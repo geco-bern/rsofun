@@ -2,8 +2,7 @@
 % Please edit documentation in R/cost_likelihood_pmodel.R
 \name{cost_likelihood_pmodel}
 \alias{cost_likelihood_pmodel}
-\title{Cost function computing a log-likelihood for calibration of P-model
-parameters}
+\title{Log-likelihood cost function for P-model with different targets}
 \usage{
 cost_likelihood_pmodel(
   par,
@@ -30,7 +29,8 @@ to check their structure).}
 for a description of the data structure.}
 
 \item{targets}{A character vector indicating the target variables for which the
-optimization will be done and the RMSE computed. This string must be a column 
+optimization will be done. This string must be a available in both model output
+and validation data set.
 name of the \code{data} data.frame belonging to the validation nested data.frame 
 (for example 'gpp').}
 
@@ -46,48 +46,63 @@ parameters are passed on to \code{\link{runread_pmodel_f}}.}
 computing. Defaults to 2.}
 }
 \value{
-The log-likelihood of the observed target values, assuming that they
-are independent, normally distributed and centered on the predictions
-made by the P-model run with standard deviation given as input (via `par` because
-the error terms are estimated through the calibration with `BayesianTools`,
-as shown in the "Parameter calibration and cost functions" vignette).
+The log-likelihood of the observed target values, for a given error 
+model and parameter set. 
+The default error model assumes that observed target values are independent,
+normally distributed, centered at the model predictions and with parametrized
+standard deviation given as input (via `par` since this/these error model 
+parameter(s) are also estimated with `BayesianTools`. See BayesianTools' 
+"Parameter calibration and cost functions" vignette.).
 }
 \description{
 The cost function performs a P-model run for the input drivers and model parameter
-values, and computes the outcome's normal log-likelihood centered at the input
-observed values and with standard deviation given as an input parameter 
-(calibratable).
+values, and computes the outcome's log-likelihood (ll).
+Separate observational error models are defined for each target variable.
+Default (and currently only option) is to assume the observational error 
+to be normally distributed centered around the model output
+and with standard deviation given as a calibratable input parameter (named as 
+'err_\[target\]').
 }
 \details{
-To run the P-model, all model parameters must be given. The cost
-function uses arguments \code{par} and \code{par_fixed} such that, in the
-calibration routine, \code{par} can be updated by the optimizer and 
-\code{par_fixed} are kept unchanged throughout calibration.
+The cost function performs a model run for the value of
+\code{par} given as argument. 
+These parameters must define all model parameters needed to run.
+The optimization maximizes the likelihood and can be  be run using \code{BayesianTools}.
 
-If the validation data contains a "date" column (fluxes), the simulated target time series
-is compared to the observed values on those same dates (e.g. for GPP). Otherwise, 
-there should only be one observed value per site (leaf traits), and the outputs 
-(averaged over the growing season, weighted by predicted GPP) will be 
-compared to this single value representative of the site (e.g. Vcmax25). As an exception,
-when the date of a trait measurement is available, it will be compared to the 
-trait value predicted on that date.
+Multiple observation types can be simultaneously calibrated, provided an error model is given for each of them. 
+Observational data can be constant (observed tratits) or time-varying (observed fluxes/states).
+This is distinguished by the presence of time information (i.e. a column named 'date')
+in the observational data.frame \code{obs} (i.e. in the nested column 'data' from a single row \code{obs}). 
+(For BiomeE this is not yet implemented.)
+Thus to calibrate simultaneously to constant and time-varying observations of
+a single (or multiple) site, each site must be repeated in the observation data
+\code{obs}.
+
+Then the modelled time series (fluxes, states, or variable leaf traits)
+is compared to the observed values on those same dates (e.g. for GPP). 
+Alternatively (without time information), the predicted value is aggregated 
+(e.g at steady state or the GPP-weighted average of acclimatized leaf traits (e.g. Vcmax25)).
 }
 \examples{
-# Compute the likelihood for a set of 
+# Compute the likelihood for a set of
 # model parameter values involved in the
-# temperature dependence of kphio 
+# temperature dependence of kphio
 # and example data
-cost_likelihood_pmodel(
- par = c(0.05, -0.01, 1,     # model parameters
-         2),                # err_gpp
- obs = p_model_validation,
+cost_likelihood_pmodel(          # reuse likelihood cost function
+ par = c(                        # must be named
+   kphio       = 0.05,
+   kphio_par_a = -0.01,
+   kphio_par_b = 1.0,
+   err_gpp     = 2.0
+ ),
+ obs     = p_model_validation,   # example data from package
  drivers = p_model_drivers,
- targets = c('gpp'),
- par_fixed = list(
-  soilm_thetastar    = 0.6 * 240,  # old setup with soil moisture stress
+ targets = c("gpp"),
+ par_fixed = c(
+  soilm_thetastar    = 0.6 * 240,# to recover old setup with soil moisture stress
   soilm_betao        = 0.0,
   beta_unitcostratio = 146.0,
-  rd_to_vcmax        = 0.014,      # from Atkin et al. 2015 for C3 herbaceous
+  rd_to_vcmax        = 0.014,    # value from Atkin et al. 2015 for C3 herbaceous
   tau_acclim         = 30.0,
   kc_jmax            = 0.41
  )

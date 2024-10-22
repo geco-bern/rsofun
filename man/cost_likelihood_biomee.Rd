@@ -2,9 +2,17 @@
 % Please edit documentation in R/cost_likelihood_biomee.R
 \name{cost_likelihood_biomee}
 \alias{cost_likelihood_biomee}
-\title{Log-likelihood cost function for BiomeE with different targets}
+\title{Log-likelihood cost function for BiomeE-model with different targets}
 \usage{
-cost_likelihood_biomee(par, obs, drivers, targets)
+cost_likelihood_biomee(
+  par,
+  obs,
+  drivers,
+  targets,
+  par_fixed = NULL,
+  parallel = FALSE,
+  ncores = 2
+)
 }
 \arguments{
 \item{par}{A vector containing parameter values for \code{'phiRL',
@@ -14,42 +22,80 @@ Make sure that
 the order of the error terms in \code{par} coincides with the order provided in
 the \code{targets} argument.}
 
-\item{obs}{A nested data frame of observations, following the structure of \code{biomee_validation},
+\item{obs}{A nested data frame of observations, following the structure of \code{biomee_validation},obs
 for example.}
 
 \item{drivers}{A nested data frame of driver data, for example \code{biomee_gs_leuning_drivers}.}
 
 \item{targets}{A character vector indicating the target variables for which the
-optimization will be done. This should be a subset of \code{c("GPP", "LAI",
-"Density", "Biomass")}.}
+optimization will be done. This string must be a available in both model output
+and validation data set. 
+This should be a subset of \code{c("GPP", "LAI", "Density", "Biomass")}.}
+
+\item{par_fixed}{A named list of model parameter values to keep fixed during the
+calibration. These should complement the input \code{par} such that all model
+parameters are passed on to \code{\link{runread_biomee_f}}. 
+Note that in BiomeE these must be NULL.}
+
+\item{parallel}{(deactivated) A logical specifying whether simulations are to be parallelised
+(sending data from a certain number of sites to each core). Defaults to
+\code{FALSE}.}
+
+\item{ncores}{(deactivated) An integer specifying the number of cores used for parallel
+computing. Defaults to 2.}
 }
 \value{
-The log-likelihood of the simulated 
-targets by the biomee model versus the observed targets.
+The log-likelihood of the observed target values, for a given error 
+model and parameter set. 
+The default error model assumes that observed target values are independent,
+normally distributed, centered at the model predictions and with parametrized
+standard deviation given as input (via `par` since this/these error model 
+parameter(s) are also estimated with `BayesianTools`. See BayesianTools' 
+"Parameter calibration and cost functions" vignette.).
 }
 \description{
-Cost function for parameter calibration, which
-computes the log-likelihood for the biomee model fitting several target 
-variables for a given set of parameters.
+The cost function performs a BiomeE-model run for the input drivers and model parameter
+values, and computes the outcome's log-likelihood (ll).
+Separate observational error models are defined for each target variable.
+Default (and currently only option) is to assume the observational error 
+to be normally distributed centered around the model output
+and with standard deviation given as a calibratable input parameter (named as 
+'err_\[target\]').
 }
 \details{
-The cost function performs a BiomeE model run for the value of
-\code{par} given as argument. The likelihood is calculated assuming that the 
-predicted targets are independent, normally distributed and centered on the observations. 
-The optimization 
-should be run using \code{BayesianTools}, so the likelihood is maximized.
+The cost function performs a model run for the value of
+\code{par} given as argument. 
+These parameters must define all model parameters needed to run.
+The optimization maximizes the likelihood and can be  be run using \code{BayesianTools}.
+
+Multiple observation types can be simultaneously calibrated, provided an error model is given for each of them. 
+Observational data can be constant (observed tratits) or time-varying (observed fluxes/states).
+This is distinguished by the presence of time information (i.e. a column named 'date')
+in the observational data.frame \code{obs} (i.e. in the nested column 'data' from a single row \code{obs}). 
+(For BiomeE this is not yet implemented.)
+Thus to calibrate simultaneously to constant and time-varying observations of
+a single (or multiple) site, each site must be repeated in the observation data
+\code{obs}.
+
+Then the modelled time series (fluxes, states, or variable leaf traits)
+is compared to the observed values on those same dates (e.g. for GPP). 
+Alternatively (without time information), the predicted value is aggregated 
+(e.g at steady state or the GPP-weighted average of acclimatized leaf traits (e.g. Vcmax25)).
 }
 \examples{
-\donttest{
 # Compute the likelihood for a set of
-# BiomeE model parameter values
-# and the example data
-cost_likelihood_biomee(
- par = c(3.5, 3.5, 1, 1,    # model params
-         0.5),              # err_GPP
- obs = biomee_validation,
- drivers = biomee_gs_leuning_drivers,
- targets = c("GPP")
-)
-}
+# model parameter values
+# and example data
+cost_likelihood_biomee( # reuse likelihood cost function
+  par = # par must be named
+    c(# BiomeE model params:
+      phiRL     = 3.5,
+      LAI_light = 3.5,
+      tf_base   = 1,
+      par_mort  = 1,
+      # error model params
+      err_GPP =   0.5),
+  obs     = biomee_validation,
+  drivers = biomee_gs_leuning_drivers,
+  targets = c('GPP'))
 }
