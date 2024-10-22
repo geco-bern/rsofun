@@ -1,4 +1,4 @@
-#' Log-likelihood cost function for P-model with different targets
+#' Log-likelihood cost function for BiomeE-model with different targets
 
 #' 
 #' The cost function performs a BiomeE-model run for the input drivers and model parameter
@@ -240,10 +240,10 @@ cost_likelihood_biomee <- function(
   mod <- model_out_full |> 
     # NOTE: for BiomeE-model output, for each row (i.e. site) the data-column contains a list of 3 data.frames
     #       The following operation separates this data column into three nested columns
-    tidyr::unnest_wider(data) |> # this keeps the three outputs: 'biomee_output_daily_tile', 'biomee_output_annual_tile', 'biomee_output_annual_cohorts'
+    tidyr::unnest_wider('data') |> # this keeps the three outputs: 'biomee_output_daily_tile', 'biomee_output_annual_tile', 'biomee_output_annual_cohorts'
     dplyr::rename_with(~paste0('biomee_', .x), .cols = -c('sitename'))
     
-  mod <- mod |> select('sitename', biomee_output_annual_tile) |> 
+  mod <- mod |> select('sitename', 'biomee_output_annual_tile') |> 
     tidyr::unnest('biomee_output_annual_tile') |>
     # keep only target model outputs:
     dplyr::select('sitename', 'year', 
@@ -329,12 +329,12 @@ cost_likelihood_biomee <- function(
   if(sum(obs_row_is_trait) > 0){
     # Unnest trait observations for our targets
     obs_df_trait <- obs[obs_row_is_trait, ] |>
-      dplyr::select(sitename, data) |>
-      tidyr::unnest(data) |>
+      dplyr::select('sitename', 'data') |>
+      tidyr::unnest('data') |>
       tidyr::pivot_wider(values_from='targets_obs', names_from='variables') |> # TODO: this is only needed for BiomeE model (see comment on wide/long data structure above)
       dplyr::select(all_of(c('sitename', targets))) |> # NOTE: any_of would silently drop unavailable
       dplyr::rename_with(~paste0(.x, '_obs'),
-                         .cols = -c(sitename)) # -c(sitename, year)
+                         .cols = -c('sitename')) # -c(sitename, year)
 
     if(ncol(obs_df_trait) < 2){
       warning("Non-dated observations (traits) are missing for the chosen targets.")
@@ -343,16 +343,16 @@ cost_likelihood_biomee <- function(
       # Join model output and trait observations
       # Derive constants form model output (traits)
       mod_df_trait <- mod |>
-        dplyr::filter(sitename %in% trait_sites) |>
-        dplyr::group_by(sitename) |>
+        dplyr::filter(.data$sitename %in% trait_sites) |>
+        dplyr::group_by(.data$sitename) |>
         # a) BiomeE: Aggregate variables from the model mod taking the last 500 yrs if spun up
         dplyr::slice_tail(n = max(0, 500-spin_up_years)) |> # TODO: make the number of years a calibration input argument instead of hardcoding
         dplyr::summarise(
-          period      = paste0("years_",paste0(range(year), collapse="_to_")),
-          GPP_mod     = mean(GPP_mod),
-          LAI_mod     = stats::quantile(LAI_mod, probs = 0.95, na.rm=TRUE),
-          Density_mod = mean(Density12_mod), # TODO: some hardcoded renames
-          Biomass_mod = mean(plantC_mod)     # TODO: some hardcoded renames
+          period      = paste0("years_",paste0(range(.data$year), collapse="_to_")),
+          GPP_mod     = mean(.data$GPP_mod),
+          LAI_mod     = stats::quantile(.data$LAI_mod, probs = 0.95, na.rm=TRUE),
+          Density_mod = mean(.data$Density12_mod), # TODO: some hardcoded renames
+          Biomass_mod = mean(.data$plantC_mod)     # TODO: some hardcoded renames
         ) |>
         # # b) P-model: get growing season average traits
         # dplyr::summarise(across(ends_with("_mod") & !starts_with('gpp'),
