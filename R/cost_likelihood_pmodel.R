@@ -40,7 +40,7 @@
 #' calibration routine, \code{par} can be updated by the optimizer and 
 #' \code{par_fixed} are kept unchanged throughout calibration.
 #' 
-#' If the validation data contains a "date" column (fluxes), the simulated target time series
+#' If the validation data contains a "date" column (fluxes/states), the simulated target time series
 #' is compared to the observed values on those same dates (e.g. for GPP). Otherwise, 
 #' there should only be one observed value per site (leaf traits), and the outputs 
 #' (averaged over the growing season, weighted by predicted GPP) will be 
@@ -122,7 +122,7 @@ cost_likelihood_pmodel <- function(
   params_modl <- c(par, par_fixed)[required_param_names]
 
   ## run the model
-  df <- runread_pmodel_f(
+  df_full <- runread_pmodel_f(
     drivers,
     par = params_modl,
     makecheck = TRUE,
@@ -130,55 +130,68 @@ cost_likelihood_pmodel <- function(
     ncores = ncores
   )
   
-  ## clean model output and unnest
-  df <- df |>
-    dplyr::rowwise() |>
-    dplyr::reframe(
-      cbind(sitename, data[, c('date', unique(c('gpp', targets)))]) |>
-        stats::setNames(c('sitename', 'date', paste0(unique(c('gpp', targets)), '_mod')))
-    ) # gpp is used to get average trait prediction
-  
-  # separate validation data into fluxes and traits, site by site
-  is_flux <- apply(obs, 1, function(x){ 'date' %in% colnames(x$data)})
-  
-  if(sum(is_flux) > 0){
-    flux_sites <- obs$sitename[is_flux]
+  # POSTPROCESS output:
+    # possible P-model outputs:
+    # df_full$data[[1]] |> tibble()                       # daily forest-specific output :    date, year_dec, properties/fluxes/states/...
+    # possible BiomeE-model outputs:
+    # df_full$data[[1]]$output_daily_tile |> tibble()     # daily forest-specific output :         year, doy, properties/fluxes/states/...
+    # df_full$data[[1]]$output_annual_tile |> tibble()    # annual forest-specific output:         year,      properties/fluxes/states/...
+    # df_full$data[[1]]$output_annual_cohorts |> tibble() # cohort-specific output       : cohort, year,      properties/fluxes/states/...
     
-    # Unnest flux observations for our targets
-    obs_flux <- obs[is_flux, ] |>
+  ## clean model output and unnest
+  df <- df_full |> tidyr::unnest('data') |>
+    # gpp is used to get average trait prediction
+    dplyr::select(sitename, 'date', 'gpp', targets) |> 
+    dplyr::rename_with(~paste0(.x, '_mod'), 
+                       .cols = -c(sitename, date))
+  
+  # PREPROCESS observation data:
+  # separate validation data into sites containing
+  # time series (fluxes/states) and sites containing constants (traits)
+  obs_row_is_timeseries <- apply(obs, 1, function(x){ 'date' %in% colnames(x$data)})
+  timeseries_sites <- obs[obs_row_is_timeseries, ][['sitename']] # individual sites can be part of both
+  trait_sites      <- obs[!obs_row_is_timeseries, ][['sitename']] # individual sites can be part of both
+                                                              # NOTE: to have an individual site in both:
+                                                              # obs must contain a row where data contains a data.frame with column 'date'
+                                                              #              and a row where data contains a data.frame without column 'date'
+  if(sum(obs_row_is_timeseries) > 0){
+    # Unnest timeseries observations for our targets
+    obs_timeseries <- obs[obs_row_is_timeseries, ] |>
       dplyr::select(sitename, data) |>
       tidyr::unnest(data) |>
-      dplyr::select(any_of(c('sitename', 'date', targets)))
+      dplyr::select(any_of(c('sitename', 'date', targets))) |> 
+      dplyr::rename_with(~paste0(.x, '_obs'), 
+                         .cols = -c(sitename, date))
     
-    if(ncol(obs_flux) < 3){
-      warning("Dated observations (fluxes) are missing for the chosen targets.")
-      df_flux <- data.frame()
+    if(ncol(obs_timeseries) < 3){
+      warning("Dated observations (fluxes/states) are missing for the chosen targets.")
+      df_timeseries <- data.frame()
     }else{
-      # Join P-model output and flux observations
-      df_flux <- df |>
-        dplyr::filter(sitename %in% flux_sites) |>
+      # Join model output and timeseries observations
+      df_timeseries <- df |>
+        dplyr::filter(sitename %in% timeseries_sites) |>
         dplyr::left_join(
-          obs_flux, 
-          by = c('sitename', 'date'))    # observations with missing date are ignored
+          obs_timeseries, 
+          by = c('sitename', 'date')) # observations with missing date are ignored 
     }
   }else{
-    df_flux <- data.frame()
+    df_timeseries <- data.frame()
   }
   
-  if(sum(!is_flux) > 0){
-    trait_sites <- obs$sitename[!is_flux]
-    
+  if(sum(!obs_row_is_timeseries) > 0){
     # Unnest trait observations for our targets
-    obs_trait <- obs[!is_flux, ] |>
+    obs_trait <- obs[!obs_row_is_timeseries, ] |>
       dplyr::select(sitename, data) |>
       tidyr::unnest(data) |>
-      dplyr::select(any_of(c('sitename', targets)))
+      dplyr::select(any_of(c('sitename', targets))) |> 
+      dplyr::rename_with(~paste0(.x, '_obs'), 
+                         .cols = -c(sitename)) # -c(sitename, date)
     
     if(ncol(obs_trait) < 2){
       warning("Non-dated observations (traits) are missing for the chosen targets.")
       df_trait <- data.frame()
     }else{
-      # Join output and trait observations
+      # Join model output and trait observations
       df_trait <- df |>
         dplyr::filter(sitename %in% trait_sites) |>
         dplyr::group_by(sitename) |>
@@ -197,25 +210,32 @@ cost_likelihood_pmodel <- function(
   
   # loop over targets to compute log-likelihood ll
   ll_df <- data.frame(target = targets, 
-                      ll     = NaN)
+                      ll     = NaN) # initialize data.frame for ll's of the different target variables
+
   for (target in targets){
+    target_obs <- paste0(target, '_obs')
+    target_mod <- paste0(target, '_mod')
+    
     # check (needed?):
-    if(target %in% colnames(df_flux) & target %in% colnames(df_trait)) {stop(
-      sprintf("Target '%s' cannot be simultaneously in df_flux and df_trait.", target))
+    if(target_obs %in% colnames(df_timeseries) & target_obs %in% colnames(df_trait)) {stop(
+      sprintf("Target '%s' cannot be simultaneously in df_timeseries and df_trait.", target))
     }
     
     # get observations and predicted target values, without NA 
-    df_target <- if(target %in% colnames(df_flux)){
-      df_flux[, c(paste0(target, '_mod'), target)] |> tidyr::drop_na()
+    df_target <- if(target_obs %in% colnames(df_timeseries)){
+      df_timeseries
+    }else if(target_obs %in% colnames(df_trait)){
+      df_trait
     }else{
-      df_trait[, c(paste0(target, '_mod'), target)] |> tidyr::drop_na()
+      stop(sprintf("Target variable: '%s', was not found in the provided observations. Please check.", target))
     }
+    df_target <- df_target[, c(target_mod, target_obs)] |> tidyr::drop_na()
     
     # calculate normal log-likelihood
     ll_df[ll_df$target == target, 'll'] <- 
       sum(stats::dnorm(
-        x    = df_target[[paste0(target, '_mod')]], # model
-        mean = df_target[[target]],                 # obs
+        x    = df_target[[target_mod]], # model
+        mean = df_target[[target_obs]], # obs
         sd   = par[[paste0('err_', target)]],       # error model
         log  = TRUE))
   }
