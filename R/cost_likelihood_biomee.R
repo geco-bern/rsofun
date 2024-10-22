@@ -85,9 +85,9 @@ cost_likelihood_biomee <- function(
   obs,
   drivers,
   targets,
-  par_fixed = NULL   # non-calibrated model parameters
-  # parallel = FALSE,
-  # ncores = 2
+  par_fixed = NULL,   # non-calibrated model parameters
+  parallel = FALSE,
+  ncores = 2
 ){
   # NOTE(fabian): These different cost functions share a LOT of code in common. Consider consolidation for maintainability?
 
@@ -223,8 +223,8 @@ cost_likelihood_biomee <- function(
     drivers,
     # par = params_modl, # unused by BiomeE
     makecheck = TRUE,
-    parallel = FALSE #parallel = parallel,
-    # ncores = ncores
+    parallel = parallel,
+    ncores = ncores
   )
 
   #### 4) Combine modelled and observed variables
