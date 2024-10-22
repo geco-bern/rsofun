@@ -77,7 +77,7 @@ ll_pmodel( par_v = c(
   rd_to_vcmax        = 0.014,      # value from Atkin et al. 2015 for C3 herbaceous
   tau_acclim         = 30.0,
   kc_jmax            = 0.41,
-  error_gpp          = 0.9         # value from previous simulations
+  err_gpp            = 0.9         # value from previous simulations
 ))
 ```
 
@@ -97,7 +97,7 @@ par_cal_best <- c(
     rd_to_vcmax        = 0.014,
     tau_acclim         = 30.0,
     kc_jmax            = 0.41,
-    error_gpp          = 1
+    err_gpp            = 1
   )
 
 # lower bound
@@ -111,7 +111,7 @@ par_cal_min <- c(
     rd_to_vcmax        = 0.01,
     tau_acclim         = 7.0,
     kc_jmax            = 0.2,
-    error_gpp          = 0.01
+    err_gpp            = 0.01
   )
 
 # upper bound
@@ -125,7 +125,7 @@ par_cal_max <- c(
     rd_to_vcmax        = 0.1,
     tau_acclim         = 60.0,
     kc_jmax            = 0.8,
-    error_gpp          = 4
+    err_gpp            = 4
   )
 ```
 
