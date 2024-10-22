@@ -41,7 +41,7 @@ test_that("test likelihood calculations", {
   # )
   # prior <- createUniformPrior(lower = par_cal_min, upper = par_cal_max, best = par_cal_best)
   # test_params_pmodel <- prior$sampler(4) |> as.data.frame() |>
-  #   setNames(nm = names(par_cal_min))
+  #   stats::setNames(nm = names(par_cal_min))
   test_params_pmodel <- data.frame( # test_params_pmodel were generated with dput(test_params_pmodel)
     kphio              = c(0.101645649550483, 0.142234791386873,0.136563287638128, 0.0529878485854715), 
     kphio_par_a        = c(-0.00398199869785458, -0.00144068546174094, -0.00302413401333615, -0.00134308318863623), 
@@ -164,7 +164,7 @@ test_that("test likelihood calculations", {
   # )
   # prior_BiomeE <- createUniformPrior(lower = parBiomeE_cal_min, upper = parBiomeE_cal_max, best = parBiomeE_cal_best)
   # test_params_BiomeE <- prior_BiomeE$sampler(4) |> as.data.frame() |>
-  #   setNames(nm = names(par_cal_min))
+  #   stats::setNames(nm = names(par_cal_min))
   test_params_BiomeE <- data.frame( # test_params_BiomeE were generated with dput(test_params_BiomeE)
     phiRL = c(6.59158648136072, 2.41828079945408, 4.51794087081216, 0.323927985038608), 
     LAI_light = c(4.83413460890297, 4.89137732107192, 6.25084221335128, 1.65691818702035), 

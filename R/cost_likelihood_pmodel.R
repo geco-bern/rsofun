@@ -7,7 +7,7 @@
 #' Default (and currently only option) is to assume the observational error 
 #' to be normally distributed centered around the model output
 #' and with standard deviation given as a calibratable input parameter (named as 
-#' 'err_\{target\}').
+#' 'err_\[target\]').
 #' 
 #' @param par A vector of values for the parameters to be calibrated, including
 #' a subset of model parameters (described in \code{\link{runread_pmodel_f}}),
@@ -66,7 +66,7 @@
 #' # Compute the likelihood for a set of
 #' # model parameter values involved in the
 #' # temperature dependence of kphio
-#' and example data
+#' # and example data
 #' cost_likelihood_pmodel(          # reuse likelihood cost function
 #'  par = c(                        # must be named
 #'    kphio       = 0.05,

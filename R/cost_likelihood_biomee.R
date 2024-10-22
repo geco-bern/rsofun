@@ -7,7 +7,7 @@
 #' Default (and currently only option) is to assume the observational error 
 #' to be normally distributed centered around the model output
 #' and with standard deviation given as a calibratable input parameter (named as 
-#' 'err_{target}').
+#' 'err_\[target\]').
 #' 
 #' @param par A vector containing parameter values for \code{'phiRL',
 #' 'LAI_light', 'tf_base', 'par_mort'} in that order, and for the error terms
@@ -22,6 +22,10 @@
 #' optimization will be done. This string must be a available in both model output
 #' and validation data set. 
 #' This should be a subset of \code{c("GPP", "LAI", "Density", "Biomass")}.
+#' @param par_fixed A named list of model parameter values to keep fixed during the
+#' calibration. These should complement the input \code{par} such that all model
+#' parameters are passed on to \code{\link{runread_biomee_f}}. 
+#' Note that in BiomeE these must be NULL.
 #' @param parallel (deactivated) A logical specifying whether simulations are to be parallelised
 #' (sending data from a certain number of sites to each core). Defaults to
 #' \code{FALSE}.
@@ -56,6 +60,7 @@
 #' (e.g at steady state or the GPP-weighted average of acclimatized leaf traits (e.g. Vcmax25)).
 #' 
 #' @export
+#' @importFrom stringr str_replace_all
 #' 
 #' @examples
 #' # Compute the likelihood for a set of
