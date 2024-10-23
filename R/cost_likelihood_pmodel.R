@@ -225,7 +225,7 @@ cost_likelihood_pmodel <- function(
   
   # Loop over the names and values of modified parameters
   for (parname in names(par_model_driver)) {
-    value <- par_model_driver[parname]
+    value <- par_model_driver[[parname]] # NOTE: this shold be a scalar, use `[[` !
     # cat("Overwriting parameter:'", parname, "' with value=", value, "\n")
     drivers <- mutate_nested_column(drivers, parname, value)
   }
