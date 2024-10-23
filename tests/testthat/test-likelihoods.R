@@ -53,7 +53,7 @@ test_that("test likelihood calculations", {
     tau_acclim         = c(53.9236626827624, 26.6468327937182, 34.3328710102942, 52.5165054232348), 
     kc_jmax            = c(0.624640251602978, 0.492042974522337, 0.23459618492052, 0.502756303641945), 
     err_gpp          = c(3.13616614692146, 2.82713630301412, 0.282233132501133, 3.00473784686066))
-  test_params_pmodel <- mutate(test_params_pmodel, err_vcmax25 = 0.5) # also add error model for vcmax25
+  test_params_pmodel <- dplyr::mutate(test_params_pmodel, err_vcmax25 = 0.5) # also add error model for vcmax25
   
   # Test rsofun::cost_likelihood_pmodel
   ll_values <- apply(test_params_pmodel, 1, function(par_v) { # par_v is a vector
@@ -178,7 +178,7 @@ test_that("test likelihood calculations", {
     err_GPP = c(2.9679689736967, 3.70911861001514, 1.16307689385489, 0.195016647893935)) # TODO: in BiomeE output is uppercase GPP, but in p-model it is lowercase
   ll_values_BiomeE <- apply(test_params_BiomeE, 1, function(par_v) { # par_v is a vector
     rsofun::cost_likelihood_biomee(    # likelihood cost function from package
-      par = par_v,                     # must be named
+      par = as.list(par_v),            # must be named
       obs = rsofun::biomee_validation, # example data from package
       drivers = rsofun::biomee_gs_leuning_drivers,
       targets = c('GPP')) # TODO: in BiomeE output is uppercase GPP, but in p-model it is lowercase
@@ -192,8 +192,8 @@ test_that("test likelihood calculations", {
                                       -13.548057740458))
   # Test rsofun::cost_rmse_biomee()
   rmse_values_BiomeE <- apply(dplyr::select(test_params_BiomeE, -err_GPP), 1, function(par_v) { # par_v is a vector
-    rsofun::cost_rmse_biomee(     # likelihood cost function from package
-      par = par_v,                      # must be named
+    rsofun::cost_rmse_biomee(          # likelihood cost function from package
+      par = par_v,                     # must be named            # TODO: changet to as.list(). Make rmse work with lists, too.
       obs = rsofun::biomee_validation, # example data from package
       drivers = rsofun::biomee_gs_leuning_drivers)
   })
@@ -214,9 +214,9 @@ test_that("test likelihood calculations", {
   # undebug(rsofun::cost_likelihood_biomee)
   ll_values_BiomeE_multisite <- apply(test_params_BiomeE, 1, function(par_v) { # par_v is a vector
     rsofun::cost_likelihood_biomee(    # likelihood cost function from package
-      par = par_v,                     # must be named
-      obs     = dplyr::bind_rows(rsofun::biomee_validation, mutate(rsofun::biomee_validation, sitename = 'CH-Lae_copy')), # example data from package
-      drivers = dplyr::bind_rows(rsofun::biomee_gs_leuning_drivers, mutate(rsofun::biomee_gs_leuning_drivers, sitename = 'CH-Lae_copy')), # example data from package
+      par     = as.list(par_v),            # must be named
+      obs     = dplyr::bind_rows(rsofun::biomee_validation, dplyr::mutate(rsofun::biomee_validation, sitename = 'CH-Lae_copy')), # example data from package
+      drivers = dplyr::bind_rows(rsofun::biomee_gs_leuning_drivers, dplyr::mutate(rsofun::biomee_gs_leuning_drivers, sitename = 'CH-Lae_copy')), # example data from package
       targets = c('GPP'))
   })
   testthat::expect_equal(object = ll_values_BiomeE_multisite, 2 * ll_values_BiomeE)

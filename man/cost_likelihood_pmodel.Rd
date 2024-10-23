@@ -90,9 +90,11 @@ Alternatively (without time information), the predicted value is aggregated
 # and example data
 cost_likelihood_pmodel(          # reuse likelihood cost function
  par = c(                        # must be named
+   # P-model params
    kphio       = 0.05,
    kphio_par_a = -0.01,
    kphio_par_b = 1.0,
+   # error model params
    err_gpp     = 2.0
  ),
  obs     = p_model_validation,   # example data from package

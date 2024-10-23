@@ -86,16 +86,18 @@ Alternatively (without time information), the predicted value is aggregated
 # Compute the likelihood for a set of
 # model parameter values
 # and example data
-cost_likelihood_biomee( # reuse likelihood cost function
-  par = # par must be named
-    c(# BiomeE model params:
-      phiRL     = 3.5,
-      LAI_light = 3.5,
-      tf_base   = 1,
-      par_mort  = 1,
-      # error model params
-      err_GPP =   0.5),
-  obs     = biomee_validation,
-  drivers = biomee_gs_leuning_drivers,
-  targets = c('GPP'))
+cost_likelihood_biomee(          # reuse likelihood cost function
+ par = c(                        # must be named
+   # BiomeE model params:
+   phiRL     = 3.5,
+   LAI_light = 3.5,
+   tf_base   = 1,
+   par_mort  = 1,
+   # error model params
+   err_GPP   = 0.5
+ ),
+ obs     = biomee_validation,
+ drivers = biomee_gs_leuning_drivers,
+ targets = c('GPP')
+)
 }

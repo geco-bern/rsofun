@@ -90,47 +90,79 @@ cost_likelihood_biomee <- function(
   parallel = FALSE,
   ncores = 2
 ){
-  # NOTE(fabian): These different cost functions share a LOT of code in common. Consider consolidation for maintainability?
-
+  # NOTE(fabian): These different cost functions share a LOT of code in common. Consider consolidation for maintainability? 
   # predefine variables for CRAN check compliance
   GPP <- LAI <- Density12 <- plantC <- error <- NULL
-  
-  #### 1) Parse input parameters
-  ## define required parameter set 'required_param_names' based on model parameters
-  ## NOTE: unlike P-model, BiomeE has numerous parameters defined in the drivers on 
-  ## the 'site_info'-, 'params_tile'-, 'params_species'-, 'params_soil'-level: 
-  required_param_list <- list(
-    site_info = c("sitename", "lon", "lat", "elv", "year_start", 
-                  "year_end", "classid", "c4", "whc", "koeppen_code", "igbp_land_use", 
-                  "plant_functional_type", "date_start", "date_end"), 
-    params_tile = c("soiltype", 
-                    "FLDCAP", "WILTPT", "K1", "K2", "K_nitrogen", "MLmixRatio", "etaN", 
-                    "LMAmin", "fsc_fine", "fsc_wood", "GR_factor", "l_fract", "retransN", 
-                    "f_initialBSW", "f_N_add", "tf_base", "par_mort", "par_mort_under"), 
-    params_species = c("lifeform", "phenotype", "pt", "alpha_FR", 
-                       "rho_FR", "root_r", "root_zeta", "Kw_root", "leaf_size", "Vmax", 
-                       "Vannual", "wet_leaf_dreg", "m_cond", "alpha_phot", "gamma_L", 
-                       "gamma_LN", "gamma_SW", "gamma_FR", "tc_crit", "tc_crit_on", 
-                       "gdd_crit", "betaON", "betaOFF", "alphaHT", "thetaHT", "alphaCA", 
-                       "thetaCA", "alphaBM", "thetaBM", "seedlingsize", "maturalage", 
-                       "v_seed", "mortrate_d_c", "mortrate_d_u", "LMA", "leafLS", "LNbase", 
-                       "CNleafsupport", "rho_wood", "taperfactor", "lAImax", "tauNSC", 
-                       "fNSNmax", "phiCSA", "CNleaf0", "CNsw0", "CNwood0", "CNroot0", 
-                       "CNseed0", "Nfixrate0", "NfixCost0", "internal_gap_frac", "kphio", 
-                       "phiRL", "LAI_light"), 
-    params_soil = c("type", "GMD", "GSD", 
-                    "vwc_sat", "chb", "psi_sat_ref", "k_sat_ref", "alphaSoil", "heat_capacity_dry")
-  )
-  required_param_names <- required_param_list |> # BiomeE-model needs these parameters:
-    unname() |> unlist()
 
-  ## For BiomeE only: 
-  if(!is.null(par_fixed)){stop("For BiomeE, par_fixed must be NULL. Fixed parameters are provided through tables in the drivers.")}
-  par_fixed_names <- drivers |> 
-    dplyr::select(c("site_info", "params_tile", "params_species", "params_soil")) |>
-    lapply(function(col){names(col[[1]])}) |> unname() |> unlist() |> sort()
-  par_fixed <- structure(rep(NA, length(par_fixed_names)), .Names = par_fixed_names)
-  
+  curr_model <- "biomee"          # not "p-model"
+
+  #### 1) Parse input parameters
+  if(curr_model == "biomee"){ # For BiomeE only
+    if(!is.null(par_fixed)){stop("For BiomeE, par_fixed must be NULL. Fixed parameters are provided through tables in the drivers.")}
+  }
+  ## define required parameter set 'required_param_names' based on model parameters
+  if(curr_model == "biomee"){
+    required_param_names <- c()# BiomeE-model needs no global parameters
+  }else if(curr_model == "p-model"){
+    required_param_names <- c(# P-model needs these global parameters:
+                  'beta_unitcostratio',
+                  'kc_jmax',
+                  'kphio',
+                  'kphio_par_a',
+                  'kphio_par_b',
+                  'rd_to_vcmax',
+                  'soilm_betao', 'soilm_thetastar',
+                  'tau_acclim'
+    )
+  }else{
+    stop("Arguments 'curr_model' must be either 'biomee' or 'p-model'")
+  }
+  ## define valid driver parameter names
+  # they were hardcoded based on the possible results of the outcommented code:
+        # rsofun::biomee_gs_leuning_drivers |>
+        #   dplyr::select(any_of(c("site_info", "params_tile", "params_species", "params_soil"))) |>
+        #   lapply(function(col){names(col[[1]])}) |> dput() # |> unname() |> unlist() |> sort()
+        # rsofun::biomee_p_model_drivers |>
+        #   dplyr::select(any_of(c("site_info", "params_tile", "params_species", "params_soil"))) |>
+        #   lapply(function(col){names(col[[1]])}) |> dput() # |> unname() |> unlist() |> sort()
+        # rsofun::p_model_drivers |>
+        #   dplyr::select(any_of(c("site_info", "params_tile", "params_species", "params_soil"))) |>
+        #   lapply(function(col){names(col[[1]])}) |> dput() # |> unname() |> unlist() |> sort()
+        # rsofun::p_model_drivers_vcmax25 |>
+        #   dplyr::select(any_of(c("site_info", "params_tile", "params_species", "params_soil"))) |>
+        #   lapply(function(col){names(col[[1]])}) |> dput() # |> unname() |> unlist() |> sort()
+  if(curr_model == "biomee"){
+    ## NOTE: unlike P-model, BiomeE has numerous parameters defined in the drivers on 
+    ## the 'site_info'-, 'params_tile'-, 'params_species'-, 'params_soil'-level: 
+    valid_par_model_driver_list <- list(
+      site_info = c("sitename", "lon", "lat", "elv", "year_start",
+                    "year_end", "classid", "c4", "whc", "koeppen_code", "igbp_land_use",
+                    "plant_functional_type", "date_start", "date_end"),
+      params_tile = c("soiltype",
+                      "FLDCAP", "WILTPT", "K1", "K2", "K_nitrogen", "MLmixRatio", "etaN",
+                      "LMAmin", "fsc_fine", "fsc_wood", "GR_factor", "l_fract", "retransN",
+                      "f_initialBSW", "f_N_add", "tf_base", "par_mort", "par_mort_under"),
+      params_species = c("lifeform", "phenotype", "pt", "alpha_FR",
+                         "rho_FR", "root_r", "root_zeta", "Kw_root", "leaf_size", "Vmax",
+                         "Vannual", "wet_leaf_dreg", "m_cond", "alpha_phot", "gamma_L",
+                         "gamma_LN", "gamma_SW", "gamma_FR", "tc_crit", "tc_crit_on",
+                         "gdd_crit", "betaON", "betaOFF", "alphaHT", "thetaHT", "alphaCA",
+                         "thetaCA", "alphaBM", "thetaBM", "seedlingsize", "maturalage",
+                         "v_seed", "mortrate_d_c", "mortrate_d_u", "LMA", "leafLS", "LNbase",
+                         "CNleafsupport", "rho_wood", "taperfactor", "lAImax", "tauNSC",
+                         "fNSNmax", "phiCSA", "CNleaf0", "CNsw0", "CNwood0", "CNroot0",
+                         "CNseed0", "Nfixrate0", "NfixCost0", "internal_gap_frac", "kphio",
+                         "phiRL", "LAI_light"),
+      params_soil = c("type", "GMD", "GSD",
+                      "vwc_sat", "chb", "psi_sat_ref", "k_sat_ref", "alphaSoil", "heat_capacity_dry")
+    )
+  }else if(curr_model == "p-model"){
+    valid_par_model_driver_list <- list(
+      site_info = c("lon", "lat", "elv", "year_start", "year_end", "whc"))
+  }else{
+    stop("Arguments 'curr_model' must be either 'biomee' or 'p-model'")
+  }
+
   ## split calibrated/fixed parameters into model and error model parameters
   ## NOTE: error model parameters must start with "err_" (and model parameters must NOT)
   par_model_toCalibrate <- par[ ! grepl("^err_", names(par))] # consider only model parameters for the check
@@ -143,22 +175,31 @@ cost_likelihood_biomee <- function(
       (!rlang::is_empty(par_fixed) && is.null(names(par_fixed)))){ # if par/par_fixed exist, they must be named!
     stop("Error: Input calibratable and fixed parameters need to be provided as named vectors.")
   }
-  if (!identical(unique(sort(c(names(par_model_toCalibrate), names(par_model_fixed)))), sort(required_param_names))){
-    missing_params <- required_param_names[!(required_param_names %in% names(par_model_toCalibrate) | 
-                                               required_param_names %in% names(par_model_fixed))]
-    stop(sprintf(paste0("Error: Input calibratable and fixed parameters do not ",
-                        "match required model parameters:",
-                        "\n         missing:            c(%s)",
-                        "\n         ",
-                        "\n         received par:       c(%s)",
-                        "\n         received par_fixed: c(%s)",
-                        "\n         required:           c(%s)"),
-                 
-                 paste0(sort(missing_params), collapse = ", "),
-                 paste0(sort(names(par_model_toCalibrate)), collapse = ", "),
-                 paste0(sort(names(par_model_fixed)), collapse = ", "),
-                 paste0(sort(required_param_names), collapse = ", ")))
+
+  if(curr_model == "biomee"){
+    # check completeness: for p-model 'par_model_toCalibrate' and 'par_model_fixed' == 'required_param_names'
+    # NOT NEEDED for BiomeE since length(required_param_names) == 0
+  }else if(curr_model == "p-model"){
+    # check completeness: for p-model 'par_model_toCalibrate' and 'par_model_fixed' == 'required_param_names'
+    if(!identical(unique(sort(c(names(par_model_toCalibrate), names(par_model_fixed)))), sort(required_param_names))){
+      missing_params <- required_param_names[!(required_param_names %in% names(par_model_toCalibrate) | 
+                                                 required_param_names %in% names(par_model_fixed))]
+      stop(sprintf(paste0("Error: Input calibratable and fixed parameters do not ",
+                          "match required model parameters:",
+                          "\n         missing:            c(%s)",
+                          "\n         ",
+                          "\n         received par:       c(%s)",
+                          "\n         received par_fixed: c(%s)",
+                          "\n         required:           c(%s)"),
+                   paste0(sort(missing_params), collapse = ", "),
+                   paste0(sort(names(par_model_toCalibrate)), collapse = ", "),
+                   paste0(sort(names(par_model_fixed)), collapse = ", "),
+                   paste0(sort(required_param_names), collapse = ", ")))
+    }
+  }else{
+    stop("Arguments 'curr_model' must be either 'biomee' or 'p-model'")
   }
+
   #### 2) Update inputs to runread_biomee_f() with the provided parameters
 
   #### 2a) reorganize parameters into a group of global parameters (provided as 
@@ -169,8 +210,6 @@ cost_likelihood_biomee <- function(
   par_error <- as.list(c(par_error_fixed, par_error_toCalibrate)) # runread_pmodel_f requires a named list
   par_model <- as.list(c(par_model_fixed, par_model_toCalibrate)) # runread_pmodel_f requires a named list
   
-  # curr_model <- "biomee"
-  curr_model <- "p-model"
   if(curr_model == "biomee"){
     global_pars <- c() ## NOTE: unlike the P-Model, BiomeE-model has no separate argument 'par' to
                        ##       `runread_biomee_f()`. All the params are provided through the driver
@@ -200,8 +239,32 @@ cost_likelihood_biomee <- function(
   #### 2b) prepare argument 'par' of runread_pmodel_f() with global parameters 
   # already done above: use par = par_model_global
 
+  ## check validity of par_model_global
+  valid_par_model_global_names <- required_param_names
+  stopifnot(all(names(par_model_global) %in% valid_par_model_global_names)) # This check is internal
+  
   #### 2c) prepare argument 'driver' of runread_biomee_f() with site-specific parameters
   # Here we need to overwrite parameters specified in the driver data where necessary
+
+  ## check validity of par_model_driver
+  valid_par_model_driver <- valid_par_model_driver_list |> unname() |> unlist()
+  
+  # check validity: 'par_model_driver' must be a subset of 'valid_par_model_driver'
+  if(!all(names(par_model_driver) %in% valid_par_model_driver)){
+    surplus_params <- names(par_model_driver)[!(names(par_model_driver) %in% valid_par_model_driver)]
+    stop(sprintf(paste0("Error: Input calibratable parameters do not ",
+                        "match valid model parameters:",
+                        "\n         surplus:            c(%s)",
+                        "\n         ",
+                        "\n         received par:       c(%s)",
+                        "\n         received par_fixed: c(%s)",
+                        "\n         valid:           c(%s)"),
+                 paste0(sort(surplus_params), collapse = ", "),
+                 paste0(sort(names(par_model_driver)), collapse = ", "),
+                 paste0(sort(names(par_model_fixed)), collapse = ", "),
+                 paste0(sort(valid_par_model_driver), collapse = ",")))
+  }
+
   # Function to mutate a column inside the nested data.frame of the driver
   mutate_nested_column <- function(mod, column_name, new_value) {
     # check occurrence of parameters:
@@ -247,10 +310,9 @@ cost_likelihood_biomee <- function(
   }
 
   #### 3) Run the model: runread_biomee_f()
-
   ## run the model
   model_out_full <- runread_biomee_f(
-    drivers,
+    drivers = drivers,
     # par = par_model_global, # unused by BiomeE
     makecheck = TRUE,
     parallel = parallel,
@@ -267,7 +329,7 @@ cost_likelihood_biomee <- function(
     # model_out_full$data[[1]]$output_annual_cohorts |> tibble() # cohort-specific output       : cohort, year,      properties/fluxes/states/...
 
   ## clean model output and unnest
-  mod <- model_out_full |> 
+  mod <- model_out_full |>
     # NOTE: for BiomeE-model output, for each row (i.e. site) the data-column contains a list of 3 data.frames
     #       The following operation separates this data column into three nested columns
     tidyr::unnest_wider('data') |> # this keeps the three outputs: 'biomee_output_daily_tile', 'biomee_output_annual_tile', 'biomee_output_annual_cohorts'
@@ -312,7 +374,7 @@ cost_likelihood_biomee <- function(
                                                               # obs must contain a row where data contains a data.frame with column 'date'
                                                               #              and a row where data contains a data.frame without column 'date'
   if(sum(obs_row_is_timeseries) > 0){
-    # TODO: for BiomeE currently no timeseries calibraiton is implemented 
+    # TODO: for BiomeE currently no timeseries calibration is implemented 
     #   # Unnest timeseries observations for our targets
     #   obs_timeseries <- obs[obs_row_is_timeseries, ] |>
     #     dplyr::select(sitename, data) |>
@@ -384,9 +446,9 @@ cost_likelihood_biomee <- function(
           Density_mod = mean(.data$Density12_mod), # TODO: some hardcoded renames
           Biomass_mod = mean(.data$plantC_mod)     # TODO: some hardcoded renames
         ) |>
-        # # b) P-model: get growing season average traits
+        # b) P-model: get growing season average traits
         # dplyr::summarise(across(ends_with("_mod") & !starts_with('gpp'),
-        #                         ~ sum(.x * gpp_mod/sum(gpp_mod)),
+        #                         ~ sum(.x * .data$gpp_mod/sum(.data$gpp_mod)),
         #                         .names = "{.col}")) |>
         dplyr::left_join(
           obs_df_trait,
