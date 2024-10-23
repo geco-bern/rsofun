@@ -40,6 +40,7 @@ cost_rmse_biomee <- function(
     obs,
     drivers
 ){
+  # TODO: refactor cost_rmse_biomee() using cost_likelihood_generic()
   
   # predefine variables for CRAN check compliance
   GPP <- LAI <- Density12 <- plantC <- targets_obs <-

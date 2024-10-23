@@ -55,9 +55,9 @@ test_that("test likelihood calculations", {
     err_gpp          = c(3.13616614692146, 2.82713630301412, 0.282233132501133, 3.00473784686066))
   test_params_pmodel <- dplyr::mutate(test_params_pmodel, err_vcmax25 = 0.5) # also add error model for vcmax25
   
-  # Test rsofun::cost_likelihood_pmodel
+  # Test cost_likelihood_pmodel
   ll_values <- apply(test_params_pmodel, 1, function(par_v) { # par_v is a vector
-    rsofun::cost_likelihood_pmodel(     # likelihood cost function from package
+    cost_likelihood_pmodel(     # likelihood cost function from package
       par = as.list(par_v),                      # must be named
       obs = rsofun::p_model_validation, # example data from package
       drivers = rsofun::p_model_drivers,
@@ -90,14 +90,14 @@ test_that("test likelihood calculations", {
   
   # Also test vcmax25 target and multi-target loglikelihoods:
   ll_values2 <- apply(test_params_pmodel, 1, function(par_v) { # par_v is a vector
-    rsofun::cost_likelihood_pmodel(     # likelihood cost function from package
+    cost_likelihood_pmodel(     # likelihood cost function from package
       par     = as.list(par_v),
       obs     = p_model_validation_vcmax25, # example data from package 
       drivers = p_model_drivers_vcmax25,       # example data from package
       targets = c('vcmax25'))
   })
   ll_values3 <- apply(test_params_pmodel, 1, function(par_v) { # par_v is a vector
-    rsofun::cost_likelihood_pmodel(     # likelihood cost function from package
+    cost_likelihood_pmodel(     # likelihood cost function from package
       par     = as.list(par_v),
       obs     = rbind(p_model_validation, p_model_validation_vcmax25), # example data from package 
       drivers = rbind(p_model_drivers, p_model_drivers_vcmax25),       # example data from package
@@ -120,7 +120,7 @@ test_that("test likelihood calculations", {
                                       -0.90316542572855))
   
   # test p-model likelihood with only fixed parameters
-  ll_pmodel_fixed <- rsofun::cost_likelihood_pmodel(
+  ll_pmodel_fixed <- cost_likelihood_pmodel(
     obs     = rbind(p_model_validation, p_model_validation_vcmax25), # example data from package 
     drivers = rbind(p_model_drivers, p_model_drivers_vcmax25),       # example data from package
     par = c(),
@@ -145,7 +145,7 @@ test_that("test likelihood calculations", {
                          expected = -336583.32327482)
   
   
-  # Test rsofun::cost_likelihood_biomee()
+  # Test cost_likelihood_biomee()
   # parBiomeE_cal_best <- c(
   #   phiRL              = 3.5,
   #   LAI_light          = 3.5,
@@ -177,7 +177,7 @@ test_that("test likelihood calculations", {
     par_mort = c(1.64211843877565, 0.579043845250271, 1.28934027748182, 1.11228716920596), 
     err_GPP = c(2.9679689736967, 3.70911861001514, 1.16307689385489, 0.195016647893935)) # TODO: in BiomeE output is uppercase GPP, but in p-model it is lowercase
   ll_values_BiomeE <- apply(test_params_BiomeE, 1, function(par_v) { # par_v is a vector
-    rsofun::cost_likelihood_biomee(    # likelihood cost function from package
+    cost_likelihood_biomee(    # likelihood cost function from package
       par = as.list(par_v),            # must be named
       obs = rsofun::biomee_validation, # example data from package
       drivers = rsofun::biomee_gs_leuning_drivers,
@@ -211,9 +211,8 @@ test_that("test likelihood calculations", {
   #                        order(ll_values_BiomeE))
   
   # Test multi-site BiomeE loglikelihood (NOTE: pseudo-multi-site for lack of input data)
-  # undebug(rsofun::cost_likelihood_biomee)
   ll_values_BiomeE_multisite <- apply(test_params_BiomeE, 1, function(par_v) { # par_v is a vector
-    rsofun::cost_likelihood_biomee(    # likelihood cost function from package
+    cost_likelihood_biomee(    # likelihood cost function from package
       par     = as.list(par_v),            # must be named
       obs     = dplyr::bind_rows(rsofun::biomee_validation, dplyr::mutate(rsofun::biomee_validation, sitename = 'CH-Lae_copy')), # example data from package
       drivers = dplyr::bind_rows(rsofun::biomee_gs_leuning_drivers, dplyr::mutate(rsofun::biomee_gs_leuning_drivers, sitename = 'CH-Lae_copy')), # example data from package

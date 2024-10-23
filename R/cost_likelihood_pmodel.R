@@ -129,7 +129,7 @@ cost_likelihood_pmodel <- function(
   parallel = FALSE,
   ncores = 2
 ){
-  cost_likelihood_generic_1(
+  cost_likelihood_generic(
     par        = par,
     obs        = obs,
     drivers    = drivers,
@@ -140,7 +140,7 @@ cost_likelihood_pmodel <- function(
     curr_model = "p-model")
 }
 
-cost_likelihood_generic_1 <- function(
+cost_likelihood_generic <- function(
   par,   # model parameters & error terms for each target
   obs,
   drivers,
@@ -153,6 +153,44 @@ cost_likelihood_generic_1 <- function(
   match.arg(curr_model, several.ok = FALSE)
 
   #### 1) Parse input parameters
+  #### 2) Update inputs to runread_pmodel_f()/runread_biomee_f() with the provided parameters
+  updated <- likelihoodHelper_update_model_parameters(curr_model, par, par_fixed, drivers)
+              # TODO: updated$par_error is not very elegant!
+  
+  #### 3) Run the model: runread_pmodel_f()/runread_biomee_f()
+  ## run the model
+  if(curr_model == "biomee"){
+    model_out_full <- runread_biomee_f(
+      drivers   = updated$drivers,
+      # par     = par_model_global, # unused by BiomeE
+      makecheck = TRUE,
+      parallel  = parallel,
+      ncores    = ncores
+    )
+  }else if(curr_model == "p-model"){
+    model_out_full <- runread_pmodel_f(
+      drivers   = updated$drivers,
+      par       = updated$par_model_global,
+      makecheck = TRUE,
+      parallel  = parallel,
+      ncores    = ncores
+    )
+  }else{
+    stop("Arguments 'curr_model' must be either 'biomee' or 'p-model'")
+  }
+
+  #### 4) Combine modelled predictions and observed variables
+  pred_obs <- likelihoodHelper_combine_model_obs(curr_model, model_out_full, obs, targets, 
+                                                 updated$drivers) # TODO: remove updated_drivers
+
+  #### 5) Compute log-likelihood
+  ll <- likelihoodHelper_compute_default_loglikelihood(pred_obs, targets, updated$par_error)
+
+  return(ll)
+}
+
+# Helper functions for cost_likelihood_generic()
+likelihoodHelper_update_model_parameters <- function(curr_model, par, par_fixed, drivers){
   if(curr_model == "biomee"){ # For BiomeE only
     if(!is.null(par_fixed)){stop("For BiomeE, par_fixed must be NULL. Fixed parameters are provided through tables in the drivers.")}
   }
@@ -340,7 +378,7 @@ cost_likelihood_generic_1 <- function(
           purrr::map(column, 
                      function(nested_df){
                        if (column_name %in% names(nested_df)) {
-                         dplyr::mutate(nested_df, !!sym(column_name) := new_value)
+                         dplyr::mutate(nested_df, !!dplyr::sym(column_name) := new_value)
                        } else {
                          nested_df
                        }}
@@ -364,30 +402,16 @@ cost_likelihood_generic_1 <- function(
     # cat("Overwriting parameter:'", parname, "' with value=", value, "\n")
     drivers <- mutate_nested_column(drivers, parname, value)
   }
+  
+  return(list(drivers          = drivers, 
+              par_model_global = par_model_global,
+              # TODO: updated$par_error is not very elegant!
+              par_error        = par_error))
+}
 
-  #### 3) Run the model: runread_pmodel_f()/runread_biomee_f()
-  ## run the model
-  if(curr_model == "biomee"){
-    model_out_full <- runread_biomee_f(
-      drivers = drivers,
-      # par = par_model_global, # unused by BiomeE
-      makecheck = TRUE,
-      parallel = parallel,
-      ncores = ncores
-    )
-  }else if(curr_model == "p-model"){
-    model_out_full <- runread_pmodel_f(
-      drivers,
-      par = par_model_global,
-      makecheck = TRUE,
-      parallel = parallel,
-      ncores = ncores
-    )
-  }else{
-    stop("Arguments 'curr_model' must be either 'biomee' or 'p-model'")
-  }
-
+likelihoodHelper_combine_model_obs <- function(curr_model, model_out_full, obs, targets, updated_drivers){ # TODO: remove updated_drivers
   #### 4) Combine modelled and observed variables
+
   #### 4a) POSTPROCESS model output
     # possible P-model outputs:
     # model_out_full$data[[1]] |> tibble()                       # daily forest-specific output :    date, year_dec, properties/fluxes/states/...
@@ -403,7 +427,7 @@ cost_likelihood_generic_1 <- function(
       #       The following operation separates this data column into three nested columns
       tidyr::unnest_wider('data') |> # this keeps the three outputs: 'biomee_output_daily_tile', 'biomee_output_annual_tile', 'biomee_output_annual_cohorts'
       dplyr::rename_with(~paste0('biomee_', .x), .cols = -c('sitename'))
-      
+
     mod <- mod |> select('sitename', 'biomee_output_annual_tile') |> 
       tidyr::unnest('biomee_output_annual_tile') |>
       # keep only target model outputs:
@@ -414,7 +438,7 @@ cost_likelihood_generic_1 <- function(
                         'Biomass' = 'plantC')))   # TODO: some hardcoded renames
                     ) |>
       dplyr::rename_with(~paste0(.x, '_mod'), 
-                        .cols = -c('sitename', 'year'))
+                         .cols = -c('sitename', 'year'))
   }else if(curr_model == "p-model"){
     mod <- model_out_full |>
       tidyr::unnest('data') |> # this keeps the output
@@ -425,25 +449,25 @@ cost_likelihood_generic_1 <- function(
       dplyr::rename_with(~paste0(.x, '_mod'),
                         .cols = -c('sitename', 'date'))
   }else{
-      stop("Arguments 'curr_model' must be either 'biomee' or 'p-model'")
+    stop("Arguments 'curr_model' must be either 'biomee' or 'p-model'")
   }
 
   if(curr_model == "biomee"){
     # drop spinup years if activated
-    if (drivers$params_siml[[1]]$spinup){
-      spinup_years <- drivers$params_siml[[1]]$spinupyears + 1 # TODO: why plus 1?
+    if (updated_drivers$params_siml[[1]]$spinup){
+      spinup_years <- updated_drivers$params_siml[[1]]$spinupyears + 1 # TODO: why plus 1?
     } else {
       spinup_years <- 0
     }
     mod <- mod #|>
-    # group_by(sitename)|> # TODO: ensure the filtering is per site
+    # group_by(.data$sitename)|> # TODO: ensure the filtering is per site
     # filter(year > spinup_years) |> # TODO: fix how spinup years are filtered
     # TODO: fix this. Do we really need to remove the spinupyears? Aren't they already removed in the fortran code?
     # TODO: fix this. Do we really need to remove the spinupyears? Aren't they already removed in the fortran code?
   }else if(curr_model == "p-model"){
     # TODO: if needed add spinup removal to p-model as well...
   }else{
-      stop("Arguments 'curr_model' must be either 'biomee' or 'p-model'")
+    stop("Arguments 'curr_model' must be either 'biomee' or 'p-model'")
   }
 
 
@@ -465,11 +489,11 @@ cost_likelihood_generic_1 <- function(
     }else if(curr_model == "p-model"){
       # Unnest timeseries observations for our targets
       obs_timeseries <- obs[obs_row_is_timeseries, ] |>
-        dplyr::select(sitename, data) |>
-        tidyr::unnest(data) |>
+        dplyr::select('sitename', 'data') |>
+        tidyr::unnest('data') |>
         dplyr::select(any_of(c('sitename', 'date', targets))) |> # NOTE: any_of silently drops unavailable targets, hence 'targets' can contain timeseries as well as traits without erroring.
         dplyr::rename_with(~paste0(.x, '_obs'),
-                          .cols = -c(sitename, date))
+                          .cols = -c('sitename', 'date'))
 
       if(ncol(obs_timeseries) < 3){
         warning("Dated observations (fluxes/states) are missing for the chosen targets.")
@@ -477,13 +501,13 @@ cost_likelihood_generic_1 <- function(
       }else{
         # Join model output and timeseries observations
         mod_df_timeseries <- mod |>
-          dplyr::filter(sitename %in% timeseries_sites) |>
+          dplyr::filter(.data$sitename %in% timeseries_sites) |>
           dplyr::left_join(
             obs_timeseries,
             by = c('sitename', 'date')) # observations with missing date are ignored
       }
     }else{
-        stop("Arguments 'curr_model' must be either 'biomee' or 'p-model'")
+      stop("Arguments 'curr_model' must be either 'biomee' or 'p-model'")
     }
   }else{
     mod_df_timeseries <- data.frame()
@@ -544,8 +568,8 @@ cost_likelihood_generic_1 <- function(
           }else if(curr_model == "p-model"){. |>
           # b) P-model: get growing season average traits
             dplyr::summarise(across(ends_with("_mod") & !starts_with('gpp'),
-                                ~ sum(.x * .data$gpp_mod/sum(.data$gpp_mod)),
-                                .names = "{.col}"))
+                                    ~ sum(.x * .data$gpp_mod/sum(.data$gpp_mod)),
+                                    .names = "{.col}"))
           }else{
             stop("Arguments 'curr_model' must be either 'biomee' or 'p-model'")
           }
@@ -559,8 +583,12 @@ cost_likelihood_generic_1 <- function(
   }else{
     mod_df_trait <- data.frame()
   }
+  
+  return(list(timeseries = mod_df_timeseries, 
+              traits     = mod_df_trait))
+}
 
-  #### 5) Compute log-likelihood
+likelihoodHelper_compute_default_loglikelihood <- function(pred_obs, targets, par_error){
   # TODO: change this approach to another one based on a long data.frame containing
   # columns for 'sitename', 'target', 'error_model', 'obs_value', 'pred_value'
   # TODO: here we could also split the joining of obs-pred from the into two separate functions
@@ -574,15 +602,15 @@ cost_likelihood_generic_1 <- function(
     target_mod <- paste0(target, '_mod')
 
     # check (needed?):
-    if(target_obs %in% colnames(mod_df_timeseries) & target_obs %in% colnames(mod_df_trait)) {
-      stop(sprintf("Target '%s' cannot be simultaneously in mod_df_timeseries and df_trait.", target))
+    if(target_obs %in% colnames(pred_obs$timeseries) & target_obs %in% colnames(pred_obs$traits)) {
+      stop(sprintf("Target '%s' cannot be simultaneously in pred_obs$timeseries and pred_obs$traits", target))
     }
 
     # get observations and predicted target values, without NA
-    df_target <- if(target_obs %in% colnames(mod_df_timeseries)){
-      mod_df_timeseries
-    }else if(target_obs %in% colnames(mod_df_trait)){
-      mod_df_trait
+    df_target <- if(target_obs %in% colnames(pred_obs$timeseries)){
+      pred_obs$timeseries
+    }else if(target_obs %in% colnames(pred_obs$traits)){
+      pred_obs$traits
     }else{
       stop(sprintf("Target variable: '%s', was not found in the provided observations. Please check.", target))
     }
