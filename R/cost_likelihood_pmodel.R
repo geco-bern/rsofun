@@ -69,9 +69,11 @@
 #' # and example data
 #' cost_likelihood_pmodel(          # reuse likelihood cost function
 #'  par = c(                        # must be named
+#'    # P-model params
 #'    kphio       = 0.05,
 #'    kphio_par_a = -0.01,
 #'    kphio_par_b = 1.0,
+#'    # error model params
 #'    err_gpp     = 2.0
 #'  ),
 #'  obs     = p_model_validation,   # example data from package
@@ -102,7 +104,7 @@ cost_likelihood_pmodel <- function(
   sitename <- data <- gpp_mod <- NULL
 
   #### 1) Parse input parameters
-  ## define required parameter set based on model parameters
+  ## define required parameter set 'required_param_names' based on model parameters
   required_param_names <- c(# P-model needs these parameters:
                   'beta_unitcostratio',
                   'kc_jmax',
@@ -115,19 +117,19 @@ cost_likelihood_pmodel <- function(
 
   ## split calibrated/fixed parameters into model and error model parameters
   ## NOTE: error model parameters must start with "err_" (and model parameters must NOT)
-  par_calibrated_model      <- par[ ! grepl("^err_", names(par))] # consider only model parameters for the check
-  par_calibrated_errormodel <- par[   grepl("^err_", names(par))]
-  par_fixed_model      <- par_fixed[ ! grepl("^err_", names(par_fixed)) ] # consider only model parameters for the check
-  par_fixed_errormodel <- par_fixed[   grepl("^err_", names(par_fixed)) ]
+  par_model_toCalibrate <- par[ ! grepl("^err_", names(par))] # consider only model parameters for the check
+  par_error_toCalibrate <- par[   grepl("^err_", names(par))]
+  par_model_fixed       <- par_fixed[ ! grepl("^err_", names(par_fixed)) ] # consider only model parameters for the check
+  par_error_fixed       <- par_fixed[   grepl("^err_", names(par_fixed)) ]
 
   ## check parameters for model
   if ((!rlang::is_empty(par)       && is.null(names(par))) || 
       (!rlang::is_empty(par_fixed) && is.null(names(par_fixed)))){ # if par/par_fixed exist, they must be named!
     stop("Error: Input calibratable and fixed parameters need to be provided as named vectors.")
   }
-  if (!identical(unique(sort(c(names(par_calibrated_model), names(par_fixed_model)))), sort(required_param_names))){
-    missing_params <- required_param_names[!(required_param_names %in% names(par_calibrated_model) | 
-                                               required_param_names %in% names(par_fixed_model))]
+  if (!identical(unique(sort(c(names(par_model_toCalibrate), names(par_model_fixed)))), sort(required_param_names))){
+    missing_params <- required_param_names[!(required_param_names %in% names(par_model_toCalibrate) | 
+                                               required_param_names %in% names(par_model_fixed))]
     stop(sprintf(paste0("Error: Input calibratable and fixed parameters do not ",
                         "match required model parameters:",
                         "\n         missing:            c(%s)",
@@ -137,18 +139,52 @@ cost_likelihood_pmodel <- function(
                         "\n         required:           c(%s)"),
                  
                  paste0(sort(missing_params), collapse = ", "),
-                 paste0(sort(names(par_calibrated_model)), collapse = ", "),
-                 paste0(sort(names(par_fixed_model)), collapse = ", "),
+                 paste0(sort(names(par_model_toCalibrate)), collapse = ", "),
+                 paste0(sort(names(par_model_fixed)), collapse = ", "),
                  paste0(sort(required_param_names), collapse = ", ")))
   }
   #### 2) Update inputs to runread_pmodel_f() with the provided parameters
 
-  #### 2a) prepare global parameters for argument 'par' of runread_pmodel_f()
-  # Combine fixed and estimated params to result in all the params required to run the model
-  # This basically uses all params except those of the error model of the observations
-  params_modl <- as.list(c(par, par_fixed)[required_param_names]) # runread_pmodel_f requires a named list
+  #### 2a) reorganize parameters into a group of global parameters (provided as 
+  ####     'par') and site specific parameters (provided through the data.frame 
+  ####     'driver')
+  # NOTE: actually, we don't need to track which ones are toCalibrate and which are fixed
+  #       here we now need to know where we need to apply them
+  par_error <- as.list(c(par_error_fixed, par_error_toCalibrate)) # runread_pmodel_f requires a named list
+  par_model <- as.list(c(par_model_fixed, par_model_toCalibrate)) # runread_pmodel_f requires a named list
   
-  #### 2b) prepare site-specific parameters for 'driver' argument of runread_pmodel_f()
+  # curr_model <- "biomee"
+  curr_model <- "p-model"
+  if(curr_model == "biomee"){
+    global_pars <- c() ## NOTE: unlike the P-Model, BiomeE-model has no separate argument 'par' to
+                       ##       `runread_biomee_f()`. All the params are provided through the driver
+    par_model_global <- par_model[   names(par_model) %in% global_pars ]
+    par_model_driver <- par_model[ ! names(par_model) %in% global_pars ]
+    rm(global_pars)
+  }else if(curr_model == "p-model"){
+        # TODO: this was added in PHydro branch: but it can already be considered when refactoring this
+        # ## if WHC is treated as calibratable, remove it from par and overwrite site 
+        # ## info with the same value for (calibrated) WHC for all sites.
+        # driver_pars <- c("whc")
+    driver_pars <- c() ## NOTE: before the pydro model all calibratable params were global params
+                       ##       i.e. the same for all sites and none were provided through the driver
+                       ##       With phydro model we'll be introducing 'whc' as a site-specific parameter
+                       ##       (that is potentially calibratable to a global value)
+    par_model_driver <- par_model[   names(par_model) %in% driver_pars]
+    par_model_global <- par_model[ ! names(par_model) %in% driver_pars]
+    rm(driver_pars)
+  }else{
+    stop("Arguments 'curr_model' must be either 'biomee' or 'p-model'")
+  }
+  
+  rm(par_error_fixed, par_error_toCalibrate, par_model_fixed, par_model_toCalibrate,
+     par_model)
+  # below only use: par_error, par_model_global, and par_model_driver
+
+  #### 2b) prepare argument 'par' of runread_pmodel_f() with global parameters 
+  # already done above: use par = par_model_global
+
+  #### 2c) prepare argument 'driver' of runread_pmodel_f() with site-specific parameters
   # Here we need to overwrite parameters specified in the driver data where necessary
   # Function to mutate a column inside the nested data.frame of the driver
   mutate_nested_column <- function(mod, column_name, new_value) {
@@ -188,18 +224,18 @@ cost_likelihood_pmodel <- function(
         # test_df <- mutate_nested_column(test_df, "bd_notexisting", 22); unnest(test_df, c(data, data2))
   
   # Loop over the names and values of modified parameters
-  # DEACTIVATED FOR PMODEL: for (parname in names(par_calibrated_model)) {
-  # DEACTIVATED FOR PMODEL:   value <- par_calibrated_model[parname]
-  # DEACTIVATED FOR PMODEL:   # cat("Overwriting parameter:'", parname, "' with value=", value, "\n")
-  # DEACTIVATED FOR PMODEL:   drivers <- mutate_nested_column(drivers, parname, value)
-  # DEACTIVATED FOR PMODEL: }  # TODO: do we need to activate this for whc in Francesco ET branch?
+  for (parname in names(par_model_driver)) {
+    value <- par_model_driver[parname]
+    # cat("Overwriting parameter:'", parname, "' with value=", value, "\n")
+    drivers <- mutate_nested_column(drivers, parname, value)
+  }
 
   #### 3) Run the model: runread_pmodel_f()
 
   ## run the model
   model_out_full <- runread_pmodel_f(
     drivers,
-    par = params_modl,
+    par = par_model_global,
     makecheck = TRUE,
     parallel = parallel,
     ncores = ncores
@@ -339,12 +375,11 @@ cost_likelihood_pmodel <- function(
     df_target <- df_target[, c(target_mod, target_obs)] |> tidyr::drop_na()
 
     # calculate normal log-likelihood
-    par_error_sd <- c(par_calibrated_errormodel, par_fixed_errormodel)[[paste0('err_', target)]]
     ll_df[ll_df$target == target, 'll'] <-
       sum(stats::dnorm(
         x    = df_target[[target_mod]], # model
         mean = df_target[[target_obs]], # obs
-        sd   = par_error_sd,            # error model
+        sd   = par_error[[paste0('err_', target)]], # error model
         log  = TRUE))
   }
   ll <- sum(ll_df$ll)

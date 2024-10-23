@@ -66,19 +66,20 @@
 #' # Compute the likelihood for a set of
 #' # model parameter values
 #' # and example data
-#' cost_likelihood_biomee( # reuse likelihood cost function
-#'   par = # par must be named
-#'     c(# BiomeE model params:
-#'       phiRL     = 3.5,
-#'       LAI_light = 3.5,
-#'       tf_base   = 1,
-#'       par_mort  = 1,
-#'       # error model params
-#'       err_GPP =   0.5),
-#'   obs     = biomee_validation,
-#'   drivers = biomee_gs_leuning_drivers,
-#'   targets = c('GPP'))
-
+#' cost_likelihood_biomee(          # reuse likelihood cost function
+#'  par = c(                        # must be named
+#'    # BiomeE model params:
+#'    phiRL     = 3.5,
+#'    LAI_light = 3.5,
+#'    tf_base   = 1,
+#'    par_mort  = 1,
+#'    # error model params
+#'    err_GPP   = 0.5
+#'  ),
+#'  obs     = biomee_validation,
+#'  drivers = biomee_gs_leuning_drivers,
+#'  targets = c('GPP')
+#' )
 
 cost_likelihood_biomee <- function(
   par,   # model parameters & error terms for each target
@@ -95,7 +96,7 @@ cost_likelihood_biomee <- function(
   GPP <- LAI <- Density12 <- plantC <- error <- NULL
   
   #### 1) Parse input parameters
-  ## define required parameter set based on model parameters
+  ## define required parameter set 'required_param_names' based on model parameters
   ## NOTE: unlike P-model, BiomeE has numerous parameters defined in the drivers on 
   ## the 'site_info'-, 'params_tile'-, 'params_species'-, 'params_soil'-level: 
   required_param_list <- list(
@@ -123,6 +124,7 @@ cost_likelihood_biomee <- function(
   required_param_names <- required_param_list |> # BiomeE-model needs these parameters:
     unname() |> unlist()
 
+  ## For BiomeE only: 
   if(!is.null(par_fixed)){stop("For BiomeE, par_fixed must be NULL. Fixed parameters are provided through tables in the drivers.")}
   par_fixed_names <- drivers |> 
     dplyr::select(c("site_info", "params_tile", "params_species", "params_soil")) |>
@@ -131,19 +133,19 @@ cost_likelihood_biomee <- function(
   
   ## split calibrated/fixed parameters into model and error model parameters
   ## NOTE: error model parameters must start with "err_" (and model parameters must NOT)
-  par_calibrated_model      <- par[ ! grepl("^err_", names(par))] # consider only model parameters for the check
-  par_calibrated_errormodel <- par[   grepl("^err_", names(par))]
-  par_fixed_model      <- par_fixed[ ! grepl("^err_", names(par_fixed)) ] # consider only model parameters for the check
-  par_fixed_errormodel <- par_fixed[   grepl("^err_", names(par_fixed)) ]
+  par_model_toCalibrate <- par[ ! grepl("^err_", names(par))] # consider only model parameters for the check
+  par_error_toCalibrate <- par[   grepl("^err_", names(par))]
+  par_model_fixed       <- par_fixed[ ! grepl("^err_", names(par_fixed)) ] # consider only model parameters for the check
+  par_error_fixed       <- par_fixed[   grepl("^err_", names(par_fixed)) ]
 
   ## check parameters for model
   if ((!rlang::is_empty(par)       && is.null(names(par))) || 
       (!rlang::is_empty(par_fixed) && is.null(names(par_fixed)))){ # if par/par_fixed exist, they must be named!
     stop("Error: Input calibratable and fixed parameters need to be provided as named vectors.")
   }
-  if (!identical(unique(sort(c(names(par_calibrated_model), names(par_fixed_model)))), sort(required_param_names))){
-    missing_params <- required_param_names[!(required_param_names %in% names(par_calibrated_model) | 
-                                               required_param_names %in% names(par_fixed_model))]
+  if (!identical(unique(sort(c(names(par_model_toCalibrate), names(par_model_fixed)))), sort(required_param_names))){
+    missing_params <- required_param_names[!(required_param_names %in% names(par_model_toCalibrate) | 
+                                               required_param_names %in% names(par_model_fixed))]
     stop(sprintf(paste0("Error: Input calibratable and fixed parameters do not ",
                         "match required model parameters:",
                         "\n         missing:            c(%s)",
@@ -153,25 +155,53 @@ cost_likelihood_biomee <- function(
                         "\n         required:           c(%s)"),
                  
                  paste0(sort(missing_params), collapse = ", "),
-                 paste0(sort(names(par_calibrated_model)), collapse = ", "),
-                 paste0(sort(names(par_fixed_model)), collapse = ", "),
+                 paste0(sort(names(par_model_toCalibrate)), collapse = ", "),
+                 paste0(sort(names(par_model_fixed)), collapse = ", "),
                  paste0(sort(required_param_names), collapse = ", ")))
   }
-
   #### 2) Update inputs to runread_biomee_f() with the provided parameters
 
-  #### 2a) prepare global parameters for argument 'par' of runread_biomee_f()
-  ## NOTE: unlike the P-Model, BiomeE-model has no separate argument 'par' to
-  ##       `runread_biomee_f()`. All the params are provided through the driver
+  #### 2a) reorganize parameters into a group of global parameters (provided as 
+  ####     'par') and site specific parameters (provided through the data.frame 
+  ####     'driver')
+  # NOTE: actually, we don't need to track which ones are toCalibrate and which are fixed
+  #       here we now need to know where we need to apply them
+  par_error <- as.list(c(par_error_fixed, par_error_toCalibrate)) # runread_pmodel_f requires a named list
+  par_model <- as.list(c(par_model_fixed, par_model_toCalibrate)) # runread_pmodel_f requires a named list
+  
+  # curr_model <- "biomee"
+  curr_model <- "p-model"
+  if(curr_model == "biomee"){
+    global_pars <- c() ## NOTE: unlike the P-Model, BiomeE-model has no separate argument 'par' to
+                       ##       `runread_biomee_f()`. All the params are provided through the driver
+    par_model_global <- par_model[   names(par_model) %in% global_pars ]
+    par_model_driver <- par_model[ ! names(par_model) %in% global_pars ]
+    rm(global_pars)
+  }else if(curr_model == "p-model"){
+        # TODO: this was added in PHydro branch: but it can already be considered when refactoring this
+        # ## if WHC is treated as calibratable, remove it from par and overwrite site 
+        # ## info with the same value for (calibrated) WHC for all sites.
+        # driver_pars <- c("whc")
+    driver_pars <- c() ## NOTE: before the pydro model all calibratable params were global params
+                       ##       i.e. the same for all sites and none were provided through the driver
+                       ##       With phydro model we'll be introducing 'whc' as a site-specific parameter
+                       ##       (that is potentially calibratable to a global value)
+    par_model_driver <- par_model[   names(par_model) %in% driver_pars]
+    par_model_global <- par_model[ ! names(par_model) %in% driver_pars]
+    rm(driver_pars)
+  }else{
+    stop("Arguments 'curr_model' must be either 'biomee' or 'p-model'")
+  }
+  
+  rm(par_error_fixed, par_error_toCalibrate, par_model_fixed, par_model_toCalibrate,
+     par_model)
+  # below only use: par_error, par_model_global, and par_model_driver
 
-  #### 2b) prepare site-specific parameters for 'driver' argument of runread_biomee_f()
+  #### 2b) prepare argument 'par' of runread_pmodel_f() with global parameters 
+  # already done above: use par = par_model_global
+
+  #### 2c) prepare argument 'driver' of runread_biomee_f() with site-specific parameters
   # Here we need to overwrite parameters specified in the driver data where necessary
-  # Option i) Manual solution
-    # drivers$params_species[[1]]$phiRL[]  <- par[1]
-    # drivers$params_species[[1]]$LAI_light[]  <- par[2]
-    # drivers$params_tile[[1]]$tf_base <- par[3]
-    # drivers$params_tile[[1]]$par_mort <- par[4]
-  # Option ii) Automatization
   # Function to mutate a column inside the nested data.frame of the driver
   mutate_nested_column <- function(mod, column_name, new_value) {
     # check occurrence of parameters:
@@ -210,18 +240,18 @@ cost_likelihood_biomee <- function(
         # test_df <- mutate_nested_column(test_df, "bd_notexisting", 22); unnest(test_df, c(data, data2))
   
   # Loop over the names and values of modified parameters
-  for (parname in names(par_calibrated_model)) {
-    value <- par_calibrated_model[parname]
+  for (parname in names(par_model_driver)) {
+    value <- par_model_driver[parname]
     # cat("Overwriting parameter:'", parname, "' with value=", value, "\n")
     drivers <- mutate_nested_column(drivers, parname, value)
-  }  
+  }
 
   #### 3) Run the model: runread_biomee_f()
 
   ## run the model
   model_out_full <- runread_biomee_f(
     drivers,
-    # par = params_modl, # unused by BiomeE
+    # par = par_model_global, # unused by BiomeE
     makecheck = TRUE,
     parallel = parallel,
     ncores = ncores
@@ -256,22 +286,22 @@ cost_likelihood_biomee <- function(
                        .cols = -c('sitename', 'year'))
 
   # did we spin up?
-  spin_up <- drivers$params_siml[[1]]$spinup
+  spinup <- drivers$params_siml[[1]]$spinup
   # drop spinup years if activated
-  if (spin_up){
-    spin_up_years <- drivers$params_siml[[1]]$spinupyears + 1
+  if (spinup){
+    spinup_years <- drivers$params_siml[[1]]$spinupyears + 1 # TODO: why plus 1?
   } else {
-    spin_up_years <- 0
+    spinup_years <- 0
   }
   mod <- mod #|>
   # group_by(sitename)|> # TODO: ensure the filtering is per site
-  # filter(year > spin_up_years) |> # TODO: fix how spinup years are filtered
+  # filter(year > spinup_years) |> # TODO: fix how spinup years are filtered
   # TODO: fix this. Do we really need to remove the spinupyears? Aren't they already removed in the fortran code?
   # TODO: fix this. Do we really need to remove the spinupyears? Aren't they already removed in the fortran code?
 
 
   #### 4b) PREPROCESS observation data
-  #### 4c) JOIN observed and modelled data # TODO: split this more clearly from 4b 
+  #### 4c) JOIN observed and modelled data # TODO: split this more clearly from 4b
   # separate validation data into sites containing
   # time series (fluxes/states) and sites containing constants (traits)
   obs_row_is_timeseries <- apply(obs, 1, function(x){ 'date' %in% colnames(x$data)})
@@ -346,7 +376,7 @@ cost_likelihood_biomee <- function(
         dplyr::filter(.data$sitename %in% trait_sites) |>
         dplyr::group_by(.data$sitename) |>
         # a) BiomeE: Aggregate variables from the model mod taking the last 500 yrs if spun up
-        dplyr::slice_tail(n = max(0, 500-spin_up_years)) |> # TODO: make the number of years a calibration input argument instead of hardcoding
+        dplyr::slice_tail(n = max(0, 500-spinup_years)) |> # TODO: make the number of years a calibration input argument instead of hardcoding
         dplyr::summarise(
           period      = paste0("years_",paste0(range(.data$year), collapse="_to_")),
           GPP_mod     = mean(.data$GPP_mod),
@@ -396,12 +426,11 @@ cost_likelihood_biomee <- function(
     df_target <- df_target[, c(target_mod, target_obs)] |> tidyr::drop_na()
 
     # calculate normal log-likelihood
-    par_error_sd <- c(par_calibrated_errormodel, par_fixed_errormodel)[[paste0('err_', target)]]
     ll_df[ll_df$target == target, 'll'] <-
       sum(stats::dnorm(
         x    = df_target[[target_mod]], # model
         mean = df_target[[target_obs]], # obs
-        sd   = par_error_sd,            # error model
+        sd   = par_error[[paste0('err_', target)]], # error model
         log  = TRUE))
   }
   ll <- sum(ll_df$ll)
