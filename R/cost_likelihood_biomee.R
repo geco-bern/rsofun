@@ -9,27 +9,39 @@
 #' and with standard deviation given as a calibratable input parameter (named as 
 #' 'err_\[target\]').
 #' 
-#' @param par A vector containing parameter values for \code{'phiRL',
-#' 'LAI_light', 'tf_base', 'par_mort'} in that order, and for the error terms
-#' corresponding to the target variables, e.g. \code{'err_GPP'} if GPP is a target. 
-#' Make sure that
-#' the order of the error terms in \code{par} coincides with the order provided in
-#' the \code{targets} argument.
-#' @param obs A nested data frame of observations, following the structure of \code{biomee_validation},obs
-#' for example.
-#' @param drivers A nested data frame of driver data, for example \code{biomee_gs_leuning_drivers}.
+#' @param par A named vector of values for the parameters that are being calibrated, 
+#' consisiting of
+#'    - parameters for the error model for each target variable (for example \code{'err_gpp'})
+#'    - parameters for the model (described in \code{\link{runread_pmodel_f}}), 
+#' Parameters from 'par' replace either global parameters (specified in argument 'par')
+#' of the function \code{\link{runread_pmodel_f}} or then site-specific 
+#' parameters defined in the driver data.frame.
+#' Note that the same parameters are applied globally to all sites in the driver 
+#' data.frame.
+#' Note that parameters for the error model of each target must correspond to the 
+#' argument `targets0`
+#' 
+#' @param obs A nested data.frame of observations, with columns \code{'sitename'}
+#' and \code{'data'} (see \code{\link{p_model_validation}}, 
+#' \code{\link{p_model_validation_vcmax25}}, or \code{\link{biomee_validation}}
+#' to check their structure).
+#' @param drivers A nested data.frame of driver data.
+#' See\code{\link{p_model_drivers}}, \code{\link{biomee_gs_leuning_drivers}}, 
+#' \code{\link{biomee_p_model_drivers}}, and \code{\link{p_model_drivers_vcmax25}}, 
+#' or p_hydro_drivers for a description of the data structure.
 #' @param targets A character vector indicating the target variables for which the
 #' optimization will be done. This string must be a available in both model output
-#' and validation data set. 
+#' and validation data set.
 #' This should be a subset of \code{c("GPP", "LAI", "Density", "Biomass")}.
+#' #' TODO: specify how time-variable and constant observations are used.
 #' @param par_fixed A named list of model parameter values to keep fixed during the
 #' calibration. These should complement the input \code{par} such that all model
-#' parameters are passed on to \code{\link{runread_biomee_f}}. 
+#' parameters are passed on to \code{\link{runread_biomee_f}}.
 #' Note that in BiomeE these must be NULL.
-#' @param parallel (deactivated) A logical specifying whether simulations are to be parallelised
+#' @param parallel A logical specifying whether simulations are to be parallelised
 #' (sending data from a certain number of sites to each core). Defaults to
 #' \code{FALSE}.
-#' @param ncores (deactivated) An integer specifying the number of cores used for parallel
+#' @param ncores An integer specifying the number of cores used for parallel
 #' computing. Defaults to 2.
 #' 
 #' @return The log-likelihood of the observed target values, for a given error 
@@ -64,7 +76,7 @@
 #' 
 #' @examples
 #' # Compute the likelihood for a set of
-#' # model parameter values
+#' # model parameter values for biomee:
 #' # and example data
 #' cost_likelihood_biomee(          # reuse likelihood cost function
 #'  par = c(                        # must be named
@@ -80,6 +92,32 @@
 #'  drivers = biomee_gs_leuning_drivers,
 #'  targets = c('GPP')
 #' )
+#' @examples
+#' # Compute the likelihood for a set of
+#' # model parameter values involved in the
+#' # temperature dependence of kphio
+#' # and example data
+#' cost_likelihood_pmodel(          # reuse likelihood cost function
+#'  par = c(                        # must be named
+#'    # P-model params
+#'    kphio       = 0.05,
+#'    kphio_par_a = -0.01,
+#'    kphio_par_b = 1.0,
+#'    # error model params
+#'    err_gpp     = 2.0
+#'  ),
+#'  obs     = p_model_validation,   # example data from package
+#'  drivers = p_model_drivers,
+#'  targets = c("gpp"),
+#'  par_fixed = c(
+#'   soilm_thetastar    = 0.6 * 240,# to recover old setup with soil moisture stress
+#'   soilm_betao        = 0.0,
+#'   beta_unitcostratio = 146.0,
+#'   rd_to_vcmax        = 0.014,    # value from Atkin et al. 2015 for C3 herbaceous
+#'   tau_acclim         = 30.0,
+#'   kc_jmax            = 0.41
+#'  )
+#' )
 
 cost_likelihood_biomee <- function(
   par,   # model parameters & error terms for each target
@@ -90,11 +128,28 @@ cost_likelihood_biomee <- function(
   parallel = FALSE,
   ncores = 2
 ){
-  # NOTE(fabian): These different cost functions share a LOT of code in common. Consider consolidation for maintainability? 
-  # predefine variables for CRAN check compliance
-  GPP <- LAI <- Density12 <- plantC <- error <- NULL
+  cost_likelihood_generic_2(
+    par        = par,
+    obs        = obs,
+    drivers    = drivers,
+    targets    = targets,
+    par_fixed  = par_fixed,
+    parallel   = parallel,
+    ncores     = ncores,
+    curr_model = "biomee")
+}
 
-  curr_model <- "biomee"          # not "p-model"
+cost_likelihood_generic_2 <- function(
+  par,   # model parameters & error terms for each target
+  obs,
+  drivers,
+  targets,
+  par_fixed = NULL,   # non-calibrated model parameters
+  parallel = FALSE,
+  ncores = 2,
+  curr_model = c("biomee", "p-model")
+){
+  match.arg(curr_model, several.ok = FALSE)
 
   #### 1) Parse input parameters
   if(curr_model == "biomee"){ # For BiomeE only
@@ -200,7 +255,7 @@ cost_likelihood_biomee <- function(
     stop("Arguments 'curr_model' must be either 'biomee' or 'p-model'")
   }
 
-  #### 2) Update inputs to runread_biomee_f() with the provided parameters
+  #### 2) Update inputs to runread_pmodel_f()/runread_biomee_f() with the provided parameters
 
   #### 2a) reorganize parameters into a group of global parameters (provided as 
   ####     'par') and site specific parameters (provided through the data.frame 
@@ -243,7 +298,7 @@ cost_likelihood_biomee <- function(
   valid_par_model_global_names <- required_param_names
   stopifnot(all(names(par_model_global) %in% valid_par_model_global_names)) # This check is internal
   
-  #### 2c) prepare argument 'driver' of runread_biomee_f() with site-specific parameters
+  #### 2c) prepare argument 'driver' of runread_pmodel_f()/runread_biomee_f() with site-specific parameters
   # Here we need to overwrite parameters specified in the driver data where necessary
 
   ## check validity of par_model_driver
@@ -309,15 +364,27 @@ cost_likelihood_biomee <- function(
     drivers <- mutate_nested_column(drivers, parname, value)
   }
 
-  #### 3) Run the model: runread_biomee_f()
+  #### 3) Run the model: runread_pmodel_f()/runread_biomee_f()
   ## run the model
-  model_out_full <- runread_biomee_f(
-    drivers = drivers,
-    # par = par_model_global, # unused by BiomeE
-    makecheck = TRUE,
-    parallel = parallel,
-    ncores = ncores
-  )
+  if(curr_model == "biomee"){
+    model_out_full <- runread_biomee_f(
+      drivers = drivers,
+      # par = par_model_global, # unused by BiomeE
+      makecheck = TRUE,
+      parallel = parallel,
+      ncores = ncores
+    )
+  }else if(curr_model == "p-model"){
+    model_out_full <- runread_pmodel_f(
+      drivers,
+      par = par_model_global,
+      makecheck = TRUE,
+      parallel = parallel,
+      ncores = ncores
+    )
+  }else{
+    stop("Arguments 'curr_model' must be either 'biomee' or 'p-model'")
+  }
 
   #### 4) Combine modelled and observed variables
   #### 4a) POSTPROCESS model output
@@ -329,37 +396,54 @@ cost_likelihood_biomee <- function(
     # model_out_full$data[[1]]$output_annual_cohorts |> tibble() # cohort-specific output       : cohort, year,      properties/fluxes/states/...
 
   ## clean model output and unnest
-  mod <- model_out_full |>
-    # NOTE: for BiomeE-model output, for each row (i.e. site) the data-column contains a list of 3 data.frames
-    #       The following operation separates this data column into three nested columns
-    tidyr::unnest_wider('data') |> # this keeps the three outputs: 'biomee_output_daily_tile', 'biomee_output_annual_tile', 'biomee_output_annual_cohorts'
-    dplyr::rename_with(~paste0('biomee_', .x), .cols = -c('sitename'))
-    
-  mod <- mod |> select('sitename', 'biomee_output_annual_tile') |> 
-    tidyr::unnest('biomee_output_annual_tile') |>
-    # keep only target model outputs:
-    dplyr::select('sitename', 'year', 
-                  'GPP', 'LAI', 'Density12', 'plantC', #TODO: here we should only keep the targets. 
-                  all_of(targets |> stringr::str_replace_all(
-                    c('Density' = 'Density12',  # TODO: some hardcoded renames
-                      'Biomass' = 'plantC')))   # TODO: some hardcoded renames
-                  ) |>
-    dplyr::rename_with(~paste0(.x, '_mod'), 
-                       .cols = -c('sitename', 'year'))
-
-  # did we spin up?
-  spinup <- drivers$params_siml[[1]]$spinup
-  # drop spinup years if activated
-  if (spinup){
-    spinup_years <- drivers$params_siml[[1]]$spinupyears + 1 # TODO: why plus 1?
-  } else {
-    spinup_years <- 0
+  if(curr_model == "biomee"){
+    mod <- model_out_full |>
+      # NOTE: for BiomeE-model output, for each row (i.e. site) the data-column contains a list of 3 data.frames
+      #       The following operation separates this data column into three nested columns
+      tidyr::unnest_wider('data') |> # this keeps the three outputs: 'biomee_output_daily_tile', 'biomee_output_annual_tile', 'biomee_output_annual_cohorts'
+      dplyr::rename_with(~paste0('biomee_', .x), .cols = -c('sitename'))
+      
+    mod <- mod |> select('sitename', 'biomee_output_annual_tile') |> 
+      tidyr::unnest('biomee_output_annual_tile') |>
+      # keep only target model outputs:
+      dplyr::select('sitename', 'year', 
+                    'GPP', 'LAI', 'Density12', 'plantC', #TODO: here we should only keep the targets. 
+                    all_of(targets |> stringr::str_replace_all(    #TODO: if removed remove also @importFrom
+                      c('Density' = 'Density12',  # TODO: some hardcoded renames
+                        'Biomass' = 'plantC')))   # TODO: some hardcoded renames
+                    ) |>
+      dplyr::rename_with(~paste0(.x, '_mod'), 
+                        .cols = -c('sitename', 'year'))
+  }else if(curr_model == "p-model"){
+    mod <- model_out_full |>
+      tidyr::unnest('data') |> # this keeps the output
+      # gpp is used to get average trait prediction
+      dplyr::select('sitename', 'date',
+                    'gpp',
+                    all_of(targets)) |>
+      dplyr::rename_with(~paste0(.x, '_mod'),
+                        .cols = -c('sitename', 'date'))
+  }else{
+      stop("Arguments 'curr_model' must be either 'biomee' or 'p-model'")
   }
-  mod <- mod #|>
-  # group_by(sitename)|> # TODO: ensure the filtering is per site
-  # filter(year > spinup_years) |> # TODO: fix how spinup years are filtered
-  # TODO: fix this. Do we really need to remove the spinupyears? Aren't they already removed in the fortran code?
-  # TODO: fix this. Do we really need to remove the spinupyears? Aren't they already removed in the fortran code?
+
+  if(curr_model == "biomee"){
+    # drop spinup years if activated
+    if (drivers$params_siml[[1]]$spinup){
+      spinup_years <- drivers$params_siml[[1]]$spinupyears + 1 # TODO: why plus 1?
+    } else {
+      spinup_years <- 0
+    }
+    mod <- mod #|>
+    # group_by(sitename)|> # TODO: ensure the filtering is per site
+    # filter(year > spinup_years) |> # TODO: fix how spinup years are filtered
+    # TODO: fix this. Do we really need to remove the spinupyears? Aren't they already removed in the fortran code?
+    # TODO: fix this. Do we really need to remove the spinupyears? Aren't they already removed in the fortran code?
+  }else if(curr_model == "p-model"){
+    # TODO: if needed add spinup removal to p-model as well...
+  }else{
+      stop("Arguments 'curr_model' must be either 'biomee' or 'p-model'")
+  }
 
 
   #### 4b) PREPROCESS observation data
@@ -374,27 +458,32 @@ cost_likelihood_biomee <- function(
                                                               # obs must contain a row where data contains a data.frame with column 'date'
                                                               #              and a row where data contains a data.frame without column 'date'
   if(sum(obs_row_is_timeseries) > 0){
-    # TODO: for BiomeE currently no timeseries calibration is implemented 
-    #   # Unnest timeseries observations for our targets
-    #   obs_timeseries <- obs[obs_row_is_timeseries, ] |>
-    #     dplyr::select(sitename, data) |>
-    #     tidyr::unnest(data) |>
-    #     dplyr::select(all_of(c('sitename', 'date', targets))) |> # NOTE: any_of would silently drop unavailable
-    #     dplyr::rename_with(~paste0(.x, '_obs'),
-    #                        .cols = -c(sitename, date))
-    #
-    #   if(ncol(obs_timeseries) < 3){
-    #     warning("Dated observations (fluxes/states) are missing for the chosen targets.")
-    #     mod_df_timeseries <- data.frame()
-    #   }else{
-    #     # Join model output and timeseries observations
-    #     # TODO: consider model spinup??
-    #     mod_df_timeseries <- mod |>
-    #       dplyr::filter(sitename %in% timeseries_sites) |>
-    #       dplyr::left_join(
-    #         obs_timeseries,
-    #         by = c('sitename', 'date')) # observations with missing date are ignored
-    #   }
+    if(curr_model == "biomee"){
+      # TODO: for BiomeE currently no timeseries calibration is implemented
+      mod_df_timeseries <- data.frame()
+    }else if(curr_model == "p-model"){
+      # Unnest timeseries observations for our targets
+      obs_timeseries <- obs[obs_row_is_timeseries, ] |>
+        dplyr::select(sitename, data) |>
+        tidyr::unnest(data) |>
+        dplyr::select(any_of(c('sitename', 'date', targets))) |> # NOTE: any_of silently drops unavailable targets, hence 'targets' can contain timeseries as well as traits without erroring.
+        dplyr::rename_with(~paste0(.x, '_obs'),
+                          .cols = -c(sitename, date))
+
+      if(ncol(obs_timeseries) < 3){
+        warning("Dated observations (fluxes/states) are missing for the chosen targets.")
+        mod_df_timeseries <- data.frame()
+      }else{
+        # Join model output and timeseries observations
+        mod_df_timeseries <- mod |>
+          dplyr::filter(sitename %in% timeseries_sites) |>
+          dplyr::left_join(
+            obs_timeseries,
+            by = c('sitename', 'date')) # observations with missing date are ignored
+      }
+    }else{
+        stop("Arguments 'curr_model' must be either 'biomee' or 'p-model'")
+    }
   }else{
     mod_df_timeseries <- data.frame()
   }
@@ -423,10 +512,12 @@ cost_likelihood_biomee <- function(
     obs_df_trait <- obs[obs_row_is_trait, ] |>
       dplyr::select('sitename', 'data') |>
       tidyr::unnest('data') |>
-      tidyr::pivot_wider(values_from='targets_obs', names_from='variables') |> # TODO: this is only needed for BiomeE model (see comment on wide/long data structure above)
-      dplyr::select(all_of(c('sitename', targets))) |> # NOTE: any_of would silently drop unavailable
-      dplyr::rename_with(~paste0(.x, '_obs'),
-                         .cols = -c('sitename')) # -c(sitename, year)
+      # do this conditionally: # TODO: this is only needed for BiomeE model (see comment on wide/long data structure above)
+      # source for conditional code: https://stackoverflow.com/a/76792390
+      {\(.) if (curr_model == "biomee") tidyr::pivot_wider(., values_from='targets_obs', names_from='variables') else . }() |> 
+      # end of conditional do
+      dplyr::select(any_of(c('sitename', targets))) |> # NOTE: any_of silently drops unavailable targets, hence 'targets' can contain timeseries as well as traits without erroring.
+      dplyr::rename_with(~paste0(.x, '_obs'), .cols = -c('sitename'))
 
     if(ncol(obs_df_trait) < 2){
       warning("Non-dated observations (traits) are missing for the chosen targets.")
@@ -437,19 +528,28 @@ cost_likelihood_biomee <- function(
       mod_df_trait <- mod |>
         dplyr::filter(.data$sitename %in% trait_sites) |>
         dplyr::group_by(.data$sitename) |>
-        # a) BiomeE: Aggregate variables from the model mod taking the last 500 yrs if spun up
-        dplyr::slice_tail(n = max(0, 500-spinup_years)) |> # TODO: make the number of years a calibration input argument instead of hardcoding
-        dplyr::summarise(
-          period      = paste0("years_",paste0(range(.data$year), collapse="_to_")),
-          GPP_mod     = mean(.data$GPP_mod),
-          LAI_mod     = stats::quantile(.data$LAI_mod, probs = 0.95, na.rm=TRUE),
-          Density_mod = mean(.data$Density12_mod), # TODO: some hardcoded renames
-          Biomass_mod = mean(.data$plantC_mod)     # TODO: some hardcoded renames
-        ) |>
-        # b) P-model: get growing season average traits
-        # dplyr::summarise(across(ends_with("_mod") & !starts_with('gpp'),
-        #                         ~ sum(.x * .data$gpp_mod/sum(.data$gpp_mod)),
-        #                         .names = "{.col}")) |>
+        # do this conditionally:
+        # source for conditional code: https://stackoverflow.com/a/76792390
+        {\(.) if(curr_model == "biomee") {. |>
+          # a) BiomeE: Aggregate variables from the model mod taking the last 500 yrs if spun up
+            dplyr::slice_tail(n = max(0, 500-spinup_years)) |> # TODO: make the number of years a calibration input argument instead of hardcoding
+            dplyr::summarise(
+              period      = paste0("years_",paste0(range(.data$year), collapse="_to_")),
+              GPP_mod     = mean(.data$GPP_mod),
+              LAI_mod     = stats::quantile(.data$LAI_mod, probs = 0.95, na.rm=TRUE),
+              Density_mod = mean(.data$Density12_mod), # TODO: some hardcoded renames
+              Biomass_mod = mean(.data$plantC_mod)     # TODO: some hardcoded renames
+            )
+          }else if(curr_model == "p-model"){. |>
+          # b) P-model: get growing season average traits
+            dplyr::summarise(across(ends_with("_mod") & !starts_with('gpp'),
+                                ~ sum(.x * .data$gpp_mod/sum(.data$gpp_mod)),
+                                .names = "{.col}"))
+          }else{
+            stop("Arguments 'curr_model' must be either 'biomee' or 'p-model'")
+          }
+        }() |>
+        # end of conditional do
         dplyr::left_join(
           obs_df_trait,
           by = c('sitename')        # compare yearly averages rather than daily obs

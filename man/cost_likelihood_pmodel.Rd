@@ -15,28 +15,39 @@ cost_likelihood_pmodel(
 )
 }
 \arguments{
-\item{par}{A vector of values for the parameters to be calibrated, including
-a subset of model parameters (described in \code{\link{runread_pmodel_f}}),
-in order, and error terms
-for each target variable (for example \code{'gpp_err'}), in the same order as
-the targets appear in \code{targets}.}
+\item{par}{A named vector of values for the parameters that are being calibrated, 
+consisiting of
+   - parameters for the error model for each target variable (for example \code{'err_gpp'})
+   - parameters for the model (described in \code{\link{runread_pmodel_f}}), 
+Parameters from 'par' replace either global parameters (specified in argument 'par')
+of the function \code{\link{runread_pmodel_f}} or then site-specific 
+parameters defined in the driver data.frame.
+Note that the same parameters are applied globally to all sites in the driver 
+data.frame.
+Note that parameters for the error model of each target must correspond to the 
+argument `targets0`}
 
 \item{obs}{A nested data.frame of observations, with columns \code{'sitename'}
-and \code{'data'} (see \code{\link{p_model_validation}} or \code{\link{p_model_validation_vcmax25}}
+and \code{'data'} (see \code{\link{p_model_validation}}, 
+\code{\link{p_model_validation_vcmax25}}, or \code{\link{biomee_validation}}
 to check their structure).}
 
-\item{drivers}{A nested data.frame of driver data. See \code{\link{p_model_drivers}}
-for a description of the data structure.}
+\item{drivers}{A nested data.frame of driver data.
+See\code{\link{p_model_drivers}}, \code{\link{biomee_gs_leuning_drivers}}, 
+\code{\link{biomee_p_model_drivers}}, and \code{\link{p_model_drivers_vcmax25}}, 
+or p_hydro_drivers for a description of the data structure.}
 
 \item{targets}{A character vector indicating the target variables for which the
 optimization will be done. This string must be a available in both model output
 and validation data set.
-name of the \code{data} data.frame belonging to the validation nested data.frame 
-(for example 'gpp').}
+name of the \code{data} data.frame belonging to the 'obs' data.frame 
+(for example 'gpp').
+TODO: specify how time-variable and constant observations are used.}
 
 \item{par_fixed}{A named list of model parameter values to keep fixed during the
 calibration. These should complement the input \code{par} such that all model
-parameters are passed on to \code{\link{runread_pmodel_f}}.}
+parameters are passed on to \code{\link{runread_pmodel_f}}.
+Note that in BiomeE these must be NULL.}
 
 \item{parallel}{A logical specifying whether simulations are to be parallelised
 (sending data from a certain number of sites to each core). Defaults to
@@ -84,6 +95,23 @@ Alternatively (without time information), the predicted value is aggregated
 (e.g at steady state or the GPP-weighted average of acclimatized leaf traits (e.g. Vcmax25)).
 }
 \examples{
+# Compute the likelihood for a set of
+# model parameter values for biomee:
+# and example data
+cost_likelihood_biomee(          # reuse likelihood cost function
+ par = c(                        # must be named
+   # BiomeE model params:
+   phiRL     = 3.5,
+   LAI_light = 3.5,
+   tf_base   = 1,
+   par_mort  = 1,
+   # error model params
+   err_GPP   = 0.5
+ ),
+ obs     = biomee_validation,
+ drivers = biomee_gs_leuning_drivers,
+ targets = c('GPP')
+)
 # Compute the likelihood for a set of
 # model parameter values involved in the
 # temperature dependence of kphio
