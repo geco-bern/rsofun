@@ -77,6 +77,7 @@ cost_rmse_pmodel <- function(
     parallel = FALSE,
     ncores = 2
 ){
+  # TODO: refactor cost_rmse_pmodel() using cost_likelihood_generic()
   
   # predefine variables for CRAN check compliance
   sitename <- data <- gpp_mod <- NULL

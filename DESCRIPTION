@@ -56,12 +56,14 @@ Imports:
     BayesianTools,
     multidplyr,
     stats,
-    utils
+    utils,
+    rlang,
+    stringr
 LazyData: true
 LazyDataCompression: xz
 ByteCompile: true
 NeedsCompilation: yes
-RoxygenNote: 7.3.1
+RoxygenNote: 7.3.2
 Suggests:
     covr,
     rcmdcheck,

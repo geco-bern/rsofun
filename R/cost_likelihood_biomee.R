@@ -1,113 +1,140 @@
-#' Log-likelihood cost function for BiomeE with different targets
+#' Log-likelihood cost function for BiomeE-model with different targets
+
 #' 
-#' Cost function for parameter calibration, which
-#' computes the log-likelihood for the biomee model fitting several target 
-#' variables for a given set of parameters.
+#' The cost function performs a BiomeE-model run for the input drivers and model parameter
+#' values, and computes the outcome's log-likelihood (ll).
+#' Separate observational error models are defined for each target variable.
+#' Default (and currently only option) is to assume the observational error 
+#' to be normally distributed centered around the model output
+#' and with standard deviation given as a calibratable input parameter (named as 
+#' 'err_\[target\]').
 #' 
-#' @param par A vector containing parameter values for \code{'phiRL',
-#' 'LAI_light', 'tf_base', 'par_mort'} in that order, and for the error terms
-#' corresponding to the target variables, e.g. \code{'err_GPP'} if GPP is a target. 
-#' Make sure that
-#' the order of the error terms in \code{par} coincides with the order provided in
-#' the \code{targets} argument.
-#' @param obs A nested data frame of observations, following the structure of \code{biomee_validation},
-#' for example.
-#' @param drivers A nested data frame of driver data, for example \code{biomee_gs_leuning_drivers}.
+#' @param par A named vector of values for the parameters that are being calibrated, 
+#' consisiting of
+#'    - parameters for the error model for each target variable (for example \code{'err_gpp'})
+#'    - parameters for the model (described in \code{\link{runread_pmodel_f}}), 
+#' Parameters from 'par' replace either global parameters (specified in argument 'par')
+#' of the function \code{\link{runread_pmodel_f}} or then site-specific 
+#' parameters defined in the driver data.frame.
+#' Note that the same parameters are applied globally to all sites in the driver 
+#' data.frame.
+#' Note that parameters for the error model of each target must correspond to the 
+#' argument `targets0`
+#' 
+#' @param obs A nested data.frame of observations, with columns \code{'sitename'}
+#' and \code{'data'} (see \code{\link{p_model_validation}}, 
+#' \code{\link{p_model_validation_vcmax25}}, or \code{\link{biomee_validation}}
+#' to check their structure).
+#' @param drivers A nested data.frame of driver data.
+#' See\code{\link{p_model_drivers}}, \code{\link{biomee_gs_leuning_drivers}}, 
+#' \code{\link{biomee_p_model_drivers}}, and \code{\link{p_model_drivers_vcmax25}}, 
+#' or p_hydro_drivers for a description of the data structure.
 #' @param targets A character vector indicating the target variables for which the
-#' optimization will be done. This should be a subset of \code{c("GPP", "LAI",
-#' "Density", "Biomass")}.
+#' optimization will be done. This string must be a available in both model output
+#' and validation data set.
+#' This should be a subset of \code{c("GPP", "LAI", "Density", "Biomass")}.
+#' #' TODO: specify how time-variable and constant observations are used.
+#' @param par_fixed A named list of model parameter values to keep fixed during the
+#' calibration. These should complement the input \code{par} such that all model
+#' parameters are passed on to \code{\link{runread_biomee_f}}.
+#' Note that in BiomeE these must be NULL.
+#' @param parallel A logical specifying whether simulations are to be parallelised
+#' (sending data from a certain number of sites to each core). Defaults to
+#' \code{FALSE}.
+#' @param ncores An integer specifying the number of cores used for parallel
+#' computing. Defaults to 2.
 #' 
-#' @return The log-likelihood of the simulated 
-#' targets by the biomee model versus the observed targets. 
+#' @return The log-likelihood of the observed target values, for a given error 
+#' model and parameter set. 
+#' The default error model assumes that observed target values are independent,
+#' normally distributed, centered at the model predictions and with parametrized
+#' standard deviation given as input (via `par` since this/these error model 
+#' parameter(s) are also estimated with `BayesianTools`. See BayesianTools' 
+#' "Parameter calibration and cost functions" vignette.).
 #' 
-#' @details The cost function performs a BiomeE model run for the value of
-#' \code{par} given as argument. The likelihood is calculated assuming that the 
-#' predicted targets are independent, normally distributed and centered on the observations. 
-#' The optimization 
-#' should be run using \code{BayesianTools}, so the likelihood is maximized.
+#' @details The cost function performs a model run for the value of
+#' \code{par} given as argument. 
+#' These parameters must define all model parameters needed to run.
+#' The optimization maximizes the likelihood and can be  be run using \code{BayesianTools}.
+#' 
+#' Multiple observation types can be simultaneously calibrated, provided an error model is given for each of them. 
+#' Observational data can be constant (observed tratits) or time-varying (observed fluxes/states).
+#' This is distinguished by the presence of time information (i.e. a column named 'date')
+#' in the observational data.frame \code{obs} (i.e. in the nested column 'data' from a single row \code{obs}). 
+#' (For BiomeE this is not yet implemented.)
+#' Thus to calibrate simultaneously to constant and time-varying observations of
+#' a single (or multiple) site, each site must be repeated in the observation data
+#' \code{obs}.
+#' 
+#' Then the modelled time series (fluxes, states, or variable leaf traits)
+#' is compared to the observed values on those same dates (e.g. for GPP). 
+#' Alternatively (without time information), the predicted value is aggregated 
+#' (e.g at steady state or the GPP-weighted average of acclimatized leaf traits (e.g. Vcmax25)).
 #' 
 #' @export
+#' @importFrom stringr str_replace_all
 #' 
 #' @examples
-#' \donttest{
 #' # Compute the likelihood for a set of
-#' # BiomeE model parameter values
-#' # and the example data
-#' cost_likelihood_biomee(
-#'  par = c(3.5, 3.5, 1, 1,    # model params
-#'          0.5),              # err_GPP
-#'  obs = biomee_validation,
+#' # model parameter values for biomee:
+#' # and example data
+#' cost_likelihood_biomee(          # reuse likelihood cost function
+#'  par = c(                        # must be named
+#'    # BiomeE model params:
+#'    phiRL     = 3.5,
+#'    LAI_light = 3.5,
+#'    tf_base   = 1,
+#'    par_mort  = 1,
+#'    # error model params
+#'    err_GPP   = 0.5
+#'  ),
+#'  obs     = biomee_validation,
 #'  drivers = biomee_gs_leuning_drivers,
-#'  targets = c("GPP")
+#'  targets = c('GPP')
 #' )
-#' }
+#' @examples
+#' # Compute the likelihood for a set of
+#' # model parameter values involved in the
+#' # temperature dependence of kphio
+#' # and example data
+#' cost_likelihood_pmodel(          # reuse likelihood cost function
+#'  par = c(                        # must be named
+#'    # P-model params
+#'    kphio       = 0.05,
+#'    kphio_par_a = -0.01,
+#'    kphio_par_b = 1.0,
+#'    # error model params
+#'    err_gpp     = 2.0
+#'  ),
+#'  obs     = p_model_validation,   # example data from package
+#'  drivers = p_model_drivers,
+#'  targets = c("gpp"),
+#'  par_fixed = c(
+#'   soilm_thetastar    = 0.6 * 240,# to recover old setup with soil moisture stress
+#'   soilm_betao        = 0.0,
+#'   beta_unitcostratio = 146.0,
+#'   rd_to_vcmax        = 0.014,    # value from Atkin et al. 2015 for C3 herbaceous
+#'   tau_acclim         = 30.0,
+#'   kc_jmax            = 0.41
+#'  )
+#' )
 
 cost_likelihood_biomee <- function(
-  par,
+  par,   # model parameters & error terms for each target
   obs,
   drivers,
-  targets
+  targets,
+  par_fixed = NULL,   # non-calibrated model parameters
+  parallel = FALSE,
+  ncores = 2
 ){
-  
-  # predefine variables for CRAN check compliance
-  GPP <- LAI <- Density12 <- plantC <- error <- NULL
-  
-  # Add changed model parameters to drivers, overwriting where necessary.
-  drivers$params_species[[1]]$phiRL[]  <- par[1]
-  drivers$params_species[[1]]$LAI_light[]  <- par[2]
-  drivers$params_tile[[1]]$tf_base <- par[3]
-  drivers$params_tile[[1]]$par_mort <- par[4]
-
-  # run model
-  df <- runread_biomee_f(
-    drivers,
-    makecheck = TRUE,
-    parallel = FALSE
-  )
-  
-  # did we spin up
-  spin_up <- drivers$params_siml[[1]]$spinup
-  
-  # drop spinup years if activated
-  # see below
-  if (spin_up){
-    spin_up_years <- drivers$params_siml[[1]]$spinupyears + 1
-  } else {
-    spin_up_years <- 0
-  }
-  
-  # Aggregate variables from the model df taking the last 500 yrs
-  # if spun up
-  df <- df$data[[1]]$output_annual_tile |>
-    utils::tail(500 - spin_up_years) |>
-    dplyr::summarise(
-      GPP = mean(GPP),
-      LAI = stats::quantile(LAI, probs = 0.95, na.rm=TRUE),
-      Density = mean(Density12),
-      Biomass = mean(plantC)
-    )
-  
-  # reshuffle observed data
-  col_names <- obs$data[[1]]$variables
-  obs <- data.frame(t(obs$data[[1]]$targets_obs))
-  colnames(obs) <- col_names
-  
-  # calculate the log likelihood, loop over targets
-  ll <- lapply(seq(length(targets)), function(i){
-    target <- targets[i]
-    BayesianTools::likelihoodIidNormal(
-      predicted = df[[target]],
-      observed = obs[[target]],
-      sd = par[4+i]
-    )
-  }) |>
-    unlist() |>
-    sum()     # sum log-likelihoods
-              
-  # trap boundary conditions
-  if(is.nan(ll) || is.na(ll) | ll == 0){
-    ll <- -Inf
-  }
-  
-  return(ll)
+  cost_likelihood_generic(
+    par        = par,
+    obs        = obs,
+    drivers    = drivers,
+    targets    = targets,
+    par_fixed  = par_fixed,
+    parallel   = parallel,
+    ncores     = ncores,
+    curr_model = "biomee")
 }
