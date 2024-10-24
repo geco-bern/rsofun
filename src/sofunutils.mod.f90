@@ -66,10 +66,11 @@ contains
       valbuf(1:ndayyear) = 0.0
       effective_window_length = MIN(window_length, inow)
       if (effective_window_length <= 0) then
-        stop("Negative effective window lenght is not allowed.")
+        ! Negative effective window lenght is not allowed. We set 0 so that the computation of the mean will fail.
+        effective_window_length = 0
       end if
     end if
-    valbuf(ndayyear + 1, 2 * ndayyear) = presval
+    valbuf(ndayyear + 1 : 2 * ndayyear) = presval
 
     runningval = sum(valbuf(idx_start:idx_end))
 
