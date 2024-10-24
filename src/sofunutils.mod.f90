@@ -38,13 +38,13 @@ contains
     ! Returns running sum/average of a window of length 'window_length'
     ! and whose last element is the 'inow' item of 'presval'.
     ! If provided, 'prevval' contains the values for the previous year used for padding.
-    ! Otherwise 'presval' is used for padding.
+    ! Otherwise no padding is used.
     !-------------------------------------------------------------------------
     ! arguments
     real, dimension(ndayyear), intent(in) :: presval          ! Vector containing values for present year
-    integer, intent(in) :: inow                               ! Index corresponding to "now" (day of year in present year). Negative values are allowed.
+    integer, intent(in) :: inow                               ! Index corresponding to "now" (day of year in present year). Negative values are allowed wihen prevval is provided.
     integer, intent(in) :: window_length                      ! Window length
-    character(len=*), intent(in) :: method                    ! Either "sum" (default) or "mean" for running sum or running mean
+    character(len=*), intent(in) :: method                    ! Either "sum" or "mean" for running sum or running mean
     real, dimension(ndayyear), optional, intent(in):: prevval ! Vector containing values for the previous year
 
     ! local variables
@@ -52,24 +52,29 @@ contains
 
     ! function return variable
     real :: runningval
-    integer :: idx_start, idx_end
+    integer :: idx_start, idx_end, effective_window_length
+
+    ! Initialize indexes
+    idx_end = ndayyear + inow
+    idx_start = idx_end - window_length
 
     ! Initialization of the buffer
     if (present(prevval)) then
       valbuf(1:ndayyear) = prevval
+      effective_window_length = window_length
     else
-      valbuf(1:ndayyear) = presval
+      valbuf(1:ndayyear) = 0.0
+      effective_window_length = MIN(window_length, inow)
+      if (effective_window_length <= 0) then
+        stop("Negative effective window lenght is not allowed.")
+      end if
     end if
     valbuf(ndayyear + 1, 2 * ndayyear) = presval
 
-    ! Setting start and end indexes
-    idx_end = ndayyear + inow
-    idx_start = idx_end - window_length
+    runningval = sum(valbuf(idx_start:idx_end))
 
     if (method == "mean") then
-      runningval = sum(valbuf(idx_start:idx_end))/window_length
-    else
-      runningval = sum(valbuf(idx_start:idx_end))
+      runningval = runningval/effective_window_length
     end if
 
   end function running
