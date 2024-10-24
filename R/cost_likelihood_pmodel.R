@@ -180,8 +180,11 @@ cost_likelihood_generic <- function(
   }
 
   #### 4) Combine modelled predictions and observed variables
-  pred_obs_df <- likelihoodHelper_assemble_pred_obs(curr_model, model_out_full, obs, targets, 
-                                                 updated$drivers) # TODO: remove updated_drivers
+  # drop spinup years if activated # TODO: (currently this removal is deactivated) can we get rid of this?
+  spinup_years <- ifelse(updated$drivers$params_siml[[1]]$spinup,          
+                         updated$drivers$params_siml[[1]]$spinupyears + 1, # TODO: why plus 1?
+                         0) 
+  pred_obs_df <- likelihoodHelper_assemble_pred_obs(curr_model, model_out_full, targets, obs, spinup_years)
 
   #### 5) Compute log-likelihood
   ll <- likelihoodHelper_compute_default_loglikelihood(pred_obs_df = pred_obs_df, 
@@ -190,6 +193,8 @@ cost_likelihood_generic <- function(
 
   return(ll)
 }
+
+
 
 # Helper functions for cost_likelihood_generic()
 likelihoodHelper_update_model_parameters <- function(curr_model, par, par_fixed, drivers){
@@ -411,16 +416,182 @@ likelihoodHelper_update_model_parameters <- function(curr_model, par, par_fixed,
               par_error        = par_error))
 }
 
-likelihoodHelper_assemble_pred_obs <- function(curr_model, model_out_full, obs, targets, updated_drivers){ # TODO: remove updated_drivers
+likelihoodHelper_assemble_pred_obs <- function(
+    curr_model = c("biomee", "p-model"), 
+    model_out_full, 
+    targets, 
+    obs, 
+    spinup_years){
+  
+  match.arg(curr_model, several.ok = FALSE)
+    
   #### 4) Combine modelled and observed variables
   
-  #### 4a) POSTPROCESS model output
-    # possible P-model outputs:
-    # model_out_full$data[[1]] |> tibble()                       # daily forest-specific output :    date, year_dec, properties/fluxes/states/...
-    # possible BiomeE-model outputs:
-    # model_out_full$data[[1]]$output_daily_tile |> tibble()     # daily forest-specific output :         year, doy, properties/fluxes/states/...
-    # model_out_full$data[[1]]$output_annual_tile |> tibble()    # annual forest-specific output:         year,      properties/fluxes/states/...
-    # model_out_full$data[[1]]$output_annual_cohorts |> tibble() # cohort-specific output       : cohort, year,      properties/fluxes/states/...
+  #### 4a) PREPROCESS model output
+  pred_long <- likelihoodHelper2_get_long_model_output_for_targets(curr_model, model_out_full, targets)
+  # NOTE: 'pred_long' is now a grouped data.frame containing daily (p-model) or yearly (BiomeE) output 
+  # and the following columns:
+  #   - ID cols (p-model: sitename, date, year_dec;
+  #              BiomeE:  sitename, year)
+  #   - and columns 'variables' and 'pred' 
+  
+  # drop spinup years in pred_long # TODO: (currently this removal is deactivated) can we get rid of this?
+  if(curr_model == "biomee"){
+    # drop spinup years if activated
+    pred_long <- pred_long #|>
+    # group_by(.data$sitename)|> # TODO: ensure the filtering is per site
+    # filter(year > spinup_years) |> # TODO: fix how spinup years are filtered
+    # TODO: fix this. Do we really need to remove the spinupyears? Aren't they already removed in the fortran code?
+    # TODO: fix this. Do we really need to remove the spinupyears? Aren't they already removed in the fortran code?
+  }else if(curr_model == "p-model"){
+    # TODO: if needed add spinup removal to p-model as well...
+  }
+  
+  #### 4b) PREPROCESS observation data
+  obs_long <- likelihoodHelper2_pivot_longer_obs(curr_model, obs, targets)
+  # NOTE: 'obs_long' is a list of two long dataframes: `traits` and `timeseries`
+  # example formats:
+  # > obs_long$timeseries # p-model
+     #   sitename date       variables targets_obs
+     #   <chr>    <date>     <chr>           <dbl>
+     # 1 FR-Pue   2007-01-01 gpp             2.21 
+     # 2 FR-Pue   2007-01-02 gpp             2.23 
+     # 3 FR-Pue   2007-01-03 gpp             2.48 
+     # 4 FR-Pue   2007-01-04 gpp             1.71 
+     # 5 FR-Pue   2007-01-05 gpp             2.61 
+     # 6 FR-Pue   2007-01-06 gpp             2.85 
+  # > obs_long$traits # p-model
+    # A tibble: 8 × 4
+    # # Rowwise:  sitename
+    #   sitename             variables   targets_obs targets_aggreg      
+    #   <chr>                <chr>             <dbl> <chr>               
+    # 1 Reichetal_Colorado   vcmax25       0.0000339 gpp-weighted-average
+    # 2 Reichetal_Colorado   vcmax25_unc   0.0000136 gpp-weighted-average
+    # 3 Reichetal_New_Mexico vcmax25       0.0000757 gpp-weighted-average
+    # 4 Reichetal_New_Mexico vcmax25_unc   0.0000163 gpp-weighted-average
+    # 5 Reichetal_Venezuela  vcmax25       0.0000472 gpp-weighted-average
+    # 6 Reichetal_Venezuela  vcmax25_unc   0.0000164 gpp-weighted-average
+    # 7 Reichetal_Wisconsin  vcmax25       0.0000502 gpp-weighted-average
+    # 8 Reichetal_Wisconsin  vcmax25_unc   0.0000147 gpp-weighted-average
+  # > obs_long$timeseries # biomee-model
+    if(nrow(obs_long$timeseries)>0 && curr_model == "biomee"){browser()}
+    # TODO: currently unused
+  # > obs_long$traits      # biomee-model
+    # # A tibble: 4 × 4
+    # # Rowwise: 
+    #   sitename variables targets_obs targets_aggreg        
+    #   <chr>    <chr>           <dbl> <chr>                 
+    # 1 CH-Lae   gpp              1.86 500year_average       
+    # 2 CH-Lae   LAI              6.49 500year_95thpercentile
+    # 3 CH-Lae   Density12      296.   500year_average       
+    # 4 CH-Lae   plantC          44.5  500year_average     
+  #### 4c) JOIN observed and modelled data
+  # i) timeseries
+  if(ncol(obs_long$timeseries) < 4){
+    warning("Dated observations (fluxes/states) are missing for the chosen targets.")
+    pred_obs_df_timeseries <- data.frame()
+  }else{
+    # Join model output and timeseries observations
+    pred_obs_df_timeseries <- pred_long |>
+      dplyr::rename('targets_pred' = 'pred') |>
+      dplyr::select(!'gpp_weights') |>
+      dplyr::inner_join(
+        obs_long$timeseries,
+        by = c('sitename', 'date', 'variables')) # observations with missing date are ignored
+  }
+  # ii) traits
+  if(ncol(obs_long$traits) < 4){
+    warning("Non-dated observations (traits) are missing for the chosen targets.")
+    pred_obs_df_traits <- data.frame()
+  }else{
+    # Join model output and trait observations
+    pred_obs_df_traits <- pred_long |>
+      # only keep variables from pred_long for which we have observations
+      dplyr::inner_join(obs_long$traits,
+                        by = dplyr::join_by('sitename', 'variables')) |>
+      dplyr::group_by(.data$sitename, .data$variables, .data$targets_obs, .data$targets_aggreg)
+      
+    if(curr_model == "p-model") {
+      pred_obs_df_traits <- pred_obs_df_traits |>
+        # compute required statistics of daily model output:
+        # P-model: get growing season average traits
+        dplyr::summarise(.groups = "keep",
+          period       = paste0("years_",paste0(range(.data$year_dec), collapse="_to_")),
+          targets_pred = dplyr::case_when(
+            dplyr::first(targets_aggreg) == "gpp-weighted-average" ~ sum(.data$pred * .data$gpp_weights/sum(.data$gpp_weights)),
+            .default                                               = mean(.data$pred))
+        )
+    }else if(curr_model == "biomee"){
+      pred_obs_df_traits <- pred_obs_df_traits |>
+        # compute required statistics of yearly model output:
+        # BiomeE: Aggregate variables from the model pred_long taking the last 500 yrs if spun up
+        dplyr::slice_tail(n = max(0, 500-spinup_years)) |> # TODO: make the number of years a calibration input argument instead of hardcoding
+        dplyr::summarise(.groups = "keep",
+          period      = paste0("years_",paste0(range(.data$year), collapse="_to_")),
+          targets_pred = dplyr::case_when(
+            dplyr::first(targets_aggreg) == "500year_average"        ~ mean(.data$pred),
+            dplyr::first(targets_aggreg) == "500year_95thpercentile" ~ stats::quantile(.data$pred, probs = 0.95, na.rm=TRUE),
+            .default                                                 = mean(.data$pred)
+          ))
+    }else{
+      stop("Arguments 'curr_model' must be either 'biomee' or 'p-model'")
+    }
+  }
+
+  # example formats:
+  # > pred_obs_df_timeseries # p-model
+      # # A tibble: 2,190 × 6
+      # # Groups:   sitename, date, year_dec [2,190]
+      #    sitename date       year_dec variables targets_pred targets_obs
+      #    <chr>    <date>        <dbl> <chr>            <dbl>       <dbl>
+      #  1 FR-Pue   2007-01-01    2007  gpp              1.69        2.21 
+      #  2 FR-Pue   2007-01-02    2007. gpp              2.75        2.23 
+      #  3 FR-Pue   2007-01-03    2007. gpp              2.81        2.48 
+      #  4 FR-Pue   2007-01-04    2007. gpp              1.31        1.71 
+      #  5 FR-Pue   2007-01-05    2007. gpp              2.96        2.61 
+  # > pred_obs_df_traits # p-model
+      # # A tibble: 4 × 6
+      # # Groups:   sitename, variables, targets_obs, targets_aggreg [4]
+      #   sitename             variables targets_obs targets_aggreg       period                 targets_pred
+      #   <chr>                <chr>           <dbl> <chr>                <chr>                         <dbl>
+      # 1 Reichetal_Colorado   vcmax25     0.0000339 gpp-weighted-average years_2001_to_2001.997   0.000158  
+      # 2 Reichetal_New_Mexico vcmax25     0.0000757 gpp-weighted-average years_2001_to_2001.997   0.0000698 
+      # 3 Reichetal_Venezuela  vcmax25     0.0000472 gpp-weighted-average years_2001_to_2001.997   0.00000884
+      # 4 Reichetal_Wisconsin  vcmax25     0.0000502 gpp-weighted-average years_2001_to_2001.997   0.0000784 
+  # > pred_obs_df_timeseries # biomee-model
+      # TODO: currently unused
+  # > pred_obs_df_traits      # biomee-model
+      # # A tibble: 4 × 6
+      # # Groups:   sitename, variables, targets_obs, targets_aggreg [4]
+      #   sitename variables targets_obs targets_aggreg         period         targets_pred
+      #   <chr>    <chr>           <dbl> <chr>                  <chr>                 <dbl>
+      # 1 CH-Lae   Density12      296.   500year_average        years_3_to_251       0     
+      # 2 CH-Lae   LAI              6.49 500year_95thpercentile years_3_to_251       0.0493
+      # 3 CH-Lae   gpp              1.86 500year_average        years_3_to_251       0.0138
+      # 4 CH-Lae   plantC          44.5  500year_average        years_3_to_251       0.0537
+
+  # prepare combination (harmonize column names):
+  df1 <- pred_obs_df_traits |> dplyr::mutate(date = as.Date(NA), year_dec = NA_real_) |> 
+    dplyr::select(dplyr::any_of(c('sitename', 'targets_aggreg', 'period',
+                                  'date', 'year_dec', # TODO: homogenize between p-model and BiomeE and remove any_of()-relaxation (this is only p-model).
+                                  'target' = 'variables', 'targets_obs', 'targets_pred')))
+  df2 <- pred_obs_df_timeseries |> dplyr::mutate(targets_aggreg = 'timeseries', period = NA_character_) |>
+    dplyr::select(dplyr::any_of(c('sitename', 'targets_aggreg', 'period',
+                                  'date', 'year_dec', # TODO: homogenize between p-model and BiomeE and remove any_of()-relaxation (this is only p-model).
+                                  'target' = 'variables', 'targets_obs', 'targets_pred')))
+  pred_obs_df <- tidyr::tibble(dplyr::bind_rows(df1, df2))
+  
+  return(pred_obs_df)
+}
+
+likelihoodHelper2_get_long_model_output_for_targets <- function(curr_model, model_out_full, targets){
+  ## INTRO
+  # possible P-model outputs:
+  # model_out_full$data[[1]] |> tibble()                       # daily forest-specific output :    date, year_dec, properties/fluxes/states/...
+  # possible BiomeE-model outputs:
+  # model_out_full$data[[1]]$output_daily_tile |> tibble()     # daily forest-specific output :         year, doy, properties/fluxes/states/...
+  # model_out_full$data[[1]]$output_annual_tile |> tibble()    # annual forest-specific output:         year,      properties/fluxes/states/...
+  # model_out_full$data[[1]]$output_annual_cohorts |> tibble() # cohort-specific output       : cohort, year,      properties/fluxes/states/...
   ## clean model output and unnest
   if(curr_model == "biomee"){
     mod_out_allthree <- model_out_full |>
@@ -444,9 +615,9 @@ likelihoodHelper_assemble_pred_obs <- function(curr_model, model_out_full, obs, 
       tidyr::unnest('biomee_output_annual_tile') |>
       # keep only needed target model outputs:
       dplyr::group_by(across(all_of(id_cols_biomee_output_annual_tile))) 
-      # NOTE: we make pred a grouped data.frame so that the grouping variables
-      #       (which vary between p-model and BiomeE-model) 
-      #       are kept through select() and pivot_longer()
+    # NOTE: we make pred a grouped data.frame so that the grouping variables
+    #       (which vary between p-model and BiomeE-model) 
+    #       are kept through select() and pivot_longer()
   }else if(curr_model == "p-model"){
     id_cols_pmodel_output_daily_tile     <- c('sitename', 'date', 'year_dec')   
     
@@ -479,283 +650,106 @@ likelihoodHelper_assemble_pred_obs <- function(curr_model, model_out_full, obs, 
     dplyr::mutate(gpp_weights = .data$gpp) |> 
     tidyr::pivot_longer(cols = !c(dplyr::group_cols(), 'gpp_weights'), 
                         names_to = 'variables', values_to = 'pred')
-  rm(pred_wide)
-  # NOTE:
-  # 'pred_long' is now a grouped data.frame containing daily (p-model) or yearly (BiomeE) output 
-  # and the following columns:
-  #   - ID cols (p-model: sitename, date, year_dec;
-  #              BiomeE:  sitename, year)
-  #   - and columns 'variables' and 'pred' 
+  return(pred_long)
+}
+likelihoodHelper2_pivot_longer_obs <- function(curr_model, obs, targets){
   
-  if(curr_model == "biomee"){
-    # drop spinup years if activated
-    if (updated_drivers$params_siml[[1]]$spinup){
-      spinup_years <- updated_drivers$params_siml[[1]]$spinupyears + 1 # TODO: why plus 1?
-    } else {
-      spinup_years <- 0
-    }
-    pred_long <- pred_long #|>
-    # group_by(.data$sitename)|> # TODO: ensure the filtering is per site
-    # filter(year > spinup_years) |> # TODO: fix how spinup years are filtered
-    # TODO: fix this. Do we really need to remove the spinupyears? Aren't they already removed in the fortran code?
-    # TODO: fix this. Do we really need to remove the spinupyears? Aren't they already removed in the fortran code?
-  }else if(curr_model == "p-model"){
-    # TODO: if needed add spinup removal to p-model as well...
-  }else{
-    stop("Arguments 'curr_model' must be either 'biomee' or 'p-model'")
-  }
-
-
-  #### 4b) PREPROCESS observation data
-  #### 4c) JOIN observed and modelled data # TODO: split this more clearly from 4b
-  # separate validation data into sites containing
+  # separate observational validation data into sites containing
   # time series (fluxes/states) and sites containing constants (traits)
   obs_row_is_timeseries <- apply(obs, 1, function(x){ 'date' %in% colnames(x$data)})
   obs_row_is_trait <- !obs_row_is_timeseries
   timeseries_sites <- obs[obs_row_is_timeseries, ][['sitename']] # individual sites can be part of both
   trait_sites      <- obs[!obs_row_is_timeseries, ][['sitename']] # individual sites can be part of both
-                                                              # NOTE: to have an individual site in both:
-                                                              # obs must contain a row where data contains a data.frame with column 'date'
-                                                              #              and a row where data contains a data.frame without column 'date'
-  if(sum(obs_row_is_timeseries) > 0){
-    if(curr_model == "biomee"){
-      # TODO: for BiomeE currently no timeseries calibration is implemented
-      mod_df_timeseries <- data.frame()
-    }else if(curr_model == "p-model"){
-      # Unnest timeseries observations for our targets
-      obs_timeseries <- obs[obs_row_is_timeseries, ] |>
-        dplyr::select('sitename', 'data') |>
-        tidyr::unnest('data') |>
-        dplyr::select(any_of(c('sitename', 'date', targets))) |> # NOTE: any_of silently drops unavailable targets, hence 'targets' can contain timeseries as well as traits without erroring.
-        dplyr::rename_with(~paste0(.x, '_obs'),
-                          .cols = -c('sitename', 'date'))
-      # TODO: redo time series 
-      obs_timeseries_new <- obs[obs_row_is_timeseries, ] |>
-        dplyr::select('sitename', 'data') |>
-        tidyr::unnest('data') |>
-        dplyr::select(any_of(c('sitename', 'date', targets))) |> # NOTE: any_of silently drops unavailable targets, hence 'targets' can contain timeseries as well as traits without erroring.
-        tidyr::pivot_longer(cols = !c('sitename', 'date'), 
-                            names_to = 'variables', values_to = 'targets_obs')
-      # TODO: end time series
-      if(ncol(obs_timeseries) < 3 || ncol(obs_timeseries_new) < 4){
-        warning("Dated observations (fluxes/states) are missing for the chosen targets.")
-        mod_df_timeseries <- data.frame()
-        mod_df_timeseries_new <- data.frame()
-      }else{
-        # Join model output and timeseries observations
-        mod_previous <- pred_long |> tidyr::pivot_wider(names_from = 'variables', values_from = 'pred') |> dplyr::rename_with(~paste0(.x, '_mod'), .cols = !dplyr::group_cols()) # to recover previous mod_previous:
-        mod_df_timeseries <- mod_previous |>
-          dplyr::filter(.data$sitename %in% timeseries_sites) |>
-          dplyr::left_join(
-            obs_timeseries,
-            by = c('sitename', 'date')) # observations with missing date are ignored
-        # TODO: redo time series 
-        mod_df_timeseries_new <- pred_long |>
-          dplyr::rename('targets_pred' = 'pred') |>
-          dplyr::select(!'gpp_weights') |>
-          dplyr::filter(.data$sitename %in% timeseries_sites) |>
-          dplyr::inner_join(
-            obs_timeseries_new,
-            by = c('sitename', 'date', 'variables')) # observations with missing date are ignored
-        # TODO: end time series
-        
-      }
-    }else{
-      stop("Arguments 'curr_model' must be either 'biomee' or 'p-model'")
-    }
-  }else{
-    mod_df_timeseries <- data.frame()
-    mod_df_timeseries_new <- data.frame()
-  }
+  # NOTE: to have an individual site in both:
+  # obs must contain a row where data contains a data.frame with column 'date'
+  #              and a row where data contains a data.frame without column 'date'
+  
   # TODO: homogenize format rsofun::biomee_validation with rsofun::p_model_validation_vcmax25
   #       for pmodel it is a wide data structure, and for biomee it is a long data structure
-        # rsofun::p_model_validation |> tidyr::unnest(data)
-            #  # A tibble: 2,190 × 4
-            #   sitename date         gpp gpp_unc
-            #   <chr>    <date>     <dbl>   <dbl>
-            # 1 FR-Pue   2007-01-01 2.21  0.0108 
-            # 2 FR-Pue   2007-01-02 2.23  0.00475
-            # 3 FR-Pue   2007-01-03 2.48  0.00727
-            # 4 FR-Pue   2007-01-04 1.71  0.00516
-        # rsofun::p_model_validation_vcmax25 |> tidyr::unnest(data)
-            # # A tibble: 4 × 3
-            # # Groups:   sitename [4]
-            # # A tibble: 4 × 3
-            # # Groups:   sitename [4]
-            #   sitename               vcmax25 vcmax25_unc
-            #   <chr>                    <dbl>       <dbl>
-            # 1 Reichetal_Colorado   0.0000339   0.0000136
-            # 2 Reichetal_New_Mexico 0.0000757   0.0000163
-            # 3 Reichetal_Venezuela  0.0000472   0.0000164
-            # 4 Reichetal_Wisconsin  0.0000502   0.0000147
-        # rsofun::biomee_validation |> tidyr::unnest(data)
-            #     sitename variables targets_obs
-            #   <chr>    <chr>           <dbl>
-            # 1 CH-Lae   GPP              1.86
-            # 2 CH-Lae   LAI              6.49
-            # 3 CH-Lae   Density        296.
-            # 4 CH-Lae   Biomass         44.5
+  # rsofun::p_model_validation |> tidyr::unnest(data)
+  #  # A tibble: 2,190 × 4
+  #   sitename date         gpp gpp_unc
+  #   <chr>    <date>     <dbl>   <dbl>
+  # 1 FR-Pue   2007-01-01 2.21  0.0108 
+  # 2 FR-Pue   2007-01-02 2.23  0.00475
+  # 3 FR-Pue   2007-01-03 2.48  0.00727
+  # 4 FR-Pue   2007-01-04 1.71  0.00516
+  # rsofun::p_model_validation_vcmax25 |> tidyr::unnest(data)
+  # # A tibble: 4 × 3
+  # # Groups:   sitename [4]
+  #   sitename               vcmax25 vcmax25_unc
+  #   <chr>                    <dbl>       <dbl>
+  # 1 Reichetal_Colorado   0.0000339   0.0000136
+  # 2 Reichetal_New_Mexico 0.0000757   0.0000163
+  # 3 Reichetal_Venezuela  0.0000472   0.0000164
+  # 4 Reichetal_Wisconsin  0.0000502   0.0000147
+  # rsofun::biomee_validation |> tidyr::unnest(data)
+  #     sitename variables targets_obs
+  #   <chr>    <chr>           <dbl>
+  # 1 CH-Lae   GPP              1.86
+  # 2 CH-Lae   LAI              6.49
+  # 3 CH-Lae   Density        296.
+  # 4 CH-Lae   Biomass         44.5
+  
+  # i) timeseries
+  if(sum(obs_row_is_timeseries) > 0){
+    # Unnest timeseries observations for our targets
+    obs_long_timeseries <- obs[obs_row_is_timeseries, ] |>
+      # make a long data.frame containing: sitename, variables, targets_obs
+      dplyr::select('sitename', 'data') |> tidyr::unnest('data') |>
+      dplyr::select(any_of(c('sitename', 'date', targets))) |> # NOTE: any_of silently drops unavailable targets, hence 'targets' can contain timeseries as well as traits without erroring.
+      tidyr::pivot_longer(cols = !c('sitename', 'date'), 
+                          names_to = 'variables', values_to = 'targets_obs')
+    
+    if(curr_model == "biomee"){
+      # TODO: for BiomeE currently no timeseries calibration is implemented
+      obs_long_timeseries <- data.frame()
+    }
+  }else{
+    obs_long_timeseries <- data.frame()
+  }
+  
+  # ii) traits
   if(sum(obs_row_is_trait) > 0){
     # Unnest trait observations for our targets
-    obs_df_trait <- obs[obs_row_is_trait, ] |>
-      dplyr::select('sitename', 'data') |>
-      tidyr::unnest('data') |>
-      # do this conditionally: # TODO: this is only needed for BiomeE model (see comment on wide/long data structure above)
-      # source for conditional code: https://stackoverflow.com/a/76792390
-      {\(.) if (curr_model == "biomee") tidyr::pivot_wider(., values_from='targets_obs', names_from='variables') else . }() |> 
-      # end of conditional do
-      dplyr::select(any_of(c('sitename', targets))) |> # NOTE: any_of silently drops unavailable targets, hence 'targets' can contain timeseries as well as traits without erroring.
-      dplyr::rename_with(~paste0(.x, '_obs'), .cols = -c('sitename'))
-
-    if(ncol(obs_df_trait) < 2){
-      warning("Non-dated observations (traits) are missing for the chosen targets.")
-      mod_df_trait <- data.frame()
-      mod_df_trait_new <- data.frame()
-    }else{
-      # Join model output and trait observations
-      # Derive constants form model output (traits)
-      mod_previous <- pred_long |> tidyr::pivot_wider(names_from = 'variables', values_from = 'pred') |> dplyr::rename_with(~paste0(.x, '_mod'), .cols = !dplyr::group_cols()) # to recover previous mod_previous:
-      mod_df_trait <- mod_previous |>
-        dplyr::filter(.data$sitename %in% trait_sites) |>
-        dplyr::group_by(.data$sitename) |>
-        # do this conditionally:
-        # source for conditional code: https://stackoverflow.com/a/76792390
-        {\(.) if(curr_model == "biomee") {. |>
-          # a) BiomeE: Aggregate variables from the model pred_long taking the last 500 yrs if spun up
-            dplyr::slice_tail(n = max(0, 500-spinup_years)) |> # TODO: make the number of years a calibration input argument instead of hardcoding
-            dplyr::summarise(.groups = "keep", 
-              period      = paste0("years_",paste0(range(.data$year), collapse="_to_")),
-              gpp_mod     = mean(.data$gpp_mod),
-              LAI_mod     = stats::quantile(.data$LAI_mod, probs = 0.95, na.rm=TRUE),
-              Density_mod = mean(.data$Density12_mod), # TODO: some hardcoded renames
-              Biomass_mod = mean(.data$plantC_mod)     # TODO: some hardcoded renames
-            )
-          }else if(curr_model == "p-model"){. |>
-          # b) P-model: get growing season average traits
-            dplyr::summarise(.groups = "keep", 
-                             across(ends_with("_mod") & !starts_with('gpp'),
-                                    ~ sum(.x * .data$gpp_weights_mod/sum(.data$gpp_weights_mod)),
-                                    .names = "{.col}"))
-          }else{
-            stop("Arguments 'curr_model' must be either 'biomee' or 'p-model'")
-          }
-        }() |>
-        # end of conditional do
-        dplyr::left_join(
-          obs_df_trait,
-          by = c('sitename')        # compare yearly averages rather than daily obs
-        )
-      
-      # TODO: redo for both      
-      obs_df_trait_new <- obs[obs_row_is_trait, ] |>
-        # make a long data.frame containing: sitename, variables, targets_obs
-        dplyr::select('sitename', 'data') |> tidyr::unnest('data') |>
-        # TODO: fix input for p-model. To harmonize it with BiomeE:
-        {\(.) if(curr_model == "p-model") {tidyr::pivot_longer(., cols = !'sitename', names_to = 'variables', values_to = 'targets_obs')}else{.}}() |>
-        # add information on time and aggregation for traits: TODO, this is currently hardcoded for some example input.
-        #                                                     TODO: in the future column 'targets_aggreg' should be provided as part of obs                                                              
-        # TODO: rename GPP to gpp # TODOTODO
-        dplyr::rowwise() |> dplyr::mutate(variables = stringr::str_replace_all(.data$variables, c("GPP"="gpp"))) |>
-        {\(.) if(curr_model == "p-model") {. |>
-            dplyr::mutate(targets_aggreg = dplyr::case_when(
-              variables=="vcmax25" ~ "gpp-weighted-average",
-              .default             = "gpp-weighted-average"))
-          }else if(curr_model == "biomee"){. |>
-            dplyr::mutate(targets_aggreg = dplyr::case_when(
-              variables=="gpp"     ~ "500year_average",
-              variables=="GPP"     ~ "500year_average",
-              variables=="LAI"     ~ "500year_95thpercentile",
-              variables=="Density" ~ "500year_average",
-              variables=="Biomass" ~ "500year_average",
-              .default             = "500year_average")) |>
-              # TODO: remove below, once the renaming of variables in rsofun::biomee_validation is fixed
-              dplyr::mutate(variables = dplyr::case_when(
-                variables == "Density"~"Density12",
-                variables == "Biomass"~"plantC",
-                TRUE ~ variables))
-          }else{
-            stop("Arguments 'curr_model' must be either 'biomee' or 'p-model'")
-          }
-        }()
-      
-      mod_df_trait_new <- pred_long |>
-        # only keep variables from pred_long for which we have observations
-        dplyr::inner_join(obs_df_trait_new,
-                          by = dplyr::join_by('sitename', 'variables')) |>
-        dplyr::group_by(.data$sitename, .data$variables, .data$targets_obs, .data$targets_aggreg)
-        
-      if(curr_model == "p-model") {
-        mod_df_trait_new <- mod_df_trait_new |>
-          # compute required statistics of daily model output:
-          # P-model: get growing season average traits
-          dplyr::summarise(.groups = "keep",
-            period       = paste0("years_",paste0(range(.data$year_dec), collapse="_to_")),
-            targets_pred = dplyr::case_when(
-              dplyr::first(targets_aggreg) == "gpp-weighted-average" ~ sum(.data$pred * .data$gpp_weights/sum(.data$gpp_weights)),
-              .default                                               = mean(.data$pred))
-          )
-      }else if(curr_model == "biomee"){
-        mod_df_trait_new <- mod_df_trait_new |>
-          # compute required statistics of yearly model output:
-          # BiomeE: Aggregate variables from the model pred_long taking the last 500 yrs if spun up
-          dplyr::slice_tail(n = max(0, 500-spinup_years)) |> # TODO: make the number of years a calibration input argument instead of hardcoding
-          dplyr::summarise(.groups = "keep",
-            period      = paste0("years_",paste0(range(.data$year), collapse="_to_")),
-            targets_pred = dplyr::case_when(
-              dplyr::first(targets_aggreg) == "500year_average"        ~ mean(.data$pred),
-              dplyr::first(targets_aggreg) == "500year_95thpercentile" ~ stats::quantile(.data$pred, probs = 0.95, na.rm=TRUE),
-              .default                                                 = mean(.data$pred)
-            ))
+    obs_long_traits <- obs[obs_row_is_trait, ] |>
+      # make a long data.frame containing: sitename, variables, targets_obs
+      dplyr::select('sitename', 'data') |> tidyr::unnest('data') |>
+      # TODO: fix input for p-model. To harmonize it with BiomeE:
+      {\(.) if(curr_model == "p-model") {tidyr::pivot_longer(., cols = !'sitename', names_to = 'variables', values_to = 'targets_obs')}else{.}}() |>
+      # add information on time and aggregation for traits: TODO, this is currently hardcoded for some example input.
+      #                                                     TODO: in the future column 'targets_aggreg' should be provided as part of obs                                                              
+      # TODO: rename GPP to gpp # TODOTODO
+      dplyr::rowwise() |> dplyr::mutate(variables = stringr::str_replace_all(.data$variables, c("GPP"="gpp"))) |>
+      {\(.) if(curr_model == "p-model") {. |>
+          dplyr::mutate(targets_aggreg = dplyr::case_when(
+            variables=="vcmax25" ~ "gpp-weighted-average",
+            .default             = "gpp-weighted-average"))
+      }else if(curr_model == "biomee"){. |>
+          dplyr::mutate(targets_aggreg = dplyr::case_when(
+            variables=="gpp"     ~ "500year_average",
+            variables=="GPP"     ~ "500year_average",
+            variables=="LAI"     ~ "500year_95thpercentile",
+            variables=="Density" ~ "500year_average",
+            variables=="Biomass" ~ "500year_average",
+            .default             = "500year_average")) |>
+          # TODO: remove below, once the renaming of variables in rsofun::biomee_validation is fixed
+          dplyr::mutate(variables = dplyr::case_when(
+            variables == "Density"~"Density12",
+            variables == "Biomass"~"plantC",
+            TRUE ~ variables))
       }else{
         stop("Arguments 'curr_model' must be either 'biomee' or 'p-model'")
       }
-      # TODO: END redo for both
-      # TODO: compare:
-        # > mod_df_trait
-        # # A tibble: 1 × 7
-        #   sitename period         GPP_mod LAI_mod Density_mod Biomass_mod GPP_obs
-        #   <chr>    <chr>            <dbl>   <dbl>       <dbl>       <dbl>   <dbl>
-        # 1 CH-Lae   years_3_to_251  0.0138  0.0493           0      0.0537    1.86
-        # > mod_df_trait_new
-        # # A tibble: 4 × 5
-        # # Groups:   sitename, variables, targets_obs [4]
-        #   sitename variables targets_obs targets_aggreg         targets_pred
-        #   <chr>    <chr>           <dbl> <chr>                            <dbl>
-        # 1 CH-Lae   Density12      296.   500year_average                 0     
-        # 2 CH-Lae   GPP              1.86 500year_average                 0.0138
-        # 3 CH-Lae   LAI              6.49 500year_95thpercentile          0.0493
-        # 4 CH-Lae   plantC          44.5  500year_average                 0.0537
-    }
+      }()
   }else{
-    mod_df_trait <- data.frame()
-    mod_df_trait_new <- data.frame()
+    obs_long_traits <- data.frame()
   }
   
-  pred_obs_df <- dplyr::bind_rows(
-    #                        with mutate add columns that stem from the other
-    mod_df_trait_new      |> dplyr::mutate(date = as.Date(NA), year_dec = NA_real_),
-    mod_df_timeseries_new |> dplyr::mutate(targets_aggreg = 'timeseries', period = NA_character_)
-    ) |> 
-    tidyr::tibble()
-  if(curr_model == "p-model") {
-    pred_obs_df <- pred_obs_df |>
-      dplyr::select('sitename', 'targets_aggreg', 
-                    'period_aggreg' = 'period', 'date', 'year_dec', 
-                    'target'        = 'variables', 
-                    tidyr::everything())
-  }else if(curr_model == "biomee"){
-    pred_obs_df <- pred_obs_df |>
-      dplyr::select('sitename', 'targets_aggreg', 
-                    'period_aggreg' = 'period',     # TODO: homogenize between p-model and BiomeE
-                    'target'        = 'variables', 
-                    tidyr::everything())
-  }else{
-    stop("Arguments 'curr_model' must be either 'biomee' or 'p-model'")
-  }
-  
-  return(pred_obs_df)
+  # return long data.frames
+  return(list(traits     = obs_long_traits,
+              timeseries = obs_long_timeseries))
 }
-
 likelihoodHelper_compute_default_loglikelihood <- function(pred_obs_df, targets, par_error, flag_single_value = TRUE){
   # TODO: change this approach to another one based on a long data.frame containing
   # columns for 'sitename', 'variables', 'error_model', 'obs_value', 'pred_value'
