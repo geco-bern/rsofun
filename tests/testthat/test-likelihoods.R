@@ -2,7 +2,6 @@ context("test P-model and BiomeE likelihood frameworks")
 set.seed(10)
 
 test_that("test likelihood calculations", {
-  library(BayesianTools)
   # par_cal_best <- c(
   #   kphio              = 0.09423773,
   #   kphio_par_a        = -0.0025,
@@ -39,6 +38,7 @@ test_that("test likelihood calculations", {
   #   kc_jmax            = 0.8,
   #   err_gpp          = 4
   # )
+  # library(BayesianTools) # for prior sampling
   # prior <- createUniformPrior(lower = par_cal_min, upper = par_cal_max, best = par_cal_best)
   # test_params_pmodel <- prior$sampler(4) |> as.data.frame() |>
   #   stats::setNames(nm = names(par_cal_min))
