@@ -277,35 +277,8 @@ contains
     nt_annual,                    &    
     nt_annual_cohorts,            &    
     forcing,                      &     
-    ! output_hourly_tile,           &
+    steps_per_day,                & ! Forcing resolution
     output_daily_tile,            &
-    ! output_daily_cohorts_year,    &
-    ! output_daily_cohorts_doy,     &
-    ! output_daily_cohorts_hour,    &
-    ! output_daily_cohorts_cID,     &
-    ! output_daily_cohorts_PFT,     &
-    ! output_daily_cohorts_layer,   &
-    ! output_daily_cohorts_density, &
-    ! output_daily_cohorts_f_layer, &
-    ! output_daily_cohorts_LAI,     &
-    ! output_daily_cohorts_gpp,     &
-    ! output_daily_cohorts_resp,    &
-    ! output_daily_cohorts_transp,  &
-    ! output_daily_cohorts_NPPleaf, &
-    ! output_daily_cohorts_NPProot, &
-    ! output_daily_cohorts_NPPwood, &
-    ! output_daily_cohorts_NSC,     &
-    ! output_daily_cohorts_seedC,   &
-    ! output_daily_cohorts_leafC,   &
-    ! output_daily_cohorts_rootC,   &
-    ! output_daily_cohorts_SW_C,    &
-    ! output_daily_cohorts_HW_C,    &
-    ! output_daily_cohorts_NSN,     &
-    ! output_daily_cohorts_seedN,   &
-    ! output_daily_cohorts_leafN,   &
-    ! output_daily_cohorts_rootN,   &
-    ! output_daily_cohorts_SW_N,    &
-    ! output_daily_cohorts_HW_N,    &
     output_annual_tile,           &
     output_annual_cohorts_year,   &
     output_annual_cohorts_cID,    &
@@ -352,7 +325,6 @@ contains
     use md_params_siml_biomee, only: getsteering
     ! use md_params_soil_biomee, only: getsoil
     use md_forcing_biomee, only: getclimate, &
-      getco2, &
       climate_type
     use md_interface_biomee, only: interfacetype_biosphere, &
       myinterface, &
@@ -427,36 +399,7 @@ contains
     ! input and output arrays (naked) to be passed back to C/R
     real(kind=c_double), dimension(nt,13), intent(in) :: forcing
 
-    ! real(kind=c_double), dimension(nt,nvars_hourly_tile), intent(out) :: output_hourly_tile ! nvars_hourly_tile = 15
-    real(kind=c_double), dimension(nt_daily,nvars_daily_tile), intent(out) :: output_daily_tile ! nvars_daily_tile = 35    
-
-    ! real(kind=c_double), dimension(nt_daily,out_max_cohorts), intent(out) :: output_daily_cohorts_year
-    ! real(kind=c_double), dimension(nt_daily,out_max_cohorts), intent(out) :: output_daily_cohorts_doy
-    ! real(kind=c_double), dimension(nt_daily,out_max_cohorts), intent(out) :: output_daily_cohorts_hour
-    ! real(kind=c_double), dimension(nt_daily,out_max_cohorts), intent(out) :: output_daily_cohorts_cID
-    ! real(kind=c_double), dimension(nt_daily,out_max_cohorts), intent(out) :: output_daily_cohorts_PFT
-    ! real(kind=c_double), dimension(nt_daily,out_max_cohorts), intent(out) :: output_daily_cohorts_layer
-    ! real(kind=c_double), dimension(nt_daily,out_max_cohorts), intent(out) :: output_daily_cohorts_density
-    ! real(kind=c_double), dimension(nt_daily,out_max_cohorts), intent(out) :: output_daily_cohorts_f_layer
-    ! real(kind=c_double), dimension(nt_daily,out_max_cohorts), intent(out) :: output_daily_cohorts_LAI
-    ! real(kind=c_double), dimension(nt_daily,out_max_cohorts), intent(out) :: output_daily_cohorts_gpp
-    ! real(kind=c_double), dimension(nt_daily,out_max_cohorts), intent(out) :: output_daily_cohorts_resp
-    ! real(kind=c_double), dimension(nt_daily,out_max_cohorts), intent(out) :: output_daily_cohorts_transp
-    ! real(kind=c_double), dimension(nt_daily,out_max_cohorts), intent(out) :: output_daily_cohorts_NPPleaf
-    ! real(kind=c_double), dimension(nt_daily,out_max_cohorts), intent(out) :: output_daily_cohorts_NPProot
-    ! real(kind=c_double), dimension(nt_daily,out_max_cohorts), intent(out) :: output_daily_cohorts_NPPwood
-    ! real(kind=c_double), dimension(nt_daily,out_max_cohorts), intent(out) :: output_daily_cohorts_NSC
-    ! real(kind=c_double), dimension(nt_daily,out_max_cohorts), intent(out) :: output_daily_cohorts_seedC
-    ! real(kind=c_double), dimension(nt_daily,out_max_cohorts), intent(out) :: output_daily_cohorts_leafC
-    ! real(kind=c_double), dimension(nt_daily,out_max_cohorts), intent(out) :: output_daily_cohorts_rootC
-    ! real(kind=c_double), dimension(nt_daily,out_max_cohorts), intent(out) :: output_daily_cohorts_SW_C
-    ! real(kind=c_double), dimension(nt_daily,out_max_cohorts), intent(out) :: output_daily_cohorts_HW_C
-    ! real(kind=c_double), dimension(nt_daily,out_max_cohorts), intent(out) :: output_daily_cohorts_NSN
-    ! real(kind=c_double), dimension(nt_daily,out_max_cohorts), intent(out) :: output_daily_cohorts_seedN
-    ! real(kind=c_double), dimension(nt_daily,out_max_cohorts), intent(out) :: output_daily_cohorts_leafN
-    ! real(kind=c_double), dimension(nt_daily,out_max_cohorts), intent(out) :: output_daily_cohorts_rootN
-    ! real(kind=c_double), dimension(nt_daily,out_max_cohorts), intent(out) :: output_daily_cohorts_SW_N
-    ! real(kind=c_double), dimension(nt_daily,out_max_cohorts), intent(out) :: output_daily_cohorts_HW_N
+    real(kind=c_double), dimension(nt_daily,nvars_daily_tile), intent(out) :: output_daily_tile ! nvars_daily_tile = 35
 
     real(kind=c_double), dimension(nt_annual,nvars_annual_tile), intent(out) :: output_annual_tile ! nvars_annual_tile = 51
 
@@ -506,8 +449,6 @@ contains
     integer                 :: yr
     
     integer :: idx
-    ! integer :: idx_hourly_start
-    ! integer :: idx_hourly_end
     integer :: idx_daily_start
     integer :: idx_daily_end
 
@@ -675,13 +616,7 @@ contains
     !----------------------------------------------------------------
     ! INTERPRET FORCING
     !----------------------------------------------------------------
-    timestep   = real(forcing(2,3)) - real(forcing(1,3))  ! This takes the hour of day (a numeric) from the forcing file
-    timestep_d = real(forcing(2,2)) - real(forcing(1,2))  ! This takes the day of year (a numeric) from the forcing file
-    if (abs(timestep) < eps .and. abs(timestep_d - 1.0) < eps) then
-      ! forcing is daily
-      timestep = 24.0
-    end if
-    myinterface%steps_per_day = int(24.0/timestep)
+    myinterface%steps_per_day = steps_per_day
     myinterface%dt_fast_yr = 1.0/(365.0 * myinterface%steps_per_day)
     myinterface%step_seconds = 24.0*3600.0/myinterface%steps_per_day ! seconds_per_year * dt_fast_yr
     ntstepsyear = myinterface%steps_per_day * 365
@@ -705,7 +640,6 @@ contains
                                             ntstepsyear, &
                                             forcing, &
                                             myinterface%steering%climateyear_idx &
-                                            ! myinterface%steering%climateyear &
                                             )
 
       !----------------------------------------------------------------
@@ -713,7 +647,6 @@ contains
       !----------------------------------------------------------------
       call biosphere_annual( &
         out_biosphere_daily_tile, &
-        ! out_biosphere_daily_cohorts, &
         out_biosphere_annual_tile, &
         out_biosphere_annual_cohorts &
         )
@@ -831,41 +764,8 @@ contains
 
     deallocate(myinterface%climate)
     deallocate(myinterface%pco2)
-    ! deallocate(out_biosphere_hourly_tile)
  
   end subroutine biomee_f
-
-  ! !////////////////////////////////////////////////////////////////
-  ! ! Populates hourly tile-level output array passed back to C and R.
-  ! !----------------------------------------------------------------
-  ! subroutine populate_outarray_hourly_tile( hourly_tile, out_hourly_tile ) !, idx_daily_start, idx_daily_end
-
-  !   use, intrinsic :: iso_fortran_env, dp=>real64, sp=>real32, in=>int32
-  !   use md_interface_biomee, only: outtype_hourly_tile
-  !   use md_params_core
-
-  !   ! arguments
-  !   type(outtype_hourly_tile), dimension(ntstepsyear), intent(in) :: hourly_tile    ! dimension(ntstepsyear)
-  !   real(kind=dp), dimension(ntstepsyear, nvars_hourly_tile), intent(inout) :: out_hourly_tile
-
-  !   out_hourly_tile(:, 1)  = dble(hourly_tile(:)%year)
-  !   out_hourly_tile(:, 2)  = dble(hourly_tile(:)%doy)
-  !   out_hourly_tile(:, 3)  = dble(hourly_tile(:)%hour)
-  !   out_hourly_tile(:, 4)  = dble(hourly_tile(:)%rad)
-  !   out_hourly_tile(:, 5)  = dble(hourly_tile(:)%Tair)
-  !   out_hourly_tile(:, 6)  = dble(hourly_tile(:)%Prcp)
-  !   out_hourly_tile(:, 7)  = dble(hourly_tile(:)%GPP)
-  !   out_hourly_tile(:, 8)  = dble(hourly_tile(:)%Resp)
-  !   out_hourly_tile(:, 9)  = dble(hourly_tile(:)%Transp)
-  !   out_hourly_tile(:, 10) = dble(hourly_tile(:)%Evap)
-  !   out_hourly_tile(:, 11) = dble(hourly_tile(:)%Runoff)
-  !   out_hourly_tile(:, 12) = dble(hourly_tile(:)%Soilwater)
-  !   out_hourly_tile(:, 13) = dble(hourly_tile(:)%wcl)
-  !   out_hourly_tile(:, 14) = dble(hourly_tile(:)%FLDCAP)
-  !   out_hourly_tile(:, 15) = dble(hourly_tile(:)%WILTPT)
-
-  ! end subroutine populate_outarray_hourly_tile
-
 
   !////////////////////////////////////////////////////////////////
   ! Populates daily tile-level output array passed back to C and R.

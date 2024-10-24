@@ -42,6 +42,7 @@ params_siml <- tibble(
   recycle = 1,
   firstyeartrend = 2009,
   nyeartrend = 1,
+  steps_per_day = 24,
   outputhourly = TRUE,
   outputdaily = TRUE,
   do_U_shaped_mortality = TRUE,
@@ -185,12 +186,11 @@ forcing <- forcingLAE %>%
   rename(month=`lubridate::month(datehour)`,day=`lubridate::day(datehour)`) %>%
   ungroup()
 forcing <- forcing %>%
-  rename(year=YEAR, doy= DOY, hour=HOUR, par=PAR, ppfd=Swdown, temp=TEMP, temp_soil=SoilT, rh=RH,
-         prec=RAIN, wind=WIND, patm=PRESSURE, co2=aCO2_AW, swc=SWC) %>%
+  rename(hour=HOUR, ppfd=Swdown, temp=TEMP, temp_soil=SoilT, vpd=vpd,
+         prec=RAIN, wind=WIND, patm=PRESSURE, co2=aCO2_AW) %>%
   mutate(snow=NA,vpd=NA, ccov_int=NA,ccov=NA,
-         date = make_date(year,month,day)) %>% 
-  select(-c(month,day)) %>%
-  relocate(date,year,doy,hour,temp,temp_soil,prec,snow,vpd,rh,ppfd,par,patm,wind,ccov_int,ccov,co2,swc)
+         date = make_date(year,month,day)) %>%
+  select(date,temp,prec,vpd,ppfd,patm,wind,co2,)
 #forcing <- bind_rows(replicate(2, forcing, simplify = FALSE))
 
 biomee_gs_leuning_drivers <- tibble(
@@ -219,12 +219,11 @@ forcing <- forcingLAE %>%
   rename(month=`lubridate::month(datehour)`,day=`lubridate::day(datehour)`) %>%
   ungroup()
 forcing <- forcing %>%
-  rename(year=YEAR, doy= DOY, hour=HOUR, par=PAR, ppfd=Swdown, temp=TEMP, temp_soil=SoilT, rh=RH,
-         prec=RAIN, wind=WIND, patm=PRESSURE, co2=aCO2_AW, swc=SWC) %>%
+  rename(hour=HOUR, ppfd=Swdown, temp=TEMP, temp_soil=SoilT, vpd=vpd,
+         prec=RAIN, wind=WIND, patm=PRESSURE, co2=aCO2_AW) %>%
   mutate(snow=NA,vpd=NA, ccov_int=NA,ccov=NA,
-         date = make_date(year,month,day)) %>% 
-  select(-c(month,day)) %>%
-  relocate(date,year,doy,hour,temp,temp_soil,prec,snow,vpd,rh,ppfd,par,patm,wind,ccov_int,ccov,co2,swc)
+         date = make_date(year,month,day)) %>%
+  select(date,temp,prec,vpd,ppfd,patm,wind,co2)
 #forcing <- bind_rows(replicate(2, forcing, simplify = FALSE))
 
 biomee_p_model_drivers <- tibble(

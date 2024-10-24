@@ -43,8 +43,6 @@ module md_params_core
   integer, parameter, dimension(npft) :: pft_end   = 1
 
   integer, parameter, dimension(nmonth)   :: ndaymonth = (/31,28,31,30,31,30,31,31,30,31,30,31/) ! number of days per month
-  integer, parameter, dimension(nmonth+1) :: middaymonth = (/16,44,75,105,136,166,197,228,258,289,319,350,381/) ! day of year of middle-month-day
-  integer, parameter, dimension(nmonth)   :: cumdaymonth = (/31,59,90,120,151,181,212,243,273,304,334,365/)
 
   real, parameter :: pi = 3.14159265359          ! pi - what else?
   real, parameter :: c_molmass = 12.0107         ! g C / mol C

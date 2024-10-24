@@ -14,15 +14,12 @@ module md_biosphere_biomee
   private
   public biosphere_annual
 
-  type(vegn_tile_type), pointer :: vegn   
-  ! type(soil_tile_type),  pointer :: soil
-  ! type(cohort_type),     pointer :: cx, cc
+  type(vegn_tile_type), pointer :: vegn
 
 contains
 
   subroutine biosphere_annual( &
     out_biosphere_daily_tile, &
-    ! out_biosphere_daily_cohorts, &
     out_biosphere_annual_tile, &
     out_biosphere_annual_cohorts &
     )
@@ -31,32 +28,26 @@ contains
     !----------------------------------------------------------------
     use md_interface_biomee, only: myinterface, &
       outtype_daily_tile, &
-      ! outtype_daily_cohorts, &
       outtype_annual_tile, &
       outtype_annual_cohorts
     use md_gpp_biomee, only: getpar_modl_gpp
 
     ! return variables
     type(outtype_daily_tile),     dimension(ndayyear)                , intent(out) :: out_biosphere_daily_tile
-    ! type(outtype_daily_cohorts),  dimension(ndayyear,out_max_cohorts), intent(out) :: out_biosphere_daily_cohorts
     type(outtype_annual_tile)                                        , intent(out) :: out_biosphere_annual_tile
     type(outtype_annual_cohorts), dimension(out_max_cohorts)         , intent(out) :: out_biosphere_annual_cohorts
 
     ! ! local variables
-    integer :: dm, moy, doy
+    integer :: moy, doy
     logical, save :: init  ! is true only on the first day of the simulation
-    ! logical, parameter :: verbose = .false.       ! change by hand for debugging etc.
 
     !----------------------------------------------------------------
     ! Biome-E stuff
     !----------------------------------------------------------------
     real    :: tsoil, soil_theta
-    integer :: i
-    integer :: idata
-    !integer :: nfrequency ! disturbances
+    integer :: hod
     integer :: simu_steps !, datalines
     integer, save :: iyears
-    integer, save :: idays
     integer, save :: idoy
 
     !----------------------------------------------------------------
@@ -82,7 +73,6 @@ contains
 
       iyears = 1
       idoy   = 0
-      idays  = 0
       init = .true.
 
     endif
@@ -92,15 +82,13 @@ contains
     !----------------------------------------------------------------
     ! LOOP THROUGH MONTHS
     !----------------------------------------------------------------
-    doy = 0
     monthloop: do moy=1,nmonth
 
       !----------------------------------------------------------------
       ! LOOP THROUGH DAYS
       !----------------------------------------------------------------
-      dayloop: do dm=1,ndaymonth(moy)
-        
-        doy = doy + 1
+      dayloop: do doy=1,ndaymonth(moy)
+
         idoy = idoy + 1
 
         ! print*,'----------------------'
@@ -112,20 +100,20 @@ contains
         !----------------------------------------------------------------
         ! get daily mean temperature from hourly/half-hourly data
         vegn%Tc_daily = 0.0
-        tsoil         = 0.0
-        fastloop: do i = 1,myinterface%steps_per_day
+        fastloop: do hod = 1,myinterface%steps_per_day
 
-          idata         = simu_steps + 1
-          vegn%Tc_daily = vegn%Tc_daily + myinterface%climate(idata)%Tair
-          tsoil         = myinterface%climate(idata)%tsoil
           simu_steps    = simu_steps + 1
+          vegn%Tc_daily = vegn%Tc_daily + myinterface%climate(simu_steps)%Tair
+          tsoil = air_to_soil_temp(myinterface%climate(:)%dtemp - kTkelvin, &
+                  doy &
+                  ) + kTkelvin
 
           !----------------------------------------------------------------
           ! Sub-daily time step at resolution given by forcing (can be 1 = daily)
           !----------------------------------------------------------------
-          call vegn_CNW_budget( vegn, myinterface%climate(idata), init )
+          call vegn_CNW_budget( vegn, myinterface%climate(simu_steps), init, tsoil )
          
-          call hourly_diagnostics( vegn, myinterface%climate(idata) )
+          call hourly_diagnostics( vegn, myinterface%climate(simu_steps) )
          
           init = .false.
          
@@ -137,7 +125,6 @@ contains
         ! Daily calls after fast loop
         !-------------------------------------------------
         vegn%Tc_daily = vegn%Tc_daily / myinterface%steps_per_day
-        tsoil         = tsoil / myinterface%steps_per_day
         soil_theta    = vegn%thetaS
 
         ! sum over fast time steps and cohorts

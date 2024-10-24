@@ -249,7 +249,7 @@ contains
           par_memory(layer) = dampen_variability(par, params_gpp%tau_acclim, par_memory(layer))
         end if
 
-        if (cc%status == LEAF_ON .and. forcing%PAR > 0.0) then
+        if (cc%status == LEAF_ON) then
 
           !----------------------------------------------------------------
           ! P-model call for C3 plants to get a list of variables that are 

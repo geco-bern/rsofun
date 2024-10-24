@@ -60,7 +60,7 @@ contains
 
     ! local variables
     integer :: idx_start, idx_end
-    integer, dimension(2) :: shape_forcing
+    ! integer, dimension(2) :: shape_forcing
 
     ! function return variable
     type( climate_type ), dimension(ndayyear) :: out_climate
@@ -69,10 +69,10 @@ contains
     idx_end   = idx_start + ndayyear - 1
     
     ! Test if forcing dimensions are correct
-    shape_forcing = shape(forcing)
-    if (idx_end > shape_forcing(1)) then
+    ! shape_forcing = shape(forcing)
+    ! if (idx_end > shape_forcing(1)) then
       ! stop 'forcing array size does not have enough rows.'
-    end if
+    ! end if
 
     ! warning: column indices in forcing array are hard coded
     out_climate(:)%dtemp   = real(forcing(idx_start:idx_end, 1))

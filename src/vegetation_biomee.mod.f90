@@ -25,7 +25,7 @@ contains
   !============= Carbon, nitrogen and water budget    =====================
   !========================================================================
 
-  subroutine vegn_CNW_budget( vegn, forcing, init )
+  subroutine vegn_CNW_budget( vegn, forcing, init, tsoil )
     !////////////////////////////////////////////////////////////////
     ! hourly carbon, nitrogen, and water dynamics, Weng 2016-11-25
     ! include Nitrogen uptake and carbon budget
@@ -38,16 +38,14 @@ contains
     type(climate_type), intent(in) :: forcing
     ! is true on the very first simulation day (first subroutine call of each gridcell)
     logical, intent(in) :: init
+    real, intent(in) :: tsoil
 
     ! local variables
     type(cohort_type), pointer :: cc  
     integer:: i
-    real   :: tair, tsoil  ! temperature of soil, degC
     real   :: theta        ! soil wetness, unitless
 
     ! Climatic variable
-    tair   = forcing%Tair - 273.16   ! conversion to degC
-    tsoil  = forcing%tsoil - 273.16  ! conversion to degC
     theta  = (vegn%wcl(2) - WILTPT) / (FLDCAP - WILTPT)
 
     ! Photosynsthesis
@@ -81,10 +79,10 @@ contains
     enddo ! all cohorts
     
     ! update soil carbon
-    call SOMdecomposition( vegn, forcing%tsoil, theta )
+    call SOMdecomposition( vegn, tsoil, theta )
     
     ! Nitrogen uptake
-    call vegn_N_uptake( vegn, forcing%tsoil )
+    call vegn_N_uptake( vegn, tsoil )
     
   end subroutine vegn_CNW_budget
 

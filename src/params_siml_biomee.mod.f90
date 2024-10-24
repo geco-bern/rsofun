@@ -20,6 +20,7 @@ module md_params_siml_biomee
     logical :: do_spinup       ! whether this simulation does spinup 
     integer :: runyears        ! number of years of entire simulation (spinup+transient)
     logical :: is_calib
+    integer :: steps_per_day   ! number of steps per day (day^-1)
 
     ! integer :: model_run_years
     logical :: outputhourly
@@ -87,30 +88,16 @@ contains
         ! during spinup
         out_steering%spinup = .true.
         out_steering%forcingyear = params_siml%firstyeartrend
-        out_steering%forcingyear_idx = 1
-        cycleyear = get_cycleyear( year, params_siml%spinupyears, params_siml%recycle )
-        out_steering%climateyear = cycleyear + params_siml%firstyeartrend - 1
-        out_steering%climateyear_idx = cycleyear
-
-        ! xxx consistency check
         out_steering%forcingyear_idx = MOD(year - 1, params_siml%recycle) + 1
-        out_steering%forcingyear     = out_steering%forcingyear_idx + params_siml%firstyeartrend - 1
-
-        out_steering%climateyear_idx = MOD(year - 1, params_siml%recycle) + 1
-        out_steering%climateyear     = out_steering%climateyear_idx + params_siml%firstyeartrend - 1
-
       else  
         ! during transient simulation
         ! TODO xxx Change to MOD in order to run longer transient years
         out_steering%spinup          = .false.
-        out_steering%forcingyear_idx =  year - params_siml%spinupyears 
-        out_steering%forcingyear     =  out_steering%forcingyear_idx + params_siml%firstyeartrend - 1
-
-        ! constant climate year not specified
-        out_steering%climateyear     = out_steering%forcingyear
-        out_steering%climateyear_idx = out_steering%forcingyear_idx
-      
+        out_steering%forcingyear_idx =  year - params_siml%spinupyears
       endif
+      out_steering%forcingyear     = out_steering%forcingyear_idx + params_siml%firstyeartrend - 1
+      out_steering%climateyear     = out_steering%forcingyear
+      out_steering%climateyear_idx = out_steering%forcingyear_idx
       out_steering%outyear = year + params_siml%firstyeartrend - params_siml%spinupyears - 1
 
       if ( year > 3 ) then
@@ -151,7 +138,7 @@ contains
       out_steering%forcingyear_idx = year
       out_steering%climateyear = out_steering%forcingyear
       out_steering%climateyear_idx = out_steering%forcingyear_idx
-      out_steering%outyear = year + params_siml%firstyeartrend - 1
+      out_steering%outyear = out_steering%forcingyear
 
     endif
 
@@ -168,34 +155,6 @@ contains
     end if
 
   end function getsteering
-
-
-  function get_cycleyear( year, spinupyears, recycle ) result( cycleyear )
-    !////////////////////////////////////////////////////////////////
-    ! Returns cycle year for climate recycling, given number of spinup
-    ! years and recycle period length, so that in the last year of
-    ! of the spinup, 'cycleyear' is equal to 'recycle'.
-    !----------------------------------------------------------------
-    ! arguments
-    integer, intent(in) :: year
-    integer, intent(in) :: spinupyears
-    integer, intent(in) :: recycle
-
-    ! local variables
-    integer :: remainder
-    integer :: nfits
-    integer :: first_cycleyear
-
-    ! function return variable
-    integer :: cycleyear
-
-    remainder = mod( spinupyears, recycle )
-    nfits = (spinupyears - remainder) / recycle
-    first_cycleyear = recycle - remainder + 1
-    cycleyear = modulo( first_cycleyear + year - 1, recycle )  
-    if (cycleyear==0) cycleyear = recycle
-
-  end function get_cycleyear
 
 end module md_params_siml_biomee
 

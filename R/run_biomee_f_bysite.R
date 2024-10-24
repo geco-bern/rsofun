@@ -7,9 +7,10 @@
 #' \describe{
 #'   \item{spinup}{A logical value indicating whether this simulation does spin-up.}
 #'   \item{spinupyears}{Number of spin-up years.}
-#'   \item{recycle}{Length of standard recycling period (days).}
+#'   \item{recycle}{Length of standard recycling period (years).}
 #'   \item{firstyeartrend}{First transient year.}
 #'   \item{nyeartrend}{Number of transient years.}
+#'   \item{steps_per_day}{Time resolution (day^-1).}
 #'   \item{outputhourly}{A logical value indicating whether hourly output is
 #'     produced.}
 #'   \item{outputdaily}{A logical value indicating whether daily output is produced.}
@@ -425,9 +426,7 @@ run_biomee_f_bysite <- function(
     code_method_photosynth <- 1
   } else if (params_siml$method_photosynth == "pmodel"){
     code_method_photosynth <- 2
-    dt_days <- forcing$doy[2] - forcing$doy[1]
-    dt_hours <- forcing$hour[2] - forcing$hour[1]
-    if (dt_days!=1 && dt_hours != 0){
+    if (params_siml$steps_per_day > 1){
       stop(
         "run_biomee_f_bysite: time step must be daily 
          for P-model photosynthesis setup."
@@ -565,8 +564,9 @@ run_biomee_f_bysite <- function(
       n_annual         = as.integer(runyears), 
       n_annual_cohorts = as.integer(params_siml$nyeartrend), # to get cohort outputs after spinup year
       #n_annual_cohorts = as.integer(runyears), # to get cohort outputs from year 1
-      forcing          = as.matrix(forcing)
-      )
+      forcing          = as.matrix(forcing),
+      steps_per_day    = as.integer(params_siml$steps_per_day)
+    )
     
     # If simulation is very long, output gets massive.
     # E.g., In a 3000 years-simulation 'biomeeout' is 11.5 GB.
@@ -592,19 +592,6 @@ run_biomee_f_bysite <- function(
                 ), 
                 sitename))
     }
-    
-    #---- Single level output, one matrix ----
-    # # hourly
-    # if (size_of_object_gb < 5){
-    #   output_hourly_tile <- as.data.frame(biomeeout[[1]], stringAsFactor = FALSE)
-    #   colnames(output_hourly_tile) <- c("year", "doy", "hour",
-    #                                     "rad", "Tair", "Prcp",
-    #                                     "GPP", "Resp", "Transp",
-    #                                     "Evap", "Runoff", "Soilwater",
-    #                                     "wcl", "FLDCAP", "WILTPT")
-    # } else {
-    #   output_hourly_tile <- NA
-    # }
     
     # daily_tile
     if (size_of_object_gb < 5){
@@ -712,70 +699,6 @@ run_biomee_f_bysite <- function(
 			"m_turnover", 
 			"c_turnover_time"
 		)
-    
-    #---- Multi-level output, multiple matrices to be combined ----
-    
-    # Convert to non dplyr routine, just a lapply looping over
-    # matrices converting to vector, this is a fixed format
-    # with preset conditions so no additional tidyverse logic
-    # is required for the conversion
-    #
-    # Cohort indices can be formatted using a matrix of the same
-    # dimension as the data, enumerated by column and unraveled
-    # as vector()
-
-    #---- daily cohorts ----
-    # if (size_of_object_gb < 5){
-    #   daily_values <- c(
-    #     "year","
-    #     doy","
-    #     hour"
-    #     "cID", 
-    #     "PFT", 
-    #     "layer"
-    #     "density","
-    #     f_layer", 
-    #     "LAI"
-    #     "gpp","
-    #     resp","
-    #     transp"
-    #     "NPPleaf","
-    #     NPProot", 
-    #     "NPPwood", 
-    #     "NSC"
-    #     "seedC", 
-    #     "leafC", 
-    #     "rootC"
-    #     "SW_C", 
-    #     "HW_C", 
-    #     "NSN"
-    #     "seedN", 
-    #     "leafN", 
-    #     "rootN"
-    #     "SW_N", 
-    #     "HW_N"
-    #   )
-    #   output_daily_cohorts <- lapply(1:length(daily_values), function(x){
-    #     loc <- 1 + x
-    #     v <- data.frame(
-    #       as.vector(biomeeout[[loc]]),
-    #       stringsAsFactors = FALSE)
-    #     names(v) <- daily_values[x]
-    #     return(v)
-    #   })
-      
-    #   output_daily_cohorts <- do.call("cbind", output_daily_cohorts)
-      
-    #   cohort <- sort(rep(1:ncol(biomeeout[[3]]),nrow(biomeeout[[3]])))
-    #   output_daily_cohorts <- cbind(cohort, output_daily_cohorts)
-      
-    #   # drop rows (cohorts) with no values
-    #   output_daily_cohorts$year[output_daily_cohorts$year == -9999 |
-    #                               output_daily_cohorts$year == 0] <- NA
-    #   output_daily_cohorts <- output_daily_cohorts[!is.na(output_daily_cohorts$year),]
-    # } else {
-    #   output_daily_cohorts <- NA
-    # }
     
     #--- annual cohorts ----
     annual_values <- c(
