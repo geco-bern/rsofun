@@ -488,7 +488,6 @@ likelihoodHelper_assemble_pred_obs <- function(
   #### 4c) JOIN observed and modelled data
   # i) timeseries
   if(ncol(obs_long$timeseries) < 4){
-    warning("Dated observations (fluxes/states) are missing for the chosen targets.")
     pred_obs_df_timeseries <- data.frame()
   }else{
     # Join model output and timeseries observations
@@ -501,7 +500,6 @@ likelihoodHelper_assemble_pred_obs <- function(
   }
   # ii) traits
   if(ncol(obs_long$traits) < 4){
-    warning("Non-dated observations (traits) are missing for the chosen targets.")
     pred_obs_df_traits <- data.frame()
   }else{
     # Join model output and trait observations
