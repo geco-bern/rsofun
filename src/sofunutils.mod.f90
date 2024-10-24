@@ -56,7 +56,7 @@ contains
 
     ! Initialize indexes
     idx_end = ndayyear + inow
-    idx_start = idx_end - window_length
+    idx_start = idx_end - window_length + 1
 
     ! Initialization of the buffer
     if (present(prevval)) then
@@ -65,17 +65,17 @@ contains
     else
       valbuf(1:ndayyear) = 0.0
       effective_window_length = MIN(window_length, inow)
-      if (effective_window_length <= 0) then
-        ! Negative effective window lenght is not allowed. We set 0 so that the computation of the mean will fail.
-        effective_window_length = 0
-      end if
     end if
     valbuf(ndayyear + 1 : 2 * ndayyear) = presval
 
     runningval = sum(valbuf(idx_start:idx_end))
 
     if (method == "mean") then
-      runningval = runningval/effective_window_length
+      if (effective_window_length <= 0) then
+        ! Negative effective window lenght is not allowed. We set it 0 so that the computation of the mean will fail.
+        effective_window_length = 0
+      end if
+      runningval = runningval / effective_window_length
     end if
 
   end function running
