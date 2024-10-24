@@ -180,11 +180,13 @@ cost_likelihood_generic <- function(
   }
 
   #### 4) Combine modelled predictions and observed variables
-  pred_obs <- likelihoodHelper_assemble_pred_obs(curr_model, model_out_full, obs, targets, 
+  pred_obs_df <- likelihoodHelper_assemble_pred_obs(curr_model, model_out_full, obs, targets, 
                                                  updated$drivers) # TODO: remove updated_drivers
 
   #### 5) Compute log-likelihood
-  ll <- likelihoodHelper_compute_default_loglikelihood(pred_obs, targets, updated$par_error)
+  ll <- likelihoodHelper_compute_default_loglikelihood(pred_obs_df = pred_obs_df, 
+                                                       targets, 
+                                                       updated$par_error)
 
   return(ll)
 }
@@ -729,74 +731,62 @@ likelihoodHelper_assemble_pred_obs <- function(curr_model, model_out_full, obs, 
     mod_df_trait_new <- data.frame()
   }
   
-  pred_obs <- dplyr::bind_rows(
+  pred_obs_df <- dplyr::bind_rows(
     #                        with mutate add columns that stem from the other
     mod_df_trait_new      |> dplyr::mutate(date = as.Date(NA), year_dec = NA_real_),
     mod_df_timeseries_new |> dplyr::mutate(targets_aggreg = 'timeseries', period = NA_character_)
     ) |> 
     tidyr::tibble()
   if(curr_model == "p-model") {
-    pred_obs <- pred_obs |>
+    pred_obs_df <- pred_obs_df |>
       dplyr::select('sitename', 'targets_aggreg', 
                     'period_aggreg' = 'period', 'date', 'year_dec', 
-                    'variables', tidyr::everything())
+                    'target'        = 'variables', 
+                    tidyr::everything())
   }else if(curr_model == "biomee"){
-    pred_obs <- pred_obs |>
+    pred_obs_df <- pred_obs_df |>
       dplyr::select('sitename', 'targets_aggreg', 
                     'period_aggreg' = 'period',     # TODO: homogenize between p-model and BiomeE
-                    'variables', tidyr::everything())
+                    'target'        = 'variables', 
+                    tidyr::everything())
   }else{
     stop("Arguments 'curr_model' must be either 'biomee' or 'p-model'")
   }
-  return(list(timeseries = mod_df_timeseries, 
-              traits     = mod_df_trait,
-              pred_obs   = pred_obs))
+  
+  return(pred_obs_df)
 }
 
-likelihoodHelper_compute_default_loglikelihood <- function(pred_obs, targets, par_error){
+likelihoodHelper_compute_default_loglikelihood <- function(pred_obs_df, targets, par_error, flag_single_value = TRUE){
   # TODO: change this approach to another one based on a long data.frame containing
-  # columns for 'sitename', 'target', 'error_model', 'obs_value', 'pred_value'
-  # TODO: here we could also split the joining of obs-pred from the into two separate functions
+  # columns for 'sitename', 'variables', 'error_model', 'obs_value', 'pred_value'
 
-  # loop over targets to compute log-likelihood ll
-  ll_df <- data.frame(target = targets,
-                      ll     = NaN) # initialize data.frame for ll's of the different target variables
+  par_error_renamed <- structure(
+    unname(par_error),
+    .Names = stringr::str_replace_all(names(par_error), c("GPP"="gpp")) # TODO: this is err_GPP, but target is gpp...
+  )  
+                                 
+  df_for_ll <- pred_obs_df |>
+    dplyr::filter(target %in% stringr::str_replace_all(targets, c("GPP"="gpp"))) |>
+    # prepare log-likelihood computation
+    dplyr::rowwise() |> dplyr::mutate(error_sd = par_error_renamed[[paste0('err_', .data$target)]]) # use rowwise() and `[[`
 
-  for (target in targets){
-    target_obs <- paste0(target, '_obs')
-    target_mod <- paste0(target, '_mod')
-
-    # TODO: remove this after renaming GPP in BiomeE to lowercase gpp
-    target_mod <- gsub("GPP_mod","gpp_mod",target_mod) 
-    
-    # check (needed?):
-    if(target_obs %in% colnames(pred_obs$timeseries) & target_obs %in% colnames(pred_obs$traits)) {
-      stop(sprintf("Target '%s' cannot be simultaneously in pred_obs$timeseries and pred_obs$traits", target))
-    }
-
-    # get observations and predicted target values, without NA
-    df_target <- if(target_obs %in% colnames(pred_obs$timeseries)){
-      pred_obs$timeseries
-    }else if(target_obs %in% colnames(pred_obs$traits)){
-      pred_obs$traits
-    }else{
-      stop(sprintf("Target variable: '%s', was not found in the provided observations. Please check.", target))
-    }
-    df_target <- df_target[, c(target_mod, target_obs)] |> tidyr::drop_na()
-
-    # calculate normal log-likelihood
-    ll_df[ll_df$target == target, 'll'] <-
-      sum(stats::dnorm(
-        x    = df_target[[target_mod]], # model
-        mean = df_target[[target_obs]], # obs
-        sd   = par_error[[paste0('err_', target)]], # error model
-        log  = TRUE))
+  # compute log-likelihood
+  ll_df_new <- df_for_ll |> 
+    tidyr::drop_na('targets_obs', 'targets_pred') |> # remove NA in relevant columns  # TODO: do we need this drop_na?
+    dplyr::group_by(.data$target) |>
+    dplyr::summarise(ll = sum(stats::dnorm(
+      x    = .data$targets_obs,
+      mean = .data$targets_pred,
+      sd   = error_sd,    # error model parameter
+      log  = TRUE)))
+  
+  if(flag_single_value){
+    ll <- sum(ll_df_new$ll)
+    # trap boundary conditions
+    if(is.nan(ll) | is.na(ll) | ll == 0){ll <- -Inf}
+    return(ll)
+  } else {
+    return(df_for_ll)   # TODO: remove flag_single_value, was only used for debugging
   }
-  ll <- sum(ll_df$ll)
-
-  # trap boundary conditions
-  if(is.nan(ll) | is.na(ll) | ll == 0){ll <- -Inf}
-
-  return(ll)
 }
 
