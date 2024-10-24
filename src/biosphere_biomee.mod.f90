@@ -178,7 +178,7 @@ contains
     ! Natural mortality (reducing number of individuals 'nindivs')
     ! (~Eq. 2 in Weng et al., 2015 BG)
 
-    call vegn_nat_mortality( vegn )
+    call vegn_nat_mortality( vegn)
     
     ! seed C and germination probability (~Eq. 1 in Weng et al., 2015 BG)
     call vegn_reproduction( vegn )

@@ -1129,7 +1129,7 @@ contains
 
     ! local variables
     type(cohort_type), pointer :: cc
-    real :: treeG, fseed, fleaf=0, froot, fwood=0, dDBH, dBA, dVol
+    real :: treeG, fseed, fleaf=0, froot, fwood=0, dDBH=0, dBA, dVol
     real :: plantC, plantN, soilC, soilN
     integer :: i
 
@@ -1171,6 +1171,7 @@ contains
 
     ! Cohorts ouput
     vegn%WDgrow = 0.0
+
 
     do i = 1, vegn%n_cohorts
       cc => vegn%cohorts(i)

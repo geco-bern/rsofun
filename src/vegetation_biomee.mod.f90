@@ -703,7 +703,7 @@ contains
     
     !   TODO: update background mortality rate as a function of wood density (Weng, Jan. 07 2017)
     type(vegn_tile_type), intent(inout) :: vegn
-    ! real, intent(in) :: deltat ! seconds since last mortality calculations, s
+    !real, intent(in) :: deltat ! seconds since last mortality calculations, s
 
     ! ---- local vars
     type(cohort_type), pointer :: cc => null()
@@ -778,7 +778,7 @@ contains
       enddo
 
       ! Remove the cohorts with 0 individuals, (never used b/c k<2)
-      if(k >= 2) call kill_lowdensity_cohorts(vegn)
+      ! if(k >= 2) call kill_lowdensity_cohorts(vegn)
 
       ! final check, can be removed if the model runs well
       cai_partial = 0.0
@@ -862,7 +862,7 @@ contains
                 ! deathrate = param_dbh * 0.1 *    &
                 !            (1.*exp(2.*(cc%dbh-1))/  &
                 !            (1. + exp(2.*(cc%dbh-1))))
-                deathrate = min(1.0, param_dbh * cc%dbh ** 2.5) ! 1.5, 2.5, 5
+                deathrate = min(1.0, param_dbh * cc%dbh ** 1.5) ! 1.5, 2.5, 5
               else
                 deathrate = sp%mortrate_d_c !0.01
               endif
@@ -872,8 +872,8 @@ contains
         endif
 
         ! previous setup allowed death rates > 1 (hence negative ind)
-        deathrate = min(1.0, deathrate + 0.01)  
-        deadtrees = cc%nindivs * deathrate
+        deathrate = min(1.0, deathrate)  !deathrate + 0.01
+        deadtrees = cc%nindivs * deathrate ! individuals / m2
 
         ! record mortality rates at cohort level
         cc%deathratevalue = deathrate
@@ -893,7 +893,7 @@ contains
       enddo
 
       ! Remove the cohorts with very few individuals
-      call kill_lowdensity_cohorts( vegn )
+      ! call kill_lowdensity_cohorts( vegn )
 
     endif
 
@@ -942,7 +942,7 @@ contains
       end associate
     enddo
     ! Remove the cohorts with 0 individuals
-    call kill_lowdensity_cohorts( vegn )
+    ! call kill_lowdensity_cohorts( vegn )
 
   end subroutine vegn_annual_starvation
 
@@ -980,12 +980,13 @@ contains
 
     ! record mortality
     ! cohort level
+    cc%m_turnover  = 0
     cc%n_deadtrees = deadtrees
     !cc%c_deadtrees = loss_coarse + loss_fine 
     cc%c_deadtrees    = deadtrees*(cc%plabl%c%c12 + cc%pseed%c%c12 + cc%pleaf%c%c12 + &
            cc%proot%c%c12 + cc%psapw%c%c12 + cc%pwood%c%c12) 
-    cc%m_turnover  = cc%m_turnover + loss_coarse + loss_fine
-    !cc%m_turnover  = cc%m_turnover + deadtrees * (cc%pwood%c%c12 + cc%psapw%c%c12)
+    !cc%m_turnover  = cc%m_turnover + loss_coarse + loss_fine
+    cc%m_turnover  = cc%m_turnover + deadtrees * (cc%pwood%c%c12 + cc%psapw%c%c12)
 
     end associate
 
@@ -1477,7 +1478,7 @@ contains
       vegn%N_P2S_yr = vegn%N_P2S_yr + lossN_fine + lossN_coarse
 
       ! record continuous biomass turnover (not linked to mortality)
-       cc%m_turnover = cc%m_turnover + loss_coarse + loss_fine
+      !cc%m_turnover = cc%m_turnover + loss_coarse + loss_fine
       ! cc%m_turnover = cc%m_turnover + (1.0 - l_fract) * cc%nindivs * dBStem
 
       end associate
