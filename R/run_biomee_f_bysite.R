@@ -1,6 +1,6 @@
-#' R wrapper for SOFUN biomee
+#' Run BiomeE (R wrapper)
 #' 
-#' Call to the biomee Fortran model
+#' Run BiomeE Fortran model on single site.
 #'
 #' @param sitename Site name.
 #' @param params_siml Simulation parameters.
@@ -39,6 +39,15 @@
 #'   \item{elv}{Elevation of the site location, in meters.}
 #' }
 #' @param forcing Forcing data.frame used as input.
+#' \describe{
+#'   \item{ppfd}{Photosynthetic photon flux densisty(mol s-1 m-2)}
+#'   \item{tair}{Air temperature (deg C)}
+#'   \item{vpd}{Vapor pressure defficit}
+#'   \item{rain}{Precipitation (kgH2O m-2 s-1)}
+#'   \item{wind}{Wind velocity (m s-1)}
+#'   \item{pair}{Atmoshperic pressure (pa)}
+#'   \item{co2}{CO2 athmospheric concentration (ppm)}
+#' }
 #' @param params_tile Tile-level model parameters, into a single row data.frame
 #'   with columns:
 #' \describe{
@@ -146,8 +155,7 @@
 #'   \item{N_input}{Annual nitrogen input to soil N pool, in kg N m\eqn{^{-2}} 
 #'     year\eqn{^{-1}}.}
 #' }
-#' @param makecheck A logical specifying whether checks are performed to verify 
-#'   forcings.
+#' @param makecheck Flag specifying whether checks are performed to verify model inputs and parameters.
 #'
 #' @export
 #' @useDynLib rsofun
@@ -392,23 +400,21 @@ run_biomee_f_bysite <- function(
   
   # predefine variables for CRAN check compliance
   type <- NULL
+
+  forcing_features <- c(
+    'ppfd',
+    'temp',
+    'vpd',
+    'rain',
+    'wind',
+    'patm',
+    'co2'
+  )
   
   # select relevant columns of the forcing data
   forcing <- forcing %>%
     select(
-      'year',
-      'doy',
-      'hour',
-      'par',
-      'ppfd',
-      'temp',
-      'temp_soil',
-      'rh',
-      'prec',
-      'wind',
-      'patm',
-      'co2',
-      'swc'
+      any_of(forcing_features)
     )
   
   params_soil <- params_soil %>%
@@ -458,40 +464,24 @@ run_biomee_f_bysite <- function(
 
   # base state, always execute the call
   continue <- TRUE
-  
+
   # validate input
   if (makecheck){
-    
-    # create a loop to loop over a list of variables
-    # to check validity
-    
-    check_vars <- c(
-      "par",
-      "ppfd",
-      "temp",
-      "temp_soil",
-      "rh",
-      "prec",
-      "wind",
-      "patm",
-      "co2",
-      "swc"
-    )
-    
+    # Add input and parameter checks here if applicable.
     data_integrity <- lapply(
-      check_vars,
+      forcing_features,
       function(check_var){
         if (any(is.nanull(forcing[check_var]))){
           warning(
-            sprintf("Error: Missing value in %s for %s",
+            sprintf("Error: Missing forcing %s for site %s",
                     check_var, sitename))
           return(FALSE)
         } else {
           return(TRUE)
         }
       })
-   
-    # only return true if all checked variables are TRUE 
+
+    # only return true if all checked variables are TRUE
     # suppress warning on coercion of list to single logical
     continue <- suppressWarnings(all(as.vector(data_integrity)))
   }
