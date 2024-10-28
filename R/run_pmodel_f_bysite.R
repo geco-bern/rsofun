@@ -394,11 +394,13 @@ run_pmodel_f_bysite <- function(
       dplyr::bind_cols(ddf,.)
 
   } else {
-    out <- tibble(date = as.Date("2000-01-01"),
+    ddf <- init_dates_dataframe(2000,2000,1,1,endmoy=1, enddom=1)
+    out <- ddf %>%
+      cross_join(tidyr::tibble(
                   fapar = NA, 
                   gpp = NA, 
-                  transp = NA, 
-                  latenth = NA, 
+                  aet = NA, 
+                  le = NA, 
                   pet = NA, 
                   vcmax = NA, 
                   jmax = NA, 
@@ -413,7 +415,7 @@ run_pmodel_f_bysite <- function(
                   netrad = NA,
                   wcont = NA, 
                   snow = NA,
-                  cond = NA)
+                  cond = NA))
   }
     
   return(out)

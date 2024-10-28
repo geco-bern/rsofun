@@ -34,6 +34,19 @@ test_that("p-model run check GPP", {
   # are in a list (don't error / warning)
   expect_type(mod, "list")
   
+  # test if wrong sim specification gives a correctly formatted dummy output
+  # check output with wrong parameters, when makecheck==TRUE:
+  mod_error <- testthat::expect_warning(run_pmodel_f_bysite( 
+    df_drivers$sitename[1],
+    df_drivers$params_siml[[1]],
+    df_drivers$site_info[[1]],
+    df_drivers$forcing[[1]], 
+    params_modl = NULL, # ! remove all parameters
+    makecheck = TRUE
+  ))
+  testthat::expect_equal(nrow(mod_error), 1)
+  testthat::expect_equal(sort(names(mod_error)), sort(names(mod)))
+  
   # test runread_pmodel_f
   df_output <- runread_pmodel_f(
     df_drivers,
