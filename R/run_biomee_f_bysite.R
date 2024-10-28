@@ -421,7 +421,7 @@ run_biomee_f_bysite <- function(
   n_daily  <- params_siml$nyeartrend * 365
 
   # Types of photosynthesis model
-    if (params_siml$method_photosynth == "gs_leuning"){
+  if (params_siml$method_photosynth == "gs_leuning"){
     code_method_photosynth <- 1
   } else if (params_siml$method_photosynth == "pmodel"){
     code_method_photosynth <- 2

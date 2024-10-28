@@ -699,7 +699,7 @@ contains
     !----------------------------------------------------------------
     ! GET SOIL PARAMETERS
     !----------------------------------------------------------------
-    !myinterface%params_soil = getsoil( params_soil )
+    ! myinterface%params_soil = getsoil( params_soil )
 
     myinterface%params_soil%GMD(:)               = real(params_soil(:,1))
     myinterface%params_soil%GSD(:)               = real(params_soil(:,2))
