@@ -5,7 +5,6 @@ module md_forcing_biomee
   !----------------------------------------------------------------
   use, intrinsic :: iso_fortran_env, dp=>real64, sp=>real32, in=>int32
   use md_params_core, only: ntstepsyear, ndayyear, kTkelvin, kfFEC
-  use md_soiltemp, only: soiltemp
   implicit none
 
   private
@@ -15,7 +14,6 @@ module md_forcing_biomee
     real    :: ppfd          ! mol/m2/s
     real    :: radiation     ! W/m2 (SW downwelling)
     real    :: Tair          ! air temperature,  K
-    real    :: Tsoil         ! soil temperature, K
     real    :: vpd           ! vapor pressure deficit (Pa)
     real    :: rain          ! kgH2O m-2 s-1
     real    :: windU         ! wind velocity (m s-1)

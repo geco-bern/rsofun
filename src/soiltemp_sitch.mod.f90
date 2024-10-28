@@ -116,4 +116,30 @@ contains
 
   end subroutine soiltemp
 
+  function air_to_soil_temp(thetaS, dtemp, doy) result (soil_temp)
+    !/////////////////////////////////////////////////////////////////////////
+    ! Calculates soil temperature (deg C) based on air temperature (deg C).
+    ! Convnience wrapper
+    !-------------------------------------------------------------------------
+    use md_tile_pmodel, only: soil_type, initglobal_soil
+
+    ! arguments
+    real, dimension(ndayyear), intent(in)            :: dtemp      ! daily temperature (deg C)
+    real, intent(in)                                 :: thetaS     ! thetaS
+    integer, intent(in)                              :: doy        ! current day of year
+
+    ! local variables
+    type( soil_type ), dimension(1) :: soil
+
+    call initglobal_soil( soil(1) )
+
+    ! Using thetaS as water scalar
+    soil(1)%phy%wscal = thetaS
+
+    call soiltemp(soil, dtemp, doy)
+
+    soil_temp = soil(1)%phy%temp
+
+  end function air_to_soil_temp
+
 end module md_soiltemp

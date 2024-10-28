@@ -9,6 +9,7 @@ module md_biosphere_biomee
   use md_vegetation_biomee
   use md_soil_biomee
   use md_params_core
+  use md_soiltemp, only: air_to_soil_temp
   
   implicit none
   private
@@ -44,7 +45,7 @@ contains
     !----------------------------------------------------------------
     ! Biome-E stuff
     !----------------------------------------------------------------
-    real    :: tsoil, soil_theta
+    real    :: tsoil
     integer :: hod
     integer :: simu_steps !, datalines
     integer, save :: iyears
@@ -104,6 +105,7 @@ contains
 
           simu_steps    = simu_steps + 1
           vegn%Tc_daily = vegn%Tc_daily + myinterface%climate(simu_steps)%Tair
+          vegn%thetaS  = (vegn%wcl(2) - WILTPT) / (FLDCAP - WILTPT)
           tsoil = air_to_soil_temp(myinterface%climate(:)%dtemp - kTkelvin, &
                   doy &
                   ) + kTkelvin
@@ -125,7 +127,6 @@ contains
         ! Daily calls after fast loop
         !-------------------------------------------------
         vegn%Tc_daily = vegn%Tc_daily / myinterface%steps_per_day
-        soil_theta    = vegn%thetaS
 
         ! sum over fast time steps and cohorts
         call daily_diagnostics( vegn, iyears, idoy, out_biosphere_daily_tile(doy)  )  ! , out_biosphere_daily_cohorts(doy,:)

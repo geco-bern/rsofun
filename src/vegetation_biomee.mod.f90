@@ -43,10 +43,6 @@ contains
     ! local variables
     type(cohort_type), pointer :: cc  
     integer:: i
-    real   :: theta        ! soil wetness, unitless
-
-    ! Climatic variable
-    theta  = (vegn%wcl(2) - WILTPT) / (FLDCAP - WILTPT)
 
     ! Photosynsthesis
     call gpp( forcing, vegn, init )
@@ -79,7 +75,7 @@ contains
     enddo ! all cohorts
     
     ! update soil carbon
-    call SOMdecomposition( vegn, tsoil, theta )
+    call SOMdecomposition( vegn, tsoil )
     
     ! Nitrogen uptake
     call vegn_N_uptake( vegn, tsoil )
@@ -1548,7 +1544,7 @@ contains
   end subroutine vegn_N_uptake
 
 
-  subroutine SOMdecomposition(vegn, tsoil, thetaS)
+  subroutine SOMdecomposition(vegn, tsoil)
     !//////////////////////////////////////////////////////////////////////
     ! Soil organic matter decomposition and N mineralization
     !
@@ -1559,8 +1555,7 @@ contains
     ! carbon use efficiency 
     !----------------------------------------------------------------------
     type(vegn_tile_type), intent(inout) :: vegn
-    real                , intent(in)    :: tsoil ! soil temperature, deg K 
-    real                , intent(in)    :: thetaS
+    real                , intent(in)    :: tsoil ! soil temperature, deg K
     real :: CUE0=0.4  ! default microbial CUE
     real :: phoMicrobial = 2.5 ! turnover rate of microbes (yr-1)
     real :: CUEfast,CUEslow
@@ -1583,7 +1578,7 @@ contains
     CNslow = vegn%psoil_sl%c%c12 / vegn%psoil_sl%n%n14
 
     ! C decomposition
-    A = A_function(tsoil, thetaS)
+    A = A_function(tsoil, vegn%thetaS)
     micr_C_loss = vegn%pmicr%c%c12    * (1.0 - exp(-A*phoMicrobial* myinterface%dt_fast_yr))
     fast_L_loss = vegn%psoil_fs%c%c12 * (1.0 - exp(-A*K1          * myinterface%dt_fast_yr))
     slow_L_loss = vegn%psoil_sl%c%c12 * (1.0 - exp(-A*K2          * myinterface%dt_fast_yr))
