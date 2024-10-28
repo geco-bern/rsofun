@@ -1,6 +1,7 @@
 #!/usr/bin/env Rscript
 
 library(tidyverse)
+library(lubridate)
 library(rsofun)
 
 # load script arguments
@@ -176,6 +177,12 @@ init_soil <- tibble( #list
   N_input             = 0.0008
 )
 
+rh_to_vpd <- function(temp, rh) {
+  esat <- 611.0 * exp( (17.27 * temp)/(temp + 237.3) )
+
+  return(esat * (1.0 - rh))
+}
+
 #---- gs leuning formatting -----
 forcing <- forcingLAE %>% 
   dplyr::group_by(
@@ -186,12 +193,11 @@ forcing <- forcingLAE %>%
   rename(month=`lubridate::month(datehour)`,day=`lubridate::day(datehour)`) %>%
   ungroup()
 forcing <- forcing %>%
-  rename(hour=HOUR, ppfd=Swdown, temp=TEMP, temp_soil=SoilT, vpd=vpd,
-         prec=RAIN, wind=WIND, patm=PRESSURE, co2=aCO2_AW) %>%
-  mutate(snow=NA,vpd=NA, ccov_int=NA,ccov=NA,
-         date = make_date(year,month,day)) %>%
-  select(date,temp,prec,vpd,ppfd,patm,wind,co2,)
-#forcing <- bind_rows(replicate(2, forcing, simplify = FALSE))
+  rename(year=YEAR, hod=HOUR, ppfd=Swdown, temp=TEMP, rh=RH,
+         rain=RAIN, wind=WIND, patm=PRESSURE, co2=aCO2_AW) %>%
+  mutate(date = make_date(year,month,day),
+           vpd = rh_to_vpd(temp, rh)) %>%
+  select(date,hod,temp,rain,vpd,ppfd,patm,wind,co2,)
 
 biomee_gs_leuning_drivers <- tibble(
   sitename,
@@ -219,12 +225,11 @@ forcing <- forcingLAE %>%
   rename(month=`lubridate::month(datehour)`,day=`lubridate::day(datehour)`) %>%
   ungroup()
 forcing <- forcing %>%
-  rename(hour=HOUR, ppfd=Swdown, temp=TEMP, temp_soil=SoilT, vpd=vpd,
-         prec=RAIN, wind=WIND, patm=PRESSURE, co2=aCO2_AW) %>%
-  mutate(snow=NA,vpd=NA, ccov_int=NA,ccov=NA,
-         date = make_date(year,month,day)) %>%
-  select(date,temp,prec,vpd,ppfd,patm,wind,co2)
-#forcing <- bind_rows(replicate(2, forcing, simplify = FALSE))
+  rename(year=YEAR, hod=HOUR, ppfd=Swdown, temp=TEMP, rh=RH,
+         rain=RAIN, wind=WIND, patm=PRESSURE, co2=aCO2_AW) %>%
+  mutate(date = make_date(year,month,day),
+           vpd = rh_to_vpd(temp, rh)) %>%
+  select(date,hod,temp,rain,vpd,ppfd,patm,wind,co2)
 
 biomee_p_model_drivers <- tibble(
   sitename,

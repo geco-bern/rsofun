@@ -7,7 +7,7 @@ module md_soiltemp
   implicit none
 
   private
-  public soiltemp
+  public soiltemp, air_to_soil_temp
 
 contains
 
@@ -130,6 +130,9 @@ contains
 
     ! local variables
     type( soil_type ), dimension(1) :: soil
+
+    ! Return variable
+    real soil_temp
 
     call initglobal_soil( soil(1) )
 

@@ -277,7 +277,7 @@ contains
     nt_annual,                    &    
     nt_annual_cohorts,            &    
     forcing,                      &     
-    steps_per_day,                & ! Forcing resolution
+    steps_per_day,                &
     output_daily_tile,            &
     output_annual_tile,           &
     output_annual_cohorts_year,   &
@@ -398,6 +398,8 @@ contains
 
     ! input and output arrays (naked) to be passed back to C/R
     real(kind=c_double), dimension(nt,13), intent(in) :: forcing
+
+    integer(kind=c_int), intent(in) :: steps_per_day  ! Forcing resolution
 
     real(kind=c_double), dimension(nt_daily,nvars_daily_tile), intent(out) :: output_daily_tile ! nvars_daily_tile = 35
 

@@ -106,7 +106,8 @@ contains
           simu_steps    = simu_steps + 1
           vegn%Tc_daily = vegn%Tc_daily + myinterface%climate(simu_steps)%Tair
           vegn%thetaS  = (vegn%wcl(2) - WILTPT) / (FLDCAP - WILTPT)
-          tsoil = air_to_soil_temp(myinterface%climate(:)%dtemp - kTkelvin, &
+          tsoil = air_to_soil_temp(vegn%thetaS, &
+                  myinterface%climate(:)%Tair - kTkelvin, &
                   doy &
                   ) + kTkelvin
 

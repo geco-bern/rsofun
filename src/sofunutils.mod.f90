@@ -49,10 +49,10 @@ contains
 
     ! local variables
     real, dimension(2*ndayyear) :: valbuf
+    integer :: idx_start, idx_end, effective_window_length
 
     ! function return variable
     real :: runningval
-    integer :: idx_start, idx_end, effective_window_length
 
     ! Initialize indexes
     idx_end = ndayyear + inow

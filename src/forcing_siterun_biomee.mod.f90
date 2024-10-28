@@ -8,7 +8,7 @@ module md_forcing_biomee
   implicit none
 
   private
-  public climate_type, getclimate, getco2
+  public climate_type, getclimate
 
   type :: climate_type
     real    :: ppfd          ! mol/m2/s

@@ -1,1 +1,2 @@
-The script for generating `data/p_model_drivers.rda` is in [`geco-bern/FluxDataKit/analysis/05_generate_demo_rsofun_drivers.R`](https://github.com/geco-bern/FluxDataKit/blob/main/analysis/05_generate_demo_rsofun_drivers.R).
+Script and data for generating `data/biomee_xxx.rda` files.
+Script for generating p-model files is in [`geco-bern/FluxDataKit/analysis/02_batch_format_rsofun_drivers.R`](https://github.com/geco-bern/FluxDataKit/blob/main/analysis/b02_batch_format_rsofun_drivers.R).

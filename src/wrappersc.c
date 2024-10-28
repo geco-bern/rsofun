@@ -461,7 +461,7 @@ extern SEXP biomee_f_C(
 /////////////////////////////////////////////////////////////
 static const R_CallMethodDef CallEntries[] = {
   {"pmodel_f_C",   (DL_FUNC) &pmodel_f_C,   23},  // Specify number of arguments to C wrapper as the last number here
-  {"biomee_f_C",   (DL_FUNC) &biomee_f_C,   48},  // Number of arguments of the C wrapper function for biomee (the SEXP variables, not the output)
+  {"biomee_f_C",   (DL_FUNC) &biomee_f_C,   49},  // Number of arguments of the C wrapper function for biomee (the SEXP variables, not the output)
   {NULL,         NULL,                0}
 };
 
