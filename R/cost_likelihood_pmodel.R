@@ -153,16 +153,22 @@ cost_likelihood_generic <- function(
   match.arg(curr_model, several.ok = FALSE)
 
   #### 1) Parse input parameters
-  #### 2) Update inputs to runread_pmodel_f()/runread_biomee_f() with the provided parameters
-  updated <- likelihoodHelper_update_model_parameters(curr_model, par, par_fixed, drivers)
-              # TODO: updated$par_error is not very elegant!
+  parameters <- llstep01_split_parameters(curr_model, par, par_fixed, drivers)
+  # defines parameters$model and parameters$error
+  # for use with the likelihood error model or for use with the simulation model
+  
+  #### 2) Update input args to runread_pmodel_f()/runread_biomee_f() with the provided parameters
+  updated <- llstep02_update_model_args(
+    curr_model, 
+    parameters$model, 
+    parameters$valid_names,
+    drivers)
   
   #### 3) Run the model: runread_pmodel_f()/runread_biomee_f()
-  ## run the model
   if(curr_model == "biomee"){
     model_out_full <- runread_biomee_f(
       drivers   = updated$drivers,
-      # par     = par_model_global, # unused by BiomeE
+      # par     = updated$par, # unused by BiomeE
       makecheck = TRUE,
       parallel  = parallel,
       ncores    = ncores
@@ -170,7 +176,7 @@ cost_likelihood_generic <- function(
   }else if(curr_model == "p-model"){
     model_out_full <- runread_pmodel_f(
       drivers   = updated$drivers,
-      par       = updated$par_model_global,
+      par       = updated$par,
       makecheck = TRUE,
       parallel  = parallel,
       ncores    = ncores
@@ -183,13 +189,15 @@ cost_likelihood_generic <- function(
   # drop spinup years if activated # TODO: (currently this removal is deactivated) can we get rid of this?
   spinup_years <- ifelse(updated$drivers$params_siml[[1]]$spinup,          
                          updated$drivers$params_siml[[1]]$spinupyears + 1, # TODO: why plus 1?
-                         0) 
-  pred_obs_df <- likelihoodHelper_assemble_pred_obs(curr_model, model_out_full, targets, obs, spinup_years)
+                         0)
 
-  #### 5) Compute log-likelihood
-  ll <- likelihoodHelper_compute_default_loglikelihood(pred_obs_df = pred_obs_df, 
-                                                       targets, 
-                                                       updated$par_error)
+  pred_obs_df <- llstep04_assemble_pred_vs_obs(curr_model, model_out_full, targets, obs, spinup_years)
+
+  #### 5) Compute log-likelihood (by default: normally distributed residuals)
+  ll <- llstep05_compute_default_loglikelihood(
+    pred_obs_df = pred_obs_df, 
+    targets     = targets, 
+    par_error   = parameters$error)
 
   return(ll)
 }
@@ -197,7 +205,7 @@ cost_likelihood_generic <- function(
 
 
 # Helper functions for cost_likelihood_generic()
-likelihoodHelper_update_model_parameters <- function(curr_model, par, par_fixed, drivers){
+llstep01_split_parameters <- function(curr_model, par, par_fixed, drivers){
   if(curr_model == "biomee"){ # For BiomeE only
     if(!is.null(par_fixed)){stop("For BiomeE, par_fixed must be NULL. Fixed parameters are provided through tables in the drivers.")}
   }
@@ -218,6 +226,7 @@ likelihoodHelper_update_model_parameters <- function(curr_model, par, par_fixed,
   }else{
     stop("Arguments 'curr_model' must be either 'biomee' or 'p-model'")
   }
+  
   ## define valid driver parameter names
   # they were hardcoded based on the possible results of the outcommented code:
         # rsofun::biomee_gs_leuning_drivers |>
@@ -300,59 +309,79 @@ likelihoodHelper_update_model_parameters <- function(curr_model, par, par_fixed,
   }else{
     stop("Arguments 'curr_model' must be either 'biomee' or 'p-model'")
   }
-
-  #### 2) Update inputs to runread_pmodel_f()/runread_biomee_f() with the provided parameters
-
-  #### 2a) reorganize parameters into a group of global parameters (provided as 
-  ####     'par') and site specific parameters (provided through the data.frame 
-  ####     'driver')
+  
+  # prepare for validity check (check is performed later in function llstep02_update_model_args())
+  valid_par_model_global_names <- required_param_names
+  valid_par_model_driver_names <- valid_par_model_driver_list |> unname() |> unlist()
+  
+  
   # NOTE: actually, we don't need to track which ones are toCalibrate and which are fixed
-  #       here we now need to know where we need to apply them
+  #       here we now need to know where they need to be applied (i.e. error model or simulation model)
   par_error <- as.list(c(par_error_fixed, par_error_toCalibrate)) # runread_pmodel_f requires a named list
   par_model <- as.list(c(par_model_fixed, par_model_toCalibrate)) # runread_pmodel_f requires a named list
   
+  
+  #### reorganize model parameters `par_model` into a group of global parameters (provided as 
+  #### 'par') and site specific parameters (provided as the data.frame 
+  #### 'driver') for the functions runread_pmodel_f()/runread_biomee_f()
   if(curr_model == "biomee"){
     global_pars <- c() ## NOTE: unlike the P-Model, BiomeE-model has no separate argument 'par' to
-                       ##       `runread_biomee_f()`. All the params are provided through the driver
-    par_model_global <- par_model[   names(par_model) %in% global_pars ]
-    par_model_driver <- par_model[ ! names(par_model) %in% global_pars ]
+    ##       `runread_biomee_f()`. All the params are provided through the driver
+    driver_pars <- names(par_model)[! names(par_model) %in% global_pars ] # since none are in global_pars, all are in driver_pars
     rm(global_pars)
   }else if(curr_model == "p-model"){
-        # TODO: this was added in PHydro branch: but it can already be considered when refactoring this
-        # ## if WHC is treated as calibratable, remove it from par and overwrite site 
-        # ## info with the same value for (calibrated) WHC for all sites.
-        # driver_pars <- c("whc")
-    driver_pars <- c() ## NOTE: before the pydro model all calibratable params were global params
-                       ##       i.e. the same for all sites and none were provided through the driver
-                       ##       With phydro model we'll be introducing 'whc' as a site-specific parameter
-                       ##       (that is potentially calibratable to a global value)
-    par_model_driver <- par_model[   names(par_model) %in% driver_pars]
-    par_model_global <- par_model[ ! names(par_model) %in% driver_pars]
-    rm(driver_pars)
+    driver_pars <- c() ## NOTE: unlike the BiomeE-model, P-Model has parameters provided through 
+    ##       both the arguments, i) 'driver' and ii) 'par' to
+    ##       `runread_pmodel_f()`. Only 'par' parameters are considered calibratable
+    # }else if(curr_model == "phydro"){
+    #   # TODO: this was added in PHydro branch: but it can already be considered while refactoring this for the master branch
+    #   driver_pars <- c("whc") ## NOTE: like the P-model, PHydro-Model has parameters provided through 
+    #                           ##       both the arguments, i) 'driver' and ii) 'par' to
+    #                           ##       `runread_pmodel_f()`. 
+    #                           ## NOTE: unlike P-model, PHydro model has also 'driver' parameters that
+    #                           ##       are considered calibratable. Hence their values need to be overwritten
+    #                           ##       in the correct place.
   }else{
     stop("Arguments 'curr_model' must be either 'biomee' or 'p-model'")
   }
+  par_model_driver <- par_model[   names(par_model) %in% driver_pars]
+  par_model_global <- par_model[ ! names(par_model) %in% driver_pars]
+  rm(driver_pars)
+
+  # only return what's needed: i) error model, ii) simulation model, iii) validity check  
+  return(list(error = par_error,
+              model = list(global = par_model_global, 
+                           driver = par_model_driver),
+              valid_names = list(global = valid_par_model_global_names,
+                                 driver = valid_par_model_driver_names)
+              ))
+}
+
+llstep02_update_model_args <- function(curr_model, par_model, valid_names, drivers){
   
-  rm(par_error_fixed, par_error_toCalibrate, par_model_fixed, par_model_toCalibrate,
-     par_model)
-  # below only use: par_error, par_model_global, and par_model_driver
+  #### 2) Update inputs to runread_pmodel_f()/runread_biomee_f() with the provided parameters
 
+  #### 2a) reorganize parameters into a group of global parameters (provided as 
+  ####     'par') and site specific parameters (provided as the data.frame 
+  ####     'driver') for the functions runread_pmodel_f()/runread_biomee_f()
+  # This reorganizing has been moved to llstep01_split_parameters()
+
+  
   #### 2b) prepare argument 'par' of runread_pmodel_f() with global parameters 
-  # already done above: use par = par_model_global
 
-  ## check validity of par_model_global
-  valid_par_model_global_names <- required_param_names
-  stopifnot(all(names(par_model_global) %in% valid_par_model_global_names)) # This check is internal
+  ## check validity of par_model$global
+  stopifnot(all(names(par_model$global) %in% valid_names$global)) # This check is internal
+  
+  # no preparation needed (here we just rename):
+  par <- par_model$global
   
   #### 2c) prepare argument 'driver' of runread_pmodel_f()/runread_biomee_f() with site-specific parameters
   # Here we need to overwrite parameters specified in the driver data where necessary
 
-  ## check validity of par_model_driver
-  valid_par_model_driver <- valid_par_model_driver_list |> unname() |> unlist()
-  
-  # check validity: 'par_model_driver' must be a subset of 'valid_par_model_driver'
-  if(!all(names(par_model_driver) %in% valid_par_model_driver)){
-    surplus_params <- names(par_model_driver)[!(names(par_model_driver) %in% valid_par_model_driver)]
+  ## check validity of par_model$driver
+  # 'par_model$driver' must be a subset of 'valid_names$driver'
+  if(!all(names(par_model$driver) %in% valid_names$driver)){
+    surplus_params <- names(par_model$driver)[!(names(par_model$driver) %in% valid_names$driver)]
     stop(sprintf(paste0("Error: Input calibratable parameters do not ",
                         "match valid model parameters:",
                         "\n         surplus:            c(%s)",
@@ -361,9 +390,9 @@ likelihoodHelper_update_model_parameters <- function(curr_model, par, par_fixed,
                         "\n         received par_fixed: c(%s)",
                         "\n         valid:           c(%s)"),
                  paste0(sort(surplus_params), collapse = ", "),
-                 paste0(sort(names(par_model_driver)), collapse = ", "),
+                 paste0(sort(names(par_model$driver)), collapse = ", "),
                  paste0(sort(names(par_model_fixed)), collapse = ", "),
-                 paste0(sort(valid_par_model_driver), collapse = ",")))
+                 paste0(sort(valid_names$driver), collapse = ",")))
   }
 
   # Function to mutate a column inside the nested data.frame of the driver
@@ -404,19 +433,17 @@ likelihoodHelper_update_model_parameters <- function(curr_model, par, par_fixed,
         # test_df <- mutate_nested_column(test_df, "bd_notexisting", 22); unnest(test_df, c(data, data2))
   
   # Loop over the names and values of modified parameters
-  for (parname in names(par_model_driver)) {
-    value <- par_model_driver[[parname]] # NOTE: this shold be a scalar, use `[[` !
+  for (parname in names(par_model$driver)) {
+    value <- par_model$driver[[parname]] # NOTE: this shold be a scalar, use `[[` !
     # cat("Overwriting parameter:'", parname, "' with value=", value, "\n")
     drivers <- mutate_nested_column(drivers, parname, value)
   }
   
-  return(list(drivers          = drivers, 
-              par_model_global = par_model_global,
-              # TODO: updated$par_error is not very elegant!
-              par_error        = par_error))
+  return(list(drivers = drivers, 
+              par     = par))
 }
 
-likelihoodHelper_assemble_pred_obs <- function(
+llstep04_assemble_pred_vs_obs <- function(
     curr_model = c("biomee", "p-model"), 
     model_out_full, 
     targets, 
@@ -428,13 +455,13 @@ likelihoodHelper_assemble_pred_obs <- function(
   #### 4) Combine modelled and observed variables
   
   #### 4a) PREPROCESS model output
-  pred_long <- likelihoodHelper2_get_long_model_output_for_targets(curr_model, model_out_full, targets)
+  pred_long <- llstep04a_get_long_model_output_for_targets(curr_model, model_out_full, targets)
   # NOTE: 'pred_long' is now a grouped data.frame containing daily (p-model) or yearly (BiomeE) output 
   # and the following columns:
   #   - ID cols (p-model: sitename, date, year_dec;
   #              BiomeE:  sitename, year)
   #   - and columns 'variables' and 'pred' 
-  
+
   # drop spinup years in pred_long # TODO: (currently this removal is deactivated) can we get rid of this?
   if(curr_model == "biomee"){
     # drop spinup years if activated
@@ -448,7 +475,7 @@ likelihoodHelper_assemble_pred_obs <- function(
   }
   
   #### 4b) PREPROCESS observation data
-  obs_long <- likelihoodHelper2_pivot_longer_obs(curr_model, obs, targets)
+  obs_long <- llstep04b_pivot_longer_obs(curr_model, obs, targets)
   # NOTE: 'obs_long' is a list of two long dataframes: `traits` and `timeseries`
   # example formats:
   # > obs_long$timeseries # p-model
@@ -582,7 +609,7 @@ likelihoodHelper_assemble_pred_obs <- function(
   return(pred_obs_df)
 }
 
-likelihoodHelper2_get_long_model_output_for_targets <- function(curr_model, model_out_full, targets){
+llstep04a_get_long_model_output_for_targets <- function(curr_model, model_out_full, targets){
   ## INTRO
   # possible P-model outputs:
   # model_out_full$data[[1]] |> tibble()                       # daily forest-specific output :    date, year_dec, properties/fluxes/states/...
@@ -618,7 +645,7 @@ likelihoodHelper2_get_long_model_output_for_targets <- function(curr_model, mode
     #       are kept through select() and pivot_longer()
   }else if(curr_model == "p-model"){
     id_cols_pmodel_output_daily_tile     <- c('sitename', 'date', 'year_dec')   
-    
+
     # Currently only daily output ('data') is used for p-modle
     pred_wide <- model_out_full |>
       # subset daily_tile_output only (called 'data')
@@ -650,7 +677,7 @@ likelihoodHelper2_get_long_model_output_for_targets <- function(curr_model, mode
                         names_to = 'variables', values_to = 'pred')
   return(pred_long)
 }
-likelihoodHelper2_pivot_longer_obs <- function(curr_model, obs, targets){
+llstep04b_pivot_longer_obs <- function(curr_model, obs, targets){
   
   # separate observational validation data into sites containing
   # time series (fluxes/states) and sites containing constants (traits)
@@ -748,10 +775,9 @@ likelihoodHelper2_pivot_longer_obs <- function(curr_model, obs, targets){
   return(list(traits     = obs_long_traits,
               timeseries = obs_long_timeseries))
 }
-likelihoodHelper_compute_default_loglikelihood <- function(pred_obs_df, targets, par_error, flag_single_value = TRUE){
+llstep05_compute_default_loglikelihood <- function(pred_obs_df, targets, par_error){
   # TODO: change this approach to another one based on a long data.frame containing
   # columns for 'sitename', 'variables', 'error_model', 'obs_value', 'pred_value'
-
   par_error_renamed <- structure(
     unname(par_error),
     .Names = stringr::str_replace_all(names(par_error), c("GPP"="gpp")) # TODO: this is err_GPP, but target is gpp...
@@ -772,13 +798,10 @@ likelihoodHelper_compute_default_loglikelihood <- function(pred_obs_df, targets,
       sd   = error_sd,    # error model parameter
       log  = TRUE)))
   
-  if(flag_single_value){
-    ll <- sum(ll_df_new$ll)
-    # trap boundary conditions
-    if(is.nan(ll) | is.na(ll) | ll == 0){ll <- -Inf}
-    return(ll)
-  } else {
-    return(df_for_ll)   # TODO: remove flag_single_value, was only used for debugging
-  }
+  ll <- sum(ll_df_new$ll)
+  # trap boundary conditions
+  if(is.nan(ll) | is.na(ll) | ll == 0){ll <- -Inf}
+  return(ll)
+  # for debugging: return(df_for_ll) # for more granularity when debugging
 }
 
