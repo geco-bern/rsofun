@@ -19,7 +19,7 @@ module md_forcing_biomee
     real    :: windU         ! wind velocity (m s-1)
     real    :: P_air         ! pa
     real    :: CO2           ! mol CO2/mol dry air
-    real    :: RH            ! relative humidity
+    real    :: RH            ! relative humidity (fraction <1)
   end type climate_type
 
 contains

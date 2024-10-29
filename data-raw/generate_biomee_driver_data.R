@@ -197,7 +197,7 @@ forcing <- forcing %>%
   rename(year=YEAR, hod=HOUR, ppfd=Swdown, temp=TEMP, rh=RH,
          rain=RAIN, wind=WIND, patm=PRESSURE, co2=aCO2_AW) %>%
   mutate(date = make_date(year,month,day),
-           vpd = rh_to_vpd(temp, rh)) %>%
+           vpd = rh_to_vpd(temp, rh / 100.0)) %>%
   select(date,hod,temp,rain,vpd,ppfd,patm,wind,co2,)
 
 biomee_gs_leuning_drivers <- tibble(
