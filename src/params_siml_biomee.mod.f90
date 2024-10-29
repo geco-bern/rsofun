@@ -146,7 +146,7 @@ contains
       out_steering%init = .true.
     else
       out_steering%init = .false.
-    endif 
+    endif
 
     if (year==params_siml%runyears) then
       out_steering%finalize = .true.

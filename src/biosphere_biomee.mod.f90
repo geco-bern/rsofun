@@ -108,8 +108,10 @@ contains
           vegn%thetaS  = (vegn%wcl(2) - WILTPT) / (FLDCAP - WILTPT)
           tsoil = air_to_soil_temp(vegn%thetaS, &
                   myinterface%climate(:)%Tair - kTkelvin, &
-                  doy &
-                  ) + kTkelvin
+                  doy, &
+                  myinterface%steering%init, &
+                  myinterface%steering%finalize &
+          ) + kTkelvin
 
           !----------------------------------------------------------------
           ! Sub-daily time step at resolution given by forcing (can be 1 = daily)

@@ -57,6 +57,7 @@ params_siml <- tibble(
 
 params_siml_pmodel <- params_siml
 params_siml_pmodel$method_photosynth <- "pmodel"
+params_siml_pmodel$steps_per_day <- 1
 
 params_tile <- tibble(
   soiltype = 3,
@@ -257,11 +258,11 @@ biomee_gs_leuning_output_annual_tile <- out$data[[1]]$output_annual_tile
 biomee_gs_leuning_output_annual_cohorts <- out$data[[1]]$output_annual_cohorts
 
 cowplot::plot_grid(
-  biomee_gs_leuning_output %>% 
+  biomee_gs_leuning_output %>%
     ggplot() +
     geom_line(aes(x = year, y = GPP)) +
     theme_classic()+labs(x = "Year", y = "GPP"),
-  biomee_gs_leuning_output %>% 
+  biomee_gs_leuning_output %>%
     ggplot() +
     geom_line(aes(x = year, y = plantC)) +
     theme_classic()+labs(x = "Year", y = "plantC")
@@ -287,11 +288,11 @@ biomee_p_model_output_annual_tile <- out$data[[1]]$output_annual_tile
 biomee_p_model_output_annual_cohorts <- out$data[[1]]$output_annual_cohorts
 
 cowplot::plot_grid(
-  biomee_p_model_output %>% 
+  biomee_p_model_output %>%
     ggplot() +
     geom_line(aes(x = year, y = GPP)) +
     theme_classic()+labs(x = "Year", y = "GPP"),
-  biomee_p_model_output %>% 
+  biomee_p_model_output %>%
     ggplot() +
     geom_line(aes(x = year, y = plantC)) +
     theme_classic()+labs(x = "Year", y = "plantC")
@@ -306,4 +307,3 @@ biomee_p_model_output_annual_cohorts %>% group_by(PFT,year) %>%
 save(biomee_p_model_output,
      file = "data/biomee_p_model_output.rda",
      compress = "xz")
-

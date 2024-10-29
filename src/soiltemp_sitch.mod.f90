@@ -11,19 +11,20 @@ module md_soiltemp
 
 contains
 
-  subroutine soiltemp( soil, dtemp, doy )
+  subroutine soiltemp( soil, dtemp, doy, init, finalize)
     !/////////////////////////////////////////////////////////////////////////
     ! Calculates soil temperature (deg C) based on air temperature (deg C).
     !-------------------------------------------------------------------------
     use md_params_core, only: ndayyear, nlu, ndaymonth, pi
     use md_sofunutils, only: running
     use md_tile_pmodel, only: soil_type
-    use md_interface_pmodel, only: myinterface
 
     ! arguments
     type( soil_type ), dimension(nlu), intent(inout) :: soil
     real, dimension(ndayyear), intent(in)            :: dtemp      ! daily temperature (deg C)
     integer, intent(in)                              :: doy        ! current day of year
+    logical, intent(in)                              :: init       ! first year
+    logical, intent(in)                              :: finalize   ! final year
 
     ! local variables
     real, dimension(:),   allocatable, save   :: dtemp_pvy    ! daily temperature of previous year (deg C)
@@ -38,7 +39,7 @@ contains
     real :: alag, amp, lag, lagtemp
 
     ! in first year, use this years air temperature (available for all days in this year)
-    if ( myinterface%steering%init .and. doy == 1 ) then
+    if ( init .and. doy == 1 ) then
       if (.not.allocated(dtemp_pvy    )) allocate( dtemp_pvy(ndayyear) )
       if (.not.allocated(wscal_pvy    )) allocate( wscal_pvy(nlu,ndayyear) )
       if (.not.allocated(wscal_alldays)) allocate( wscal_alldays(nlu,ndayyear) )
@@ -108,7 +109,7 @@ contains
     end if
 
     ! free memory on the last simulation year and day
-    if ( myinterface%steering%finalize .and. doy == ndayyear ) then
+    if ( finalize .and. doy == ndayyear ) then
       if (allocated(dtemp_pvy    )) deallocate( dtemp_pvy )
       if (allocated(wscal_pvy    )) deallocate( wscal_pvy )
       if (allocated(wscal_alldays)) deallocate( wscal_alldays )
@@ -116,7 +117,7 @@ contains
 
   end subroutine soiltemp
 
-  function air_to_soil_temp(thetaS, dtemp, doy) result (soil_temp)
+  function air_to_soil_temp(thetaS, dtemp, doy, init, finalize) result (soil_temp)
     !/////////////////////////////////////////////////////////////////////////
     ! Calculates soil temperature (deg C) based on air temperature (deg C).
     ! Convnience wrapper
@@ -127,6 +128,8 @@ contains
     real, dimension(ndayyear), intent(in)            :: dtemp      ! daily temperature (deg C)
     real, intent(in)                                 :: thetaS     ! thetaS
     integer, intent(in)                              :: doy        ! current day of year
+    logical, intent(in)                              :: init       ! first year
+    logical, intent(in)                              :: finalize   ! final year
 
     ! local variables
     type( soil_type ), dimension(1) :: soil
@@ -139,7 +142,7 @@ contains
     ! Using thetaS as water scalar
     soil(1)%phy%wscal = thetaS
 
-    call soiltemp(soil, dtemp, doy)
+    call soiltemp(soil, dtemp, doy, init, finalize)
 
     soil_temp = soil(1)%phy%temp
 

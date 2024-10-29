@@ -159,7 +159,9 @@ contains
         call soiltemp(&
                       tile(:)%soil, &
                       myinterface%climate(:)%dtemp, &
-                      doy & 
+                      doy, &
+                      myinterface%steering%init, &
+                      myinterface%steering%finalize &
                       )
         ! if (verbose) print*, '... done'
 
