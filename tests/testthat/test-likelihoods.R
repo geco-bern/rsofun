@@ -192,10 +192,11 @@ test_that("test likelihood calculations", {
                                       -13.548057740458))
   # Test rsofun::cost_rmse_biomee()
   rmse_values_BiomeE <- apply(dplyr::select(test_params_BiomeE, -err_GPP), 1, function(par_v) { # par_v is a vector
-    rsofun::cost_rmse_biomee(          # likelihood cost function from package
+    cost_rmse_biomee(          # likelihood cost function from package
       par = par_v,                     # must be named            # TODO: changet to as.list(). Make rmse work with lists, too.
       obs = rsofun::biomee_validation, # example data from package
-      drivers = rsofun::biomee_gs_leuning_drivers)
+      drivers = rsofun::biomee_gs_leuning_drivers,
+      targets = c("GPP", "LAI", "Density12", "plantC")) # default targets for backwards compatibility
   })
   testthat::expect_equal(tolerance = 1e-4,
                          object = rmse_values_BiomeE, 

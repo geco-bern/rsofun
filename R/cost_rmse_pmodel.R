@@ -18,7 +18,7 @@
 #' @param par_fixed A named list of model parameter values to keep fixed during the
 #' calibration. These should complement the input \code{par} such that all model
 #' parameters are passed on to \code{\link{runread_pmodel_f}}.
-#' @param target_weights A vector of weights to be used in the computation of
+#' @param target_weights A named vector of weights to be used in the computation of
 #' the RMSE if using several targets. By default (\code{target_weights = NULL})
 #' the RMSE is computed separately for each target and then averaged. The provided
 #' weights are used to compute a weighted average of RMSE across targets.
@@ -77,134 +77,100 @@ cost_rmse_pmodel <- function(
     parallel = FALSE,
     ncores = 2
 ){
-  # TODO: refactor cost_rmse_pmodel() using cost_likelihood_generic()
+  cost_rmse_generic(
+    par        = par,
+    obs        = obs,
+    drivers    = drivers,
+    targets    = targets,
+    par_fixed  = par_fixed,
+    target_weights = target_weights,
+    parallel   = parallel,
+    ncores     = ncores,
+    curr_model = "p-model")
+}
+
+cost_rmse_generic <- function(
+    par,   # model parameters & error terms for each target
+    obs,
+    drivers,
+    targets,
+    par_fixed = NULL, # non-calibrated model parameters
+    target_weights = NULL, # if using several targets, how are the individual 
+                           # RMSE weighted? named vector
+    parallel = FALSE,
+    ncores = 2,
+    curr_model = c("biomee", "p-model")
+){
+  match.arg(curr_model, several.ok = FALSE)
   
-  # predefine variables for CRAN check compliance
-  sitename <- data <- gpp_mod <- NULL
+  #### 1) Parse input parameters
+  parameters <- llstep01_split_parameters(curr_model, par, par_fixed, drivers)
+  # defines parameters$model and parameters$error
+  # for use with the likelihood error model or for use with the simulation model
   
-  ## check input parameters
-  if( (length(par) + length(par_fixed)) != 9 ){
-    stop('Error: Input calibratable and fixed parameters (par and par_fixed)
-    do not match length of the required P-model parameters.')
-  }
+  #### 2) Update input args to runread_pmodel_f()/runread_biomee_f() with the provided parameters
+  updated <- llstep02_update_model_args(
+    curr_model, 
+    parameters$model, 
+    parameters$valid_names,
+    drivers)
   
-  ## define parameter set based on calibrated parameters
-  calib_param_names <- c('kphio', 'kphio_par_a', 'kphio_par_b',
-                         'soilm_thetastar', 'soilm_betao',
-                         'beta_unitcostratio', 'rd_to_vcmax', 
-                         'tau_acclim', 'kc_jmax')
-  
-  if(!is.null(par_fixed)){
-    params_modl <- list()
-    # complete with calibrated values
-    i <- 1 # start counter
-    for(par_name in calib_param_names){
-      if(is.null(par_fixed[[par_name]])){
-        params_modl[[par_name]] <- par[i]   # use calibrated par value
-        i <- i + 1                          # counter of calibrated params
-      }else{
-        params_modl[[par_name]] <- par_fixed[[par_name]]  # use fixed par value
-      }
-    }
+  #### 3) Run the model: runread_pmodel_f()/runread_biomee_f()
+  if(curr_model == "biomee"){
+    model_out_full <- runread_biomee_f(
+      drivers   = updated$drivers,
+      # par     = updated$par, # unused by BiomeE
+      makecheck = TRUE,
+      parallel  = parallel,
+      ncores    = ncores
+    )
+  }else if(curr_model == "p-model"){
+    model_out_full <- runread_pmodel_f(
+      drivers   = updated$drivers,
+      par       = updated$par,
+      makecheck = TRUE,
+      parallel  = parallel,
+      ncores    = ncores
+    )
   }else{
-    params_modl <- as.list(par)       # all parameters calibrated
-    names(params_modl) <- calib_param_names
+    stop("Arguments 'curr_model' must be either 'biomee' or 'p-model'")
   }
   
-  # run the model
-  df <- runread_pmodel_f(
-    drivers, 
-    par = params_modl,
-    makecheck = TRUE,
-    parallel = FALSE
-  )
+  #### 4) Combine modelled predictions and observed variables
+  # drop spinup years if activated # TODO: (currently this removal is deactivated) can we get rid of this?
+  spinup_years <- ifelse(updated$drivers$params_siml[[1]]$spinup,          
+                         updated$drivers$params_siml[[1]]$spinupyears + 1, # TODO: why plus 1?
+                         0)
   
-  # clean model output and unnest
-  df <- df |>
-    dplyr::rowwise() |>
-    dplyr::reframe(
-      cbind(sitename, data[, c('date', unique(c('gpp', targets)))]) |>
-        stats::setNames(c('sitename', 'date', paste0(unique(c('gpp', targets)), '_mod')))
-    ) # gpp is used to get average trait prediction
+  pred_obs_df <- llstep04_assemble_pred_vs_obs(curr_model, model_out_full, targets, obs, spinup_years)
   
-  # separate validation data into fluxes and traits, site by site
-  is_flux <- apply(obs, 1, function(x){ 'date' %in% colnames(x$data)})
+  #### 5) Compute RMSE
+  rmse <- llstep05_compute_RMSE(pred_obs_df    = pred_obs_df, 
+                                targets        = targets, 
+                                target_weights = target_weights)
   
-  if(sum(is_flux) > 0){
-    flux_sites <- obs$sitename[is_flux]
-    
-    # Unnest flux observations for our targets
-    obs_flux <- obs[is_flux, ] |>
-      dplyr::select(sitename, data) |>
-      tidyr::unnest(data) |>
-      dplyr::select(any_of(c('sitename', 'date', targets)))
-    
-    if(ncol(obs_flux) < 3){
-      warning("Dated observations (fluxes) are missing for the chosen targets.")
-      df_flux <- data.frame()
-    }else{
-      # Join P-model output and flux observations
-      df_flux <- df |>
-      dplyr::filter(sitename %in% flux_sites) |>
-      dplyr::left_join(
-        obs_flux, 
-        by = c('sitename', 'date'))    # observations with missing date are ignored
-    }
-  }else{
-    df_flux <- data.frame()
-  }
-  
-  if(sum(!is_flux) > 0){
-    trait_sites <- obs$sitename[!is_flux]
-    
-    # Unnest trait observations for our targets
-    obs_trait <- obs[!is_flux, ] |>
-      dplyr::select(sitename, data) |>
-      tidyr::unnest(data) |>
-      dplyr::select(any_of(c('sitename', targets)))
-    
-    if(ncol(obs_trait) < 2){
-      warning("Non-dated observations (traits) are missing for the chosen targets.")
-      df_trait <- data.frame()
-    }else{
-      # Join output and trait observations
-      df_trait <- df |>
-        dplyr::filter(sitename %in% trait_sites) |>
-        dplyr::group_by(sitename) |>
-          # get growing season average traits
-        dplyr::summarise(across(ends_with("_mod") & !starts_with('gpp'),
-                                ~ sum(.x * gpp_mod/sum(gpp_mod)),
-                                .names = "{.col}")) |>
-        dplyr::left_join(
-          obs_trait,
-          by = c('sitename')        # compare yearly averages rather than daily obs
-        )
-    }
-  }else{
-    df_trait <- data.frame()
-  }
-  
-  # Calculate cost (RMSE) per target
-  rmse <- lapply(targets, function(target){
-    if(target %in% colnames(df_flux)){
-      error <- (df_flux[[target]] - df_flux[[paste0(target, '_mod')]])^2
-    }else{
-      error <- c()
-    }
-    if(target %in% colnames(df_trait)){
-      error <- c(error, 
-                (df_trait[[target]] - df_trait[[paste0(target, '_mod')]])^2)
-    }
-    sqrt(mean(error, na.rm = TRUE))
-  }) |>
-    unlist()
+  return(rmse)
+}
+llstep05_compute_RMSE <- function(pred_obs_df, targets, target_weights){
+  # pred_obs_df is a data.frame containing columns for 'date', 'year_dec', 
+  # 'sitename', 'targets_aggreg', 'period', 'target', 'targets_obs', 'targets_pred'
+
+  # compute RMSE
+  df_for_rmse <- pred_obs_df |>
+    dplyr::filter(target %in% stringr::str_replace_all(targets, c("GPP"="gpp"))) |> 
+    tidyr::drop_na('targets_obs', 'targets_pred') |> # remove NA in relevant columns  # TODO: do we need this drop_na?
+    dplyr::group_by(.data$target) |>
+    # dplyr::mutate(targets_se = (.data$targets_obs - .data$targets_pred)^2)
+    dplyr::summarise(targets_rmse = sqrt(mean((.data$targets_obs - .data$targets_pred)^2, na.rm = TRUE)))
   
   # Aggregate RMSE over targets (weighted average)
+                  #TODO  for developing: # target_weights <- c(gpp = 1.0)
   if(!is.null(target_weights)){
-    cost <- sum(rmse * target_weights)
+    cost <- sum(df_for_rmse$targets_rmse * target_weights[df_for_rmse$target])
   }else{
-    cost <- mean(rmse, na.rm = TRUE)
+    cost <- mean(df_for_rmse$targets_rmse, na.rm = TRUE)
   }
 
   return(cost)
+  # for debugging: return(df_for_ll) # for more granularity when debugging
 }

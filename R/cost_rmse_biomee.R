@@ -36,16 +36,27 @@
 #' }
 
 cost_rmse_biomee <- function(
-    par,
-    obs,
-    drivers
+    par,  # ordered vector of model parameters
+    obs, 
+    drivers,
+    targets = c("GPP", "LAI", "Density12", "plantC"), # default targets for backwards compatibility
+    par_fixed = NULL, # non-calibrated model parameters
+    target_weights = NULL, # if using several targets, how are the individual 
+    # RMSE weighted? named vector
+    parallel = FALSE,
+    ncores = 2
 ){
-  # TODO: refactor cost_rmse_biomee() using cost_likelihood_generic()
-  
-  # predefine variables for CRAN check compliance
-  GPP <- LAI <- Density12 <- plantC <- targets_obs <-
-    targets_mod <- error <- targets_obs <- NULL
-  
+  cost_rmse_generic(
+    par        = par,
+    obs        = obs,
+    drivers    = drivers,
+    targets    = targets,
+    par_fixed  = NULL,
+    target_weights = target_weights,
+    parallel   = parallel,
+    ncores     = ncores,
+    curr_model = "biomee")
+}
   # Add changed model parameters to drivers, overwriting where necessary.
   drivers$params_species[[1]]$phiRL[]      <- par[1]
   drivers$params_species[[1]]$LAI_light[]  <- par[2]
