@@ -1010,7 +1010,7 @@ contains
     ! real :: failed_seeds, N_failedseed !, prob_g, prob_e
     integer :: newcohorts, matchflag, nPFTs ! number of new cohorts to be created
     integer :: nCohorts, istat
-    integer :: i, k ! cohort indices
+    integer :: i, k, n ! cohort indices
 
     ! Looping through all reproductable cohorts and Check if reproduction happens
     vegn%WDrepr = 0.0
@@ -1071,29 +1071,37 @@ contains
       ccnew(1:vegn%n_cohorts) = ccold(1:vegn%n_cohorts) ! copy old cohort information
       vegn%cohorts => ccnew
 
-      deallocate (ccold)
-
       ! set up new cohorts
       k = vegn%n_cohorts
       do i = 1, newcohorts
-        
         k = k + 1 ! increment new cohort index
-        cc => vegn%cohorts(k)
+        ! Copy old information to new cohort, Weng, 2021-06-02
+        do n =1, vegn%n_cohorts ! go through old cohorts
+          if(reproPFTs(i) == ccold(n)%species)then
+            ccnew(k) = ccold(n) ! Use the information from parent cohort
+            exit
+          endif
+        enddo
         
+        ! Update new cohort information
+        cc => vegn%cohorts(k)
+        cc%species    = reproPFTs(i)
         ! Give the new cohort an ID
         cc%ccID = MaxCohortID + i
-        
         ! update child cohort parameters
         associate (sp => spdata(reproPFTs(i)))
         
         ! density
         cc%nindivs = seedC(i)/sp%seedlingsize
 
-        cc%species    = reproPFTs(i)
-        cc%status     = LEAF_OFF
-        cc%firstlayer = 0
-        cc%topyear    = 0.0
-        cc%age        = 0.0
+        if(sp%phenotype == 0)then
+          cc%status = LEAF_OFF
+        else
+          cc%status = LEAF_ON
+        endif
+        !cc%firstlayer = 0
+        !cc%topyear    = 0.0
+        !cc%age        = 0.0
 
         ! Carbon pools
         cc%pleaf%c%c12 = 0.0 * sp%seedlingsize
@@ -1116,6 +1124,9 @@ contains
         cc%psapw%n%n14  = cc%psapw%c%c12/sp%CNsw0
         cc%pwood%n%n14  = cc%pwood%c%c12/sp%CNwood0
         cc%pseed%n%n14  = 0.0
+
+        cc%topyear    = 0.0
+        cc%age        = 0.0 
 
         if (cc%nindivs>0.0) then
           cc%plabl%n%n14 = sp%seedlingsize * seedN(i) / seedC(i) -  &
@@ -1152,12 +1163,12 @@ contains
 
         end associate   ! F2003
       enddo
-
+      deallocate (ccold)
       MaxCohortID = MaxCohortID + newcohorts
       vegn%n_cohorts = k
       ccnew => null()
       
-      call zero_diagnostics( vegn )
+      !call zero_diagnostics( vegn )
     
     endif ! set up new born cohorts
 
