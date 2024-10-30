@@ -46,7 +46,6 @@ contains
       ! Note: in the first year, we use this year as previous year,
       ! meaning that the end of this year is used is if it was the end of last year.
       dtemp_pvy(:) = dtemp(:)
-      wscal_pvy(:,:) = wscal_alldays(:,:)
     end if
 
     wscal_alldays(:,doy) = soil(:)%phy%wscal
@@ -64,7 +63,13 @@ contains
       ! avetemp stores running mean temperature of previous 12 months.
       ! meanw1 stores running mean soil moisture in layer 1 of previous 12 months 
       !-------------------------------------------------------------------------
-      meanw1  = running( wscal_alldays(lu,:), doy, ndayyear, "mean", wscal_pvy(lu,:))
+
+      ! On the first year, we do not have wscal_pvy since it is not a forcing, but an output.
+      if (init) then
+        meanw1  = running( wscal_alldays(lu,:), doy, ndayyear, "mean")
+      else
+        meanw1  = running( wscal_alldays(lu,:), doy, ndayyear, "mean", wscal_pvy(lu,:))
+      end if
 
       ! In case of zero soil water, soil temp = air temp
       if (abs(meanw1 - 0.0) < eps) then
