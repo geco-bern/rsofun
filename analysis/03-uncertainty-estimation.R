@@ -66,7 +66,7 @@ pmodel_runs <- samples_par |>
   # compute quantiles for each day
   dplyr::summarise(
     gpp_q05 = quantile(gpp, 0.05, na.rm = TRUE),
-    gpp = quantile(gpp, 0.5, na.rm = TRUE),          # get median
+    gpp_q50 = quantile(gpp, 0.5, na.rm = TRUE),          # get median
     gpp_q95 = quantile(gpp, 0.95, na.rm = TRUE),
     gpp_pred_q05 = quantile(gpp_pred, 0.05, na.rm = TRUE),
     gpp_pred_q95 = quantile(gpp_pred, 0.95, na.rm = TRUE)
@@ -74,16 +74,17 @@ pmodel_runs <- samples_par |>
 
 # Plot the credible intervals computed above
 # for the first year only
-plot_gpp_error <- ggplot(data = pmodel_runs |>
-                           dplyr::slice(1:365) |>
-                           dplyr::left_join(
-                             # Merge GPP validation data (first year)
-                             p_model_validation$data[[1]][1:365, ] |>
-                               dplyr::rename(gpp_obs = gpp),
-                             by = "date")
-) +             # Plot only first year
+data_to_plot <- pmodel_runs |>
+  # Plot only first year
+  dplyr::slice(1:365) |>
+  dplyr::left_join(
+    # Merge GPP validation data (first year)
+    p_model_validation$data[[1]][1:365, ] |>
+      dplyr::rename(gpp_obs = gpp),
+    by = "date")
+plot_gpp_error <- ggplot(data = data_to_plot) +
   geom_ribbon(
-    aes(ymin = gpp_pred_q05, 
+    aes(ymin = gpp_pred_q05,
         ymax = gpp_pred_q95,
         x = date,
         fill = "Model uncertainty")) +
@@ -92,21 +93,15 @@ plot_gpp_error <- ggplot(data = pmodel_runs |>
         ymax = gpp_q95,
         x = date,
         fill = "Parameter uncertainty")) +
-
   geom_line(
-    aes(
-      date,
-      gpp,
-      color = "Predictions"
-    )
-  ) +
-  geom_line(
-    aes(
-      date,
-      gpp_obs,
-      color = "Observations"
-    )
-  ) +
+    aes(x = date,
+        y = gpp_q50,
+        color = "Predictions")) +
+  # Include observations in the plot
+  geom_point(shape = 3, 
+    aes(x = date,
+        y = gpp_obs,
+        color = "Observations")) +
   theme_classic() +
   theme(panel.grid.major.y = element_line(),
         legend.position = "bottom") +
@@ -115,7 +110,6 @@ plot_gpp_error <- ggplot(data = pmodel_runs |>
     y = expression(paste("GPP (g C m"^-2, "s"^-1, ")"))
   )
 
-# Include observations in the plot
 plot_gpp_error <- plot_gpp_error +  
   scale_color_manual(name = "",
                      breaks = c("Observations",

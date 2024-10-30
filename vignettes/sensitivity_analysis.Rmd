@@ -432,7 +432,7 @@ pmodel_runs <- samples_par |>
   # compute quantiles for each day
   dplyr::summarise(
     gpp_q05 = quantile(gpp, 0.05, na.rm = TRUE),
-    gpp = quantile(gpp, 0.5, na.rm = TRUE),          # get median
+    gpp_q50 = quantile(gpp, 0.5, na.rm = TRUE),          # get median
     gpp_q95 = quantile(gpp, 0.95, na.rm = TRUE),
     gpp_pred_q05 = quantile(gpp_pred, 0.05, na.rm = TRUE),
     gpp_pred_q95 = quantile(gpp_pred, 0.95, na.rm = TRUE)
@@ -471,13 +471,10 @@ plot_gpp_error <- ggplot(data = pmodel_runs |>
         x = date),
     fill = 'grey40', alpha = 0.2) +
   geom_line(
-    aes(
-      date,
-      gpp
-    ),
+    aes(x = date,
+        y = gpp_q50),
     colour = "grey40",
-    alpha = 0.8
-  ) +
+    alpha = 0.8) +
   theme_classic() +
   theme(panel.grid.major.y = element_line()) +
   labs(
@@ -492,12 +489,9 @@ validation_data <- p_model_validation$data[[1]][1:365, ]
 plot_gpp_error +  
   geom_line(
     data = validation_data,
-    aes(
-      date,
-      gpp
-    ),
-    alpha = 0.8
-  )
+    aes(x = date,
+        y = gpp),
+    alpha = 0.8)
 ```
 
 <!-- Below we plot the first year of predicted GPP (in grey) against GPP observations (in black). -->
