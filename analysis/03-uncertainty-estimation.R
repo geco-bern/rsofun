@@ -123,6 +123,59 @@ plot_gpp_error <- plot_gpp_error +
                                "Parameter uncertainty"),
                     values = c(t_col("#E69F00", 60),
                                t_col("#009E73", 40)))
+plot_gpp_error
+dir.create("./analysis/paper_results_files2")
+settings_string <- get_settings_str(par_calib)
+ggsave(paste0("./analysis/paper_results_files2/",settings_string,"_gpp_predictions_observations.pdf"), plot = plot_gpp_error, width = 6, height = 5)
+ggsave(paste0("./analysis/paper_results_files2/",settings_string,"_gpp_predictions_observations.png"), plot = plot_gpp_error, width = 6, height = 5)
 
-# ggsave("./analysis/paper_results_files/gpp_predictions_observations.pdf", plot = plot_gpp_error, width = 6, height = 5)
-# ggsave("./analysis/paper_results_files/gpp_predictions_observations.png", plot = plot_gpp_error, width = 6, height = 5)
+
+
+
+
+plot_gpp_error2 <- ggplot(data = data_to_plot) +
+  # geom_ribbon(
+  #   aes(ymin = gpp_pred_q05,
+  #       ymax = gpp_pred_q95,
+  #       x = date,
+  #       fill = "Model uncertainty")) +
+  geom_ribbon(
+    aes(ymin = gpp_q05, 
+        ymax = gpp_q95,
+        x = date,
+        fill = "Parameter uncertainty")) +
+  # geom_line(
+  #   aes(x = date,
+  #       y = gpp_q50,
+  #       color = "Predictions")) +
+  # Include observations in the plot
+  # geom_point(
+  #   aes(x = date,
+  #       y = gpp_obs,
+  #       color = "Observations")) +
+  theme_classic() +
+  theme(panel.grid.major.y = element_line(),
+        legend.position = "bottom") +
+  labs(
+    x = 'Date',
+    y = expression(paste("GPP (g C m"^-2, "s"^-1, ")"))
+  )
+
+plot_gpp_error2 <- plot_gpp_error2 +  
+  scale_color_manual(name = "",
+                     breaks = c("Observations",
+                                "Predictions",
+                                "Non-calibrated predictions"),
+                     values = c(t_col("black", 10),
+                                t_col("#E69F00", 10),
+                                t_col("#56B4E9", 10))) +
+  scale_fill_manual(name = "",
+                    breaks = c("Model uncertainty",
+                               "Parameter uncertainty"),
+                    values = c(t_col("#E69F00", 60),
+                               t_col("#009E73", 40)))
+plot_gpp_error2
+dir.create("./analysis/paper_results_files2")
+ggsave(paste0("./analysis/paper_results_files2/",settings_string,"_gpp_predictions_observations_2.pdf"), plot = plot_gpp_error2, width = 6, height = 5)
+ggsave(paste0("./analysis/paper_results_files2/",settings_string,"_gpp_predictions_observations_2.png"), plot = plot_gpp_error2, width = 6, height = 5)
+

@@ -116,5 +116,50 @@ toc() # Stop measuring time
 # Plot prior and posterior distributions
 gg <- plot_prior_posterior_density(par_calib$mod)
 
-# ggsave("./analysis/paper_results_files/prior_posterior.pdf", plot = gg, width = 6, height = 5)
-# ggsave("./analysis/paper_results_files/prior_posterior.png", plot = gg, width = 6, height = 5)
+# Plot MCMC diagnostics
+# plot(par_calib$mod)
+# summary(par_calib$mod) # Gives Gelman Rubin multivariate of 1.019
+# summary(par_calib$par)
+# print(get_runtime(par_calib))
+
+# Output
+## Define MCMC postprocessing
+get_settings_str <- function(par_calib) {# function(settings_calib){
+  stopifnot(is(par_calib$mod, "mcmcSamplerList"))
+  
+  # explore what's in a mcmcSamplerList:
+    # summary(par_calib$mod)
+    # plot(par_calib$mod)
+  individual_chains <- par_calib$mod
+  nrChains <- length(individual_chains) # number of chains
+    # plot(individual_chains[[1]]) # chain 1
+    # plot(individual_chains[[2]]) # chain 2
+    # plot(individual_chains[[3]]) # chain 3
+    # class(individual_chains[[1]]$setup); individual_chains[[1]]$setup # Bayesian Setup
+    # individual_chains[[1]]$chain
+    # individual_chains[[1]]$X
+    # individual_chains[[1]]$Z
+  nrInternalChains <- lapply(individual_chains, function(curr_chain){curr_chain$settings$nrChains})  |> unlist() |> unique() |> paste0(collapse = "-")
+  nrIterations     <- lapply(individual_chains, function(curr_chain){curr_chain$settings$iterations})|> unlist() |> unique() |> paste0(collapse = "-")
+  nrBurnin         <- lapply(individual_chains, function(curr_chain){curr_chain$settings$burnin})    |> unlist() |> unique() |> paste0(collapse = "-")
+  sampler_name     <- lapply(individual_chains, function(curr_chain){curr_chain$settings$sampler})   |> unlist() |> unique() |> paste0(collapse = "-")
+  
+  # create descriptive string of settings for filename
+  return(sprintf(
+    "Sampler-%s-%siterations_ofwhich%sburnin_chains(%sx%s)",
+    sampler_name, nrIterations, nrBurnin, nrChains,  nrInternalChains))
+}
+get_runtime <- function(par_calib) {# function(settings_calib){
+  total_time_secs <- sum(unlist(lapply(
+    par_calib$mod, 
+    function(curr_chain){curr_chain$settings$runtime[["elapsed"]]})))  
+  return(sprintf("Total runtime: %.0f secs", total_time_secs))
+}
+
+dir.create("./analysis/paper_results_files2")
+settings_string <- get_settings_str(par_calib)
+
+saveRDS(par_calib, file = paste0("./analysis/paper_results_files2/",settings_string,"_prior_posterior.RDS"))
+ggsave(paste0("./analysis/paper_results_files2/",settings_string,"_prior_posterior.pdf"), plot = gg, width = 6, height = 5)
+ggsave(paste0("./analysis/paper_results_files2/",settings_string,"_prior_posterior.png"), plot = gg, width = 6, height = 5)
+
