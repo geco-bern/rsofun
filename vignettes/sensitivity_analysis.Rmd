@@ -343,16 +343,27 @@ When convergence has been reached, the oscillation of the time series should loo
 plot_acf_mcmc <- function(chains, par_names){
   # chains: from the BayesianTools output
   n_chains <- length(chains)
+  n_internal_chains <- length(chains[[1]]$chain)
   par(mfrow = c(length(par_names), n_chains))
   for(par_name in par_names){
     for(i in 1:n_chains){
-      chains[[i]][, par_name] |>
-        pacf(main = paste0("Series of ", par_name, " , chain ", i))
+      stopifnot(n_internal_chains<=3); color = c("blue", "red", "darkgreen")
+      spacing = 0.5/n_internal_chains
+      for(j in 1:n_internal_chains){
+        autocorr_internal_chain <- pacf(getSample(chains[[i]]$chain[[j]])[, par_name], plot = FALSE)
+        if(j==1){
+          plot(autocorr_internal_chain, col = color[j], 
+               main = sprintf("Series of %s , chain (%i)", par_name, i))  
+        } else {
+          lines(autocorr_internal_chain$lag + spacing*(j-1),
+                autocorr_internal_chain$acf,
+                col = color[j], type = "h")  
+        }
+      }
     }
   }
 }
-
-plot_acf_mcmc(par_calib$mod$chain, c("kphio", "kphio_par_a", "kphio_par_b", "err_gpp"))
+plot_acf_mcmc(par_calib$mod, c("kphio", "kphio_par_a", "kphio_par_b", "err_gpp"))
 ```
 
 Looking at the correlation between chains for different parameters is also helpful because parameter correlation may slow down convergence, or the chains may oscillate in the multivariate posterior space. In this calibration we expect parameter samples to be somewhat correlated, especially `kphio_par_a` and `kphio_par_b` because they specify the shape of the temperature dependence of the quantum yield efficiency, $\varphi_o(T)$. We can also see that `err_gpp` is correlated with `kphio` (to which the P-model is very sensitive), since the error represents how good the model fits the observed GPP.
