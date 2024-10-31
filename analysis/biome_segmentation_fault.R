@@ -4,9 +4,16 @@ library(dplyr)
 library(ggplot2)
 library(tibble)
 
-load("data/biomee_p_model_drivers.rda")
+#load("data/biomee_p_model_drivers.rda")
 # Set spunup to false:
 #biomee_p_model_drivers$params_siml[[1]]$spinup <- F
+
+set.seed(2023)
+out_sim <- runread_biomee_f(
+  biomee_p_model_drivers,
+  makecheck = TRUE,
+  parallel = FALSE
+)$data[[1]]$output_annual_tile
 
 # function to run biomee multiple times and detect the segmentation fault error
 biomeextimes <- function(drivers,n){
@@ -15,14 +22,14 @@ biomeextimes <- function(drivers,n){
     print(i)
     set.seed(2023)
     out <- runread_biomee_f(
-    drivers,
+      biomee_p_model_drivers,
     makecheck = TRUE,
     parallel = FALSE
   )$data[[1]]$output_annual_tile['plantC'] %>%
      slice(tail(row_number(), 1))
 
     print(paste("Plant C", out))
-    
+
   if(is.na(out)|out==0){
     print(out$plantC)
     stop("Error: Simulation failed")
@@ -35,6 +42,6 @@ biomeextimes <- function(drivers,n){
 
 # run the model n times 
 n = 5
-res = biomeextimes(biomee_p_model_drivers,n)
+#res = biomeextimes(biomee_p_model_drivers,n)
 
 # always after clearing the environment, the first run yields a slightly different value
