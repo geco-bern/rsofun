@@ -39,7 +39,7 @@ contains
     type(outtype_annual_cohorts), dimension(out_max_cohorts)         , intent(out) :: out_biosphere_annual_cohorts
 
     ! ! local variables
-    integer :: moy, doy
+    integer :: moy, doy, dm
     logical, save :: init  ! is true only on the first day of the simulation
 
     !----------------------------------------------------------------
@@ -79,6 +79,7 @@ contains
     endif
 
     simu_steps = 0
+    doy = 0
 
     !----------------------------------------------------------------
     ! LOOP THROUGH MONTHS
@@ -88,8 +89,9 @@ contains
       !----------------------------------------------------------------
       ! LOOP THROUGH DAYS
       !----------------------------------------------------------------
-      dayloop: do doy=1,ndaymonth(moy)
+      dayloop: do dm=1,ndaymonth(moy)
 
+        doy = doy + 1
         idoy = idoy + 1
 
         ! print*,'----------------------'
@@ -231,3 +233,4 @@ contains
   end subroutine biosphere_annual
 
 end module md_biosphere_biomee
+
