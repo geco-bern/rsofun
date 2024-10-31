@@ -172,8 +172,8 @@ init_cohort <- tibble(
 )
 
 init_soil <- tibble( #list
-  init_fast_soil_C    = 0.0,
-  init_slow_soil_C    = 0.0,
+  init_fast_soil_C    = 0.01,
+  init_slow_soil_C    = 0.001,
   init_Nmineral       = 0.015,
   N_input             = 0.0008
 )
