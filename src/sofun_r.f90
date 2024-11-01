@@ -43,7 +43,6 @@ contains
     ! Receives simulation parameters, site parameters, and the full 
     ! simulation's forcing as time series
     !----------------------------------------------------------------
-    use md_params_siml_pmodel, only: getsteering
     use md_forcing_pmodel, only: getclimate, getco2, getfapar, get_fpc_grid
     use md_interface_pmodel, only: interfacetype_biosphere, outtype_biosphere, myinterface
     use md_params_core
@@ -84,17 +83,18 @@ contains
     !----------------------------------------------------------------
     ! GET SIMULATION PARAMETERS
     !----------------------------------------------------------------
-    myinterface%params_siml%do_spinup      = spinup
-    myinterface%params_siml%spinupyears    = spinupyears
-    myinterface%params_siml%recycle        = recycle
-    myinterface%params_siml%firstyeartrend = firstyeartrend
-    myinterface%params_siml%nyeartrend     = nyeartrend
+    myinterface%params_siml%steering%do_spinup      = spinup
+    myinterface%params_siml%steering%spinupyears    = spinupyears
+    myinterface%params_siml%steering%recycle        = recycle
+    myinterface%params_siml%steering%firstyeartrend = firstyeartrend
+    myinterface%params_siml%steering%nyeartrend     = nyeartrend
 
-    if (myinterface%params_siml%do_spinup) then
-      myinterface%params_siml%runyears = myinterface%params_siml%nyeartrend + myinterface%params_siml%spinupyears
+    if (myinterface%params_siml%steering%do_spinup) then
+      myinterface%params_siml%steering%runyears = myinterface%params_siml%steering%nyeartrend &
+              + myinterface%params_siml%steering%spinupyears
     else
-      myinterface%params_siml%runyears = myinterface%params_siml%nyeartrend
-      myinterface%params_siml%spinupyears = 0
+      myinterface%params_siml%steering%runyears = myinterface%params_siml%steering%nyeartrend
+      myinterface%params_siml%steering%spinupyears = 0
     endif
     
     myinterface%params_siml%in_ppfd            = in_ppfd
@@ -108,16 +108,6 @@ contains
     myinterface%params_siml%lgn3               = lgn3
     myinterface%params_siml%lgr4               = lgr4
     myinterface%params_siml%secs_per_tstep     = secs_per_tstep
-
-    ! ! Count PFTs to be simulated
-    ! npft_local = 0
-    ! if (myinterface%params_siml%ltre) npft_local = npft_local + 1
-    ! if (myinterface%params_siml%ltne) npft_local = npft_local + 1
-    ! if (myinterface%params_siml%ltrd) npft_local = npft_local + 1
-    ! if (myinterface%params_siml%ltnd) npft_local = npft_local + 1
-    ! if (myinterface%params_siml%lgr3) npft_local = npft_local + 1
-    ! if (myinterface%params_siml%lgr4) npft_local = npft_local + 1
-    ! if (myinterface%params_siml%lgn3) npft_local = npft_local + 1
 
     ! set parameter to define that this is not a calibration run (otherwise sofun.f90 would not have been compiled, but sofun_simsuite.f90)
     myinterface%params_siml%is_calib = .true.  ! treat paramters passed through R/C-interface the same way as calibratable parameters
@@ -152,12 +142,12 @@ contains
     !----------------------------------------------------------------
     myinterface%fpc_grid(:) = get_fpc_grid( myinterface%params_siml )
     
-    do yr=1,myinterface%params_siml%runyears
+    do yr=1,myinterface%params_siml%steering%runyears
 
       !----------------------------------------------------------------
       ! Define simulations "steering" variables (forcingyear, etc.)
       !----------------------------------------------------------------
-      myinterface%steering = getsteering( yr, myinterface%params_siml )
+      myinterface%steering = get_steering( yr, myinterface%params_siml%steering )
 
       !----------------------------------------------------------------
       ! Get external (environmental) forcing
@@ -174,7 +164,7 @@ contains
       myinterface%pco2 = getco2(  nt, &
                                   forcing, &
                                   myinterface%steering%forcingyear, &
-                                  myinterface%params_siml%firstyeartrend &
+                                  myinterface%params_siml%steering%firstyeartrend &
                                   )
 
       !----------------------------------------------------------------
@@ -195,7 +185,7 @@ contains
       !----------------------------------------------------------------
       ! Populate Fortran output array which is passed back to C/R
       !----------------------------------------------------------------
-      if (yr > myinterface%params_siml%spinupyears ) then
+      if (yr > myinterface%params_siml%steering%spinupyears ) then
 
         idx_start = (myinterface%steering%forcingyear_idx - 1) * ndayyear + 1
         idx_end   = idx_start + ndayyear - 1
@@ -322,7 +312,6 @@ contains
     ! simulation's forcing as time series
     ! test xxx
     !----------------------------------------------------------------
-    use md_params_siml_biomee, only: getsteering
     ! use md_params_soil_biomee, only: getsoil
     use md_forcing_biomee, only: getclimate, &
       climate_type
@@ -457,17 +446,18 @@ contains
     !----------------------------------------------------------------
     ! POPULATE MYINTERFACE WITH ARGUMENTS FROM R
     !----------------------------------------------------------------
-    myinterface%params_siml%do_spinup        = spinup
-    myinterface%params_siml%spinupyears      = spinupyears
-    myinterface%params_siml%recycle          = recycle
-    myinterface%params_siml%firstyeartrend   = firstyeartrend
-    myinterface%params_siml%nyeartrend       = nyeartrend
+    myinterface%params_siml%steering%do_spinup        = spinup
+    myinterface%params_siml%steering%spinupyears      = spinupyears
+    myinterface%params_siml%steering%recycle          = recycle
+    myinterface%params_siml%steering%firstyeartrend   = firstyeartrend
+    myinterface%params_siml%steering%nyeartrend       = nyeartrend
 
-    if (myinterface%params_siml%do_spinup) then
-      myinterface%params_siml%runyears = myinterface%params_siml%nyeartrend + myinterface%params_siml%spinupyears
+    if (myinterface%params_siml%steering%do_spinup) then
+      myinterface%params_siml%steering%runyears = myinterface%params_siml%steering%nyeartrend &
+              + myinterface%params_siml%steering%spinupyears
     else
-      myinterface%params_siml%runyears = myinterface%params_siml%nyeartrend
-      myinterface%params_siml%spinupyears = 0
+      myinterface%params_siml%steering%runyears = myinterface%params_siml%steering%nyeartrend
+      myinterface%params_siml%steering%spinupyears = 0
     endif
 
     ! Simulation parameters
@@ -627,11 +617,11 @@ contains
     allocate(myinterface%pco2(ntstepsyear))
     ! allocate(out_biosphere_hourly_tile(ntstepsyear))
 
-    yearloop: do yr=1, myinterface%params_siml%runyears
+    yearloop: do yr=1, myinterface%params_siml%steering%runyears
       !----------------------------------------------------------------
       ! Define simulations "steering" variables (forcingyear, etc.)
       !----------------------------------------------------------------
-      myinterface%steering = getsteering( yr, myinterface%params_siml )
+      myinterface%steering = get_steering( yr, myinterface%params_siml%steering )
 
       !----------------------------------------------------------------
       ! Get external (environmental) forcing (for biomee, co2 is in myinterface%climate)
@@ -661,7 +651,7 @@ contains
       ! Output out_hourly_tile (calling subroutine)
       !----------------------------------------------------------------
       ! if (.not. myinterface%steering%spinup) then  
-      !   idx_hourly_start = (yr - myinterface%params_siml%spinupyears - 1) * ntstepsyear + 1    ! To exclude the spinup years and include only the transient years
+      !   idx_hourly_start = (yr - myinterface%params_siml%steering%spinupyears - 1) * ntstepsyear + 1    ! To exclude the spinup years and include only the transient years
       !   idx_hourly_end   = idx_hourly_start + ntstepsyear - 1
       !   ! call populate_outarray_hourly_tile( out_biosphere_hourly_tile(:), output_hourly_tile(idx_hourly_start:idx_hourly_end,:)) !xxx commented out for calibration!
       ! end if
@@ -672,7 +662,7 @@ contains
       ! Output only for transient years
       if (.not. myinterface%steering%spinup) then  
 
-        idx_daily_start = (yr - myinterface%params_siml%spinupyears - 1) * ndayyear + 1  
+        idx_daily_start = (yr - myinterface%params_siml%steering%spinupyears - 1) * ndayyear + 1
         idx_daily_end   = idx_daily_start + ndayyear - 1
 
         call populate_outarray_daily_tile( out_biosphere_daily_tile(:), output_daily_tile(idx_daily_start:idx_daily_end,:))
@@ -723,7 +713,7 @@ contains
 
       if (.not. myinterface%steering%spinup) then  
 
-        idx =  yr - myinterface%params_siml%spinupyears
+        idx =  yr - myinterface%params_siml%steering%spinupyears
 
         output_annual_cohorts_year(idx, :)        = dble(out_biosphere_annual_cohorts(:)%year)
         output_annual_cohorts_cID(idx, :)         = dble(out_biosphere_annual_cohorts(:)%cID)

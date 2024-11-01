@@ -104,7 +104,6 @@ contains
 
   end subroutine subsample
 
-
   function area( lat, dx, dy ) result( out_area )
     !////////////////////////////////////////////////////////////////
     ! Calculates grid cell area in m2 on a spherical Earth
