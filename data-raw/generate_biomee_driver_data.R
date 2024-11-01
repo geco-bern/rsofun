@@ -224,23 +224,6 @@ save(biomee_gs_leuning_drivers,
      compress = "xz")
 
 #---- p-model formatting -----
-forcing <- forcingLAE %>% 
-  dplyr::group_by(
-    lubridate::month(datehour),
-    lubridate::day(datehour)) %>% 
-  summarise_at(vars(1:13), 
-               list(~mean(., na.rm = TRUE))) %>%
-  rename(month=`lubridate::month(datehour)`,day=`lubridate::day(datehour)`) %>%
-  ungroup()
-forcing <- forcing %>%
-  rename(year=YEAR, hod=HOUR, rad=Swdown, temp=TEMP, rh=RH,
-         rain=RAIN, wind=WIND, patm=PRESSURE, co2=aCO2_AW) %>%
-  mutate(date = make_date(year,month,day),
-          vpd = rh_to_vpd(temp, rh / 100.0),
-         ppfd = rad_to_ppfd(rad)
-  ) %>%
-  select(date,hod,temp,rain,vpd,ppfd,patm,wind,co2)
-
 biomee_p_model_drivers <- tibble(
   sitename,
   site_info = list(tibble(siteinfo)),
@@ -295,7 +278,6 @@ out <- runread_biomee_f(
 
 biomee_p_model_output_annual_tile <- out$data[[1]]$output_annual_tile
 biomee_p_model_output_annual_cohorts <- out$data[[1]]$output_annual_cohorts
-biomee_p_model_output_annual_tile
 
 cowplot::plot_grid(
   biomee_p_model_output %>%
