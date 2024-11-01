@@ -87,15 +87,15 @@ contains
       if (year<=params_siml%spinupyears) then
         ! during spinup
         out_steering%spinup = .true.
-        out_steering%forcingyear = params_siml%firstyeartrend
         out_steering%forcingyear_idx = MOD(year - 1, params_siml%recycle) + 1
-      else  
+        out_steering%forcingyear = params_siml%firstyeartrend
+      else
         ! during transient simulation
         ! TODO xxx Change to MOD in order to run longer transient years
         out_steering%spinup          = .false.
         out_steering%forcingyear_idx =  year - params_siml%spinupyears
+        out_steering%forcingyear     = out_steering%forcingyear_idx + params_siml%firstyeartrend - 1
       endif
-      out_steering%forcingyear     = out_steering%forcingyear_idx + params_siml%firstyeartrend - 1
       out_steering%climateyear     = out_steering%forcingyear
       out_steering%climateyear_idx = out_steering%forcingyear_idx
       out_steering%outyear = year + params_siml%firstyeartrend - params_siml%spinupyears - 1
