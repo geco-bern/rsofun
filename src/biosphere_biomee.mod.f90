@@ -32,6 +32,7 @@ contains
       outtype_annual_tile, &
       outtype_annual_cohorts
     use md_gpp_biomee, only: getpar_modl_gpp
+    use md_sofunutils, only: subsample
 
     ! return variables
     type(outtype_daily_tile),     dimension(ndayyear)                , intent(out) :: out_biosphere_daily_tile
@@ -41,6 +42,7 @@ contains
     ! ! local variables
     integer :: moy, doy, dm
     logical, save :: init  ! is true only on the first day of the simulation
+    real, dimension(SIZE(myinterface%climate)/myinterface%steps_per_day) :: daily_temp  ! Daily temperatures
 
     !----------------------------------------------------------------
     ! Biome-E stuff
@@ -81,6 +83,9 @@ contains
     simu_steps = 0
     doy = 0
 
+    ! Compute daily temperatures.
+    call subsample(daily_temp, myinterface%climate(:)%Tair, myinterface%steps_per_day)
+
     !----------------------------------------------------------------
     ! LOOP THROUGH MONTHS
     !----------------------------------------------------------------
@@ -98,6 +103,17 @@ contains
         ! print*,'YEAR, DOY ', myinterface%steering%year, doy
         ! print*,'----------------------'
 
+        ! The algorithm for computing soil temp from air temp works with a daily period.
+        ! vegn%wcl(2) is updated in the fast loop, but not much so it is ok to use
+        ! the last value of the previous day for computing the daily soil temperature.
+        vegn%thetaS  = (vegn%wcl(2) - WILTPT) / (FLDCAP - WILTPT)
+        tsoil = air_to_soil_temp(vegn%thetaS, &
+                daily_temp - kTkelvin, &
+                doy, &
+                myinterface%steering%init, &
+                myinterface%steering%finalize &
+                ) + kTkelvin
+
         !----------------------------------------------------------------
         ! FAST TIME STEP
         !----------------------------------------------------------------
@@ -108,12 +124,6 @@ contains
           simu_steps    = simu_steps + 1
           vegn%Tc_daily = vegn%Tc_daily + myinterface%climate(simu_steps)%Tair
           vegn%thetaS  = (vegn%wcl(2) - WILTPT) / (FLDCAP - WILTPT)
-          tsoil = air_to_soil_temp(vegn%thetaS, &
-                  myinterface%climate(:)%Tair - kTkelvin, &
-                  doy, &
-                  myinterface%steering%init, &
-                  myinterface%steering%finalize &
-          ) + kTkelvin
 
           !----------------------------------------------------------------
           ! Sub-daily time step at resolution given by forcing (can be 1 = daily)
@@ -181,7 +191,7 @@ contains
     !---------------------------------------------
     call kill_lowdensity_cohorts( vegn )
 
-    call kill_old_grass( vegn ) 
+    call kill_old_grass( vegn )
     
     call relayer_cohorts( vegn )
     
@@ -194,34 +204,6 @@ contains
 
     ! update the years of model run
     iyears = iyears + 1
-
-    ! !---------------------------------------------
-    ! ! Reset vegetation to initial conditions
-    ! !---------------------------------------------
-
-    ! !if (iyears > myinterface%params_siml%spinupyears+31 .and. rand(0)<0.40) &
-    ! !     call reset_vegn_initial(vegn) ! 0.01, 0.02, 0.04, 0.08, 0.20, 0.40
-
-    ! !if (iyears == 700 .or. iyears == 800) &
-    ! !     call reset_vegn_initial(vegn) 
-
-    ! if(myinterface%params_siml%do_reset_veg) then
-
-    ! if (iyears==myinterface%params_siml%spinupyears + 31)  then
-    !   call reset_vegn_initial(vegn)
-    ! endif
-
-    ! ! nfrequency = 50 ! 100,75,50,25,15,10 
-
-    ! if(myinterface%params_siml%dist_frequency > 0) then
-    !     do i = myinterface%params_siml%spinupyears + 31 + myinterface%params_siml%dist_frequency, &
-    !     myinterface%params_siml%spinupyears + myinterface%params_siml%nyeartrend, &
-    !     myinterface%params_siml%dist_frequency
-    !   if (iyears == i) call reset_vegn_initial(vegn)
-    ! enddo
-    ! endif
-
-    ! endif
 
     !----------------------------------------------------------------
     ! Finalize run: deallocating memory

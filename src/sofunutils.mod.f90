@@ -80,6 +80,30 @@ contains
 
   end function running
 
+  subroutine subsample(out, in, rate)
+    !////////////////////////////////////////////////////////////////
+    ! Subsample array 'in' with rate 'rate' using average scheme.
+    !----------------------------------------------------------------
+    ! arguments
+    real, dimension(:), intent(inout) :: out      ! Output array (should have size of 'in' / rate)
+    real, dimension(:), intent(in) :: in          ! Input array
+    integer, intent(in) :: rate                   ! Sampling rate
+
+    ! local variables
+    integer :: idx, idx_in_start, idx_in_end
+
+    if (rate == 1) then
+      out(:) = in(:)
+    else
+      do idx = 1, SIZE(in)/rate
+        idx_in_start = (idx - 1) * rate + 1
+        idx_in_end = idx * rate
+        out(idx) = SUM(in(idx_in_start : idx_in_end))/rate
+      end do
+    end if
+
+  end subroutine subsample
+
 
   function area( lat, dx, dy ) result( out_area )
     !////////////////////////////////////////////////////////////////

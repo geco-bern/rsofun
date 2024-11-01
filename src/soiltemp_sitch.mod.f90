@@ -118,7 +118,7 @@ contains
       if (allocated(dtemp_pvy    )) deallocate( dtemp_pvy )
       if (allocated(wscal_pvy    )) deallocate( wscal_pvy )
       if (allocated(wscal_alldays)) deallocate( wscal_alldays )
-    end if    
+    end if
 
   end subroutine soiltemp
 
