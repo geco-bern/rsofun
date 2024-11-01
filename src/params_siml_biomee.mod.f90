@@ -20,7 +20,6 @@ module md_params_siml_biomee
     logical :: do_spinup       ! whether this simulation does spinup 
     integer :: runyears        ! number of years of entire simulation (spinup+transient)
     logical :: is_calib
-    integer :: steps_per_day   ! number of steps per day (day^-1)
 
     ! integer :: model_run_years
     logical :: outputhourly
@@ -101,8 +100,6 @@ contains
       out_steering%outyear = year + params_siml%firstyeartrend - params_siml%spinupyears - 1
 
       if ( year > 3 ) then
-      ! if (year > (spinupyr_soilequil_1 + 1) ) then
-      ! if (out_steering%forcingyear > 2003 ) then
         out_steering%dofree_alloc = .true.
       else
         out_steering%dofree_alloc = .false.
