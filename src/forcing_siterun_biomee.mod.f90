@@ -11,8 +11,8 @@ module md_forcing_biomee
   public climate_type, getclimate
 
   type :: climate_type
-    real    :: ppfd          ! mol/m2/s
-    real    :: radiation     ! W/m2 (SW downwelling)
+    real    :: ppfd          ! mol m-2 s-1
+    real    :: radiation     ! W m-2 (SW downwelling)
     real    :: Tair          ! air temperature,  K
     real    :: vpd           ! vapor pressure deficit (Pa)
     real    :: rain          ! kgH2O m-2 s-1
@@ -34,7 +34,7 @@ contains
     ! arguments
     integer, intent(in) :: nt ! number of time steps
     integer, intent(in) :: ntstepsyear   ! number of time steps per year of model
-    real(kind=dp),  dimension(nt,11), intent(in)  :: forcing  ! array containing all temporally varying forcing data
+    real(kind=dp),  dimension(nt,7), intent(in)  :: forcing  ! array containing all temporally varying forcing data
     integer, intent(in) :: climateyear_idx
 
     ! local variables
@@ -57,20 +57,9 @@ contains
 
     out_climate%radiation = out_climate%ppfd / (kfFEC * 1.0e-6)
 
-    !print*,'out_climate%radiation, W/m2', out_climate(150)%radiation         ! W/m2
-    !print*,'out_climate%Tair, K', out_climate(150)%Tair                      ! air temperature, K
-    !print*,'out_climate%vpd, fraction', out_climate(150)%vpd                 ! vapor pressure defficit
-    !print*,'out_climate%rain, kgH2O m-2 s-1', out_climate(150)%rain          ! kgH2O m-2 s-1
-    !print*,'out_climate%windU, (m s-1)', out_climate(150)%windU              ! wind velocity (m s-1)
-    !print*,'out_climate%P_air, ! pa', out_climate(150)%P_air                 ! pa
-    !print*,'out_climate%CO2, ! mol/mol', out_climate(150)%CO2                ! mol/mol
-
     do it=1,ntstepsyear
       out_climate(it)%RH  = calc_rh_vpd( out_climate(it)%vpd, (out_climate(it)%Tair - kTkelvin) )
     end do
-
-    !print*,'out_climate%RH, fraction', out_climate(150)%RH         ! relative humidity as a fraction (0.xx)
-    !print*,'out_climate%Tsoil, K', out_climate(150)%Tsoil         ! soil temperature, K
 
   end function getclimate
 

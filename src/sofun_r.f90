@@ -397,7 +397,7 @@ contains
     integer(kind=c_int), intent(in) :: nt_annual_cohorts
 
     ! input and output arrays (naked) to be passed back to C/R
-    real(kind=c_double), dimension(nt,13), intent(in) :: forcing
+    real(kind=c_double), dimension(nt,7), intent(in) :: forcing
 
     integer(kind=c_int), intent(in) :: steps_per_day  ! Forcing resolution
 

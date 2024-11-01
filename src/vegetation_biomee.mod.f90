@@ -38,7 +38,7 @@ contains
     type(climate_type), intent(in) :: forcing
     ! is true on the very first simulation day (first subroutine call of each gridcell)
     logical, intent(in) :: init
-    real, intent(in) :: tsoil
+    real, intent(in) :: tsoil  ! Soil temperature in K
 
     ! local variables
     type(cohort_type), pointer :: cc  
