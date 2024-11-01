@@ -184,6 +184,12 @@ rh_to_vpd <- function(temp, rh) {
   return(esat * (1.0 - rh))
 }
 
+rad_to_ppfd <- function(rad) {
+  kcFCE <- 2.04 # from flux to energy conversion, umol/J (Meek et al., 1984)
+
+  return(rad * kcFCE * 1.0e-6)
+}
+
 #---- gs leuning formatting -----
 forcing <- forcingLAE %>% 
   dplyr::group_by(
@@ -194,10 +200,11 @@ forcing <- forcingLAE %>%
   rename(month=`lubridate::month(datehour)`,day=`lubridate::day(datehour)`) %>%
   ungroup()
 forcing <- forcing %>%
-  rename(year=YEAR, hod=HOUR, ppfd=Swdown, temp=TEMP, rh=RH,
+  rename(year=YEAR, hod=HOUR, rad=Swdown, temp=TEMP, rh=RH,
          rain=RAIN, wind=WIND, patm=PRESSURE, co2=aCO2_AW) %>%
   mutate(date = make_date(year,month,day),
-           vpd = rh_to_vpd(temp, rh / 100.0)) %>%
+          vpd = rh_to_vpd(temp, rh / 100.0),
+         ppfd = rad_to_ppfd(rad)) %>%
   select(date,hod,temp,rain,vpd,ppfd,patm,wind,co2,)
 
 biomee_gs_leuning_drivers <- tibble(
@@ -226,10 +233,12 @@ forcing <- forcingLAE %>%
   rename(month=`lubridate::month(datehour)`,day=`lubridate::day(datehour)`) %>%
   ungroup()
 forcing <- forcing %>%
-  rename(year=YEAR, hod=HOUR, ppfd=Swdown, temp=TEMP, rh=RH,
+  rename(year=YEAR, hod=HOUR, rad=Swdown, temp=TEMP, rh=RH,
          rain=RAIN, wind=WIND, patm=PRESSURE, co2=aCO2_AW) %>%
   mutate(date = make_date(year,month,day),
-           vpd = rh_to_vpd(temp, rh / 100.0)) %>%
+          vpd = rh_to_vpd(temp, rh / 100.0),
+         ppfd = rad_to_ppfd(rad)
+  ) %>%
   select(date,hod,temp,rain,vpd,ppfd,patm,wind,co2)
 
 biomee_p_model_drivers <- tibble(
@@ -286,6 +295,7 @@ out <- runread_biomee_f(
 
 biomee_p_model_output_annual_tile <- out$data[[1]]$output_annual_tile
 biomee_p_model_output_annual_cohorts <- out$data[[1]]$output_annual_cohorts
+biomee_p_model_output_annual_tile
 
 cowplot::plot_grid(
   biomee_p_model_output %>%
