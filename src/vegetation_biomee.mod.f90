@@ -796,7 +796,7 @@ contains
  
     else
       vegn%WDmort = 0.0
-      
+
       do i = 1, vegn%n_cohorts
         cc => vegn%cohorts(i)
         associate ( sp => spdata(cc%species))
@@ -1004,7 +1004,7 @@ contains
 
     ! local variables
     type(cohort_type), pointer :: cc ! parent and child cohort pointers
-    type(cohort_type), dimension(:), pointer :: ccnew   ! pointer to old cohort array
+    type(cohort_type), dimension(:), pointer :: ccnew
     integer, dimension(16) :: reproPFTs
     real,    dimension(16) :: seedC, seedN ! seed pool of productible PFTs
     ! real :: failed_seeds, N_failedseed !, prob_g, prob_e
@@ -1080,7 +1080,7 @@ contains
             exit
           endif
         enddo
-        
+
         ! Update new cohort information
         cc => ccnew(k)
         cc%species    = reproPFTs(i)
@@ -1124,7 +1124,7 @@ contains
         cc%pseed%n%n14  = 0.0
 
         cc%topyear    = 0.0
-        cc%age        = 0.0 
+        cc%age        = 0.0
 
         if (cc%nindivs>0.0) then
           cc%plabl%n%n14 = sp%seedlingsize * seedN(i) / seedC(i) -  &
@@ -1306,10 +1306,10 @@ contains
 
     ! copy cohort information to the new cohorts, splitting the old cohorts that 
     ! stride the layer boundaries
-    i = 1 
-    k = 1 
+    i = 1
+    k = 1
     L = 1 
-    frac = 0.0 
+    frac = 0.0
     nindivs = cc(idx(k))%nindivs
     
     ! loop over all original cohorts
@@ -1336,7 +1336,7 @@ contains
         ! allocate the remainder of individuals to the last cohort
         new(i)%nindivs = new(i)%nindivs + nindivs
         
-        if (k == N0) then
+        if (k >= N0) then
           exit ! end of loop
         else
           k = k + 1
@@ -1354,33 +1354,11 @@ contains
     
     enddo
 
-    !--------------------------------- 
-    ! THIS CREATES WEIRD BUG: SOMETIMES ZERO SOLUTION
+    !---------------------------------
     ! replace the array of cohorts
     deallocate(vegn%cohorts)
     vegn%cohorts => new
-    !--------------------------------- 
-
-    ! !--------------------------------- 
-    ! ! Ensheng's suggested modification (email 29 Apr 2024)
-    ! ! THIS CREATES WEIRD BUG: SOMETIMES ZERO SOLUTION
-    ! ! replace the array of cohorts
-    ! deallocate(vegn%cohorts)
-    ! vegn%cohorts => new
-    ! ! Let new points to null()
-    ! new => null()
-    ! !---------------------------------
-
-    ! !--------------------------------- 
-    ! ! Ensheng's ALTERNATIVE suggested modification (email 29 Apr 2024)
-    ! ! THIS ALSO CREATES WEIRD BUG: SOMETIMES ZERO SOLUTION
-    ! ! replace the array of cohorts
-    ! vegn%cohorts => new
-    ! deallocate(cc) ! Release the memory of the old cohort array
-    ! ! Let new and cc point to null
-    ! new => null()
-    ! cc => null()
-    ! !---------------------------------
+    !---------------------------------
 
     vegn%n_cohorts = i
 
@@ -1804,6 +1782,7 @@ contains
     integer, dimension((n+1)/2), intent (out) :: t
     integer :: na,nb
     integer :: v
+
     if (n < 2) return
     if (n == 2) then
       if ( x(a(1)) < x(a(2)) ) then
@@ -1853,7 +1832,9 @@ contains
     ! at this point, k is the number of new cohorts
     vegn%n_cohorts = k
     deallocate(vegn%cohorts)
-    vegn%cohorts=>cc
+    allocate(vegn%cohorts(k))
+    vegn%cohorts = cc(1:k)
+    deallocate(cc)
 
   end subroutine vegn_mergecohorts
 
@@ -1954,7 +1935,7 @@ contains
       enddo
       vegn%n_cohorts = j
       deallocate (vegn%cohorts)
-      vegn%cohorts=>cc
+      vegn%cohorts => cc
     endif
 
   end subroutine kill_old_grass
@@ -2078,25 +2059,17 @@ contains
   end subroutine initialize_cohort_from_biomass
 
   !============= Reset to Initial Vegetation States =====================
-   !Weng, 12/20/2022
    subroutine reset_vegn_initial(vegn)
     type(vegn_tile_type),intent(inout),pointer :: vegn
 
     !--------local vars -------
-    type(cohort_type),dimension(:), pointer :: cc,cc1
     type(cohort_type), pointer :: cp
     integer :: i, istat
 
-    !Reset to initial plant cohorts
-    allocate(cc(1:vegn%n_initialCC), STAT = istat)
-    cc1 => vegn%cohorts ! Remember the current cohorts in vegn
-    cc = vegn%initialCC ! Copy the initial cohorts to a new cohor array
-    vegn%cohorts => cc  ! Set the vegn%cohorts as the initial cohorts
-    vegn%n_cohorts = vegn%n_initialCC ! size(vegn%cohorts)
-
-    !Release memory
-    deallocate(cc1) ! Remove the old cohorts
-    cc => null()
+    deallocate(vegn%cohorts)
+    allocate(vegn%cohorts(vegn%n_initialCC))
+    vegn%cohorts = vegn%initialCC
+    vegn%n_cohorts = vegn%n_initialCC
 
     ! Relayering and summary
     call relayer_cohorts(vegn)
@@ -2110,27 +2083,6 @@ contains
     if (vegn%n_cohorts > 0) MaxCohortID = cp%ccID
 
    end subroutine reset_vegn_initial
-
-  ! subroutine annual_calls( vegn )
-  !   !////////////////////////////////////////////////////////////////
-  !   ! Code from BiomeE-Allocation
-  !   !---------------------------------------------------------------
-  !   type(vegn_tile_type), intent(inout) :: vegn
-  !   !---- annual call -------------
-  !   ! update the LAImax of each PFT according to available N for next year
-  !   if (update_annualLAImax) call vegn_annualLAImax_update( vegn )
-  !   ! Reproduction and mortality
-  !   !call vegn_starvation( vegn )  ! called daily
-  !   !call vegn_annual_starvation( vegn )
-  !   call vegn_reproduction( vegn )
-  !   call vegn_nat_mortality(vegn, real(seconds_per_year))
-  !   ! Re-organize cohorts
-  !   call relayer_cohorts( vegn )
-  !   call kill_lowdensity_cohorts( vegn )
-  !   call vegn_mergecohorts( vegn )
-  !   ! set annual variables zero
-  !   call Zero_diagnostics( vegn )
-  ! end subroutine annual_calls
 
 
   subroutine init_cohort_allometry( cc )
@@ -2302,10 +2254,8 @@ contains
     ! Initialize plant cohorts
     ! init_n_cohorts = nCohorts ! Weng,2018-11-21
     init_n_cohorts = myinterface%init_cohort(1)%init_n_cohorts
-    allocate(cc(1:init_n_cohorts), STAT = istat)
-    vegn%cohorts => cc
+    allocate(vegn%cohorts(init_n_cohorts), STAT = istat)
     vegn%n_cohorts = init_n_cohorts
-    cc => null()
 
     do i=1,init_n_cohorts
       cx => vegn%cohorts(i)
@@ -2365,12 +2315,10 @@ contains
                       vegn%psoil_sl%n%n14 + vegn%ninorg%n14
     vegn%totN =  vegn%initialN0
 
-    ! For reset: Keep initial plant cohorts
-    allocate(cc(1:init_n_cohorts), STAT = istat)
-    cc = vegn%cohorts
-    vegn%initialCC   => cc
+    ! For reset: Keep copy of initial plant cohorts
+    allocate(vegn%initialCC(init_n_cohorts), STAT = istat)
+    vegn%initialCC = vegn%cohorts
     vegn%n_initialCC = init_n_cohorts
-    cc => null()
 
     ! xxx up to here new from d-ben
 
