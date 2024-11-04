@@ -428,16 +428,22 @@ run_biomee_f_bysite <- function(
   n_daily  <- params_siml$nyeartrend * 365
 
   # Types of photosynthesis model
-    if (params_siml$method_photosynth == "gs_leuning"){
+  if (params_siml$method_photosynth == "gs_leuning"){
     code_method_photosynth <- 1
+    if (is.null(params_siml$steps_per_day))
+      stop(
+        "Parameter 'steps_per_day' is required."
+      )
   } else if (params_siml$method_photosynth == "pmodel"){
     code_method_photosynth <- 2
-    if (params_siml$steps_per_day > 1){
+    if (is.null(params_siml$steps_per_day))
+      params_siml$steps_per_day <- 1
+    else if (params_siml$steps_per_day > 1){
       stop(
         "run_biomee_f_bysite: time step must be daily 
          for P-model photosynthesis setup."
         )
-      } 
+      }
   } else {
     stop(
       paste("run_biomee_f_bysite:
