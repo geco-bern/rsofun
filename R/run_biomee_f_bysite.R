@@ -648,8 +648,8 @@ run_biomee_f_bysite <- function(
 			"Rauto", 
 			"Rh",
 			"rain", 
-			"SoilWater","
-			Transp",
+			"SoilWater",
+            "Transp",
 			"Evap", 
 			"Runoff", 
 			"plantC",
