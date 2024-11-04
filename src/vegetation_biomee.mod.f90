@@ -344,6 +344,8 @@ contains
         cc%leaf_age = (1.0 - dBL/cc%pleaf%c%c12) * cc%leaf_age !NEW
         cc%resg = 0.5 * (dBR + dBL + dSeed + dBSW) !  daily
 
+        !vegn%WDgrow = vegn%WDgrow + cc%psapw%c%c12 *cc%nindivs
+
         ! update nitrogen pools, Nitrogen allocation
         cc%pleaf%n%n14 = cc%pleaf%n%n14 + dBL   /sp%CNleaf0
         cc%proot%n%n14 = cc%proot%n%n14 + dBR   /sp%CNroot0
@@ -701,7 +703,7 @@ contains
     
     !   TODO: update background mortality rate as a function of wood density (Weng, Jan. 07 2017)
     type(vegn_tile_type), intent(inout) :: vegn
-    ! real, intent(in) :: deltat ! seconds since last mortality calculations, s
+    !real, intent(in) :: deltat ! seconds since last mortality calculations, s
 
     ! ---- local vars
     type(cohort_type), pointer :: cc => null()
@@ -776,7 +778,7 @@ contains
       enddo
 
       ! Remove the cohorts with 0 individuals, (never used b/c k<2)
-      if(k >= 2) call kill_lowdensity_cohorts(vegn)
+      ! if(k >= 2) call kill_lowdensity_cohorts(vegn)
 
       ! final check, can be removed if the model runs well
       cai_partial = 0.0
@@ -793,7 +795,8 @@ contains
       deallocate(cai_partial)
  
     else
-
+      vegn%WDmort = 0.0
+      
       do i = 1, vegn%n_cohorts
         cc => vegn%cohorts(i)
         associate ( sp => spdata(cc%species))
@@ -869,8 +872,8 @@ contains
         endif
 
         ! previous setup allowed death rates > 1 (hence negative ind)
-        deathrate = min(1.0, deathrate + 0.01) 
-        deadtrees = cc%nindivs * deathrate
+        deathrate = min(1.0, deathrate)  !deathrate + 0.01
+        deadtrees = cc%nindivs * deathrate ! individuals / m2
 
         ! record mortality rates at cohort level
         cc%deathratevalue = deathrate
@@ -880,13 +883,17 @@ contains
 
         ! Update plant density
         cc%nindivs = cc%nindivs - deadtrees
+
+        ! Record wood C mortality
+        if (sp%lifeform == 1) vegn%WDmort = vegn%WDmort + (cc%psapw%c%c12 + cc%pwood%c%c12)*deadtrees
+
         ! vegn%n_deadtrees = deadtrees
         ! vegn%c_deadtrees = vegn%c_deadtrees + deadtrees*(cc%plabl%c%c12 + cc%pseed%c%c12 + cc%pleaf%c%c12 + cc%proot%c%c12 + cc%psapw%c%c12 + cc%pwood%c%c12)
         end associate
       enddo
 
       ! Remove the cohorts with very few individuals
-      call kill_lowdensity_cohorts( vegn )
+      ! call kill_lowdensity_cohorts( vegn )
 
     endif
 
@@ -935,7 +942,7 @@ contains
       end associate
     enddo
     ! Remove the cohorts with 0 individuals
-    call kill_lowdensity_cohorts( vegn )
+    ! call kill_lowdensity_cohorts( vegn )
 
   end subroutine vegn_annual_starvation
 
@@ -973,12 +980,13 @@ contains
 
     ! record mortality
     ! cohort level
+    cc%m_turnover  = 0
     cc%n_deadtrees = deadtrees
     !cc%c_deadtrees = loss_coarse + loss_fine 
     cc%c_deadtrees    = deadtrees*(cc%plabl%c%c12 + cc%pseed%c%c12 + cc%pleaf%c%c12 + &
            cc%proot%c%c12 + cc%psapw%c%c12 + cc%pwood%c%c12) 
-    cc%m_turnover  = cc%m_turnover + loss_coarse + loss_fine
-    !cc%m_turnover  = cc%m_turnover + deadtrees * (cc%pwood%c%c12 + cc%psapw%c%c12)
+    !cc%m_turnover  = cc%m_turnover + loss_coarse + loss_fine
+    cc%m_turnover  = cc%m_turnover + deadtrees * (cc%pwood%c%c12 + cc%psapw%c%c12)
 
     end associate
 
@@ -1002,9 +1010,10 @@ contains
     ! real :: failed_seeds, N_failedseed !, prob_g, prob_e
     integer :: newcohorts, matchflag, nPFTs ! number of new cohorts to be created
     integer :: nCohorts, istat
-    integer :: i, k ! cohort indices
+    integer :: i, k, n ! cohort indices
 
     ! Looping through all reproductable cohorts and Check if reproduction happens
+    vegn%WDrepr = 0.0
     reproPFTs = -999 ! the code of reproductive PFT
     vegn%totseedC = 0.0
     vegn%totseedN = 0.0
@@ -1062,29 +1071,37 @@ contains
       ccnew(1:vegn%n_cohorts) = ccold(1:vegn%n_cohorts) ! copy old cohort information
       vegn%cohorts => ccnew
 
-      deallocate (ccold)
-
       ! set up new cohorts
       k = vegn%n_cohorts
       do i = 1, newcohorts
-        
         k = k + 1 ! increment new cohort index
-        cc => vegn%cohorts(k)
+        ! Copy old information to new cohort, Weng, 2021-06-02
+        do n =1, vegn%n_cohorts ! go through old cohorts
+          if(reproPFTs(i) == ccold(n)%species)then
+            ccnew(k) = ccold(n) ! Use the information from parent cohort
+            exit
+          endif
+        enddo
         
+        ! Update new cohort information
+        cc => vegn%cohorts(k)
+        cc%species    = reproPFTs(i)
         ! Give the new cohort an ID
         cc%ccID = MaxCohortID + i
-        
         ! update child cohort parameters
         associate (sp => spdata(reproPFTs(i)))
         
         ! density
         cc%nindivs = seedC(i)/sp%seedlingsize
 
-        cc%species    = reproPFTs(i)
-        cc%status     = LEAF_OFF
-        cc%firstlayer = 0
-        cc%topyear    = 0.0
-        cc%age        = 0.0
+        if(sp%phenotype == 0)then
+          cc%status = LEAF_OFF
+        else
+          cc%status = LEAF_ON
+        endif
+        !cc%firstlayer = 0
+        !cc%topyear    = 0.0
+        !cc%age        = 0.0
 
         ! Carbon pools
         cc%pleaf%c%c12 = 0.0 * sp%seedlingsize
@@ -1108,6 +1125,9 @@ contains
         cc%pwood%n%n14  = cc%pwood%c%c12/sp%CNwood0
         cc%pseed%n%n14  = 0.0
 
+        cc%topyear    = 0.0
+        cc%age        = 0.0 
+
         if (cc%nindivs>0.0) then
           cc%plabl%n%n14 = sp%seedlingsize * seedN(i) / seedC(i) -  &
             (cc%pleaf%n%n14 + cc%proot%n%n14 + cc%psapw%n%n14 + cc%pwood%n%n14)
@@ -1119,7 +1139,12 @@ contains
           cc%psapw%n%n14 + cc%pwood%n%n14 + cc%plabl%n%n14)
 
         call init_cohort_allometry( cc )
-        !        ! seeds fail
+
+        ! Record wood C in seedlings
+        if(sp%lifeform == 1) vegn%WDrepr = vegn%WDrepr + &
+          (cc%psapw%c%c12 + cc%pwood%c%c12)*cc%nindivs
+
+        !! seeds fail
         !cc%nindivs = cc%nindivs * sp%prob_g * sp%prob_e
         !       put failed seeds to soil carbon pools
         !        failed_seeds = 0.0 ! (1. - sp%prob_g*sp%prob_e) * seedC(i)!!
@@ -1138,12 +1163,12 @@ contains
 
         end associate   ! F2003
       enddo
-
+      deallocate (ccold)
       MaxCohortID = MaxCohortID + newcohorts
       vegn%n_cohorts = k
       ccnew => null()
       
-      call zero_diagnostics( vegn )
+      !call zero_diagnostics( vegn )
     
     endif ! set up new born cohorts
 
@@ -1464,8 +1489,8 @@ contains
       vegn%N_P2S_yr = vegn%N_P2S_yr + lossN_fine + lossN_coarse
 
       ! record continuous biomass turnover (not linked to mortality)
-      ! cc%m_turnover = cc%m_turnover + loss_coarse + loss_fine
-      cc%m_turnover = cc%m_turnover + (1.0 - l_fract) * cc%nindivs * dBStem
+      !cc%m_turnover = cc%m_turnover + loss_coarse + loss_fine
+      ! cc%m_turnover = cc%m_turnover + (1.0 - l_fract) * cc%nindivs * dBStem
 
       end associate
     enddo
@@ -1844,7 +1869,7 @@ contains
     ! local variables
     type(cohort_type), pointer :: cx, cc(:) ! array to hold new cohorts
     ! logical :: merged(vegn%n_cohorts)        ! mask to skip cohorts that were already merged
-    real, parameter :: mindensity = 0.25E-4
+    real, parameter :: mindensity = 1.0E-6 !1.0E-6 !0.25E-4
     integer :: i,k
 
     ! calculate the number of cohorts with indivs>mindensity
@@ -1860,6 +1885,7 @@ contains
     !endif
     
     ! exclude cohorts that have low individuals
+    vegn%WDkill = 0.0
     if (k > 0 .and. k < vegn%n_cohorts) then
       allocate(cc(k))
       k = 0
@@ -1870,6 +1896,9 @@ contains
           k = k + 1
           cc(k) = cx
         else
+          ! Record wood killed
+          if(sp%lifeform == 1) vegn%WDkill = vegn%WDkill + &
+          (cx%psapw%c%c12 + cx%pwood%c%c12)*cx%nindivs
           ! Carbon and Nitrogen from plants to soil pools
           call plant2soil(vegn, cx, cx%nindivs)
         endif
@@ -2272,8 +2301,8 @@ contains
 
     !  Read parameters from the parameter file (namelist)
 
-    ! xxx seems new from d-ben - missing if?
     ! Initialize plant cohorts
+    ! init_n_cohorts = nCohorts ! Weng,2018-11-21
     init_n_cohorts = myinterface%init_cohort(1)%init_n_cohorts
     allocate(cc(1:init_n_cohorts), STAT = istat)
     vegn%cohorts => cc

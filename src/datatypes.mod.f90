@@ -364,6 +364,7 @@ module datatypes
     type(orgpool) :: plabl                       ! labile pool, temporary storage of N and C [kg C m-2]
 
     real :: totSeedC, totSeedN, totNewCC, totNewCN
+    real :: WDgrow, WDmort, WDrepr, WDkill !, WDmgrt, WDdstb ! for DBEN wood fluxes
 
   end type vegn_tile_type
 
@@ -762,8 +763,9 @@ contains
     vegn%annualN      = 0.0
     vegn%Nloss_yr     = 0.0
     vegn%annualNup    = 0.0
-    vegn%n_deadtrees  = 0.0
-    vegn%c_deadtrees  = 0.0
+    !vegn%n_deadtrees  = 0.0
+    !vegn%c_deadtrees  = 0.0
+    vegn%m_turnover   = 0
 
     do i = 1, vegn%n_cohorts
       cc => vegn%cohorts(i)
@@ -800,9 +802,9 @@ contains
       cc%BA_ys        = cc%BA
       cc%Vol_ys       = cc%Volume
       cc%ABG_ys       = cc%psapw%c%c12 + cc%pwood%c%c12
-      cc%n_deadtrees  = 0.0
-      cc%c_deadtrees  = 0.0
-      cc%m_turnover   = 0.0
+      !cc%n_deadtrees  = 0.0
+      !cc%c_deadtrees  = 0.0
+      !cc%m_turnover   = 0.0
     enddo
   
   end subroutine Zero_diagnostics
@@ -1090,10 +1092,10 @@ contains
 
     ! running annual sums
     vegn%annualNup  = vegn%annualNup  + vegn%dailyNup
-    vegn%annualGPP  = vegn%annualGPP  + vegn%dailygpp
-    vegn%annualNPP  = vegn%annualNPP  + vegn%dailynpp
-    vegn%annualResp = vegn%annualResp + vegn%dailyresp
-    vegn%annualRh   = vegn%annualRh   + vegn%dailyrh
+    vegn%annualGPP  = vegn%annualGPP  + vegn%dailyGPP
+    vegn%annualNPP  = vegn%annualNPP  + vegn%dailyNpp
+    vegn%annualResp = vegn%annualResp + vegn%dailyResp
+    vegn%annualRh   = vegn%annualRh   + vegn%dailyRh
     vegn%annualPrcp = vegn%annualPrcp + vegn%dailyPrcp
     vegn%annualTrsp = vegn%annualTrsp + vegn%dailytrsp
     vegn%annualEvap = vegn%annualEvap + vegn%dailyevap
@@ -1127,7 +1129,7 @@ contains
 
     ! local variables
     type(cohort_type), pointer :: cc
-    real :: treeG, fseed, fleaf=0, froot, fwood=0, dDBH, dBA, dVol
+    real :: treeG, fseed, fleaf=0, froot, fwood=0, dDBH=0, dBA, dVol
     real :: plantC, plantN, soilC, soilN
     integer :: i
 
@@ -1168,8 +1170,12 @@ contains
     out_annual_cohorts(:)%deathrate   = dummy
 
     ! Cohorts ouput
+    vegn%WDgrow = 0.0
+
+
     do i = 1, vegn%n_cohorts
       cc => vegn%cohorts(i)
+      vegn%WDgrow = vegn%WDgrow + cc%NPPwood * cc%nindivs
       treeG     = cc%pseed%c%c12 + cc%NPPleaf + cc%NPProot + cc%NPPwood
       fseed     = cc%pseed%c%c12 / treeG
       fleaf     = cc%NPPleaf / treeG
@@ -1186,8 +1192,8 @@ contains
       out_annual_cohorts(i)%PFT         = cc%species
       out_annual_cohorts(i)%layer       = cc%layer
       out_annual_cohorts(i)%density     = cc%nindivs * 10000
-      out_annual_cohorts(i)%flayer     = cc%layerfrac
-      out_annual_cohorts(i)%dbh         = cc%dbh * 100   ! *100 to convert m in cm
+      out_annual_cohorts(i)%flayer      = cc%layerfrac
+      out_annual_cohorts(i)%DBH         = cc%dbh * 100   ! *100 to convert m in cm
       out_annual_cohorts(i)%dDBH        = dDBH * 100     ! *100 to convert m in cm
       out_annual_cohorts(i)%height      = cc%height
       out_annual_cohorts(i)%age         = cc%age
@@ -1223,7 +1229,7 @@ contains
  
     vegn%NPPL        = 0.0
     vegn%NPPW        = 0.0
-    vegn%n_deadtrees = 0 !yyy
+    vegn%n_deadtrees = 0 
     vegn%c_deadtrees = 0
     vegn%m_turnover  = 0
 
@@ -1303,6 +1309,10 @@ contains
     out_annual_tile%c_deadtrees     = vegn%c_deadtrees
     out_annual_tile%m_turnover      = vegn%m_turnover
     out_annual_tile%c_turnover_time = vegn%pwood%c%c12 / vegn%NPPW
+    out_annual_tile%WDgrow          = vegn%WDgrow
+    out_annual_tile%WDmort          = vegn%WDmort
+    out_annual_tile%WDrepr          = vegn%WDrepr
+    out_annual_tile%WDkill          = vegn%WDkill
 
     ! I cannot figure out why N losing. Hack!
     if (myinterface%params_siml%do_closedN_run) call Recover_N_balance(vegn)

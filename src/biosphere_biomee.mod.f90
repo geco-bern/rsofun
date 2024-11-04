@@ -178,7 +178,7 @@ contains
     ! Natural mortality (reducing number of individuals 'nindivs')
     ! (~Eq. 2 in Weng et al., 2015 BG)
 
-    call vegn_nat_mortality( vegn )
+    call vegn_nat_mortality( vegn)
     
     ! seed C and germination probability (~Eq. 1 in Weng et al., 2015 BG)
     call vegn_reproduction( vegn )
@@ -212,23 +212,21 @@ contains
     ! !if (iyears == 700 .or. iyears == 800) &
     ! !     call reset_vegn_initial(vegn) 
 
-    ! if(myinterface%params_siml%do_reset_veg) then
+     if(myinterface%params_siml%do_reset_veg) then
 
-    ! if (iyears==myinterface%params_siml%spinupyears + 31)  then
-    !   call reset_vegn_initial(vegn)
-    ! endif
+     if (iyears==myinterface%params_siml%spinupyears + 31)  then
+       call reset_vegn_initial(vegn)
+     endif
 
-    ! ! nfrequency = 50 ! 100,75,50,25,15,10 
+    if(myinterface%params_siml%dist_frequency > 0) then
+         do i = myinterface%params_siml%spinupyears + 31 + myinterface%params_siml%dist_frequency, &
+         myinterface%params_siml%spinupyears + myinterface%params_siml%nyeartrend, &
+         myinterface%params_siml%dist_frequency
+       if (iyears == i) call reset_vegn_initial(vegn)
+     enddo
+     endif
 
-    ! if(myinterface%params_siml%dist_frequency > 0) then
-    !     do i = myinterface%params_siml%spinupyears + 31 + myinterface%params_siml%dist_frequency, &
-    !     myinterface%params_siml%spinupyears + myinterface%params_siml%nyeartrend, &
-    !     myinterface%params_siml%dist_frequency
-    !   if (iyears == i) call reset_vegn_initial(vegn)
-    ! enddo
-    ! endif
-
-    ! endif
+     endif
 
     !----------------------------------------------------------------
     ! Finalize run: deallocating memory

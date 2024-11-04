@@ -563,8 +563,8 @@ run_biomee_f_bysite <- function(
       n                = as.integer(nrow(forcing)), # n here is for hourly (forcing is hourly), add n for daily and annual outputs
       n_daily          = as.integer(n_daily), 
       n_annual         = as.integer(runyears), 
-      n_annual_cohorts = as.integer(params_siml$nyeartrend), # to get cohort outputs after spinup year
-      #n_annual_cohorts = as.integer(runyears), # to get cohort outputs from year 1
+      #n_annual_cohorts = as.integer(params_siml$nyeartrend), # to get cohort outputs after spinup year
+      n_annual_cohorts = as.integer(runyears), # to get cohort outputs from year 1
       forcing          = as.matrix(forcing)
       )
     
@@ -655,9 +655,9 @@ run_biomee_f_bysite <- function(
 			"year", 
 			"CAI", 
 			"LAI",
-			"Density", 
+			"density", 
 			"DBH", 
-			"Density12",
+			"density12",
 			"DBH12", 
 			"QMD", 
 			"NPP",
@@ -665,8 +665,8 @@ run_biomee_f_bysite <- function(
 			"Rauto", 
 			"Rh",
 			"rain", 
-			"SoilWater","
-			Transp",
+			"SoilWater",
+			"Transp",
 			"Evap", 
 			"Runoff", 
 			"plantC",
@@ -710,7 +710,11 @@ run_biomee_f_bysite <- function(
 			"n_deadtrees", 
 			"c_deadtrees", 
 			"m_turnover", 
-			"c_turnover_time"
+			"c_turnover_time",
+			"WDgrow",
+			"WDmort",
+			"WDrepr",
+			"WDkill"
 		)
     
     #---- Multi-level output, multiple matrices to be combined ----
@@ -794,12 +798,12 @@ run_biomee_f_bysite <- function(
       "Acrown",
       "Aleaf",
       "nsc",
+      "nsn",
       "seedC",
       "leafC",
       "rootC",
       "sapwC",
       "woodC",
-      "nsn",
       "treeG",
       "fseed",
       "fleaf",

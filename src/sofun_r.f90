@@ -786,9 +786,13 @@ contains
       ! To get outputs only after spinupyears make if below and 
       ! also in run_biomee_f_bysite.R make n_annual_cohorts = as.integer(params_siml$nyeartrend)
 
-      if (.not. myinterface%steering%spinup) then  
+      !if (.not. myinterface%steering%spinup) then  
 
-        idx =  yr - myinterface%params_siml%spinupyears
+        !idx =  yr - myinterface%params_siml%spinupyears
+
+      ! To get outputs for all runyears idx=yr and also in run_biomee_f_bysite.R make n_annual_cohorts = as.integer(runyears)
+       
+       idx =  yr
 
         output_annual_cohorts_year(idx, :)        = dble(out_biosphere_annual_cohorts(:)%year)
         output_annual_cohorts_cID(idx, :)         = dble(out_biosphere_annual_cohorts(:)%cID)
@@ -796,7 +800,7 @@ contains
         output_annual_cohorts_layer(idx, :)       = dble(out_biosphere_annual_cohorts(:)%layer)
         output_annual_cohorts_density(idx, :)     = dble(out_biosphere_annual_cohorts(:)%density)
         output_annual_cohorts_flayer(idx, :)      = dble(out_biosphere_annual_cohorts(:)%flayer)
-        output_annual_cohorts_dbh(idx, :)         = dble(out_biosphere_annual_cohorts(:)%DBH)
+        output_annual_cohorts_DBH(idx, :)         = dble(out_biosphere_annual_cohorts(:)%DBH)
         output_annual_cohorts_dDBH(idx, :)        = dble(out_biosphere_annual_cohorts(:)%dDBH)
         output_annual_cohorts_height(idx, :)      = dble(out_biosphere_annual_cohorts(:)%height)
         output_annual_cohorts_age(idx, :)         = dble(out_biosphere_annual_cohorts(:)%age)
@@ -825,7 +829,7 @@ contains
         output_annual_cohorts_n_deadtrees(idx, :) = dble(out_biosphere_annual_cohorts(:)%n_deadtrees)
         output_annual_cohorts_c_deadtrees(idx, :) = dble(out_biosphere_annual_cohorts(:)%c_deadtrees)
 
-       end if
+       !end if
 
     end do yearloop
 
@@ -937,7 +941,7 @@ contains
     out_annual_tile(3)  = dble(annual_tile%LAI)
     out_annual_tile(4)  = dble(annual_tile%density)
     out_annual_tile(5)  = dble(annual_tile%DBH)
-    out_annual_tile(6)  = dble(annual_tile%Density12)
+    out_annual_tile(6)  = dble(annual_tile%density12)
     out_annual_tile(7)  = dble(annual_tile%DBH12)
     out_annual_tile(8)  = dble(annual_tile%QMD)
     out_annual_tile(9)  = dble(annual_tile%NPP)
@@ -991,6 +995,10 @@ contains
     out_annual_tile(57) = dble(annual_tile%c_deadtrees)
     out_annual_tile(58) = dble(annual_tile%m_turnover)
     out_annual_tile(59) = dble(annual_tile%c_turnover_time)
+    out_annual_tile(60) = dble(annual_tile%WDgrow)
+    out_annual_tile(61) = dble(annual_tile%WDmort)
+    out_annual_tile(62) = dble(annual_tile%WDrepr)
+    out_annual_tile(63) = dble(annual_tile%WDkill)
 
   end subroutine populate_outarray_annual_tile
 

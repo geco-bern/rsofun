@@ -23,7 +23,7 @@ module md_params_core
   integer, parameter :: nvars_hourly_tile = 15
   integer, parameter :: nvars_daily_tile = 35
   integer, parameter :: nvars_daily_cohorts = 27
-  integer, parameter :: nvars_annual_tile = 59
+  integer, parameter :: nvars_annual_tile = 63
   integer, parameter :: nvars_annual_cohorts = 34
 
   !===== Physical constants

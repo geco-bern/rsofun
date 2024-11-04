@@ -235,7 +235,7 @@ module md_interface_biomee
     real :: LAI
     real :: density
     real :: DBH
-    real :: Density12
+    real :: density12
     real :: DBH12
     real :: QMD
     real :: NPP
@@ -289,6 +289,10 @@ module md_interface_biomee
     real :: c_deadtrees
     real :: m_turnover
     real :: c_turnover_time
+    real :: WDgrow
+    real :: WDmort
+    real :: WDrepr
+    real :: WDkill
   end type outtype_annual_tile  
 
   type outtype_annual_cohorts ! fno2
