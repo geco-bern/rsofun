@@ -251,7 +251,7 @@ module datatypes
 
     !===== For reseting vegetation
     integer :: n_initialCC = 0
-    type(cohort_type), pointer :: initialCC(:)=>NULL()
+    type(cohort_type), pointer :: initialCC(:) => NULL()
 
     !===== Cohorts nested inside tile
     type(cohort_type), pointer :: cohorts(:) => NULL()

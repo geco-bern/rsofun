@@ -51,6 +51,7 @@ contains
     ! Biome-E stuff
     !----------------------------------------------------------------
     real    :: tsoil, soil_theta
+    integer :: disturbance_offset, disturbance_year
     integer :: i
     integer :: idata
     !integer :: nfrequency ! disturbances
@@ -206,27 +207,14 @@ contains
     ! ! Reset vegetation to initial conditions
     ! !---------------------------------------------
 
-    ! !if (iyears > myinterface%params_siml%spinupyears+31 .and. rand(0)<0.40) &
-    ! !     call reset_vegn_initial(vegn) ! 0.01, 0.02, 0.04, 0.08, 0.20, 0.40
+    if(myinterface%params_siml%do_reset_veg) then
+      disturbance_offset = 31 ! This should be a parameter instead
+      disturbance_year = iyears - myinterface%params_siml%spinupyears
+      if (disturbance_year >= 0 .and. MOD(disturbance_year, myinterface%params_siml%dist_frequency) == 0)  then
+        call reset_vegn_initial(vegn)
+      endif
+    endif
 
-    ! !if (iyears == 700 .or. iyears == 800) &
-    ! !     call reset_vegn_initial(vegn) 
-
-     if(myinterface%params_siml%do_reset_veg) then
-
-     if (iyears==myinterface%params_siml%spinupyears + 31)  then
-       call reset_vegn_initial(vegn)
-     endif
-
-    if(myinterface%params_siml%dist_frequency > 0) then
-         do i = myinterface%params_siml%spinupyears + 31 + myinterface%params_siml%dist_frequency, &
-         myinterface%params_siml%spinupyears + myinterface%params_siml%nyeartrend, &
-         myinterface%params_siml%dist_frequency
-       if (iyears == i) call reset_vegn_initial(vegn)
-     enddo
-     endif
-
-     endif
 
     !----------------------------------------------------------------
     ! Finalize run: deallocating memory

@@ -1004,7 +1004,7 @@ contains
 
     ! local variables
     type(cohort_type), pointer :: cc ! parent and child cohort pointers
-    type(cohort_type), dimension(:), pointer :: ccold, ccnew   ! pointer to old cohort array
+    type(cohort_type), dimension(:), pointer :: ccnew   ! pointer to old cohort array
     integer, dimension(16) :: reproPFTs
     real,    dimension(16) :: seedC, seedN ! seed pool of productible PFTs
     ! real :: failed_seeds, N_failedseed !, prob_g, prob_e
@@ -1064,27 +1064,25 @@ contains
     newcohorts = nPFTs
 
     if (newcohorts >= 1) then   ! build new cohorts for seedlings
-      
-      ccold => vegn%cohorts ! keep old cohort information
+
       nCohorts = vegn%n_cohorts + newcohorts
       allocate(ccnew(1:nCohorts), STAT = istat)
-      ccnew(1:vegn%n_cohorts) = ccold(1:vegn%n_cohorts) ! copy old cohort information
-      vegn%cohorts => ccnew
+      ccnew(1:vegn%n_cohorts) = vegn%cohorts(1:vegn%n_cohorts) ! copy old cohort information
 
       ! set up new cohorts
       k = vegn%n_cohorts
       do i = 1, newcohorts
         k = k + 1 ! increment new cohort index
         ! Copy old information to new cohort, Weng, 2021-06-02
-        do n =1, vegn%n_cohorts ! go through old cohorts
-          if(reproPFTs(i) == ccold(n)%species)then
-            ccnew(k) = ccold(n) ! Use the information from parent cohort
+        do n = 1, vegn%n_cohorts ! go through old cohorts
+          if(reproPFTs(i) == vegn%cohorts(n)%species)then
+            ccnew(k) = vegn%cohorts(n) ! Use the information from parent cohort
             exit
           endif
         enddo
         
         ! Update new cohort information
-        cc => vegn%cohorts(k)
+        cc => ccnew(k)
         cc%species    = reproPFTs(i)
         ! Give the new cohort an ID
         cc%ccID = MaxCohortID + i
@@ -1163,11 +1161,11 @@ contains
 
         end associate   ! F2003
       enddo
-      deallocate (ccold)
-      MaxCohortID = MaxCohortID + newcohorts
+      deallocate (vegn%cohorts)
+      vegn%cohorts => ccnew
       vegn%n_cohorts = k
-      ccnew => null()
-      
+      MaxCohortID = MaxCohortID + newcohorts
+
       !call zero_diagnostics( vegn )
     
     endif ! set up new born cohorts
