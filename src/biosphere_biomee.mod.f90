@@ -41,7 +41,7 @@ contains
 
     ! ! local variables
     integer :: moy, doy, dm
-    logical, save :: init  ! is true only on the first day of the simulation
+    logical, save :: init  ! is true only on the first step of the simulation
     real, dimension(SIZE(myinterface%climate)/myinterface%steps_per_day) :: daily_temp  ! Daily temperatures
 
     !----------------------------------------------------------------
@@ -64,9 +64,6 @@ contains
       ! Initialize vegetation tile and plant cohorts
       allocate( vegn )
       call initialize_vegn_tile( vegn )
-      
-      ! Sort and relayer cohorts
-      call relayer_cohorts( vegn )
 
       ! initialise outputs 
       call Zero_diagnostics( vegn )
@@ -208,7 +205,7 @@ contains
     !----------------------------------------------------------------
     ! Finalize run: deallocating memory
     !----------------------------------------------------------------
-    if (myinterface%steering%finalize) then  
+    if (myinterface%steering%finalize) then
       deallocate(vegn)
     end if
     

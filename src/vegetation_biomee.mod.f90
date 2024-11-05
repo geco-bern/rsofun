@@ -36,7 +36,7 @@ contains
 
     type(vegn_tile_type), intent(inout) :: vegn
     type(climate_type), intent(in) :: forcing
-    ! is true on the very first simulation day (first subroutine call of each gridcell)
+    ! is true on the very first simulation step (first subroutine call of each gridcell)
     logical, intent(in) :: init
     real, intent(in) :: tsoil  ! Soil temperature in K
 
@@ -1784,6 +1784,7 @@ contains
     na=(n+1)/2
     nb=n-na
     call mergerank(x,a,na,t)
+    ! Shouldn't next line be: call mergerank(x,a(na+1:n),nb,t) ????
     call mergerank(x,a(na+1),nb,t)
     if (x(a(na)) < x(a(na+1))) then
       t(1:na) = a(1:na)
