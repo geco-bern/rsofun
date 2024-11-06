@@ -190,22 +190,31 @@ rad_to_ppfd <- function(rad) {
   return(rad * kcFCE * 1.0e-6)
 }
 
+forcing_builder <- function(forcing_data, hourly) {
+  if (hourly)
+    groups <- forcing_data %>% dplyr::group_by(
+      lubridate::month(datehour),
+      lubridate::day(datehour),
+      lubridate::hour(datehour))
+  else
+    groups <- forcing_data %>% dplyr::group_by(
+      lubridate::month(datehour),
+      lubridate::day(datehour))
+  forcing <- groups %>%
+    summarise_at(vars(1:13), list(~mean(., na.rm = TRUE))) %>%
+    rename(month=`lubridate::month(datehour)`,day=`lubridate::day(datehour)`) %>%
+    ungroup() %>%
+    rename(year=YEAR, hod=HOUR, rad=Swdown, temp=TEMP, rh=RH,
+           rain=RAIN, wind=WIND, patm=PRESSURE, co2=aCO2_AW) %>%
+    mutate(date = make_date(year,month,day),
+           vpd = rh_to_vpd(temp, rh / 100.0),
+           ppfd = rad_to_ppfd(rad)) %>%
+    select(date,hod,temp,rain,vpd,ppfd,patm,wind,co2,)
+    return(forcing)
+}
+
 #---- gs leuning formatting -----
-forcing <- forcingLAE %>% 
-  dplyr::group_by(
-    lubridate::month(datehour),
-    lubridate::day(datehour),
-    lubridate::hour(datehour)) %>% 
-  summarise_at(vars(1:13), list(~mean(., na.rm = TRUE))) %>%
-  rename(month=`lubridate::month(datehour)`,day=`lubridate::day(datehour)`) %>%
-  ungroup()
-forcing <- forcing %>%
-  rename(year=YEAR, hod=HOUR, rad=Swdown, temp=TEMP, rh=RH,
-         rain=RAIN, wind=WIND, patm=PRESSURE, co2=aCO2_AW) %>%
-  mutate(date = make_date(year,month,day),
-          vpd = rh_to_vpd(temp, rh / 100.0),
-         ppfd = rad_to_ppfd(rad)) %>%
-  select(date,hod,temp,rain,vpd,ppfd,patm,wind,co2,)
+forcing <- forcing_builder(forcingLAE, TRUE)
 
 biomee_gs_leuning_drivers <- tibble(
   sitename,
@@ -224,6 +233,8 @@ save(biomee_gs_leuning_drivers,
      compress = "xz")
 
 #---- p-model formatting -----
+forcing <- forcing_builder(forcingLAE, FALSE)
+
 biomee_p_model_drivers <- tibble(
   sitename,
   site_info = list(tibble(siteinfo)),
