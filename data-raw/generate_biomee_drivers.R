@@ -37,7 +37,7 @@ siteinfo <- siteinfo %>%
   dplyr::mutate(date_end = lubridate::ymd(paste0(year_end, "-12-31")))
 
 # load model parameters (valid ones)
-params_siml <- tibble(
+params_siml_gs_leuning <- tibble(
   spinup = TRUE,
   spinupyears = 250,
   recycle = 1,
@@ -55,7 +55,7 @@ params_siml <- tibble(
   method_mortality = "dbh"
 )
 
-params_siml_pmodel <- params_siml
+params_siml_pmodel <- params_siml_gs_leuning
 params_siml_pmodel$method_photosynth <- "pmodel"
 params_siml_pmodel$steps_per_day <- 1
 
@@ -190,7 +190,7 @@ rad_to_ppfd <- function(rad) {
   return(rad * kcFCE * 1.0e-6)
 }
 
-forcing_builder <- function(forcing_data, hourly) {
+build_forcing <- function(forcing_data, hourly) {
   if (hourly)
     groups <- forcing_data %>% dplyr::group_by(
       lubridate::month(datehour),
@@ -213,100 +213,35 @@ forcing_builder <- function(forcing_data, hourly) {
     return(forcing)
 }
 
-#---- gs leuning formatting -----
-forcing <- forcing_builder(forcingLAE, TRUE)
+build_driver <- function(params_siml, forcing) {
+ drivers <- tibble(
+    sitename,
+    site_info = list(tibble(siteinfo)),
+    params_siml = list(tibble(params_siml)),
+    params_tile = list(tibble(params_tile)),
+    params_species = list(tibble(params_species)),
+    params_soil = list(tibble(params_soil)),
+    init_cohort = list(tibble(init_cohort)),
+    init_soil = list(tibble(init_soil)),
+    forcing = list(tibble(forcing))
+  )
+  return(drivers)
+}
 
-biomee_gs_leuning_drivers <- tibble(
-  sitename,
-  site_info = list(tibble(siteinfo)),
-  params_siml = list(tibble(params_siml)),
-  params_tile = list(tibble(params_tile)),
-  params_species = list(tibble(params_species)),
-  params_soil = list(tibble(params_soil)),
-  init_cohort = list(tibble(init_cohort)),
-  init_soil = list(tibble(init_soil)),
-  forcing = list(tibble(forcing))
-)
+#---- gs leuning formatting -----
+forcing_gs_leuning <- build_forcing(forcingLAE, TRUE)
+
+biomee_gs_leuning_drivers <- build_driver(params_siml_gs_leuning, forcing_gs_leuning)
 
 save(biomee_gs_leuning_drivers,
      file ="data/biomee_gs_leuning_drivers.rda",
      compress = "xz")
 
 #---- p-model formatting -----
-forcing <- forcing_builder(forcingLAE, FALSE)
+forcing_pmodel <- build_forcing(forcingLAE, FALSE)
 
-biomee_p_model_drivers <- tibble(
-  sitename,
-  site_info = list(tibble(siteinfo)),
-  params_siml = list(tibble(params_siml_pmodel)),
-  params_tile = list(tibble(params_tile)),
-  params_species = list(tibble(params_species)),
-  params_soil = list(tibble(params_soil)),
-  init_cohort = list(tibble(init_cohort)),
-  init_soil = list(tibble(init_soil)),
-  forcing  =list(tibble(forcing))
-)
+biomee_p_model_drivers <- build_driver(params_siml_pmodel, forcing_pmodel)
 
 save(biomee_p_model_drivers,
      file ="data/biomee_p_model_drivers.rda",
-     compress = "xz")
-
-# run the model gs-leuning
-out <- runread_biomee_f(
-  biomee_gs_leuning_drivers,
-  makecheck = TRUE,
-  parallel = FALSE)
-
-biomee_gs_leuning_output_annual_tile <- out$data[[1]]$output_annual_tile
-biomee_gs_leuning_output_annual_cohorts <- out$data[[1]]$output_annual_cohorts
-
-cowplot::plot_grid(
-  biomee_gs_leuning_output %>%
-    ggplot() +
-    geom_line(aes(x = year, y = GPP)) +
-    theme_classic()+labs(x = "Year", y = "GPP"),
-  biomee_gs_leuning_output %>%
-    ggplot() +
-    geom_line(aes(x = year, y = plantC)) +
-    theme_classic()+labs(x = "Year", y = "plantC")
-)
-
-biomee_gs_leuning_output_annual_cohorts %>% group_by(PFT,year) %>%
-  summarise(npp=sum(NPP*density/10000)) %>% mutate(PFT=as.factor(PFT)) %>%
-  ggplot() +
-  geom_line(aes(x = year, y = npp,col=PFT)) +
-  theme_classic()+labs(x = "Year", y = "NPP")
-
-save(biomee_gs_leuning_output,
-     file ="data/biomee_gs_leuning_output.rda",
-     compress = "xz")
-
-# run the model p-model
-out <- runread_biomee_f(
-  biomee_p_model_drivers,
-  makecheck = TRUE,
-  parallel = FALSE)
-
-biomee_p_model_output_annual_tile <- out$data[[1]]$output_annual_tile
-biomee_p_model_output_annual_cohorts <- out$data[[1]]$output_annual_cohorts
-
-cowplot::plot_grid(
-  biomee_p_model_output %>%
-    ggplot() +
-    geom_line(aes(x = year, y = GPP)) +
-    theme_classic()+labs(x = "Year", y = "GPP"),
-  biomee_p_model_output %>%
-    ggplot() +
-    geom_line(aes(x = year, y = plantC)) +
-    theme_classic()+labs(x = "Year", y = "plantC")
-)
-
-biomee_p_model_output_annual_cohorts %>% group_by(PFT,year) %>%
-  summarise(npp=sum(NPP*density/10000)) %>% mutate(PFT=as.factor(PFT)) %>%
-  ggplot() +
-  geom_line(aes(x = year, y = npp,col=PFT)) +
-  theme_classic()+labs(x = "Year", y = "NPP")
-
-save(biomee_p_model_output,
-     file = "data/biomee_p_model_output.rda",
      compress = "xz")
