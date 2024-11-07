@@ -254,10 +254,10 @@
 #' }
 "biomee_validation"
 
-#' rsofun BiomeE GPP validation data
+#' rsofun BiomeE validation data
 #'
 #' Small tests dataset to validate 
-#' calibration routines
+#' calibration routines and model output
 #'
 #' @format A tibble of driver data:
 #' \describe{
@@ -266,10 +266,10 @@
 #' }
 "biomee_p_model_output"
 
-#' rsofun BiomeE GPP validation data
+#' rsofun BiomeE validation data
 #'
 #' Small tests dataset to validate 
-#' calibration routines
+#' calibration routines and model output
 #'
 #' @format A tibble of driver data:
 #' \describe{
