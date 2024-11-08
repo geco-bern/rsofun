@@ -984,6 +984,7 @@ contains
     ! Reproduction of each canopy cohort, yearly time step
     ! calculate the new cohorts added in this step and states:
     ! tree density, DBH, woddy and fine biomass
+    ! Attention: newborn cohorts diagnostics are not initialized.
     ! Code from BiomeE-Allocation
     !---------------------------------------------------------------
     type(vegn_tile_type), intent(inout) :: vegn
@@ -1136,9 +1137,9 @@ contains
       MaxCohortID = MaxCohortID + newcohorts
       vegn%n_cohorts = k
       ccnew => null()
-      
-      call zero_diagnostics( vegn )
-    
+
+      ! Attention: newborn cohorts diagnostics are not initialized.
+
     endif ! set up new born cohorts
 
   end subroutine vegn_reproduction
@@ -1242,16 +1243,17 @@ contains
     integer :: L ! layer index (top-down)
     integer :: N0, N1 ! initial and final number of cohorts 
     real    :: frac ! fraction of the layer covered so far by the canopies
-    type(cohort_type), pointer :: cc(:)
-    type(cohort_type), pointer :: new(:)
+    type(cohort_type), pointer :: oldCC(:)
+    type(cohort_type), pointer :: newCC(:)
     real    :: nindivs
 
     !  rand_sorting = .TRUE. ! .False.
 
-    ! rank cohorts in descending order by height. For now, assume that they are 
-    ! in order
-    N0 = vegn%n_cohorts; cc=>vegn%cohorts
-    call rank_descending(cc(1:N0)%height,idx)
+    ! rank cohorts in descending order by height. For now, assume that they are in order
+    N0 = vegn%n_cohorts
+    oldCC => vegn%cohorts
+
+    call rank_descending(oldCC%height,idx)
 
     ! calculate max possible number of new cohorts : it is equal to the number of
     ! old cohorts, plus the number of layers -- since the number of full layers is 
@@ -1259,21 +1261,21 @@ contains
     ! boundary.
     
     ! replace NaN with 0
-    where(cc(1:N0)%crownarea /= cc(1:N0)%crownarea)
-      cc(1:N0)%crownarea = 0
+    where(oldCC%crownarea /= oldCC%crownarea)
+      oldCC%crownarea = 0
     end where
     
-    where(cc(1:N0)%nindivs /= cc(1:N0)%nindivs)
-      cc(1:N0)%nindivs = 0
+    where(oldCC%nindivs /= oldCC%nindivs)
+      oldCC%nindivs = 0
     end where
 
     ! calculate size of the new cohorts, correctly dealing with the NaN
     ! values - if one ignores the NaN values these are treated as a large
     ! negative int()
-    N1 = vegn%n_cohorts + int(sum(cc(1:N0)%nindivs * cc(1:N0)%crownarea))
-    
+    N1 = N0 + int(sum(oldCC%nindivs * oldCC%crownarea))
+
     ! allocate the new cohort array using the above size
-    allocate(new(N1))
+    allocate(newCC(N1))
 
     ! copy cohort information to the new cohorts, splitting the old cohorts that 
     ! stride the layer boundaries
@@ -1281,37 +1283,37 @@ contains
     k = 1 
     L = 1 
     frac = 0.0 
-    nindivs = cc(idx(k))%nindivs
+    nindivs = oldCC(idx(k))%nindivs
     
     ! loop over all original cohorts
     do
-      new(i) = cc(idx(k))
-      new(i)%nindivs = min(nindivs, (layer_vegn_cover - frac)/cc(idx(k))%crownarea)
-      new(i)%layer   = L
+      newCC(i) = oldCC(idx(k))
+      newCC(i)%nindivs = min(nindivs, (layer_vegn_cover - frac)/oldCC(idx(k))%crownarea)
+      newCC(i)%layer   = L
 
       if (L == 1) then
-        new(i)%firstlayer = 1
+        newCC(i)%firstlayer = 1
       endif
 
-      !    if (L>1)  new(i)%firstlayer = 0  ! switch off "push-down effects"
-      frac = frac + new(i)%nindivs * new(i)%crownarea
-      nindivs = nindivs - new(i)%nindivs
+      !    if (L>1)  newCC(i)%firstlayer = 0  ! switch off "push-down effects"
+      frac = frac + newCC(i)%nindivs * newCC(i)%crownarea
+      nindivs = nindivs - newCC(i)%nindivs
       
       ! check for individuals less than 0
       if (nindivs < 0) then
         nindivs = 0
       endif
 
-      if ((nindivs*cc(idx(k))%crownarea) < tolerance) then
+      if ((nindivs*oldCC(idx(k))%crownarea) < tolerance) then
 
         ! allocate the remainder of individuals to the last cohort
-        new(i)%nindivs = new(i)%nindivs + nindivs
+        newCC(i)%nindivs = newCC(i)%nindivs + nindivs
         
         if (k == N0) then
           exit ! end of loop
         else
           k = k + 1
-          nindivs = cc(idx(k))%nindivs
+          nindivs = oldCC(idx(k))%nindivs
         endif
         
       endif
@@ -1329,29 +1331,8 @@ contains
     ! THIS CREATES WEIRD BUG: SOMETIMES ZERO SOLUTION
     ! replace the array of cohorts
     deallocate(vegn%cohorts)
-    vegn%cohorts => new
-    !--------------------------------- 
-
-    ! !--------------------------------- 
-    ! ! Ensheng's suggested modification (email 29 Apr 2024)
-    ! ! THIS CREATES WEIRD BUG: SOMETIMES ZERO SOLUTION
-    ! ! replace the array of cohorts
-    ! deallocate(vegn%cohorts)
-    ! vegn%cohorts => new
-    ! ! Let new points to null()
-    ! new => null()
-    ! !---------------------------------
-
-    ! !--------------------------------- 
-    ! ! Ensheng's ALTERNATIVE suggested modification (email 29 Apr 2024)
-    ! ! THIS ALSO CREATES WEIRD BUG: SOMETIMES ZERO SOLUTION
-    ! ! replace the array of cohorts
-    ! vegn%cohorts => new
-    ! deallocate(cc) ! Release the memory of the old cohort array
-    ! ! Let new and cc point to null
-    ! new => null()
-    ! cc => null()
-    ! !---------------------------------
+    vegn%cohorts => newCC
+    !---------------------------------
 
     vegn%n_cohorts = i
 

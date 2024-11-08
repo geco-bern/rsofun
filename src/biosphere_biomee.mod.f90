@@ -32,7 +32,7 @@ contains
       outtype_annual_tile, &
       outtype_annual_cohorts
     use md_gpp_biomee, only: getpar_modl_gpp
-    use md_sofunutils, only: subsample
+    use md_sofunutils, only: downscale
 
     ! return variables
     type(outtype_daily_tile),     dimension(ndayyear)                , intent(out) :: out_biosphere_daily_tile
@@ -42,7 +42,7 @@ contains
     ! ! local variables
     integer :: moy, doy, dm
     logical, save :: init  ! is true only on the first step of the simulation
-    real, dimension(SIZE(myinterface%climate)/myinterface%steps_per_day) :: daily_temp  ! Daily temperatures
+    real, dimension(ndayyear) :: daily_temp  ! Daily temperatures (average)
 
     !----------------------------------------------------------------
     ! Biome-E stuff
@@ -65,9 +65,6 @@ contains
       allocate( vegn )
       call initialize_vegn_tile( vegn )
 
-      ! initialise outputs 
-      call Zero_diagnostics( vegn )
-
       ! module-specific parameter specification
       call getpar_modl_gpp()
 
@@ -77,11 +74,15 @@ contains
 
     endif
 
+    !---------------------------------------------
+    ! Reset diagnostics and counters
+    !---------------------------------------------
     simu_steps = 0
     doy = 0
+    call Zero_diagnostics( vegn )
 
-    ! Compute daily temperatures.
-    call subsample(daily_temp, myinterface%climate(:)%Tair, myinterface%steps_per_day)
+    ! Compute averaged daily temperatures.
+    call downscale(daily_temp, myinterface%climate(:)%Tair, myinterface%steps_per_day)
 
     !----------------------------------------------------------------
     ! LOOP THROUGH MONTHS
@@ -115,11 +116,9 @@ contains
         ! FAST TIME STEP
         !----------------------------------------------------------------
         ! get daily mean temperature from hourly/half-hourly data
-        vegn%Tc_daily = 0.0
         fastloop: do hod = 1,myinterface%steps_per_day
 
           simu_steps    = simu_steps + 1
-          vegn%Tc_daily = vegn%Tc_daily + myinterface%climate(simu_steps)%Tair
           vegn%thetaS  = (vegn%wcl(2) - WILTPT) / (FLDCAP - WILTPT)
 
           !----------------------------------------------------------------
@@ -138,7 +137,7 @@ contains
         !-------------------------------------------------
         ! Daily calls after fast loop
         !-------------------------------------------------
-        vegn%Tc_daily = vegn%Tc_daily / myinterface%steps_per_day
+        vegn%Tc_daily = daily_temp(doy)
 
         ! sum over fast time steps and cohorts
         call daily_diagnostics( vegn, iyears, idoy, out_biosphere_daily_tile(doy)  )  ! , out_biosphere_daily_cohorts(doy,:)
@@ -166,6 +165,7 @@ contains
     ! because mortality and reproduction re-organize
     ! cohorts again and we want annual output and daily
     ! output to be consistent with cohort identities.
+    ! Note: Relayering happens in phenology leading to a reshuffling of the cohorts and affecting cohort identities.
     !---------------------------------------------
     call annual_diagnostics( vegn, iyears, out_biosphere_annual_cohorts(:), out_biosphere_annual_tile )
 
@@ -193,11 +193,6 @@ contains
     call relayer_cohorts( vegn )
     
     call vegn_mergecohorts( vegn )
-
-    !---------------------------------------------
-    ! Set annual variables zero
-    !---------------------------------------------
-    call Zero_diagnostics( vegn )
 
     ! update the years of model run
     iyears = iyears + 1

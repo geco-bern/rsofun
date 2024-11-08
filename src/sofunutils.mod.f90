@@ -80,9 +80,9 @@ contains
 
   end function running
 
-  subroutine subsample(out, in, rate)
+  subroutine downscale(out, in, rate)
     !////////////////////////////////////////////////////////////////
-    ! Subsample array 'in' with rate 'rate' using average scheme.
+    ! Downscale array 'in' with rate 'rate' using average scheme.
     !----------------------------------------------------------------
     ! arguments
     real, dimension(:), intent(inout) :: out      ! Output array (should have size of 'in' / rate)
@@ -102,7 +102,7 @@ contains
       end do
     end if
 
-  end subroutine subsample
+  end subroutine downscale
 
   function area( lat, dx, dy ) result( out_area )
     !////////////////////////////////////////////////////////////////

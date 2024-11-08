@@ -10,8 +10,8 @@ module md_params_core
   integer, parameter :: nhoursyear = 8760        ! number of days in a year
   integer, parameter :: nmonth = 12              ! number of months in a year
   real,    parameter :: secs_per_day = 86400.0   ! number of seconds in a day
-  integer, parameter :: hours_per_year = 365 * 24  
-  real,    parameter :: seconds_per_year = 365. * 24. * 3600.
+  integer, parameter :: hours_per_year = ndayyear * 24
+  real,    parameter :: seconds_per_year = ndayyear * 24. * 3600.
 
   ! From LM3-PPA
   integer, parameter :: nlayers_soil = 3         ! number of soil layers
