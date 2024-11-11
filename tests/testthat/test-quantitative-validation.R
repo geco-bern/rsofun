@@ -35,62 +35,41 @@ test_that("p-model quantitative check", {
   expect_equal(tolerance, 0.4201191, tolerance = 0.04)
 })
 
-# test_that("p-model consistency R vs Fortran (rpmodel vs rsofun)", {
-#   skip_on_cran()
-# 
-#   df <- rsofun::p_model_drivers
-# 
-#   # set model drivers to the NPHT paper
-#   # ones
-#   params_modl <- list(
-#     kphio           = 0.09423773,
-#     soilm_par_a     = 0.33349283,
-#     soilm_par_b     = 1.45602286,
-#     tau_acclim_tempstress = 10,
-#     par_shape_tempstress  = 0.0
-#   )
-# 
-#   df$forcing[[1]] <- df$forcing[[1]] %>%
-#     dplyr::mutate(dplyr::across(-c(date,doy), mean))
-# 
-#   # run the model for these parameters
-#   output <- rsofun::runread_pmodel_f(
-#     df,
-#     par = params_modl
-#   )$data[[1]]$gpp
-# 
-#   df <- df$forcing[[1]]
-# 
-#   output_rp <- apply(df, 1, function(x){
-#     out <- rpmodel::rpmodel(
-#       tc             = as.numeric(x['temp']),
-#       patm           = as.numeric(x['patm']),
-#       co2            = as.numeric(x['co2']),
-#       fapar          = as.numeric(x['fapar']),
-#       ppfd           = as.numeric(x['ppfd']),
-#       vpd            = as.numeric(x['vpd']),
-#       elv            = 270,
-#       kphio          = 0.09423773,
-#       beta           = 146,
-#       c4             = FALSE,
-#       method_optci   = "prentice14",
-#       method_jmaxlim = "wang17",
-#       do_ftemp_kphio = FALSE,
-#       do_soilmstress = FALSE,
-#       verbose        = TRUE
-#     )
-#   })
-# 
-#   output_rp <- data.frame(do.call("rbind", output_rp))
-#   output_rp <- unlist(output_rp$gpp)
-# 
-#   plot(output_rp)
-#   plot(output)
-# 
-#   # normal tolerance ~ 0.67
-#   tolerance <- mean(abs(output - gpp), na.rm = TRUE)/
-#     mean(abs(gpp), na.rm = TRUE)
-# 
-#   # test for correctly returned values
-#   expect_equal(tolerance, 0.6768124, tolerance = 0.03)
-# })
+test_that("biomeE quantitative check (gs leuning)", {
+  skip_on_cran()
+
+  out <- runread_biomee_f(
+    biomee_gs_leuning_drivers,
+    makecheck = TRUE,
+    parallel = FALSE)
+
+  output_annual_tile <- out$data[[1]]$output_annual_tile
+
+  expect_true(all.equal(output_annual_tile, biomee_gs_leuning_output))
+
+  # If this test fails it means that the output of the model is out of sync with the data in the data directory.
+  # It could either mean that:
+  # - the model was accidentally altered and should be fixed to deliver the expected output
+  # - the model, drivers, or parameters was changed and the output data needs to be re-generetaed using the scripts in
+  #   raw-data directory.
+})
+
+
+test_that("biomeE quantitative check (p-model)", {
+  skip_on_cran()
+
+  out <- runread_biomee_f(
+    biomee_p_model_drivers,
+    makecheck = TRUE,
+    parallel = FALSE)
+
+  output_annual_tile <- out$data[[1]]$output_annual_tile
+
+  expect_true(all.equal(output_annual_tile, biomee_p_model_output))
+
+  # If this test fails it means that the output of the model is out of sync with the data in the data directory.
+  # It could either mean that:
+  # - the model was accidentally altered and should be fixed to deliver the expected output
+  # - the model, drivers, or parameters was changed and the output data needs to be re-generetaed using the scripts in
+  #   raw-data directory.
+})

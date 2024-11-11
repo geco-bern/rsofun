@@ -888,7 +888,11 @@ contains
 
     if (vegn%nindivs>0.0)   vegn%DBH   = vegn%DBH / vegn%nindivs  
     if (vegn%nindivs12>0.0) vegn%DBH12 = vegn%DBH12 / vegn%nindivs12  ! vegn%nindivs12 could be zero if all dbh<0.12
-    if (vegn%nindivs12>0.0) vegn%QMD   = sqrt(vegn%DBH12pow2 / vegn%nindivs12)  
+    if (vegn%nindivs12>0.0) then
+      vegn%QMD   = sqrt(vegn%DBH12pow2 / vegn%nindivs12)
+    else
+      vegn%QMD = 0.0
+    end if
 
   end subroutine summarize_tile
 
