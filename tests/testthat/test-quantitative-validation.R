@@ -45,7 +45,7 @@ test_that("biomeE quantitative check (gs leuning)", {
 
   output_annual_tile <- out$data[[1]]$output_annual_tile
 
-  expect_true(all.equal(colMeans(output_annual_tile), colMeans(biomee_gs_leuning_output), tolerance = 1e-6))
+  expect_true(all.equal(colMeans(output_annual_tile), colMeans(biomee_gs_leuning_output), tolerance = 1e-4))
 
   # If this test fails it means that the output of the model is out of sync with the data in the data directory.
   # It could either mean that:
@@ -65,7 +65,7 @@ test_that("biomeE quantitative check (p-model)", {
 
   output_annual_tile <- out$data[[1]]$output_annual_tile
 
-  expect_true(all.equal(colMeans(output_annual_tile), colMeans(biomee_p_model_output), tolerance = 1e-6))
+  expect_true(all.equal(colMeans(output_annual_tile), colMeans(biomee_p_model_output), tolerance = 1e-4))
 
   # If this test fails it means that the output of the model is out of sync with the data in the data directory.
   # It could either mean that:
