@@ -45,6 +45,7 @@ should be run using \code{BayesianTools}, so the likelihood is maximized.
 # BiomeE model parameter values
 # and the example data
 print(biomee_validation)
+print(biomee_gs_leuning_drivers)
 cost_likelihood_biomee(
  par = c(3.5, 3.5, 1, 1,    # model params
          0.5),              # err_GPP
