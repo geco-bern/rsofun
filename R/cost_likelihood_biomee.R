@@ -58,16 +58,12 @@ cost_likelihood_biomee <- function(
   drivers$params_tile[[1]]$tf_base <- par[3]
   drivers$params_tile[[1]]$par_mort <- par[4]
 
-  print("ZA")
-
   # run model
   df <- runread_biomee_f(
     drivers,
     makecheck = TRUE,
     parallel = FALSE
   )
-
-  print("AZ")
   
   # did we spin up
   spin_up <- drivers$params_siml[[1]]$spinup
