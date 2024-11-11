@@ -723,6 +723,8 @@ contains
     real :: CAI_max
 
     if ((trim(myinterface%params_siml%method_mortality) == "const_selfthin")) then
+      ! Work in progress.
+      ! Throws segementation fault.
 
       ! Remove a big amount of very small trees first
       if (cc%layer > 1) deathrate = 0.2 !sp%mortrate_d_u

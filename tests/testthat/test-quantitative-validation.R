@@ -38,6 +38,10 @@ test_that("p-model quantitative check", {
 test_that("biomeE quantitative check (gs leuning)", {
   skip_on_cran()
 
+  # We make sure the right drivers and data are loaded.
+  load('data/biomee_gs_leuning_drivers.rda')
+  load('data/biomee_gs_leuning_output.rda')
+
   out <- runread_biomee_f(
     biomee_gs_leuning_drivers,
     makecheck = TRUE,
@@ -57,6 +61,10 @@ test_that("biomeE quantitative check (gs leuning)", {
 
 test_that("biomeE quantitative check (p-model)", {
   skip_on_cran()
+
+  # We make sure the right drivers and data are loaded.
+  load('data/biomee_p_model_drivers.rda')
+  load('data/biomee_p_model_output.rda')
 
   out <- runread_biomee_f(
     biomee_p_model_drivers,
