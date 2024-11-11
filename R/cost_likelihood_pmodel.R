@@ -55,6 +55,7 @@
 #' # model parameter values involved in the
 #' # temperature dependence of kphio 
 #' # and example data
+#' print(p_model_validation)
 #' cost_likelihood_pmodel(
 #'  par = c(0.05, -0.01, 1,     # model parameters
 #'          2),                # err_gpp
