@@ -92,7 +92,6 @@
 #'   }
 #' }
 #' @examples require(ggplot2); require(tidyr)
-#' print(p_model_validation)
 #' p_model_validation %>% tidyr::unnest(data) 
 #' 
 #' @source Pastorello, G., Trotta, C., Canfora, E. et al. 
