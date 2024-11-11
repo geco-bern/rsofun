@@ -51,8 +51,6 @@ cost_likelihood_biomee <- function(
   
   # predefine variables for CRAN check compliance
   GPP <- LAI <- Density12 <- plantC <- error <- NULL
-
-  print("AAAAA")
   
   # Add changed model parameters to drivers, overwriting where necessary.
   drivers$params_species[[1]]$phiRL[]  <- par[1]
@@ -60,7 +58,7 @@ cost_likelihood_biomee <- function(
   drivers$params_tile[[1]]$tf_base <- par[3]
   drivers$params_tile[[1]]$par_mort <- par[4]
 
-  print("BBBBB")
+  print("ZA")
 
   # run model
   df <- runread_biomee_f(
@@ -69,12 +67,10 @@ cost_likelihood_biomee <- function(
     parallel = FALSE
   )
 
-  print("CCCCCC")
+  print("AZ")
   
   # did we spin up
   spin_up <- drivers$params_siml[[1]]$spinup
-
-  print("DDDDDDD")
 
   # drop spinup years if activated
   # see below
@@ -83,8 +79,6 @@ cost_likelihood_biomee <- function(
   } else {
     spin_up_years <- 0
   }
-
-  print("EEEEEEEE")
   
   # Aggregate variables from the model df taking the last 500 yrs
   # if spun up
@@ -96,15 +90,11 @@ cost_likelihood_biomee <- function(
       Density = mean(Density12),
       Biomass = mean(plantC)
     )
-
-  print("FFFFFFF")
   
   # reshuffle observed data
   col_names <- obs$data[[1]]$variables
   obs <- data.frame(t(obs$data[[1]]$targets_obs))
   colnames(obs) <- col_names
-
-  print("GGGGGGGG")
   
   # calculate the log likelihood, loop over targets
   ll <- lapply(seq(length(targets)), function(i){
@@ -117,15 +107,11 @@ cost_likelihood_biomee <- function(
   }) |>
     unlist() |>
     sum()     # sum log-likelihoods
-
-  print("HHHHHHH")
               
   # trap boundary conditions
   if(is.nan(ll) || is.na(ll) | ll == 0){
     ll <- -Inf
   }
-
-  print("IIIIIII")
   
   return(ll)
 }

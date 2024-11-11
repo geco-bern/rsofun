@@ -443,6 +443,8 @@ contains
     integer :: idx_daily_start
     integer :: idx_daily_end
 
+    PRINT *, 'AAAAAAAAA'
+
     !----------------------------------------------------------------
     ! POPULATE MYINTERFACE WITH ARGUMENTS FROM R
     !----------------------------------------------------------------
@@ -634,6 +636,8 @@ contains
                                             myinterface%steering%climateyear_idx &
                                             )
 
+      PRINT *, 'BBBBBBBBB'
+
       !----------------------------------------------------------------
       ! Call biosphere (wrapper for all modules, contains time loops)
       !----------------------------------------------------------------
@@ -753,6 +757,8 @@ contains
        end if
 
     end do yearloop
+
+    PRINT *, 'CCCCCCCCCC'
 
     deallocate(myinterface%climate)
     deallocate(myinterface%pco2)
