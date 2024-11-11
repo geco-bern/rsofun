@@ -12,14 +12,14 @@ module md_forcing_biomee
 
   type :: climate_type
     real    :: ppfd          ! mol m-2 s-1
-    real    :: radiation     ! W m-2 (SW downwelling)
+    real    :: radiation     ! W m-2 (SW downwelling, computed from ppfd)
     real    :: Tair          ! air temperature,  K
     real    :: vpd           ! vapor pressure deficit (Pa)
     real    :: rain          ! kgH2O m-2 s-1
     real    :: windU         ! wind velocity (m s-1)
     real    :: P_air         ! pa
     real    :: CO2           ! mol CO2/mol dry air
-    real    :: RH            ! relative humidity (fraction <1)
+    real    :: RH            ! relative humidity (fraction < 1, computed from vpd and Tair)
   end type climate_type
 
 contains

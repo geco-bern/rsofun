@@ -18,11 +18,11 @@ module md_forcing_pmodel
     real(kind=sp) :: dtemp  ! daily mean air temperature, deg C
     real(kind=sp) :: dtmin  ! daily minimum air temperature, deg C
     real(kind=sp) :: dtmax  ! daily maximum air temperature, deg C
-    real(kind=sp) :: dprec  ! mm d-1
-    real(kind=sp) :: dsnow  ! mm d-1 water equivalents
+    real(kind=sp) :: dprec  ! mm s-1
+    real(kind=sp) :: dsnow  ! mm s-1 water equivalents
     real(kind=sp) :: dfsun  ! unitless
     real(kind=sp) :: dvpd   ! Pa
-    real(kind=sp) :: dppfd  ! mol m-2 d-1
+    real(kind=sp) :: dppfd  ! mol m-2 s-1
     real(kind=sp) :: dnetrad! W m-2
     real(kind=sp) :: dpatm  ! Pa
   end type climate_type

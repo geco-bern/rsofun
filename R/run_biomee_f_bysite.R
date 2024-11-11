@@ -43,7 +43,7 @@
 #'   \item{ppfd}{Photosynthetic photon flux densisty(mol s-1 m-2)}
 #'   \item{tair}{Air temperature (deg C)}
 #'   \item{vpd}{Vapor pressure defficit (Pa)}
-#'   \item{rain}{Precipitation (kgH2O m-2 s-1)}
+#'   \item{rain}{Precipitation (kgH2O m-2 s-1 == mm s-1)}
 #'   \item{wind}{Wind velocity (m s-1)}
 #'   \item{pair}{Atmoshperic pressure (pa)}
 #'   \item{co2}{CO2 athmospheric concentration (ppm)}
