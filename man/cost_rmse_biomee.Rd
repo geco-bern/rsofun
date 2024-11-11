@@ -37,6 +37,7 @@ computes the RMSE for the biomee model fitting target variables
 # Compute RMSE for a set of
 # model parameter values
 # and example data
+print(biomee_validation)
 cost_rmse_biomee(
  par = c(3.5, 3.5, 1, 1),
  obs = biomee_validation,

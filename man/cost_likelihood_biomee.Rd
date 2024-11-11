@@ -44,6 +44,7 @@ should be run using \code{BayesianTools}, so the likelihood is maximized.
 # Compute the likelihood for a set of
 # BiomeE model parameter values
 # and the example data
+print(biomee_validation)
 cost_likelihood_biomee(
  par = c(3.5, 3.5, 1, 1,    # model params
          0.5),              # err_GPP

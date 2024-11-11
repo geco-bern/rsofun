@@ -75,6 +75,7 @@ trait value predicted on that date.
 # Compute RMSE for a set
 # of model parameter values
 # and example data
+print(p_model_validation)
 cost_rmse_pmodel(
  par = c(0.05, -0.01, 0.5),  # kphio related parameters
  obs = p_model_validation,
