@@ -15,7 +15,7 @@ contains
     !/////////////////////////////////////////////////////////////////////////
     ! Calculates soil temperature (deg C) based on air temperature (deg C).
     !-------------------------------------------------------------------------
-    use md_params_core, only: ndayyear, nlu, ndaymonth, pi
+    use md_params_core, only: ndayyear, nlu, pi
     use md_sofunutils, only: running
     use md_tile_pmodel, only: soil_type
 
@@ -31,7 +31,7 @@ contains
     real, dimension(:,:), allocatable, save   :: wscal_pvy    ! daily Cramer-Prentice-Alpha of previous year (unitless) 
     real, dimension(:,:), allocatable, save   :: wscal_alldays
 
-    integer :: pm ,ppm, lu, window_length
+    integer :: lu, window_length
 
     real :: avetemp, meanw1
     real :: tempthismonth, templastmonth

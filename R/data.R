@@ -250,7 +250,7 @@
 #' @format A tibble of driver data:
 #' \describe{
 #'   \item{sitename}{site name}
-#'   \item{data}{validation dta}
+#'   \item{data}{validation data}
 #' }
 "biomee_validation"
 
@@ -262,7 +262,7 @@
 #' @format A tibble of driver data:
 #' \describe{
 #'   \item{sitename}{site name}
-#'   \item{data}{validation dta}
+#'   \item{data}{validation data}
 #' }
 "biomee_p_model_output"
 
@@ -274,7 +274,7 @@
 #' @format A tibble of driver data:
 #' \describe{
 #'   \item{sitename}{site name}
-#'   \item{data}{validation dta}
+#'   \item{data}{validation data}
 #' }
 "biomee_gs_leuning_output"
 

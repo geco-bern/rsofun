@@ -436,7 +436,6 @@ contains
     type(outtype_annual_tile)                                         :: out_biosphere_annual_tile
     type(outtype_annual_cohorts), dimension(out_max_cohorts)          :: out_biosphere_annual_cohorts
 
-    real                    :: timestep, timestep_d
     integer                 :: yr
     
     integer :: idx

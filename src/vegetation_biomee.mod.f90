@@ -1263,15 +1263,6 @@ contains
     ! old cohorts, plus the number of layers -- since the number of full layers is 
     ! equal to the maximum number of times an input cohort can be split by a layer 
     ! boundary.
-    
-    ! replace NaN with 0
-    where(oldCC%crownarea /= oldCC%crownarea)
-      oldCC%crownarea = 0
-    end where
-    
-    where(oldCC%nindivs /= oldCC%nindivs)
-      oldCC%nindivs = 0
-    end where
 
     ! calculate size of the new cohorts, correctly dealing with the NaN
     ! values - if one ignores the NaN values these are treated as a large

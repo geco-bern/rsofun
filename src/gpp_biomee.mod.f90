@@ -210,7 +210,8 @@ contains
         temp_memory = (forcing%Tair - kTkelvin)
         vpd_memory  = forcing%vpd
         patm_memory = forcing%P_air
-        par_memory = -1.0 ! We initialize par_memory to a dummy value used to detect the need for initialization, as the initialization process using init flags is error prone given the dunmaic the adjuction of layers.
+        par_memory = -1.0 ! We initialize par_memory to a dummy value used to detect the need for initialization,
+        ! as the initialization process using init flags is error prone given the dunmaic the adjuction of layers.
       end if 
       
       co2_memory  = dampen_variability( forcing%CO2 * 1.0e6,        params_gpp%tau_acclim, co2_memory )
@@ -243,7 +244,7 @@ contains
         ! photosynthetically active radiation level at this layer
         par = f_light(layer) * forcing%radiation * kfFEC * 1.0e-6
         ! slowly varying light conditions per layer, relevant for acclimation (P-model quantities)
-        if (par_memory(layer) == -1.0) then
+        if (par_memory(layer) <= -1.0) then
           par_memory(layer) = par
         else
           par_memory(layer) = dampen_variability(par, params_gpp%tau_acclim, par_memory(layer))
