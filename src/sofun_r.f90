@@ -14,7 +14,10 @@ contains
   subroutine pmodel_f(         &
     spinup,                    &   
     spinupyears,               &        
-    recycle,                   &    
+    recycle,                   &
+    use_phydro,                &
+    use_gs,                    &    
+    use_pml,                   &    
     firstyeartrend,            &           
     nyeartrend,                &  
     secs_per_tstep,            &     
@@ -32,9 +35,12 @@ contains
     latitude,                  &     
     altitude,                  &   
     whc,                       &
+    canopy_height,             &
+    reference_height,          &
     nt,                        &
     par,                       &
     forcing,                   &
+    forcing_acclim,            &
     output                     &
     ) bind(C, name = "pmodel_f_")
 
@@ -55,6 +61,9 @@ contains
     logical(kind=c_bool), intent(in) :: spinup
     integer(kind=c_int),  intent(in) :: spinupyears
     integer(kind=c_int),  intent(in) :: recycle
+    logical(kind=c_bool), intent(in) :: use_phydro
+    logical(kind=c_bool), intent(in) :: use_gs
+    logical(kind=c_bool), intent(in) :: use_pml
     integer(kind=c_int),  intent(in) :: firstyeartrend
     integer(kind=c_int),  intent(in) :: nyeartrend
     integer(kind=c_int),  intent(in) :: secs_per_tstep
@@ -72,10 +81,13 @@ contains
     real(kind=c_double),  intent(in) :: latitude
     real(kind=c_double),  intent(in) :: altitude
     real(kind=c_double),  intent(in) :: whc
+    real(kind=c_double),  intent(in) :: canopy_height
+    real(kind=c_double),  intent(in) :: reference_height
     integer(kind=c_int),  intent(in) :: nt ! number of time steps
-    real(kind=c_double),  dimension(9), intent(in) :: par  ! free (calibratable) model parameters
-    real(kind=c_double),  dimension(nt,12), intent(in) :: forcing  ! array containing all temporally varying forcing data (rows: time steps; columns: 1=air temperature, 2=rainfall, 3=vpd, 4=ppfd, 5=net radiation, 6=sunshine fraction, 7=snowfall, 8=co2, 9=fapar, 10=patm, 11=tmin, 12=tmax) 
-    real(kind=c_double),  dimension(nt,19), intent(out) :: output
+    real(kind=c_double),  dimension(15), intent(in) :: par  ! free (calibratable) model parameters
+    real(kind=c_double),  dimension(nt,13), intent(in) :: forcing  ! array containing all temporally varying forcing data for instantaneous model (rows: time steps; columns: 1=air temperature, 2=rainfall, 3=vpd, 4=ppfd, 5=net radiation, 6=sunshine fraction, 7=snowfall, 8=co2, 9=fapar, 10=patm, 11=tmin, 12=tmax) 
+    real(kind=c_double),  dimension(nt,12), intent(in) :: forcing_acclim  ! array containing all temporally varying forcing data for acclimating model (rows: time steps; columns: 1=air temperature, 2=rainfall, 3=vpd, 4=ppfd, 5=net radiation, 6=sunshine fraction, 7=snowfall, 8=co2, 9=fapar, 10=patm, 11=tmin, 12=tmax) 
+    real(kind=c_double),  dimension(nt,23), intent(out) :: output
 
     ! local variables
     type(outtype_biosphere) :: out_biosphere  ! holds all the output used for calculating the cost or maximum likelihood function 
@@ -87,6 +99,9 @@ contains
     myinterface%params_siml%do_spinup      = spinup
     myinterface%params_siml%spinupyears    = spinupyears
     myinterface%params_siml%recycle        = recycle
+    myinterface%params_siml%use_phydro     = use_phydro
+    myinterface%params_siml%use_gs         = use_gs
+    myinterface%params_siml%use_pml        = use_pml
     myinterface%params_siml%firstyeartrend = firstyeartrend
     myinterface%params_siml%nyeartrend     = nyeartrend
 
@@ -133,6 +148,12 @@ contains
     ! GET SOIL PARAMETERS
     !----------------------------------------------------------------
     myinterface%whc_prescr = real( whc )
+
+    !----------------------------------------------------------------
+    ! Other site-specific PARAMETERS
+    !----------------------------------------------------------------
+    myinterface%canopy_height = real(canopy_height)
+    myinterface%reference_height = real(reference_height)
     
     !----------------------------------------------------------------
     ! GET CALIBRATABLE MODEL PARAMETERS (so far a small list)
@@ -141,11 +162,17 @@ contains
     myinterface%params_calib%kphio_par_a        = real(par(2))
     myinterface%params_calib%kphio_par_b        = real(par(3))
     myinterface%params_calib%soilm_thetastar    = real(par(4))
-    myinterface%params_calib%soilm_betao        = real(par(5))
-    myinterface%params_calib%beta_unitcostratio = real(par(6))
-    myinterface%params_calib%rd_to_vcmax        = real(par(7))
-    myinterface%params_calib%tau_acclim         = real(par(8))
-    myinterface%params_calib%kc_jmax            = real(par(9))
+    myinterface%params_calib%beta_unitcostratio = real(par(5))
+    myinterface%params_calib%rd_to_vcmax        = real(par(6))
+    myinterface%params_calib%tau_acclim         = real(par(7))
+    myinterface%params_calib%kc_jmax            = real(par(8))
+    myinterface%params_calib%phydro_K_plant     = real(par(9))
+    myinterface%params_calib%phydro_p50_plant   = real(par(10))
+    myinterface%params_calib%phydro_b_plant     = real(par(11))
+    myinterface%params_calib%phydro_alpha       = real(par(12))
+    myinterface%params_calib%phydro_gamma       = real(par(13))
+    myinterface%params_calib%bsoil              = real(par(14))
+    myinterface%params_calib%Ssoil              = real(par(15))
 
     !----------------------------------------------------------------
     ! GET VEGETATION COVER (fractional projective cover by PFT)
@@ -165,6 +192,13 @@ contains
       ! Get climate variables for this year (full fields and 365 daily values for each variable)
       myinterface%climate(:) = getclimate(nt, &
                                           forcing, &
+                                          myinterface%steering%climateyear_idx, &
+                                          myinterface%params_siml%in_ppfd,  &
+                                          myinterface%params_siml%in_netrad &
+                                          )
+
+      myinterface%climate_acclimation(:) = getclimate(nt, &
+                                          forcing_acclim, &
                                           myinterface%steering%climateyear_idx, &
                                           myinterface%params_siml%in_ppfd,  &
                                           myinterface%params_siml%in_netrad &
@@ -219,6 +253,10 @@ contains
         output(idx_start:idx_end,17) = dble(out_biosphere%wcont(:))
         output(idx_start:idx_end,18) = dble(out_biosphere%snow(:))
         output(idx_start:idx_end,19) = dble(out_biosphere%cond(:))
+        output(idx_start:idx_end,20) = dble(out_biosphere%latenth_canopy(:))
+        output(idx_start:idx_end,21) = dble(out_biosphere%latenth_soil(:))
+        output(idx_start:idx_end,22) = dble(out_biosphere%dpsi(:))
+        output(idx_start:idx_end,23) = dble(out_biosphere%psi_leaf(:))
 
       end if
 
@@ -661,7 +699,7 @@ contains
     !----------------------------------------------------------------
     ! GET SOIL PARAMETERS
     !----------------------------------------------------------------
-    !myinterface%params_soil = getsoil( params_soil )
+    ! myinterface%params_soil = getsoil( params_soil )
 
     myinterface%params_soil%GMD(:)               = real(params_soil(:,1))
     myinterface%params_soil%GSD(:)               = real(params_soil(:,2))

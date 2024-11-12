@@ -111,8 +111,8 @@ contains
         call solar( tile_fluxes(:), &
                     myinterface%grid, & 
                     myinterface%climate(doy),  &
-                    doy &
-                    ! myinterface%params_siml%in_netrad &
+                    doy, &
+                    myinterface%params_siml%in_netrad &
                     )
         ! if (verbose) print*,'... done'
 
@@ -131,15 +131,24 @@ contains
         ! calculate GPP
         !----------------------------------------------------------------
         ! if (verbose) print*,'calling gpp() ... '
+        ! print *, "Using pml: ", myinterface%params_siml%use_pml
         call gpp( tile(:), &
                   tile_fluxes(:), &
                   myinterface%pco2, &
                   myinterface%climate(doy), &
+                  myinterface%climate_acclimation(doy), &
                   myinterface%grid, &
                   init_daily, &
-                  myinterface%params_siml%in_ppfd &
+                  myinterface%params_siml%in_ppfd, &
+                  myinterface%params_siml%use_phydro &
                   )
         ! if (verbose) print*,'... done'
+
+        !----------------------------------------------------------------
+        ! daily diagnostics (e.g., sum over plant within canopy)
+        !----------------------------------------------------------------
+        ! Jaideep NOTE: This is moved here because waterbal requires aggregated canopy transpiration.
+        call diag_daily(tile(:), tile_fluxes(:))
 
         !----------------------------------------------------------------
         ! get soil moisture, and runoff
@@ -148,7 +157,11 @@ contains
         call waterbal(  tile(:), &
                         tile_fluxes(:), &
                         myinterface%grid, &
-                        myinterface%climate(doy) &
+                        myinterface%climate(doy), &
+                        tile(:)%canopy%fapar, &
+                        myinterface%params_siml%use_phydro, &
+                        myinterface%params_siml%use_gs, &
+                        myinterface%params_siml%use_pml &
                         )
         ! if (verbose) print*,'... done'
 
@@ -163,11 +176,6 @@ contains
                       doy & 
                       )
         ! if (verbose) print*, '... done'
-
-        !----------------------------------------------------------------
-        ! daily diagnostics (e.g., sum over plant within canopy)
-        !----------------------------------------------------------------
-        call diag_daily(tile(:), tile_fluxes(:))
 
         !----------------------------------------------------------------
         ! populate function return variable
@@ -193,6 +201,11 @@ contains
         out_biosphere%wcont(doy)   = tile(1)%soil%phy%wcont
         out_biosphere%snow(doy)    = tile(1)%soil%phy%snow
         out_biosphere%cond(doy)    = tile_fluxes(1)%canopy%dcn
+        ! Additional outputs for coupled model and phydro
+        out_biosphere%latenth_canopy(doy) = tile_fluxes(1)%canopy%daet_e_canop
+        out_biosphere%latenth_soil(doy) = tile_fluxes(1)%canopy%daet_e_soil
+        out_biosphere%dpsi(doy)    = tile_fluxes(1)%plant(1)%dpsi
+        out_biosphere%psi_leaf(doy)    = tile_fluxes(1)%plant(1)%psi_leaf
 
         init_daily = .false.
 

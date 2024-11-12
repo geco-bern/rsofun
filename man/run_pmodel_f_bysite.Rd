@@ -9,9 +9,11 @@ run_pmodel_f_bysite(
   params_siml,
   site_info,
   forcing,
+  forcing_acclim,
   params_modl,
   makecheck = TRUE,
-  verbose = TRUE
+  verbose = TRUE,
+  ...
 )
 }
 \arguments{
@@ -60,9 +62,6 @@ for a detailed description of its structure and contents).}
   \item{soilm_thetastar}{The threshold parameter \eqn{\theta^{*}} in the 
    soil moisture stress function (see Details), given in mm.
    To turn off the soil moisture stress, set \code{soilm_thetastar = 0}.}
-  \item{soilm_betao}{The intercept parameter \eqn{\beta_{0}} in the
-   soil moisture stress function (see Details). This is the parameter calibrated 
-   in Stocker et al. 2020 GMD.}
   \item{beta_unitcostratio}{The unit cost of carboxylation, corresponding to
    \eqn{\beta = b / a'} in Eq. 3 of Stocker et al. 2020 GMD.}
   \item{rd_to_vcmax}{Ratio of Rdark (dark respiration) to Vcmax25.}
@@ -156,20 +155,21 @@ params_modl <- list(
   kphio_par_a        = 0.0,        # disable temperature-dependence of kphio
   kphio_par_b        = 1.0,
   soilm_thetastar    = 0.6 * 240,  # old setup with soil moisture stress
-  soilm_betao        = 0.0,
   beta_unitcostratio = 146.0,
   rd_to_vcmax        = 0.014,      # from Atkin et al. 2015 for C3 herbaceous
   tau_acclim         = 30.0,
-  kc_jmax            = 0.41
+  kc_jmax            = 0.41,
+  whc                = 240
 )
 
-# Run the Fortran P-model 
+# Run the Fortran P-model
 mod_output <- run_pmodel_f_bysite(
   # unnest drivers example data
-  sitename = p_model_drivers$sitename[1],
-  params_siml = p_model_drivers$params_siml[[1]],
-  site_info = p_model_drivers$site_info[[1]],
-  forcing = p_model_drivers$forcing[[1]],
+  sitename = p_model_drivers_format2024_08$sitename[1],
+  params_siml = p_model_drivers_format2024_08$params_siml[[1]],
+  site_info = p_model_drivers_format2024_08$site_info[[1]],
+  forcing = p_model_drivers_format2024_08$forcing[[1]],
+  forcing_acclim = p_model_drivers_format2024_08$forcing_daytime[[1]],
   params_modl = params_modl
  )
 }

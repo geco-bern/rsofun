@@ -1,0 +1,685 @@
+---
+title: "P-model usage (new data and new ET options)"
+author: "Koen Hufkens, Josefa Arán, Jaideep Joshi, Benjamin Stocker"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{P-model usage (new data and new ET options)}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\usepackage[utf8]{inputenc}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.align = "center",
+  fig.width = 7,
+  fig.height = 5
+)
+
+library(rsofun)
+library(dplyr)
+library(ggplot2)
+# library(ggthemes)
+library(RColorBrewer)
+
+# fake variable as optimization isn't run
+pars <- list()
+pars$par["kphio"] <- 0.04478049
+
+# model-vs-obs evaluation function
+analyse_modobs <- function(
+    df,
+    mod,
+    obs,
+    relative = FALSE,
+    xlim = NULL,
+    ylim = NULL,
+    use_factor = NULL,
+    shortsubtitle = FALSE,
+    plot_subtitle = TRUE,
+    plot_linmod = TRUE,
+    ...
+    ){
+  
+  ## rename to 'mod' and 'obs' and remove rows with NA in mod or obs
+  df <- df %>%
+    as_tibble() %>%
+    ungroup() %>%
+    dplyr::select(mod = mod, obs = obs) %>% # TODO: lifecycle::last_lifecycle_warnings()
+    tidyr::drop_na(mod, obs)
+
+  ## get linear regression (coefficients)
+  linmod <- lm(obs ~ mod, data = df)
+
+  ## construct metrics table using the 'yardstick' library
+  df_metrics <- df %>%
+    yardstick::metrics(obs, mod) %>%
+    dplyr::bind_rows(tibble(.metric = "n", .estimator = "standard", .estimate = summarise(df, numb = n()) %>% unlist())) %>%
+    dplyr::bind_rows(tibble(.metric = "slope", .estimator = "standard", .estimate = coef(linmod)[2])) %>%
+    # dplyr::bind_rows( tibble( .metric = "nse",      .estimator = "standard", .estimate = hydroGOF::NSE( obs, mod, na.rm=TRUE ) ) ) %>%
+    dplyr::bind_rows(tibble(.metric = "mean_obs", .estimator = "standard", .estimate = summarise(df, mean = mean(obs, na.rm = TRUE)) %>% unlist())) %>%
+    dplyr::bind_rows(tibble(
+      .metric = "prmse", .estimator = "standard",
+      .estimate = dplyr::filter(., .metric == "rmse") %>% dplyr::select(.estimate) %>% unlist() /
+        dplyr::filter(., .metric == "mean_obs") %>%
+        dplyr::select(.estimate) %>%
+        unlist()
+    )) %>%
+    dplyr::bind_rows(tibble(
+      .metric = "pmae", .estimator = "standard",
+      .estimate = dplyr::filter(., .metric == "mae") %>% dplyr::select(.estimate) %>% unlist() /
+        dplyr::filter(., .metric == "mean_obs") %>%
+        dplyr::select(.estimate) %>%
+        unlist()
+    )) %>%
+    dplyr::bind_rows(tibble(.metric = "bias", .estimator = "standard", .estimate = dplyr::summarise(df, mean((mod - obs), na.rm = TRUE)) %>% unlist())) %>%
+    dplyr::bind_rows(tibble(.metric = "pbias", .estimator = "standard", .estimate = dplyr::summarise(df, mean((mod - obs) / obs, na.rm = TRUE)) %>% unlist()))
+
+  rsq_val <- df_metrics %>%
+    dplyr::filter(.metric == "rsq") %>%
+    dplyr::select(.estimate) %>%
+    unlist() %>%
+    unname()
+  rmse_val <- df_metrics %>%
+    dplyr::filter(.metric == "rmse") %>%
+    dplyr::select(.estimate) %>%
+    unlist() %>%
+    unname()
+  mae_val <- df_metrics %>%
+    dplyr::filter(.metric == "mae") %>%
+    dplyr::select(.estimate) %>%
+    unlist() %>%
+    unname()
+  bias_val <- df_metrics %>%
+    dplyr::filter(.metric == "bias") %>%
+    dplyr::select(.estimate) %>%
+    unlist() %>%
+    unname()
+  slope_val <- df_metrics %>%
+    dplyr::filter(.metric == "slope") %>%
+    dplyr::select(.estimate) %>%
+    unlist() %>%
+    unname()
+  n_val <- df_metrics %>%
+    dplyr::filter(.metric == "n") %>%
+    dplyr::select(.estimate) %>%
+    unlist() %>%
+    unname()
+
+  if (relative) {
+    rmse_val <- rmse_val / mean(df$obs, na.rm = TRUE)
+    bias_val <- bias_val / mean(df$obs, na.rm = TRUE)
+  }
+
+  rsq_lab <- format(rsq_val, digits = 2)
+  rmse_lab <- format(rmse_val, digits = 3)
+  mae_lab <- format(mae_val, digits = 3)
+  bias_lab <- format(bias_val, digits = 3)
+  slope_lab <- format(slope_val, digits = 3)
+  n_lab <- format(n_val, digits = 3)
+
+  results <- tibble(rsq = rsq_val, rmse = rmse_val, mae = mae_val, bias = bias_val, slope = slope_val, n = n_val)
+
+  if (shortsubtitle) {
+    subtitle <- bquote(italic(R)^2 == .(rsq_lab) ~ ~
+                         RMSE == .(rmse_lab))
+  } else {
+    subtitle <- bquote(italic(R)^2 == .(rsq_lab) ~ ~
+                         RMSE == .(rmse_lab) ~ ~
+                         bias == .(bias_lab) ~ ~
+                         slope == .(slope_lab) ~ ~
+                         italic(N) == .(n_lab))
+  }
+
+  ## ggplot hexbin
+  gg <- df %>%
+    ggplot2::ggplot(aes(x = mod, y = obs)) +
+    geom_hex(bins = 60) +
+    scale_fill_gradientn(
+      colours = colorRampPalette(c("gray65", "navy", "red", "yellow"))(5),
+      trans = "log"
+    ) +
+    geom_abline(intercept = 0, slope = 1, linetype = "dotted") +
+    # coord_fixed() +
+    # xlim(0,NA) +
+    # ylim(0,NA) +
+    theme_classic() +
+    labs(x = mod, y = obs)
+
+  if (plot_subtitle) gg <- gg + labs(subtitle = subtitle)
+  if (plot_linmod) gg <- gg + geom_smooth(method = "lm", color = "red", linewidth = 0.5, se = FALSE)
+    
+  return(list(df_metrics = df_metrics, gg = gg, linmod = linmod, results = results))
+}
+```
+
+The `rsofun` package and framework includes two main models. The `pmodel` and `biomee` (which in part relies on P-model components). Here we give a short example on how to run the `pmodel` on the included demo datasets to familiarize yourself with both the data structure and the outputs.
+
+## Demo data
+
+The package includes two demo datasets to run and validate pmodel output using GPP observations. These files can be directly loaded into your workspace by typing:
+
+```{r}
+# library(rsofun)
+# 
+# drivers_path = "/data/scratch/jaideep/FluxDataKit/v4.0"
+# 
+# # this is to deal with an error p_model_drivers.rds not being found 
+# p_model_drivers = readRDS(file.path(drivers_path, "p_model_drivers.rds")) |> 
+#   filter(sitename == "FR-Pue") |> 
+#   rowwise() |> 
+#   # manipulate all forcing variables, filter years and gapfill missing values
+#   mutate(across(
+#            starts_with("forcing"),
+#            ~.x |> 
+#              filter(lubridate::year(date) >= 2007 & 
+#                       lubridate::year(date) <= 2012) |> 
+#              # mutate(rain = ifelse(is.na(rain), yes=0, no=rain)) |>
+#              list()
+#            )) |>
+#   mutate(site_info = site_info |> 
+#            # Set WHC from demo data just to check match, new data has ~250
+#            mutate(whc=432) |>
+#            list()) |>
+#   mutate(params_siml = params_siml |> 
+#          # First try with setting use_gs to false
+#          mutate(use_gs=F) |>
+#          list())
+# 
+# 
+# p_model_validation = readRDS(file.path(drivers_path, "p_model_validation.rds")) |>
+#   filter(sitename == "FR-Pue") |> 
+#   rowwise() |>
+#   # Use NT GPP as gpp, and filter years across all data columns
+#   mutate(across(
+#     starts_with("data"),
+#     ~ .x |> 
+#          mutate(gpp = gpp_nt,
+#                 le = le_corr*86400) |> 
+#          filter(lubridate::year(date) >= 2007 & 
+#                   lubridate::year(date) <= 2012) |>
+#          list()
+#     ))
+#
+# Save to subfolder data/ and export it to make it available for package users:
+# p_model_drivers_format2024_08 <- p_model_drivers
+# usethis::use_data(p_model_drivers_format2024_08)  # TODO: NOT YET UPDATED FOR PHYDRO (still add default phydro_* parameters)
+# p_model_validation_format2024_08 <- p_model_validation
+# usethis::use_data(p_model_validation_format2024_08) 
+```
+
+### Read drivers
+
+```{r}
+# p_model_drivers <- rsofun::p_model_drivers_format2024_08 # TODO: NOT YET UPDATED FOR PHYDRO (still add default phydro_* parameters)
+
+# p_model_validation <- rsofun::p_model_validation_format2024_08
+```
+
+### Visualize drivers
+
+```{r}
+rsofun::p_model_drivers_format2024_08$forcing[[1]] |>
+    # dplyr::filter(year(date) >= ystart & year(date) <= yend) |>
+    dplyr::select(date, co2, ppfd, netrad, temp, vpd, fapar, rain, ccov) |>
+    tidyr::pivot_longer(-date) |>
+    dplyr::mutate(type="24-hr mean") |>
+    rbind(rsofun::p_model_validation_format2024_08$data[[1]] |>
+            # dplyr::filter(year(date) >= ystart & year(date) <= yend) |>
+            dplyr::select(date, gpp) |>
+            tidyr::pivot_longer(-date) |>
+            dplyr::mutate(type="obs (24 hr)")
+    ) |>
+    ggplot(aes(y=value, x=date)) +
+    geom_line(aes(group=type, col=type), alpha=0.5) +
+    theme_classic() +
+    theme(strip.background = element_rect(color = "white", linewidth = 1))+
+    facet_wrap(~name, scales = "free")+
+    ggtitle(rsofun::p_model_drivers_format2024_08$sitename[[1]])
+
+```
+
+These are real data from the French FR-Pue fluxnet site. Information about data structure, variable names, and their meaning and units can be found in the reference pages of `p_model_drivers` and `p_model_validation`. We can use these data to run the model, together with observations of GPP we can also calibrate `pmodel` parameters.
+
+Another two datasets are provided as an example to validate the model against leaf traits data, rather than fluxes. Measurements of Vcmax25 (aggregated over species) for a subset of 4 sites from the GlobResp database (Atkin et al., 2015) are given in `p_model_validation_vcmax25` and the corresponding forcing for the P-model is given in `p_model_drivers_vcmax25`. Since leaf traits are only measured once per site, the forcing used is a single year of average climate (the average measurements between 2001 and 2015 on each day of the year).
+
+```{r}
+rsofun::p_model_drivers_vcmax25
+
+rsofun::p_model_validation_vcmax25
+```
+
+For the remainder of this vignette, we will use the GPP flux datasets. The workflow is exactly the same for leaf traits data.
+
+To get your raw data into the structure used within `rsofun`, please see R packages [ingestr](https://github.com/geco-bern/ingestr) and [FluxDataKit](https://github.com/geco-bern/FluxDataKit).
+
+## Running P-model
+
+With all data prepared we can run the P-model using `runread_pmodel_f()`. This function takes the nested data structure and runs the model site by site, returning nested model output results matching the input drivers.
+
+```{r}
+# define model parameter values from previous work
+params_modl <- list(
+    kphio              = 0.04998,    # setup ORG in Stocker et al. 2020 GMD
+    kphio_par_a        = 0.0,        # set to zero to disable temperature-dependence of kphio
+    kphio_par_b        = 1.0,
+    soilm_thetastar    = 0.6 * 240,  # to recover old setup with soil moisture stress
+    beta_unitcostratio = 146.0,
+    rd_to_vcmax        = 0.014,      # value from Atkin et al. 2015 for C3 herbaceous
+    tau_acclim         = 30.0,
+    kc_jmax            = 0.41
+  )
+
+# run the model for these parameters
+output <- rsofun::runread_pmodel_f(
+  rsofun::p_model_drivers_format2024_08,
+  par = params_modl
+  )
+```
+
+### Plotting output
+
+We can now visualize both the model output and the measured values together.
+
+```{r}
+# Load libraries for plotting
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+
+# Create data.frame for plotting
+df_gpp_plot <- rbind(
+  output |>
+    filter(sitename == "FR-Pue") |>
+    unnest(data) |>
+    select(date, gpp) |>
+    mutate(type = "P-model output"),
+  rsofun::p_model_validation_format2024_08 |>
+    filter(sitename == "FR-Pue") |>
+    unnest(data) |>
+    select(date, gpp) |>
+    mutate(type = "Observed")
+)
+df_gpp_plot$type <- factor(df_gpp_plot$type,
+                           levels = c('P-model output',
+                                      'Observed'))
+
+# Plot GPP
+ggplot(data = df_gpp_plot) +
+  geom_line(
+    aes(x = date,
+        y = gpp,
+        color = type),
+    alpha = 0.7
+  ) +
+  scale_color_manual(values = c(
+    'P-model output'='grey70',
+    'Observed'='black')) +
+  theme_classic() +
+  theme(panel.grid.major.y = element_line()) +
+  labs(
+    x = 'Date',
+    y = expression(paste("GPP (g C m"^-2, "s"^-1, ")")),
+    colour = ""
+  )
+```
+
+## Plot all outputs
+
+```{r}
+output$data[[1]] |>
+  pivot_longer(-date) |> 
+  ggplot(aes(x=date, y=value)) +
+  geom_line()+
+  facet_wrap(~name, scales="free_y")
+```
+
+
+## Calibrating model parameters
+
+To optimize new parameters based upon driver data and a validation dataset we must first specify an optimization strategy and settings, as well as a cost function and parameter ranges.
+
+```{r}
+settings <- list(
+  method              = "GenSA",
+  metric              = cost_rmse_pmodel,
+  control = list(
+    maxit = 100),
+  par = list(
+    kphio = list(lower=0.02, upper=0.2, init = 0.05)
+    )
+)
+```
+
+`rsofun` supports both optimization using the `GenSA` and `BayesianTools` packages. The above statement provides settings for a `GenSA` optimization approach. For this example the maximum number of iterations is kept artificially low. In a real scenario you will have to increase this value orders of magnitude. Keep in mind that optimization routines rely on a cost function, which, depending on its structure influences parameter selection. A limited set of cost functions is provided but the model structure is transparent and custom cost functions can be easily written. More details can be found in the "Parameter calibration and cost functions" vignette.
+
+In addition starting values and ranges are provided for the free parameters in the model. Free parameters include: parameters for the quantum yield efficiency `kphio`, `kphio_par_a` and `kphio_par_b`, soil moisture stress parameter `soilm_thetastar`, and also `beta_unitcostratio`, `rd_to_vcmax`, `tau_acclim` and `kc_jmax` (see `?runread_pmodel_f`). Be mindful that with newer versions of `rsofun` additional parameters might be introduced, so re-check vignettes and function documentation when updating existing code.
+
+With all settings defined the optimization function `calib_sofun()` can be called with driver data and observations specified. Extra arguments for the cost function (like what variable should be used as target to compute the root mean squared error (RMSE) and previous values for the parameters that aren't calibrated, which are needed to run the P-model).
+
+```{r eval=FALSE}
+# calibrate the model and optimize free parameters
+pars <- calib_sofun(
+    drivers = rsofun::p_model_drivers_format2024_08,  
+    obs = rsofun::p_model_validation_format2024_08,
+    settings = settings,
+    # extra arguments passed to the cost function:
+    targets = "gpp",             # define target variable GPP
+    par_fixed = params_modl[-1]  # fix non-calibrated parameters to previous 
+                                 # values, removing kphio
+  )
+```
+
+When successful, the optimized parameters can be used to run subsequent modelling efforts, in the present case slightly improving the model fit over a more global parameter set.
+
+```{r}
+# Update the parameter list with calibrated value
+params_modl$kphio <- pars$par["kphio"]
+
+# Run the model for these parameters
+output_new <- rsofun::runread_pmodel_f(
+  rsofun::p_model_drivers_format2024_08,
+  par = params_modl
+  )
+
+# Update data.frame for plotting
+df_gpp_plot <- rbind(
+  df_gpp_plot,
+  output_new |>
+    filter(sitename == "FR-Pue") |>
+    unnest(data) |>
+    select(date, gpp) |>
+    mutate(type = "P-model output (calibrated)")
+)
+df_gpp_plot$type <- factor(df_gpp_plot$type,
+                           levels = c('P-model output',
+                                      'P-model output (calibrated)',
+                                      'Observed'))
+
+# Plot GPP
+ggplot(data = df_gpp_plot) +
+  geom_line(
+    aes(x = date,
+        y = gpp,
+        color = type),
+    alpha = 0.7
+  ) +
+  scale_color_manual(values = c(
+    'P-model output'='grey70',
+    'P-model output (calibrated)'='grey40',
+    'Observed'='black')) +
+  theme_classic() +
+  theme(panel.grid.major.y = element_line()) +
+  labs(
+    x = 'Date',
+    y = expression(paste("GPP (g C m"^-2, "s"^-1, ")")),
+    colour = ""
+  )
+```
+
+For details on the optimization settings we refer to the manuals of [GenSA](https://cran.r-project.org/package=GenSA) and [BayesianTools](https://github.com/florianhartig/BayesianTools).
+
+
+```{r, echo=F}
+get_density <- function(x, y, ...) {
+  df = tibble(x=x, y=y) %>% drop_na
+  dens <- MASS::kde2d(df$x, df$y, ...)
+  ix <- findInterval(x, dens$x)
+  iy <- findInterval(y, dens$y)
+  ii <- cbind(ix, iy)
+  return(dens$z[ii])
+}
+```
+
+## P-model with SPLASH AET
+
+Set `use_gs` flag to `FALSE` in params_siml so that Priestly-Taylor formulation will be used in calculation of ET (P-model gs will not be used).
+
+Run the model and plot outputs
+
+```{r}
+# run the model for these parameters
+output <- rsofun::runread_pmodel_f(
+  mutate(rsofun::p_model_drivers_format2024_08,
+         params_siml = params_siml |> mutate(use_gs = FALSE) |> list()),
+  par = params_modl
+)
+```
+
+```{r}
+df_plot <- output$data[[1]] %>% 
+  select(date, gpp_mod = gpp, le_mod = le) %>% 
+  left_join(
+    rsofun::p_model_validation_format2024_08$data[[1]] %>% 
+      select(date, gpp_obs = gpp, le_obs = le),
+    by = join_by(date)
+  ) |> 
+  as_tibble()
+
+out_gpp <- analyse_modobs(
+  df_plot,
+  "gpp_mod",
+  "gpp_obs"
+)
+out_gpp$gg +
+  labs(
+    title = "GPP"
+  )
+
+out_le <- analyse_modobs(
+  df_plot,
+  "le_mod",
+  "le_obs"
+)
+out_le$gg +
+  labs(
+    title = "LE"
+  )
+```
+
+
+## P-model with Gs-coupled diffusion ET
+
+Set `use_gs` flag to TRUE in params_siml so that the internally predicted stomatal conductance ($G_s$) from P-model will be used in calculation of ET. ET is a weighted average of canopy transpiration ($T$) and soil evaporation. Canopy transpiration is calculated using the diffusion equation as:
+$$
+T = 1.6 \; G_s \; \text{VPD}
+$$
+
+Run the model.
+
+```{r}
+# run the model for these parameters
+output <- rsofun::runread_pmodel_f(
+  mutate(rsofun::p_model_drivers_format2024_08,
+         params_siml = params_siml |> mutate(use_gs = TRUE) |> list()),
+  par = params_modl
+)
+```
+
+Plot outputs. 
+
+```{r}
+df_plot <- output$data[[1]] %>% 
+  select(date, gpp_mod = gpp, le_mod = le) %>% 
+  left_join(
+    rsofun::p_model_validation_format2024_08$data[[1]] %>% 
+      select(date, gpp_obs = gpp, le_obs = le),
+    by = join_by(date)
+  ) |> 
+  as_tibble()
+
+out_gpp <- analyse_modobs(
+  df_plot,
+  "gpp_mod",
+  "gpp_obs"
+)
+
+out_le <- analyse_modobs(
+  df_plot,
+  "le_mod",
+  "le_obs"
+)
+
+out_gpp$gg +
+  labs(
+    title = "GPP"
+  )
+out_le$gg +
+  labs(
+    title = "LE"
+  )
+```
+
+## P-model with PML ET
+
+Set `use_gs` flag to TRUE in params_siml so that the internally predicted stomatal conductance ($G_s$) from P-model will be used in calculation of ET. ET is a weighted average of canopy transpiration ($T$) and soil evaporation. Canopy transpiration is calculated using the diffusion equation as:
+$$
+T = 1.6 \; G_s \; \text{VPD}
+$$
+
+Run the model.
+
+```{r}
+# run the model for these parameters
+output <- rsofun::runread_pmodel_f(
+  mutate(rsofun::p_model_drivers_format2024_08,
+         params_siml = params_siml |> mutate(use_gs = TRUE, use_pml = TRUE, use_phydro + FALSE) |> list()),
+  par = params_modl
+)
+```
+
+Plot outputs. 
+
+```{r}
+df_plot <- output$data[[1]] %>% 
+  select(date, gpp_mod = gpp, le_mod = le) %>% 
+  left_join(
+    rsofun::p_model_validation_format2024_08$data[[1]] %>% 
+      select(date, gpp_obs = gpp, le_obs = le),
+    by = join_by(date)
+  ) |> 
+  as_tibble()
+
+out_gpp <- analyse_modobs(
+  df_plot,
+  "gpp_mod",
+  "gpp_obs"
+)
+
+out_le <- analyse_modobs(
+  df_plot,
+  "le_mod",
+  "le_obs"
+)
+
+out_gpp$gg +
+  labs(
+    title = "GPP"
+  )
+out_le$gg +
+  labs(
+    title = "LE"
+  )
+```
+
+
+## P-hydro run with diffusion
+
+For P-hydro, we must use the 3-hr daily max forcing as the acclimation forcing. So let's rename it in the data.
+
+```{r}
+phdro_model_drivers <- rsofun::p_model_drivers_format2024_08 |> 
+  rename(forcing_acclim = forcing_3hrmax)
+
+phdro_model_drivers$forcing_acclim[[1]] |>
+    # dplyr::filter(year(date) >= ystart & year(date) <= yend) |>
+    dplyr::select(date, co2, ppfd, netrad, temp, vpd, fapar, rain, ccov) |>
+    tidyr::pivot_longer(-date) |>
+    dplyr::mutate(type="24-hr mean") |>
+    rbind(rsofun::p_model_validation_format2024_08$data[[1]] |>
+            # dplyr::filter(year(date) >= ystart & year(date) <= yend) |>
+            dplyr::select(date, gpp) |>
+            tidyr::pivot_longer(-date) |>
+            dplyr::mutate(type="obs (24 hr)")
+    ) |>
+    ggplot(aes(y=value, x=date)) +
+    geom_line(aes(group=type, col=type), alpha=0.5) +
+    theme_classic() +
+    theme(strip.background = element_rect(color = "white", size = 1))+
+    facet_wrap(~name, scales = "free")+
+    ggtitle(phdro_model_drivers$sitename[[1]])
+```
+
+For P-hydro runs, we always set `use_phydro = T` and `use_gs = T`.
+
+```{r}
+# define model parameter values
+params_modl <- list(
+  kphio              = 0.0288,
+  kphio_par_a        = 0.0,        # set to zero to disable temperature-dependence of kphio
+  kphio_par_b        = 1.0,
+  rd_to_vcmax        = 0.014,      # value from Atkin et al. 2015 for C3 herbaceous
+  tau_acclim         = 30.0,
+  kc_jmax            = 0.41,
+  phydro_K_plant     = 5e-17,
+  phydro_p50_plant   = -0.46,
+  phydro_gamma       = 0.065,
+  phydro_b_plant     = 1,
+  phydro_alpha       = 0.08,
+  bsoil              = 3,
+  Ssoil              = 113
+)
+
+# run the model for these parameters
+output <- rsofun::runread_pmodel_f(
+  mutate(phdro_model_drivers, 
+         params_siml = params_siml |> mutate(use_gs = TRUE, use_phydro = TRUE) |> list()),
+  par = params_modl
+)
+
+```
+
+## Plot Phydro outputs
+
+```{r}
+df_plot <- output$data[[1]] %>% 
+  select(date, gpp_mod = gpp, le_mod = le) %>% 
+  left_join(
+    rsofun::p_model_validation_format2024_08$data[[1]] %>% 
+      select(date, gpp_obs = gpp, le_obs = le),
+    by = join_by(date)
+  ) |> 
+  as_tibble()
+
+out_gpp <- analyse_modobs(
+  df_plot,
+  "gpp_mod",
+  "gpp_obs"
+)
+
+out_le <- analyse_modobs(
+  df_plot,
+  "le_mod",
+  "le_obs"
+)
+
+out_gpp$gg +
+  labs(
+    title = "GPP"
+  )
+out_le$gg +
+  labs(
+    title = "LE"
+  )
+```
+
+Plot all outputs
+
+```{r}
+output$data[[1]] |>
+  pivot_longer(-date) |> 
+  ggplot(aes(x=date, y=value)) +
+  geom_line()+
+  facet_wrap(~name, scales="free_y")
+```

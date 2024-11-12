@@ -21,11 +21,17 @@ module md_interface_pmodel
     real :: kphio_par_a
     real :: kphio_par_b
     real :: soilm_thetastar
-    real :: soilm_betao
     real :: beta_unitcostratio
     real :: rd_to_vcmax
     real :: tau_acclim
     real :: kc_jmax
+    real :: phydro_K_plant   
+    real :: phydro_p50_plant 
+    real :: phydro_b_plant   
+    real :: phydro_alpha     
+    real :: phydro_gamma     
+    real :: bsoil
+    real :: Ssoil
   end type paramstype_calib  
 
 
@@ -34,7 +40,10 @@ module md_interface_pmodel
     real                                    :: pco2
     type(gridtype)                          :: grid
     real                                    :: whc_prescr
+    real                                    :: canopy_height
+    real                                    :: reference_height
     type(climate_type), dimension(ndayyear) :: climate
+    type(climate_type), dimension(ndayyear) :: climate_acclimation
     type(vegcover_type), dimension(ndayyear):: vegcover
     ! type(domaininfo_type)                 :: domaininfo
     type(outtype_steering)                  :: steering
@@ -70,6 +79,11 @@ module md_interface_pmodel
     real, dimension(ndayyear) :: wcont
     real, dimension(ndayyear) :: snow
     real, dimension(ndayyear) :: cond
+    real, dimension(ndayyear) :: latenth_canopy
+    real, dimension(ndayyear) :: latenth_soil
+    real, dimension(ndayyear) :: dpsi
+    real, dimension(ndayyear) :: psi_leaf
+
   end type outtype_biosphere
 
 end module md_interface_pmodel

@@ -1,6 +1,6 @@
 context("Test model output (values)")
 
-test_that("p-model quantitative check", {
+test_that("p-model quantitative check versus observations (FR-Pue)", {
   skip_on_cran()
   
   # grab gpp data from the validation set
@@ -14,25 +14,39 @@ test_that("p-model quantitative check", {
     kphio_par_a        = 0.0,  # set to zero to disable temperature-dependence of kphio, setup ORG in Stocker et al. 2020 GMD
     kphio_par_b        = 1.0,
     soilm_thetastar    = 0.6 * 240,  # to recover old setup with soil moisture stress
-    soilm_betao        = 0.01,
     beta_unitcostratio = 146.0,
     rd_to_vcmax        = 0.014, # value from Atkin et al. 2015 for C3 herbaceous
     tau_acclim         = 30.0,
     kc_jmax            = 0.41
   )
   
+  df_drivers <- rsofun::p_model_drivers_format2024_08 # TODO: NOT YET UPDATED FOR PHYDRO (still add default phydro_* parameters)
+  df_drivers <- df_drivers # |>        
+    # formerly we corrected to 2000mm: tidyr::unnest(site_info) |> mutate(whc = 2000) |>        
+    # formerly we corrected to 2000mm: tidyr::nest(site_info = !c(sitename, params_siml, starts_with("forcing")))        
+
   # run the model for these parameters
-  output <- rsofun::runread_pmodel_f(
-    rsofun::p_model_drivers,
+  res <- rsofun::runread_pmodel_f(
+    drivers = df_drivers,
     par = params_modl
-  )$data[[1]]$gpp
-  
+  )
+  output <- res$data[[1]]$gpp
+
+  # ggplot(data = tibble(res$data[[1]]), mapping = aes(x = date, y = gpp)) +
+  #   geom_line() +
+  #   geom_point(data = tibble(p_model_validation$data[[1]]),
+  #              mapping = aes(color = "observation")) + theme_classic()
+  # 
+
   # normal tolerance ~ 0.305
   tolerance <- mean(abs(output - gpp), na.rm = TRUE)/
      mean(abs(gpp), na.rm = TRUE)
   
   # test for correctly returned values
-  expect_equal(tolerance, 0.4201191, tolerance = 0.04)
+  # expect_equal(tolerance, 0.4201191, tolerance = 0.04) # before PHYDRO
+  # expect_equal(tolerance, 0.4863206, tolerance = 0.04)   # with PHYDRO and 2000mm
+  expect_equal(tolerance, 0.3438646, tolerance = 0.04)   # with PHYDRO and best estimate of 432mm
+  
 })
 
 # test_that("p-model consistency R vs Fortran (rpmodel vs rsofun)", {

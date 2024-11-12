@@ -43,9 +43,6 @@
 #'   \item{soilm_thetastar}{The threshold parameter \eqn{\theta^{*}} in the 
 #'    soil moisture stress function (see Details), given in mm.
 #'    To turn off the soil moisture stress, set \code{soilm_thetastar = 0}.}
-#'   \item{soilm_betao}{The intercept parameter \eqn{\beta_{0}} in the
-#'    soil moisture stress function (see Details). This is the parameter calibrated 
-#'    in Stocker et al. 2020 GMD.}
 #'   \item{beta_unitcostratio}{The unit cost of carboxylation, corresponding to
 #'    \eqn{\beta = b / a'} in Eq. 3 of Stocker et al. 2020 GMD.}
 #'   \item{rd_to_vcmax}{Ratio of Rdark (dark respiration) to Vcmax25.}
@@ -137,31 +134,33 @@
 #'   kphio_par_a        = 0.0,        # disable temperature-dependence of kphio
 #'   kphio_par_b        = 1.0,
 #'   soilm_thetastar    = 0.6 * 240,  # old setup with soil moisture stress
-#'   soilm_betao        = 0.0,
 #'   beta_unitcostratio = 146.0,
 #'   rd_to_vcmax        = 0.014,      # from Atkin et al. 2015 for C3 herbaceous
 #'   tau_acclim         = 30.0,
-#'   kc_jmax            = 0.41
+#'   kc_jmax            = 0.41,
+#'   whc                = 240
 #' )
 #' 
-#' # Run the Fortran P-model 
+#' # Run the Fortran P-model
 #' mod_output <- run_pmodel_f_bysite(
 #'   # unnest drivers example data
-#'   sitename = p_model_drivers$sitename[1],
-#'   params_siml = p_model_drivers$params_siml[[1]],
-#'   site_info = p_model_drivers$site_info[[1]],
-#'   forcing = p_model_drivers$forcing[[1]],
+#'   sitename = p_model_drivers_format2024_08$sitename[1],
+#'   params_siml = p_model_drivers_format2024_08$params_siml[[1]],
+#'   site_info = p_model_drivers_format2024_08$site_info[[1]],
+#'   forcing = p_model_drivers_format2024_08$forcing[[1]],
+#'   forcing_acclim = p_model_drivers_format2024_08$forcing_daytime[[1]],
 #'   params_modl = params_modl
 #'  )
-
-run_pmodel_f_bysite <- function(
+run_pmodel_f_bysite <- function( # TODO: Above docstring appears duplicated in runread_pmodel_f.R. This redunduncy should be reduced.
   sitename,
   params_siml,
   site_info,
   forcing,
+  forcing_acclim,
   params_modl,
   makecheck = TRUE,
-  verbose = TRUE
+  verbose = TRUE,
+  ...
   ){
   
   # predefine variables for CRAN check compliance
@@ -196,23 +195,29 @@ run_pmodel_f_bysite <- function(
   
   # re-define units and naming of forcing dataframe
   # keep the order of columns - it's critical for Fortran (reading by column number)
+  columns_ordered = c(
+    "temp",
+    "rain",
+    "vpd",
+    "ppfd",
+    "netrad",
+    "fsun",
+    "snow",
+    "co2",
+    "fapar",
+    "patm",
+    "tmin",
+    "tmax",
+    "vwind"
+  )
   forcing <- forcing %>% 
     dplyr::mutate(fsun = (100-ccov)/100) %>% 
-    dplyr::select(
-      temp,
-      rain,
-      vpd,
-      ppfd,
-      netrad,
-      fsun,
-      snow,
-      co2,
-      fapar,
-      patm,
-      tmin,
-      tmax
-      )
+    dplyr::select(all_of(columns_ordered))
   
+  forcing_acclim <- forcing_acclim %>% 
+    dplyr::mutate(fsun = (100-ccov)/100) %>% 
+    dplyr::select(all_of(columns_ordered))
+
   # validate input
   if (makecheck){
     
@@ -226,7 +231,17 @@ run_pmodel_f_bysite <- function(
       "fapar",
       "patm",
       "tmin",
-      "tmax"
+      "tmax",
+      "vwind"
+    )
+    # list variable to check for
+    check_vars_acclim <- c(
+      "temp",
+      "vpd",
+      "co2",
+      "ppfd",
+      "fapar",
+      "patm"
     )
     
     # create a loop to loop over a list of variables
@@ -241,9 +256,35 @@ run_pmodel_f_bysite <- function(
         return(TRUE)
       }
     })
+    data_integrity_acclim <- lapply(check_vars_acclim, function(check_var){
+      if (any(is.nanull(forcing_acclim[check_var]))){
+        warning(sprintf("Error: Missing value %s in acclimation dataset for %s",
+                        check_var, sitename))
+        return(FALSE)
+      } else {
+        return(TRUE)
+      }
+    })
     
+        
     if (suppressWarnings(!all(data_integrity))){
       continue <- FALSE
+    }
+    if (suppressWarnings(!all(data_integrity_acclim))){
+      continue <- FALSE
+    }
+    
+    if (!("use_gs" %in% colnames(params_siml))){
+      warning("Parameter use_gs not set. Assuming FALSE")
+      params_siml$use_gs = FALSE
+    }
+    if (!("use_phydro" %in% colnames(params_siml))){
+      warning("Parameter use_phydro not set. Assuming FALSE")
+      params_siml$use_phydro = FALSE
+    }
+    if (!("use_pml" %in% colnames(params_siml))){
+      warning("Parameter use_pml not set. Assuming FALSE")
+      params_siml$use_pml = FALSE
     }
     
     # parameters to check
@@ -251,6 +292,9 @@ run_pmodel_f_bysite <- function(
       "spinup",
       "spinupyears",
       "recycle",
+      "use_phydro",
+      "use_gs",
+      "use_pml",
       "outdt",
       "ltre",
       "ltne",
@@ -280,15 +324,57 @@ run_pmodel_f_bysite <- function(
               correspond to full years.")
       continue <- FALSE
     }
+    if (nrow(forcing_acclim) %% ndayyear != 0){
+      # something weird more fundamentally -> don't run the model
+      warning(" Returning a dummy data frame. Acclimation Forcing data does not
+              correspond to full years.")
+      continue <- FALSE
+    }
     
     # Check model parameters
-    if( sum( names(params_modl) %in% c('kphio', 'kphio_par_a', 'kphio_par_b',
-                                              'soilm_thetastar', 'soilm_betao',
-                                              'beta_unitcostratio', 'rd_to_vcmax', 
-                                              'tau_acclim', 'kc_jmax')
-    ) != 9){
-      warning(" Returning a dummy data frame. Incorrect model parameters.")
+    # The different models need these parameters:
+    if (!params_siml$use_phydro){
+      required_param_names <- rsofun:::required_param_names$p_model
+    } else {
+      required_param_names <- rsofun:::required_param_names$phydro_model
+    }
+
+    ## check parameters
+    if (!identical(sort(names(params_modl)), required_param_names)){
+      warning(sprintf(paste0(" Returning a dummy data frame. Incorrect model parameters.",
+                             "Received params do not match required model parameters:",
+                             "\n         params_model (received): c(%s)",
+                             "\n         required:                c(%s)"),
+                   paste0(sort(names(params_modl)), collapse = ", "),
+                   paste0(sort(required_param_names), collapse = ", ")))
       continue <- FALSE
+    }
+    if (!is.list(params_modl)){  # stopifnot(is.list(params_modl))
+      warning(sprintf(paste0(" Returning a dummy data frame. Model parameters not provided as named list but as:",
+                             "\n         %s"),
+                      str(par)))
+      continue <- FALSE
+    }
+  }
+  stopifnot(is.list(params_modl))
+  
+  
+  # If PML is used, then ensure that site info has reference height and canopy height
+  avl_canopy_height = !is.nanull(site_info$canopy_height)
+  if (!avl_canopy_height){
+    if (params_siml$use_pml){
+      continue <- FALSE
+    } else {
+      site_info$canopy_height <- NA
+    }
+  }
+
+  avl_reference_height = !is.nanull(site_info$reference_height)
+  if (!avl_reference_height){
+    if (params_siml$use_pml){
+      continue <- FALSE
+    } else {
+      site_info$reference_height <- NA
     }
   }
   
@@ -298,8 +384,9 @@ run_pmodel_f_bysite <- function(
     in_ppfd <- ifelse(any(is.na(forcing$ppfd)), FALSE, TRUE)  
 
     # determine whether to read PPFD from forcing or to calculate internally
-    # in_netrad <- ifelse(any(is.na(forcing$netrad)), FALSE, TRUE)  
-    in_netrad <- FALSE  # net radiation is currently ignored as a model forcing, but is internally simulated by SPLASH.
+    # Jaideep Note: phydro uses input netrad, so dont enforce internal calculation
+    in_netrad <- ifelse(any(is.na(forcing$netrad)), FALSE, TRUE)  
+    # in_netrad <- FALSE  # net radiation is currently ignored as a model forcing, but is internally simulated by SPLASH.
 
     # Check if fsun is available
     if(! (in_ppfd & in_netrad)){
@@ -312,21 +399,49 @@ run_pmodel_f_bysite <- function(
     
     # convert to matrix
     forcing <- as.matrix(forcing)
+    forcing_acclim <- as.matrix(forcing_acclim)
     
     # number of rows in matrix (pre-allocation of memory)
     n <- as.integer(nrow(forcing))
 
     # Model parameters as vector in order
+    # Fortran code will take in all parameters since the FORTRAN interface cannot be conditional.
+    # But in this preprocessing step, parameters not relevant to the chosen model will be set to dummy value
+    dummy_val = 1e20
     par <- c(
       as.numeric(params_modl$kphio),
       as.numeric(params_modl$kphio_par_a),
       as.numeric(params_modl$kphio_par_b),
-      as.numeric(params_modl$soilm_thetastar),
-      as.numeric(params_modl$soilm_betao),
-      as.numeric(params_modl$beta_unitcostratio),
+      ifelse(params_siml$use_phydro, 
+             no  = as.numeric(params_modl$soilm_thetastar),
+             yes = dummy_val),
+      ifelse(params_siml$use_phydro, 
+             no  = as.numeric(params_modl$beta_unitcostratio),
+             yes = dummy_val),
       as.numeric(params_modl$rd_to_vcmax),
       as.numeric(params_modl$tau_acclim),
-      as.numeric(params_modl$kc_jmax)
+      as.numeric(params_modl$kc_jmax),
+      ifelse(params_siml$use_phydro, 
+             no  = dummy_val,
+             yes = params_modl$phydro_K_plant),
+      ifelse(params_siml$use_phydro, 
+             no  = dummy_val,
+             yes = params_modl$phydro_p50_plant),
+      ifelse(params_siml$use_phydro, 
+             no  = dummy_val,
+             yes = params_modl$phydro_b_plant),
+      ifelse(params_siml$use_phydro, 
+             no  = dummy_val,
+             yes = params_modl$phydro_alpha),
+      ifelse(params_siml$use_phydro, 
+             no  = dummy_val,
+             yes = params_modl$phydro_gamma),
+      ifelse(params_siml$use_phydro, 
+             no  = dummy_val,
+             yes = params_modl$bsoil),
+      ifelse(params_siml$use_phydro, 
+             no  = dummy_val,
+             yes = params_modl$Ssoil)
       )
 
     ## C wrapper call
@@ -338,6 +453,9 @@ run_pmodel_f_bysite <- function(
       spinup                    = as.logical(params_siml$spinup),
       spinupyears               = as.integer(params_siml$spinupyears),
       recycle                   = as.integer(params_siml$recycle),
+      use_phydro                = as.logical(params_siml$use_phydro),
+      use_gs                    = as.logical(params_siml$use_gs),
+      use_pml                   = as.logical(params_siml$use_pml),
       firstyeartrend            = as.integer(firstyeartrend_forcing),
       nyeartrend                = as.integer(nyeartrend_forcing),
       secs_per_tstep            = as.integer(secs_per_tstep),
@@ -355,9 +473,12 @@ run_pmodel_f_bysite <- function(
       latitude                  = as.numeric(site_info$lat),
       altitude                  = as.numeric(site_info$elv),
       whc                       = as.numeric(site_info$whc),
+      canopy_height             = as.numeric(site_info$canopy_height),
+      reference_height          = as.numeric(site_info$reference_height),
       n                         = n,
       par                       = par, 
-      forcing                   = forcing
+      forcing                   = forcing,
+      forcing_acclim            = forcing_acclim
       )
     
     # Prepare output to be a nice looking tidy data frame (tibble)
@@ -388,7 +509,11 @@ run_pmodel_f_bysite <- function(
           "netrad", 
           "wcont", 
           "snow",
-          "cond")
+          "cond",
+          "le_canopy",
+          "le_soil",
+          "dpsi",
+          "psi_leaf")
         ) %>%
       as_tibble(.name_repair = "check_unique") %>%
       dplyr::bind_cols(ddf,.)
@@ -397,8 +522,8 @@ run_pmodel_f_bysite <- function(
     out <- tibble(date = as.Date("2000-01-01"),
                   fapar = NA, 
                   gpp = NA, 
-                  transp = NA, 
-                  latenth = NA, 
+                  aet = NA, 
+                  le = NA, 
                   pet = NA, 
                   vcmax = NA, 
                   jmax = NA, 
@@ -413,7 +538,12 @@ run_pmodel_f_bysite <- function(
                   netrad = NA,
                   wcont = NA, 
                   snow = NA,
-                  cond = NA)
+                  cond = NA,
+                  le_canopy = NA,
+                  le_soil = NA,
+                  dpsi = NA,
+                  psi_leaf = NA
+                  )
   }
     
   return(out)
@@ -423,3 +553,34 @@ run_pmodel_f_bysite <- function(
 .onUnload <- function(libpath) {
   library.dynam.unload("rsofun", libpath)
 }
+
+# For internal use and checks. (NOTE we could add a docstring similar to `p_model_validation`, but it is currently not needed.)
+required_param_names <- list(
+  phydro_model = c( # P-hydro model needs these parameters:
+  'bsoil', 
+  'kc_jmax', 
+  'kphio', 
+  'kphio_par_a', 
+  'kphio_par_b', 
+  'phydro_alpha', 
+  'phydro_b_plant', 
+  'phydro_gamma', 
+  'phydro_K_plant', 
+  'phydro_p50_plant', 
+  'rd_to_vcmax', 
+  'Ssoil', 
+  'tau_acclim'
+  ),
+  p_model = c(# P-model needs these parameters:
+  'beta_unitcostratio', 
+  'kc_jmax', 
+  'kphio', 
+  'kphio_par_a', 
+  'kphio_par_b',
+  'rd_to_vcmax', 
+  'soilm_thetastar',
+  'tau_acclim'
+  ),
+  biomee_model = c(# Biomee-model needs these parameters:
+  'TODO')
+)

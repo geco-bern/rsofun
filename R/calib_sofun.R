@@ -16,7 +16,7 @@
 #'   \item{\code{par}}{A list of model parameters. For each parameter, an initial value 
 #'   and lower and upper bounds should be provided. The calibratable parameters
 #'   include model parameters 'kphio', 'kphio_par_a', 'kphio_par_b', 'soilm_thetastar',
-#'   'soilm_betao', 'beta_costunitratio', 'rd_to_vcmax', 'tau_acclim', 'kc_jmax'
+#'   'beta_costunitratio', 'rd_to_vcmax', 'tau_acclim', 'kc_jmax'
 #'   and 'rootzone_whc' , and (if
 #'   doing Bayesian calibration) error parameters
 #'   for each target variable, named for example 'err_gpp'. This list must match
@@ -49,11 +49,11 @@
 #'   kphio_par_a        = 0,
 #'   kphio_par_b        = 1.0,
 #'   soilm_thetastar    = 0.6*240,
-#'   soilm_betao        = 0.01,
 #'   beta_unitcostratio = 146,
 #'   rd_to_vcmax        = 0.014,
 #'   tau_acclim         = 30,
-#'   kc_jmax            = 0.41
+#'   kc_jmax            = 0.41,
+#'   whc                = 432
 #' )
 #' 
 #' # Define calibration settings
@@ -68,12 +68,12 @@
 #'     sampler = "DEzs",
 #'     settings = list(
 #'       nrChains = 1,
-#'       burnin = 0,        
-#'       iterations = 50     # kept artificially low
+#'       burnin = 0,
+#'       iterations = 50    # kept artificially low,
 #'     )
 #'   )
 #'  )
-#'  
+#' 
 #'  # Run the calibration for GPP data
 #'  calib_output <- rsofun::calib_sofun(
 #'    drivers = rsofun::p_model_drivers,
@@ -120,7 +120,7 @@ calib_sofun <- function(
     # create bounds
     lower <- unlist(lapply(settings$par, function(x) x$lower))
     upper <- unlist(lapply(settings$par, function(x) x$upper))
-    pars <- unlist(lapply( settings$par, function(x) x$init))
+    pars  <- unlist(lapply(settings$par, function(x) x$init))
     
     out <- GenSA::GenSA(
       par   = pars,
@@ -149,39 +149,40 @@ calib_sofun <- function(
       eval(settings$metric)(par = par,
                             obs = obs,
                             drivers = drivers,
-                            ...)
+                            ...) # the dots contain: par_fixed, targets, parallel, ncores
     }
     
     # reformat parameters
-    pars <- as.data.frame(do.call("rbind", settings$par), row.names = FALSE)
-    
-    priors  <- BayesianTools::createUniformPrior(
+    pars <- as.data.frame(do.call("rbind", settings$par)) # use rownames later on
+
+    # priors  <- BayesianTools::createTruncatedNormalPrior(
+    #   unlist(pars$mean),   # NOTE: This needs a value otherwise: Error in `parallelSampler(1000)`: sampler provided doesn't work
+    #   unlist(pars$sd),     # NOTE: This needs a value otherwise: Error in `parallelSampler(1000)`: sampler provided doesn't work
+    #   unlist(pars$lower),          # As a workaround BayesianTools::createUniformPrior could be used
+    #   unlist(pars$upper)
+    #   # unlist(pars$init)
+    # )
+    priors  <- BayesianTools::createUniformPrior( # workaround for TruncatedNormalPrior, this does not require mean and sd
       unlist(pars$lower),
-      unlist(pars$upper),
-      unlist(pars$init)
+      unlist(pars$upper)
+      # unlist(pars$init)
     )
     
     # setup the bayes run, no message forwarding is provided
     # so wrap the function in a do.call
     setup <- BayesianTools::createBayesianSetup(
-      likelihood = function(
-    random_par) {
-        # cost(
-        #   par = random_par,
-        #   obs = obs,
-        #   drivers = drivers,
-        #   ...
-        # )
+      likelihood = function(random_par) {
         do.call("cost",
                 list(
-                  par = random_par,
+                  par = setNames(random_par, rownames(pars)),
                   obs = obs,
                   drivers = drivers
-                ))
-      },
-    prior = priors,
-    names = names(settings$par)
-    )    
+                ))},
+      prior = priors,
+      names = rownames(pars)#,
+      #parallel = TRUE, 
+      #parallelOptions = list(variables = "all", packages = "all", dlls = NULL), # TODO: this default option might be tweaked
+    )
     
     # set bt control parameters
     bt_settings <- settings$control$settings
@@ -192,7 +193,7 @@ calib_sofun <- function(
       sampler = settings$control$sampler,
       settings = bt_settings
     )
-    
+
     # drop last value
     bt_par <- BayesianTools::MAP(out)$parametersMAP
     bt_par <- bt_par[1:(length(bt_par))]
