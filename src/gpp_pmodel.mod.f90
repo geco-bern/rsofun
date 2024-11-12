@@ -49,7 +49,7 @@ contains
   !   soilwp = 1 - wscal**(-bsoil)
   ! end function
 
-  subroutine gpp( tile, tile_fluxes, co2, climate, climate_acclimation, grid, init, in_ppfd, use_phydro, use_pml )
+  subroutine gpp( tile, tile_fluxes, co2, climate, climate_acclimation, grid, init, in_ppfd, use_phydro)
     !//////////////////////////////////////////////////////////////////
     ! Wrapper function to call to P-model. 
     ! Calculates meteorological conditions with memory based on daily
