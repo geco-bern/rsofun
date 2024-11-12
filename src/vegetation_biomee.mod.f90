@@ -1253,7 +1253,9 @@ contains
 
     ! rank cohorts in descending order by height. For now, assume that they are in order
     N0 = vegn%n_cohorts
-    oldCC => vegn%cohorts
+    ! It is important to write the bounds here as vegn%cohorts could have a size greater than N0,
+    ! which breaks rank_descending().
+    oldCC => vegn%cohorts(1:N0)
 
     call rank_descending(oldCC%height,idx)
 
