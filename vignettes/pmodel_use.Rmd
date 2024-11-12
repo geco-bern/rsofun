@@ -25,7 +25,7 @@ library(khroma)
 library(cowplot)
 
 # define function for evaluation plots
-plot_eval <- function(df, is_gpp = TRUE){
+plot_eval <- function(df, is_gpp = TRUE, return_gg1 = FALSE, return_gg2 = FALSE){
   
   use_col <- ifelse(is_gpp, "tomato", "royalblue")
   use_lab <- ifelse(
@@ -132,8 +132,14 @@ plot_eval <- function(df, is_gpp = TRUE){
 
   }
   
-  out <- cowplot::plot_grid(gg1, gg2, nrow = 1)
-  return(out)
+  if (return_gg1){
+    return(gg1)
+  } else if (return_gg2){
+    return(gg2)
+  } else {
+    cow <- cowplot::plot_grid(gg1, gg2, nrow = 1)
+    return(cow)
+  }
 }
 ```
 
@@ -415,7 +421,8 @@ df_plot <- output |>
     by = join_by(date)
   )
 
-plot_eval(df_plot, is_gpp = FALSE)
+plot_eval(df_plot, is_gpp = FALSE, return_gg1 = TRUE)
+ggsave("~/rsofun/fig/et_fr-pue.pdf", height = 4, width = 6)
 ```
 
 ## P-hydro run with diffusion
