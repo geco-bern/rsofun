@@ -5,7 +5,7 @@
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>P-model data format • rsofun</title>
+<title>Data format • rsofun</title>
 <!-- favicons --><link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
 <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
 <link rel="apple-touch-icon" type="image/png" sizes="180x180" href="/apple-touch-icon.png">
@@ -18,7 +18,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Titillium+Web:ital,wght@0,300;0,400;0,700;1,300;1,400&amp;display=swap" rel="stylesheet">
 <!-- clipboard.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.4/clipboard.min.js" integrity="sha256-FiZwavyI2V6+EXO1U+xzLG3IKldpiTFf3153ea9zikQ=" crossorigin="anonymous"></script><!-- headroom.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.9.4/headroom.min.js" integrity="sha256-DJFC1kqIhelURkuza0AvYal5RxMtpzLjFhsnVIeuk+U=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.9.4/jQuery.headroom.min.js" integrity="sha256-ZX/yNShbjqsohH1k95liqY9Gd8uOiE1S4vZc+9KQ1K4=" crossorigin="anonymous"></script><!-- pkgdown --><link href="../pkgdown.css" rel="stylesheet">
 <script src="../pkgdown.js"></script><!-- geco --><link href="../geco.css" rel="stylesheet">
-<meta property="og:title" content="P-model data format">
+<meta property="og:title" content="Data format">
 <!-- Mathjax --><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.6/MathJax.js" async integrity="sha256-nlrDrBTHxJJlDDX22AS33xYI1OJHnGMDhiYMSe2U0e0=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.6/config/TeX-AMS-MML_HTMLorMML.js" async integrity="sha256-4zys9A4hMQmtq2EUL+JRoXc0NZi8jVJMzb8onewOaSQ=" crossorigin="anonymous"></script>
 </head>
 <body data-spy="scroll" data-target="#toc">
@@ -64,7 +64,7 @@
       <a href="../articles/biomee_use.html">BiomeE usage</a>
     </li>
     <li>
-      <a href="../articles/data_format.html">P-model data format</a>
+      <a href="../articles/data_format.html">Data format</a>
     </li>
     <li>
       <a href="../articles/new_cost_function.html">Parameter calibration and cost functions</a>
@@ -99,7 +99,7 @@
       </header><div class="row">
   <div class="col-md-9 contents">
     <div class="page-header toc-ignore">
-      <h1 data-toc-skip>P-model data format</h1>
+      <h1 data-toc-skip>Data format</h1>
                         <h4 data-toc-skip class="author">Koen Hufkens,
 Josefa Arán</h4>
             
@@ -111,6 +111,9 @@ Josefa Arán</h4>
 
     
     
+<div class="section level2">
+<h2 id="p-model">P-model<a class="anchor" aria-label="anchor" href="#p-model"></a>
+</h2>
 <p>Overall, the package uses the {tidyverse} data paradigm (Wickham,
 2017), using nested data frames (tibbles) to store model input and
 output, and validation data. Where possible the package uses a
@@ -157,6 +160,33 @@ present in the used dataset using the ‘check’ argument in the
 runread_pmodel_f() function calls. Throughout the package verbose output
 is provided (if desired) as to evaluate errors or progress when running
 the model on a particular dataset.</p>
+</div>
+<div class="section level2">
+<h2 id="biomee">BiomeE<a class="anchor" aria-label="anchor" href="#biomee"></a>
+</h2>
+<p>BiomeE follows the same data structure as P-model overall, but with
+some specific parameters and forcing data. Details about thees can be
+obtained in the documentation: <code><a href="../reference/run_biomee_f_bysite.html">?run_biomee_f_bysite</a></code>.</p>
+<p>Here is an example of forcing data for BiomeE:</p>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># detailed look at the forcing data</span></span>
+<span><span class="fu">rsofun</span><span class="fu">::</span><span class="va"><a href="../reference/biomee_p_model_drivers.html">biomee_p_model_drivers</a></span><span class="op">$</span><span class="va">forcing</span></span>
+<span><span class="co">#&gt; [[1]]</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 365 × 9</span></span></span>
+<span><span class="co">#&gt;    date         hod    temp       rain   vpd      ppfd   patm  wind   co2</span></span>
+<span><span class="co">#&gt;    <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 1</span> 2009-01-01  11.5  0.384  0.000<span style="text-decoration: underline;">016</span>6   39.5 0.000<span style="text-decoration: underline;">057</span>1 <span style="text-decoration: underline;">93</span>092.  3.00  388.</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 2</span> 2009-01-02  11.5 -<span style="color: #BB0000;">1.64</span>   0.000<span style="text-decoration: underline;">023</span>2   40.5 0.000<span style="text-decoration: underline;">049</span>9 <span style="text-decoration: underline;">93</span>248.  2.97  388.</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 3</span> 2009-01-03  11.5 -<span style="color: #BB0000;">2.51</span>   0.000<span style="text-decoration: underline;">003</span>71  75.9 0.000<span style="text-decoration: underline;">094</span>9 <span style="text-decoration: underline;">93</span>684.  2.84  388.</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 4</span> 2009-01-04  11.5 -<span style="color: #BB0000;">1.82</span>   0.000<span style="text-decoration: underline;">013</span>0   88.0 0.000<span style="text-decoration: underline;">070</span>6 <span style="text-decoration: underline;">93</span>435.  2.67  388.</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 5</span> 2009-01-05  11.5 -<span style="color: #BB0000;">1.34</span>   0.000<span style="text-decoration: underline;">022</span>3   67.8 0.000<span style="text-decoration: underline;">073</span>9 <span style="text-decoration: underline;">93</span>175.  3.21  388.</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 6</span> 2009-01-06  11.5 -<span style="color: #BB0000;">0.450</span>  0.000<span style="text-decoration: underline;">021</span>9   54.0 0.000<span style="text-decoration: underline;">052</span>8 <span style="text-decoration: underline;">93</span>282.  3.03  388.</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 7</span> 2009-01-07  11.5  0.266  0.000<span style="text-decoration: underline;">013</span>6   64.1 0.000<span style="text-decoration: underline;">071</span>1 <span style="text-decoration: underline;">93</span>511.  2.64  388.</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 8</span> 2009-01-08  11.5  0.504  0.000<span style="text-decoration: underline;">011</span>3   88.2 0.000<span style="text-decoration: underline;">090</span>5 <span style="text-decoration: underline;">93</span>443.  2.68  388.</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 9</span> 2009-01-09  11.5  0.086<span style="text-decoration: underline;">9</span> 0.000<span style="text-decoration: underline;">018</span>6   59.9 0.000<span style="text-decoration: underline;">051</span>6 <span style="text-decoration: underline;">93</span>447.  2.74  388.</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">10</span> 2009-01-10  11.5 -<span style="color: #BB0000;">0.404</span>  0.000<span style="text-decoration: underline;">012</span>5   58.6 0.000<span style="text-decoration: underline;">082</span>7 <span style="text-decoration: underline;">93</span>633.  2.17  388.</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># ℹ 355 more rows</span></span></span></code></pre></div>
+</div>
   </div>
 
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
