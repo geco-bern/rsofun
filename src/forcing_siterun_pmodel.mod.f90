@@ -18,11 +18,11 @@ module md_forcing_pmodel
     real(kind=sp) :: dtemp  ! daily mean air temperature, deg C
     real(kind=sp) :: dtmin  ! daily minimum air temperature, deg C
     real(kind=sp) :: dtmax  ! daily maximum air temperature, deg C
-    real(kind=sp) :: dprec  ! mm d-1
-    real(kind=sp) :: dsnow  ! mm d-1 water equivalents
+    real(kind=sp) :: dprec  ! mm s-1
+    real(kind=sp) :: dsnow  ! mm s-1 water equivalents
     real(kind=sp) :: dfsun  ! unitless
     real(kind=sp) :: dvpd   ! Pa
-    real(kind=sp) :: dppfd  ! mol m-2 d-1
+    real(kind=sp) :: dppfd  ! mol m-2 s-1
     real(kind=sp) :: dnetrad! W m-2
     real(kind=sp) :: dpatm  ! Pa
   end type climate_type
@@ -60,7 +60,7 @@ contains
 
     ! local variables
     integer :: idx_start, idx_end
-    integer, dimension(2) :: shape_forcing
+    ! integer, dimension(2) :: shape_forcing
 
     ! function return variable
     type( climate_type ), dimension(ndayyear) :: out_climate
@@ -69,10 +69,10 @@ contains
     idx_end   = idx_start + ndayyear - 1
     
     ! Test if forcing dimensions are correct
-    shape_forcing = shape(forcing)
-    if (idx_end > shape_forcing(1)) then
+    ! shape_forcing = shape(forcing)
+    ! if (idx_end > shape_forcing(1)) then
       ! stop 'forcing array size does not have enough rows.'
-    end if
+    ! end if
 
     ! warning: column indices in forcing array are hard coded
     out_climate(:)%dtemp   = real(forcing(idx_start:idx_end, 1))

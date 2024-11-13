@@ -1,6 +1,7 @@
 #!/usr/bin/env Rscript
 
 library(tidyverse)
+library(lubridate)
 library(rsofun)
 
 # load script arguments
@@ -36,12 +37,13 @@ siteinfo <- siteinfo %>%
   dplyr::mutate(date_end = lubridate::ymd(paste0(year_end, "-12-31")))
 
 # load model parameters (valid ones)
-params_siml <- tibble(
+params_siml_gs_leuning <- tibble(
   spinup = TRUE,
   spinupyears = 250,
   recycle = 1,
   firstyeartrend = 2009,
   nyeartrend = 1,
+  steps_per_day = 24,
   outputhourly = TRUE,
   outputdaily = TRUE,
   do_U_shaped_mortality = TRUE,
@@ -53,8 +55,9 @@ params_siml <- tibble(
   method_mortality = "dbh"
 )
 
-params_siml_pmodel <- params_siml
+params_siml_pmodel <- params_siml_gs_leuning
 params_siml_pmodel$method_photosynth <- "pmodel"
+params_siml_pmodel$steps_per_day <- 1
 
 params_tile <- tibble(
   soiltype = 3,
@@ -169,137 +172,76 @@ init_cohort <- tibble(
 )
 
 init_soil <- tibble( #list
-  init_fast_soil_C    = 0.0,
-  init_slow_soil_C    = 0.0,
+  init_fast_soil_C    = 0.01,
+  init_slow_soil_C    = 0.001,
   init_Nmineral       = 0.015,
   N_input             = 0.0008
 )
 
-#---- gs leuning formatting -----
-forcing <- forcingLAE %>% 
-  dplyr::group_by(
-    lubridate::month(datehour),
-    lubridate::day(datehour),
-    lubridate::hour(datehour)) %>% 
-  summarise_at(vars(1:13), list(~mean(., na.rm = TRUE))) %>%
-  rename(month=`lubridate::month(datehour)`,day=`lubridate::day(datehour)`) %>%
-  ungroup()
-forcing <- forcing %>%
-  rename(year=YEAR, doy= DOY, hour=HOUR, par=PAR, ppfd=Swdown, temp=TEMP, temp_soil=SoilT, rh=RH,
-         prec=RAIN, wind=WIND, patm=PRESSURE, co2=aCO2_AW, swc=SWC) %>%
-  mutate(snow=NA,vpd=NA, ccov_int=NA,ccov=NA,
-         date = make_date(year,month,day)) %>% 
-  select(-c(month,day)) %>%
-  relocate(date,year,doy,hour,temp,temp_soil,prec,snow,vpd,rh,ppfd,par,patm,wind,ccov_int,ccov,co2,swc)
-#forcing <- bind_rows(replicate(2, forcing, simplify = FALSE))
+rh_to_vpd <- function(temp, rh) {
+  esat <- 611.0 * exp( (17.27 * temp)/(temp + 237.3) )
 
-biomee_gs_leuning_drivers <- tibble(
-  sitename,
-  site_info = list(tibble(siteinfo)),
-  params_siml = list(tibble(params_siml)),
-  params_tile = list(tibble(params_tile)),
-  params_species = list(tibble(params_species)),
-  params_soil = list(tibble(params_soil)),
-  init_cohort = list(tibble(init_cohort)),
-  init_soil = list(tibble(init_soil)),
-  forcing = list(tibble(forcing))
-)
+  return(esat * (1.0 - rh))
+}
+
+rad_to_ppfd <- function(rad) {
+  kcFCE <- 2.04 # from flux to energy conversion, umol/J (Meek et al., 1984)
+
+  return(rad * kcFCE * 1.0e-6)
+}
+
+build_forcing <- function(forcing_data, hourly) {
+  if (hourly)
+    groups <- forcing_data %>% dplyr::group_by(
+      lubridate::month(datehour),
+      lubridate::day(datehour),
+      lubridate::hour(datehour))
+  else
+    groups <- forcing_data %>% dplyr::group_by(
+      lubridate::month(datehour),
+      lubridate::day(datehour))
+  forcing <- groups %>%
+    summarise_at(vars(1:13), list(~mean(., na.rm = TRUE))) %>%
+    rename(month=`lubridate::month(datehour)`,day=`lubridate::day(datehour)`) %>%
+    ungroup() %>%
+    rename(year=YEAR, hod=HOUR, rad=Swdown, temp=TEMP, rh=RH,
+           rain=RAIN, wind=WIND, patm=PRESSURE, co2=aCO2_AW) %>%
+    mutate(date = make_date(year,month,day),
+           vpd = rh_to_vpd(temp, rh / 100.0),
+           ppfd = rad_to_ppfd(rad)) %>%
+    select(date,hod,temp,rain,vpd,ppfd,patm,wind,co2,)
+    return(forcing)
+}
+
+build_driver <- function(params_siml, forcing) {
+ drivers <- tibble(
+    sitename,
+    site_info = list(tibble(siteinfo)),
+    params_siml = list(tibble(params_siml)),
+    params_tile = list(tibble(params_tile)),
+    params_species = list(tibble(params_species)),
+    params_soil = list(tibble(params_soil)),
+    init_cohort = list(tibble(init_cohort)),
+    init_soil = list(tibble(init_soil)),
+    forcing = list(tibble(forcing))
+  )
+  return(drivers)
+}
+
+#---- gs leuning formatting -----
+forcing_gs_leuning <- build_forcing(forcingLAE, TRUE)
+
+biomee_gs_leuning_drivers <- build_driver(params_siml_gs_leuning, forcing_gs_leuning)
 
 save(biomee_gs_leuning_drivers,
      file ="data/biomee_gs_leuning_drivers.rda",
      compress = "xz")
 
 #---- p-model formatting -----
-forcing <- forcingLAE %>% 
-  dplyr::group_by(
-    lubridate::month(datehour),
-    lubridate::day(datehour)) %>% 
-  summarise_at(vars(1:13), 
-               list(~mean(., na.rm = TRUE))) %>%
-  rename(month=`lubridate::month(datehour)`,day=`lubridate::day(datehour)`) %>%
-  ungroup()
-forcing <- forcing %>%
-  rename(year=YEAR, doy= DOY, hour=HOUR, par=PAR, ppfd=Swdown, temp=TEMP, temp_soil=SoilT, rh=RH,
-         prec=RAIN, wind=WIND, patm=PRESSURE, co2=aCO2_AW, swc=SWC) %>%
-  mutate(snow=NA,vpd=NA, ccov_int=NA,ccov=NA,
-         date = make_date(year,month,day)) %>% 
-  select(-c(month,day)) %>%
-  relocate(date,year,doy,hour,temp,temp_soil,prec,snow,vpd,rh,ppfd,par,patm,wind,ccov_int,ccov,co2,swc)
-#forcing <- bind_rows(replicate(2, forcing, simplify = FALSE))
+forcing_pmodel <- build_forcing(forcingLAE, FALSE)
 
-biomee_p_model_drivers <- tibble(
-  sitename,
-  site_info = list(tibble(siteinfo)),
-  params_siml = list(tibble(params_siml_pmodel)),
-  params_tile = list(tibble(params_tile)),
-  params_species = list(tibble(params_species)),
-  params_soil = list(tibble(params_soil)),
-  init_cohort = list(tibble(init_cohort)),
-  init_soil = list(tibble(init_soil)),
-  forcing  =list(tibble(forcing))
-)
+biomee_p_model_drivers <- build_driver(params_siml_pmodel, forcing_pmodel)
 
 save(biomee_p_model_drivers,
      file ="data/biomee_p_model_drivers.rda",
      compress = "xz")
-
-# run the model gs-leuning
-out <- runread_biomee_f(
-  biomee_gs_leuning_drivers,
-  makecheck = TRUE,
-  parallel = FALSE)
-
-biomee_gs_leuning_output_annual_tile <- out$data[[1]]$output_annual_tile
-biomee_gs_leuning_output_annual_cohorts <- out$data[[1]]$output_annual_cohorts
-
-cowplot::plot_grid(
-  biomee_gs_leuning_output %>% 
-    ggplot() +
-    geom_line(aes(x = year, y = GPP)) +
-    theme_classic()+labs(x = "Year", y = "GPP"),
-  biomee_gs_leuning_output %>% 
-    ggplot() +
-    geom_line(aes(x = year, y = plantC)) +
-    theme_classic()+labs(x = "Year", y = "plantC")
-)
-
-biomee_gs_leuning_output_annual_cohorts %>% group_by(PFT,year) %>%
-  summarise(npp=sum(NPP*density/10000)) %>% mutate(PFT=as.factor(PFT)) %>%
-  ggplot() +
-  geom_line(aes(x = year, y = npp,col=PFT)) +
-  theme_classic()+labs(x = "Year", y = "NPP")
-
-save(biomee_gs_leuning_output,
-     file ="data/biomee_gs_leuning_output.rda",
-     compress = "xz")
-
-# run the model p-model
-out <- runread_biomee_f(
-  biomee_p_model_drivers,
-  makecheck = TRUE,
-  parallel = FALSE)
-
-biomee_p_model_output_annual_tile <- out$data[[1]]$output_annual_tile
-biomee_p_model_output_annual_cohorts <- out$data[[1]]$output_annual_cohorts
-
-cowplot::plot_grid(
-  biomee_p_model_output %>% 
-    ggplot() +
-    geom_line(aes(x = year, y = GPP)) +
-    theme_classic()+labs(x = "Year", y = "GPP"),
-  biomee_p_model_output %>% 
-    ggplot() +
-    geom_line(aes(x = year, y = plantC)) +
-    theme_classic()+labs(x = "Year", y = "plantC")
-)
-
-biomee_p_model_output_annual_cohorts %>% group_by(PFT,year) %>%
-  summarise(npp=sum(NPP*density/10000)) %>% mutate(PFT=as.factor(PFT)) %>%
-  ggplot() +
-  geom_line(aes(x = year, y = npp,col=PFT)) +
-  theme_classic()+labs(x = "Year", y = "NPP")
-
-save(biomee_p_model_output,
-     file = "data/biomee_p_model_output.rda",
-     compress = "xz")
-

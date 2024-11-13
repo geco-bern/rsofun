@@ -67,7 +67,7 @@ cost_likelihood_biomee <- function(
   
   # did we spin up
   spin_up <- drivers$params_siml[[1]]$spinup
-  
+
   # drop spinup years if activated
   # see below
   if (spin_up){

@@ -9,7 +9,7 @@ module md_tile_pmodel
 
   private
   public tile_type, tile_fluxes_type, initglobal_tile, psoilphystype, soil_type, &
-    initdaily_tile_fluxes, getpar_modl_tile, diag_daily !, init_annual, diag_annual
+    initdaily_tile_fluxes, getpar_modl_tile, diag_daily, initglobal_soil !, init_annual, diag_annual
 
   !----------------------------------------------------------------
   ! physical soil state variables with memory from year to year (~pools)

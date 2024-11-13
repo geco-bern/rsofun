@@ -7,8 +7,8 @@ module md_interface_pmodel
 
   use md_forcing_pmodel, only: climate_type, landuse_type, ninput_type, vegcover_type  
   ! use md_params_soil_pmodel, only: paramtype_soil
-  use md_params_siml_pmodel, only: paramstype_siml, outtype_steering
-  use md_params_core, only: nlayers_soil, ndayyear, npft
+  use md_params_siml_pmodel, only: paramstype_siml
+  use md_params_core, only: nlayers_soil, ndayyear, npft, outtype_steering
   use md_grid, only: gridtype !, domaininfo_type
 
   implicit none

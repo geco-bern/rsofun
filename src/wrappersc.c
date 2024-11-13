@@ -159,35 +159,8 @@ void F77_NAME(biomee_f)(
     int    *nt_annual,                
     int    *nt_annual_cohorts,                
     double *forcing,                  
-    // double *output_hourly_tile,   
-    double *output_daily_tile,    
-    // double *output_daily_cohorts_year,
-    // double *output_daily_cohorts_doy,
-    // double *output_daily_cohorts_hour,
-    // double *output_daily_cohorts_cID,
-    // double *output_daily_cohorts_PFT,
-    // double *output_daily_cohorts_layer,
-    // double *output_daily_cohorts_density,
-    // double *output_daily_cohorts_f_layer,
-    // double *output_daily_cohorts_LAI,
-    // double *output_daily_cohorts_gpp,
-    // double *output_daily_cohorts_resp,
-    // double *output_daily_cohorts_transp,
-    // double *output_daily_cohorts_NPPleaf,
-    // double *output_daily_cohorts_NPProot,
-    // double *output_daily_cohorts_NPPwood,
-    // double *output_daily_cohorts_NSC,
-    // double *output_daily_cohorts_seedC,
-    // double *output_daily_cohorts_leafC,
-    // double *output_daily_cohorts_rootC,
-    // double *output_daily_cohorts_SW_C,
-    // double *output_daily_cohorts_HW_C,
-    // double *output_daily_cohorts_NSN,
-    // double *output_daily_cohorts_seedN,
-    // double *output_daily_cohorts_leafN,
-    // double *output_daily_cohorts_rootN,
-    // double *output_daily_cohorts_SW_N,
-    // double *output_daily_cohorts_HW_N,
+    int    *steps_per_day,
+    double *output_daily_tile,
     double *output_annual_tile,   
     double *output_annual_cohorts_year,
     double *output_annual_cohorts_cID,
@@ -274,45 +247,17 @@ extern SEXP biomee_f_C(
     SEXP n_daily,                 
     SEXP n_annual,                
     SEXP n_annual_cohorts,                
-    SEXP forcing                 
+    SEXP forcing,
+    SEXP steps_per_day
     ){
 
     // // Number of time steps (same in forcing and output)
-    // const int nt = INTEGER(n)[0];
     const int nt_daily = INTEGER(n_daily)[0];
     const int nt_annual = INTEGER(n_annual)[0];
     const int nt_annual_cohorts = INTEGER(n_annual_cohorts)[0];
 
     // // Specify output
-    // SEXP output_hourly_tile            = PROTECT( allocMatrix(REALSXP, nt,       15) );   // 2nd agument to allocMatrix is number of rows, 3rd is number of columns.  xxx todo
     SEXP output_daily_tile             = PROTECT( allocMatrix(REALSXP, nt_daily, 35) );   // 2nd agument to allocMatrix is number of rows, 3rd is number of columns.  xxx todo
-    // SEXP output_daily_cohorts_year     = PROTECT( allocMatrix(REALSXP, nt_daily, 50) );
-    // SEXP output_daily_cohorts_doy      = PROTECT( allocMatrix(REALSXP, nt_daily, 50) );
-    // SEXP output_daily_cohorts_hour     = PROTECT( allocMatrix(REALSXP, nt_daily, 50) );
-    // SEXP output_daily_cohorts_cID      = PROTECT( allocMatrix(REALSXP, nt_daily, 50) );
-    // SEXP output_daily_cohorts_PFT      = PROTECT( allocMatrix(REALSXP, nt_daily, 50) );
-    // SEXP output_daily_cohorts_layer    = PROTECT( allocMatrix(REALSXP, nt_daily, 50) );
-    // SEXP output_daily_cohorts_density  = PROTECT( allocMatrix(REALSXP, nt_daily, 50) );
-    // SEXP output_daily_cohorts_f_layer  = PROTECT( allocMatrix(REALSXP, nt_daily, 50) );
-    // SEXP output_daily_cohorts_LAI      = PROTECT( allocMatrix(REALSXP, nt_daily, 50) );
-    // SEXP output_daily_cohorts_gpp      = PROTECT( allocMatrix(REALSXP, nt_daily, 50) );
-    // SEXP output_daily_cohorts_resp     = PROTECT( allocMatrix(REALSXP, nt_daily, 50) );
-    // SEXP output_daily_cohorts_transp   = PROTECT( allocMatrix(REALSXP, nt_daily, 50) );
-    // SEXP output_daily_cohorts_NPPleaf  = PROTECT( allocMatrix(REALSXP, nt_daily, 50) );
-    // SEXP output_daily_cohorts_NPProot  = PROTECT( allocMatrix(REALSXP, nt_daily, 50) );
-    // SEXP output_daily_cohorts_NPPwood  = PROTECT( allocMatrix(REALSXP, nt_daily, 50) );
-    // SEXP output_daily_cohorts_NSC      = PROTECT( allocMatrix(REALSXP, nt_daily, 50) );
-    // SEXP output_daily_cohorts_seedC    = PROTECT( allocMatrix(REALSXP, nt_daily, 50) );
-    // SEXP output_daily_cohorts_leafC    = PROTECT( allocMatrix(REALSXP, nt_daily, 50) );
-    // SEXP output_daily_cohorts_rootC    = PROTECT( allocMatrix(REALSXP, nt_daily, 50) );
-    // SEXP output_daily_cohorts_SW_C     = PROTECT( allocMatrix(REALSXP, nt_daily, 50) );
-    // SEXP output_daily_cohorts_HW_C     = PROTECT( allocMatrix(REALSXP, nt_daily, 50) );
-    // SEXP output_daily_cohorts_NSN      = PROTECT( allocMatrix(REALSXP, nt_daily, 50) );
-    // SEXP output_daily_cohorts_seedN    = PROTECT( allocMatrix(REALSXP, nt_daily, 50) );
-    // SEXP output_daily_cohorts_leafN    = PROTECT( allocMatrix(REALSXP, nt_daily, 50) );
-    // SEXP output_daily_cohorts_rootN    = PROTECT( allocMatrix(REALSXP, nt_daily, 50) );
-    // SEXP output_daily_cohorts_SW_N     = PROTECT( allocMatrix(REALSXP, nt_daily, 50) );
-    // SEXP output_daily_cohorts_HW_N     = PROTECT( allocMatrix(REALSXP, nt_daily, 50) );
     SEXP output_annual_tile            = PROTECT( allocMatrix(REALSXP, nt_annual, 59) );   // 2nd agument to allocMatrix is number of rows, 3rd is number of columns.  xxx todo
     SEXP output_annual_cohorts_year    = PROTECT( allocMatrix(REALSXP, nt_annual_cohorts, 50) );
     SEXP output_annual_cohorts_cID     = PROTECT( allocMatrix(REALSXP, nt_annual_cohorts, 50) );
@@ -399,35 +344,8 @@ extern SEXP biomee_f_C(
         INTEGER(n_annual),                
         INTEGER(n_annual_cohorts),                
         REAL(forcing),             
-        // REAL(output_hourly_tile),  
-        REAL(output_daily_tile),    
-        // REAL(output_daily_cohorts_year),
-        // REAL(output_daily_cohorts_doy),
-        // REAL(output_daily_cohorts_hour),
-        // REAL(output_daily_cohorts_cID),
-        // REAL(output_daily_cohorts_PFT),
-        // REAL(output_daily_cohorts_layer),
-        // REAL(output_daily_cohorts_density),
-        // REAL(output_daily_cohorts_f_layer),
-        // REAL(output_daily_cohorts_LAI),
-        // REAL(output_daily_cohorts_gpp),
-        // REAL(output_daily_cohorts_resp),
-        // REAL(output_daily_cohorts_transp),
-        // REAL(output_daily_cohorts_NPPleaf),
-        // REAL(output_daily_cohorts_NPProot),
-        // REAL(output_daily_cohorts_NPPwood),
-        // REAL(output_daily_cohorts_NSC),
-        // REAL(output_daily_cohorts_seedC),
-        // REAL(output_daily_cohorts_leafC),
-        // REAL(output_daily_cohorts_rootC),
-        // REAL(output_daily_cohorts_SW_C),
-        // REAL(output_daily_cohorts_HW_C),
-        // REAL(output_daily_cohorts_NSN),
-        // REAL(output_daily_cohorts_seedN),
-        // REAL(output_daily_cohorts_leafN),
-        // REAL(output_daily_cohorts_rootN),
-        // REAL(output_daily_cohorts_SW_N),
-        // REAL(output_daily_cohorts_HW_N),
+        INTEGER(steps_per_day),
+        REAL(output_daily_tile),
         REAL(output_annual_tile),  
         REAL(output_annual_cohorts_year),
         REAL(output_annual_cohorts_cID),
@@ -543,7 +461,7 @@ extern SEXP biomee_f_C(
 /////////////////////////////////////////////////////////////
 static const R_CallMethodDef CallEntries[] = {
   {"pmodel_f_C",   (DL_FUNC) &pmodel_f_C,   23},  // Specify number of arguments to C wrapper as the last number here
-  {"biomee_f_C",   (DL_FUNC) &biomee_f_C,   48},  // Number of arguments of the C wrapper function for biomee (the SEXP variables, not the output)
+  {"biomee_f_C",   (DL_FUNC) &biomee_f_C,   49},  // Number of arguments of the C wrapper function for biomee (the SEXP variables, not the output)
   {NULL,         NULL,                0}
 };
 

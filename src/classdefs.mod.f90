@@ -26,11 +26,11 @@ module md_classdefs
 
   ! Carbon, so far contains only c12 (to be extended for c13)
   type carbon
-   real :: c12
+   real :: c12 = 0.0
   end type carbon
 
   type nitrogen
-   real :: n14
+   real :: n14 = 0.0
   end type nitrogen
 
   ! Organic pools, contain carbon (c12) and nitrogen (n14)

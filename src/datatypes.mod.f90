@@ -305,7 +305,7 @@ module datatypes
 
     !=====  N-related fluxes
     real    :: totN               = 0.0
-    real    :: N_input                            ! annual N input (kgN m-2 yr-1)
+    real    :: N_input            = 0.0           ! annual N input (kgN m-2 yr-1)
     real    :: N_uptake           = 0.0           ! kg N m-2 hour-1
     real    :: annualN            = 0.0           ! annual available N in a year
     real    :: Nloss_yr           = 0.0           ! annual N loss
@@ -337,12 +337,12 @@ module datatypes
     real    :: rh                 = 0.0           ! soil carbon lost to the atmosphere
 
     !=====  Daily diagnostics
-    real    :: dailyGPP
-    real    :: dailyNPP
-    real    :: dailyResp
-    real    :: dailyRh
-    real    :: dailyNup
-    real    :: dailyfixedN
+    real    :: dailyGPP     = 0.0
+    real    :: dailyNPP     = 0.0
+    real    :: dailyResp    = 0.0
+    real    :: dailyRh      = 0.0
+    real    :: dailyNup     = 0.0
+    real    :: dailyfixedN  = 0.0
 
     !=====  Annual diagnostics
     real    :: dailyPrcp     = 0.0,  annualPrcp  = 0.0                            ! mm m-2 yr-1
@@ -352,7 +352,7 @@ module datatypes
     real    :: annualNPP     = 0.0
     real    :: annualResp    = 0.0
     real    :: annualRh      = 0.0
-    real    :: annualNup                                                          ! accumulated N uptake kgN m-2 yr-1
+    real    :: annualNup     = 0.0                                                ! accumulated N uptake kgN m-2 yr-1
     real    :: annualfixedN  = 0.0                                                ! fixed N in a tile
 
     !===== Annual reporting at tile level
@@ -363,7 +363,10 @@ module datatypes
     type(orgpool) :: pseed                       ! biomass put aside for future progeny [kg C m-2]
     type(orgpool) :: plabl                       ! labile pool, temporary storage of N and C [kg C m-2]
 
-    real :: totSeedC, totSeedN, totNewCC, totNewCN
+    real :: totSeedC = 0.0
+    real :: totSeedN = 0.0
+    real :: totNewCC = 0.0
+    real :: totNewCN = 0.0
 
   end type vegn_tile_type
 
@@ -737,16 +740,7 @@ contains
     integer :: i
     
     ! daily
-    vegn%dailyfixedN = 0.0
-    vegn%dailyPrcp   = 0.0
-    vegn%dailyTrsp   = 0.0
-    vegn%dailyEvap   = 0.0
-    vegn%dailyRoff   = 0.0
-    vegn%dailyNup    = 0.0
-    vegn%dailyGPP    = 0.0
-    vegn%dailyNPP    = 0.0
-    vegn%dailyResp   = 0.0
-    vegn%dailyRh     = 0.0
+    call zero_daily_diagnostics(vegn)
 
     ! annual
     vegn%annualfixedN = 0.0
@@ -807,6 +801,24 @@ contains
   
   end subroutine Zero_diagnostics
 
+  subroutine zero_daily_diagnostics( vegn )
+    !////////////////////////////////////////////////////////////////////////
+    ! Zero daily diagnostics
+    !------------------------------------------------------------------------
+    type(vegn_tile_type), intent(inout) :: vegn
+
+    vegn%dailyNup  = 0.0
+    vegn%dailyGPP  = 0.0
+    vegn%dailyNPP  = 0.0
+    vegn%dailyResp = 0.0
+    vegn%dailyRh   = 0.0
+    vegn%dailyPrcp = 0.0
+    vegn%dailyTrsp = 0.0
+    vegn%dailyEvap = 0.0
+    vegn%dailyRoff = 0.0
+    vegn%dailyfixedN = 0.0
+
+  end subroutine zero_daily_diagnostics
 
   subroutine summarize_tile( vegn ) 
     !////////////////////////////////////////////////////////////////////////
@@ -876,7 +888,11 @@ contains
 
     if (vegn%nindivs>0.0)   vegn%DBH   = vegn%DBH / vegn%nindivs  
     if (vegn%nindivs12>0.0) vegn%DBH12 = vegn%DBH12 / vegn%nindivs12  ! vegn%nindivs12 could be zero if all dbh<0.12
-    if (vegn%nindivs12>0.0) vegn%QMD   = sqrt(vegn%DBH12pow2 / vegn%nindivs12)  
+    if (vegn%nindivs12>0.0) then
+      vegn%QMD   = sqrt(vegn%DBH12pow2 / vegn%nindivs12)
+    else
+      vegn%QMD = 0.0
+    end if
 
   end subroutine summarize_tile
 
@@ -970,69 +986,9 @@ contains
     type(cohort_type), pointer :: cc    ! current cohort
     integer :: i
 
-    ! if (.not. myinterface%steering%spinup) then 
-    !   out_daily_cohorts(:)%year    = dummy
-    !   out_daily_cohorts(:)%doy     = dummy
-    !   out_daily_cohorts(:)%hour    = dummy
-    !   out_daily_cohorts(:)%cID     = dummy
-    !   out_daily_cohorts(:)%PFT     = dummy
-    !   out_daily_cohorts(:)%layer   = dummy
-    !   out_daily_cohorts(:)%density = dummy
-    !   out_daily_cohorts(:)%f_layer = dummy
-    !   out_daily_cohorts(:)%LAI     = dummy
-    !   out_daily_cohorts(:)%gpp     = dummy
-    !   out_daily_cohorts(:)%resp    = dummy
-    !   out_daily_cohorts(:)%transp  = dummy
-    !   out_daily_cohorts(:)%NPPleaf = dummy
-    !   out_daily_cohorts(:)%NPProot = dummy
-    !   out_daily_cohorts(:)%NPPwood = dummy
-    !   out_daily_cohorts(:)%NSC     = dummy
-    !   out_daily_cohorts(:)%seedC   = dummy
-    !   out_daily_cohorts(:)%leafC   = dummy
-    !   out_daily_cohorts(:)%rootC   = dummy
-    !   out_daily_cohorts(:)%SW_C    = dummy
-    !   out_daily_cohorts(:)%HW_C    = dummy
-    !   out_daily_cohorts(:)%NSN     = dummy
-    !   out_daily_cohorts(:)%seedN   = dummy
-    !   out_daily_cohorts(:)%leafN   = dummy
-    !   out_daily_cohorts(:)%rootN   = dummy
-    !   out_daily_cohorts(:)%SW_N    = dummy
-    !   out_daily_cohorts(:)%HW_N    = dummy
-    ! endif
-
     ! cohorts output
     do i = 1, vegn%n_cohorts
       cc => vegn%cohorts(i)
-
-      ! if (.not. myinterface%steering%spinup) then 
-      !   out_daily_cohorts(i)%year    = iyears
-      !   out_daily_cohorts(i)%doy     = idoy
-      !   out_daily_cohorts(i)%hour    = i !1.0
-      !   out_daily_cohorts(i)%cID     = cc%ccID
-      !   out_daily_cohorts(i)%PFT     = cc%species
-      !   out_daily_cohorts(i)%layer   = cc%layer
-      !   out_daily_cohorts(i)%density = cc%nindivs * 10000 
-      !   out_daily_cohorts(i)%f_layer = cc%layerfrac
-      !   out_daily_cohorts(i)%LAI     = cc%LAI
-      !   out_daily_cohorts(i)%gpp     = cc%dailygpp
-      !   out_daily_cohorts(i)%resp    = cc%dailyresp
-      !   out_daily_cohorts(i)%transp  = cc%dailytrsp
-      !   out_daily_cohorts(i)%NPPleaf = cc%NPPleaf
-      !   out_daily_cohorts(i)%NPProot = cc%NPProot
-      !   out_daily_cohorts(i)%NPPwood = cc%NPPwood
-      !   out_daily_cohorts(i)%NSC     = cc%plabl%c%c12
-      !   out_daily_cohorts(i)%seedC   = cc%pseed%c%c12
-      !   out_daily_cohorts(i)%leafC   = cc%pleaf%c%c12
-      !   out_daily_cohorts(i)%rootC   = cc%proot%c%c12
-      !   out_daily_cohorts(i)%SW_C    = cc%psapw%c%c12
-      !   out_daily_cohorts(i)%HW_C    = cc%pwood%c%c12
-      !   out_daily_cohorts(i)%NSN     = cc%plabl%n%n14 * 1000
-      !   out_daily_cohorts(i)%seedN   = cc%pseed%n%n14 * 1000
-      !   out_daily_cohorts(i)%leafN   = cc%pleaf%n%n14 * 1000
-      !   out_daily_cohorts(i)%rootN   = cc%proot%n%n14 * 1000
-      !   out_daily_cohorts(i)%SW_N    = cc%psapw%n%n14 * 1000
-      !   out_daily_cohorts(i)%HW_N    = cc%pwood%n%n14 * 1000
-      ! endif
 
       ! running annual sum
       cc%annualGPP  = cc%annualGPP  + cc%dailyGPP
@@ -1050,7 +1006,7 @@ contains
     ! Tile level, daily
     call summarize_tile(vegn)
 
-      if (.not. myinterface%steering%spinup) then 
+    if (.not. myinterface%steering%spinup) then
       out_daily_tile%year      = iyears
       out_daily_tile%doy       = idoy
       out_daily_tile%Tc        = vegn%tc_daily
@@ -1100,15 +1056,7 @@ contains
     vegn%annualRoff = vegn%annualRoff + vegn%dailyRoff
 
     ! zero:
-    vegn%dailyNup  = 0.0
-    vegn%dailyGPP  = 0.0
-    vegn%dailyNPP  = 0.0
-    vegn%dailyResp = 0.0
-    vegn%dailyRh   = 0.0
-    vegn%dailyPrcp = 0.0
-    vegn%dailyTrsp = 0.0
-    vegn%dailyEvap = 0.0
-    vegn%dailyRoff = 0.0
+    call zero_daily_diagnostics(vegn)
 
   end subroutine daily_diagnostics
 

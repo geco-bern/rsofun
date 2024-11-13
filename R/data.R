@@ -33,7 +33,7 @@
 #'     \describe{
 #'       \item{spinup}{A logical value indicating whether this simulation does spin-up.}
 #'       \item{spinupyears}{Number of spin-up years.}
-#'       \item{recycle}{Length of standard recycling period, in days.}
+#'       \item{recycle}{Length of standard recycling period, in years.}
 #'       \item{outdt}{An integer indicating the output periodicity.}
 #'       \item{ltre}{A logical value, \code{TRUE} if evergreen tree.}
 #'       \item{ltne}{A logical value, \code{TRUE} if evergreen tree and N-fixing.}
@@ -136,7 +136,7 @@
 #'     \describe{
 #'       \item{spinup}{A logical value indicating whether this simulation does spin-up.}
 #'       \item{spinupyears}{Number of spin-up years.}
-#'       \item{recycle}{Length of standard recycling period, in days.}
+#'       \item{recycle}{Length of standard recycling period, in years.}
 #'       \item{outdt}{An integer indicating the output periodicity.}
 #'       \item{ltre}{A logical value, \code{TRUE} if evergreen tree.}
 #'       \item{ltne}{A logical value, \code{TRUE} if evergreen tree and N-fixing.}
@@ -250,31 +250,31 @@
 #' @format A tibble of driver data:
 #' \describe{
 #'   \item{sitename}{site name}
-#'   \item{data}{validation dta}
+#'   \item{data}{validation data}
 #' }
 "biomee_validation"
 
-#' rsofun BiomeE GPP validation data
+#' rsofun BiomeE validation data
 #'
 #' Small tests dataset to validate 
-#' calibration routines
+#' calibration routines and model output
 #'
 #' @format A tibble of driver data:
 #' \describe{
 #'   \item{sitename}{site name}
-#'   \item{data}{validation dta}
+#'   \item{data}{validation data}
 #' }
 "biomee_p_model_output"
 
-#' rsofun BiomeE GPP validation data
+#' rsofun BiomeE validation data
 #'
 #' Small tests dataset to validate 
-#' calibration routines
+#' calibration routines and model output
 #'
 #' @format A tibble of driver data:
 #' \describe{
 #'   \item{sitename}{site name}
-#'   \item{data}{validation dta}
+#'   \item{data}{validation data}
 #' }
 "biomee_gs_leuning_output"
 

@@ -43,7 +43,6 @@ contains
     ! Receives simulation parameters, site parameters, and the full 
     ! simulation's forcing as time series
     !----------------------------------------------------------------
-    use md_params_siml_pmodel, only: getsteering
     use md_forcing_pmodel, only: getclimate, getco2, getfapar, get_fpc_grid
     use md_interface_pmodel, only: interfacetype_biosphere, outtype_biosphere, myinterface
     use md_params_core
@@ -84,17 +83,18 @@ contains
     !----------------------------------------------------------------
     ! GET SIMULATION PARAMETERS
     !----------------------------------------------------------------
-    myinterface%params_siml%do_spinup      = spinup
-    myinterface%params_siml%spinupyears    = spinupyears
-    myinterface%params_siml%recycle        = recycle
-    myinterface%params_siml%firstyeartrend = firstyeartrend
-    myinterface%params_siml%nyeartrend     = nyeartrend
+    myinterface%params_siml%steering%do_spinup      = spinup
+    myinterface%params_siml%steering%spinupyears    = spinupyears
+    myinterface%params_siml%steering%recycle        = recycle
+    myinterface%params_siml%steering%firstyeartrend = firstyeartrend
+    myinterface%params_siml%steering%nyeartrend     = nyeartrend
 
-    if (myinterface%params_siml%do_spinup) then
-      myinterface%params_siml%runyears = myinterface%params_siml%nyeartrend + myinterface%params_siml%spinupyears
+    if (myinterface%params_siml%steering%do_spinup) then
+      myinterface%params_siml%steering%runyears = myinterface%params_siml%steering%nyeartrend &
+              + myinterface%params_siml%steering%spinupyears
     else
-      myinterface%params_siml%runyears = myinterface%params_siml%nyeartrend
-      myinterface%params_siml%spinupyears = 0
+      myinterface%params_siml%steering%runyears = myinterface%params_siml%steering%nyeartrend
+      myinterface%params_siml%steering%spinupyears = 0
     endif
     
     myinterface%params_siml%in_ppfd            = in_ppfd
@@ -108,16 +108,6 @@ contains
     myinterface%params_siml%lgn3               = lgn3
     myinterface%params_siml%lgr4               = lgr4
     myinterface%params_siml%secs_per_tstep     = secs_per_tstep
-
-    ! ! Count PFTs to be simulated
-    ! npft_local = 0
-    ! if (myinterface%params_siml%ltre) npft_local = npft_local + 1
-    ! if (myinterface%params_siml%ltne) npft_local = npft_local + 1
-    ! if (myinterface%params_siml%ltrd) npft_local = npft_local + 1
-    ! if (myinterface%params_siml%ltnd) npft_local = npft_local + 1
-    ! if (myinterface%params_siml%lgr3) npft_local = npft_local + 1
-    ! if (myinterface%params_siml%lgr4) npft_local = npft_local + 1
-    ! if (myinterface%params_siml%lgn3) npft_local = npft_local + 1
 
     ! set parameter to define that this is not a calibration run (otherwise sofun.f90 would not have been compiled, but sofun_simsuite.f90)
     myinterface%params_siml%is_calib = .true.  ! treat paramters passed through R/C-interface the same way as calibratable parameters
@@ -152,12 +142,12 @@ contains
     !----------------------------------------------------------------
     myinterface%fpc_grid(:) = get_fpc_grid( myinterface%params_siml )
     
-    do yr=1,myinterface%params_siml%runyears
+    do yr=1,myinterface%params_siml%steering%runyears
 
       !----------------------------------------------------------------
       ! Define simulations "steering" variables (forcingyear, etc.)
       !----------------------------------------------------------------
-      myinterface%steering = getsteering( yr, myinterface%params_siml )
+      myinterface%steering = get_steering( yr, myinterface%params_siml%steering )
 
       !----------------------------------------------------------------
       ! Get external (environmental) forcing
@@ -174,7 +164,7 @@ contains
       myinterface%pco2 = getco2(  nt, &
                                   forcing, &
                                   myinterface%steering%forcingyear, &
-                                  myinterface%params_siml%firstyeartrend &
+                                  myinterface%params_siml%steering%firstyeartrend &
                                   )
 
       !----------------------------------------------------------------
@@ -195,7 +185,7 @@ contains
       !----------------------------------------------------------------
       ! Populate Fortran output array which is passed back to C/R
       !----------------------------------------------------------------
-      if (yr > myinterface%params_siml%spinupyears ) then
+      if (yr > myinterface%params_siml%steering%spinupyears ) then
 
         idx_start = (myinterface%steering%forcingyear_idx - 1) * ndayyear + 1
         idx_end   = idx_start + ndayyear - 1
@@ -277,35 +267,8 @@ contains
     nt_annual,                    &    
     nt_annual_cohorts,            &    
     forcing,                      &     
-    ! output_hourly_tile,           &
+    steps_per_day,                &
     output_daily_tile,            &
-    ! output_daily_cohorts_year,    &
-    ! output_daily_cohorts_doy,     &
-    ! output_daily_cohorts_hour,    &
-    ! output_daily_cohorts_cID,     &
-    ! output_daily_cohorts_PFT,     &
-    ! output_daily_cohorts_layer,   &
-    ! output_daily_cohorts_density, &
-    ! output_daily_cohorts_f_layer, &
-    ! output_daily_cohorts_LAI,     &
-    ! output_daily_cohorts_gpp,     &
-    ! output_daily_cohorts_resp,    &
-    ! output_daily_cohorts_transp,  &
-    ! output_daily_cohorts_NPPleaf, &
-    ! output_daily_cohorts_NPProot, &
-    ! output_daily_cohorts_NPPwood, &
-    ! output_daily_cohorts_NSC,     &
-    ! output_daily_cohorts_seedC,   &
-    ! output_daily_cohorts_leafC,   &
-    ! output_daily_cohorts_rootC,   &
-    ! output_daily_cohorts_SW_C,    &
-    ! output_daily_cohorts_HW_C,    &
-    ! output_daily_cohorts_NSN,     &
-    ! output_daily_cohorts_seedN,   &
-    ! output_daily_cohorts_leafN,   &
-    ! output_daily_cohorts_rootN,   &
-    ! output_daily_cohorts_SW_N,    &
-    ! output_daily_cohorts_HW_N,    &
     output_annual_tile,           &
     output_annual_cohorts_year,   &
     output_annual_cohorts_cID,    &
@@ -349,10 +312,8 @@ contains
     ! simulation's forcing as time series
     ! test xxx
     !----------------------------------------------------------------
-    use md_params_siml_biomee, only: getsteering
     ! use md_params_soil_biomee, only: getsoil
     use md_forcing_biomee, only: getclimate, &
-      getco2, &
       climate_type
     use md_interface_biomee, only: interfacetype_biosphere, &
       myinterface, &
@@ -425,38 +386,11 @@ contains
     integer(kind=c_int), intent(in) :: nt_annual_cohorts
 
     ! input and output arrays (naked) to be passed back to C/R
-    real(kind=c_double), dimension(nt,13), intent(in) :: forcing
+    real(kind=c_double), dimension(nt,7), intent(in) :: forcing
 
-    ! real(kind=c_double), dimension(nt,nvars_hourly_tile), intent(out) :: output_hourly_tile ! nvars_hourly_tile = 15
-    real(kind=c_double), dimension(nt_daily,nvars_daily_tile), intent(out) :: output_daily_tile ! nvars_daily_tile = 35    
+    integer(kind=c_int), intent(in) :: steps_per_day  ! Forcing resolution
 
-    ! real(kind=c_double), dimension(nt_daily,out_max_cohorts), intent(out) :: output_daily_cohorts_year
-    ! real(kind=c_double), dimension(nt_daily,out_max_cohorts), intent(out) :: output_daily_cohorts_doy
-    ! real(kind=c_double), dimension(nt_daily,out_max_cohorts), intent(out) :: output_daily_cohorts_hour
-    ! real(kind=c_double), dimension(nt_daily,out_max_cohorts), intent(out) :: output_daily_cohorts_cID
-    ! real(kind=c_double), dimension(nt_daily,out_max_cohorts), intent(out) :: output_daily_cohorts_PFT
-    ! real(kind=c_double), dimension(nt_daily,out_max_cohorts), intent(out) :: output_daily_cohorts_layer
-    ! real(kind=c_double), dimension(nt_daily,out_max_cohorts), intent(out) :: output_daily_cohorts_density
-    ! real(kind=c_double), dimension(nt_daily,out_max_cohorts), intent(out) :: output_daily_cohorts_f_layer
-    ! real(kind=c_double), dimension(nt_daily,out_max_cohorts), intent(out) :: output_daily_cohorts_LAI
-    ! real(kind=c_double), dimension(nt_daily,out_max_cohorts), intent(out) :: output_daily_cohorts_gpp
-    ! real(kind=c_double), dimension(nt_daily,out_max_cohorts), intent(out) :: output_daily_cohorts_resp
-    ! real(kind=c_double), dimension(nt_daily,out_max_cohorts), intent(out) :: output_daily_cohorts_transp
-    ! real(kind=c_double), dimension(nt_daily,out_max_cohorts), intent(out) :: output_daily_cohorts_NPPleaf
-    ! real(kind=c_double), dimension(nt_daily,out_max_cohorts), intent(out) :: output_daily_cohorts_NPProot
-    ! real(kind=c_double), dimension(nt_daily,out_max_cohorts), intent(out) :: output_daily_cohorts_NPPwood
-    ! real(kind=c_double), dimension(nt_daily,out_max_cohorts), intent(out) :: output_daily_cohorts_NSC
-    ! real(kind=c_double), dimension(nt_daily,out_max_cohorts), intent(out) :: output_daily_cohorts_seedC
-    ! real(kind=c_double), dimension(nt_daily,out_max_cohorts), intent(out) :: output_daily_cohorts_leafC
-    ! real(kind=c_double), dimension(nt_daily,out_max_cohorts), intent(out) :: output_daily_cohorts_rootC
-    ! real(kind=c_double), dimension(nt_daily,out_max_cohorts), intent(out) :: output_daily_cohorts_SW_C
-    ! real(kind=c_double), dimension(nt_daily,out_max_cohorts), intent(out) :: output_daily_cohorts_HW_C
-    ! real(kind=c_double), dimension(nt_daily,out_max_cohorts), intent(out) :: output_daily_cohorts_NSN
-    ! real(kind=c_double), dimension(nt_daily,out_max_cohorts), intent(out) :: output_daily_cohorts_seedN
-    ! real(kind=c_double), dimension(nt_daily,out_max_cohorts), intent(out) :: output_daily_cohorts_leafN
-    ! real(kind=c_double), dimension(nt_daily,out_max_cohorts), intent(out) :: output_daily_cohorts_rootN
-    ! real(kind=c_double), dimension(nt_daily,out_max_cohorts), intent(out) :: output_daily_cohorts_SW_N
-    ! real(kind=c_double), dimension(nt_daily,out_max_cohorts), intent(out) :: output_daily_cohorts_HW_N
+    real(kind=c_double), dimension(nt_daily,nvars_daily_tile), intent(out) :: output_daily_tile ! nvars_daily_tile = 35
 
     real(kind=c_double), dimension(nt_annual,nvars_annual_tile), intent(out) :: output_annual_tile ! nvars_annual_tile = 51
 
@@ -502,29 +436,27 @@ contains
     type(outtype_annual_tile)                                         :: out_biosphere_annual_tile
     type(outtype_annual_cohorts), dimension(out_max_cohorts)          :: out_biosphere_annual_cohorts
 
-    real                    :: timestep, timestep_d
     integer                 :: yr
     
     integer :: idx
-    ! integer :: idx_hourly_start
-    ! integer :: idx_hourly_end
     integer :: idx_daily_start
     integer :: idx_daily_end
 
     !----------------------------------------------------------------
     ! POPULATE MYINTERFACE WITH ARGUMENTS FROM R
     !----------------------------------------------------------------
-    myinterface%params_siml%do_spinup        = spinup
-    myinterface%params_siml%spinupyears      = spinupyears
-    myinterface%params_siml%recycle          = recycle
-    myinterface%params_siml%firstyeartrend   = firstyeartrend
-    myinterface%params_siml%nyeartrend       = nyeartrend
+    myinterface%params_siml%steering%do_spinup        = spinup
+    myinterface%params_siml%steering%spinupyears      = spinupyears
+    myinterface%params_siml%steering%recycle          = recycle
+    myinterface%params_siml%steering%firstyeartrend   = firstyeartrend
+    myinterface%params_siml%steering%nyeartrend       = nyeartrend
 
-    if (myinterface%params_siml%do_spinup) then
-      myinterface%params_siml%runyears = myinterface%params_siml%nyeartrend + myinterface%params_siml%spinupyears
+    if (myinterface%params_siml%steering%do_spinup) then
+      myinterface%params_siml%steering%runyears = myinterface%params_siml%steering%nyeartrend &
+              + myinterface%params_siml%steering%spinupyears
     else
-      myinterface%params_siml%runyears = myinterface%params_siml%nyeartrend
-      myinterface%params_siml%spinupyears = 0
+      myinterface%params_siml%steering%runyears = myinterface%params_siml%steering%nyeartrend
+      myinterface%params_siml%steering%spinupyears = 0
     endif
 
     ! Simulation parameters
@@ -675,13 +607,7 @@ contains
     !----------------------------------------------------------------
     ! INTERPRET FORCING
     !----------------------------------------------------------------
-    timestep   = real(forcing(2,3)) - real(forcing(1,3))  ! This takes the hour of day (a numeric) from the forcing file
-    timestep_d = real(forcing(2,2)) - real(forcing(1,2))  ! This takes the day of year (a numeric) from the forcing file
-    if (abs(timestep) < eps .and. abs(timestep_d - 1.0) < eps) then
-      ! forcing is daily
-      timestep = 24.0
-    end if
-    myinterface%steps_per_day = int(24.0/timestep)
+    myinterface%steps_per_day = steps_per_day
     myinterface%dt_fast_yr = 1.0/(365.0 * myinterface%steps_per_day)
     myinterface%step_seconds = 24.0*3600.0/myinterface%steps_per_day ! seconds_per_year * dt_fast_yr
     ntstepsyear = myinterface%steps_per_day * 365
@@ -690,11 +616,11 @@ contains
     allocate(myinterface%pco2(ntstepsyear))
     ! allocate(out_biosphere_hourly_tile(ntstepsyear))
 
-    yearloop: do yr=1, myinterface%params_siml%runyears
+    yearloop: do yr=1, myinterface%params_siml%steering%runyears
       !----------------------------------------------------------------
       ! Define simulations "steering" variables (forcingyear, etc.)
       !----------------------------------------------------------------
-      myinterface%steering = getsteering( yr, myinterface%params_siml )
+      myinterface%steering = get_steering( yr, myinterface%params_siml%steering )
 
       !----------------------------------------------------------------
       ! Get external (environmental) forcing (for biomee, co2 is in myinterface%climate)
@@ -705,7 +631,6 @@ contains
                                             ntstepsyear, &
                                             forcing, &
                                             myinterface%steering%climateyear_idx &
-                                            ! myinterface%steering%climateyear &
                                             )
 
       !----------------------------------------------------------------
@@ -713,7 +638,6 @@ contains
       !----------------------------------------------------------------
       call biosphere_annual( &
         out_biosphere_daily_tile, &
-        ! out_biosphere_daily_cohorts, &
         out_biosphere_annual_tile, &
         out_biosphere_annual_cohorts &
         )
@@ -726,7 +650,7 @@ contains
       ! Output out_hourly_tile (calling subroutine)
       !----------------------------------------------------------------
       ! if (.not. myinterface%steering%spinup) then  
-      !   idx_hourly_start = (yr - myinterface%params_siml%spinupyears - 1) * ntstepsyear + 1    ! To exclude the spinup years and include only the transient years
+      !   idx_hourly_start = (yr - myinterface%params_siml%steering%spinupyears - 1) * ntstepsyear + 1    ! To exclude the spinup years and include only the transient years
       !   idx_hourly_end   = idx_hourly_start + ntstepsyear - 1
       !   ! call populate_outarray_hourly_tile( out_biosphere_hourly_tile(:), output_hourly_tile(idx_hourly_start:idx_hourly_end,:)) !xxx commented out for calibration!
       ! end if
@@ -737,7 +661,7 @@ contains
       ! Output only for transient years
       if (.not. myinterface%steering%spinup) then  
 
-        idx_daily_start = (yr - myinterface%params_siml%spinupyears - 1) * ndayyear + 1  
+        idx_daily_start = (yr - myinterface%params_siml%steering%spinupyears - 1) * ndayyear + 1
         idx_daily_end   = idx_daily_start + ndayyear - 1
 
         call populate_outarray_daily_tile( out_biosphere_daily_tile(:), output_daily_tile(idx_daily_start:idx_daily_end,:))
@@ -788,7 +712,7 @@ contains
 
       if (.not. myinterface%steering%spinup) then  
 
-        idx =  yr - myinterface%params_siml%spinupyears
+        idx =  yr - myinterface%params_siml%steering%spinupyears
 
         output_annual_cohorts_year(idx, :)        = dble(out_biosphere_annual_cohorts(:)%year)
         output_annual_cohorts_cID(idx, :)         = dble(out_biosphere_annual_cohorts(:)%cID)
@@ -831,41 +755,8 @@ contains
 
     deallocate(myinterface%climate)
     deallocate(myinterface%pco2)
-    ! deallocate(out_biosphere_hourly_tile)
  
   end subroutine biomee_f
-
-  ! !////////////////////////////////////////////////////////////////
-  ! ! Populates hourly tile-level output array passed back to C and R.
-  ! !----------------------------------------------------------------
-  ! subroutine populate_outarray_hourly_tile( hourly_tile, out_hourly_tile ) !, idx_daily_start, idx_daily_end
-
-  !   use, intrinsic :: iso_fortran_env, dp=>real64, sp=>real32, in=>int32
-  !   use md_interface_biomee, only: outtype_hourly_tile
-  !   use md_params_core
-
-  !   ! arguments
-  !   type(outtype_hourly_tile), dimension(ntstepsyear), intent(in) :: hourly_tile    ! dimension(ntstepsyear)
-  !   real(kind=dp), dimension(ntstepsyear, nvars_hourly_tile), intent(inout) :: out_hourly_tile
-
-  !   out_hourly_tile(:, 1)  = dble(hourly_tile(:)%year)
-  !   out_hourly_tile(:, 2)  = dble(hourly_tile(:)%doy)
-  !   out_hourly_tile(:, 3)  = dble(hourly_tile(:)%hour)
-  !   out_hourly_tile(:, 4)  = dble(hourly_tile(:)%rad)
-  !   out_hourly_tile(:, 5)  = dble(hourly_tile(:)%Tair)
-  !   out_hourly_tile(:, 6)  = dble(hourly_tile(:)%Prcp)
-  !   out_hourly_tile(:, 7)  = dble(hourly_tile(:)%GPP)
-  !   out_hourly_tile(:, 8)  = dble(hourly_tile(:)%Resp)
-  !   out_hourly_tile(:, 9)  = dble(hourly_tile(:)%Transp)
-  !   out_hourly_tile(:, 10) = dble(hourly_tile(:)%Evap)
-  !   out_hourly_tile(:, 11) = dble(hourly_tile(:)%Runoff)
-  !   out_hourly_tile(:, 12) = dble(hourly_tile(:)%Soilwater)
-  !   out_hourly_tile(:, 13) = dble(hourly_tile(:)%wcl)
-  !   out_hourly_tile(:, 14) = dble(hourly_tile(:)%FLDCAP)
-  !   out_hourly_tile(:, 15) = dble(hourly_tile(:)%WILTPT)
-
-  ! end subroutine populate_outarray_hourly_tile
-
 
   !////////////////////////////////////////////////////////////////
   ! Populates daily tile-level output array passed back to C and R.

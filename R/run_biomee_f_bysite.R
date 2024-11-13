@@ -1,15 +1,16 @@
-#' R wrapper for SOFUN biomee
+#' Run BiomeE (R wrapper)
 #' 
-#' Call to the biomee Fortran model
+#' Run BiomeE Fortran model on single site.
 #'
 #' @param sitename Site name.
 #' @param params_siml Simulation parameters.
 #' \describe{
 #'   \item{spinup}{A logical value indicating whether this simulation does spin-up.}
 #'   \item{spinupyears}{Number of spin-up years.}
-#'   \item{recycle}{Length of standard recycling period (days).}
+#'   \item{recycle}{Length of standard recycling period (years).}
 #'   \item{firstyeartrend}{First transient year.}
 #'   \item{nyeartrend}{Number of transient years.}
+#'   \item{steps_per_day}{Time resolution (day^-1).}
 #'   \item{outputhourly}{A logical value indicating whether hourly output is
 #'     produced.}
 #'   \item{outputdaily}{A logical value indicating whether daily output is produced.}
@@ -38,6 +39,15 @@
 #'   \item{elv}{Elevation of the site location, in meters.}
 #' }
 #' @param forcing Forcing data.frame used as input.
+#' \describe{
+#'   \item{ppfd}{Photosynthetic photon flux densisty(mol s-1 m-2)}
+#'   \item{tair}{Air temperature (deg C)}
+#'   \item{vpd}{Vapor pressure defficit (Pa)}
+#'   \item{rain}{Precipitation (kgH2O m-2 s-1 == mm s-1)}
+#'   \item{wind}{Wind velocity (m s-1)}
+#'   \item{pair}{Atmoshperic pressure (pa)}
+#'   \item{co2}{CO2 athmospheric concentration (ppm)}
+#' }
 #' @param params_tile Tile-level model parameters, into a single row data.frame
 #'   with columns:
 #' \describe{
@@ -145,8 +155,7 @@
 #'   \item{N_input}{Annual nitrogen input to soil N pool, in kg N m\eqn{^{-2}} 
 #'     year\eqn{^{-1}}.}
 #' }
-#' @param makecheck A logical specifying whether checks are performed to verify 
-#'   forcings.
+#' @param makecheck Flag specifying whether checks are performed to verify model inputs and parameters.
 #'
 #' @export
 #' @useDynLib rsofun
@@ -391,23 +400,21 @@ run_biomee_f_bysite <- function(
   
   # predefine variables for CRAN check compliance
   type <- NULL
+
+  forcing_features <- c(
+    'ppfd',
+    'temp',
+    'vpd',
+    'rain',
+    'wind',
+    'patm',
+    'co2'
+  )
   
   # select relevant columns of the forcing data
   forcing <- forcing %>%
     select(
-      'year',
-      'doy',
-      'hour',
-      'par',
-      'ppfd',
-      'temp',
-      'temp_soil',
-      'rh',
-      'prec',
-      'wind',
-      'patm',
-      'co2',
-      'swc'
+      any_of(forcing_features)
     )
   
   params_soil <- params_soil %>%
@@ -421,18 +428,22 @@ run_biomee_f_bysite <- function(
   n_daily  <- params_siml$nyeartrend * 365
 
   # Types of photosynthesis model
-    if (params_siml$method_photosynth == "gs_leuning"){
+  if (params_siml$method_photosynth == "gs_leuning"){
     code_method_photosynth <- 1
+    if (is.null(params_siml$steps_per_day))
+      stop(
+        "Parameter 'steps_per_day' is required."
+      )
   } else if (params_siml$method_photosynth == "pmodel"){
     code_method_photosynth <- 2
-    dt_days <- forcing$doy[2] - forcing$doy[1]
-    dt_hours <- forcing$hour[2] - forcing$hour[1]
-    if (dt_days!=1 && dt_hours != 0){
+    if (is.null(params_siml$steps_per_day))
+      params_siml$steps_per_day <- 1
+    else if (params_siml$steps_per_day > 1){
       stop(
         "run_biomee_f_bysite: time step must be daily 
          for P-model photosynthesis setup."
         )
-      } 
+      }
   } else {
     stop(
       paste("run_biomee_f_bysite:
@@ -459,40 +470,24 @@ run_biomee_f_bysite <- function(
 
   # base state, always execute the call
   continue <- TRUE
-  
+
   # validate input
   if (makecheck){
-    
-    # create a loop to loop over a list of variables
-    # to check validity
-    
-    check_vars <- c(
-      "par",
-      "ppfd",
-      "temp",
-      "temp_soil",
-      "rh",
-      "prec",
-      "wind",
-      "patm",
-      "co2",
-      "swc"
-    )
-    
+    # Add input and parameter checks here if applicable.
     data_integrity <- lapply(
-      check_vars,
+      forcing_features,
       function(check_var){
         if (any(is.nanull(forcing[check_var]))){
           warning(
-            sprintf("Error: Missing value in %s for %s",
+            sprintf("Error: Missing forcing %s for site %s",
                     check_var, sitename))
           return(FALSE)
         } else {
           return(TRUE)
         }
       })
-   
-    # only return true if all checked variables are TRUE 
+
+    # only return true if all checked variables are TRUE
     # suppress warning on coercion of list to single logical
     continue <- suppressWarnings(all(as.vector(data_integrity)))
   }
@@ -565,8 +560,9 @@ run_biomee_f_bysite <- function(
       n_annual         = as.integer(runyears), 
       n_annual_cohorts = as.integer(params_siml$nyeartrend), # to get cohort outputs after spinup year
       #n_annual_cohorts = as.integer(runyears), # to get cohort outputs from year 1
-      forcing          = as.matrix(forcing)
-      )
+      forcing          = as.matrix(forcing),
+      steps_per_day    = as.integer(params_siml$steps_per_day)
+    )
     
     # If simulation is very long, output gets massive.
     # E.g., In a 3000 years-simulation 'biomeeout' is 11.5 GB.
@@ -592,19 +588,6 @@ run_biomee_f_bysite <- function(
                 ), 
                 sitename))
     }
-    
-    #---- Single level output, one matrix ----
-    # # hourly
-    # if (size_of_object_gb < 5){
-    #   output_hourly_tile <- as.data.frame(biomeeout[[1]], stringAsFactor = FALSE)
-    #   colnames(output_hourly_tile) <- c("year", "doy", "hour",
-    #                                     "rad", "Tair", "Prcp",
-    #                                     "GPP", "Resp", "Transp",
-    #                                     "Evap", "Runoff", "Soilwater",
-    #                                     "wcl", "FLDCAP", "WILTPT")
-    # } else {
-    #   output_hourly_tile <- NA
-    # }
     
     # daily_tile
     if (size_of_object_gb < 5){
@@ -665,8 +648,8 @@ run_biomee_f_bysite <- function(
 			"Rauto", 
 			"Rh",
 			"rain", 
-			"SoilWater","
-			Transp",
+			"SoilWater",
+            "Transp",
 			"Evap", 
 			"Runoff", 
 			"plantC",
@@ -712,70 +695,6 @@ run_biomee_f_bysite <- function(
 			"m_turnover", 
 			"c_turnover_time"
 		)
-    
-    #---- Multi-level output, multiple matrices to be combined ----
-    
-    # Convert to non dplyr routine, just a lapply looping over
-    # matrices converting to vector, this is a fixed format
-    # with preset conditions so no additional tidyverse logic
-    # is required for the conversion
-    #
-    # Cohort indices can be formatted using a matrix of the same
-    # dimension as the data, enumerated by column and unraveled
-    # as vector()
-
-    #---- daily cohorts ----
-    # if (size_of_object_gb < 5){
-    #   daily_values <- c(
-    #     "year","
-    #     doy","
-    #     hour"
-    #     "cID", 
-    #     "PFT", 
-    #     "layer"
-    #     "density","
-    #     f_layer", 
-    #     "LAI"
-    #     "gpp","
-    #     resp","
-    #     transp"
-    #     "NPPleaf","
-    #     NPProot", 
-    #     "NPPwood", 
-    #     "NSC"
-    #     "seedC", 
-    #     "leafC", 
-    #     "rootC"
-    #     "SW_C", 
-    #     "HW_C", 
-    #     "NSN"
-    #     "seedN", 
-    #     "leafN", 
-    #     "rootN"
-    #     "SW_N", 
-    #     "HW_N"
-    #   )
-    #   output_daily_cohorts <- lapply(1:length(daily_values), function(x){
-    #     loc <- 1 + x
-    #     v <- data.frame(
-    #       as.vector(biomeeout[[loc]]),
-    #       stringsAsFactors = FALSE)
-    #     names(v) <- daily_values[x]
-    #     return(v)
-    #   })
-      
-    #   output_daily_cohorts <- do.call("cbind", output_daily_cohorts)
-      
-    #   cohort <- sort(rep(1:ncol(biomeeout[[3]]),nrow(biomeeout[[3]])))
-    #   output_daily_cohorts <- cbind(cohort, output_daily_cohorts)
-      
-    #   # drop rows (cohorts) with no values
-    #   output_daily_cohorts$year[output_daily_cohorts$year == -9999 |
-    #                               output_daily_cohorts$year == 0] <- NA
-    #   output_daily_cohorts <- output_daily_cohorts[!is.na(output_daily_cohorts$year),]
-    # } else {
-    #   output_daily_cohorts <- NA
-    # }
     
     #--- annual cohorts ----
     annual_values <- c(

@@ -10,8 +10,8 @@ module md_params_core
   integer, parameter :: nhoursyear = 8760        ! number of days in a year
   integer, parameter :: nmonth = 12              ! number of months in a year
   real,    parameter :: secs_per_day = 86400.0   ! number of seconds in a day
-  integer, parameter :: hours_per_year = 365 * 24  
-  real,    parameter :: seconds_per_year = 365. * 24. * 3600.
+  integer, parameter :: hours_per_year = ndayyear * 24
+  real,    parameter :: seconds_per_year = ndayyear * 24. * 3600.
 
   ! From LM3-PPA
   integer, parameter :: nlayers_soil = 3         ! number of soil layers
@@ -43,8 +43,6 @@ module md_params_core
   integer, parameter, dimension(npft) :: pft_end   = 1
 
   integer, parameter, dimension(nmonth)   :: ndaymonth = (/31,28,31,30,31,30,31,31,30,31,30,31/) ! number of days per month
-  integer, parameter, dimension(nmonth+1) :: middaymonth = (/16,44,75,105,136,166,197,228,258,289,319,350,381/) ! day of year of middle-month-day
-  integer, parameter, dimension(nmonth)   :: cumdaymonth = (/31,59,90,120,151,181,212,243,273,304,334,365/)
 
   real, parameter :: pi = 3.14159265359          ! pi - what else?
   real, parameter :: c_molmass = 12.0107         ! g C / mol C
@@ -69,5 +67,162 @@ module md_params_core
 
   ! needed here
   real, parameter :: dummy = -9999.0             ! arbitrary dummy value
+
+  type outtype_steering
+    integer :: year
+    integer :: climateyear     ! year AD for which climate is read in (recycling during spinup or when climate is held const.)
+    integer :: climateyear_idx ! year index for which climate is read in.
+    integer :: forcingyear     ! year AD for which forcings are read in (=firstyeartrend during spinup)
+    integer :: forcingyear_idx ! year index for which forcings are read in (=1 during spinup)
+    integer :: outyear         ! year AD written to output
+    logical :: spinup          ! is true during spinup
+    logical :: init            ! is true in first simulation year
+    logical :: finalize        ! is true in the last simulation year
+    logical :: do_soilequil    ! true in year of analytical soil equilibration (during spinup)
+    logical :: average_soil    ! true in years before analytical soil equilibration, when average in and out are taken
+    logical :: project_nmin    ! true in all years before analytical soil equilibration, when projected soil N mineralisation is used
+    logical :: dofree_alloc    ! true if allocation is not fixed by 'frac_leaf'
+    logical :: add_ninorg      ! true in the first few years to get it started
+  end type outtype_steering
+
+  type steering_parameters
+
+    integer :: spinupyears     ! number of spinup years
+    integer :: nyeartrend      ! number of transient years
+    integer :: firstyeartrend  ! year AD of first transient year
+    integer :: recycle         ! length of standard recycling period
+    logical :: do_spinup       ! whether this simulation does spinup
+    integer :: runyears        ! number of years of entire simulation (spinup+transient)
+
+  end type steering_parameters
+
+contains
+
+  function get_steering( year, steering ) result( out_steering )
+    !////////////////////////////////////////////////////////////////
+    ! Gets variables used for steering simulation for each
+    ! simulation year (setting booleans for opening files, doing
+    ! spinup etc.)
+    !----------------------------------------------------------------
+
+    ! arguments
+    integer, intent(in) :: year ! simulation year, starts counting from 1, starting at the beginning of spinup
+    type( steering_parameters ), intent(in) :: steering
+
+    ! function return variable
+    type( outtype_steering ) :: out_steering
+
+    ! local variables
+    integer :: cycleyear
+
+    integer, parameter :: spinupyr_soilequil_1 = 600   ! year of analytical soil equilibration, based on mean litter -> soil input flux
+    integer, parameter :: spinupyr_soilequil_2 = 1200  ! year of analytical soil equilibration, based on mean litter -> soil input flux
+    integer, parameter :: spinup_add_ninorg    = 100   ! year until which inorganic N is added to get it started
+
+    out_steering%year = year
+
+    if (steering%do_spinup) then
+
+      if (year <= spinup_add_ninorg) then
+        out_steering%add_ninorg = .true.
+      else
+        out_steering%add_ninorg = .false.
+      end if
+
+      if (year<=steering%spinupyears) then
+        ! during spinup
+        out_steering%spinup = .true.
+        cycleyear = get_cycleyear( year, steering%spinupyears, steering%recycle )
+        out_steering%climateyear = cycleyear + steering%firstyeartrend - 1
+        out_steering%climateyear_idx = cycleyear
+        out_steering%forcingyear = steering%firstyeartrend
+        out_steering%forcingyear_idx = 1
+      else
+        ! during transient simulation
+        out_steering%spinup          = .false.
+        out_steering%climateyear_idx = year - steering%spinupyears
+        out_steering%climateyear     = out_steering%climateyear_idx + steering%firstyeartrend - 1
+        out_steering%forcingyear = out_steering%climateyear
+        out_steering%forcingyear_idx = out_steering%climateyear_idx
+      endif
+      out_steering%outyear = year + steering%firstyeartrend - steering%spinupyears - 1
+
+      if ( year > 3 ) then
+        out_steering%dofree_alloc = .true.
+      else
+        out_steering%dofree_alloc = .false.
+      end if
+
+      if ( (year==spinupyr_soilequil_1 .or. year==spinupyr_soilequil_2 ) .and. year<=steering%spinupyears) then
+        out_steering%do_soilequil = .true.
+      else
+        out_steering%do_soilequil = .false.
+      end if
+
+      if ( year<=steering%spinupyears .and. ( year > ( spinupyr_soilequil_1 - steering%recycle ) .and. &
+              year <= spinupyr_soilequil_1 .or. year > ( spinupyr_soilequil_2 - steering%recycle ) .and. &
+              year <= spinupyr_soilequil_2 ) ) then
+        out_steering%average_soil = .true.
+      else
+        out_steering%average_soil = .false.
+      end if
+
+      if ( year<=steering%spinupyears .and. year <= spinupyr_soilequil_1 ) then
+        out_steering%project_nmin = .true.
+      else
+        out_steering%project_nmin = .false.
+      end if
+
+    else
+
+      out_steering%dofree_alloc = .false.
+      out_steering%do_soilequil = .false.
+      out_steering%average_soil = .false.
+      out_steering%project_nmin = .false.
+      out_steering%climateyear = year + steering%firstyeartrend - 1
+      out_steering%climateyear_idx = year
+      out_steering%outyear = out_steering%climateyear
+      out_steering%forcingyear = out_steering%climateyear
+      out_steering%forcingyear_idx = out_steering%climateyear_idx
+
+    endif
+
+    if (year==1) then
+      out_steering%init = .true.
+    else
+      out_steering%init = .false.
+    endif
+
+    if (year==steering%runyears) then
+      out_steering%finalize = .true.
+    else
+      out_steering%finalize = .false.
+    end if
+
+  end function get_steering
+
+  function get_cycleyear( year, spinupyears, recycle ) result( cycleyear )
+  !////////////////////////////////////////////////////////////////
+  ! Returns cycle year for climate recycling, given number of spinup
+  ! years and recycle period length, so that in the last year of
+  ! of the spinup, 'cycleyear' is equal to 'recycle'.
+  !----------------------------------------------------------------
+    ! arguments
+    integer, intent(in) :: year
+    integer, intent(in) :: spinupyears
+    integer, intent(in) :: recycle
+
+    ! local variables
+    integer :: remainder
+    integer :: first_cycleyear
+
+    ! function return variable
+    integer :: cycleyear
+
+    remainder = mod( spinupyears, recycle )
+    first_cycleyear = recycle - remainder - 1
+    cycleyear = modulo( first_cycleyear + year, recycle ) + 1
+
+  end function get_cycleyear
 
 end module md_params_core

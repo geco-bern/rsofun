@@ -1,9 +1,9 @@
 ---
-title: "P-model data format"
+title: "Data format"
 author: "Koen Hufkens, Josefa Arán"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{P-model data format}
+  %\VignetteIndexEntry{Data format}
   %\VignetteEngine{knitr::rmarkdown}
   %\usepackage[utf8]{inputenc}
 ---
@@ -23,6 +23,8 @@ library(ggplot2)
 
 ```
 
+## P-model
+
 Overall, the package uses the {tidyverse} data paradigm (Wickham, 2017), using nested data frames (tibbles) to store model input and output, and validation data. Where possible the package uses a consistent ontogeny in terms of variables and data structures used.  Each site is defined by a site name (sitename), location specific site information (site_info), soil characteristics (params_soil), simulation parameter settings (params_siml) and environmental forcing data (forcing). Sites are grouped by row in a nested tibble.
 
 ```{r}
@@ -38,3 +40,14 @@ rsofun::p_model_drivers$forcing
 ```
 
 To create your own driver data it should be arranged into a tibble with the same structure as the example drivers objects. Within {rsofun} optional checks are executed to ensure that the required variables are present in the used dataset using the ‘check’ argument in the runread_pmodel_f() function calls. Throughout the package verbose output is provided (if desired) as to evaluate errors or progress when running the model on a particular dataset.
+
+## BiomeE
+
+BiomeE follows the same data structure as P-model overall, but with some specific parameters and forcing data.
+Details about thees can be obtained in the documentation: `?run_biomee_f_bysite`.
+
+Here is an example of forcing data for BiomeE:
+```{r}
+# detailed look at the forcing data
+rsofun::biomee_p_model_drivers$forcing
+```

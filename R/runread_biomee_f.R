@@ -1,19 +1,19 @@
 #' Run BiomeE
 #'
-#' Runs the BiomeE model and loads output in once.
+#' Runs BiomeE model for multiple sites.
 #'
 #' @param drivers A nested data frame with one row for each site and columns
-#'  named according to the arguments of function `runread_biomee_f_bysite()`
-#' @param makecheck A logical specifying whether checks are performed to verify
-#'  forcings.
-#' @param parallel A logical specifying whether simulations are to be 
+#'  named according to the arguments of function `runread_biomee_f_bysite()`.
+#'  See `?run_biomee_f_bysite` for the list of parameters and forcing data required.
+#' @param makecheck Flag specifying whether checks are performed to verify forcings.
+#' @param parallel Flag specifying whether simulations are to be
 #'  parallelised (sending data from a certain number of sites to each core). 
 #'  Defaults to \code{FALSE}.
 #' @param ncores An integer specifying the number of cores used for parallel 
 #' computing. Defaults to 2.
 #'
 #' @return A tibble with one row for each site and model outputs stored 
-#' in the nested column \code{data}. See `run_biomee_f_bysite()` for a
+#' in the nested column \code{data}. See `?run_biomee_f_bysite` for a
 #' description of the BiomeE output variables.
 #' @export
 #' 
