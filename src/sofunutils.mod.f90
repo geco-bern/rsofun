@@ -80,29 +80,29 @@ contains
 
   end function running
 
-  subroutine downscale(out, in, rate)
+  subroutine aggregate(out, in, ratio)
     !////////////////////////////////////////////////////////////////
-    ! Downscale array 'in' with rate 'rate' using average scheme.
+    ! Aggregate array 'in' with ratio 'ratio' using average scheme.
     !----------------------------------------------------------------
     ! arguments
-    real, dimension(:), intent(inout) :: out      ! Output array (should have size of 'in' / rate)
+    real, dimension(:), intent(inout) :: out      ! Output array (should have size of 'in' / ratio)
     real, dimension(:), intent(in) :: in          ! Input array
-    integer, intent(in) :: rate                   ! Sampling rate
+    integer, intent(in) :: ratio                   ! Sampling ratio
 
     ! local variables
     integer :: idx, idx_in_start, idx_in_end
 
-    if (rate == 1) then
+    if (ratio == 1) then
       out(:) = in(:)
     else
-      do idx = 1, SIZE(in)/rate
-        idx_in_start = (idx - 1) * rate + 1
-        idx_in_end = idx * rate
-        out(idx) = SUM(in(idx_in_start : idx_in_end))/rate
+      do idx = 1, SIZE(in)/ratio
+        idx_in_start = (idx - 1) * ratio + 1
+        idx_in_end = idx * ratio
+        out(idx) = SUM(in(idx_in_start : idx_in_end))/ratio
       end do
     end if
 
-  end subroutine downscale
+  end subroutine aggregate
 
   function area( lat, dx, dy ) result( out_area )
     !////////////////////////////////////////////////////////////////

@@ -168,11 +168,11 @@ contains
     ! 9: WET: type12 = "permanent wetlands" ;
     ! 10:CRO: type13 + type15 = "croplands" + "cropland (natural vegetation mosaic)";
     !----------------------------------------------------------------
-    use md_params_siml_pmodel, only: paramstype_siml
+    use md_params_siml_pmodel, only: paramstype_siml_pmodel
     use md_params_core, only: npft
 
     ! arguments
-    type( paramstype_siml ), intent(in) :: params_siml
+    type( paramstype_siml_pmodel ), intent(in) :: params_siml
 
     ! function return variable
     real, dimension(npft) :: fpc_grid_field

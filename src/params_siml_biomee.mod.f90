@@ -7,27 +7,23 @@ module md_params_siml_biomee
   implicit none
 
   private
-  public paramstype_siml
+  public paramstype_siml_biomee
 
   !----------------------------------------------------------------
   ! Derived type for simulation parameters
   !----------------------------------------------------------------
-  type paramstype_siml
+  type paramstype_siml_biomee
 
     type(steering_parameters) :: steering
 
     ! integer :: model_run_years
-    logical :: outputhourly
-    logical :: outputdaily
     logical :: do_U_shaped_mortality
     logical :: update_annualLAImax
     logical :: do_closedN_run
-    logical :: do_reset_veg
-    integer :: dist_frequency
     character(len=30) :: method_photosynth
     character(len=30) :: method_mortality
 
-  end type paramstype_siml
+  end type paramstype_siml_biomee
 
 end module md_params_siml_biomee
 

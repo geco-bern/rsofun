@@ -11,19 +11,12 @@
 #'   \item{firstyeartrend}{First transient year.}
 #'   \item{nyeartrend}{Number of transient years.}
 #'   \item{steps_per_day}{Time resolution (day^-1).}
-#'   \item{outputhourly}{A logical value indicating whether hourly output is
-#'     produced.}
-#'   \item{outputdaily}{A logical value indicating whether daily output is produced.}
 #'   \item{do_U_shaped_mortality}{A logical value indicating whether U-shaped 
 #'     mortality is used.}
 #'   \item{update_annualLAImax}{A logical value indicating whether updating 
 #'     LAImax according to mineral N in soil.}
 #'   \item{do_closedN_run}{A logical value indicating whether doing N closed 
 #'     runs to recover N balance.}
-#'   \item{do_reset_veg}{A logical value indicating whether reseting vegetation 
-#'     for disturbance runs.}
-#'   \item{dist_frequency}{Value indicating the frequency of the disturbance event (in years) 
-#'     (e.g. 100 indicates a disturbance event occurs every 100 years, i.e., at a rate of 0.01)}
 #'   \item{code_method_photosynth}{String specifying the method of photosynthesis 
 #'     used in the model, either "pmodel" or "gs_leuning".}
 #'   \item{code_method_mortality}{String indicating the type of mortality in the 
@@ -264,7 +257,7 @@
 #'       ha\eqn{^{-1}}).}
 #'     \item{DBH12}{Diameter at tile level considering trees with DBH > 12 cm
 #'       (cm).}
-#'     \item{QMD}{Quadratic mean diameter at tile level considering trees with 
+#'     \item{QMD12}{Quadratic mean diameter at tile level considering trees with
 #'       DBH > 12 cm (cm).}
 #'     \item{NPP}{Net primary productivity (kg C m\eqn{^{-2}} yr\eqn{^{-1}}).}
 #'     \item{GPP}{Gross primary productivity (kg C m\eqn{^{-2}} yr\eqn{^{-1}}).}
@@ -505,13 +498,9 @@ run_biomee_f_bysite <- function(
       recycle               = as.integer(params_siml$recycle),
       firstyeartrend        = as.integer(params_siml$firstyeartrend),
       nyeartrend            = as.integer(params_siml$nyeartrend),
-      outputhourly          = as.logical(params_siml$outputhourly),
-      outputdaily           = as.logical(params_siml$outputdaily),
       do_U_shaped_mortality = as.logical(params_siml$do_U_shaped_mortality),
       update_annualLAImax   = as.logical(params_siml$update_annualLAImax),
       do_closedN_run        = as.logical(params_siml$do_closedN_run),
-      do_reset_veg          = as.logical(params_siml$do_reset_veg),
-      dist_frequency        = as.integer(params_siml$dist_frequency),
       code_method_photosynth= as.integer(code_method_photosynth),
       code_method_mortality = as.integer(code_method_mortality),
       
@@ -642,7 +631,7 @@ run_biomee_f_bysite <- function(
 			"DBH", 
 			"Density12",
 			"DBH12", 
-			"QMD", 
+			"QMD12",
 			"NPP",
 			"GPP", 
 			"Rauto", 

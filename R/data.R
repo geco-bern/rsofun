@@ -247,34 +247,24 @@
 #' Small tests dataset to validate 
 #' calibration routines
 #'
-#' @format A tibble of driver data:
+#' @format A tibble of validation data:
 #' \describe{
 #'   \item{sitename}{site name}
 #'   \item{data}{validation data}
 #' }
+#'
+#' @source Lukas Hörtnagl,  Werner Eugster,  Nina Buchmann,  Eugenie Paul-Limoges,  Sophia Etzold,  Matthias Haeni,  Peter Pluess,  Thomas Baur  (2004-2014)
+#' FLUXNET2015 CH-Lae Laegern,
+#' Dataset. https://doi.org/10.18140/FLX/1440134
 "biomee_validation"
 
-#' rsofun BiomeE validation data
+#' rsofun BiomeE (p-model) output data
 #'
-#' Small tests dataset to validate 
-#' calibration routines and model output
-#'
-#' @format A tibble of driver data:
-#' \describe{
-#'   \item{sitename}{site name}
-#'   \item{data}{validation data}
-#' }
+#' Example output dataset using BiomeE (p-model)
 "biomee_p_model_output"
 
-#' rsofun BiomeE validation data
+#' rsofun BiomeE (GS leuning) output data
 #'
-#' Small tests dataset to validate 
-#' calibration routines and model output
-#'
-#' @format A tibble of driver data:
-#' \describe{
-#'   \item{sitename}{site name}
-#'   \item{data}{validation data}
-#' }
+#' Example output dataset using BiomeE (GS leuning)
 "biomee_gs_leuning_output"
 

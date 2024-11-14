@@ -1322,8 +1322,7 @@ contains
     
     enddo
 
-    !--------------------------------- 
-    ! THIS CREATES WEIRD BUG: SOMETIMES ZERO SOLUTION
+    !---------------------------------
     ! replace the array of cohorts
     deallocate(vegn%cohorts)
     vegn%cohorts => newCC

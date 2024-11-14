@@ -7,18 +7,17 @@ module md_params_siml_pmodel
   implicit none
 
   private
-  public paramstype_siml
+  public paramstype_siml_pmodel
 
   !----------------------------------------------------------------
   ! Derived type for simulation parameters
   !----------------------------------------------------------------
-  type paramstype_siml
+  type paramstype_siml_pmodel
 
     type(steering_parameters) :: steering
     integer :: outdt           ! output periodicity
     integer :: outnt           ! number of output time steps per year
     integer :: secs_per_tstep  ! number of seconds per time step (now daily => 60 * 60 * 24)
-    logical :: is_calib             ! whether this simulation is a calibration simulation (overriding parameters and no output)
 
     character(len=256) :: runname
     character(len=256) :: sitename
@@ -38,7 +37,7 @@ module md_params_siml_pmodel
 
     ! integer :: npft        ! number of activated PFTs
 
-  end type paramstype_siml
+  end type paramstype_siml_pmodel
 
 end module md_params_siml_pmodel
 

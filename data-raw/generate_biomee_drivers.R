@@ -44,13 +44,9 @@ params_siml_gs_leuning <- tibble(
   firstyeartrend = 2009,
   nyeartrend = 1,
   steps_per_day = 24,
-  outputhourly = TRUE,
-  outputdaily = TRUE,
   do_U_shaped_mortality = TRUE,
   update_annualLAImax = TRUE,
   do_closedN_run = TRUE,
-  do_reset_veg = FALSE, # TRUE
-  dist_frequency = 0, # 100, 75, 50, 25, 15, 10
   method_photosynth = "gs_leuning",
   method_mortality = "dbh"
 )
@@ -178,16 +174,19 @@ init_soil <- tibble( #list
   N_input             = 0.0008
 )
 
-rh_to_vpd <- function(temp, rh) {
+rh_to_vpd <- function(temp, # Air temperature (deg C)
+                      rh    # Relative humidity (< 1)
+) {
   esat <- 611.0 * exp( (17.27 * temp)/(temp + 237.3) )
 
-  return(esat * (1.0 - rh))
+  return(esat * (1.0 - rh)) # VPD (Pa)
 }
 
-rad_to_ppfd <- function(rad) {
+rad_to_ppfd <- function(rad   # Downwelling radiation (W m-2)
+) {
   kcFCE <- 2.04 # from flux to energy conversion, umol/J (Meek et al., 1984)
 
-  return(rad * kcFCE * 1.0e-6)
+  return(rad * kcFCE * 1.0e-6)  # PPFD (mol m-2 s-1)
 }
 
 build_forcing <- function(forcing_data, hourly) {

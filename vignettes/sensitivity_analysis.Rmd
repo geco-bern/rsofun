@@ -3,7 +3,7 @@ title: "Sensitivity analysis and calibration interpretation"
 author: "Josefa Arán"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Sensitivity analysis}
+  %\VignetteIndexEntry{Sensitivity analysis and calibration interpretation}
   %\VignetteEngine{knitr::rmarkdown}
   %\usepackage[utf8]{inputenc}
 ---

@@ -279,7 +279,7 @@ module datatypes
     real    :: nindivs12
     real    :: DBH12
     real    :: DBH12pow2
-    real    :: QMD
+    real    :: QMD12
     real    :: MaxAge
     real    :: MaxVolume
     real    :: MaxDBH
@@ -889,9 +889,9 @@ contains
     if (vegn%nindivs>0.0)   vegn%DBH   = vegn%DBH / vegn%nindivs  
     if (vegn%nindivs12>0.0) vegn%DBH12 = vegn%DBH12 / vegn%nindivs12  ! vegn%nindivs12 could be zero if all dbh<0.12
     if (vegn%nindivs12>0.0) then
-      vegn%QMD   = sqrt(vegn%DBH12pow2 / vegn%nindivs12)
+      vegn%QMD12   = sqrt(vegn%DBH12pow2 / vegn%nindivs12)
     else
-      vegn%QMD = 0.0
+      vegn%QMD12 = 0.0
     end if
 
   end subroutine summarize_tile
@@ -1199,7 +1199,7 @@ contains
     out_annual_tile%DBH             = vegn%DBH * 100         !xxx New tile out  * 100 to convert in cm
     out_annual_tile%density12       = vegn%nindivs12 * 10000 !xxx New tile out
     out_annual_tile%DBH12           = vegn%DBH12 * 100       !xxx New tile out  * 100 to convert in cm
-    out_annual_tile%QMD             = vegn%QMD * 100         !xxx New tile out  * 100 to convert in cm
+    out_annual_tile%QMD12           = vegn%QMD12 * 100       !xxx New tile out  * 100 to convert in cm
     out_annual_tile%NPP             = vegn%annualNPP
     out_annual_tile%GPP             = vegn%annualGPP
     out_annual_tile%Rauto           = vegn%annualResp

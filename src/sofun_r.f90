@@ -109,9 +109,6 @@ contains
     myinterface%params_siml%lgr4               = lgr4
     myinterface%params_siml%secs_per_tstep     = secs_per_tstep
 
-    ! set parameter to define that this is not a calibration run (otherwise sofun.f90 would not have been compiled, but sofun_simsuite.f90)
-    myinterface%params_siml%is_calib = .true.  ! treat paramters passed through R/C-interface the same way as calibratable parameters
-
     !----------------------------------------------------------------
     ! GET GRID INFORMATION
     !----------------------------------------------------------------
@@ -223,14 +220,10 @@ contains
     spinupyears,                  &        
     recycle,                      &    
     firstyeartrend,               &           
-    nyeartrend,                   &       
-    outputhourly,                 &          
-    outputdaily,                  &         
+    nyeartrend,                   &
     do_U_shaped_mortality,        &                   
     update_annualLAImax,          &                 
-    do_closedN_run,               &  
-    do_reset_veg,                 &   
-    dist_frequency,               &   
+    do_closedN_run,               &
     code_method_photosynth,       &
     code_method_mortality,        &             
     longitude,                    &      
@@ -333,13 +326,9 @@ contains
     integer(kind=c_int),  intent(in) :: firstyeartrend
     integer(kind=c_int),  intent(in) :: nyeartrend
 
-    logical(kind=c_bool), intent(in) :: outputhourly
-    logical(kind=c_bool), intent(in) :: outputdaily
     logical(kind=c_bool), intent(in) :: do_U_shaped_mortality
     logical(kind=c_bool), intent(in) :: update_annualLAImax
     logical(kind=c_bool), intent(in) :: do_closedN_run
-    logical(kind=c_bool), intent(in) :: do_reset_veg
-    integer(kind=c_int),  intent(in) :: dist_frequency
     integer(kind=c_int),  intent(in) :: code_method_photosynth
     integer(kind=c_int),  intent(in) :: code_method_mortality
 
@@ -460,13 +449,9 @@ contains
     endif
 
     ! Simulation parameters
-    myinterface%params_siml%outputhourly          = outputhourly
-    myinterface%params_siml%outputdaily           = outputdaily
     myinterface%params_siml%do_U_shaped_mortality = do_U_shaped_mortality
     myinterface%params_siml%update_annualLAImax   = update_annualLAImax      
-    myinterface%params_siml%do_closedN_run        = do_closedN_run 
-    myinterface%params_siml%do_reset_veg          = do_reset_veg  
-    myinterface%params_siml%dist_frequency        = dist_frequency           
+    myinterface%params_siml%do_closedN_run        = do_closedN_run
     
     ! this needs to be consistent with translation to code in run_biomee_f_bysite.R
     if (code_method_photosynth == 1) then
@@ -830,7 +815,7 @@ contains
     out_annual_tile(5)  = dble(annual_tile%DBH)
     out_annual_tile(6)  = dble(annual_tile%Density12)
     out_annual_tile(7)  = dble(annual_tile%DBH12)
-    out_annual_tile(8)  = dble(annual_tile%QMD)
+    out_annual_tile(8)  = dble(annual_tile%QMD12)
     out_annual_tile(9)  = dble(annual_tile%NPP)
     out_annual_tile(10) = dble(annual_tile%GPP)
     out_annual_tile(11) = dble(annual_tile%Rauto)

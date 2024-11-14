@@ -55,23 +55,20 @@ head(biomee_gs_leuning_drivers$forcing)
 set.seed(2023)
 
 # run the model
-biomee_gs_leuning_output <- runread_biomee_f(
+out <- runread_biomee_f(
      biomee_gs_leuning_drivers,
      makecheck = TRUE,
      parallel = FALSE
      )
 
 # split out the annual data
-biomee_gs_leuning_output <- biomee_gs_leuning_output$data[[1]]$output_annual_tile
-```
-
-```{r echo = FALSE, eval = FALSE}
-# Save output
-save(biomee_gs_leuning_output, file = "files/biomee_gs_leuning_output.rda")
+biomee_gs_leuning_output_annual_tile <- out$data[[1]]$output_annual_tile
+biomee_gs_leuning_output_annual_cohorts <- out$data[[1]]$output_annual_cohorts
 ```
 
 ```{r echo = FALSE}
-load("files/biomee_gs_leuning_output.rda")
+biomee_gs_leuning_output_annual_tile <- biomee_gs_leuning_output$data[[1]]$output_annual_tile
+biomee_gs_leuning_output_annual_cohorts <- biomee_gs_leuning_output$data[[1]]$output_annual_cohorts
 ```
 
 ### Plotting output
@@ -81,20 +78,27 @@ We can now visualize the model output.
 ```{r fig.width=7}
 # we only have one site so we'll unnest
 # the main model output
-biomee_gs_leuning_output |>
+biomee_gs_leuning_output_annual_tile |>
   ggplot() +
   geom_line(aes(x = year, y = GPP)) +
   theme_classic()+labs(x = "Year", y = "GPP")
 
-biomee_gs_leuning_output |>
+biomee_gs_leuning_output_annual_tile |>
   ggplot() +
   geom_line(aes(x = year, y = plantC)) +
   theme_classic()+labs(x = "Year", y = "plantC")
+
+biomee_gs_leuning_output_annual_cohorts %>% group_by(cohort,year) %>%
+  summarise(npp=sum(NPP*density/10000)) %>% mutate(cohort=as.factor(cohort)) %>%
+  ggplot(aes(x=cohort,y=npp,fill=year)) +
+  geom_bar(stat="identity") +
+  theme_classic()+labs(x = "Cohort", y = "NPP")
+
 ```
 
 ## Running the BiomeEP model
 
-Running the fast P-model implementation with P-model photosynthesis.
+Running BiomeE with P-model photosynthesis.
 
 ```{r}
 # print parameter settings
@@ -106,23 +110,20 @@ head(biomee_p_model_drivers$forcing)
 
 ```{r eval = FALSE}
 # run the model
-biomee_p_model_output <- runread_biomee_f(
+out <- runread_biomee_f(
      biomee_p_model_drivers,
      makecheck = TRUE,
      parallel = FALSE
      )
 
 # split out the annual data for visuals
-biomee_p_model_output <- biomee_p_model_output$data[[1]]$output_annual_tile
-```
-
-```{r echo = FALSE, eval = FALSE}
-# Save output
-save(biomee_p_model_output, file = "files/biomee_p_model_output.rda")
+biomee_p_model_output_annual_tile <- out$data[[1]]$output_annual_tile
+biomee_p_model_output_annual_cohorts <- out$data[[1]]$output_annual_cohorts
 ```
 
 ```{r echo = FALSE}
-load("files/biomee_p_model_output.rda")
+biomee_p_model_output_annual_tile <- biomee_p_model_output$data[[1]]$output_annual_tile
+biomee_p_model_output_annual_cohorts <- biomee_p_model_output$data[[1]]$output_annual_cohorts
 ```
 
 ### Plotting output
@@ -132,17 +133,24 @@ We can now visualize the model output.
 ```{r fig.width=7}
 # we only have one site so we'll unnest
 # the main model output
-biomee_p_model_output %>% 
+biomee_p_model_output_annual_tile %>%
   ggplot() +
   geom_line(aes(x = year, y = GPP)) +
-  theme_classic() + 
+  theme_classic() +
   labs(x = "Year", y = "GPP")
 
-biomee_p_model_output %>% 
+biomee_p_model_output_annual_tile %>%
   ggplot() +
   geom_line(aes(x = year, y = plantC)) +
-  theme_classic() + 
+  theme_classic() +
   labs(x = "Year", y = "plantC")
+
+biomee_p_model_output_annual_cohorts %>% group_by(cohort,year) %>%
+  summarise(npp=sum(NPP*density/10000)) %>% mutate(cohort=as.factor(cohort)) %>%
+  ggplot(aes(x=cohort,y=npp,fill=year)) +
+  geom_bar(stat="identity") +
+  theme_classic()+labs(x = "Cohort", y = "NPP")
+
 ```
 
 ## Calibrating model parameters
@@ -215,7 +223,7 @@ Finally, we can visually compare the two model runs. We plot the original model 
 ```{r fig.width=7}
 # unnest model output for our single site
 ggplot() +
-  geom_line(data = biomee_p_model_output,
+  geom_line(data = biomee_p_model_output$data[[1]]$output_annual_tile,
             aes(x = year, y = GPP)) +
   geom_line(data = biomee_p_model_output_calib,
             aes(x = year, y = GPP),
@@ -224,7 +232,7 @@ ggplot() +
   labs(x = "Year", y = "GPP")
 
 ggplot() +
-  geom_line(data = biomee_p_model_output,
+  geom_line(data = biomee_p_model_output$data[[1]]$output_annual_tile,
             aes(x = year, y = plantC)) +
   geom_line(data = biomee_p_model_output_calib,
             aes(x = year, y = plantC),
