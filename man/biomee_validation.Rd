@@ -5,11 +5,16 @@
 \alias{biomee_validation}
 \title{rsofun BiomeE targets validation data}
 \format{
-A tibble of driver data:
+A tibble of validation data:
 \describe{
   \item{sitename}{site name}
-  \item{data}{validation dta}
+  \item{data}{validation data}
 }
+}
+\source{
+Lukas Hörtnagl,  Werner Eugster,  Nina Buchmann,  Eugenie Paul-Limoges,  Sophia Etzold,  Matthias Haeni,  Peter Pluess,  Thomas Baur  (2004-2014)
+FLUXNET2015 CH-Lae Laegern,
+Dataset. https://doi.org/10.18140/FLX/1440134
 }
 \usage{
 biomee_validation

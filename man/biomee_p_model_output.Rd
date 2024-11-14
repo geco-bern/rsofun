@@ -3,19 +3,14 @@
 \docType{data}
 \name{biomee_p_model_output}
 \alias{biomee_p_model_output}
-\title{rsofun BiomeE GPP validation data}
+\title{rsofun BiomeE (p-model) output data}
 \format{
-A tibble of driver data:
-\describe{
-  \item{sitename}{site name}
-  \item{data}{validation dta}
-}
+An object of class \code{tbl_df} (inherits from \code{tbl}, \code{data.frame}) with 1 rows and 2 columns.
 }
 \usage{
 biomee_p_model_output
 }
 \description{
-Small tests dataset to validate 
-calibration routines
+Example output dataset using BiomeE (p-model)
 }
 \keyword{datasets}
