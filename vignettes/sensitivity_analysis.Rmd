@@ -456,6 +456,8 @@ save(pmodel_runs, file = "files/pmodel_runs.rda")
 
 ```{r echo = FALSE, eval = TRUE}
 load("files/pmodel_runs.rda")
+
+pmodel_runs <- pmodel_runs %>% dplyr::rename(gpp_q50 = gpp) # Temporary fix until rda is updated
 ```
 
 Below we plot the first year of observed GPP (in black) against the predicted 
