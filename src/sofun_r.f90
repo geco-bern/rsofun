@@ -593,9 +593,9 @@ contains
     ! INTERPRET FORCING
     !----------------------------------------------------------------
     myinterface%steps_per_day = steps_per_day
-    myinterface%dt_fast_yr = 1.0/(365.0 * myinterface%steps_per_day)
-    myinterface%step_seconds = 24.0*3600.0/myinterface%steps_per_day ! seconds_per_year * dt_fast_yr
-    ntstepsyear = myinterface%steps_per_day * 365
+    ntstepsyear = myinterface%steps_per_day * ndayyear
+    myinterface%dt_fast_yr = 1.0 / ntstepsyear
+    myinterface%step_seconds = secs_per_day / myinterface%steps_per_day ! seconds_per_year * dt_fast_yr
 
     allocate(myinterface%climate(ntstepsyear))
     allocate(myinterface%pco2(ntstepsyear))
