@@ -99,12 +99,12 @@
 #' Sci Data 7, 225 (2020). https://doi.org/10.1038/s41597-020-0534-3
 "p_model_validation"
 
-#' rsofun p-model driver data (for leaf traits)
+#' rsofun P-model driver data (for leaf traits)
 #'
 #' Small tests dataset to validate if compiled code
 #' and optimization routines can run for leaf traits data
 #'
-#' @format A tibble of model driver data:
+#' @format A tibble of driver data:
 #' \describe{
 #'   \item{sitename}{A character string containing the site name.}
 #'   \item{forcing}{A tibble of a time series of forcing climate data, including
@@ -130,7 +130,7 @@
 #'       net radiation are not prescribed.}
 #'       }
 #'   }
-#'   \item{params_siml}{A tibble containing simulation parameters.
+#'   \item{params_siml}{A tibble of simulation parameters.
 #'     \describe{
 #'       \item{spinup}{A logical value indicating whether this simulation does spin-up.}
 #'       \item{spinupyears}{Number of spin-up years.}
