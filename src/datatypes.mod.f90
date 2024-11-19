@@ -151,12 +151,12 @@ module datatypes
   type :: cohort_type
 
     !===== Biological prognostic variables
-    integer :: ccID       = 0.0          ! cohort ID
-    integer :: species    = 0.0          ! vegetation species
+    integer :: ccID       = 0            ! cohort ID
+    integer :: species    = 0            ! vegetation species
     real    :: gdd        = 0.0          ! for phenology
-    integer :: status     = 0.0          ! growth status of plant: 1 for ON, 0 for OFF
-    integer :: layer      = 1.0          ! the layer of this cohort (numbered from top, top layer=1)
-    integer :: firstlayer = 0.0          ! 0 = never been in the first layer; 1 = at least one year in first layer
+    integer :: status     = 0            ! growth status of plant: 1 for ON, 0 for OFF
+    integer :: layer      = 1            ! the layer of this cohort (numbered from top, top layer=1)
+    integer :: firstlayer = 0            ! 0 = never been in the first layer; 1 = at least one year in first layer
     real    :: layerfrac  = 0.0          ! fraction of layer area occupied by this cohort
     real    :: leaf_age   = 0.0          ! leaf age (years)
 
@@ -199,17 +199,17 @@ module datatypes
     real    :: annualGPP                         ! C flux/tree
     real    :: annualNPP
     real    :: annualResp 
-    real    :: n_deadtrees        = 0.0
-    real    :: c_deadtrees        = 0.0
-    real    :: m_turnover         = 0.0
+    real    :: n_deadtrees        = 0.0          ! plant to soil N flux due to mortality (kg N m-2 yr-1)
+    real    :: c_deadtrees        = 0.0          ! plant to soil C flux due to mortality (kg C m-2 yr-1)
+    real    :: m_turnover         = 0.0          ! C turnover due to mortality and tissue turnover (kg C m-2 yr-1)
     real    :: deathratevalue     = 0.0
 
     !===== Nitrogen model related parameters
     real    :: NSNmax             = 0.0
-    real    :: N_uptake           = 0.0
-    real    :: annualNup          = 0.0
-    real    :: fixedN                             ! fixed N at each stem per tree
-    real    :: annualfixedN       = 0.0           ! annual N fixation per unit crown area
+    real    :: N_uptake           = 0.0           ! N uptake at each step per tree, kg N/individual h-1
+    real    :: annualNup          = 0.0           ! annual N uptake, kg N/individual yr-1
+    real    :: fixedN             = 0.0           ! fixed N at each step per tree, kg N/individual h-1
+    real    :: annualfixedN       = 0.0           ! annual N fixation, kg N/individual yr-1
     real    :: bl_max             = 0.0           ! Max. leaf biomass, kg C/individual
     real    :: br_max             = 0.0           ! Max. fine root biomass, kg C/individual
     real    :: CSAsw              = 0.0
@@ -289,7 +289,7 @@ module datatypes
     !===== Leaf area index
     real    :: LAI                                ! leaf area index
     real    :: CAI                                ! crown area index
-    ! real    :: LAIlayer(0:10)     = 0.0           ! LAI of each crown layer, max. 9
+    ! real    :: LAIlayer(0:10)     = 0.0         ! LAI of each crown layer, max. 9
     real    :: root_distance(max_lev)             ! characteristic half-distance between fine roots, m
 
     !=====  Averaged quantities for PPA phenology
@@ -299,19 +299,19 @@ module datatypes
 
     !=====  Litter and soil carbon pools
     real    :: litter             = 0.0           ! litter flux
-    real    :: n_deadtrees        = 0.0
-    real    :: c_deadtrees        = 0.0
-    real    :: m_turnover         = 0.0
+    real    :: c_deadtrees        = 0.0           ! plant to soil C flux due to mortality (kg C m-2 yr-1)
+    real    :: m_turnover         = 0.0           ! C turnover due to mortality and tissue turnover (kg C m-2 yr-1)
 
     !=====  N-related fluxes
     real    :: totN               = 0.0
-    real    :: N_input            = 0.0           ! annual N input (kgN m-2 yr-1)
-    real    :: N_uptake           = 0.0           ! kg N m-2 hour-1
+    real    :: N_input            = 0.0           ! annual N input (kg N m-2 yr-1)
+    real    :: N_uptake           = 0.0           ! N uptake at each time step, kg N m-2 hour-1
     real    :: annualN            = 0.0           ! annual available N in a year
     real    :: Nloss_yr           = 0.0           ! annual N loss
-    real    :: N_P2S_yr           = 0.0           ! annual N from plants to soil
-    real    :: previousN                          ! an weighted annual available N
-    real    :: initialN0
+    real    :: N_P2S_yr           = 0.0           ! N turnover (plant to soil) (kg N m-2 yr-1)
+    real    :: n_deadtrees        = 0.0           ! plant to soil N flux due to mortality (kg N m-2 yr-1)
+    real    :: previousN          = 0.0           ! weighted annual available N
+    real    :: initialN0          = 0.0           ! initial available N (kg N m-2)
 
     !=====  Soil water
     integer :: soiltype                           ! lookup table for soil hydrologic parameters
@@ -330,9 +330,9 @@ module datatypes
     real    :: W_uptake                           ! water uptake rate per unit time per m2
 
     !=====  Carbon fluxes
-    real    :: gpp                = 0.0           ! gross primary production, kgC m-2 yr-1
-    real    :: npp                = 0.0           ! net primary productivity
-    real    :: resp               = 0.0           ! auto-respiration of plants
+    real    :: gpp                = 0.0           ! gross primary production, kgC m-2 h-1
+    real    :: npp                = 0.0           ! net primary productivity, kgC m-2 h-1
+    real    :: resp               = 0.0           ! auto-respiration of plants, kgC m-2 h-1
     real    :: nep                = 0.0           ! net ecosystem productivity
     real    :: rh                 = 0.0           ! soil carbon lost to the atmosphere
 
@@ -648,7 +648,7 @@ contains
     spdata(0:MSPECIES)%CNseed0   = myinterface%params_species(1:(MSPECIES+1))%CNseed0
     spdata(0:MSPECIES)%Nfixrate0 = myinterface%params_species(1:(MSPECIES+1))%Nfixrate0
     spdata(0:MSPECIES)%NfixCost0 = myinterface%params_species(1:(MSPECIES+1))%NfixCost0
-    spdata(0:MSPECIES)%internal_gap_frac = myinterface%params_species(1:(MSPECIES+1))%internal_gap_frac    
+    spdata(0:MSPECIES)%internal_gap_frac = myinterface%params_species(1:(MSPECIES+1))%internal_gap_frac
 
     do i = 0, MSPECIES
       call init_derived_species_data(spdata(i))
@@ -936,7 +936,7 @@ contains
     enddo
 
     ! NEP is equal to NNP minus soil respiration
-    vegn%nep = vegn%npp - vegn%rh ! kgC m-2 hour-1; time step is hourly
+    vegn%nep = vegn%npp - vegn%rh
 
     !  if (.not. myinterface%steering%spinup) then
     !   out_hourly_tile%year      =  iyears    
@@ -1160,7 +1160,7 @@ contains
       out_annual_cohorts(i)%Rauto       = cc%annualResp
       out_annual_cohorts(i)%Nupt        = cc%annualNup
       out_annual_cohorts(i)%Nfix        = cc%annualfixedN
-      out_annual_cohorts(i)%n_deadtrees = cc%n_deadtrees ! dead trees/m2
+      out_annual_cohorts(i)%n_deadtrees = cc%n_deadtrees
       out_annual_cohorts(i)%c_deadtrees = cc%c_deadtrees
       out_annual_cohorts(i)%deathrate   = cc%deathratevalue
 
@@ -1171,7 +1171,7 @@ contains
  
     vegn%NPPL        = 0.0
     vegn%NPPW        = 0.0
-    vegn%n_deadtrees = 0 !yyy
+    vegn%n_deadtrees = 0
     vegn%c_deadtrees = 0
     vegn%m_turnover  = 0
 
@@ -1256,6 +1256,53 @@ contains
     if (myinterface%params_siml%do_closedN_run) call Recover_N_balance(vegn)
 
   end subroutine annual_diagnostics
+
+  subroutine annual_diagnostics_post_mortality(vegn, out_annual_cohorts, out_annual_tile)
+    !////////////////////////////////////////////////////////////////////////
+    ! Updates tile-level variables and populates annual output in once
+    !------------------------------------------------------------------------
+    use md_interface_biomee, only: outtype_annual_cohorts, outtype_annual_tile, myinterface
+
+    type(vegn_tile_type), intent(inout) :: vegn
+    type(outtype_annual_cohorts), dimension(out_max_cohorts) :: out_annual_cohorts
+    type(outtype_annual_tile) :: out_annual_tile
+
+    ! local variables
+    type(cohort_type), pointer :: cc
+    integer :: i
+
+    ! re-initialise to avoid elements not updated when number
+    ! of cohorts declines from one year to the next
+    out_annual_cohorts(:)%n_deadtrees = dummy
+    out_annual_cohorts(:)%c_deadtrees = dummy
+    out_annual_cohorts(:)%deathrate   = dummy
+
+    ! Cohorts ouput
+    do i = 1, vegn%n_cohorts
+      cc => vegn%cohorts(i)
+      out_annual_cohorts(i)%n_deadtrees = cc%n_deadtrees
+      out_annual_cohorts(i)%c_deadtrees = cc%c_deadtrees
+      out_annual_cohorts(i)%deathrate   = cc%deathratevalue
+
+    enddo
+
+    vegn%n_deadtrees = 0
+    vegn%c_deadtrees = 0
+    vegn%m_turnover  = 0
+
+    do i = 1, vegn%n_cohorts
+      cc => vegn%cohorts(i)
+      vegn%n_deadtrees  = vegn%n_deadtrees   + cc%n_deadtrees
+      vegn%c_deadtrees  = vegn%c_deadtrees   + cc%c_deadtrees
+      vegn%m_turnover   = vegn%m_turnover    + cc%m_turnover
+    enddo
+
+    out_annual_tile%N_P2S           = vegn%N_P2S_yr
+    out_annual_tile%n_deadtrees     = vegn%n_deadtrees
+    out_annual_tile%c_deadtrees     = vegn%c_deadtrees
+    out_annual_tile%m_turnover      = vegn%m_turnover
+
+  end subroutine annual_diagnostics_post_mortality
 
   subroutine Recover_N_balance(vegn)
     !////////////////////////////////////////////////////////////////////////

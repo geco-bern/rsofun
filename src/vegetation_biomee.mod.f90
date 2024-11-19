@@ -54,8 +54,6 @@ contains
     do i = 1, vegn%n_cohorts
 
       cc => vegn%cohorts(i)
-      associate ( sp => spdata(cc%species) )
-
       ! increment the cohort age
       cc%age = cc%age + myinterface%dt_fast_yr
 
@@ -70,11 +68,9 @@ contains
       cc%plabl%c%c12 = cc%plabl%c%c12 + cc%npp
       cc%plabl%n%n14 = cc%plabl%n%n14 + cc%fixedN
 
-
-      end associate
     enddo ! all cohorts
     
-    ! update soil carbon
+    ! update soil C and N
     call SOMdecomposition( vegn, tsoil )
     
     ! Nitrogen uptake
@@ -126,7 +122,8 @@ contains
     ! Obligate Nitrogen Fixation
     cc%fixedN = fnsc*spdata(sp)%NfixRate0 * cc%proot%c%c12 * tf * myinterface%dt_fast_yr ! kgN tree-1 step-1
     r_Nfix    = spdata(sp)%NfixCost0 * cc%fixedN ! + 0.25*spdata(sp)%NfixCost0 * cc%N_uptake    ! tree-1 step-1
-    
+    cc%annualfixedN = cc%annualfixedN + cc%fixedN
+
     ! LeafN    = spdata(sp)%LNA * cc%leafarea  ! gamma_SW is sapwood respiration rate (kgC m-2 Acambium yr-1)
     r_stem   = fnsc*spdata(sp)%gamma_SW  * Acambium * tf * myinterface%dt_fast_yr ! kgC tree-1 step-1
     r_root   = fnsc*spdata(sp)%gamma_FR  * cc%proot%n%n14 * tf * myinterface%dt_fast_yr ! root respiration ~ root N
@@ -907,7 +904,6 @@ contains
     do i = 1, vegn%n_cohorts
       
       cc => vegn%cohorts(i)
-      associate ( sp => spdata(cc%species)  )
 
       ! Mortality due to starvation
       deathrate = 0.0
@@ -928,7 +924,6 @@ contains
       else
         deathrate = 0.0
       endif
-      end associate
     enddo
     ! Remove the cohorts with 0 individuals
     call kill_lowdensity_cohorts( vegn )
@@ -946,20 +941,20 @@ contains
     real,                 intent(in)    :: deadtrees ! dead trees/m2
 
     ! local variables --------
-    real :: loss_fine,loss_coarse
+    real :: lossC_fine,lossC_coarse
     real :: lossN_fine,lossN_coarse
 
     associate (sp => spdata(cc%species))
 
     ! Carbon and Nitrogen from plants to soil pools
-    loss_coarse  = deadtrees * (cc%pwood%c%c12 + cc%psapw%c%c12 + cc%pleaf%c%c12 - cc%leafarea * LMAmin)
-    loss_fine    = deadtrees * (cc%plabl%c%c12 + cc%pseed%c%c12 + cc%proot%c%c12 + cc%leafarea * LMAmin)
+    lossC_coarse  = deadtrees * (cc%pwood%c%c12 + cc%psapw%c%c12 + cc%pleaf%c%c12 - cc%leafarea * LMAmin)
+    lossC_fine    = deadtrees * (cc%plabl%c%c12 + cc%pseed%c%c12 + cc%proot%c%c12 + cc%leafarea * LMAmin)
 
     lossN_coarse = deadtrees * (cc%pwood%n%n14 + cc%psapw%n%n14 + cc%pleaf%n%n14 - cc%leafarea*sp%LNbase)
-    lossN_fine   = deadtrees * (cc%proot%n%n14 + cc%pseed%n%n14 + cc%plabl%n%n14 + cc%leafarea*sp%LNbase)
+    lossN_fine   = deadtrees * (cc%plabl%n%n14 + cc%pseed%n%n14 + cc%proot%n%n14 + cc%leafarea*sp%LNbase)
 
-    vegn%psoil_fs%c%c12 = vegn%psoil_fs%c%c12 + fsc_fine * loss_fine + fsc_wood * loss_coarse
-    vegn%psoil_sl%c%c12 = vegn%psoil_sl%c%c12 + (1.0 - fsc_fine) * loss_fine + (1.0-fsc_wood) * loss_coarse
+    vegn%psoil_fs%c%c12 = vegn%psoil_fs%c%c12 + fsc_fine * lossC_fine + fsc_wood * lossC_coarse
+    vegn%psoil_sl%c%c12 = vegn%psoil_sl%c%c12 + (1.0 - fsc_fine) * lossC_fine + (1.0-fsc_wood) * lossC_coarse
 
     vegn%psoil_fs%n%n14 = vegn%psoil_fs%n%n14 + fsc_fine * lossN_fine + fsc_wood * lossN_coarse
     vegn%psoil_sl%n%n14 = vegn%psoil_sl%n%n14 + (1.0 - fsc_fine) * lossN_fine + (1.-fsc_wood) * lossN_coarse
@@ -969,11 +964,9 @@ contains
 
     ! record mortality
     ! cohort level
-    cc%n_deadtrees = deadtrees
-    !cc%c_deadtrees = loss_coarse + loss_fine 
-    cc%c_deadtrees    = deadtrees*(cc%plabl%c%c12 + cc%pseed%c%c12 + cc%pleaf%c%c12 + &
-           cc%proot%c%c12 + cc%psapw%c%c12 + cc%pwood%c%c12) 
-    cc%m_turnover  = cc%m_turnover + loss_coarse + loss_fine
+    cc%n_deadtrees = lossN_coarse + lossN_fine
+    cc%c_deadtrees = lossC_coarse + lossC_fine
+    cc%m_turnover  = cc%m_turnover + cc%c_deadtrees
     !cc%m_turnover  = cc%m_turnover + deadtrees * (cc%pwood%c%c12 + cc%psapw%c%c12)
 
     end associate
@@ -1454,16 +1447,13 @@ contains
     type(cohort_type),pointer :: cc
 
     real    :: rho_N_up0 = 0.1 ! hourly N uptake rate, fraction of the total mineral N
-    real    :: N_roots0  = 0.4 ! root biomass at half max N-uptake rate,kg C m-2
+    real    :: N_roots0  = 0.4 ! root biomass at half max N-uptake rate, kg C m-2
 
     real    :: totNup    ! kgN m-2
     real    :: avgNup
     real    :: rho_N_up, N_roots   ! actual N uptake rate
     ! logical :: NSN_not_full
     integer :: i
-
-    ! xxx try
-    vegn%ninorg%n14 = 0.2
 
     ! Nitrogen uptake parameter
     ! It considers competition here. How much N one can absorp depends on 
@@ -1504,7 +1494,7 @@ contains
 
             cc%N_uptake    = cc%proot%c%c12 * avgNup ! min(cc%proot%c%c12*avgNup, cc%NSNmax-cc%plabl%n%n14)
             cc%plabl%n%n14 = cc%plabl%n%n14 + cc%N_uptake
-            cc%annualNup   = cc%annualNup + cc%N_uptake !/cc%crownarea
+            cc%annualNup   = cc%annualNup + cc%N_uptake
 
             ! subtract N from mineral N
             vegn%ninorg%n14 = vegn%ninorg%n14 - cc%N_uptake * cc%nindivs
@@ -1834,7 +1824,6 @@ contains
       k = 0
       do i = 1,vegn%n_cohorts
         cx => vegn%cohorts(i)
-        associate(sp => spdata(cx%species))
         if (cx%nindivs > mindensity) then
           k = k + 1
           cc(k) = cx
@@ -1842,7 +1831,6 @@ contains
           ! Carbon and Nitrogen from plants to soil pools
           call plant2soil(vegn, cx, cx%nindivs)
         endif
-        end associate
       enddo
       vegn%n_cohorts = k
       deallocate (vegn%cohorts)

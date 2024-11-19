@@ -162,7 +162,7 @@ contains
     ! output to be consistent with cohort identities.
     ! Note: Relayering happens in phenology leading to a reshuffling of the cohorts and affecting cohort identities.
     !---------------------------------------------
-    call annual_diagnostics( vegn, iyears, out_biosphere_annual_cohorts(:), out_biosphere_annual_tile )
+    call annual_diagnostics( vegn, iyears, out_biosphere_annual_cohorts, out_biosphere_annual_tile )
 
     !---------------------------------------------
     ! Reproduction and mortality
@@ -188,6 +188,11 @@ contains
     call relayer_cohorts( vegn )
     
     call vegn_mergecohorts( vegn )
+
+    !---------------------------------------------
+    ! Update ost-mortality metrics
+    !---------------------------------------------
+    call annual_diagnostics_post_mortality( vegn, out_biosphere_annual_cohorts, out_biosphere_annual_tile )
 
     ! update the years of model run
     iyears = iyears + 1
