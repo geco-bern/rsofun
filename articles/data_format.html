@@ -53,29 +53,8 @@
 <li>
   <a href="../reference/index.html">Reference</a>
 </li>
-<li class="dropdown">
-  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-    Articles
-
-    <span class="caret"></span>
-  </a>
-  <ul class="dropdown-menu" role="menu">
 <li>
-      <a href="../articles/biomee_use.html">BiomeE usage</a>
-    </li>
-    <li>
-      <a href="../articles/data_format.html">Data format</a>
-    </li>
-    <li>
-      <a href="../articles/new_cost_function.html">Parameter calibration and cost functions</a>
-    </li>
-    <li>
-      <a href="../articles/pmodel_use.html">P-model usage</a>
-    </li>
-    <li>
-      <a href="../articles/sensitivity_analysis.html">Sensitivity analysis and calibration interpretation</a>
-    </li>
-  </ul>
+  <a href="../articles/index.html">Articles</a>
 </li>
 <li>
   <a href="../news/index.html">Changelog</a>
@@ -112,32 +91,86 @@ Josefa Arán</h4>
     
     
 <div class="section level2">
-<h2 id="p-model">P-model<a class="anchor" aria-label="anchor" href="#p-model"></a>
+<h2 id="philosophy">Philosophy<a class="anchor" aria-label="anchor" href="#philosophy"></a>
 </h2>
 <p>Overall, the package uses the {tidyverse} data paradigm (Wickham,
 2017), using nested data frames (tibbles) to store model input and
 output, and validation data. Where possible the package uses a
-consistent ontogeny in terms of variables and data structures used. Each
-site is defined by a site name (sitename), location specific site
-information (site_info), soil characteristics (params_soil), simulation
-parameter settings (params_siml) and environmental forcing data
-(forcing). Sites are grouped by row in a nested tibble.</p>
+consistent ontogeny in terms of variables and data structures used.</p>
+</div>
+<div class="section level2">
+<h2 id="drivers-data-inputs">Drivers data (inputs)<a class="anchor" aria-label="anchor" href="#drivers-data-inputs"></a>
+</h2>
+<p>A drivers object is used as unique input to the models, consisting of
+a list of sites. Each site (i.e. row) contains the following data: -
+<code>sitename</code>: site name - <code>site_info</code>: location
+specific site information (nested tibble) - <code>params_soil</code>:
+soil characteristics for BiomeE model (nested tibble) -
+<code>params_siml</code>: simulation parameter settings (nested tibble)
+- <code>forcing</code>: environmental forcing data (nested tibble)</p>
+<p>Each of the provided demo drivers contain only one sample site:</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># call to the included p-model demo data</span></span>
+<code class="sourceCode R"><span><span class="co"># call to the included p-model demo drivers</span></span>
 <span><span class="fu">rsofun</span><span class="fu">::</span><span class="va"><a href="../reference/p_model_drivers.html">p_model_drivers</a></span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 1 × 4</span></span></span>
 <span><span class="co">#&gt;   sitename params_siml       site_info        forcing              </span></span>
 <span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;list&gt;</span>            <span style="color: #949494; font-style: italic;">&lt;list&gt;</span>           <span style="color: #949494; font-style: italic;">&lt;list&gt;</span>               </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> FR-Pue   <span style="color: #949494;">&lt;tibble [1 × 11]&gt;</span> <span style="color: #949494;">&lt;tibble [1 × 4]&gt;</span> <span style="color: #949494;">&lt;tibble [2,190 × 13]&gt;</span></span></span></code></pre></div>
-<p>Here, the forcing data contains environmental variables commonly
-available at fluxnet (reference) or ICOS atmospheric gas exchange
-measurement locations or gathered from various gridded or re-analysis
-sources. Data are provided at a daily time step and for complete
-years.</p>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> FR-Pue   <span style="color: #949494;">&lt;tibble [1 × 11]&gt;</span> <span style="color: #949494;">&lt;tibble [1 × 4]&gt;</span> <span style="color: #949494;">&lt;tibble [2,190 × 13]&gt;</span></span></span>
+<span></span>
+<span><span class="co"># call to the included BiomeE (p-model) demo drivers</span></span>
+<span><span class="fu">rsofun</span><span class="fu">::</span><span class="va"><a href="../reference/biomee_p_model_drivers.html">biomee_p_model_drivers</a></span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 1 × 9</span></span></span>
+<span><span class="co">#&gt;   sitename site_info         params_siml params_tile params_species params_soil</span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;list&gt;</span>            <span style="color: #949494; font-style: italic;">&lt;list&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;list&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;list&gt;</span>         <span style="color: #949494; font-style: italic;">&lt;list&gt;</span>     </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> CH-Lae   <span style="color: #949494;">&lt;tibble [1 × 14]&gt;</span> <span style="color: #949494;">&lt;tibble&gt;</span>    <span style="color: #949494;">&lt;tibble&gt;</span>    <span style="color: #949494;">&lt;tibble&gt;</span>       <span style="color: #949494;">&lt;tibble&gt;</span>   </span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># ℹ 3 more variables: init_cohort &lt;list&gt;, init_soil &lt;list&gt;, forcing &lt;list&gt;</span></span></span>
+<span></span>
+<span><span class="co"># call to the included BiomeE (gs leuning) demo drivers</span></span>
+<span><span class="fu">rsofun</span><span class="fu">::</span><span class="va"><a href="../reference/biomee_gs_leuning_drivers.html">biomee_gs_leuning_drivers</a></span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 1 × 9</span></span></span>
+<span><span class="co">#&gt;   sitename site_info         params_siml params_tile params_species params_soil</span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;list&gt;</span>            <span style="color: #949494; font-style: italic;">&lt;list&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;list&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;list&gt;</span>         <span style="color: #949494; font-style: italic;">&lt;list&gt;</span>     </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> CH-Lae   <span style="color: #949494;">&lt;tibble [1 × 14]&gt;</span> <span style="color: #949494;">&lt;tibble&gt;</span>    <span style="color: #949494;">&lt;tibble&gt;</span>    <span style="color: #949494;">&lt;tibble&gt;</span>       <span style="color: #949494;">&lt;tibble&gt;</span>   </span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># ℹ 3 more variables: init_cohort &lt;list&gt;, init_soil &lt;list&gt;, forcing &lt;list&gt;</span></span></span></code></pre></div>
+<p>Nested data structures can be accessed like this:</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># detailed look at the forcing data</span></span>
-<span><span class="fu">rsofun</span><span class="fu">::</span><span class="va"><a href="../reference/p_model_drivers.html">p_model_drivers</a></span><span class="op">$</span><span class="va">forcing</span></span>
-<span><span class="co">#&gt; [[1]]</span></span>
+<code class="sourceCode R"><span><span class="co"># Accessing the site information for the first site</span></span>
+<span><span class="fu">rsofun</span><span class="fu">::</span><span class="va"><a href="../reference/biomee_gs_leuning_drivers.html">biomee_gs_leuning_drivers</a></span><span class="op">$</span><span class="va">site_info</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 1 × 14</span></span></span>
+<span><span class="co">#&gt;   sitename   lon   lat   elv year_start year_end classid c4    whc  </span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;lgl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;lgl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;lgl&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> CH-Lae    8.36  47.5   700       <span style="text-decoration: underline;">2</span>004     <span style="text-decoration: underline;">2</span>014 <span style="color: #BB0000;">NA</span>      FALSE <span style="color: #BB0000;">NA</span>   </span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># ℹ 5 more variables: koeppen_code &lt;lgl&gt;, igbp_land_use &lt;chr&gt;,</span></span></span>
+<span><span class="co">#&gt; <span style="color: #949494;">#   plant_functional_type &lt;chr&gt;, date_start &lt;date&gt;, date_end &lt;date&gt;</span></span></span></code></pre></div>
+<div class="section level3">
+<h3 id="specific-data-for-each-model">Specific data for each model<a class="anchor" aria-label="anchor" href="#specific-data-for-each-model"></a>
+</h3>
+<p>Each model has its own specificities when it comes to the set of
+simulation parameters and forcing data. Please refer to the
+documentation for each model for an exhaustive list of parameters and
+data required by the model.</p>
+<ul>
+<li>P-model: <code><a href="../reference/run_pmodel_f_bysite.html">?run_pmodel_f_bysite</a></code>
+</li>
+<li>BiomeE: <code><a href="../reference/run_biomee_f_bysite.html">?run_biomee_f_bysite</a></code>
+</li>
+</ul>
+</div>
+<div class="section level3">
+<h3 id="forcing-data">Forcing data<a class="anchor" aria-label="anchor" href="#forcing-data"></a>
+</h3>
+<p>The forcing data contains environmental variables commonly available
+at fluxnet (reference) or ICOS atmospheric gas exchange measurement
+locations or gathered from various gridded or re-analysis sources.
+Forcing data are expected to be sequences of complete years (each
+starting on January 1st and ending on december 31st), where leap days
+are excluded (February 29th should not be present).</p>
+<p>Each model has a specific forcing data resolution: - P-model: daily -
+BiomeE (p-model): daily - BiomeE (gs leuning): hourly</p>
+<p>Forcing data present in the demo drivers can be used as examples:</p>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Detailed look at the forcing data for the P-model</span></span>
+<span><span class="fu">rsofun</span><span class="fu">::</span><span class="va"><a href="../reference/p_model_drivers.html">p_model_drivers</a></span><span class="op">$</span><span class="va">forcing</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 2,190 × 13</span></span></span>
 <span><span class="co">#&gt;    date        temp   vpd     ppfd netrad   patm  snow    rain  tmin  tmax fapar</span></span>
 <span><span class="co">#&gt;    <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
@@ -153,39 +186,33 @@ years.</p>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">10</span> 2007-01-10 11.4   26.0  2.77<span style="color: #949494;">e</span><span style="color: #BB0000;">-5</span>  -<span style="color: #BB0000;">6.41</span> 9.94<span style="color: #949494;">e</span>4     0 0   <span style="color: #949494;"> </span>    8.98 12.0  0.598</span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># ℹ 2,180 more rows</span></span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># ℹ 2 more variables: co2 &lt;dbl&gt;, ccov &lt;dbl&gt;</span></span></span></code></pre></div>
-<p>To create your own driver data it should be arranged into a tibble
-with the same structure as the example drivers objects. Within {rsofun}
-optional checks are executed to ensure that the required variables are
-present in the used dataset using the ‘check’ argument in the
-runread_pmodel_f() function calls. Throughout the package verbose output
-is provided (if desired) as to evaluate errors or progress when running
-the model on a particular dataset.</p>
+</div>
 </div>
 <div class="section level2">
-<h2 id="biomee">BiomeE<a class="anchor" aria-label="anchor" href="#biomee"></a>
+<h2 id="output-data">Output data<a class="anchor" aria-label="anchor" href="#output-data"></a>
 </h2>
-<p>BiomeE follows the same data structure as P-model overall, but with
-some specific parameters and forcing data. Details about thees can be
-obtained in the documentation: <code><a href="../reference/run_biomee_f_bysite.html">?run_biomee_f_bysite</a></code>.</p>
-<p>Here is an example of forcing data for BiomeE:</p>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># detailed look at the forcing data</span></span>
-<span><span class="fu">rsofun</span><span class="fu">::</span><span class="va"><a href="../reference/biomee_p_model_drivers.html">biomee_p_model_drivers</a></span><span class="op">$</span><span class="va">forcing</span></span>
-<span><span class="co">#&gt; [[1]]</span></span>
-<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 365 × 9</span></span></span>
-<span><span class="co">#&gt;    date         hod    temp       rain   vpd      ppfd   patm  wind   co2</span></span>
-<span><span class="co">#&gt;    <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 1</span> 2009-01-01  11.5  0.384  0.000<span style="text-decoration: underline;">016</span>6   39.5 0.000<span style="text-decoration: underline;">057</span>1 <span style="text-decoration: underline;">93</span>092.  3.00  388.</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 2</span> 2009-01-02  11.5 -<span style="color: #BB0000;">1.64</span>   0.000<span style="text-decoration: underline;">023</span>2   40.5 0.000<span style="text-decoration: underline;">049</span>9 <span style="text-decoration: underline;">93</span>248.  2.97  388.</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 3</span> 2009-01-03  11.5 -<span style="color: #BB0000;">2.51</span>   0.000<span style="text-decoration: underline;">003</span>71  75.9 0.000<span style="text-decoration: underline;">094</span>9 <span style="text-decoration: underline;">93</span>684.  2.84  388.</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 4</span> 2009-01-04  11.5 -<span style="color: #BB0000;">1.82</span>   0.000<span style="text-decoration: underline;">013</span>0   88.0 0.000<span style="text-decoration: underline;">070</span>6 <span style="text-decoration: underline;">93</span>435.  2.67  388.</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 5</span> 2009-01-05  11.5 -<span style="color: #BB0000;">1.34</span>   0.000<span style="text-decoration: underline;">022</span>3   67.8 0.000<span style="text-decoration: underline;">073</span>9 <span style="text-decoration: underline;">93</span>175.  3.21  388.</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 6</span> 2009-01-06  11.5 -<span style="color: #BB0000;">0.450</span>  0.000<span style="text-decoration: underline;">021</span>9   54.0 0.000<span style="text-decoration: underline;">052</span>8 <span style="text-decoration: underline;">93</span>282.  3.03  388.</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 7</span> 2009-01-07  11.5  0.266  0.000<span style="text-decoration: underline;">013</span>6   64.1 0.000<span style="text-decoration: underline;">071</span>1 <span style="text-decoration: underline;">93</span>511.  2.64  388.</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 8</span> 2009-01-08  11.5  0.504  0.000<span style="text-decoration: underline;">011</span>3   88.2 0.000<span style="text-decoration: underline;">090</span>5 <span style="text-decoration: underline;">93</span>443.  2.68  388.</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 9</span> 2009-01-09  11.5  0.086<span style="text-decoration: underline;">9</span> 0.000<span style="text-decoration: underline;">018</span>6   59.9 0.000<span style="text-decoration: underline;">051</span>6 <span style="text-decoration: underline;">93</span>447.  2.74  388.</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">10</span> 2009-01-10  11.5 -<span style="color: #BB0000;">0.404</span>  0.000<span style="text-decoration: underline;">012</span>5   58.6 0.000<span style="text-decoration: underline;">082</span>7 <span style="text-decoration: underline;">93</span>633.  2.17  388.</span></span>
-<span><span class="co">#&gt; <span style="color: #949494;"># ℹ 355 more rows</span></span></span></code></pre></div>
+<p>The output of the model contains one line per site found in the
+drivers: - <code>sitename</code>: site name - <code>data</code>: output
+data for the site (nested tibble)</p>
+<p>The data structure for the output <code>data</code> is specific for
+each model.</p>
+<div class="section level3">
+<h3 id="p-model">P-model<a class="anchor" aria-label="anchor" href="#p-model"></a>
+</h3>
+<p>For detailed information about the content of <code>data</code>, see
+<code><a href="../reference/run_pmodel_f_bysite.html">?run_pmodel_f_bysite</a></code>.</p>
+</div>
+<div class="section level3">
+<h3 id="biomee">BiomeE<a class="anchor" aria-label="anchor" href="#biomee"></a>
+</h3>
+<p><code>data</code> contains the following tables: -
+<code>output_daily_tile</code>: Daily output during the simulated period
+- <code>output_annual_cohorts</code>: Annual output at the cohort level
+during the simulated period - <code>output_annual_tile</code>: Yearly
+output during the spin-up and simulated periods.</p>
+<p>For detailed information about each table, see
+<code><a href="../reference/run_biomee_f_bysite.html">?run_biomee_f_bysite</a></code>.</p>
+</div>
 </div>
   </div>
 
