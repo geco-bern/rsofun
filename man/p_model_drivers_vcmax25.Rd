@@ -3,9 +3,9 @@
 \docType{data}
 \name{p_model_drivers_vcmax25}
 \alias{p_model_drivers_vcmax25}
-\title{rsofun p-model driver data (for leaf traits)}
+\title{rsofun P-model driver data (for leaf traits)}
 \format{
-A tibble of model driver data:
+A tibble of driver data:
 \describe{
   \item{sitename}{A character string containing the site name.}
   \item{forcing}{A tibble of a time series of forcing climate data, including
@@ -31,7 +31,7 @@ A tibble of model driver data:
       net radiation are not prescribed.}
       }
   }
-  \item{params_siml}{A tibble containing simulation parameters.
+  \item{params_siml}{A tibble of simulation parameters.
     \describe{
       \item{spinup}{A logical value indicating whether this simulation does spin-up.}
       \item{spinupyears}{Number of spin-up years.}

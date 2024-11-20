@@ -18,7 +18,7 @@
 #'   \item{do_closedN_run}{Flag indicating whether doing N closed
 #'     runs to recover N balance enforcing 0.2 kg N m-2 in the inorganic N pool.}
 #'   \item{code_method_photosynth}{String specifying the method of photosynthesis 
-#'     used in the model, either "pmodel" or "gs_leuning".}
+#'     used in the model, either "pmodel" or "gs_leuning".document()}
 #'   \item{code_method_mortality}{String indicating the type of mortality in the 
 #'     model. One of the following: "dbh" is size-dependent mortality, "const_selfthin" 
 #'     is constant self thinning (in development), "cstarvation" is carbon starvation, and
