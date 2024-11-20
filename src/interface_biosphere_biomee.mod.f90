@@ -285,7 +285,7 @@ module md_interface_biomee
     real :: MaxDBH
     real :: NPPL
     real :: NPPW
-    real :: n_deadtrees !yyy
+    real :: n_deadtrees
     real :: c_deadtrees
     real :: m_turnover
     real :: c_turnover_time

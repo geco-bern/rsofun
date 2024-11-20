@@ -102,7 +102,6 @@ subroutine SoilWaterDynamicsLayer(forcing,vegn)    !outputs
   real    :: Cmolar ! mole density of air (mol/m3)
   real    :: rsoil  ! s m-1
   real    :: raero
-  real    :: rLAI
   real    :: transp,fsupply ! fraction of transpiration from a soil layer
   real    :: WaterBudgetL(max_lev)
   integer :: i,j
@@ -159,7 +158,6 @@ subroutine SoilWaterDynamicsLayer(forcing,vegn)    !outputs
       !Rsoil=3.0E+10 * (FILDCP-vegn%wcl(1))**16 ! Kondo et al. 1990
       !rsoil=7500 * exp(-50.0*vegn%wcl(1))  ! s m-1
       raero = 50./(forcing%windU + 0.2)
-      rLAI = exp(vegn%LAI)
 !     latent heat flux into air from soil
 !           Eleaf(ileaf)=1.0*
 !     &     (slope*Y*Rnstar(ileaf)+rhocp*Dair/(rbH_L+raero))/    !2* Weng 0215

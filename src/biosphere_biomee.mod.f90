@@ -190,7 +190,7 @@ contains
     call vegn_mergecohorts( vegn )
 
     !---------------------------------------------
-    ! Update ost-mortality metrics
+    ! Update post-mortality metrics
     !---------------------------------------------
     call annual_diagnostics_post_mortality( vegn, out_biosphere_annual_cohorts, out_biosphere_annual_tile )
 

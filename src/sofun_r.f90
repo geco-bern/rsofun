@@ -806,7 +806,7 @@ contains
 
     ! arguments
     type(outtype_annual_tile), intent(in) :: annual_tile
-    real(kind=dp), dimension(nvars_annual_tile), intent(inout) :: out_annual_tile
+    real(kind=dp), dimension(nvars_annual_tile), intent(inout) :: out_annual_tile(:)
 
     out_annual_tile(1)  = dble(annual_tile%year)
     out_annual_tile(2)  = dble(annual_tile%CAI)

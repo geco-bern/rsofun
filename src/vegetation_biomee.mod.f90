@@ -362,8 +362,10 @@ contains
         cc%height    = cc%height    + dHeight
         cc%crownarea = cc%crownarea + dCA
         cc%leafarea  = leaf_area_from_biomass(cc%pleaf%c%c12, cc%species)
+        ! cc%lai is surface of leaves per m2 of crown
         cc%lai       = cc%leafarea/cc%crownarea !(cc%crownarea *(1.0-sp%internal_gap_frac))
-        vegn%LAI     = vegn%LAI + cc%leafarea  * cc%nindivs
+        ! vegn%LAI is the surface of leaves per m2 of ground/tile
+        vegn%LAI     = vegn%LAI + cc%leafarea * cc%nindivs
 
         call rootarea_and_verticalprofile( cc )
 

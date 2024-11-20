@@ -1261,7 +1261,7 @@ contains
     !////////////////////////////////////////////////////////////////////////
     ! Updates tile-level variables and populates annual output in once
     !------------------------------------------------------------------------
-    use md_interface_biomee, only: outtype_annual_cohorts, outtype_annual_tile, myinterface
+    use md_interface_biomee, only: outtype_annual_cohorts, outtype_annual_tile
 
     type(vegn_tile_type), intent(inout) :: vegn
     type(outtype_annual_cohorts), dimension(out_max_cohorts) :: out_annual_cohorts

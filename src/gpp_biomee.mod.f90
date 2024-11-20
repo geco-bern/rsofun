@@ -183,8 +183,6 @@ contains
           cc%resl    = -resp         * c_molmass * 1e-3 * cc%leafarea * myinterface%step_seconds ! kgC tree-1 step-1
           cc%gpp     = (psyn - resp) * c_molmass * 1e-3 * cc%leafarea * myinterface%step_seconds ! kgC step-1 tree-1
 
-          !if (isnan(cc%gpp)) stop '"gpp" is a NaN'
-
           else
 
           ! no leaves means no photosynthesis and no stomatal conductance either
@@ -308,6 +306,7 @@ contains
 
     ! taking from params_core (SOFUN)
     use md_params_core, only: kR, kTkelvin
+    use, intrinsic :: ieee_arithmetic
 
     real,    intent(in)    :: rad_top ! PAR dn on top of the canopy, w/m2
     real,    intent(in)    :: rad_net ! PAR net on top of the canopy, w/m2
@@ -364,6 +363,7 @@ contains
     real :: anbar
     real :: gsbar
     real :: w_scale
+    real :: kk
 
     ! soil water stress
     real :: Ed, an_w, gs_w
@@ -433,76 +433,54 @@ contains
     ! only if PAR is positive
     if ( light_top > light_crit ) then
 
-      if (pt==PT_C4) then ! C4 species
+      coef0=(1+ds/do1)/spdata(pft)%m_cond
+      ci=(ca+1.6*coef0*capgam)/(1+1.6*coef0)
 
-        coef0=(1+ds/do1)/spdata(pft)%m_cond
-        ci=(ca+1.6*coef0*capgam)/(1+1.6*coef0)
+      if (ci>capgam) then
 
-        if (ci>capgam) then
+        if (pt==PT_C4) then ! C4 species
+
           f2=vm
           f3=18000.0*vm*ci ! 18000 or 1800?
-          dum2=min(f2,f3)
+          kk = 1.0
 
-          ! find LAI level at which rubisco limited rate is equal to light limited rate
-          lai_eq = -log(dum2/(kappa*spdata(pft)%alpha_phot*light_top))/kappa
-          lai_eq = min(max(0.0,lai_eq),lai) ! limit lai_eq to physically possible range
+        else ! C3 species
 
-          ! gross photosynthesis for light-limited part of the canopy
-          Ag_l   = spdata(pft)%alpha_phot * par_net &
-                  * (exp(-lai_eq*kappa)-exp(-lai*kappa))/(1-exp(-lai*kappa))
+          coef1=kc*(1.0+0.209/ko)
+          f2=vm*(ci-capgam)/(ci+coef1)
+          f3=vm/2.
+          kk = (ci+2.*capgam)/(ci-capgam)
 
-          ! gross photosynthesis for rubisco-limited part of the canopy
-          Ag_rb  = dum2*lai_eq
+        end if
 
-          Ag=(Ag_l+Ag_rb)/((1.0+exp(0.4*(5.0-tl+kTkelvin)))*(1.0+exp(0.4*(tl-45.0-kTkelvin))))
-          An=Ag-Resp
-          anbar=An/lai
-
-          if (anbar>0.0) then
-            gsbar=anbar/(ci-capgam)/coef0
-          endif
-
-        endif ! ci>capgam
-
-      else ! C3 species
-
-        coef0=(1+ds/do1)/spdata(pft)%m_cond
-        coef1=kc*(1.0+0.209/ko)
-        ci=(ca+1.6*coef0*capgam)/(1+1.6*coef0)
-        f2=vm*(ci-capgam)/(ci+coef1)
-        f3=vm/2.
         dum2=min(f2,f3)
 
-        if (ci>capgam) then
-          ! find LAI level at which rubisco limited rate is equal to light limited rate
-          lai_eq=-log(dum2*(ci+2.*capgam)/(ci-capgam)/ &
-           (spdata(pft)%alpha_phot*light_top*kappa))/kappa
-          lai_eq = min(max(0.0,lai_eq),lai) ! limit lai_eq to physically possible range
+        ! find LAI level at which rubisco limited rate is equal to light limited rate
+        lai_eq = -log(dum2*kk/(kappa*spdata(pft)%alpha_phot*light_top))/kappa
+        lai_eq = min(max(0.0,lai_eq),lai) ! limit lai_eq to physically possible range
 
-          ! gross photosynthesis for light-limited part of the canopy
-          Ag_l   = spdata(pft)%alpha_phot * (ci-capgam)/(ci+2.*capgam) * par_net &
-                   * (exp(-lai_eq*kappa)-exp(-lai*kappa))/(1.0-exp(-lai*kappa))
+        ! gross photosynthesis for light-limited part of the canopy
+        Ag_l   = spdata(pft)%alpha_phot * par_net &
+                * (exp(-lai_eq*kappa)-exp(-lai*kappa))/(1-exp(-lai*kappa))
 
-          ! gross photosynthesis for rubisco-limited part of the canopy
-          Ag_rb  = dum2*lai_eq
+        ! We test if Ag_l is NaN and, if so, we set it to 0
+        ! (which is the value Ag_l tends to just before exploding due to numerical instability)
+        if (ieee_is_nan(Ag_l)) Ag_l = 0.0
 
-          Ag=(Ag_l+Ag_rb) /((1.0+exp(0.4*(5.0-tl+kTkelvin)))*(1.0+exp(0.4*(tl-45.0-kTkelvin))));
-          An=Ag-Resp;
-          anbar=An/lai
-          !write(*,*)'An,Ag,AG_l,Ag_rb,lai',An,Ag, Ag_l, Ag_rb,lai
+        ! gross photosynthesis for rubisco-limited part of the canopy
+        Ag_rb  = dum2 * lai_eq
 
-          if (anbar>0.0) then
-            gsbar=anbar/(ci-capgam)/coef0;
-          endif
+        Ag= (Ag_l + Ag_rb)/((1.0+exp(0.4*(5.0-tl+kTkelvin)))*(1.0+exp(0.4*(tl-45.0-kTkelvin))))
+        An=Ag-Resp
+        anbar=An/lai
 
+        if (anbar>0.0) then
+          gsbar=anbar/(ci-capgam)/coef0
         endif
 
-      endif
+      endif ! ci>capgam
 
     endif ! light is available for photosynthesis
-
-    !write(898,'(1(I4,","),10(E10.4,","))') &
-    !     layer, light_top, par_net, kappa, lai, lai_eq, ci, capgam, Ag_l, Ag_rb, Ag
 
     an_w=anbar
 
