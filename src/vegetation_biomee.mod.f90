@@ -1457,6 +1457,9 @@ contains
     ! logical :: NSN_not_full
     integer :: i
 
+    ! We artificially refill N inorg
+    if (myinterface%params_siml%do_closedN_run) vegn%ninorg%n14 = 0.2
+
     ! Nitrogen uptake parameter
     ! It considers competition here. How much N one can absorp depends on 
     ! how many roots it has and how many roots other individuals have.

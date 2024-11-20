@@ -5,18 +5,18 @@
 #' @param sitename Site name.
 #' @param params_siml Simulation parameters.
 #' \describe{
-#'   \item{spinup}{A logical value indicating whether this simulation does spin-up.}
+#'   \item{spinup}{Flag indicating whether this simulation does spin-up.}
 #'   \item{spinupyears}{Number of spin-up years.}
 #'   \item{recycle}{Length of standard recycling period (years).}
 #'   \item{firstyeartrend}{First transient year.}
 #'   \item{nyeartrend}{Number of transient years.}
-#'   \item{steps_per_day}{Time resolution (day^-1).}
-#'   \item{do_U_shaped_mortality}{A logical value indicating whether U-shaped 
+#'   \item{steps_per_day}{Time resolution (day-1).}
+#'   \item{do_U_shaped_mortality}{Flag indicating whether U-shaped
 #'     mortality is used.}
-#'   \item{update_annualLAImax}{A logical value indicating whether updating 
+#'   \item{update_annualLAImax}{Flag indicating whether updating
 #'     LAImax according to mineral N in soil.}
-#'   \item{do_closedN_run}{A logical value indicating whether doing N closed 
-#'     runs to recover N balance.}
+#'   \item{do_closedN_run}{Flag indicating whether doing N closed
+#'     runs to recover N balance enforcing 0.2 kg N m-2 in the inorganic N pool.}
 #'   \item{code_method_photosynth}{String specifying the method of photosynthesis 
 #'     used in the model, either "pmodel" or "gs_leuning".}
 #'   \item{code_method_mortality}{String indicating the type of mortality in the 

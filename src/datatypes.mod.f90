@@ -1252,7 +1252,7 @@ contains
     out_annual_tile%m_turnover      = vegn%m_turnover
     out_annual_tile%c_turnover_time = vegn%pwood%c%c12 / vegn%NPPW
 
-    ! Fix N imbalance (unknown origin)
+    ! Rebalance N (to compensate for the adjunction in vegn_N_uptake)
     if (myinterface%params_siml%do_closedN_run) call Recover_N_balance(vegn)
 
   end subroutine annual_diagnostics
