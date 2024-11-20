@@ -2,7 +2,7 @@
 % Please edit documentation in R/run_biomee_f_bysite.R
 \name{run_biomee_f_bysite}
 \alias{run_biomee_f_bysite}
-\title{R wrapper for SOFUN biomee}
+\title{Run BiomeE (R wrapper)}
 \usage{
 run_biomee_f_bysite(
   sitename,
@@ -22,26 +22,20 @@ run_biomee_f_bysite(
 
 \item{params_siml}{Simulation parameters.
 \describe{
-  \item{spinup}{A logical value indicating whether this simulation does spin-up.}
+  \item{spinup}{Flag indicating whether this simulation does spin-up.}
   \item{spinupyears}{Number of spin-up years.}
-  \item{recycle}{Length of standard recycling period (days).}
+  \item{recycle}{Length of standard recycling period (years).}
   \item{firstyeartrend}{First transient year.}
   \item{nyeartrend}{Number of transient years.}
-  \item{outputhourly}{A logical value indicating whether hourly output is
-    produced.}
-  \item{outputdaily}{A logical value indicating whether daily output is produced.}
-  \item{do_U_shaped_mortality}{A logical value indicating whether U-shaped 
+  \item{steps_per_day}{Time resolution (day-1).}
+  \item{do_U_shaped_mortality}{Flag indicating whether U-shaped
     mortality is used.}
-  \item{update_annualLAImax}{A logical value indicating whether updating 
+  \item{update_annualLAImax}{Flag indicating whether updating
     LAImax according to mineral N in soil.}
-  \item{do_closedN_run}{A logical value indicating whether doing N closed 
-    runs to recover N balance.}
-  \item{do_reset_veg}{A logical value indicating whether reseting vegetation 
-    for disturbance runs.}
-  \item{dist_frequency}{Value indicating the frequency of the disturbance event (in years) 
-    (e.g. 100 indicates a disturbance event occurs every 100 years, i.e., at a rate of 0.01)}
+  \item{do_closedN_run}{Flag indicating whether doing N closed
+    runs to recover N balance enforcing 0.2 kg N m-2 in the inorganic N pool.}
   \item{code_method_photosynth}{String specifying the method of photosynthesis 
-    used in the model, either "pmodel" or "gs_leuning".}
+    used in the model, either "pmodel" or "gs_leuning".document()}
   \item{code_method_mortality}{String indicating the type of mortality in the 
     model. One of the following: "dbh" is size-dependent mortality, "const_selfthin" 
     is constant self thinning (in development), "cstarvation" is carbon starvation, and
@@ -56,7 +50,16 @@ run_biomee_f_bysite(
   \item{elv}{Elevation of the site location, in meters.}
 }}
 
-\item{forcing}{Forcing data.frame used as input.}
+\item{forcing}{Forcing data.frame used as input.
+\describe{
+  \item{ppfd}{Photosynthetic photon flux densisty(mol s-1 m-2)}
+  \item{tair}{Air temperature (deg C)}
+  \item{vpd}{Vapor pressure defficit (Pa)}
+  \item{rain}{Precipitation (kgH2O m-2 s-1 == mm s-1)}
+  \item{wind}{Wind velocity (m s-1)}
+  \item{pair}{Atmoshperic pressure (pa)}
+  \item{co2}{CO2 athmospheric concentration (ppm)}
+}}
 
 \item{params_tile}{Tile-level model parameters, into a single row data.frame
   with columns:
@@ -170,8 +173,7 @@ run_biomee_f_bysite(
     year\eqn{^{-1}}.}
 }}
 
-\item{makecheck}{A logical specifying whether checks are performed to verify 
-forcings.}
+\item{makecheck}{Flag specifying whether checks are performed to verify model inputs and parameters.}
 }
 \value{
 Model output is provided as a list, with elements:
@@ -278,7 +280,7 @@ Model output is provided as a list, with elements:
       ha\eqn{^{-1}}).}
     \item{DBH12}{Diameter at tile level considering trees with DBH > 12 cm
       (cm).}
-    \item{QMD}{Quadratic mean diameter at tile level considering trees with 
+    \item{QMD12}{Quadratic mean diameter at tile level considering trees with
       DBH > 12 cm (cm).}
     \item{NPP}{Net primary productivity (kg C m\eqn{^{-2}} yr\eqn{^{-1}}).}
     \item{GPP}{Gross primary productivity (kg C m\eqn{^{-2}} yr\eqn{^{-1}}).}
@@ -379,7 +381,7 @@ Model output is provided as a list, with elements:
 }
 }
 \description{
-Call to the biomee Fortran model
+Run BiomeE Fortran model on single site.
 }
 \examples{
 \donttest{

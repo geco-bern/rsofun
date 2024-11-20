@@ -32,7 +32,7 @@ contains
       outtype_annual_tile, &
       outtype_annual_cohorts
     use md_gpp_biomee, only: getpar_modl_gpp
-    use md_sofunutils, only: downscale
+    use md_sofunutils, only: aggregate
 
     ! return variables
     type(outtype_daily_tile),     dimension(ndayyear)                , intent(out) :: out_biosphere_daily_tile
@@ -40,18 +40,13 @@ contains
     type(outtype_annual_cohorts), dimension(out_max_cohorts)         , intent(out) :: out_biosphere_annual_cohorts
 
     ! ! local variables
-    integer :: moy, doy, dm
+    integer :: moy         ! Month of year
+    integer :: doy         ! Day of year
+    integer :: dayloop_idx, fastloop_idx, simu_steps
     logical, save :: init  ! is true only on the first step of the simulation
     real, dimension(ndayyear) :: daily_temp  ! Daily temperatures (average)
-
-    !----------------------------------------------------------------
-    ! Biome-E stuff
-    !----------------------------------------------------------------
     real    :: tsoil
-    integer :: hod
-    integer :: simu_steps !, datalines
-    integer, save :: iyears
-    integer, save :: idoy
+    integer, save :: iyears, idoy
 
     !----------------------------------------------------------------
     ! INITIALISATIONS
@@ -81,8 +76,8 @@ contains
     doy = 0
     call Zero_diagnostics( vegn )
 
-    ! Compute averaged daily temperatures.
-    call downscale(daily_temp, myinterface%climate(:)%Tair, myinterface%steps_per_day)
+    ! Compute averaged daily temperatures
+    call aggregate(daily_temp, myinterface%climate(:)%Tair, myinterface%steps_per_day)
 
     !----------------------------------------------------------------
     ! LOOP THROUGH MONTHS
@@ -92,7 +87,7 @@ contains
       !----------------------------------------------------------------
       ! LOOP THROUGH DAYS
       !----------------------------------------------------------------
-      dayloop: do dm=1,ndaymonth(moy)
+      dayloop: do dayloop_idx=1,ndaymonth(moy)
 
         doy = doy + 1
         idoy = idoy + 1
@@ -116,7 +111,7 @@ contains
         ! FAST TIME STEP
         !----------------------------------------------------------------
         ! get daily mean temperature from hourly/half-hourly data
-        fastloop: do hod = 1,myinterface%steps_per_day
+        fastloop: do fastloop_idx = 1,myinterface%steps_per_day
 
           simu_steps    = simu_steps + 1
           vegn%thetaS  = (vegn%wcl(2) - WILTPT) / (FLDCAP - WILTPT)
@@ -167,7 +162,7 @@ contains
     ! output to be consistent with cohort identities.
     ! Note: Relayering happens in phenology leading to a reshuffling of the cohorts and affecting cohort identities.
     !---------------------------------------------
-    call annual_diagnostics( vegn, iyears, out_biosphere_annual_cohorts(:), out_biosphere_annual_tile )
+    call annual_diagnostics( vegn, iyears, out_biosphere_annual_cohorts, out_biosphere_annual_tile )
 
     !---------------------------------------------
     ! Reproduction and mortality
@@ -193,6 +188,11 @@ contains
     call relayer_cohorts( vegn )
     
     call vegn_mergecohorts( vegn )
+
+    !---------------------------------------------
+    ! Update post-mortality metrics
+    !---------------------------------------------
+    call annual_diagnostics_post_mortality( vegn, out_biosphere_annual_cohorts, out_biosphere_annual_tile )
 
     ! update the years of model run
     iyears = iyears + 1

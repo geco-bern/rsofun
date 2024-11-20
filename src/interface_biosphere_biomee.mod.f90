@@ -6,7 +6,7 @@ module md_interface_biomee
   use, intrinsic :: iso_fortran_env, dp=>real64
   use md_forcing_biomee, only: climate_type
   use md_params_soil_biomee, only: paramtype_soil, getsoil
-  use md_params_siml_biomee, only: paramstype_siml
+  use md_params_siml_biomee, only: paramstype_siml_biomee
   use md_params_core, only: MSPECIES, ntstepsyear, ndayyear, MAX_INIT_COHORTS, out_max_cohorts, outtype_steering
   use md_grid, only: gridtype !, domaininfo_type
 
@@ -121,7 +121,7 @@ module md_interface_biomee
     type(gridtype)                                        :: grid
     type(climate_type), dimension(:), allocatable         :: climate
     type(outtype_steering)                                :: steering
-    type(paramstype_siml)                                 :: params_siml
+    type(paramstype_siml_biomee)                          :: params_siml
     real, dimension(:), allocatable                       :: fpc_grid   ! allocatable because we don't know number of PFTs a priori
     type(paramstype_species), dimension(MSPECIES+1)       :: params_species
     type(paramtype_soil)                                  :: params_soil
@@ -237,7 +237,7 @@ module md_interface_biomee
     real :: DBH
     real :: Density12
     real :: DBH12
-    real :: QMD
+    real :: QMD12
     real :: NPP
     real :: GPP
     real :: Rauto
@@ -285,7 +285,7 @@ module md_interface_biomee
     real :: MaxDBH
     real :: NPPL
     real :: NPPW
-    real :: n_deadtrees !yyy
+    real :: n_deadtrees
     real :: c_deadtrees
     real :: m_turnover
     real :: c_turnover_time

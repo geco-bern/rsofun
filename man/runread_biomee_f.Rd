@@ -8,12 +8,12 @@ runread_biomee_f(drivers, makecheck = TRUE, parallel = FALSE, ncores = 2)
 }
 \arguments{
 \item{drivers}{A nested data frame with one row for each site and columns
-named according to the arguments of function `runread_biomee_f_bysite()`}
+named according to the arguments of function `runread_biomee_f_bysite()`.
+See `?run_biomee_f_bysite` for the list of parameters and forcing data required.}
 
-\item{makecheck}{A logical specifying whether checks are performed to verify
-forcings.}
+\item{makecheck}{Flag specifying whether checks are performed to verify forcings.}
 
-\item{parallel}{A logical specifying whether simulations are to be 
+\item{parallel}{Flag specifying whether simulations are to be
 parallelised (sending data from a certain number of sites to each core). 
 Defaults to \code{FALSE}.}
 
@@ -22,11 +22,11 @@ computing. Defaults to 2.}
 }
 \value{
 A tibble with one row for each site and model outputs stored 
-in the nested column \code{data}. See `run_biomee_f_bysite()` for a
+in the nested column \code{data}. See `?run_biomee_f_bysite` for a
 description of the BiomeE output variables.
 }
 \description{
-Runs the BiomeE model and loads output in once.
+Runs BiomeE model for multiple sites.
 }
 \examples{
 \donttest{
