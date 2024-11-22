@@ -11,7 +11,6 @@ run_biomee_f_bysite(
   forcing,
   params_tile,
   params_species,
-  params_soil,
   init_cohort,
   init_soil,
   makecheck = TRUE
@@ -140,23 +139,9 @@ run_biomee_f_bysite(
   \item{LAI_light}{Maximum LAI limited by light.}
 }}
 
-\item{params_soil}{A tibble of soil parameters (one row per soil layer).
-\describe{
-  \item{type}{A string indicating the type of soil.}
-  \item{GMD}{Geometric mean particle diameter (mm).}
-  \item{GSD}{Geometric standard deviation of particle size.}
-  \item{vwc_sat}{Saturated volumetric soil water content (vol/vol).}
-  \item{chb}{Soil texture parameter.}
-  \item{psi_sat_ref}{Saturation soil water potential (m).}
-  \item{k_sat_ref}{Hydraulic conductivity of saturated soil (kg m\eqn{^{-2}} 
-    s\eqn{^{-1}}).}
-  \item{alphaSoil}{Vertical changes of soil property, where 1 = no change.}
-  \item{heat_capacity_dry}{Heat capacity dry air (J m\eqn{^{-3}} K\eqn{^{-1}}).}
-}}
-
 \item{init_cohort}{A data.frame of initial cohort specifications.
 \describe{
-  \item{init_cohort_species}{Indicates different species.}
+  \item{init_cohort_species}{Index of a species described in param_species.}
   \item{init_cohort_nindivs}{Initial individual density, in individuals per 
     m\eqn{^{2}}.}
   \item{init_cohort_bsw}{Initial biomass of sapwood, in kg C per individual.}
@@ -398,7 +383,6 @@ mod_output <- run_biomee_f_bysite(
  forcing = drivers$forcing[[1]],
  params_tile = drivers$params_tile[[1]],
  params_species = drivers$params_species[[1]],
- params_soil = drivers$params_soil[[1]],
  init_cohort = drivers$init_cohort[[1]],
  init_soil = drivers$init_soil[[1]]
 )

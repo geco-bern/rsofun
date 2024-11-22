@@ -5,16 +5,17 @@ module md_interface_biomee
   !----------------------------------------------------------------
   use, intrinsic :: iso_fortran_env, dp=>real64
   use md_forcing_biomee, only: climate_type
-  use md_params_soil_biomee, only: paramtype_soil, getsoil
   use md_params_siml_biomee, only: paramstype_siml_biomee
-  use md_params_core, only: MSPECIES, ntstepsyear, ndayyear, MAX_INIT_COHORTS, out_max_cohorts, outtype_steering
+  use md_params_core
   use md_grid, only: gridtype !, domaininfo_type
 
   implicit none
 
   private
   public  myinterface, interfacetype_biosphere, outtype_hourly_tile, &
-    outtype_annual_cohorts, outtype_daily_cohorts, outtype_daily_tile, outtype_annual_tile
+    outtype_annual_cohorts, outtype_daily_cohorts, outtype_daily_tile, outtype_annual_tile, spec_data_type
+
+  integer, public, parameter :: MAX_LEVELS               = 3                     ! Soil layers, for soil water dynamics
 
   type paramstype_tile
     integer:: soiltype
@@ -37,64 +38,87 @@ module md_interface_biomee
     real   :: par_mort ! calibratable
     real   :: par_mort_under ! calibratable
   end type paramstype_tile
-  
-  type paramstype_species
-    integer :: lifeform
-    integer :: phenotype
-    integer :: pt
-    real    :: alpha_FR
-    real    :: rho_FR
-    real    :: root_r
-    real    :: root_zeta
-    real    :: Kw_root
-    real    :: leaf_size
-    real    :: Vmax
-    real    :: Vannual
-    real    :: wet_leaf_dreg
-    real    :: m_cond
-    real    :: alpha_phot
-    real    :: gamma_L
-    real    :: gamma_LN
-    real    :: gamma_SW
-    real    :: gamma_FR
-    real    :: tc_crit
-    real    :: tc_crit_on
-    real    :: gdd_crit
-    real    :: betaON
-    real    :: betaOFF
-    real    :: alphaHT   ! prescribed by sps
-    real    :: thetaHT   ! prescribed by sps
-    real    :: alphaCA   ! prescribed by sps
-    real    :: thetaCA   ! prescribed by sps
-    real    :: alphaBM   ! prescribed by sps
-    real    :: thetaBM   ! prescribed by sps
-    real    :: seedlingsize
-    real    :: maturalage
-    real    :: v_seed
-    real    :: mortrate_d_c
-    real    :: mortrate_d_u
-    real    :: LMA       ! prescribed by sps
-    real    :: leafLS
-    real    :: LNbase
-    real    :: CNleafsupport
-    real    :: rho_wood  ! prescribed by sps
+
+  !=============== PFT data type =============================================================
+  type spec_data_type
+
+    integer :: lifeform                           ! 0 for grasses, 1 for trees
+    integer :: phenotype                          ! phenology type: 0 for deciduous, 1 for evergreen
+    integer :: pt                                 ! photosynthetic physiology of species
+
+    !===== Leaf traits
+    real    :: LMA                                ! leaf mass per unit area, kg C/m2
+    real    :: leafLS                             ! leaf life span
+    real    :: alpha_L                            ! leaf turn over rate, (leaf longevity as a function of LMA)
+    real    :: LNA                                ! leaf Nitrogen per unit area, kg N/m2
+    real    :: LNbase                             ! basal leaf Nitrogen per unit area, kg N/m2, (Rubisco)
+    real    :: CNleafsupport                      ! leaf structural tissues, 175
+    real    :: leaf_size                          ! characteristic leaf size
+    real    :: alpha_phot                         ! photosynthesis efficiency
+    real    :: m_cond                             ! factor of stomatal conductance
+    real    :: Vmax                               ! max rubisco rate, mol m-2 s-1
+    real    :: Vannual                            ! annual productivity per unit area at full fun (kgC m-2 yr-1)
+    real    :: gamma_L                            ! leaf respiration coeficient (per yr)
+    real    :: gamma_LN                           ! leaf respiration coeficient per unit N
+    real    :: wet_leaf_dreg                      ! wet leaf photosynthesis down-regulation
+
+    !===== Root traits
+    real    :: rho_FR                             ! material density of fine roots (kgC m-3)
+    real    :: root_r                             ! radius of the fine roots, m
+    real    :: root_zeta                          ! e-folding parameter of root vertical distribution (m)
+    real    :: root_frac(MAX_LEVELS)              ! root fraction
+    real    :: SRA                                ! specific fine root area, m2/kg C
+    real    :: gamma_FR                           ! Fine root respiration rate, kgC kgC-1 yr-1
+    real    :: alpha_FR                           ! Turnover rate of Fine roots, fraction yr-1
+    real    :: Kw_root                            ! fine root water donductivity mol m m-2 s−1 MPa−1 !
+    real    :: NfixRate0                          ! Reference N fixation rate (kgN kgC-1 root)
+    real    :: NfixCost0                          ! Carbon cost of N fixation (kgC kgN-1)
+
+    !===== Wood traits
+    real    :: rho_wood                           ! woody density, kg C m-3 wood
+    real    :: gamma_SW                           ! sapwood respiration rate, kgC m-2 Acambium yr-1
     real    :: taperfactor
-    real    :: lAImax
-    real    :: tauNSC
-    real    :: fNSNmax
-    real    :: phiCSA
+
+    !===== Allometry
+    real    :: alphaHT, thetaHT                   ! height = alphaHT * DBH ** thetaHT
+    real    :: alphaCA, thetaCA                   ! crown area = alphaCA * DBH ** thetaCA
+    real    :: alphaBM, thetaBM                   ! biomass = alphaBM * DBH ** thetaBM
+    real    :: kphio                              ! quantum yield efficiency calibratable
+    real    :: phiRL                              ! ratio of fine root to leaf area calibratable
+    real    :: phiCSA                             ! ratio of sapwood CSA to target leaf area
+    real    :: tauNSC                             ! residence time of C in NSC (to define storage capacity)
+    real    :: fNSNmax                            ! multilier for NSNmax
+
+    !===== Default C/N ratios
     real    :: CNleaf0
+    real    :: CNroot0
     real    :: CNsw0
     real    :: CNwood0
-    real    :: CNroot0
     real    :: CNseed0
-    real    :: Nfixrate0
-    real    :: NfixCost0
-    real    :: internal_gap_frac
-    real    :: kphio     ! calibratable
-    real    :: phiRL     ! calibratable
-    real    :: LAI_light ! calibratable
-  end type paramstype_species
+
+    !===== Phenology
+    real    :: tc_crit                            ! K, for turning OFF a growth season
+    real    :: tc_crit_on                         ! K, for turning ON a growth season
+    real    :: gdd_crit                           ! K, critical value of GDD5 for turning ON growth season
+    real    :: betaON                             ! Critical soil moisture for PhenoON
+    real    :: betaOFF                            ! Critical soil moisture for PhenoOFF
+
+    !===== Vital rates
+    real    :: maturalage                         ! the age that can reproduce
+    real    :: v_seed                             ! fracton of G_SF to G_F
+    real    :: seedlingsize                       ! size of the seedlings, kgC/indiv
+    real    :: prob_g,prob_e                      ! germination and establishment probabilities
+    real    :: mortrate_d_c                       ! yearly mortality rate in canopy
+    real    :: mortrate_d_u                       ! yearly mortality rate in understory
+
+    !===== Population level variables
+    real    :: LAImax, underLAImax                ! max. LAI
+    real    :: LAI_light                          ! light controlled maximum LAI
+    real    :: internal_gap_frac                  ! fraction of internal gaps in the canopy
+
+    ! "internal" gaps are the gaps that are created within the canopy by the branch fall processes.
+
+  end type
 
   type inittype_cohort 
     integer :: init_n_cohorts
@@ -122,9 +146,7 @@ module md_interface_biomee
     type(climate_type), dimension(:), allocatable         :: climate
     type(outtype_steering)                                :: steering
     type(paramstype_siml_biomee)                          :: params_siml
-    real, dimension(:), allocatable                       :: fpc_grid   ! allocatable because we don't know number of PFTs a priori
-    type(paramstype_species), dimension(MSPECIES+1)       :: params_species
-    type(paramtype_soil)                                  :: params_soil
+    type(spec_data_type), dimension(MSPECIES)             :: params_species
     type(paramstype_tile)                                 :: params_tile
     type(inittype_cohort), dimension(MAX_INIT_COHORTS)    :: init_cohort
     type(inittype_soil)                                   :: init_soil
@@ -132,8 +154,6 @@ module md_interface_biomee
     integer                                               :: steps_per_day
     real                                                  :: dt_fast_yr
     real                                                  :: step_seconds
-    ! type(paramstype_calib_species), dimension(0:MSPECIES) :: params_calib_species
-    ! type(paramstype_calib_tile)                           :: params_calib_tile
   end type interfacetype_biosphere
 
   type(interfacetype_biosphere) :: myinterface

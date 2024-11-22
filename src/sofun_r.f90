@@ -248,8 +248,7 @@ contains
     tf_base,                      &     
     par_mort,                     &
     par_mort_under,               &  
-    params_species,               &            
-    params_soil,                  &         
+    params_species,               &
     init_cohort,                  &         
     init_fast_soil_C,             &              
     init_slow_soil_C,             &              
@@ -308,12 +307,7 @@ contains
     ! use md_params_soil_biomee, only: getsoil
     use md_forcing_biomee, only: getclimate, &
       climate_type
-    use md_interface_biomee, only: interfacetype_biosphere, &
-      myinterface, &
-      outtype_daily_tile, &
-      outtype_daily_cohorts, &
-      outtype_annual_tile, &
-      outtype_annual_cohorts
+    use md_interface_biomee
     use md_params_core
     use md_biosphere_biomee, only: biosphere_annual
 
@@ -359,8 +353,7 @@ contains
     real(kind=c_double), intent(in) :: par_mort_under
 
     ! naked arrays
-    real(kind=c_double), dimension(0:MSPECIES,55), intent(in)       :: params_species
-    real(kind=c_double), dimension(n_dim_soil_types,8), intent(in)  :: params_soil
+    real(kind=c_double), dimension(MSPECIES,55), intent(in)         :: params_species
     real(kind=c_double), dimension(MAX_INIT_COHORTS,9),  intent(in) :: init_cohort
 
     ! initial soil pool size
@@ -574,20 +567,6 @@ contains
     myinterface%init_soil%init_slow_soil_C = real( init_slow_soil_C )
     myinterface%init_soil%init_Nmineral    = real( init_Nmineral )
     myinterface%init_soil%N_input          = real( N_input )
-
-    !----------------------------------------------------------------
-    ! GET SOIL PARAMETERS
-    !----------------------------------------------------------------
-    !myinterface%params_soil = getsoil( params_soil )
-
-    myinterface%params_soil%GMD(:)               = real(params_soil(:,1))
-    myinterface%params_soil%GSD(:)               = real(params_soil(:,2))
-    myinterface%params_soil%vwc_sat(:)           = real(params_soil(:,3))
-    myinterface%params_soil%chb(:)               = real(params_soil(:,4))
-    myinterface%params_soil%psi_sat_ref(:)       = real(params_soil(:,5))
-    myinterface%params_soil%k_sat_ref(:)         = real(params_soil(:,6))
-    myinterface%params_soil%alphaSoil(:)         = real(params_soil(:,7))
-    myinterface%params_soil%heat_capacity_dry(:) = real(params_soil(:,8))
 
     !----------------------------------------------------------------
     ! INTERPRET FORCING

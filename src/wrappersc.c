@@ -143,8 +143,7 @@ void F77_NAME(biomee_f)(
     double *tf_base,
     double *par_mort,
     double *par_mort_under,
-    double *params_species,                   
-    double *params_soil,                                    
+    double *params_species,
     double *init_cohort,                   
     double *init_fast_soil_C,                   
     double *init_slow_soil_C,                   
@@ -228,8 +227,7 @@ extern SEXP biomee_f_C(
     SEXP tf_base, 
     SEXP par_mort,
     SEXP par_mort_under,  
-    SEXP params_species,                   
-    SEXP params_soil,                                  
+    SEXP params_species,
     SEXP init_cohort,                   
     SEXP init_fast_soil_C,                   
     SEXP init_slow_soil_C,                   
@@ -320,8 +318,7 @@ extern SEXP biomee_f_C(
         REAL(tf_base),  
         REAL(par_mort),  
         REAL(par_mort_under),  
-        REAL(params_species),                   
-        REAL(params_soil),                                     
+        REAL(params_species),
         REAL(init_cohort),                  
         REAL(init_fast_soil_C),                   
         REAL(init_slow_soil_C),                   
@@ -373,36 +370,8 @@ extern SEXP biomee_f_C(
 
     // // Output as list
     SEXP out_list = PROTECT( allocVector(VECSXP, 36) );  // maybe try  STRSXP instead of VECSXP
-    
-    // SET_VECTOR_ELT(out_list, 0,  output_hourly_tile);
+
     SET_VECTOR_ELT(out_list, 0,  output_daily_tile);
-    // SET_VECTOR_ELT(out_list, 1,  output_daily_cohorts_year ); 
-    // SET_VECTOR_ELT(out_list, 2,  output_daily_cohorts_doy );  
-    // SET_VECTOR_ELT(out_list, 3,  output_daily_cohorts_hour );  
-    // SET_VECTOR_ELT(out_list, 4,  output_daily_cohorts_cID );  
-    // SET_VECTOR_ELT(out_list, 5,  output_daily_cohorts_PFT );  
-    // SET_VECTOR_ELT(out_list, 6,  output_daily_cohorts_layer );  
-    // SET_VECTOR_ELT(out_list, 7,  output_daily_cohorts_density );  
-    // SET_VECTOR_ELT(out_list, 8,  output_daily_cohorts_f_layer );  
-    // SET_VECTOR_ELT(out_list, 9,  output_daily_cohorts_LAI );  
-    // SET_VECTOR_ELT(out_list, 10, output_daily_cohorts_gpp );  
-    // SET_VECTOR_ELT(out_list, 11, output_daily_cohorts_resp );  
-    // SET_VECTOR_ELT(out_list, 12, output_daily_cohorts_transp );  
-    // SET_VECTOR_ELT(out_list, 13, output_daily_cohorts_NPPleaf );  
-    // SET_VECTOR_ELT(out_list, 14, output_daily_cohorts_NPProot );  
-    // SET_VECTOR_ELT(out_list, 15, output_daily_cohorts_NPPwood );  
-    // SET_VECTOR_ELT(out_list, 16, output_daily_cohorts_NSC );  
-    // SET_VECTOR_ELT(out_list, 17, output_daily_cohorts_seedC );  
-    // SET_VECTOR_ELT(out_list, 18, output_daily_cohorts_leafC );  
-    // SET_VECTOR_ELT(out_list, 19, output_daily_cohorts_rootC );  
-    // SET_VECTOR_ELT(out_list, 20, output_daily_cohorts_SW_C );  
-    // SET_VECTOR_ELT(out_list, 21, output_daily_cohorts_HW_C );  
-    // SET_VECTOR_ELT(out_list, 22, output_daily_cohorts_NSN );  
-    // SET_VECTOR_ELT(out_list, 23, output_daily_cohorts_seedN );  
-    // SET_VECTOR_ELT(out_list, 24, output_daily_cohorts_leafN );  
-    // SET_VECTOR_ELT(out_list, 25, output_daily_cohorts_rootN );  
-    // SET_VECTOR_ELT(out_list, 26, output_daily_cohorts_SW_N );  
-    // SET_VECTOR_ELT(out_list, 27, output_daily_cohorts_HW_N );  
     SET_VECTOR_ELT(out_list, 1, output_annual_tile);
     SET_VECTOR_ELT(out_list, 2, output_annual_cohorts_year);
     SET_VECTOR_ELT(out_list, 3, output_annual_cohorts_cID);
@@ -449,7 +418,7 @@ extern SEXP biomee_f_C(
 /////////////////////////////////////////////////////////////
 static const R_CallMethodDef CallEntries[] = {
   {"pmodel_f_C",   (DL_FUNC) &pmodel_f_C,   23},  // Specify number of arguments to C wrapper as the last number here
-  {"biomee_f_C",   (DL_FUNC) &biomee_f_C,   45},  // Number of arguments of the C wrapper function for biomee (the SEXP variables, not the output)
+  {"biomee_f_C",   (DL_FUNC) &biomee_f_C,   44},  // Number of arguments of the C wrapper function for biomee (the SEXP variables, not the output)
   {NULL,         NULL,                0}
 };
 

@@ -35,7 +35,7 @@ runread_biomee_f <- function(
   
   # predefine variables for CRAN check compliance
   forcing <- init_cohort <- init_soil <- data <-
-    input <- params_siml <- params_soil <- params_species <-
+    input <- params_siml <- params_species <-
     params_tile <- site_info <- sitename <- . <- NULL
   
   if (parallel){
@@ -55,7 +55,6 @@ runread_biomee_f <- function(
                             "forcing",
                             "params_tile",
                             "params_species",
-                            "params_soil",
                             "init_cohort",
                             "init_soil")) %>%
       multidplyr::partition(cl) %>%
@@ -66,8 +65,7 @@ runread_biomee_f <- function(
            site_info      = .x$site_info[[1]], 
            forcing        = .x$forcing[[1]], 
            params_tile    = .x$params_tile[[1]], 
-           params_species = .x$params_species[[1]], 
-           params_soil    = .x$params_soil[[1]], 
+           params_species = .x$params_species[[1]],
            init_cohort    = .x$init_cohort[[1]], 
            init_soil      = .x$init_soil[[1]], 
            makecheck      = makecheck )
@@ -86,8 +84,7 @@ runread_biomee_f <- function(
                     "site_info", 
                     "forcing", 
                     "params_tile", 
-                    "params_species", 
-                    "params_soil", 
+                    "params_species",
                     "init_cohort", 
                     "init_soil"
                     ) %>% 
