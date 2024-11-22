@@ -20,10 +20,6 @@ knitr::opts_chunk$set(
 library(rsofun)
 library(dplyr)
 library(ggplot2)
-
-# fake variable as optimization isn't run
-pars <- list()
-pars$par["kphio"] <- 0.04478049
 ```
 
 The `rsofun` package and framework includes two main models. The `pmodel` and `biomee` (which in part relies on P-model components). Here we give a short example on how to run the `pmodel` on the included demo datasets to familiarize yourself with both the data structure and the outputs.
@@ -163,6 +159,11 @@ pars <- calib_sofun(
   )
 ```
 
+```{r simulate_calibration_run, include = FALSE}
+# fake variable as optimization isn't run
+pars <- list()
+pars$par["kphio"] <- 0.03580962
+```
 When successful the optimized parameters can be used to run subsequent modelling efforts, in this case slightly improving the model fit over a more global parameter set.
 
 ```{r}
