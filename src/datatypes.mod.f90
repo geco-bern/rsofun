@@ -3,8 +3,7 @@ module datatypes
   ! Module containing BiomeE state variable and parameter 
   ! definitions.
   ! Code adopted from BiomeE https://doi.org/10.5281/zenodo.7125963.
-  !----------------------------------------------------------------  
-  use, intrinsic :: iso_fortran_env, dp=>real64, sp=>real32, in=>int32
+  !----------------------------------------------------------------
   use md_interface_biomee, only: myinterface, spec_data_type, MAX_LEVELS
   use md_params_core
   use md_classdefs
@@ -15,7 +14,6 @@ module datatypes
   public :: spec_data_type, cohort_type, vegn_tile_type
 
   !=============== Public subroutines =====================================================
-  public :: initialize_PFT_data
   public :: Zero_diagnostics, hourly_diagnostics, daily_diagnostics, &
             annual_diagnostics
 
@@ -55,6 +53,9 @@ module datatypes
   !===== Soil SOM reference C/N ratios
   real, public, parameter :: CN0metabolicL               = 15.0 
   real, public, parameter :: CN0structuralL              = 40.0
+
+  !===== Hydrolics
+  real, public, parameter :: psi_leaf                    = -2.31 *1.0e6 ! pa, Katul et al. 2003, for clay soil
 
   !=============== Cohort level data type =============================================================
   type :: cohort_type
@@ -355,77 +356,6 @@ module datatypes
   real  :: DBHtp      = 2.0    !  m, for canopy tree's mortality rate
 
 contains
-
-! ================Parameter initialization ===================
-! =========================================================================
-
-  subroutine initialize_PFT_data()
-
-    ! ---- local vars ------
-    integer :: i
-
-    associate(spdata => myinterface%params_species)
-
-      spdata%prob_g        = 1.0
-      spdata%prob_e        = 1.0
-
-      spdata%underLAImax = spdata%LAImax
-
-      ! specific root area
-      spdata%SRA           = 2.0/(spdata%root_r*spdata%rho_FR)
-
-      ! calculate alphaBM parameter of allometry. note that rho_wood was re-introduced for this calculation
-      spdata%alphaBM = spdata%rho_wood * spdata%taperfactor * PI/4. * spdata%alphaHT ! 5200
-
-      ! Vmax as a function of LNbase
-      spdata%Vmax = 0.02 * spdata%LNbase ! 0.03125 * sp%LNbase ! Vmax/LNbase= 25E-6/0.8E-3 = 0.03125 !
-
-      ! CN0 of leaves
-      spdata%LNA     = spdata%LNbase +  spdata%LMA/spdata%CNleafsupport
-      spdata%CNleaf0 = spdata%LMA/spdata%LNA
-      ! Leaf life span as a function of LMA
-      spdata%leafLS = c_LLS * spdata%LMA
-
-      do i = 1, size(spdata)
-        call init_derived_species_data(spdata(i))
-      enddo
-
-    end associate
-
-  end subroutine initialize_pft_data
-
-
-  subroutine init_derived_species_data(sp)
-    
-    type(spec_data_type), intent(inout) :: sp
-
-    ! ---- local vars ------
-    integer :: j
-    real :: rdepth(0:max_lev)
-    real :: residual
-
-    ! root vertical profile
-    rdepth=0.0
-    do j=1,max_lev
-      rdepth(j) = rdepth(j-1)+thksl(j)
-      sp%root_frac(j) = exp(-rdepth(j-1)/sp%root_zeta)- &
-                       exp(-rdepth(j)  /sp%root_zeta)
-    enddo
-    residual = exp(-rdepth(max_lev)/sp%root_zeta)
-    do j=1,max_lev
-      sp%root_frac(j) = sp%root_frac(j) + residual*thksl(j)/rdepth(max_lev)
-    enddo
-
-    if(sp%leafLS>1.0)then
-      sp%phenotype = 1
-    else
-      sp%phenotype = 0
-    endif
-
-    ! Leaf turnover rate, (leaf longevity as a function of LMA)
-    sp%alpha_L = 1.0/sp%leafLS * sp%phenotype
-
-  end subroutine init_derived_species_data
 
   !==============for diagnostics============================================
   subroutine Zero_diagnostics(vegn)

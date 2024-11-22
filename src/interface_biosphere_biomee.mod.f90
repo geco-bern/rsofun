@@ -3,11 +3,10 @@ module md_interface_biomee
   ! Module for handling I/O (forcing, parameters, output) from 
   ! biome_f to the biosphere() with the BiomeE implementation
   !----------------------------------------------------------------
-  use, intrinsic :: iso_fortran_env, dp=>real64
   use md_forcing_biomee, only: climate_type
   use md_params_siml_biomee, only: paramstype_siml_biomee
   use md_params_core
-  use md_grid, only: gridtype !, domaininfo_type
+  use md_grid, only: gridtype
 
   implicit none
 
@@ -15,7 +14,7 @@ module md_interface_biomee
   public  myinterface, interfacetype_biosphere, outtype_hourly_tile, &
     outtype_annual_cohorts, outtype_daily_cohorts, outtype_daily_tile, outtype_annual_tile, spec_data_type
 
-  integer, public, parameter :: MAX_LEVELS               = 3                     ! Soil layers, for soil water dynamics
+  integer, public, parameter :: MAX_LEVELS = 3  ! Soil layers, for soil water dynamics
 
   type paramstype_tile
     integer:: soiltype
@@ -146,9 +145,9 @@ module md_interface_biomee
     type(climate_type), dimension(:), allocatable         :: climate
     type(outtype_steering)                                :: steering
     type(paramstype_siml_biomee)                          :: params_siml
-    type(spec_data_type), dimension(MSPECIES)             :: params_species
+    type(spec_data_type), dimension(:), allocatable       :: params_species
     type(paramstype_tile)                                 :: params_tile
-    type(inittype_cohort), dimension(MAX_INIT_COHORTS)    :: init_cohort
+    type(inittype_cohort), dimension(:), allocatable      :: init_cohort
     type(inittype_soil)                                   :: init_soil
     integer                                               :: datalines
     integer                                               :: steps_per_day

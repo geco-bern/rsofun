@@ -513,9 +513,11 @@ run_biomee_f_bysite <- function(
       par_mort_under = as.numeric(params_tile$par_mort_under),
 
       ## Species-specific parameters
+      n_params_species = as.integer(nrow(params_species)),
       params_species = as.matrix(params_species),
-      
+
       ## initial cohort sizes
+      n_init_cohort = as.integer(nrow(init_cohort)),
       init_cohort = as.matrix(init_cohort),
 
       ## initial soil pools

@@ -35,13 +35,10 @@ contains
       real :: fWup(max_lev)      ! fraction to the actual soil water
       real :: freewater(max_lev)
       real :: totWsup(max_lev) ! potential water uptake, mol s-1 m-2
-      real :: psi_soil, psi_leaf ! Pa, water potentials from soil to leaf
       real :: thetaS(max_lev) ! soil moisture index (0~1)
       real :: dpsiSR(max_lev) ! pressure difference between soil water and root water, Pa
       integer :: i,j
 
-    !! Plant hydraulics
-       psi_leaf = -2.31 *1.0e6 ! pa, Katul et al. 2003, for clay soil
     !! Water supply from each layer
       do i=1, max_lev ! Calculate water uptake potential layer by layer
          freewater(i) = max(0.0,((vegn%wcl(i)-WILTPT) * thksl(i) * 1000.0))

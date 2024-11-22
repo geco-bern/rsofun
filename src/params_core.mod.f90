@@ -15,8 +15,6 @@ module md_params_core
 
   ! From LM3-PPA
   integer, parameter :: nlayers_soil = 3         ! number of soil layers
-  integer, parameter :: MSPECIES = 16            ! number of species
-  integer, parameter :: MAX_INIT_COHORTS = 10    ! Number of initial cohorts
   integer, parameter :: out_max_cohorts = 50     ! Number of maximum cohorts
 
   integer, parameter :: nvars_hourly_tile = 15

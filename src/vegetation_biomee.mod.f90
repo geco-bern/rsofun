@@ -837,7 +837,7 @@ contains
                 !            (1. + exp(2.*(cc%dbh-1))))
                 deathrate = min(1.0, param_dbh * cc%dbh ** 1.5) ! 1.5, 2.5, 5
               else
-                deathrate = sp%mortrate_d_c !0.01
+                deathrate = sp%mortrate_d_c
               endif
             endif
           endif
@@ -970,8 +970,8 @@ contains
     ! local variables
     type(cohort_type), pointer :: cc ! parent and child cohort pointers
     type(cohort_type), dimension(:), pointer :: ccold, ccnew   ! pointer to old cohort array
-    integer, dimension(16) :: reproPFTs
-    real,    dimension(16) :: seedC, seedN ! seed pool of productible PFTs
+    integer, dimension(vegn%n_cohorts) :: reproPFTs
+    real,    dimension(vegn%n_cohorts) :: seedC, seedN ! seed pool of productible PFTs
     ! real :: failed_seeds, N_failedseed !, prob_g, prob_e
     integer :: newcohorts, matchflag, nPFTs ! number of new cohorts to be created
     integer :: nCohorts, istat
@@ -2139,30 +2139,6 @@ contains
 
       enddo
     end associate
-
-    !  ! update the PFTs in the first layer based on fixed N
-    !  if (fixedN_based) then ! based on "cc%annualfixedN + vegn%previousN"
-    !!    Reset sp%LAImax
-    !     do i = 1,vegn%n_cohorts
-    !        cc => vegn%cohorts(i)
-    !        associate (sp => myinterface%params_species(cc%species) )
-    !        sp%LAImax    = 0.0  ! max(sp%LAImax,ccLAImax)
-    !        sp%layerfrac = 0.0
-    !        sp%n_cc      = 0
-    !        end associate
-    !     enddo
-    !!   Sum ccLAImax in the first layer
-    !     do i = 1,vegn%n_cohorts
-    !        cc => vegn%cohorts(i)
-    !        associate ( sp => myinterface%params_species(cc%species) )
-    !        if (sp%LAImax < LAImin) then
-    !           LAI_nitrogen = 0.5*(vegn%previousN+cc%annualfixedN)*sp%CNleaf0*sp%leafLS/sp%LMA
-    !           if (sp%Nfixrate0 > 0.0)
-    !           sp%LAImax    = MAX(LAImin, MIN(LAI_nitrogen,sp%LAI_light))
-    !        endif
-    !        end associate
-    !     enddo
-    !  endif
   
   end subroutine vegn_annualLAImax_update
 
