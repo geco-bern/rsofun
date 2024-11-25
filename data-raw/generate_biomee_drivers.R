@@ -141,23 +141,11 @@ params_species <- tibble(
   kphio         = rep(0.05,16),
   phiRL         = rep(3.5,16),
   LAI_light     = rep(3.5,16)
-) 
-
-params_soil <- tibble(
-  type              = c("Coarse","Medium","Fine","CM","CF","MF","CMF","Peat","MCM"),
-  GMD               = c(0.7, 0.4, 0.3, 0.1, 0.1, 0.07, 0.007, 0.3, 0.3),
-  GSD               = c(5.0, 5.3, 7.4, 6.1, 6.1, 14.0, 15.0, 7.4, 7.4),
-  vwc_sat           = c(0.380, 0.445, 0.448, 0.412, 0.414, 0.446, 0.424, 0.445, 0.445),
-  chb               = c(3.5,6.4,11.0,4.8,6.3,8.4,6.3,6.4,6.4),
-  psi_sat_ref       = c(-600, -790, -910, -1580, -1680, -1880, -5980, -790, -790),
-  k_sat_ref         = c(130.8, 75.1, 53.2, 12.1, 11.1, 12.7, 1.69, 53.2, 53.2),
-  alphaSoil         = rep(1, 9),
-  heat_capacity_dry = c(1.2e6, 1.1e6, 1.1e6, 1.1e6, 1.1e6, 1.1e6, 1.1e6, 1.4e6, 1.0)
 )
 
 init_cohort <- tibble(
   init_n_cohorts = 1,   # number of PFTs
-  init_cohort_species = rep(1, 10),    # indicates sps # 1 - Fagus sylvatica
+  init_cohort_species = rep(2, 10),    # indicates sps # 1 - Fagus sylvatica
   init_cohort_nindivs = rep(0.05,10),  # initial individual density, individual/m2 ! 1 indiv/m2 = 10.000 indiv/ha
   init_cohort_bl      = rep(0.0,10),   # initial biomass of leaves, kg C/individual
   init_cohort_br      = rep(0.0, 10),  # initial biomass of fine roots, kg C/individual
@@ -219,7 +207,6 @@ build_driver <- function(params_siml, forcing) {
     params_siml = list(tibble(params_siml)),
     params_tile = list(tibble(params_tile)),
     params_species = list(tibble(params_species)),
-    params_soil = list(tibble(params_soil)),
     init_cohort = list(tibble(init_cohort)),
     init_soil = list(tibble(init_soil)),
     forcing = list(tibble(forcing))
