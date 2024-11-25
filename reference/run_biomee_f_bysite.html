@@ -68,7 +68,6 @@
 <span>  <span class="va">forcing</span>,</span>
 <span>  <span class="va">params_tile</span>,</span>
 <span>  <span class="va">params_species</span>,</span>
-<span>  <span class="va">params_soil</span>,</span>
 <span>  <span class="va">init_cohort</span>,</span>
 <span>  <span class="va">init_soil</span>,</span>
 <span>  makecheck <span class="op">=</span> <span class="cn">TRUE</span></span>
@@ -372,42 +371,9 @@
 </dl></dd>
 
 
-<dt id="arg-params-soil">params_soil<a class="anchor" aria-label="anchor" href="#arg-params-soil"></a></dt>
-<dd><p>A tibble of soil parameters (one row per soil layer).</p><dl><dt>type</dt>
-<dd><p>A string indicating the type of soil.</p></dd>
-
-  <dt>GMD</dt>
-<dd><p>Geometric mean particle diameter (mm).</p></dd>
-
-  <dt>GSD</dt>
-<dd><p>Geometric standard deviation of particle size.</p></dd>
-
-  <dt>vwc_sat</dt>
-<dd><p>Saturated volumetric soil water content (vol/vol).</p></dd>
-
-  <dt>chb</dt>
-<dd><p>Soil texture parameter.</p></dd>
-
-  <dt>psi_sat_ref</dt>
-<dd><p>Saturation soil water potential (m).</p></dd>
-
-  <dt>k_sat_ref</dt>
-<dd><p>Hydraulic conductivity of saturated soil (kg m\(^{-2}\)
-    s\(^{-1}\)).</p></dd>
-
-  <dt>alphaSoil</dt>
-<dd><p>Vertical changes of soil property, where 1 = no change.</p></dd>
-
-  <dt>heat_capacity_dry</dt>
-<dd><p>Heat capacity dry air (J m\(^{-3}\) K\(^{-1}\)).</p></dd>
-
-
-</dl></dd>
-
-
 <dt id="arg-init-cohort">init_cohort<a class="anchor" aria-label="anchor" href="#arg-init-cohort"></a></dt>
 <dd><p>A data.frame of initial cohort specifications.</p><dl><dt>init_cohort_species</dt>
-<dd><p>Indicates different species.</p></dd>
+<dd><p>Index of a species described in param_species.</p></dd>
 
   <dt>init_cohort_nindivs</dt>
 <dd><p>Initial individual density, in individuals per
@@ -1004,7 +970,6 @@
 <span class="r-in"><span> forcing <span class="op">=</span> <span class="va">drivers</span><span class="op">$</span><span class="va">forcing</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span>,</span></span>
 <span class="r-in"><span> params_tile <span class="op">=</span> <span class="va">drivers</span><span class="op">$</span><span class="va">params_tile</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span>,</span></span>
 <span class="r-in"><span> params_species <span class="op">=</span> <span class="va">drivers</span><span class="op">$</span><span class="va">params_species</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span>,</span></span>
-<span class="r-in"><span> params_soil <span class="op">=</span> <span class="va">drivers</span><span class="op">$</span><span class="va">params_soil</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span>,</span></span>
 <span class="r-in"><span> init_cohort <span class="op">=</span> <span class="va">drivers</span><span class="op">$</span><span class="va">init_cohort</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span>,</span></span>
 <span class="r-in"><span> init_soil <span class="op">=</span> <span class="va">drivers</span><span class="op">$</span><span class="va">init_soil</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>

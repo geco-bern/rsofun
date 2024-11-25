@@ -104,10 +104,9 @@ consistent ontogeny in terms of variables and data structures used.</p>
 <p>A drivers object is used as unique input to the models, consisting of
 a list of sites. Each site (i.e. row) contains the following data: -
 <code>sitename</code>: site name - <code>site_info</code>: location
-specific site information (nested tibble) - <code>params_soil</code>:
-soil characteristics for BiomeE model (nested tibble) -
-<code>params_siml</code>: simulation parameter settings (nested tibble)
-- <code>forcing</code>: environmental forcing data (nested tibble)</p>
+specific site information (nested tibble) - <code>params_siml</code>:
+simulation parameter settings (nested tibble) - <code>forcing</code>:
+environmental forcing data (nested tibble)</p>
 <p>Each of the provided demo drivers contain only one sample site:</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># call to the included p-model demo drivers</span></span>
@@ -119,19 +118,19 @@ soil characteristics for BiomeE model (nested tibble) -
 <span></span>
 <span><span class="co"># call to the included BiomeE (p-model) demo drivers</span></span>
 <span><span class="fu">rsofun</span><span class="fu">::</span><span class="va"><a href="../reference/biomee_p_model_drivers.html">biomee_p_model_drivers</a></span></span>
-<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 1 × 9</span></span></span>
-<span><span class="co">#&gt;   sitename site_info         params_siml params_tile params_species params_soil</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 1 × 8</span></span></span>
+<span><span class="co">#&gt;   sitename site_info         params_siml params_tile params_species init_cohort</span></span>
 <span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;list&gt;</span>            <span style="color: #949494; font-style: italic;">&lt;list&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;list&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;list&gt;</span>         <span style="color: #949494; font-style: italic;">&lt;list&gt;</span>     </span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> CH-Lae   <span style="color: #949494;">&lt;tibble [1 × 14]&gt;</span> <span style="color: #949494;">&lt;tibble&gt;</span>    <span style="color: #949494;">&lt;tibble&gt;</span>    <span style="color: #949494;">&lt;tibble&gt;</span>       <span style="color: #949494;">&lt;tibble&gt;</span>   </span></span>
-<span><span class="co">#&gt; <span style="color: #949494;"># ℹ 3 more variables: init_cohort &lt;list&gt;, init_soil &lt;list&gt;, forcing &lt;list&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># ℹ 2 more variables: init_soil &lt;list&gt;, forcing &lt;list&gt;</span></span></span>
 <span></span>
 <span><span class="co"># call to the included BiomeE (gs leuning) demo drivers</span></span>
 <span><span class="fu">rsofun</span><span class="fu">::</span><span class="va"><a href="../reference/biomee_gs_leuning_drivers.html">biomee_gs_leuning_drivers</a></span></span>
-<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 1 × 9</span></span></span>
-<span><span class="co">#&gt;   sitename site_info         params_siml params_tile params_species params_soil</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 1 × 8</span></span></span>
+<span><span class="co">#&gt;   sitename site_info         params_siml params_tile params_species init_cohort</span></span>
 <span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;list&gt;</span>            <span style="color: #949494; font-style: italic;">&lt;list&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;list&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;list&gt;</span>         <span style="color: #949494; font-style: italic;">&lt;list&gt;</span>     </span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> CH-Lae   <span style="color: #949494;">&lt;tibble [1 × 14]&gt;</span> <span style="color: #949494;">&lt;tibble&gt;</span>    <span style="color: #949494;">&lt;tibble&gt;</span>    <span style="color: #949494;">&lt;tibble&gt;</span>       <span style="color: #949494;">&lt;tibble&gt;</span>   </span></span>
-<span><span class="co">#&gt; <span style="color: #949494;"># ℹ 3 more variables: init_cohort &lt;list&gt;, init_soil &lt;list&gt;, forcing &lt;list&gt;</span></span></span></code></pre></div>
+<span><span class="co">#&gt; <span style="color: #949494;"># ℹ 2 more variables: init_soil &lt;list&gt;, forcing &lt;list&gt;</span></span></span></code></pre></div>
 <p>Nested data structures can be accessed like this:</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Accessing the site information for the first site</span></span>
