@@ -141,6 +141,14 @@ contains
 
   end function calc_patm
 
+  function calc_esat(T) result( out_esat ) ! pressure, Pa
+    implicit none
+    real :: out_esat
+    real, intent(in) :: T ! degC
+
+    out_esat=610.78*exp(17.27*T/(T+237.3))
+
+  end function calc_esat
 
   function median( vec, len ) result( out )
     !--------------------------------------------------------------------
@@ -156,7 +164,7 @@ contains
     real                               :: out
 
     ! local variables
-    real, dimension(1:len)             :: tmp
+    real, dimension(len)             :: tmp
 
     tmp(:) = vec(:)
 

@@ -32,7 +32,6 @@ Overall, the package uses the {tidyverse} data paradigm (Wickham, 2017), using n
 A drivers object is used as unique input to the models, consisting of a list of sites. Each site (i.e. row) contains the following data:
 - `sitename`: site name
 - `site_info`: location specific site information (nested tibble)
-- `params_soil`: soil characteristics for BiomeE model (nested tibble)
 - `params_siml`: simulation parameter settings (nested tibble)
 - `forcing`: environmental forcing data (nested tibble)
 
