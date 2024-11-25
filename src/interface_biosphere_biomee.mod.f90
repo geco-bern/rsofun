@@ -111,7 +111,7 @@ module md_interface_biomee
     real    :: mortrate_d_u                       ! yearly mortality rate in understory
 
     !===== Population level variables
-    real    :: LAImax, underLAImax                ! max. LAI
+    real    :: LAImax, underLAImax                ! max. LAI - Mutated at runtime!!
     real    :: LAI_light                          ! light controlled maximum LAI
     real    :: internal_gap_frac                  ! fraction of internal gaps in the canopy
 
@@ -155,6 +155,8 @@ module md_interface_biomee
     real                                                  :: step_seconds
   end type interfacetype_biosphere
 
+  ! Data structure containing the parameters and forcing data.
+  ! Should not be mutated (it is now for historical reasons)
   type(interfacetype_biosphere) :: myinterface
 
   !----------------------------------------------------------------

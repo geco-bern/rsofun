@@ -1204,6 +1204,7 @@ contains
 
 
   subroutine relayer_cohorts( vegn )
+    use, intrinsic :: ieee_arithmetic
     !////////////////////////////////////////////////////////////////
     ! Arrange crowns into canopy layers according to their height and 
     ! crown areas.
@@ -1241,9 +1242,17 @@ contains
     ! equal to the maximum number of times an input cohort can be split by a layer 
     ! boundary.
 
-    ! calculate size of the new cohorts, correctly dealing with the NaN
-    ! values - if one ignores the NaN values these are treated as a large
-    ! negative int()
+    ! NaN can happen when cohorts spiral down to 0, leading to division by 0 in multiple places
+    ! They need to be delt with here to avoid segmentation faults when allocating newCC.
+    where(ieee_is_nan(oldCC%crownarea))
+      oldCC%crownarea = 0
+    end where
+
+    where(ieee_is_nan(oldCC%nindivs))
+      oldCC%nindivs = 0
+    end where
+
+    ! calculate size of the new cohorts
     N1 = N0 + int(sum(oldCC%nindivs * oldCC%crownarea))
 
     ! allocate the new cohort array using the above size

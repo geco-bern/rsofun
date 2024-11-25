@@ -15,7 +15,7 @@ module md_params_core
 
   ! From LM3-PPA
   integer, parameter :: nlayers_soil = 3         ! number of soil layers
-  integer, parameter :: out_max_cohorts = 50     ! Number of maximum cohorts
+  integer, parameter :: out_max_cohorts = 50     ! maximum number of cohorts
 
   integer, parameter :: nvars_hourly_tile = 15
   integer, parameter :: nvars_daily_tile = 35
