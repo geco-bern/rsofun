@@ -1,3 +1,3 @@
-## R CMD check results
+## R CMD check
 
-0 errors | 0 warnings | 0 notes
+Status: Ok
