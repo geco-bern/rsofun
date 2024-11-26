@@ -107,4 +107,7 @@ params_modl <- list(
 output <- rsofun::runread_pmodel_f(
   drivers = rsofun::p_model_drivers,
   par = params_modl)
+output_vcmax25 <- rsofun::runread_pmodel_f(
+  drivers = rsofun::p_model_drivers_vcmax25,
+  par = params_modl)
 }

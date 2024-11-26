@@ -8,6 +8,7 @@
 ^benchmarking$
 ^Rscripts$
 ^Rold$
+^.idea$
 
 # R-markdown files in the root folder.
 ^.*.ods$

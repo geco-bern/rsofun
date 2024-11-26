@@ -44,7 +44,6 @@ plot_prior_posterior_density <- function(
   priorMat <-  getSetup(x)$prior$sampler(10000) # nPriorDraws = 10000
   
   # Parameter names
-  nPar <- ncol(posteriorMat)
   parNames <- colnames(posteriorMat)
   # rename columns priorMat
   colnames(priorMat) <- parNames  
@@ -81,15 +80,15 @@ settings_calib <- list(
   control = list(
     sampler = "DEzs",
     settings = list(
-      burnin = 1500,
+      burnin = 3000,
       iterations = 12000,
       nrChains = 3,       # number of independent chains
       startValue = 3      # number of internal chains to be sampled
     )),
   par = list(
-    kphio = list(lower = 0.03, upper = 0.15, init = 0.05),
-    soilm_betao = list(lower = 0, upper = 1, init = 0.2),
-    kc_jmax = list(lower = 0.2, upper = 0.8, init = 0.41),
+    kphio = list(lower = 0.02, upper = 0.15, init = 0.05),
+    kphio_par_b = list(lower = 10, upper = 30, init = 20),
+    kc_jmax = list(lower = 0.1, upper = 0.8, init = 0.40),
     err_gpp = list(lower = 0.1, upper = 3, init = 0.8)
   )
 )
@@ -102,9 +101,9 @@ par_calib <- calib_sofun(
   obs = rsofun::p_model_validation,
   settings = settings_calib,
   par_fixed = list(
-    kphio_par_a = -0.0025,            # define model parameter values from
-    kphio_par_b = 20,                 # Stocker et al. 2020
+    kphio_par_a = -0.0025,            # define model parameter values from Stocker et al. 2020
     soilm_thetastar    = 0.6*240,
+    soilm_betao = 0.2,
     beta_unitcostratio = 146.0,
     rd_to_vcmax        = 0.014,
     tau_acclim         = 30.0),
@@ -116,11 +115,18 @@ toc() # Stop measuring time
 # Plot prior and posterior distributions
 gg <- plot_prior_posterior_density(par_calib$mod)
 
+get_runtime <- function(par_calib) {# function(settings_calib){
+  total_time_secs <- sum(unlist(lapply(
+    par_calib$mod,
+    function(curr_chain){curr_chain$settings$runtime[["elapsed"]]})))
+  return(sprintf("Total runtime: %.0f secs", total_time_secs))
+}
+
 # Plot MCMC diagnostics
-# plot(par_calib$mod)
-# summary(par_calib$mod) # Gives Gelman Rubin multivariate of 1.019
-# summary(par_calib$par)
-# print(get_runtime(par_calib))
+plot(par_calib$mod)
+summary(par_calib$mod) # Gives Gelman Rubin multivariate of 1.019
+summary(par_calib$par)
+print(get_runtime(par_calib))
 
 # Output
 ## Define MCMC postprocessing
@@ -128,17 +134,17 @@ get_settings_str <- function(par_calib) {# function(settings_calib){
   stopifnot(is(par_calib$mod, "mcmcSamplerList"))
   
   # explore what's in a mcmcSamplerList:
-    # summary(par_calib$mod)
-    # plot(par_calib$mod)
+  # summary(par_calib$mod)
+  # plot(par_calib$mod)
   individual_chains <- par_calib$mod
   nrChains <- length(individual_chains) # number of chains
-    # plot(individual_chains[[1]]) # chain 1
-    # plot(individual_chains[[2]]) # chain 2
-    # plot(individual_chains[[3]]) # chain 3
-    # class(individual_chains[[1]]$setup); individual_chains[[1]]$setup # Bayesian Setup
-    # individual_chains[[1]]$chain
-    # individual_chains[[1]]$X
-    # individual_chains[[1]]$Z
+  # plot(individual_chains[[1]]) # chain 1
+  # plot(individual_chains[[2]]) # chain 2
+  # plot(individual_chains[[3]]) # chain 3
+  # class(individual_chains[[1]]$setup); individual_chains[[1]]$setup # Bayesian Setup
+  # individual_chains[[1]]$chain
+  # individual_chains[[1]]$X
+  # individual_chains[[1]]$Z
   nrInternalChains <- lapply(individual_chains, function(curr_chain){curr_chain$settings$nrChains})  |> unlist() |> unique() |> paste0(collapse = "-")
   nrIterations     <- lapply(individual_chains, function(curr_chain){curr_chain$settings$iterations})|> unlist() |> unique() |> paste0(collapse = "-")
   nrBurnin         <- lapply(individual_chains, function(curr_chain){curr_chain$settings$burnin})    |> unlist() |> unique() |> paste0(collapse = "-")
@@ -149,17 +155,10 @@ get_settings_str <- function(par_calib) {# function(settings_calib){
     "Sampler-%s-%siterations_ofwhich%sburnin_chains(%sx%s)",
     sampler_name, nrIterations, nrBurnin, nrChains,  nrInternalChains))
 }
-get_runtime <- function(par_calib) {# function(settings_calib){
-  total_time_secs <- sum(unlist(lapply(
-    par_calib$mod, 
-    function(curr_chain){curr_chain$settings$runtime[["elapsed"]]})))  
-  return(sprintf("Total runtime: %.0f secs", total_time_secs))
-}
 
-dir.create("./analysis/paper_results_files2")
 settings_string <- get_settings_str(par_calib)
 
-saveRDS(par_calib, file = paste0("./analysis/paper_results_files2/",settings_string,"_prior_posterior.RDS"))
-ggsave(paste0("./analysis/paper_results_files2/",settings_string,"_prior_posterior.pdf"), plot = gg, width = 6, height = 5)
-ggsave(paste0("./analysis/paper_results_files2/",settings_string,"_prior_posterior.png"), plot = gg, width = 6, height = 5)
+saveRDS(par_calib, file = paste0("./analysis/paper_results_files/",settings_string,"_prior_posterior.RDS"))
+ggsave(paste0("./analysis/paper_results_files/",settings_string,"_prior_posterior.pdf"), plot = gg, width = 6, height = 5)
+ggsave(paste0("./analysis/paper_results_files/",settings_string,"_prior_posterior.png"), plot = gg, width = 6, height = 5)
 

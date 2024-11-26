@@ -29,7 +29,7 @@ test_that("p-model quantitative check", {
   
   # normal tolerance ~ 0.305
   tolerance <- mean(abs(output - gpp), na.rm = TRUE)/
-     mean(abs(gpp), na.rm = TRUE)
+    mean(abs(gpp), na.rm = TRUE)
   
   # test for correctly returned values
   expect_equal(tolerance, 0.4201191, tolerance = 0.04)

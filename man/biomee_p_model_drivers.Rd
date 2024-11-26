@@ -3,23 +3,17 @@
 \docType{data}
 \name{biomee_p_model_drivers}
 \alias{biomee_p_model_drivers}
-\title{rsofun BiomeE driver data}
+\title{rsofun BiomeE driver data (P-model photosynthesis model)}
 \format{
-A tibble of driver data:
-\describe{
-  \item{sitename}{site name}
-  \item{params_siml}{model parameters}
-  \item{site_info}{site information}
-  \item{soil_texture}{soil texture data}
-  \item{forcing}{forcing data}
-}
+See \code{\link{biomee_gs_leuning_drivers}}
 }
 \usage{
 biomee_p_model_drivers
 }
 \description{
-Small tests dataset to validate if compiled code
-and optimization routines can run using the
-p-model specifications
+Small dataset representing the driver to run the BiomeE-model at the CH-LAE site
+using the P-model photosynthesis specification (and daily time step).
+It can also be used together with leaf trait data from CH-LAE (\code{\link{biomee_validation}}) 
+to optimize model parameters.
 }
 \keyword{datasets}

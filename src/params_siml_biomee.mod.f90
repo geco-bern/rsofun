@@ -16,7 +16,6 @@ module md_params_siml_biomee
 
     type(steering_parameters) :: steering
 
-    ! integer :: model_run_years
     logical :: do_U_shaped_mortality
     logical :: update_annualLAImax
     logical :: do_closedN_run

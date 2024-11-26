@@ -3,6 +3,8 @@
 #' Creates a tibble with rows for each date from \code{'yrstart'} to \code{'yrend'}
 #' in \code{'yyyy-mm-dd'} format. Intervals of dates are specified by argument 
 #'\code{'freq'}. 
+#'  ddf <- init_dates_dataframe(2000, 2003, startmoy=1, startdoy=1,
+#'                              freq="days", endmoy=12, enddom=31, noleap=FALSE)
 #'
 #' @param yrstart An integer defining the start year
 #'  of dates covered by the dataframe.
@@ -24,21 +26,17 @@
 #' of February is removed. Defaults to \code{FALSE}.
 #' 
 #' @return A tibble with dates.
-#' @export
 #'
-#' @examples
-#'  ddf <- init_dates_dataframe( 2000, 2003, startmoy=1, startdoy=1,
-#'   freq="days", endmoy=12, enddom=31, noleap=FALSE )
 
 init_dates_dataframe <- function(
-  yrstart,
-  yrend,
-  startmoy=1,
-  startdoy=1,
-  freq="days",
-  endmoy=12,
-  enddom=31,
-  noleap=FALSE ){
+    yrstart,
+    yrend,
+    startmoy=1,
+    startdoy=1,
+    freq="days",
+    endmoy=12,
+    enddom=31,
+    noleap=FALSE ){
   
   if (freq=="days"){
     
@@ -49,7 +47,7 @@ init_dates_dataframe <- function(
     end_date   <- as.Date(
       sprintf("%04d-%02d-%02d",
               yrend, endmoy, enddom))
-
+    
   } else if (freq=="months"){
     
     start_date <- as.Date(
@@ -59,7 +57,7 @@ init_dates_dataframe <- function(
     end_date   <- as.Date(
       sprintf("%04d-%02d-15",
               yrend, endmoy))
-  
+    
   } else if (freq=="years"){
     
     start_date <- as.Date(
@@ -70,7 +68,7 @@ init_dates_dataframe <- function(
       sprintf("%04d-%02d-01",
               yrend, 7))    
   }
-
+  
   # define date range
   date_range <- data.frame(
     date = seq.Date(
@@ -81,14 +79,14 @@ init_dates_dataframe <- function(
   
   # convert to decimal date
   date_range$year_dec <- numeric_year(date_range$date)
-
+  
   # leap year filter
   if (noleap) {
     date_range <- dplyr::filter(date_range,
-      !(format(date, "%m-%d") == "02-29")
-      )
+                                !(format(date, "%m-%d") == "02-29")
+    )
     
-    }
-
+  }
+  
   return(date_range)
 }

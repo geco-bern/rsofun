@@ -3,23 +3,155 @@
 \docType{data}
 \name{biomee_gs_leuning_drivers}
 \alias{biomee_gs_leuning_drivers}
-\title{rsofun BiomeE driver data}
+\title{rsofun BiomeE driver data (Leuning photosynthesis model)}
 \format{
-A tibble of driver data:
+A tibble of driver data.
 \describe{
-  \item{sitename}{site name}
-  \item{params_siml}{model parameters}
-  \item{site_info}{site information}
-  \item{soil_texture}{soil texture data}
-  \item{forcing}{forcing data}
+  \item{sitename}{Site name}
+  \item{params_siml}{Simulation parameters as a data.frame, including
+  the following data:
+    \describe{
+      \item{spinup}{Flag indicating whether this simulation does spin-up.}
+      \item{spinupyears}{Number of spin-up years.}
+      \item{recycle}{Length of standard recycling period (years).}
+      \item{firstyeartrend}{First transient year.}
+      \item{nyeartrend}{Number of transient years.}
+      \item{steps_per_day}{Time resolution (day-1).}
+      \item{do_U_shaped_mortality}{Flag indicating whether U-shaped
+        mortality is used.}
+      \item{update_annualLAImax}{Flag indicating whether updating
+        LAImax according to mineral N in soil.}
+      \item{do_closedN_run}{Flag indicating whether doing N closed
+        runs to recover N balance enforcing 0.2 kg N m-2 in the inorganic N pool.}
+      \item{code_method_photosynth}{String specifying the method of photosynthesis
+        used in the model, either "pmodel" or "gs_leuning".document()}
+      \item{code_method_mortality}{String indicating the type of mortality in the
+        model. One of the following: "dbh" is size-dependent mortality, "const_selfthin"
+        is constant self thinning (in development), "cstarvation" is carbon starvation, and
+        "growthrate" is growth rate dependent mortality.}
+    }}
+  \item{site_info}{Site meta info in a data.frame.
+This data structure can be freely used for documenting the dataset, but must include at least the following data:
+    \describe{
+      \item{lon}{Longitude of the site location.}
+      \item{lat}{Latitude of the site location.}
+      \item{elv}{Elevation of the site location, in meters.}
+    }}
+  \item{forcing}{Forcing data.frame used as input
+    \describe{
+      \item{ppfd}{Photosynthetic photon flux density (mol s-1 m-2)}
+      \item{tair}{Air temperature (deg C)}
+      \item{vpd}{Vapor pressure deficit (Pa)}
+      \item{rain}{Precipitation (kgH2O m-2 s-1 == mm s-1)}
+      \item{wind}{Wind velocity (m s-1)}
+      \item{pair}{Atmospheric pressure (pa)}
+      \item{co2}{CO2 atmospheric concentration (ppm)}
+    }}
+  \item{params_tile}{Tile-level model parameters, into a single row data.frame, including
+  the following data:
+    \describe{
+      \item{soiltype}{Integer indicating the type of soil: Sand = 1, LoamySand = 2,
+        SandyLoam = 3, SiltLoam = 4, FrittedClay = 5, Loam = 6, Clay = 7.}
+      \item{FLDCAP}{Field capacity (vol/vol). Water remaining in a soil after it
+        has been thoroughly saturated and allowed to drain freely.}
+      \item{WILTPT}{Wilting point (vol/vol). Water content of a soil at which
+      plants wilt and fail to recover.}
+      \item{K1}{Fast soil C decomposition rate (year\eqn{^{-1}}).}
+      \item{K2}{Slow soil C decomposition rate (year\eqn{^{-1}}).}
+      \item{K_nitrogen}{Mineral Nitrogen turnover rate (year\eqn{^{-1}}).}
+      \item{MLmixRatio}{Ratio of C and N returned to litters from microbes.}
+      \item{etaN}{N loss rate through runoff (organic and mineral) (year\eqn{^{-1}}).}
+      \item{LMAmin}{Minimum LMA, leaf mass per unit area, kg C m\eqn{^{-2}}.}
+      \item{fsc_fine}{Fraction of fast turnover carbon in fine biomass.}
+      \item{fsc_wood}{Fraction of fast turnover carbon in wood biomass.}
+      \item{GR_factor}{Growth respiration factor.}
+      \item{l_fract}{Fraction of the carbon retained after leaf drop.}
+      \item{retransN}{Retranslocation coefficient of nitrogen.}
+      \item{f_initialBSW}{Coefficient for setting up initial sapwood.}
+      \item{f_N_add}{Re-fill of N for sapwood.}
+      \item{tf_base}{Calibratable scalar for respiration, used to increase LUE
+        levels.}
+      \item{par_mort}{Canopy mortality parameter.}
+      \item{par_mort_under}{Parameter for understory mortality.}
+    }}
+  \item{params_species}{A data.frame containing species-specific model parameters,
+      with one species per row, including the following data:
+    \describe{
+      \item{lifeform}{Integer set to 0 for grasses and 1 for trees.}
+      \item{phenotype}{Integer set to 0 for deciduous and 1 for evergreen.}
+      \item{pt}{Integer indicating the type of plant according to photosynthesis:
+        0 for C3; 1 for C4}
+      \item{alpha_FR}{Fine root turnonver rate (year\eqn{^{-1}}).}
+      \item{rho_FR}{Material density of fine roots (kg C m\eqn{^{-3}}).}
+      \item{root_r}{Radius of the fine roots, in m.}
+      \item{root_zeta}{e-folding parameter of root vertical distribution, in m.}
+      \item{Kw_root}{Fine root water conductivity (mol m\eqn{^{-2}}
+        s\eqn{^{-1}} MPa\eqn{^{-1}}).}
+      \item{leaf_size}{Characteristic leaf size.}
+      \item{Vmax}{Max RuBisCo rate, in mol m\eqn{^{-2}} s\eqn{^{-1}}.}
+      \item{Vannual}{Annual productivity per unit area at full sun (kg C
+        m\eqn{^{-2}} year\eqn{^{-2}}).}
+      \item{wet_leaf_dreg}{Wet leaf photosynthesis down-regulation.}
+      \item{m_cond}{Factor of stomatal conductance.}
+      \item{alpha_phot}{Photosynthesis efficiency.}
+      \item{gamma_L}{Leaf respiration coefficient, in year\eqn{^{-1}}.}
+      \item{gamma_LN}{Leaf respiration coefficient per unit N.}
+      \item{gamma_SW}{Sapwood respiration rate, in kg C m\eqn{^{-2}} year\eqn{^{-1}}.}
+      \item{gamma_FR}{Fine root respiration rate, kg C kg C\eqn{^{-1}}
+        year\eqn{^{-1}}.}
+      \item{tc_crit}{Critical temperature triggerng offset of phenology, in Kelvin.}
+      \item{tc_crit_on}{Critical temperature triggerng onset of phenology, in Kelvin.}
+      \item{gdd_crit}{Critical value of GDD5 for turning ON growth season.}
+      \item{betaON}{Critical soil moisture for phenology onset.}
+      \item{betaOFF}{Critical soil moisture for phenology offset.}
+      \item{seedlingsize}{Initial size of seedlings, in kg C per individual.}
+      \item{LNbase}{Basal leaf N per unit area, in kg N m\eqn{^{-2}}.}
+      \item{lAImax}{Maximum crown LAI (leaf area index).}
+      \item{Nfixrate0}{Reference N fixation rate (kg N kg C\eqn{^{-1}} root).}
+      \item{NfixCost0}{Carbon cost of N fixation (kg C kg N\eqn{^{-1}}).}
+      \item{phiCSA}{Ratio of sapwood area to leaf area.}
+      \item{mortrate_d_c}{Canopy tree mortality rate (year\eqn{^{-1}}).}
+      \item{mortrate_d_u}{Understory tree mortality rate (year\eqn{^{-1}}).}
+      \item{maturalage}{Age at which trees can reproduce (years).}
+      \item{v_seed}{Fraction of G_SF to G_F.}
+      \item{fNSmax}{Multiplier for NSNmax as sum of potential bl and br.}
+      \item{LMA}{Leaf mass per unit area (kg C m\eqn{^{-2}}).}
+      \item{rho_wood}{Wood density (kg C m\eqn{^{-3}}).}
+      \item{alphaBM}{Coefficient for allometry (biomass = alphaBM * DBH ** thetaBM).}
+      \item{thetaBM}{Coefficient for allometry (biomass = alphaBM * DBH ** thetaBM).}
+      \item{kphio}{Quantum yield efficiency \eqn{\varphi_0},
+       in mol mol\eqn{^{-1}}.}
+      \item{phiRL}{Ratio of fine root to leaf area.}
+      \item{LAI_light}{Maximum LAI limited by light.}
+    }}
+  \item{init_cohort}{A data.frame of initial cohort specifications, including
+  the following data:
+    \describe{
+      \item{init_cohort_species}{Index of a species described in param_species.}
+      \item{init_cohort_nindivs}{Initial individual density, in individuals per
+        m\eqn{^{2}}.}
+      \item{init_cohort_bsw}{Initial biomass of sapwood, in kg C per individual.}
+      \item{init_cohort_bHW}{Initial biomass of heartwood, in kg C per tree.}
+      \item{init_cohort_nsc}{Initial non-structural biomass.}
+    }}
+  \item{init_soil}{A data.frame of initial soil pools, including
+  the following data:
+    \describe{
+      \item{init_fast_soil_C}{Initial fast soil carbon, in kg C m\eqn{^{-2}}.}
+      \item{init_slow_soil_C}{Initial slow soil carbon, in kg C m\eqn{^{-2}}.}
+      \item{init_Nmineral}{Mineral nitrogen pool, in kg N m\eqn{^{-2}}.}
+      \item{N_input}{Annual nitrogen input to soil N pool, in kg N m\eqn{^{-2}}
+        year\eqn{^{-1}}.}
+    }}
 }
 }
 \usage{
 biomee_gs_leuning_drivers
 }
 \description{
-Small tests dataset to validate if compiled code
-and optimization routines can run using the
-Leuning specifications
+Small dataset representing the driver to run the BiomeE-model at the CH-LAE site
+using the Leuning photosynthesis specification (and half-hourly time step)
+It can also be used together with leaf trait data from CH-LAE (\code{\link{biomee_validation}}) 
+to optimize model parameters.
 }
 \keyword{datasets}

@@ -3,7 +3,7 @@
 \docType{data}
 \name{p_model_validation_vcmax25}
 \alias{p_model_validation_vcmax25}
-\title{SOFUN p-model Vcmax25 validation data}
+\title{rsofun P-model Vcmax25 validation data}
 \format{
 A tibble of validation data:
 \describe{
@@ -30,8 +30,8 @@ New Phytol. 206 (2), 614–636. doi:10.1111/nph.13253
 p_model_validation_vcmax25
 }
 \description{
-Small tests dataset to validate 
-calibration routines for leaf traits.
+Small example dataset of target observations (leaf trait data) to optimize 
+model parameters with the function \code{\link{calib_sofun}}
 }
 \examples{
 require(ggplot2); require(tidyr)

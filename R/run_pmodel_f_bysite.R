@@ -20,7 +20,7 @@
 #' }
 #' @param site_info A list of site meta info. Required:
 #' \describe{
-#'       \item{lon}{Longitud of the site location.}
+#'       \item{lon}{Longitude of the site location.}
 #'       \item{lat}{Latitude of the site location.}
 #'       \item{elv}{Elevation of the site location, in meters.}
 #'       \item{whc}{A numeric value for the total root zone water holding capacity (in mm), used
@@ -155,20 +155,20 @@
 #'  )
 
 run_pmodel_f_bysite <- function(
-  sitename,
-  params_siml,
-  site_info,
-  forcing,
-  params_modl,
-  makecheck = TRUE,
-  verbose = TRUE
-  ){
+    sitename,
+    params_siml,
+    site_info,
+    forcing,
+    params_modl,
+    makecheck = TRUE,
+    verbose = TRUE
+){
   
   # predefine variables for CRAN check compliance
   ccov <- temp <- rain <- vpd <- ppfd <- netrad <-
-  fsun <- snow <- co2 <- fapar <- patm <- 
-  nyeartrend_forcing <- firstyeartrend_forcing <-
-  tmin <- tmax <- . <- NULL
+    fsun <- snow <- co2 <- fapar <- patm <- 
+    nyeartrend_forcing <- firstyeartrend_forcing <-
+    tmin <- tmax <- . <- NULL
   
   # base state, always execute the call
   continue <- TRUE
@@ -211,7 +211,7 @@ run_pmodel_f_bysite <- function(
       patm,
       tmin,
       tmax
-      )
+    )
   
   # validate input
   if (makecheck){
@@ -235,7 +235,7 @@ run_pmodel_f_bysite <- function(
     data_integrity <- lapply(check_vars, function(check_var){
       if (any(is.nanull(forcing[check_var]))){
         warning(sprintf("Error: Missing value in %s for %s",
-                            check_var, sitename))
+                        check_var, sitename))
         return(FALSE)
       } else {
         return(TRUE)
@@ -263,7 +263,7 @@ run_pmodel_f_bysite <- function(
     parameter_integrity <- lapply(check_param, function(check_var){
       if (any(is.nanull(params_siml[check_var]))){
         warning(sprintf("Error: Missing value in %s for %s",
-                            check_var, sitename))
+                        check_var, sitename))
         return(FALSE)
       } else {
         return(TRUE)
@@ -273,7 +273,7 @@ run_pmodel_f_bysite <- function(
     if (suppressWarnings(!all(parameter_integrity))){
       continue <- FALSE
     }
-      
+    
     if (nrow(forcing) %% ndayyear != 0){
       # something weird more fundamentally -> don't run the model
       warning(" Returning a dummy data frame. Forcing data does not
@@ -283,9 +283,9 @@ run_pmodel_f_bysite <- function(
     
     # Check model parameters
     if( sum( names(params_modl) %in% c('kphio', 'kphio_par_a', 'kphio_par_b',
-                                              'soilm_thetastar', 'soilm_betao',
-                                              'beta_unitcostratio', 'rd_to_vcmax', 
-                                              'tau_acclim', 'kc_jmax')
+                                       'soilm_thetastar', 'soilm_betao',
+                                       'beta_unitcostratio', 'rd_to_vcmax', 
+                                       'tau_acclim', 'kc_jmax')
     ) != 9){
       warning(" Returning a dummy data frame. Incorrect model parameters.")
       continue <- FALSE
@@ -293,14 +293,14 @@ run_pmodel_f_bysite <- function(
   }
   
   if (continue){
-
+    
     # determine whether to read PPFD from forcing or to calculate internally
     in_ppfd <- ifelse(any(is.na(forcing$ppfd)), FALSE, TRUE)  
-
+    
     # determine whether to read PPFD from forcing or to calculate internally
     # in_netrad <- ifelse(any(is.na(forcing$netrad)), FALSE, TRUE)  
     in_netrad <- FALSE  # net radiation is currently ignored as a model forcing, but is internally simulated by SPLASH.
-
+    
     # Check if fsun is available
     if(! (in_ppfd & in_netrad)){
       # fsun must be available when one of ppfd or netrad is missing
@@ -315,7 +315,7 @@ run_pmodel_f_bysite <- function(
     
     # number of rows in matrix (pre-allocation of memory)
     n <- as.integer(nrow(forcing))
-
+    
     # Model parameters as vector in order
     par <- c(
       as.numeric(params_modl$kphio),
@@ -327,11 +327,11 @@ run_pmodel_f_bysite <- function(
       as.numeric(params_modl$rd_to_vcmax),
       as.numeric(params_modl$tau_acclim),
       as.numeric(params_modl$kc_jmax)
-      )
-
+    )
+    
     ## C wrapper call
     out <- .Call(
-
+      
       'pmodel_f_C',
       
       ## Simulation parameters
@@ -358,14 +358,14 @@ run_pmodel_f_bysite <- function(
       n                         = n,
       par                       = par, 
       forcing                   = forcing
-      )
+    )
     
     # Prepare output to be a nice looking tidy data frame (tibble)
     ddf <- init_dates_dataframe(
       yrstart = firstyeartrend_forcing,
       yrend = firstyeartrend_forcing + nyeartrend_forcing - 1,
       noleap = TRUE)
-
+    
     out <- out %>%
       as.matrix() %>% 
       as.data.frame() %>% 
@@ -389,10 +389,10 @@ run_pmodel_f_bysite <- function(
           "wcont", 
           "snow",
           "cond")
-        ) %>%
+      ) %>%
       as_tibble(.name_repair = "check_unique") %>%
       dplyr::bind_cols(ddf,.)
-
+    
   } else {
     out <- tibble(date = as.Date("2000-01-01"),
                   fapar = NA, 
@@ -415,9 +415,9 @@ run_pmodel_f_bysite <- function(
                   snow = NA,
                   cond = NA)
   }
-    
+  
   return(out)
-
+  
 }
 
 .onUnload <- function(libpath) {

@@ -19,16 +19,12 @@ sitename <- "CH-Lae"
 
 # Take only year 2004 to 2014, corresponding to subset of data for site CH-Lae
 siteinfo <- tibble(
-  sitename = "CH-Lae",
   lon = 8.365,
   lat = 47.47808,
   elv = 700,
   year_start = 2004,
   year_end = 2014,
-  classid = NA,
   c4 = FALSE,
-  whc = NA,
-  koeppen_code = NA,
   igbp_land_use = "Mixed Forests",
   plant_functional_type = "Broadleaf trees")
 
@@ -166,14 +162,14 @@ rh_to_vpd <- function(temp, # Air temperature (deg C)
                       rh    # Relative humidity (< 1)
 ) {
   esat <- 611.0 * exp( (17.27 * temp)/(temp + 237.3) )
-
+  
   return(esat * (1.0 - rh)) # VPD (Pa)
 }
 
 rad_to_ppfd <- function(rad   # Downwelling radiation (W m-2)
 ) {
   kcFCE <- 2.04 # from flux to energy conversion, umol/J (Meek et al., 1984)
-
+  
   return(rad * kcFCE * 1.0e-6)  # PPFD (mol m-2 s-1)
 }
 
@@ -197,11 +193,11 @@ build_forcing <- function(forcing_data, hourly) {
            vpd = rh_to_vpd(temp, rh / 100.0),
            ppfd = rad_to_ppfd(rad)) %>%
     select(date,hod,temp,rain,vpd,ppfd,patm,wind,co2,)
-    return(forcing)
+  return(forcing)
 }
 
 build_driver <- function(params_siml, forcing) {
- drivers <- tibble(
+  drivers <- tibble(
     sitename,
     site_info = list(tibble(siteinfo)),
     params_siml = list(tibble(params_siml)),

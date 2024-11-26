@@ -5,57 +5,7 @@
 \alias{p_model_drivers_vcmax25}
 \title{rsofun P-model driver data (for leaf traits)}
 \format{
-A tibble of driver data:
-\describe{
-  \item{sitename}{A character string containing the site name.}
-  \item{forcing}{A tibble of a time series of forcing climate data, including
-  the following variables:
-    \describe{
-      \item{date}{Date of the observation in YYYY-MM-DD format.}
-      \item{temp}{Daytime average air temperature in \eqn{^\circ}C.}
-      \item{vpd}{Daytime average vapour pressure deficit in Pa.}
-      \item{ppfd}{Photosynthetic photon flux density (PPFD) in
-      mol m\eqn{^{-2}} s\eqn{^{-1}}. If all values are NA, it indicates that
-      PPFD should be calculated by the SPLASH model.}
-      \item{netrad}{Net radiation in W m\eqn{^{-2}}. This is currently
-      ignored as a model forcing.}
-      \item{patm}{Atmospheric pressure in Pa.}
-      \item{snow}{Snow in water equivalents mm s\eqn{^{-1}}.}
-      \item{rain}{Rain as precipitation in liquid form in mm s\eqn{^{-1}}.}
-      \item{tmin}{Daily minimum air temperature in \eqn{^\circ}C.}
-      \item{tmax}{Daily maximum air temperature in \eqn{^\circ}C.}
-      \item{fapar}{Fraction of photosynthetic active radiation (fAPAR), taking
-     values between 0 and 1.}
-      \item{co2}{Atmospheric CO\eqn{_2} concentration.}
-      \item{ccov}{Cloud coverage in \%. This is only used when either PPFD or
-      net radiation are not prescribed.}
-      }
-  }
-  \item{params_siml}{A tibble of simulation parameters.
-    \describe{
-      \item{spinup}{A logical value indicating whether this simulation does spin-up.}
-      \item{spinupyears}{Number of spin-up years.}
-      \item{recycle}{Length of standard recycling period, in years.}
-      \item{outdt}{An integer indicating the output periodicity.}
-      \item{ltre}{A logical value, \code{TRUE} if evergreen tree.}
-      \item{ltne}{A logical value, \code{TRUE} if evergreen tree and N-fixing.}
-      \item{ltrd}{A logical value, \code{TRUE} if deciduous tree.}
-      \item{ltnd}{A logical value, \code{TRUE} if deciduous tree and N-fixing.}
-      \item{lgr3}{A logical value, \code{TRUE} if grass with C3 photosynthetic pathway.}
-      \item{lgn3}{A logical value, \code{TRUE} if grass with C3 photosynthetic
-      pathway and N-fixing.}
-      \item{lgr4}{A logical value, \code{TRUE} if grass with C4 photosynthetic pathway.}
-    }
-  }
-  \item{site_info}{A tibble containing site meta information.
-    \describe{
-      \item{lon}{Longitude of the site location in degrees east.}
-      \item{lat}{Latitude of the site location in degrees north.}
-      \item{elv}{Elevation of the site location, in meters above sea level.}
-      \item{whc}{A numeric value for the rooting zone water holding capacity (in mm)}
-    }
-  }
-}
+See \code{\link{p_model_drivers}}
 }
 \source{
 Atkin, O. K., Bloomfield, K. J., Reich, P. B., Tjoelker, M. G., Asner, G. P., Bonal, D., et al. (2015). 
@@ -84,7 +34,9 @@ Atmospheric carbon dioxide variations at Mauna Loa Observatory, Hawaii, Tellus, 
 p_model_drivers_vcmax25
 }
 \description{
-Small tests dataset to validate if compiled code
-and optimization routines can run for leaf traits data
+Small dataset representing the driver to run the P-model at four separate sites. 
+It can also be used together with leaf traits data from these four sites
+(\code{\link{p_model_validation_vcmax25}}) to optimize model parameters.
+To optimize model parameters to GPP flux data use the datasets \code{\link{p_model_drivers}} and \code{\link{p_model_validation}}.
 }
 \keyword{datasets}

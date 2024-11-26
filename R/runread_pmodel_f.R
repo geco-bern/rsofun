@@ -94,13 +94,16 @@
 #' output <- rsofun::runread_pmodel_f(
 #'   drivers = rsofun::p_model_drivers,
 #'   par = params_modl)
+#' output_vcmax25 <- rsofun::runread_pmodel_f(
+#'   drivers = rsofun::p_model_drivers_vcmax25,
+#'   par = params_modl)
 
 runread_pmodel_f <- function(
-  drivers,
-  par,
-  makecheck = TRUE,
-  parallel = FALSE,
-  ncores = 1){
+    drivers,
+    par,
+    makecheck = TRUE,
+    parallel = FALSE,
+    ncores = 1){
   
   # predefine variables for CRAN check compliance
   sitename <- params_siml <- site_info <-
@@ -174,9 +177,9 @@ runread_pmodel_f <- function(
     df_out <- drivers %>%
       dplyr::mutate(
         data = purrr::pmap(.,
-        	run_pmodel_f_bysite,
-            params_modl = par,
-            makecheck = makecheck
+                           run_pmodel_f_bysite,
+                           params_modl = par,
+                           makecheck = makecheck
         )
       ) |> 
       dplyr::select(sitename, site_info, data)

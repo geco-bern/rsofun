@@ -43,10 +43,10 @@
 #' }
 
 cost_likelihood_biomee <- function(
-  par,
-  obs,
-  drivers,
-  targets
+    par,
+    obs,
+    drivers,
+    targets
 ){
   
   # predefine variables for CRAN check compliance
@@ -57,7 +57,7 @@ cost_likelihood_biomee <- function(
   drivers$params_species[[1]]$LAI_light[]  <- par[2]
   drivers$params_tile[[1]]$tf_base <- par[3]
   drivers$params_tile[[1]]$par_mort <- par[4]
-
+  
   # run model
   df <- runread_biomee_f(
     drivers,
@@ -67,7 +67,7 @@ cost_likelihood_biomee <- function(
   
   # did we spin up
   spin_up <- drivers$params_siml[[1]]$spinup
-
+  
   # drop spinup years if activated
   # see below
   if (spin_up){
@@ -103,7 +103,7 @@ cost_likelihood_biomee <- function(
   }) |>
     unlist() |>
     sum()     # sum log-likelihoods
-              
+  
   # trap boundary conditions
   if(is.nan(ll) || is.na(ll) | ll == 0){
     ll <- -Inf

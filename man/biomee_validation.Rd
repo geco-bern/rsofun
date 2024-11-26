@@ -20,7 +20,7 @@ Dataset. https://doi.org/10.18140/FLX/1440134
 biomee_validation
 }
 \description{
-Small tests dataset to validate 
-calibration routines
+Small example dataset of target observations (leaf trait data) at the CH-LAE site
+to optimize model parameters with the function \code{\link{calib_sofun}}
 }
 \keyword{datasets}

@@ -14,14 +14,12 @@ An R Simulating Optimal FUNctioning (RSOFUN) framework for site-scale simulation
 
 ### Stable release
 
-**rsofun is not currently available on CRAN.**
-
-<!--To install the current stable release use a CRAN repository:
+To install the current stable release use a CRAN repository:
 
 ``` r
 install.packages("rsofun")
 library("rsofun")
-```-->
+```
 
 ### Development release
 

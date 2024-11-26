@@ -3,7 +3,7 @@
 \docType{data}
 \name{biomee_p_model_output}
 \alias{biomee_p_model_output}
-\title{rsofun BiomeE (p-model) output data}
+\title{rsofun BiomeE (P-model) output data}
 \format{
 An object of class \code{tbl_df} (inherits from \code{tbl}, \code{data.frame}) with 1 rows and 2 columns.
 }
@@ -11,6 +11,6 @@ An object of class \code{tbl_df} (inherits from \code{tbl}, \code{data.frame}) w
 biomee_p_model_output
 }
 \description{
-Example output dataset using BiomeE (p-model)
+Example output dataset from a BiomeE-model run (p-model)
 }
 \keyword{datasets}

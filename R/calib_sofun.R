@@ -92,8 +92,7 @@ calib_sofun <- function(
     ...
 ){
   # predefine variables for CRAN check compliance
-  cost <- lower <- upper <- pars <- out <- out_optim <- priors <- setup <- 
-    bt_par <- bt_settings <- NULL
+  lower <- upper <- out_optim <- NULL
   
   # check input variables
   if(missing(obs) | missing(drivers) | missing(settings)){
@@ -166,12 +165,6 @@ calib_sofun <- function(
     setup <- BayesianTools::createBayesianSetup(
       likelihood = function(
     random_par) {
-        # cost(
-        #   par = random_par,
-        #   obs = obs,
-        #   drivers = drivers,
-        #   ...
-        # )
         do.call("cost",
                 list(
                   par = random_par,

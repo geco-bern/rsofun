@@ -178,9 +178,9 @@ test_that("test Vcmax25 calibration routine p-model (GenSA, rmse)", {
 test_that("test joint calibration routine p-model (BT, likelihood maximization)", {
   skip_on_cran()
   drivers <- rbind(gpp = rsofun::p_model_drivers, 
-                  vcmax25 = rsofun::p_model_drivers_vcmax25)
+                   vcmax25 = rsofun::p_model_drivers_vcmax25)
   obs <- rbind(gpp = rsofun::p_model_validation,
-              vcmax25 = rsofun::p_model_validation_vcmax25)
+               vcmax25 = rsofun::p_model_validation_vcmax25)
   params_fix <- list(
     # kphio              = 0.04998, # setup ORG in Stocker et al. 2020 GMD
     kphio_par_a        = 0.01,  # set to zero to disable temperature-dependence of kphio, setup ORG in Stocker et al. 2020 GMD

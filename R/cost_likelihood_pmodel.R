@@ -212,7 +212,7 @@ cost_likelihood_pmodel <- function(
   }) |>
     unlist() |>
     sum()
-
+  
   # trap boundary conditions
   if(is.nan(ll) | is.na(ll) | ll == 0){ll <- -Inf}
   

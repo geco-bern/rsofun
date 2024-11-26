@@ -13,8 +13,7 @@ set.seed(432)
 
 # Define log-likelihood function
 ll_pmodel <- function(
-    par_v                 # a vector of all calibratable parameters 
-                          # including errors
+    par_v                 # a vector of all calibratable parameters including errors
 ){
   rsofun::cost_likelihood_pmodel(        # likelihood cost function from package
     par_v,
@@ -118,5 +117,5 @@ gg <- morrisOut.df |>
   ) +
   coord_flip()    # make horizontal
 
-# ggsave("./analysis/paper_results_files/morris.pdf", plot = gg, width = 5, height = 3)
-# ggsave("./analysis/paper_results_files/morris.png", plot = gg, width = 5, height = 3)
+ggsave("./analysis/paper_results_files/morris.pdf", plot = gg, width = 5, height = 3)
+ggsave("./analysis/paper_results_files/morris.png", plot = gg, width = 5, height = 3)
