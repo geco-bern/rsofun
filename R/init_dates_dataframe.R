@@ -24,7 +24,6 @@
 #' of February is removed. Defaults to \code{FALSE}.
 #' 
 #' @return A tibble with dates.
-#' @export
 #'
 #' @examples
 #'  ddf <- init_dates_dataframe( 2000, 2003, startmoy=1, startdoy=1,
