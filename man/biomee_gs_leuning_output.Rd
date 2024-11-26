@@ -3,7 +3,7 @@
 \docType{data}
 \name{biomee_gs_leuning_output}
 \alias{biomee_gs_leuning_output}
-\title{rsofun BiomeE (GS leuning) output data}
+\title{rsofun BiomeE (gs_leuning) output data}
 \format{
 An object of class \code{tbl_df} (inherits from \code{tbl}, \code{data.frame}) with 1 rows and 2 columns.
 }
@@ -11,6 +11,6 @@ An object of class \code{tbl_df} (inherits from \code{tbl}, \code{data.frame}) w
 biomee_gs_leuning_output
 }
 \description{
-Example output dataset using BiomeE (GS leuning)
+Example output dataset from a BiomeE-model run (gs_leuning)
 }
 \keyword{datasets}

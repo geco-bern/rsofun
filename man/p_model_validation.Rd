@@ -3,7 +3,7 @@
 \docType{data}
 \name{p_model_validation}
 \alias{p_model_validation}
-\title{SOFUN p-model GPP validation data}
+\title{rsofun P-model GPP validation data}
 \format{
 A tibble of validation data:
 \describe{
@@ -27,8 +27,8 @@ Sci Data 7, 225 (2020). https://doi.org/10.1038/s41597-020-0534-3
 p_model_validation
 }
 \description{
-Small tests dataset to validate 
-calibration routines for a time series of fluxes.
+Small example dataset of target observations (daily GPP flux data) to optimize 
+model parameters with the function \code{\link{calib_sofun}}
 }
 \examples{
 require(ggplot2); require(tidyr)

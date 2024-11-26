@@ -34,7 +34,9 @@ Atmospheric carbon dioxide variations at Mauna Loa Observatory, Hawaii, Tellus, 
 p_model_drivers_vcmax25
 }
 \description{
-Small tests dataset to validate if compiled code
-and optimization routines can run for leaf traits data
+Small dataset representing the driver to run the P-model at four separate sites. 
+It can also be used together with leaf traits data from these four sites
+(\code{\link{p_model_validation_vcmax25}}) to optimize model parameters.
+To optimize model parameters to GPP flux data use the datasets \code{\link{p_model_drivers}} and \code{\link{p_model_validation}}.
 }
 \keyword{datasets}

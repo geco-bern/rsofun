@@ -20,25 +20,25 @@ run_biomee_f_bysite(
 \item{sitename}{Site name.}
 
 \item{params_siml}{Simulation parameters.
-See \code{\link{biomee_gs_leuning_drivers}}}
+See examples \code{\link{biomee_gs_leuning_drivers}} or \code{\link{biomee_p_model_drivers}}}
 
 \item{site_info}{Site meta info in a data.frame.
-See \code{\link{biomee_gs_leuning_drivers}}}
+See examples \code{\link{biomee_gs_leuning_drivers}} or \code{\link{biomee_p_model_drivers}}}
 
 \item{forcing}{Forcing data.frame used as input.
-See \code{\link{biomee_gs_leuning_drivers}}}
+See examples \code{\link{biomee_gs_leuning_drivers}} or \code{\link{biomee_p_model_drivers}}}
 
 \item{params_tile}{Tile-level model parameters, into a single row data.frame.
-See \code{\link{biomee_gs_leuning_drivers}}}
+See examples \code{\link{biomee_gs_leuning_drivers}} or \code{\link{biomee_p_model_drivers}}}
 
 \item{params_species}{A data.frame containing species-specific model parameters,
-with one species per row. See \code{\link{biomee_gs_leuning_drivers}}}
+with one species per row. See examples \code{\link{biomee_gs_leuning_drivers}} or \code{\link{biomee_p_model_drivers}}}
 
 \item{init_cohort}{A data.frame of initial cohort specifications.
-See \code{\link{biomee_gs_leuning_drivers}}}
+See examples \code{\link{biomee_gs_leuning_drivers}} or \code{\link{biomee_p_model_drivers}}}
 
 \item{init_soil}{A data.frame of initial soil pools.
-See \code{\link{biomee_gs_leuning_drivers}}}
+See examples \code{\link{biomee_gs_leuning_drivers}} or \code{\link{biomee_p_model_drivers}}}
 
 \item{makecheck}{Flag specifying whether checks are performed to verify model inputs and parameters.}
 }

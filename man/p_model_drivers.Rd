@@ -82,7 +82,9 @@ surfaces for global land areas. International Journal of Climatology 37 (12): 43
 p_model_drivers
 }
 \description{
-Small tests dataset to validate if compiled code
-and optimization routines can run
+Small dataset representing the driver to run the P-model at the FR-Pue site. 
+It can also be used together with daily GPP flux time series data from CH-LAE 
+(\code{\link{p_model_validation}}) to optimize model parameters.
+To optimize model parameters to leaf traits data use the datasets \code{\link{p_model_drivers_vcmax25}} and \code{\link{p_model_validation_vcmax25}}.
 }
 \keyword{datasets}

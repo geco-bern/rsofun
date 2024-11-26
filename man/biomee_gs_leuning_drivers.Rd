@@ -3,7 +3,7 @@
 \docType{data}
 \name{biomee_gs_leuning_drivers}
 \alias{biomee_gs_leuning_drivers}
-\title{rsofun BiomeE driver data}
+\title{rsofun BiomeE driver data (Leuning photosynthesis model)}
 \format{
 A tibble of driver data.
 \describe{
@@ -149,8 +149,9 @@ This data structure can be freely used for documenting the dataset, but must inc
 biomee_gs_leuning_drivers
 }
 \description{
-Small tests dataset to validate if compiled code
-and optimization routines can run using the
-Leuning specifications
+Small dataset representing the driver to run the BiomeE-model at the CH-LAE site
+using the Leuning photosynthesis specification (and half-hourly time step)
+It can also be used together with leaf trait data from CH-LAE (\code{\link{biomee_validation}}) 
+to optimize model parameters.
 }
 \keyword{datasets}
