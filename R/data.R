@@ -1,7 +1,9 @@
 #' rsofun P-model driver data
 #'
-#' Small tests dataset to validate if compiled code
-#' and optimization routines can run
+#' Small dataset representing the driver to run the P-model at the FR-Pue site. 
+#' It can also be used together with daily GPP flux time series data from CH-LAE 
+#' (\code{\link{p_model_validation}}) to optimize model parameters.
+#' To optimize model parameters to leaf traits data use the datasets \code{\link{p_model_drivers_vcmax25}} and \code{\link{p_model_validation_vcmax25}}.
 #'
 #' @format A tibble of driver data:
 #' \describe{
@@ -76,10 +78,10 @@
 #' surfaces for global land areas. International Journal of Climatology 37 (12): 4302-4315.
 "p_model_drivers"
 
-#' SOFUN p-model GPP validation data
+#' rsofun P-model GPP validation data
 #'
-#' Small tests dataset to validate 
-#' calibration routines for a time series of fluxes.
+#' Small example dataset of target observations (daily GPP flux data) to optimize 
+#' model parameters with the function \code{\link{calib_sofun}}
 #'
 #' @format A tibble of validation data:
 #' \describe{
@@ -103,9 +105,11 @@
 
 #' rsofun P-model driver data (for leaf traits)
 #'
-#' Small tests dataset to validate if compiled code
-#' and optimization routines can run for leaf traits data
-#'
+#' Small dataset representing the driver to run the P-model at four separate sites. 
+#' It can also be used together with leaf traits data from these four sites
+#' (\code{\link{p_model_validation_vcmax25}}) to optimize model parameters.
+#' To optimize model parameters to GPP flux data use the datasets \code{\link{p_model_drivers}} and \code{\link{p_model_validation}}.
+#' 
 #' @format See \code{\link{p_model_drivers}}
 #' 
 #' @source Atkin, O. K., Bloomfield, K. J., Reich, P. B., Tjoelker, M. G., Asner, G. P., Bonal, D., et al. (2015). 
@@ -131,10 +135,10 @@
 #' Atmospheric carbon dioxide variations at Mauna Loa Observatory, Hawaii, Tellus, vol. 28, 538-551
 "p_model_drivers_vcmax25"
 
-#' SOFUN p-model Vcmax25 validation data
+#' rsofun P-model Vcmax25 validation data
 #'
-#' Small tests dataset to validate 
-#' calibration routines for leaf traits.
+#' Small example dataset of target observations (leaf trait data) to optimize 
+#' model parameters with the function \code{\link{calib_sofun}}
 #'
 #' @format A tibble of validation data:
 #' \describe{
@@ -161,9 +165,15 @@
 
 #' rsofun BiomeE driver data
 #'
-#' Small tests dataset to validate if compiled code
-#' and optimization routines can run using the
-#' Leuning specifications
+#' Example output dataset from a p-model run using \code{\link{p_model_drivers_vcmax25}}
+"p_model_output_vcmax25"
+
+#' rsofun BiomeE driver data (Leuning photosynthesis model)
+#' 
+#' Small dataset representing the driver to run the BiomeE-model at the CH-LAE site
+#' using the Leuning photosynthesis specification (and half-hourly time step)
+#' It can also be used together with leaf trait data from CH-LAE (\code{\link{biomee_validation}}) 
+#' to optimize model parameters.
 #'
 #' @format A tibble of driver data.
 #' \describe{
@@ -306,11 +316,12 @@
 #' }
 "biomee_gs_leuning_drivers"
 
-#' rsofun BiomeE driver data
-#'
-#' Small tests dataset to validate if compiled code
-#' and optimization routines can run using the
-#' p-model specifications
+#' rsofun BiomeE driver data (P-model photosynthesis model)
+#' 
+#' Small dataset representing the driver to run the BiomeE-model at the CH-LAE site
+#' using the P-model photosynthesis specification (and daily time step).
+#' It can also be used together with leaf trait data from CH-LAE (\code{\link{biomee_validation}}) 
+#' to optimize model parameters.
 #'
 #' @format See \code{\link{biomee_gs_leuning_drivers}}
 #'
@@ -319,8 +330,8 @@
 
 #' rsofun BiomeE targets validation data
 #'
-#' Small tests dataset to validate 
-#' calibration routines
+#' Small example dataset of target observations (leaf trait data) at the CH-LAE site
+#' to optimize model parameters with the function \code{\link{calib_sofun}}
 #'
 #' @format A tibble of validation data:
 #' \describe{
@@ -333,13 +344,12 @@
 #' Dataset. https://doi.org/10.18140/FLX/1440134
 "biomee_validation"
 
-#' rsofun BiomeE (p-model) output data
+#' rsofun BiomeE (P-model) output data
 #'
-#' Example output dataset using BiomeE (p-model)
+#' Example output dataset from a BiomeE-model run (p-model)
 "biomee_p_model_output"
 
-#' rsofun BiomeE (GS leuning) output data
+#' rsofun BiomeE (gs_leuning) output data
 #'
-#' Example output dataset using BiomeE (GS leuning)
+#' Example output dataset from a BiomeE-model run (gs_leuning)
 "biomee_gs_leuning_output"
-

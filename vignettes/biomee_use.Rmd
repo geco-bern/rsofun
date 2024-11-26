@@ -19,11 +19,15 @@ library(dplyr)
 library(ggplot2)
 ```
 
-The `rsofun` package and framework includes two main models. The `pmodel` and `biomee` (which in part relies on pmodel component). Here we give a short example on how to run the `biomee` model on the included demo datasets to familiarize yourself with both the data structure and the outputs.
+The `rsofun` package and framework includes two distinct simulation models. 
+The `p-model` and `biomee` (which in part relies on p-model component). 
+Below we give a short example on how to run the `biomee` model on the included demo datasets to familiarize yourself with both the data structure and the outputs.
 
 ## Demo data
 
-The package includes two demo datasets to run. These files can be directly loaded into your workspace by typing:
+The package includes two demo datasets to run simulations at the site CH-LAE with either the P-model or Leuning photosynthesis models.
+See below under 'Two model approaches' for a brief description of the differences.
+These demo files can be directly loaded into your workspace by typing:
 
 ```{r eval = FALSE}
 library(rsofun)
@@ -33,7 +37,7 @@ biomee_p_model_drivers
 biomee_validation
 ```
 
-These are real data from the Swiss CH-Lae fluxnet site. We can use these data to run the model, together with observations of GPP we can also parameterize `biomee` parameters.
+These are real data from the Swiss CH-LAE fluxnet site. We can use these data to run the model, together with observations of GPP we can also parameterize `biomee` parameters.
 
 # Two model approaches
 
