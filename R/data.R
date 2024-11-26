@@ -163,7 +163,12 @@
 #' New Phytol. 206 (2), 614–636. doi:10.1111/nph.13253
 "p_model_validation_vcmax25"
 
-#' rsofun BiomeE driver data
+#' rsofun P-model output data
+#'
+#' Example output dataset from a p-model run using \code{\link{p_model_drivers}}
+"p_model_output"
+
+#' rsofun P-model output data
 #'
 #' Example output dataset from a p-model run using \code{\link{p_model_drivers_vcmax25}}
 "p_model_output_vcmax25"
