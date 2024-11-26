@@ -21,7 +21,7 @@
         <a class="external-link hidden-md hidden-lg" href="https://geco-group.org/">
           <img src="https://raw.githubusercontent.com/computationales/GECO_template/main/geco_logo_white_small.png" id="hexlogo" alt="GECO"></a>
         <a class="navbar-brand" href="../index.html">
-           <i>rsofun <small>v4.4.1</small></i>
+           <i>rsofun <small>v5.0.0</small></i>
         </a>
       </div>
     </div>
@@ -83,331 +83,38 @@
 
 
 <dt id="arg-params-siml">params_siml<a class="anchor" aria-label="anchor" href="#arg-params-siml"></a></dt>
-<dd><p>Simulation parameters.</p><dl><dt>spinup</dt>
-<dd><p>Flag indicating whether this simulation does spin-up.</p></dd>
-
-  <dt>spinupyears</dt>
-<dd><p>Number of spin-up years.</p></dd>
-
-  <dt>recycle</dt>
-<dd><p>Length of standard recycling period (years).</p></dd>
-
-  <dt>firstyeartrend</dt>
-<dd><p>First transient year.</p></dd>
-
-  <dt>nyeartrend</dt>
-<dd><p>Number of transient years.</p></dd>
-
-  <dt>steps_per_day</dt>
-<dd><p>Time resolution (day-1).</p></dd>
-
-  <dt>do_U_shaped_mortality</dt>
-<dd><p>Flag indicating whether U-shaped
-    mortality is used.</p></dd>
-
-  <dt>update_annualLAImax</dt>
-<dd><p>Flag indicating whether updating
-    LAImax according to mineral N in soil.</p></dd>
-
-  <dt>do_closedN_run</dt>
-<dd><p>Flag indicating whether doing N closed
-    runs to recover N balance enforcing 0.2 kg N m-2 in the inorganic N pool.</p></dd>
-
-  <dt>code_method_photosynth</dt>
-<dd><p>String specifying the method of photosynthesis
-    used in the model, either "pmodel" or "gs_leuning".document()</p></dd>
-
-  <dt>code_method_mortality</dt>
-<dd><p>String indicating the type of mortality in the
-    model. One of the following: "dbh" is size-dependent mortality, "const_selfthin"
-    is constant self thinning (in development), "cstarvation" is carbon starvation, and
-    "growthrate" is growth rate dependent mortality.</p></dd>
-
-
-</dl></dd>
+<dd><p>Simulation parameters.
+See examples <code><a href="biomee_gs_leuning_drivers.html">biomee_gs_leuning_drivers</a></code> or <code><a href="biomee_p_model_drivers.html">biomee_p_model_drivers</a></code></p></dd>
 
 
 <dt id="arg-site-info">site_info<a class="anchor" aria-label="anchor" href="#arg-site-info"></a></dt>
-<dd><p>Site meta info in a data.frame.</p><dl><dt>sitename</dt>
-<dd><p>Name of the site.</p></dd>
-
-  <dt>lon</dt>
-<dd><p>Longitud of the site location.</p></dd>
-
-  <dt>lat</dt>
-<dd><p>Latitude of the site location.</p></dd>
-
-  <dt>elv</dt>
-<dd><p>Elevation of the site location, in meters.</p></dd>
-
-
-</dl></dd>
+<dd><p>Site meta info in a data.frame.
+See examples <code><a href="biomee_gs_leuning_drivers.html">biomee_gs_leuning_drivers</a></code> or <code><a href="biomee_p_model_drivers.html">biomee_p_model_drivers</a></code></p></dd>
 
 
 <dt id="arg-forcing">forcing<a class="anchor" aria-label="anchor" href="#arg-forcing"></a></dt>
-<dd><p>Forcing data.frame used as input.</p><dl><dt>ppfd</dt>
-<dd><p>Photosynthetic photon flux densisty(mol s-1 m-2)</p></dd>
-
-  <dt>tair</dt>
-<dd><p>Air temperature (deg C)</p></dd>
-
-  <dt>vpd</dt>
-<dd><p>Vapor pressure defficit (Pa)</p></dd>
-
-  <dt>rain</dt>
-<dd><p>Precipitation (kgH2O m-2 s-1 == mm s-1)</p></dd>
-
-  <dt>wind</dt>
-<dd><p>Wind velocity (m s-1)</p></dd>
-
-  <dt>pair</dt>
-<dd><p>Atmoshperic pressure (pa)</p></dd>
-
-  <dt>co2</dt>
-<dd><p>CO2 athmospheric concentration (ppm)</p></dd>
-
-
-</dl></dd>
+<dd><p>Forcing data.frame used as input.
+See examples <code><a href="biomee_gs_leuning_drivers.html">biomee_gs_leuning_drivers</a></code> or <code><a href="biomee_p_model_drivers.html">biomee_p_model_drivers</a></code></p></dd>
 
 
 <dt id="arg-params-tile">params_tile<a class="anchor" aria-label="anchor" href="#arg-params-tile"></a></dt>
-<dd><p>Tile-level model parameters, into a single row data.frame
-  with columns:</p><dl><dt>soiltype</dt>
-<dd><p>Integer indicating the type of soil: Sand = 1, LoamySand = 2,
-    SandyLoam = 3, SiltLoam = 4, FrittedClay = 5, Loam = 6, Clay = 7.</p></dd>
-
-  <dt>FLDCAP</dt>
-<dd><p>Field capacity (vol/vol). Water remaining in a soil after it
-    has been thoroughly saturated and allowed to drain freely.</p></dd>
-
-  <dt>WILTPT</dt>
-<dd><p>Wilting point (vol/vol). Water content of a soil at which
-  plants wilt and fail to recover.</p></dd>
-
-  <dt>K1</dt>
-<dd><p>Fast soil C decomposition rate (year\(^{-1}\)).</p></dd>
-
-  <dt>K2</dt>
-<dd><p>Slow soil C decomposition rate (year\(^{-1}\)).</p></dd>
-
-  <dt>K_nitrogen</dt>
-<dd><p>Mineral Nitrogen turnover rate (year\(^{-1}\)).</p></dd>
-
-  <dt>MLmixRatio</dt>
-<dd><p>Ratio of C and N returned to litters from microbes.</p></dd>
-
-  <dt>etaN</dt>
-<dd><p>N loss rate through runoff (organic and mineral) (year\(^{-1}\)).</p></dd>
-
-  <dt>LMAmin</dt>
-<dd><p>Minimum LMA, leaf mass per unit area, kg C m\(^{-2}\).</p></dd>
-
-  <dt>fsc_fine</dt>
-<dd><p>Fraction of fast turnover carbon in fine biomass.</p></dd>
-
-  <dt>fsc_wood</dt>
-<dd><p>Fraction of fast turnover carbon in wood biomass.</p></dd>
-
-  <dt>GR_factor</dt>
-<dd><p>Growth respiration factor.</p></dd>
-
-  <dt>l_fract</dt>
-<dd><p>Fraction of the carbon retained after leaf drop.</p></dd>
-
-  <dt>retransN</dt>
-<dd><p>Retranslocation coefficient of nitrogen.</p></dd>
-
-  <dt>f_initialBSW</dt>
-<dd><p>Coefficient for setting up initial sapwood.</p></dd>
-
-  <dt>f_N_add</dt>
-<dd><p>Re-fill of N for sapwood.</p></dd>
-
-  <dt>tf_base</dt>
-<dd><p>Calibratable scalar for respiration, used to increase LUE
-    levels.</p></dd>
-
-  <dt>par_mort</dt>
-<dd><p>Canopy mortality parameter.</p></dd>
-
-  <dt>par_mort_under</dt>
-<dd><p>Parameter for understory mortality.</p></dd>
-
-
-</dl></dd>
+<dd><p>Tile-level model parameters, into a single row data.frame.
+See examples <code><a href="biomee_gs_leuning_drivers.html">biomee_gs_leuning_drivers</a></code> or <code><a href="biomee_p_model_drivers.html">biomee_p_model_drivers</a></code></p></dd>
 
 
 <dt id="arg-params-species">params_species<a class="anchor" aria-label="anchor" href="#arg-params-species"></a></dt>
 <dd><p>A data.frame containing species-specific model parameters,
-  with one species per row. The columns of this data.frame are:</p><dl><dt>lifeform</dt>
-<dd><p>Integer set to 0 for grasses and 1 for trees.</p></dd>
-
-  <dt>phenotype</dt>
-<dd><p>Integer set to 0 for deciduous and 1 for evergreen.</p></dd>
-
-  <dt>pt</dt>
-<dd><p>Integer indicating the type of plant according to photosynthesis:
-    0 for C3; 1 for C4</p></dd>
-
-  <dt>alpha_FR</dt>
-<dd><p>Fine root turnonver rate (year\(^{-1}\)).</p></dd>
-
-  <dt>rho_FR</dt>
-<dd><p>Material density of fine roots (kg C m\(^{-3}\)).</p></dd>
-
-  <dt>root_r</dt>
-<dd><p>Radious of the fine roots, in m.</p></dd>
-
-  <dt>root_zeta</dt>
-<dd><p>e-folding parameter of root vertical distribution, in m.</p></dd>
-
-  <dt>Kw_root</dt>
-<dd><p>Fine root water conductivity (mol m\(^{-2}\)
-    s\(^{-1}\) MPa\(^{-1}\)).</p></dd>
-
-  <dt>leaf_size</dt>
-<dd><p>Characteristic leaf size.</p></dd>
-
-  <dt>Vmax</dt>
-<dd><p>Max RuBisCo rate, in mol m\(^{-2}\) s\(^{-1}\).</p></dd>
-
-  <dt>Vannual</dt>
-<dd><p>Annual productivity per unit area at full sun (kg C
-    m\(^{-2}\) year\(^{-2}\)).</p></dd>
-
-  <dt>wet_leaf_dreg</dt>
-<dd><p>Wet leaf photosynthesis down-regulation.</p></dd>
-
-  <dt>m_cond</dt>
-<dd><p>Factor of stomatal conductance.</p></dd>
-
-  <dt>alpha_phot</dt>
-<dd><p>Photosynthesis efficiency.</p></dd>
-
-  <dt>gamma_L</dt>
-<dd><p>Leaf respiration coefficient, in year\(^{-1}\).</p></dd>
-
-  <dt>gamma_LN</dt>
-<dd><p>Leaf respiration coefficient per unit N.</p></dd>
-
-  <dt>gamma_SW</dt>
-<dd><p>Sapwood respiration rate, in kg C m\(^{-2}\) year\(^{-1}\).</p></dd>
-
-  <dt>gamma_FR</dt>
-<dd><p>Fine root respiration rate, kg C kg C\(^{-1}\)
-    year\(^{-1}\).</p></dd>
-
-  <dt>tc_crit</dt>
-<dd><p>Critical temperature triggerng offset of phenology, in Kelvin.</p></dd>
-
-  <dt>tc_crit_on</dt>
-<dd><p>Critical temperature triggerng onset of phenology, in Kelvin.</p></dd>
-
-  <dt>gdd_crit</dt>
-<dd><p>Critical value of GDD5 for turning ON growth season.</p></dd>
-
-  <dt>betaON</dt>
-<dd><p>Critical soil moisture for phenology onset.</p></dd>
-
-  <dt>betaOFF</dt>
-<dd><p>Critical soil moisture for phenology offset.</p></dd>
-
-  <dt>seedlingsize</dt>
-<dd><p>Initial size of seedlings, in kg C per individual.</p></dd>
-
-  <dt>LNbase</dt>
-<dd><p>Basal leaf N per unit area, in kg N m\(^{-2}\).</p></dd>
-
-  <dt>lAImax</dt>
-<dd><p>Maximum crown LAI (leaf area index).</p></dd>
-
-  <dt>Nfixrate0</dt>
-<dd><p>Reference N fixation rate (kg N kg C\(^{-1}\) root).</p></dd>
-
-  <dt>NfixCost0</dt>
-<dd><p>Carbon cost of N fixation (kg C kg N\(^{-1}\)).</p></dd>
-
-  <dt>phiCSA</dt>
-<dd><p>Ratio of sapwood area to leaf area.</p></dd>
-
-  <dt>mortrate_d_c</dt>
-<dd><p>Canopy tree mortality rate (year\(^{-1}\)).</p></dd>
-
-  <dt>mortrate_d_u</dt>
-<dd><p>Understory tree mortality rate (year\(^{-1}\)).</p></dd>
-
-  <dt>maturalage</dt>
-<dd><p>Age at which trees can reproduce (years).</p></dd>
-
-  <dt>v_seed</dt>
-<dd><p>Fraction of G_SF to G_F.</p></dd>
-
-  <dt>fNSmax</dt>
-<dd><p>Multiplier for NSNmax as sum of potential bl and br.</p></dd>
-
-  <dt>LMA</dt>
-<dd><p>Leaf mass per unit area (kg C m\(^{-2}\)).</p></dd>
-
-  <dt>rho_wood</dt>
-<dd><p>Wood density (kg C m\(^{-3}\)).</p></dd>
-
-  <dt>alphaBM</dt>
-<dd><p>Coefficient for allometry (biomass = alphaBM * DBH ** thetaBM).</p></dd>
-
-  <dt>thetaBM</dt>
-<dd><p>Coefficient for allometry (biomass = alphaBM * DBH ** thetaBM).</p></dd>
-
-  <dt>kphio</dt>
-<dd><p>Quantum yield efficiency \(\varphi_0\),
-   in mol mol\(^{-1}\).</p></dd>
-
-  <dt>phiRL</dt>
-<dd><p>Ratio of fine root to leaf area.</p></dd>
-
-  <dt>LAI_light</dt>
-<dd><p>Maximum LAI limited by light.</p></dd>
-
-
-</dl></dd>
+with one species per row. See examples <code><a href="biomee_gs_leuning_drivers.html">biomee_gs_leuning_drivers</a></code> or <code><a href="biomee_p_model_drivers.html">biomee_p_model_drivers</a></code></p></dd>
 
 
 <dt id="arg-init-cohort">init_cohort<a class="anchor" aria-label="anchor" href="#arg-init-cohort"></a></dt>
-<dd><p>A data.frame of initial cohort specifications.</p><dl><dt>init_cohort_species</dt>
-<dd><p>Index of a species described in param_species.</p></dd>
-
-  <dt>init_cohort_nindivs</dt>
-<dd><p>Initial individual density, in individuals per
-    m\(^{2}\).</p></dd>
-
-  <dt>init_cohort_bsw</dt>
-<dd><p>Initial biomass of sapwood, in kg C per individual.</p></dd>
-
-  <dt>init_cohort_bHW</dt>
-<dd><p>Initial biomass of heartwood, in kg C per tree.</p></dd>
-
-  <dt>init_cohort_nsc</dt>
-<dd><p>Initial non-structural biomass.</p></dd>
-
-
-</dl></dd>
+<dd><p>A data.frame of initial cohort specifications.
+See examples <code><a href="biomee_gs_leuning_drivers.html">biomee_gs_leuning_drivers</a></code> or <code><a href="biomee_p_model_drivers.html">biomee_p_model_drivers</a></code></p></dd>
 
 
 <dt id="arg-init-soil">init_soil<a class="anchor" aria-label="anchor" href="#arg-init-soil"></a></dt>
-<dd><p>A data.frame of initial soil pools.</p><dl><dt>init_fast_soil_C</dt>
-<dd><p>Initial fast soil carbon, in kg C m\(^{-2}\).</p></dd>
-
-  <dt>init_slow_soil_C</dt>
-<dd><p>Initial slow soil carbon, in kg C m\(^{-2}\).</p></dd>
-
-  <dt>init_Nmineral</dt>
-<dd><p>Mineral nitrogen pool, in kg N m\(^{-2}\).</p></dd>
-
-  <dt>N_input</dt>
-<dd><p>Annual nitrogen input to soil N pool, in kg N m\(^{-2}\)
-    year\(^{-1}\).</p></dd>
-
-
-</dl></dd>
+<dd><p>A data.frame of initial soil pools.
+See examples <code><a href="biomee_gs_leuning_drivers.html">biomee_gs_leuning_drivers</a></code> or <code><a href="biomee_p_model_drivers.html">biomee_p_model_drivers</a></code></p></dd>
 
 
 <dt id="arg-makecheck">makecheck<a class="anchor" aria-label="anchor" href="#arg-makecheck"></a></dt>

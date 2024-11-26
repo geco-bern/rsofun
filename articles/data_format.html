@@ -43,7 +43,7 @@
         <a class="external-link hidden-md hidden-lg" href="https://geco-group.org/">
           <img src="https://raw.githubusercontent.com/computationales/GECO_template/main/geco_logo_white_small.png" id="hexlogo" alt="GECO"></a>
         <a class="navbar-brand" href="../index.html">
-           <i>rsofun <small>v4.4.1</small></i>
+           <i>rsofun <small>v5.0.0</small></i>
         </a>
       </div>
     </div>
@@ -121,7 +121,7 @@ environmental forcing data (nested tibble)</p>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 1 × 8</span></span></span>
 <span><span class="co">#&gt;   sitename site_info         params_siml params_tile params_species init_cohort</span></span>
 <span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;list&gt;</span>            <span style="color: #949494; font-style: italic;">&lt;list&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;list&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;list&gt;</span>         <span style="color: #949494; font-style: italic;">&lt;list&gt;</span>     </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> CH-Lae   <span style="color: #949494;">&lt;tibble [1 × 14]&gt;</span> <span style="color: #949494;">&lt;tibble&gt;</span>    <span style="color: #949494;">&lt;tibble&gt;</span>    <span style="color: #949494;">&lt;tibble&gt;</span>       <span style="color: #949494;">&lt;tibble&gt;</span>   </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> CH-Lae   <span style="color: #949494;">&lt;tibble [1 × 10]&gt;</span> <span style="color: #949494;">&lt;tibble&gt;</span>    <span style="color: #949494;">&lt;tibble&gt;</span>    <span style="color: #949494;">&lt;tibble&gt;</span>       <span style="color: #949494;">&lt;tibble&gt;</span>   </span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># ℹ 2 more variables: init_soil &lt;list&gt;, forcing &lt;list&gt;</span></span></span>
 <span></span>
 <span><span class="co"># call to the included BiomeE (gs leuning) demo drivers</span></span>
@@ -129,18 +129,18 @@ environmental forcing data (nested tibble)</p>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 1 × 8</span></span></span>
 <span><span class="co">#&gt;   sitename site_info         params_siml params_tile params_species init_cohort</span></span>
 <span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;list&gt;</span>            <span style="color: #949494; font-style: italic;">&lt;list&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;list&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;list&gt;</span>         <span style="color: #949494; font-style: italic;">&lt;list&gt;</span>     </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> CH-Lae   <span style="color: #949494;">&lt;tibble [1 × 14]&gt;</span> <span style="color: #949494;">&lt;tibble&gt;</span>    <span style="color: #949494;">&lt;tibble&gt;</span>    <span style="color: #949494;">&lt;tibble&gt;</span>       <span style="color: #949494;">&lt;tibble&gt;</span>   </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> CH-Lae   <span style="color: #949494;">&lt;tibble [1 × 10]&gt;</span> <span style="color: #949494;">&lt;tibble&gt;</span>    <span style="color: #949494;">&lt;tibble&gt;</span>    <span style="color: #949494;">&lt;tibble&gt;</span>       <span style="color: #949494;">&lt;tibble&gt;</span>   </span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># ℹ 2 more variables: init_soil &lt;list&gt;, forcing &lt;list&gt;</span></span></span></code></pre></div>
 <p>Nested data structures can be accessed like this:</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Accessing the site information for the first site</span></span>
 <span><span class="fu">rsofun</span><span class="fu">::</span><span class="va"><a href="../reference/biomee_gs_leuning_drivers.html">biomee_gs_leuning_drivers</a></span><span class="op">$</span><span class="va">site_info</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span></span>
-<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 1 × 14</span></span></span>
-<span><span class="co">#&gt;   sitename   lon   lat   elv year_start year_end classid c4    whc  </span></span>
-<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;lgl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;lgl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;lgl&gt;</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> CH-Lae    8.36  47.5   700       <span style="text-decoration: underline;">2</span>004     <span style="text-decoration: underline;">2</span>014 <span style="color: #BB0000;">NA</span>      FALSE <span style="color: #BB0000;">NA</span>   </span></span>
-<span><span class="co">#&gt; <span style="color: #949494;"># ℹ 5 more variables: koeppen_code &lt;lgl&gt;, igbp_land_use &lt;chr&gt;,</span></span></span>
-<span><span class="co">#&gt; <span style="color: #949494;">#   plant_functional_type &lt;chr&gt;, date_start &lt;date&gt;, date_end &lt;date&gt;</span></span></span></code></pre></div>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 1 × 10</span></span></span>
+<span><span class="co">#&gt;     lon   lat   elv year_start year_end c4    igbp_land_use</span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;lgl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>        </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span>  8.36  47.5   700       <span style="text-decoration: underline;">2</span>004     <span style="text-decoration: underline;">2</span>014 FALSE Mixed Forests</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># ℹ 3 more variables: plant_functional_type &lt;chr&gt;, date_start &lt;date&gt;,</span></span></span>
+<span><span class="co">#&gt; <span style="color: #949494;">#   date_end &lt;date&gt;</span></span></span></code></pre></div>
 <div class="section level3">
 <h3 id="specific-data-for-each-model">Specific data for each model<a class="anchor" aria-label="anchor" href="#specific-data-for-each-model"></a>
 </h3>

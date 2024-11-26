@@ -21,7 +21,7 @@
         <a class="external-link hidden-md hidden-lg" href="https://geco-group.org/">
           <img src="https://raw.githubusercontent.com/computationales/GECO_template/main/geco_logo_white_small.png" id="hexlogo" alt="GECO"></a>
         <a class="navbar-brand" href="../index.html">
-           <i>rsofun <small>v4.4.1</small></i>
+           <i>rsofun <small>v5.0.0</small></i>
         </a>
       </div>
     </div>
@@ -101,9 +101,20 @@ description of the BiomeE output variables.</p>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># \donttest{</span></span></span>
 <span class="r-in"><span><span class="co"># Example BiomeE model run</span></span></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="va">mod_output</span> <span class="op">&lt;-</span> <span class="fu">runread_biomee_f</span><span class="op">(</span></span></span>
+<span class="r-in"><span><span class="fu">runread_biomee_f</span><span class="op">(</span></span></span>
 <span class="r-in"><span>  drivers <span class="op">=</span> <span class="va">biomee_gs_leuning_drivers</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 1 × 2</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   sitename data            </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;list&gt;</span>          </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> CH-Lae   <span style="color: #949494;">&lt;named list [3]&gt;</span></span>
+<span class="r-in"><span><span class="fu">runread_biomee_f</span><span class="op">(</span></span></span>
+<span class="r-in"><span>  drivers <span class="op">=</span> <span class="va">biomee_p_model_drivers</span></span></span>
+<span class="r-in"><span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 1 × 2</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   sitename data            </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;list&gt;</span>          </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> CH-Lae   <span style="color: #949494;">&lt;named list [3]&gt;</span></span>
 <span class="r-in"><span><span class="co"># }</span></span></span>
 </code></pre></div>
     </div>
