@@ -3,6 +3,8 @@
 #' Creates a tibble with rows for each date from \code{'yrstart'} to \code{'yrend'}
 #' in \code{'yyyy-mm-dd'} format. Intervals of dates are specified by argument 
 #'\code{'freq'}. 
+#'  ddf <- init_dates_dataframe(2000, 2003, startmoy=1, startdoy=1,
+#'                              freq="days", endmoy=12, enddom=31, noleap=FALSE)
 #'
 #' @param yrstart An integer defining the start year
 #'  of dates covered by the dataframe.
@@ -25,9 +27,6 @@
 #' 
 #' @return A tibble with dates.
 #'
-#' @examples
-#'  ddf <- init_dates_dataframe( 2000, 2003, startmoy=1, startdoy=1,
-#'   freq="days", endmoy=12, enddom=31, noleap=FALSE )
 
 init_dates_dataframe <- function(
     yrstart,
