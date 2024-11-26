@@ -188,7 +188,7 @@ pars <- calib_sofun(
 )
 ```
 
-```{r simulate_biomee_p_model_calibration, include = FALSE}
+```{r include = FALSE}
 # TODO: get rid of this and always fully run the vignettes
 # fake output since calibration isn't run
 # saveRDS(pars, "files/biomee_use.Rmd__biomee_p_model_output___pars.RDS")

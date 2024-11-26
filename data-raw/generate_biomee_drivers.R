@@ -19,16 +19,12 @@ sitename <- "CH-Lae"
 
 # Take only year 2004 to 2014, corresponding to subset of data for site CH-Lae
 siteinfo <- tibble(
-  sitename = "CH-Lae",
   lon = 8.365,
   lat = 47.47808,
   elv = 700,
   year_start = 2004,
   year_end = 2014,
-  classid = NA,
   c4 = FALSE,
-  whc = NA,
-  koeppen_code = NA,
   igbp_land_use = "Mixed Forests",
   plant_functional_type = "Broadleaf trees")
 

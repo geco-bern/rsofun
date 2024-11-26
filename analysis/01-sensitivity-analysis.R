@@ -118,5 +118,5 @@ gg <- morrisOut.df |>
   ) +
   coord_flip()    # make horizontal
 
-# ggsave("./analysis/paper_results_files/morris.pdf", plot = gg, width = 5, height = 3)
-# ggsave("./analysis/paper_results_files/morris.png", plot = gg, width = 5, height = 3)
+ggsave("./analysis/paper_results_files/morris.pdf", plot = gg, width = 5, height = 3)
+ggsave("./analysis/paper_results_files/morris.png", plot = gg, width = 5, height = 3)

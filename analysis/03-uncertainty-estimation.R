@@ -39,9 +39,9 @@ run_pmodel <- function(sample_par){
     par =  list(                      # copied from par_fixed above
       kphio = sample_par$kphio,
       kphio_par_a = -0.0025,
-      kphio_par_b = 20,
+      kphio_par_b = sample_par$kphio_par_b,
       soilm_thetastar    = 0.6*240,
-      soilm_betao        = sample_par$soilm_betao,
+      soilm_betao        = 0.2,
       beta_unitcostratio = 146.0,
       rd_to_vcmax        = 0.014,
       tau_acclim         = 30.0,
@@ -87,21 +87,30 @@ plot_gpp_error <- ggplot(data = data_to_plot) +
     aes(ymin = gpp_pred_q05,
         ymax = gpp_pred_q95,
         x = date,
-        fill = "Model uncertainty")) +
+        fill = "Model uncertainty"
+    ),
+    alpha = 0.5) +
   geom_ribbon(
     aes(ymin = gpp_q05, 
         ymax = gpp_q95,
         x = date,
-        fill = "Parameter uncertainty")) +
+        fill = "Parameter uncertainty"
+    ),
+    alpha = 0.5) +
+  # Include observations in the plot
+  geom_point(
+    aes(x = date,
+        y = gpp_obs,
+        color = "Observations"
+    ),
+  ) +
   geom_line(
     aes(x = date,
         y = gpp_q50,
-        color = "Predictions")) +
-  # Include observations in the plot
-  geom_point(shape = 3, 
-    aes(x = date,
-        y = gpp_obs,
-        color = "Observations")) +
+        color = "Predictions"
+    ),
+    alpha = 0.6
+    ) +
   theme_classic() +
   theme(panel.grid.major.y = element_line(),
         legend.position = "bottom") +
@@ -110,27 +119,21 @@ plot_gpp_error <- ggplot(data = data_to_plot) +
     y = expression(paste("GPP (g C m"^-2, "s"^-1, ")"))
   )
 
-plot_gpp_error <- plot_gpp_error +  
+plot_gpp_error <- plot_gpp_error +
   scale_color_manual(name = "",
                      breaks = c("Observations",
-                                "Predictions",
-                                "Non-calibrated predictions"),
+                                "Predictions"),
                      values = c(t_col("black", 10),
-                                t_col("#E69F00", 10),
-                                t_col("#56B4E9", 10))) +
-  scale_fill_manual(name = "",
-                    breaks = c("Model uncertainty",
-                               "Parameter uncertainty"),
-                    values = c(t_col("#E69F00", 60),
-                               t_col("#009E73", 40)))
+                                t_col("grey40", 10)))# +
+#  scale_fill_manual(name = "",
+#                    breaks = c("Model uncertainty",
+#                               "Parameter uncertainty"),
+#                    values = c(t_col("#E69F00", 60),
+#                               t_col("#009E73", 40)))
 plot_gpp_error
-dir.create("./analysis/paper_results_files2")
 settings_string <- get_settings_str(par_calib)
-ggsave(paste0("./analysis/paper_results_files2/",settings_string,"_gpp_predictions_observations.pdf"), plot = plot_gpp_error, width = 6, height = 5)
-ggsave(paste0("./analysis/paper_results_files2/",settings_string,"_gpp_predictions_observations.png"), plot = plot_gpp_error, width = 6, height = 5)
-
-
-
+ggsave(paste0("./analysis/paper_results_files/",settings_string,"_gpp_predictions_observations.pdf"), plot = plot_gpp_error, width = 6, height = 5)
+ggsave(paste0("./analysis/paper_results_files/",settings_string,"_gpp_predictions_observations.png"), plot = plot_gpp_error, width = 6, height = 5)
 
 
 plot_gpp_error2 <- ggplot(data = data_to_plot) +
@@ -175,7 +178,6 @@ plot_gpp_error2 <- plot_gpp_error2 +
                     values = c(t_col("#E69F00", 60),
                                t_col("#009E73", 40)))
 plot_gpp_error2
-dir.create("./analysis/paper_results_files2")
-ggsave(paste0("./analysis/paper_results_files2/",settings_string,"_gpp_predictions_observations_2.pdf"), plot = plot_gpp_error2, width = 6, height = 5)
-ggsave(paste0("./analysis/paper_results_files2/",settings_string,"_gpp_predictions_observations_2.png"), plot = plot_gpp_error2, width = 6, height = 5)
+ggsave(paste0("./analysis/paper_results_files/",settings_string,"_gpp_predictions_observations_2.pdf"), plot = plot_gpp_error2, width = 6, height = 5)
+ggsave(paste0("./analysis/paper_results_files/",settings_string,"_gpp_predictions_observations_2.png"), plot = plot_gpp_error2, width = 6, height = 5)
 

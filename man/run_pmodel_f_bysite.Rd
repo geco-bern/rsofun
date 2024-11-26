@@ -35,7 +35,7 @@ run_pmodel_f_bysite(
 
 \item{site_info}{A list of site meta info. Required:
 \describe{
-      \item{lon}{Longitud of the site location.}
+      \item{lon}{Longitude of the site location.}
       \item{lat}{Latitude of the site location.}
       \item{elv}{Elevation of the site location, in meters.}
       \item{whc}{A numeric value for the total root zone water holding capacity (in mm), used

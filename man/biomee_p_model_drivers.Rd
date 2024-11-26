@@ -5,14 +5,7 @@
 \alias{biomee_p_model_drivers}
 \title{rsofun BiomeE driver data}
 \format{
-A tibble of driver data:
-\describe{
-  \item{sitename}{site name}
-  \item{params_siml}{model parameters}
-  \item{site_info}{site information}
-  \item{soil_texture}{soil texture data}
-  \item{forcing}{forcing data}
-}
+See \code{\link{biomee_gs_leuning_drivers}}
 }
 \usage{
 biomee_p_model_drivers
