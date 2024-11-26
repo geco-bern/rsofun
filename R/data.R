@@ -168,7 +168,7 @@
 #' Example output dataset from a p-model run using \code{\link{p_model_drivers}}
 "p_model_output"
 
-#' rsofun P-model output data
+#' rsofun P-model output data (using vcmax25 drivers)
 #'
 #' Example output dataset from a p-model run using \code{\link{p_model_drivers_vcmax25}}
 "p_model_output_vcmax25"
