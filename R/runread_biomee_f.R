@@ -21,8 +21,11 @@
 #' \donttest{
 #' # Example BiomeE model run
 #' 
-#' mod_output <- runread_biomee_f(
+#' runread_biomee_f(
 #'   drivers = biomee_gs_leuning_drivers
+#' )
+#' runread_biomee_f(
+#'   drivers = biomee_p_model_drivers
 #' )
 #' }
 
