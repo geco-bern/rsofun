@@ -1,3 +1,12 @@
+# rsofun v4.5.0
+
+* new BiomeE forcing data matching that of P-model
+  * `prec` is now called `rain`
+  * `rh` is now provided as `vpd`
+  * See `biomee_gs_leuning_drivers` for an example
+* fix Fortran modules leading to segmentation faults using BiomeE model
+* improved documentation
+
 # rsofun v4.4.1
 
 * bugfix Fortran modules and derived types
