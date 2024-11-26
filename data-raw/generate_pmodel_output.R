@@ -16,18 +16,18 @@ params_modl <- list(
 )
 
 # Run the model for these parameters and the example drivers
-pmodel_output <- rsofun::runread_pmodel_f(
+p_model_output <- rsofun::runread_pmodel_f(
   drivers = rsofun::p_model_drivers,
   par     = params_modl)
 
-pmodel_output_vcmax25 <- rsofun::runread_pmodel_f(
+p_model_output_vcmax25 <- rsofun::runread_pmodel_f(
   drivers = rsofun::p_model_drivers_vcmax25,
   par = params_modl)
   
-save(pmodel_output,
-     file ="data/pmodel_output.rda",
+save(p_model_output,
+     file ="data/p_model_output.rda",
      compress = "xz")
 
-save(pmodel_output_vcmax25,
-     file ="data/pmodel_output_vcmax25.rda",
+save(p_model_output_vcmax25,
+     file ="data/p_model_output_vcmax25.rda",
      compress = "xz")
