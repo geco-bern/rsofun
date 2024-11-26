@@ -1,4 +1,4 @@
-# rsofun v4.5.0
+# rsofun v5.0.0
 
 * new BiomeE forcing data matching that of P-model
   * `prec` is now called `rain`
