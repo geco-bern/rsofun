@@ -115,6 +115,13 @@ toc() # Stop measuring time
 # Plot prior and posterior distributions
 gg <- plot_prior_posterior_density(par_calib$mod)
 
+get_runtime <- function(par_calib) {# function(settings_calib){
+  total_time_secs <- sum(unlist(lapply(
+    par_calib$mod,
+    function(curr_chain){curr_chain$settings$runtime[["elapsed"]]})))
+  return(sprintf("Total runtime: %.0f secs", total_time_secs))
+}
+
 # Plot MCMC diagnostics
 plot(par_calib$mod)
 summary(par_calib$mod) # Gives Gelman Rubin multivariate of 1.019
@@ -147,12 +154,6 @@ get_settings_str <- function(par_calib) {# function(settings_calib){
   return(sprintf(
     "Sampler-%s-%siterations_ofwhich%sburnin_chains(%sx%s)",
     sampler_name, nrIterations, nrBurnin, nrChains,  nrInternalChains))
-}
-get_runtime <- function(par_calib) {# function(settings_calib){
-  total_time_secs <- sum(unlist(lapply(
-    par_calib$mod, 
-    function(curr_chain){curr_chain$settings$runtime[["elapsed"]]})))  
-  return(sprintf("Total runtime: %.0f secs", total_time_secs))
 }
 
 settings_string <- get_settings_str(par_calib)

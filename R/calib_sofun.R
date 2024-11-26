@@ -89,6 +89,7 @@ calib_sofun <- function(
     obs,
     settings,
     optim_out = TRUE,
+    parallel = FALSE, # Keep false by default as integration test fail otherwise
     ...
 ){
   # predefine variables for CRAN check compliance
@@ -172,7 +173,7 @@ calib_sofun <- function(
                   drivers = drivers
                 ))
       },
-      parallel = T,
+      parallel = parallel,
       prior = priors,
       names = names(settings$par)
     )    
