@@ -110,7 +110,7 @@ plot_gpp_error <- ggplot(data = data_to_plot) +
         color = "Predictions"
     ),
     alpha = 0.6
-    ) +
+  ) +
   theme_classic() +
   theme(panel.grid.major.y = element_line(),
         legend.position = "bottom") +

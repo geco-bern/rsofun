@@ -172,8 +172,8 @@ calib_sofun <- function(
                   drivers = drivers
                 ))
       },
-      prior = priors,
-      names = names(settings$par)
+    prior = priors,
+    names = names(settings$par)
     )    
     
     # set bt control parameters

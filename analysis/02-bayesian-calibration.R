@@ -134,17 +134,17 @@ get_settings_str <- function(par_calib) {# function(settings_calib){
   stopifnot(is(par_calib$mod, "mcmcSamplerList"))
   
   # explore what's in a mcmcSamplerList:
-    # summary(par_calib$mod)
-    # plot(par_calib$mod)
+  # summary(par_calib$mod)
+  # plot(par_calib$mod)
   individual_chains <- par_calib$mod
   nrChains <- length(individual_chains) # number of chains
-    # plot(individual_chains[[1]]) # chain 1
-    # plot(individual_chains[[2]]) # chain 2
-    # plot(individual_chains[[3]]) # chain 3
-    # class(individual_chains[[1]]$setup); individual_chains[[1]]$setup # Bayesian Setup
-    # individual_chains[[1]]$chain
-    # individual_chains[[1]]$X
-    # individual_chains[[1]]$Z
+  # plot(individual_chains[[1]]) # chain 1
+  # plot(individual_chains[[2]]) # chain 2
+  # plot(individual_chains[[3]]) # chain 3
+  # class(individual_chains[[1]]$setup); individual_chains[[1]]$setup # Bayesian Setup
+  # individual_chains[[1]]$chain
+  # individual_chains[[1]]$X
+  # individual_chains[[1]]$Z
   nrInternalChains <- lapply(individual_chains, function(curr_chain){curr_chain$settings$nrChains})  |> unlist() |> unique() |> paste0(collapse = "-")
   nrIterations     <- lapply(individual_chains, function(curr_chain){curr_chain$settings$iterations})|> unlist() |> unique() |> paste0(collapse = "-")
   nrBurnin         <- lapply(individual_chains, function(curr_chain){curr_chain$settings$burnin})    |> unlist() |> unique() |> paste0(collapse = "-")

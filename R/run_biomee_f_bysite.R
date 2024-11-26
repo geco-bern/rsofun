@@ -247,20 +247,20 @@
 #' }
 
 run_biomee_f_bysite <- function(
-  sitename,
-  params_siml,
-  site_info,
-  forcing,
-  params_tile,
-  params_species,
-  init_cohort,
-  init_soil,
-  makecheck = TRUE
-  ){
+    sitename,
+    params_siml,
+    site_info,
+    forcing,
+    params_tile,
+    params_species,
+    init_cohort,
+    init_soil,
+    makecheck = TRUE
+){
   
   # predefine variables for CRAN check compliance
   type <- NULL
-
+  
   forcing_features <- c(
     'ppfd',
     'temp',
@@ -276,14 +276,14 @@ run_biomee_f_bysite <- function(
     select(
       any_of(forcing_features)
     )
-
+  
   runyears <- ifelse(
     params_siml$spinup,
     (params_siml$spinupyears + params_siml$nyeartrend),
     params_siml$nyeartrend)
   
   n_daily  <- params_siml$nyeartrend * 365
-
+  
   # Types of photosynthesis model
   if (params_siml$method_photosynth == "gs_leuning"){
     code_method_photosynth <- 1
@@ -299,17 +299,17 @@ run_biomee_f_bysite <- function(
       stop(
         "run_biomee_f_bysite: time step must be daily 
          for P-model photosynthesis setup."
-        )
-      }
+      )
+    }
   } else {
     stop(
       paste("run_biomee_f_bysite:
             params_siml$method_photosynth not recognised:",
             params_siml$method_photosynth))
   }
-
-# Types of mortality formulations
-    if (params_siml$method_mortality == "cstarvation"){
+  
+  # Types of mortality formulations
+  if (params_siml$method_mortality == "cstarvation"){
     code_method_mortality <- 1
   } else if (params_siml$method_mortality == "growthrate"){
     code_method_mortality <- 2
@@ -324,10 +324,10 @@ run_biomee_f_bysite <- function(
       paste("run_biomee_f_bysite: params_siml$method_mortality not recognised:",
             params_siml$method_mortality))
   }
-
+  
   # base state, always execute the call
   continue <- TRUE
-
+  
   # validate input
   if (makecheck){
     # Add input and parameter checks here if applicable.
@@ -343,19 +343,19 @@ run_biomee_f_bysite <- function(
           return(TRUE)
         }
       })
-
+    
     # only return true if all checked variables are TRUE
     # suppress warning on coercion of list to single logical
     continue <- suppressWarnings(all(as.vector(data_integrity)))
   }
-
+  
   if (continue) {
-
+    
     ## C wrapper call
     biomeeout <- .Call(
-
+      
       'biomee_f_C',
-
+      
       ## Simulation parameters
       spinup                = as.logical(params_siml$spinup),
       spinupyears           = as.integer(params_siml$spinupyears),
@@ -372,7 +372,7 @@ run_biomee_f_bysite <- function(
       longitude             = as.numeric(site_info$lon),
       latitude              = as.numeric(site_info$lat),
       altitude              = as.numeric(site_info$elv),
-
+      
       ## Tile-level parameters
       soiltype     = as.integer(params_tile$soiltype),
       FLDCAP       = as.numeric(params_tile$FLDCAP),
@@ -393,15 +393,15 @@ run_biomee_f_bysite <- function(
       tf_base      = as.numeric(params_tile$tf_base),
       par_mort     = as.numeric(params_tile$par_mort),
       par_mort_under = as.numeric(params_tile$par_mort_under),
-
+      
       ## Species-specific parameters
       n_params_species = as.integer(nrow(params_species)),
       params_species = as.matrix(params_species),
-
+      
       ## initial cohort sizes
       n_init_cohort = as.integer(nrow(init_cohort)),
       init_cohort = as.matrix(init_cohort),
-
+      
       ## initial soil pools
       init_fast_soil_C = as.numeric(init_soil$init_fast_soil_C),
       init_slow_soil_C = as.numeric(init_soil$init_slow_soil_C),
@@ -426,9 +426,9 @@ run_biomee_f_bysite <- function(
         format(
           utils::object.size(biomeeout), 
           units = "GB"
-          )
         )
       )
+    )
     
     if (size_of_object_gb >= 5){
       warning(
@@ -487,66 +487,66 @@ run_biomee_f_bysite <- function(
     # annual tile
     output_annual_tile <- as.data.frame(biomeeout[[2]], stringAsFactor = FALSE)
     colnames(output_annual_tile) <- c(
-			"year", 
-			"CAI", 
-			"LAI",
-			"Density", 
-			"DBH", 
-			"Density12",
-			"DBH12", 
-			"QMD12",
-			"NPP",
-			"GPP", 
-			"Rauto", 
-			"Rh",
-			"rain", 
-			"SoilWater",
-            "Transp",
-			"Evap", 
-			"Runoff", 
-			"plantC",
-			"soilC", 
-			"plantN", 
-			"soilN",
-			"totN", 
-			"NSC", 
-			"SeedC", 
-			"leafC",
-			"rootC", 
-			"SapwoodC", 
-			"WoodC",
-			"NSN", 
-			"SeedN", 
-			"leafN",
-			"rootN", 
-			"SapwoodN", 
-			"WoodN",
-			"McrbC", 
-			"fastSOM", 
-			"SlowSOM",
-			"McrbN", 
-			"fastSoilN", 
-			"slowSoilN",
-			"mineralN", 
-			"N_fxed", 
-			"N_uptk",
-			"N_yrMin", 
-			"N_P2S", 
-			"N_loss",
-			"totseedC", 
-			"totseedN", 
-			"Seedling_C",
-			"Seedling_N", 
-			"MaxAge", 
-			"MaxVolume",
-			"MaxDBH", 
-			"NPPL", 
-			"NPPW",
-			"n_deadtrees", 
-			"c_deadtrees", 
-			"m_turnover", 
-			"c_turnover_time"
-		)
+      "year", 
+      "CAI", 
+      "LAI",
+      "Density", 
+      "DBH", 
+      "Density12",
+      "DBH12", 
+      "QMD12",
+      "NPP",
+      "GPP", 
+      "Rauto", 
+      "Rh",
+      "rain", 
+      "SoilWater",
+      "Transp",
+      "Evap", 
+      "Runoff", 
+      "plantC",
+      "soilC", 
+      "plantN", 
+      "soilN",
+      "totN", 
+      "NSC", 
+      "SeedC", 
+      "leafC",
+      "rootC", 
+      "SapwoodC", 
+      "WoodC",
+      "NSN", 
+      "SeedN", 
+      "leafN",
+      "rootN", 
+      "SapwoodN", 
+      "WoodN",
+      "McrbC", 
+      "fastSOM", 
+      "SlowSOM",
+      "McrbN", 
+      "fastSoilN", 
+      "slowSoilN",
+      "mineralN", 
+      "N_fxed", 
+      "N_uptk",
+      "N_yrMin", 
+      "N_P2S", 
+      "N_loss",
+      "totseedC", 
+      "totseedN", 
+      "Seedling_C",
+      "Seedling_N", 
+      "MaxAge", 
+      "MaxVolume",
+      "MaxDBH", 
+      "NPPL", 
+      "NPPW",
+      "n_deadtrees", 
+      "c_deadtrees", 
+      "m_turnover", 
+      "c_turnover_time"
+    )
     
     #--- annual cohorts ----
     annual_values <- c(
@@ -602,7 +602,7 @@ run_biomee_f_bysite <- function(
     
     # drop rows (cohorts) with no values
     output_annual_cohorts$year[output_annual_cohorts$year == -9999 | 
-                           output_annual_cohorts$year == 0] <- NA
+                                 output_annual_cohorts$year == 0] <- NA
     output_annual_cohorts <- 
       output_annual_cohorts[!is.na(output_annual_cohorts$year),]
     
@@ -617,9 +617,9 @@ run_biomee_f_bysite <- function(
   } else {
     out <- NA
   }
-    
+  
   return(out)
-
+  
 }
 
 .onUnload <- function(libpath) {

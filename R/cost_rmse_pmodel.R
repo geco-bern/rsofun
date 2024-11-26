@@ -73,7 +73,7 @@ cost_rmse_pmodel <- function(
     targets,    
     par_fixed = NULL, # non-calibrated model parameters
     target_weights = NULL, # if using several targets, how are the individual 
-                           # RMSE weighted? named vector
+    #                      # RMSE weighted? named vector
     parallel = FALSE,
     ncores = 2
 ){
@@ -144,10 +144,10 @@ cost_rmse_pmodel <- function(
     }else{
       # Join P-model output and flux observations
       df_flux <- df |>
-      dplyr::filter(sitename %in% flux_sites) |>
-      dplyr::left_join(
-        obs_flux, 
-        by = c('sitename', 'date'))    # observations with missing date are ignored
+        dplyr::filter(sitename %in% flux_sites) |>
+        dplyr::left_join(
+          obs_flux, 
+          by = c('sitename', 'date'))    # observations with missing date are ignored
     }
   }else{
     df_flux <- data.frame()
@@ -170,7 +170,7 @@ cost_rmse_pmodel <- function(
       df_trait <- df |>
         dplyr::filter(sitename %in% trait_sites) |>
         dplyr::group_by(sitename) |>
-          # get growing season average traits
+        # get growing season average traits
         dplyr::summarise(across(ends_with("_mod") & !starts_with('gpp'),
                                 ~ sum(.x * gpp_mod/sum(gpp_mod)),
                                 .names = "{.col}")) |>
@@ -192,7 +192,7 @@ cost_rmse_pmodel <- function(
     }
     if(target %in% colnames(df_trait)){
       error <- c(error, 
-                (df_trait[[target]] - df_trait[[paste0(target, '_mod')]])^2)
+                 (df_trait[[target]] - df_trait[[paste0(target, '_mod')]])^2)
     }
     sqrt(mean(error, na.rm = TRUE))
   }) |>
@@ -204,6 +204,6 @@ cost_rmse_pmodel <- function(
   }else{
     cost <- mean(rmse, na.rm = TRUE)
   }
-
+  
   return(cost)
 }

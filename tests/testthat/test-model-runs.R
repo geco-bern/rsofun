@@ -41,7 +41,7 @@ test_that("p-model run check GPP", {
     makecheck = FALSE,
     parallel = FALSE
   )
-
+  
   # test for correctly returned values
   expect_type(df_output, "list")
   
@@ -116,16 +116,16 @@ test_that("p-model run check Vcmax25", {
 
 test_that("biomeE output check (gs leuning)", {
   skip_on_cran()
-
+  
   out <- runread_biomee_f(
     biomee_gs_leuning_drivers,
     makecheck = TRUE,
     parallel = FALSE)
-
+  
   output_annual_tile <- out$data[[1]]$output_annual_tile
-
+  
   expect_true(all.equal(colMeans(output_annual_tile), colMeans(biomee_gs_leuning_output$data[[1]]$output_annual_tile), tolerance = 1e-4))
-
+  
   # If this test fails it means that the output of the model is out of sync with the data in the data directory.
   # It could either mean that:
   # - the model was accidentally altered and should be fixed to deliver the expected output
@@ -136,16 +136,16 @@ test_that("biomeE output check (gs leuning)", {
 
 test_that("biomee output check (p-model)", {
   skip_on_cran()
-
+  
   out <- runread_biomee_f(
     biomee_p_model_drivers,
     makecheck = TRUE,
     parallel = FALSE)
-
+  
   output_annual_tile <- out$data[[1]]$output_annual_tile
-
+  
   expect_true(all.equal(colMeans(output_annual_tile), colMeans(biomee_p_model_output$data[[1]]$output_annual_tile), tolerance = 1e-4))
-
+  
   # If this test fails it means that the output of the model is out of sync with the data in the data directory.
   # It could either mean that:
   # - the model was accidentally altered and should be fixed to deliver the expected output
