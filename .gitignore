@@ -11,10 +11,11 @@ src/*.o
 src/*.so
 src/*.dll
 src/*.mod
-src/Makevars
 
 # vignette builds
 vignettes/*.html
 
 # documentation dir
 docs/
+
+CRAN-SUBMISSION

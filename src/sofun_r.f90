@@ -51,22 +51,22 @@ contains
     implicit none
 
     ! arguments
-    logical(kind=c_bool), intent(in) :: spinup
+    integer(kind=c_int),  intent(in) :: spinup         ! logical type is not supported in the C interface (LTO)
     integer(kind=c_int),  intent(in) :: spinupyears
     integer(kind=c_int),  intent(in) :: recycle
     integer(kind=c_int),  intent(in) :: firstyeartrend
     integer(kind=c_int),  intent(in) :: nyeartrend
     integer(kind=c_int),  intent(in) :: secs_per_tstep
-    logical(kind=c_bool), intent(in) :: in_ppfd
-    logical(kind=c_bool), intent(in) :: in_netrad
+    integer(kind=c_int),  intent(in) :: in_ppfd        ! logical
+    integer(kind=c_int),  intent(in) :: in_netrad      ! logical
     integer(kind=c_int),  intent(in) :: outdt
-    logical(kind=c_bool), intent(in) :: ltre
-    logical(kind=c_bool), intent(in) :: ltne
-    logical(kind=c_bool), intent(in) :: ltrd
-    logical(kind=c_bool), intent(in) :: ltnd
-    logical(kind=c_bool), intent(in) :: lgr3
-    logical(kind=c_bool), intent(in) :: lgn3
-    logical(kind=c_bool), intent(in) :: lgr4
+    integer(kind=c_int), intent(in) :: ltre            ! logical
+    integer(kind=c_int), intent(in) :: ltne            ! logical
+    integer(kind=c_int), intent(in) :: ltrd            ! logical
+    integer(kind=c_int), intent(in) :: ltnd            ! logical
+    integer(kind=c_int), intent(in) :: lgr3            ! logical
+    integer(kind=c_int), intent(in) :: lgn3            ! logical
+    integer(kind=c_int), intent(in) :: lgr4            ! logical
     real(kind=c_double),  intent(in) :: longitude
     real(kind=c_double),  intent(in) :: latitude
     real(kind=c_double),  intent(in) :: altitude
@@ -83,7 +83,7 @@ contains
     !----------------------------------------------------------------
     ! GET SIMULATION PARAMETERS
     !----------------------------------------------------------------
-    myinterface%params_siml%steering%do_spinup      = spinup
+    myinterface%params_siml%steering%do_spinup      = spinup /= 0
     myinterface%params_siml%steering%spinupyears    = spinupyears
     myinterface%params_siml%steering%recycle        = recycle
     myinterface%params_siml%steering%firstyeartrend = firstyeartrend
@@ -97,16 +97,16 @@ contains
       myinterface%params_siml%steering%spinupyears = 0
     endif
     
-    myinterface%params_siml%in_ppfd            = in_ppfd
-    myinterface%params_siml%in_netrad          = in_netrad
+    myinterface%params_siml%in_ppfd            = in_ppfd /= 0
+    myinterface%params_siml%in_netrad          = in_netrad /= 0
     myinterface%params_siml%outdt              = outdt
-    myinterface%params_siml%ltre               = ltre
-    myinterface%params_siml%ltne               = ltne
-    myinterface%params_siml%ltrd               = ltrd
-    myinterface%params_siml%ltnd               = ltnd
-    myinterface%params_siml%lgr3               = lgr3
-    myinterface%params_siml%lgn3               = lgn3
-    myinterface%params_siml%lgr4               = lgr4
+    myinterface%params_siml%ltre               = ltre /= 0
+    myinterface%params_siml%ltne               = ltne /= 0
+    myinterface%params_siml%ltrd               = ltrd /= 0
+    myinterface%params_siml%ltnd               = ltnd /= 0
+    myinterface%params_siml%lgr3               = lgr3 /= 0
+    myinterface%params_siml%lgn3               = lgn3 /= 0
+    myinterface%params_siml%lgr4               = lgr4 /= 0
     myinterface%params_siml%secs_per_tstep     = secs_per_tstep
 
     !----------------------------------------------------------------
@@ -316,15 +316,15 @@ contains
     implicit none
 
     ! Simulation parameters
-    logical(kind=c_bool), intent(in) :: spinup
+    integer(kind=c_int), intent(in) :: spinup                 ! logical type is not supported in the C interface (LTO)
     integer(kind=c_int),  intent(in) :: spinupyears
     integer(kind=c_int),  intent(in) :: recycle
     integer(kind=c_int),  intent(in) :: firstyeartrend
     integer(kind=c_int),  intent(in) :: nyeartrend
 
-    logical(kind=c_bool), intent(in) :: do_U_shaped_mortality
-    logical(kind=c_bool), intent(in) :: update_annualLAImax
-    logical(kind=c_bool), intent(in) :: do_closedN_run
+    integer(kind=c_int), intent(in) :: do_U_shaped_mortality  ! logical
+    integer(kind=c_int), intent(in) :: update_annualLAImax    ! logical
+    integer(kind=c_int), intent(in) :: do_closedN_run         ! logical
     integer(kind=c_int),  intent(in) :: code_method_photosynth
     integer(kind=c_int),  intent(in) :: code_method_mortality
 
@@ -431,7 +431,7 @@ contains
     !----------------------------------------------------------------
     ! POPULATE MYINTERFACE WITH ARGUMENTS FROM R
     !----------------------------------------------------------------
-    myinterface%params_siml%steering%do_spinup        = spinup
+    myinterface%params_siml%steering%do_spinup        = spinup /= 0
     myinterface%params_siml%steering%spinupyears      = spinupyears
     myinterface%params_siml%steering%recycle          = recycle
     myinterface%params_siml%steering%firstyeartrend   = firstyeartrend
@@ -446,10 +446,10 @@ contains
     endif
 
     ! Simulation parameters
-    myinterface%params_siml%do_U_shaped_mortality = do_U_shaped_mortality
-    myinterface%params_siml%update_annualLAImax   = update_annualLAImax      
-    myinterface%params_siml%do_closedN_run        = do_closedN_run
-    
+    myinterface%params_siml%do_U_shaped_mortality = do_U_shaped_mortality /= 0
+    myinterface%params_siml%update_annualLAImax   = update_annualLAImax /= 0
+    myinterface%params_siml%do_closedN_run        = do_closedN_run /= 0
+
     ! this needs to be consistent with translation to code in run_biomee_f_bysite.R
     if (code_method_photosynth == 1) then
       myinterface%params_siml%method_photosynth = "gs_leuning"
