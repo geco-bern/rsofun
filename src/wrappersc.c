@@ -9,23 +9,24 @@
 /////////////////////////////////////////////////////////////
 // P-model
 /////////////////////////////////////////////////////////////
+
 void F77_NAME(pmodel_f)(
-    int    *spinup, // LOGICAL can be defined as _Bool but it gives a warming  
+    int    *spinup, // LOGICAL type is not supported in the C interface (LTO)
     int    *spinupyears,
     int    *recycle,
     int    *firstyeartrend,
     int    *nyeartrend,
     int    *secs_per_tstep,
-    int    *in_ppfd,
-    int    *in_netrad,
+    int    *in_ppfd,// LOGICAL
+    int    *in_netrad,// LOGICAL
     int    *outdt,
-    int    *ltre,
-    int    *ltne,
-    int    *ltrd,
-    int    *ltnd,
-    int    *lgr3,
-    int    *lgn3,
-    int    *lgr4,
+    int    *ltre,// LOGICAL
+    int    *ltne,// LOGICAL
+    int    *ltrd,// LOGICAL
+    int    *ltnd,// LOGICAL
+    int    *lgr3,// LOGICAL
+    int    *lgn3,// LOGICAL
+    int    *lgr4,// LOGICAL
     double *longitude,
     double *latitude,
     double *altitude,
@@ -72,22 +73,22 @@ extern SEXP pmodel_f_C(
 
     // Fortran subroutine call
     F77_CALL(pmodel_f)(
-        LOGICAL(spinup),
+        INTEGER(spinup),
         INTEGER(spinupyears),
         INTEGER(recycle),
         INTEGER(firstyeartrend),
         INTEGER(nyeartrend),
         INTEGER(secs_per_tstep),
-        LOGICAL(in_ppfd),
-        LOGICAL(in_netrad),
+        INTEGER(in_ppfd),
+        INTEGER(in_netrad),
         INTEGER(outdt),
-        LOGICAL(ltre),
-        LOGICAL(ltne),
-        LOGICAL(ltrd),
-        LOGICAL(ltnd),
-        LOGICAL(lgr3),
-        LOGICAL(lgn3),
-        LOGICAL(lgr4),
+        INTEGER(ltre),
+        INTEGER(ltne),
+        INTEGER(ltrd),
+        INTEGER(ltnd),
+        INTEGER(lgr3),
+        INTEGER(lgn3),
+        INTEGER(lgr4),
         REAL(longitude),
         REAL(latitude),
         REAL(altitude),
@@ -111,14 +112,14 @@ extern SEXP pmodel_f_C(
 // biomee
 /////////////////////////////////////////////////////////////
 void F77_NAME(biomee_f)(
-    int    *spinup, // LOGICAL can be defined as _Bool but it gives a warming
+    int    *spinup, // LOGICAL type is not supported in the C interface (LTO)
     int    *spinupyears,               
     int    *recycle,              
     int    *firstyeartrend,                  
     int    *nyeartrend,
-    int    *do_U_shaped_mortality,             
-    int    *update_annualLAImax,                   
-    int    *do_closedN_run,
+    int    *do_U_shaped_mortality, //LOGICAL
+    int    *update_annualLAImax, //LOGICAL
+    int    *do_closedN_run, //LOGICAL
     int    *code_method_photosynth,
     int    *code_method_mortality,                   
     double *longitude,                  
@@ -198,7 +199,7 @@ void F77_NAME(biomee_f)(
 // C wrapper function for biomee
 extern SEXP biomee_f_C(
     SEXP spinup,                
-    SEXP spinupyears,               
+    SEXP spinupyears,
     SEXP recycle,                 
     SEXP firstyeartrend,                  
     SEXP nyeartrend,
@@ -290,14 +291,14 @@ extern SEXP biomee_f_C(
     
     // Fortran subroutine call
     F77_CALL(biomee_f)(
-        LOGICAL(spinup),                
+        INTEGER(spinup),
         INTEGER(spinupyears),                  
         INTEGER(recycle),                 
         INTEGER(firstyeartrend),                  
         INTEGER(nyeartrend),
-        LOGICAL(do_U_shaped_mortality),                
-        LOGICAL(update_annualLAImax),                   
-        LOGICAL(do_closedN_run),
+        INTEGER(do_U_shaped_mortality),
+        INTEGER(update_annualLAImax),
+        INTEGER(do_closedN_run),
         INTEGER(code_method_photosynth),
         INTEGER(code_method_mortality),              
         REAL(longitude),                  
