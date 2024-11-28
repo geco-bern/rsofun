@@ -188,9 +188,21 @@ params_modl <- list(
   kc_jmax            = 0.41
   )
 
+drivers_tmp <- p_model_drivers |> 
+  mutate(
+    params_siml = purrr::map(
+      params_siml,
+      ~mutate(
+        ., 
+        use_gs = FALSE,
+        use_pml = FALSE,
+        use_phydro = FALSE
+        )
+      ))
+
 # run the model for these parameters
 output <- rsofun::runread_pmodel_f(
-  p_model_drivers,
+  drivers_tmp,
   par = params_modl
   )
 ```
@@ -421,74 +433,83 @@ df_plot <- output |>
     by = join_by(date)
   )
 
-plot_eval(df_plot, is_gpp = FALSE, return_gg1 = TRUE)
-ggsave("~/rsofun/fig/et_fr-pue.pdf", height = 4, width = 6)
-```
-
-## P-hydro run with diffusion
-
-(For comparison)
-
-For P-hydro, we must use the 3-hr daily max forcing as the acclimation forcing. So let's rename it in the data.
-
-```{r}
-phdro_model_drivers <- rsofun::p_model_drivers_format2024_08 |> 
-  rename(forcing_acclim = forcing_3hrmax)
-```
-
-For P-hydro runs, we always set `use_phydro = T` and `use_gs = T`.
-
-```{r}
-# define model parameter values
-params_modl <- list(
-  kphio              = 0.0288,
-  kphio_par_a        = 0.0,        # set to zero to disable temperature-dependence of kphio
-  kphio_par_b        = 1.0,
-  rd_to_vcmax        = 0.014,      # value from Atkin et al. 2015 for C3 herbaceous
-  tau_acclim         = 30.0,
-  kc_jmax            = 0.41,
-  phydro_K_plant     = 5e-17,
-  phydro_p50_plant   = -0.46,
-  phydro_gamma       = 0.065,
-  phydro_b_plant     = 1,
-  phydro_alpha       = 0.08,
-  bsoil              = 3,
-  Ssoil              = 113
-)
-
-# run the model for these parameters
-output <- rsofun::runread_pmodel_f(
-  mutate(phdro_model_drivers, 
-         params_siml = params_siml |> mutate(use_gs = TRUE, use_phydro = TRUE) |> list()),
-  par = params_modl
-)
-```
-
-
-```{r}
-# gpp
-df_plot <- output$data[[1]] |> 
-  select(date, mod = gpp) |> 
-  left_join(
-    rsofun::p_model_validation_format2024_08$data[[1]] |> 
-      select(date, obs = gpp),
-    by = join_by(date)
-  ) |> 
-  as_tibble()
-
-plot_eval(df_plot)
-
-# le
-df_plot <- output$data[[1]] |> 
-  mutate(le =  le / (24 * 60 * 60)) |> 
-  select(date, mod = le) |> 
-  left_join(
-    rsofun::p_model_validation_format2024_08$data[[1]] |> 
-      mutate(le =  le / (24 * 60 * 60)) |> 
-      select(date, obs = le),
-    by = join_by(date)
-  ) |> 
-  as_tibble()
-
 plot_eval(df_plot, is_gpp = FALSE)
+# ggsave("~/rsofun/fig/et_fr-pue.pdf", height = 4, width = 6)
 ```
+
+<!-- ## P-hydro run with diffusion -->
+
+<!-- (For comparison) -->
+
+<!-- For P-hydro, we must use the 3-hr daily max forcing as the acclimation forcing. So let's rename it in the data. -->
+
+<!-- ```{r} -->
+<!-- phydro_model_drivers <- rsofun::p_model_drivers_format2024_08 |>  -->
+<!--   rename(forcing_acclim = forcing_3hrmax) -->
+
+<!--   # mutate(forcing = purrr::map(forcing, ~mutate(., vwind = NA))) -->
+
+<!-- phydro_model_drivers$forcing[[1]]$vwind <- NA  -->
+<!-- phydro_model_drivers$forcing_acclim[[1]]$vwind <- NA  -->
+<!-- ``` -->
+
+<!-- For P-hydro runs, we always set `use_phydro = T` and `use_gs = T`. -->
+
+<!-- ```{r} -->
+<!-- # define model parameter values -->
+<!-- params_modl <- list( -->
+<!--   kphio              = 0.0288, -->
+<!--   kphio_par_a        = 0.0,        # set to zero to disable temperature-dependence of kphio -->
+<!--   kphio_par_b        = 1.0, -->
+<!--   rd_to_vcmax        = 0.014,      # value from Atkin et al. 2015 for C3 herbaceous -->
+<!--   tau_acclim         = 30.0, -->
+<!--   kc_jmax            = 0.41, -->
+<!--   phydro_K_plant     = 5e-17, -->
+<!--   phydro_p50_plant   = -0.46, -->
+<!--   phydro_gamma       = 0.065, -->
+<!--   phydro_b_plant     = 1, -->
+<!--   phydro_alpha       = 0.08, -->
+<!--   bsoil              = 3, -->
+<!--   Ssoil              = 113 -->
+<!-- ) -->
+
+<!-- # run the model for these parameters -->
+<!-- output <- rsofun::runread_pmodel_f( -->
+<!--   mutate( -->
+<!--     phydro_model_drivers,  -->
+<!--     params_siml = params_siml |>  -->
+<!--       mutate(use_gs = TRUE, use_phydro = TRUE) |>  -->
+<!--       list() -->
+<!--     ), -->
+<!--   par = params_modl -->
+<!-- ) -->
+<!-- ``` -->
+
+
+<!-- ```{r} -->
+<!-- # gpp -->
+<!-- df_plot <- output$data[[1]] |>  -->
+<!--   select(date, mod = gpp) |>  -->
+<!--   left_join( -->
+<!--     rsofun::p_model_validation_format2024_08$data[[1]] |>  -->
+<!--       select(date, obs = gpp), -->
+<!--     by = join_by(date) -->
+<!--   ) |>  -->
+<!--   as_tibble() -->
+
+<!-- plot_eval(df_plot) -->
+
+<!-- # le -->
+<!-- df_plot <- output$data[[1]] |>  -->
+<!--   mutate(le =  le / (24 * 60 * 60)) |>  -->
+<!--   select(date, mod = le) |>  -->
+<!--   left_join( -->
+<!--     rsofun::p_model_validation_format2024_08$data[[1]] |>  -->
+<!--       mutate(le =  le / (24 * 60 * 60)) |>  -->
+<!--       select(date, obs = le), -->
+<!--     by = join_by(date) -->
+<!--   ) |>  -->
+<!--   as_tibble() -->
+
+<!-- plot_eval(df_plot, is_gpp = FALSE) -->
+<!-- ``` -->
