@@ -23,7 +23,7 @@ set.seed(2023)
 
 # Sample parameter values from the posterior distribution
 samples_par <- getSample(par_calib$mod,
-                         thin = 46,              # get 600 samples in total
+                         thin = 60,              # get 600 samples in total
                          whichParameters = 1:4) |>
   as.data.frame() |>
   dplyr::mutate(mcmc_id = 1:n()) |>
@@ -51,7 +51,7 @@ run_pmodel <- function(sample_par){
   # return modelled GPP and prediction for a new GPP observation
   gpp <- out$data[[1]][, "gpp"]
   data.frame(gpp = gpp, 
-             gpp_pred = gpp + rnorm(n = length(gpp), mean = 0, 
+             gpp_pred = rnorm(n = length(gpp), mean = gpp,
                                     sd = sample_par$err_gpp),
              date = out$data[[1]][, "date"])
 }
@@ -88,15 +88,13 @@ plot_gpp_error <- ggplot(data = data_to_plot) +
         ymax = gpp_pred_q95,
         x = date,
         fill = "Model uncertainty"
-    ),
-    alpha = 0.5) +
+    )) +
   geom_ribbon(
     aes(ymin = gpp_q05, 
         ymax = gpp_q95,
         x = date,
         fill = "Parameter uncertainty"
-    ),
-    alpha = 0.5) +
+    )) +
   # Include observations in the plot
   geom_point(
     aes(x = date,
@@ -108,8 +106,7 @@ plot_gpp_error <- ggplot(data = data_to_plot) +
     aes(x = date,
         y = gpp_q50,
         color = "Predictions"
-    ),
-    alpha = 0.6
+    )
   ) +
   theme_classic() +
   theme(panel.grid.major.y = element_line(),
@@ -120,64 +117,18 @@ plot_gpp_error <- ggplot(data = data_to_plot) +
   )
 
 plot_gpp_error <- plot_gpp_error +
-  scale_color_manual(name = "",
+  scale_color_manual(NULL,
                      breaks = c("Observations",
                                 "Predictions"),
                      values = c(t_col("black", 10),
-                                t_col("grey40", 10)))# +
-#  scale_fill_manual(name = "",
-#                    breaks = c("Model uncertainty",
-#                               "Parameter uncertainty"),
-#                    values = c(t_col("#E69F00", 60),
-#                               t_col("#009E73", 40)))
+                                t_col("#7570b3", 10))) +
+  scale_fill_manual(NULL,
+                    breaks = c("Model uncertainty",
+                               "Parameter uncertainty"),
+                    values = c(t_col("#d95f02", 50),
+                               t_col("#1b9e77", 50)))
 plot_gpp_error
+
 settings_string <- get_settings_str(par_calib)
 ggsave(paste0("./analysis/paper_results_files/",settings_string,"_gpp_predictions_observations.pdf"), plot = plot_gpp_error, width = 6, height = 5)
 ggsave(paste0("./analysis/paper_results_files/",settings_string,"_gpp_predictions_observations.png"), plot = plot_gpp_error, width = 6, height = 5)
-
-
-plot_gpp_error2 <- ggplot(data = data_to_plot) +
-  # geom_ribbon(
-  #   aes(ymin = gpp_pred_q05,
-  #       ymax = gpp_pred_q95,
-  #       x = date,
-  #       fill = "Model uncertainty")) +
-  geom_ribbon(
-    aes(ymin = gpp_q05, 
-        ymax = gpp_q95,
-        x = date,
-        fill = "Parameter uncertainty")) +
-  # geom_line(
-  #   aes(x = date,
-  #       y = gpp_q50,
-  #       color = "Predictions")) +
-  # Include observations in the plot
-  # geom_point(
-  #   aes(x = date,
-  #       y = gpp_obs,
-  #       color = "Observations")) +
-  theme_classic() +
-  theme(panel.grid.major.y = element_line(),
-        legend.position = "bottom") +
-  labs(
-    x = 'Date',
-    y = expression(paste("GPP (g C m"^-2, "s"^-1, ")"))
-  )
-
-plot_gpp_error2 <- plot_gpp_error2 +  
-  scale_color_manual(name = "",
-                     breaks = c("Observations",
-                                "Predictions",
-                                "Non-calibrated predictions"),
-                     values = c(t_col("black", 10),
-                                t_col("#E69F00", 10),
-                                t_col("#56B4E9", 10))) +
-  scale_fill_manual(name = "",
-                    breaks = c("Model uncertainty",
-                               "Parameter uncertainty"),
-                    values = c(t_col("#E69F00", 60),
-                               t_col("#009E73", 40)))
-plot_gpp_error2
-ggsave(paste0("./analysis/paper_results_files/",settings_string,"_gpp_predictions_observations_2.pdf"), plot = plot_gpp_error2, width = 6, height = 5)
-ggsave(paste0("./analysis/paper_results_files/",settings_string,"_gpp_predictions_observations_2.png"), plot = plot_gpp_error2, width = 6, height = 5)
-
