@@ -60,12 +60,12 @@ plot_prior_posterior_density <- function(
     ggplot(
       aes(x = value, fill = distrib)
     ) +
-    geom_density() +
+    geom_density(adjust = 5) +
     theme_classic() +
     facet_wrap( ~ variable , nrow = 2, scales = "free") +
     theme(legend.position = "bottom",
           axis.title.x = element_text("")) +
-    scale_fill_manual(values = c("#29a274ff", t_col("#777055ff"))) # GECO colors
+    scale_fill_manual(NULL, values = c("#29a274ff", t_col("#777055ff"))) # GECO colors
   
   return(gg)
 }
@@ -80,8 +80,8 @@ settings_calib <- list(
   control = list(
     sampler = "DEzs",
     settings = list(
-      burnin = 3000,
-      iterations = 12000,
+      burnin = 6000,
+      iterations = 18000,
       nrChains = 3,       # number of independent chains
       startValue = 3      # number of internal chains to be sampled
     )),
@@ -114,6 +114,7 @@ toc() # Stop measuring time
 
 # Plot prior and posterior distributions
 gg <- plot_prior_posterior_density(par_calib$mod)
+gg
 
 get_runtime <- function(par_calib) {# function(settings_calib){
   total_time_secs <- sum(unlist(lapply(
