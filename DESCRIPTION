@@ -1,6 +1,6 @@
 Package: rsofun
 Title: The P-Model and BiomeE Modelling Framework
-Version: 5.0.0
+Version: 5.0.0.9000
 Authors@R: c(
             person(
               family = "Stocker",

@@ -43,4 +43,4 @@ classdefs.mod.o: params_core.mod.o
 wrappersc.o: sofun_r.o
 
 clean:
-	@rm -rf *.o
+	@rm -rf *.o *.mod
