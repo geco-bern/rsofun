@@ -558,7 +558,6 @@ contains
 
     ! Initial cohort sizes
     allocate(myinterface%init_cohort(n_init_cohort))
-    myinterface%init_cohort(:)%init_n_cohorts      = int(init_cohort(:,1))
     myinterface%init_cohort(:)%init_cohort_species = int(init_cohort(:,2))
     myinterface%init_cohort(:)%init_cohort_nindivs = real(init_cohort(:,3))
     myinterface%init_cohort(:)%init_cohort_bl      = real(init_cohort(:,4))

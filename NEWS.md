@@ -1,3 +1,5 @@
+* Breaking change: biomee drivers' `init_cohort$init_n_cohorts` column is deprecated and should take the value 0.
+
 # rsofun v5.0.0
 
 * new BiomeE forcing data matching that of P-model
