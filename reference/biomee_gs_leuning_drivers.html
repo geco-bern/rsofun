@@ -24,7 +24,7 @@ to optimize model parameters."><meta name="twitter:card" content="summary"><!-- 
         <a class="external-link hidden-md hidden-lg" href="https://geco-group.org/">
           <img src="https://raw.githubusercontent.com/computationales/GECO_template/main/geco_logo_white_small.png" id="hexlogo" alt="GECO"></a>
         <a class="navbar-brand" href="../index.html">
-           <i>rsofun <small>v5.0.0</small></i>
+           <i>rsofun <small>v5.0.0.9000</small></i>
         </a>
       </div>
     </div>
@@ -55,7 +55,7 @@ to optimize model parameters."><meta name="twitter:card" content="summary"><!-- 
   <div class="col-md-9 contents">
     <div class="page-header">
     <h1>rsofun BiomeE driver data (Leuning photosynthesis model)</h1>
-    <small class="dont-index">Source: <a href="https://github.com/geco-bern/rsofun/blob/v5.0/R/data.R" class="external-link"><code>R/data.R</code></a></small>
+    <small class="dont-index">Source: <a href="https://github.com/geco-bern/rsofun/blob/master/R/data.R" class="external-link"><code>R/data.R</code></a></small>
     <div class="hidden name"><code>biomee_gs_leuning_drivers.Rd</code></div>
     </div>
 
@@ -367,14 +367,23 @@ This data structure can be freely used for documenting the dataset, but must inc
 <dd><p>Initial individual density, in individuals per
         m\(^{2}\).</p></dd>
 
+      <dt>init_cohort_bl</dt>
+<dd><p>Initial biomass of leaf, in kg C per individual.</p></dd>
+
+      <dt>init_cohort_br</dt>
+<dd><p>Initial biomass of fine root, in kg C per individual.</p></dd>
+
       <dt>init_cohort_bsw</dt>
 <dd><p>Initial biomass of sapwood, in kg C per individual.</p></dd>
 
       <dt>init_cohort_bHW</dt>
-<dd><p>Initial biomass of heartwood, in kg C per tree.</p></dd>
+<dd><p>Initial biomass of heartwood, in kg C per individual.</p></dd>
+
+      <dt>init_cohort_seedC</dt>
+<dd><p>Initial biomass of seed, in kg C per individual.</p></dd>
 
       <dt>init_cohort_nsc</dt>
-<dd><p>Initial non-structural biomass.</p></dd>
+<dd><p>Initial non-structural biomass, in kg C per individual.</p></dd>
 
 
 </dl></dd>
