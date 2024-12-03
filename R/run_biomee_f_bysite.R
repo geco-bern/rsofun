@@ -344,12 +344,8 @@ run_biomee_f_bysite <- function(
         }
       })
 
-    registered_n_cohorts <- init_cohort$init_n_cohorts[[1]]
-
-    if (registered_n_cohorts != 0) {
-      warning(
-        sprintf("Error: init_cohorts' init_cohort_species is deprecated and should contain a negative value (found %i)",
-                registered_n_cohorts))
+    if ('init_n_cohorts' %in% names(init_cohort)) {
+      warning("Error: column 'init_n_cohorts' under 'init_cohort' has been phased out and must be removed from the drivers.")
       data_integrity <- append(data_integrity, FALSE)
     }
     

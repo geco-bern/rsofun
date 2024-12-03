@@ -140,7 +140,6 @@ params_species <- tibble(
 )
 
 init_cohort <- tibble(
-  init_n_cohorts      = 0,   # Not used. 0 is compulsory for safety.
   init_cohort_species = 2,    # indicates sps # 1 - Fagus sylvatica
   init_cohort_nindivs = 0.05, # initial individual density, individual/m2 ! 1 indiv/m2 = 10.000 indiv/ha
   init_cohort_bl      = 0.0,  # initial biomass of leaves, kg C/individual

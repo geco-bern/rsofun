@@ -302,7 +302,6 @@
 #'   \item{init_cohort}{A data.frame of initial cohort specifications, including
 #'   the following data:
 #'     \describe{
-#'       \item{init_n_cohort}{Not used. 0 is required.}
 #'       \item{init_cohort_species}{Index of a species described in param_species.}
 #'       \item{init_cohort_nindivs}{Initial individual density, in individuals per
 #'         m\eqn{^{2}}.}
