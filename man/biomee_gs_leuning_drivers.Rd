@@ -130,9 +130,12 @@ This data structure can be freely used for documenting the dataset, but must inc
       \item{init_cohort_species}{Index of a species described in param_species.}
       \item{init_cohort_nindivs}{Initial individual density, in individuals per
         m\eqn{^{2}}.}
+      \item{init_cohort_bl}{Initial biomass of leaf, in kg C per individual.}
+      \item{init_cohort_br}{Initial biomass of fine root, in kg C per individual.}
       \item{init_cohort_bsw}{Initial biomass of sapwood, in kg C per individual.}
-      \item{init_cohort_bHW}{Initial biomass of heartwood, in kg C per tree.}
-      \item{init_cohort_nsc}{Initial non-structural biomass.}
+      \item{init_cohort_bHW}{Initial biomass of heartwood, in kg C per individual.}
+      \item{init_cohort_seedC}{Initial biomass of seed, in kg C per individual.}
+      \item{init_cohort_nsc}{Initial non-structural biomass, in kg C per individual.}
     }}
   \item{init_soil}{A data.frame of initial soil pools, including
   the following data:

@@ -1,5 +1,8 @@
 # rsofun (development version)
 
+* Breaking change: biomee drivers' `init_cohort$init_n_cohorts` column has been phased out and must not be present in  
+drivers to protect against data corruption.
+
 # rsofun v5.0.0
 
 * new BiomeE forcing data matching that of P-model

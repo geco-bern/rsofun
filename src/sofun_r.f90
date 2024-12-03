@@ -558,15 +558,14 @@ contains
 
     ! Initial cohort sizes
     allocate(myinterface%init_cohort(n_init_cohort))
-    myinterface%init_cohort(:)%init_n_cohorts      = int(init_cohort(:,1))
-    myinterface%init_cohort(:)%init_cohort_species = int(init_cohort(:,2))
-    myinterface%init_cohort(:)%init_cohort_nindivs = real(init_cohort(:,3))
-    myinterface%init_cohort(:)%init_cohort_bl      = real(init_cohort(:,4))
-    myinterface%init_cohort(:)%init_cohort_br      = real(init_cohort(:,5))
-    myinterface%init_cohort(:)%init_cohort_bsw     = real(init_cohort(:,6))
-    myinterface%init_cohort(:)%init_cohort_bHW     = real(init_cohort(:,7))
-    myinterface%init_cohort(:)%init_cohort_seedC   = real(init_cohort(:,8))
-    myinterface%init_cohort(:)%init_cohort_nsc     = real(init_cohort(:,9))
+    myinterface%init_cohort(:)%init_cohort_species = int(init_cohort(:,1))
+    myinterface%init_cohort(:)%init_cohort_nindivs = real(init_cohort(:,2))
+    myinterface%init_cohort(:)%init_cohort_bl      = real(init_cohort(:,3))
+    myinterface%init_cohort(:)%init_cohort_br      = real(init_cohort(:,4))
+    myinterface%init_cohort(:)%init_cohort_bsw     = real(init_cohort(:,5))
+    myinterface%init_cohort(:)%init_cohort_bHW     = real(init_cohort(:,6))
+    myinterface%init_cohort(:)%init_cohort_seedC   = real(init_cohort(:,7))
+    myinterface%init_cohort(:)%init_cohort_nsc     = real(init_cohort(:,8))
 
     ! Initial soil pools
     myinterface%init_soil%init_fast_soil_C = real( init_fast_soil_C )

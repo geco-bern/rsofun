@@ -343,6 +343,11 @@ run_biomee_f_bysite <- function(
           return(TRUE)
         }
       })
+
+    if ('init_n_cohorts' %in% names(init_cohort)) {
+      warning("Error: column 'init_n_cohorts' under 'init_cohort' has been phased out and must be removed from the drivers.")
+      data_integrity <- append(data_integrity, FALSE)
+    }
     
     # only return true if all checked variables are TRUE
     # suppress warning on coercion of list to single logical

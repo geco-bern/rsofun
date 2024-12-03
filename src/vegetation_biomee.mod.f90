@@ -2213,7 +2213,7 @@ contains
 
     ! xxx seems new from d-ben - missing if?
     ! Initialize plant cohorts
-    init_n_cohorts = myinterface%init_cohort(1)%init_n_cohorts
+    init_n_cohorts = size(myinterface%init_cohort)
     allocate(cc(1:init_n_cohorts), STAT = istat)
     vegn%cohorts => cc
     vegn%n_cohorts = init_n_cohorts
