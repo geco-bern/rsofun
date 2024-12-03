@@ -310,7 +310,7 @@
 #'       \item{init_cohort_bsw}{Initial biomass of sapwood, in kg C per individual.}
 #'       \item{init_cohort_bHW}{Initial biomass of heartwood, in kg C per individual.}
 #'       \item{init_cohort_seedC}{Initial biomass of seed, in kg C per individual.}
-#'       \item{init_cohort_nsc}{Initial non-structural biomass.}
+#'       \item{init_cohort_nsc}{Initial non-structural biomass, in kg C per individual.}
 #'     }}
 #'   \item{init_soil}{A data.frame of initial soil pools, including
 #'   the following data:
