@@ -34,14 +34,14 @@ par_cal_best <- c(
   soilm_betao        = 0.2,
   beta_unitcostratio = 146.0,
   rd_to_vcmax        = 0.014,
-  tau_acclim         = 30.0,
+  tau_acclim         = 20.0,
   kc_jmax            = 0.41,
-  error_gpp          = 1
+  err_gpp            = 1
 )
 
 # lower bound
 par_cal_min <- c(
-  kphio              = 0.03,
+  kphio              = 0.02,
   kphio_par_a        = -0.004,
   kphio_par_b        = 10,
   soilm_thetastar    = 0,
@@ -49,8 +49,8 @@ par_cal_min <- c(
   beta_unitcostratio = 50.0,
   rd_to_vcmax        = 0.01,
   tau_acclim         = 7.0,
-  kc_jmax            = 0.2,
-  error_gpp          = 0.01
+  kc_jmax            = 0.1,
+  err_gpp            = 0.1
 )
 
 # upper bound
@@ -64,7 +64,7 @@ par_cal_max <- c(
   rd_to_vcmax        = 0.1,
   tau_acclim         = 60.0,
   kc_jmax            = 0.8,
-  error_gpp          = 4
+  err_gpp          = 4
 )
 
 # Create BayesinaTools setup object
@@ -96,7 +96,7 @@ morrisOut.df <- data.frame(
   arrange( mu.star )
 
 # Create barplot to show sensitivity analysis output
-gg <- morrisOut.df |>
+gg <- morrisOut.df %>% filter(parameter != "err_gpp") |>
   tidyr::pivot_longer( -parameter, names_to = "variable", values_to = "value") |>
   ggplot(aes(
     reorder(parameter, value),
@@ -111,11 +111,13 @@ gg <- morrisOut.df |>
                                'sigma' = "#777055ff")) +
   theme_classic() +
   theme(
-    axis.text = element_text(size = 6),
+    axis.text = element_text(size = 11),
     axis.title = element_blank(),
     legend.position = c(0.9, 0.1), legend.justification = c(0.95, 0.05)
   ) +
   coord_flip()    # make horizontal
+
+gg
 
 ggsave("./analysis/paper_results_files/morris.pdf", plot = gg, width = 5, height = 3)
 ggsave("./analysis/paper_results_files/morris.png", plot = gg, width = 5, height = 3)

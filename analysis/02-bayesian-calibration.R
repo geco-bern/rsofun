@@ -60,7 +60,7 @@ plot_prior_posterior_density <- function(
     ggplot(
       aes(x = value, fill = distrib)
     ) +
-    geom_density(adjust = 5) +
+    geom_density() +
     theme_classic() +
     facet_wrap( ~ variable , nrow = 2, scales = "free") +
     theme(legend.position = "bottom",
@@ -78,18 +78,30 @@ settings_calib <- list(
   method = "BayesianTools",
   metric = rsofun::cost_likelihood_pmodel,
   control = list(
-    sampler = "DEzs",
+    sampler  = "DEzs",
     settings = list(
-      burnin = 6000,
-      iterations = 18000,
-      nrChains = 3,       # number of independent chains
-      startValue = 3      # number of internal chains to be sampled
+      burnin = 12000,     # number of samples discarded per independent chain
+                          # (i.e. divide by startValue to know the number of samples discarded in each
+                          # internal chain)
+      iterations = 24000, # number of iterations per independent chain (including burn-in)
+      nrChains   = 3,       # number of independent chains
+      startValue = 3      # number of internal chains
     )),
   par = list(
-    kphio = list(lower = 0.02, upper = 0.15, init = 0.05),
-    kphio_par_b = list(lower = 10, upper = 30, init = 20),
-    kc_jmax = list(lower = 0.1, upper = 0.8, init = 0.40),
-    err_gpp = list(lower = 0.1, upper = 3, init = 0.8)
+    kphio = list(lower = par_cal_min['kphio'], upper = par_cal_max['kphio'],
+                        init = par_cal_best['kphio']),
+    kphio_par_a = list(lower = par_cal_min['kphio_par_a'], upper = par_cal_max['kphio_par_a'],
+                        init = par_cal_best['kphio_par_a']),
+    kphio_par_b = list(lower = par_cal_min['kphio_par_b'], upper = par_cal_max['kphio_par_b'],
+                        init = par_cal_best['kphio_par_b']),
+    soilm_thetastar = list(lower = par_cal_min['soilm_thetastar'], upper = par_cal_max['soilm_thetastar'],
+                           init = par_cal_best['soilm_thetastar']),
+    soilm_betao = list(lower = par_cal_min['soilm_betao'], upper = par_cal_max['soilm_betao'],
+                       init = par_cal_best['soilm_betao']),
+    kc_jmax = list(lower = par_cal_min['kc_jmax'], upper = par_cal_max['kc_jmax'],
+                   init = par_cal_best['kc_jmax']),
+    err_gpp = list(lower = par_cal_min['err_gpp'], upper = par_cal_max['err_gpp'],
+                   init = par_cal_best['err_gpp'])
   )
 )
 
@@ -101,12 +113,10 @@ par_calib <- calib_sofun(
   obs = rsofun::p_model_validation,
   settings = settings_calib,
   par_fixed = list(
-    kphio_par_a = -0.0025,            # define model parameter values from Stocker et al. 2020
-    soilm_thetastar    = 0.6*240,
-    soilm_betao = 0.2,
-    beta_unitcostratio = 146.0,
-    rd_to_vcmax        = 0.014,
-    tau_acclim         = 30.0),
+    beta_unitcostratio = par_cal_best['beta_unitcostratio'],
+    rd_to_vcmax = par_cal_best['rd_to_vcmax'],
+    tau_acclim = par_cal_best['tau_acclim']
+  ),
   targets = "gpp"
 )
 

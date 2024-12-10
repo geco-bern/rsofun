@@ -24,7 +24,7 @@ set.seed(2023)
 # Sample parameter values from the posterior distribution
 samples_par <- getSample(par_calib$mod,
                          thin = 60,              # get 600 samples in total
-                         whichParameters = 1:4) |>
+                         ) |>
   as.data.frame() |>
   dplyr::mutate(mcmc_id = 1:n()) |>
   tidyr::nest(.by = mcmc_id, .key = "pars")
@@ -36,16 +36,17 @@ run_pmodel <- function(sample_par){
   
   out <- runread_pmodel_f(
     drivers = p_model_drivers,
-    par =  list(                      # copied from par_fixed above
-      kphio = sample_par$kphio,
-      kphio_par_a = -0.0025,
-      kphio_par_b = sample_par$kphio_par_b,
-      soilm_thetastar    = 0.6*240,
-      soilm_betao        = 0.2,
-      beta_unitcostratio = 146.0,
-      rd_to_vcmax        = 0.014,
-      tau_acclim         = 30.0,
-      kc_jmax            = sample_par$kc_jmax)       # value from posterior
+    par =  list(
+      kphio              = sample_par$kphio,
+      kphio_par_a        = sample_par$kphio_par_a,
+      kphio_par_b        = sample_par$kphio_par_b,
+      soilm_thetastar    = sample_par$soilm_thetastar,
+      soilm_betao        = sample_par$soilm_betao,
+      beta_unitcostratio = par_cal_best['beta_unitcostratio'],
+      rd_to_vcmax        = par_cal_best['rd_to_vcmax'],
+      tau_acclim         = par_cal_best['tau_acclim'],
+      kc_jmax            = sample_par$kc_jmax
+    )
   )
   
   # return modelled GPP and prediction for a new GPP observation
@@ -121,7 +122,7 @@ plot_gpp_error <- plot_gpp_error +
                      breaks = c("Observations",
                                 "Predictions"),
                      values = c(t_col("black", 10),
-                                t_col("#7570b3", 10))) +
+                                t_col("#d95f02", 10))) +
   scale_fill_manual(NULL,
                     breaks = c("Model uncertainty",
                                "Parameter uncertainty"),
