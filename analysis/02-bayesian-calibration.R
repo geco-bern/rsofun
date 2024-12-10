@@ -60,7 +60,7 @@ plot_prior_posterior_density <- function(
     ggplot(
       aes(x = value, fill = distrib)
     ) +
-    geom_density(adjust = 5) +
+    geom_density() +
     theme_classic() +
     facet_wrap( ~ variable , nrow = 2, scales = "free") +
     theme(legend.position = "bottom",

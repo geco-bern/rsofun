@@ -82,6 +82,7 @@ data_to_plot <- pmodel_runs |>
     p_model_validation$data[[1]][1:365, ] |>
       dplyr::rename(gpp_obs = gpp),
     by = "date")
+
 plot_gpp_error <- ggplot(data = data_to_plot) +
   geom_ribbon(
     aes(ymin = gpp_pred_q05,
@@ -120,13 +121,13 @@ plot_gpp_error <- plot_gpp_error +
   scale_color_manual(NULL,
                      breaks = c("Observations",
                                 "Predictions"),
-                     values = c(t_col("black", 10),
-                                t_col("#7570b3", 10))) +
+                     values = c(t_col("black", 0),
+                                t_col("tomato", 0))) +
   scale_fill_manual(NULL,
                     breaks = c("Model uncertainty",
                                "Parameter uncertainty"),
-                    values = c(t_col("#d95f02", 50),
-                               t_col("#1b9e77", 50)))
+                    values = c(t_col("tomato", 50),
+                               t_col("#1b9e77", 0)))
 plot_gpp_error
 
 settings_string <- get_settings_str(par_calib)
