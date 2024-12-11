@@ -166,9 +166,7 @@ run_pmodel_f_bysite <- function(
   
   # predefine variables for CRAN check compliance
   ccov <- temp <- rain <- vpd <- ppfd <- netrad <-
-    fsun <- snow <- co2 <- fapar <- patm <- 
-    nyeartrend_forcing <- firstyeartrend_forcing <-
-    tmin <- tmax <- . <- NULL
+    fsun <- snow <- co2 <- fapar <- patm <- tmin <- tmax <- . <- NULL
   
   # base state, always execute the call
   continue <- TRUE

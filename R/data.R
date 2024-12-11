@@ -36,7 +36,10 @@
 #'     \describe{
 #'       \item{spinup}{A logical value indicating whether this simulation does spin-up.}
 #'       \item{spinupyears}{Number of spin-up years.}
-#'       \item{recycle}{Length of standard recycling period, in years.}
+#'       \item{recycle}{Length of the recycling period during spin-up, in years.}
+#'       \item{firstyeartrend}{First transient year (year AD).}
+#'       \item{nyeartrend}{Number of transient years. If greater than the forcing data, the last year is repeated.}
+#'       \item{steps_per_day}{Time resolution (day-1). Must be set to 1.}
 #'       \item{outdt}{An integer indicating the output periodicity.}
 #'       \item{ltre}{A logical value, \code{TRUE} if evergreen tree.}
 #'       \item{ltne}{A logical value, \code{TRUE} if evergreen tree and N-fixing.}
@@ -188,9 +191,9 @@
 #'     \describe{
 #'       \item{spinup}{Flag indicating whether this simulation does spin-up.}
 #'       \item{spinupyears}{Number of spin-up years.}
-#'       \item{recycle}{Length of standard recycling period (years).}
-#'       \item{firstyeartrend}{First transient year.}
-#'       \item{nyeartrend}{Number of transient years.}
+#'       \item{recycle}{Length of the recycling period during spin-up, in years.}
+#'       \item{firstyeartrend}{First transient year (year AD).}
+#'       \item{nyeartrend}{Number of transient years. If greater than the forcing data, the last year is repeated.}
 #'       \item{steps_per_day}{Time resolution (day-1).}
 #'       \item{do_U_shaped_mortality}{Flag indicating whether U-shaped
 #'         mortality is used.}
@@ -256,7 +259,7 @@
 #'       \item{phenotype}{Integer set to 0 for deciduous and 1 for evergreen.}
 #'       \item{pt}{Integer indicating the type of plant according to photosynthesis:
 #'         0 for C3; 1 for C4}
-#'       \item{alpha_FR}{Fine root turnonver rate (year\eqn{^{-1}}).}
+#'       \item{alpha_FR}{Fine root turnover rate (year\eqn{^{-1}}).}
 #'       \item{rho_FR}{Material density of fine roots (kg C m\eqn{^{-3}}).}
 #'       \item{root_r}{Radius of the fine roots, in m.}
 #'       \item{root_zeta}{e-folding parameter of root vertical distribution, in m.}

@@ -38,12 +38,17 @@ contains
     integer, intent(in) :: climateyear_idx
 
     ! local variables
-    integer :: idx_start, idx_end, it
+    integer :: idx_start, idx_end, it, forcing_years, idx
 
     ! function return variable
     type(climate_type), dimension(ntstepsyear) :: out_climate
 
-    idx_start = (climateyear_idx - 1) * ntstepsyear + 1
+    forcing_years = size(forcing(:, 1)) / ntstepsyear
+    ! If we are simulating more years than the forcing array contains,
+    ! We repeat the last year of the forcing.
+    idx = MIN(climateyear_idx, forcing_years)
+
+    idx_start = (idx - 1) * ntstepsyear + 1
     idx_end   = idx_start + ntstepsyear - 1
 
     ! This is to read from ORNL file
