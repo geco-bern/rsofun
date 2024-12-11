@@ -279,8 +279,15 @@ run_biomee_f_bysite <- function(
   forcing_years <- nrow(forcing)/(365 * params_siml$steps_per_day)
 
   `%nin%` <- Negate(`%in%`)
+  # Default value for nyeartrend
   if ('nyeartrend' %nin% names(params_siml)) {
     params_siml$nyeartrend <- forcing_years
+  }
+  # Default value for firstyeartrend
+  # If not provided, we anchor to 0, meaning that spinup years are negative and transient years are positive.
+  # firstyeartrend is currently not used.
+  if ('firstyeartrend' %nin% names(params_siml)) {
+    params_siml$firstyeartrend <- 0
   }
 
   runyears <- ifelse(
