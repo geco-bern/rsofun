@@ -221,7 +221,8 @@ contains
     recycle,                      &    
     firstyeartrend,               &           
     nyeartrend,                   &
-    do_U_shaped_mortality,        &                   
+    steps_per_day,                &
+    do_U_shaped_mortality,        &
     update_annualLAImax,          &                 
     do_closedN_run,               &
     code_method_photosynth,       &
@@ -260,8 +261,7 @@ contains
     nt_daily,                     &    
     nt_annual,                    &    
     nt_annual_cohorts,            &    
-    forcing,                      &     
-    steps_per_day,                &
+    forcing,                      &
     output_daily_tile,            &
     output_annual_tile,           &
     output_annual_cohorts_year,   &

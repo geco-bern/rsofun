@@ -189,9 +189,9 @@
 #'       \item{spinup}{Flag indicating whether this simulation does spin-up.}
 #'       \item{spinupyears}{Number of spin-up years.}
 #'       \item{recycle}{Length of the recycling period during spin-up, in years.}
-#'       \item{firstyeartrend}{First transient year (year AD).}
-#'       \item{nyeartrend}{Number of transient years. If greater than the forcing data, the last year is repeated.}
-#'       \item{steps_per_day}{Time resolution (day-1).}
+#'       \item{firstyeartrend}{First year in forcing data (year AD). For output purpose only.}
+#'       \item{nyeartrend}{Number of transient years (optional). Default: number of years contained in the forcing data. If provided, overrides default and extends forcing data by repeating last year (if applicable).}
+#'       \item{steps_per_day}{Time resolution of the forcing (day-1).}
 #'       \item{do_U_shaped_mortality}{Flag indicating whether U-shaped
 #'         mortality is used.}
 #'       \item{update_annualLAImax}{Flag indicating whether updating

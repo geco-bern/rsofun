@@ -276,11 +276,18 @@ run_biomee_f_bysite <- function(
     select(
       any_of(forcing_features)
     )
-  
+  forcing_years <- nrow(forcing)/(365 * params_siml$steps_per_day)
+
+  `%nin%` <- Negate(`%in%`)
+  if ('nyeartrend' %nin% names(params_siml)) {
+    params_siml$nyeartrend <- forcing_years
+  }
+
   runyears <- ifelse(
     params_siml$spinup,
     (params_siml$spinupyears + params_siml$nyeartrend),
-    params_siml$nyeartrend)
+    params_siml$nyeartrend
+  )
   
   n_daily  <- params_siml$nyeartrend * 365
   
@@ -330,6 +337,17 @@ run_biomee_f_bysite <- function(
   
   # validate input
   if (makecheck){
+    if (params_siml$nyeartrend < forcing_years) {
+      warning(sprintf(
+        "Info: provided value of nyeartrend is less than the number of years of forcing data (%i). Only the first %i will be used."
+        , forcing_years, params_siml$nyeartrend))
+    }
+    if (params_siml$nyeartrend > forcing_years) {
+      warning(sprintf(
+        "Info: provided value of nyeartrend is greater than the number of years of forcing data (%i). The final year will be repeated as much as needed."
+        , forcing_years))
+    }
+
     # Add input and parameter checks here if applicable.
     data_integrity <- lapply(
       forcing_features,
@@ -355,7 +373,7 @@ run_biomee_f_bysite <- function(
   }
   
   if (continue) {
-    
+
     ## C wrapper call
     biomeeout <- .Call(
       
@@ -367,6 +385,7 @@ run_biomee_f_bysite <- function(
       recycle               = as.integer(params_siml$recycle),
       firstyeartrend        = as.integer(params_siml$firstyeartrend),
       nyeartrend            = as.integer(params_siml$nyeartrend),
+      steps_per_day         = as.integer(params_siml$steps_per_day),
       do_U_shaped_mortality = as.logical(params_siml$do_U_shaped_mortality),
       update_annualLAImax   = as.logical(params_siml$update_annualLAImax),
       do_closedN_run        = as.logical(params_siml$do_closedN_run),
@@ -417,8 +436,7 @@ run_biomee_f_bysite <- function(
       n_annual         = as.integer(runyears), 
       n_annual_cohorts = as.integer(params_siml$nyeartrend), # to get cohort outputs after spinup year
       #n_annual_cohorts = as.integer(runyears), # to get cohort outputs from year 1
-      forcing          = as.matrix(forcing),
-      steps_per_day    = as.integer(params_siml$steps_per_day)
+      forcing          = as.matrix(forcing)
     )
     
     # If simulation is very long, output gets massive.
