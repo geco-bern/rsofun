@@ -37,9 +37,6 @@
 #'       \item{spinup}{A logical value indicating whether this simulation does spin-up.}
 #'       \item{spinupyears}{Number of spin-up years.}
 #'       \item{recycle}{Length of the recycling period during spin-up, in years.}
-#'       \item{firstyeartrend}{First transient year (year AD).}
-#'       \item{nyeartrend}{Number of transient years. If greater than the forcing data, the last year is repeated.}
-#'       \item{steps_per_day}{Time resolution (day-1). Must be set to 1.}
 #'       \item{outdt}{An integer indicating the output periodicity.}
 #'       \item{ltre}{A logical value, \code{TRUE} if evergreen tree.}
 #'       \item{ltne}{A logical value, \code{TRUE} if evergreen tree and N-fixing.}
