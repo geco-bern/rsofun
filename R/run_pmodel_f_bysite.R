@@ -224,6 +224,8 @@ run_pmodel_f_bysite <- function(
   
   # validate input
   if (makecheck){
+
+    is.nanull <- function(x) ifelse(any(is.null(x), is.na(x)), TRUE, FALSE)
     
     # list variable to check for
     check_vars <- c(

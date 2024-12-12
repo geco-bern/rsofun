@@ -351,6 +351,9 @@ run_biomee_f_bysite <- function(
 
   # validate input
   if (makecheck){
+
+    is.nanull <- function(x) ifelse(any(is.null(x), is.na(x)), TRUE, FALSE)
+
     if (params_siml$nyeartrend < forcing_years) {
       warning(sprintf(
         "Info: provided value of nyeartrend is less than the number of years of forcing data (%i). Only the first %i will be used."
