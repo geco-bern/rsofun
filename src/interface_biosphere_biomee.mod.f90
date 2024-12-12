@@ -148,6 +148,8 @@ module md_interface_biomee
     type(paramstype_tile)                                 :: params_tile
     type(inittype_cohort), dimension(:), allocatable      :: init_cohort
     type(inittype_soil)                                   :: init_soil
+    type(real), dimension(:), allocatable                 :: init_lu
+    type(real), dimension(:,:), allocatable               :: luc
     integer                                               :: datalines
     integer                                               :: steps_per_day
     real                                                  :: dt_fast_yr

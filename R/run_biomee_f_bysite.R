@@ -9,6 +9,10 @@
 #' See examples \code{\link{biomee_gs_leuning_drivers}} or \code{\link{biomee_p_model_drivers}}
 #' @param forcing Forcing data.frame used as input.
 #' See examples \code{\link{biomee_gs_leuning_drivers}} or \code{\link{biomee_p_model_drivers}}
+#' @param init_lu Initial land use state array used as input (optional).
+#' See examples \code{\link{biomee_gs_leuning_drivers}} or \code{\link{biomee_p_model_drivers}}
+#' @param luc Land use change (transition matrix) data.frame used as input (optional).
+#' See examples \code{\link{biomee_gs_leuning_drivers}} or \code{\link{biomee_p_model_drivers}}
 #' @param params_tile Tile-level model parameters, into a single row data.frame.
 #' See examples \code{\link{biomee_gs_leuning_drivers}} or \code{\link{biomee_p_model_drivers}}
 #' @param params_species A data.frame containing species-specific model parameters,
@@ -255,12 +259,10 @@ run_biomee_f_bysite <- function(
     params_species,
     init_cohort,
     init_soil,
-    makecheck = TRUE
+    makecheck = TRUE,
+    init_lu = NULL,
+    luc = NULL
 ){
-  
-  # predefine variables for CRAN check compliance
-  type <- NULL
-  
   forcing_features <- c(
     'ppfd',
     'temp',
@@ -270,7 +272,25 @@ run_biomee_f_bysite <- function(
     'patm',
     'co2'
   )
-  
+
+  # If init_lu is null, we create dummy LU initial state containing only one state (with a fraction of 1)
+  if (is.null(init_lu))
+    init_lu <- c(1.0)
+
+  # Number of LU states
+  n_lu <- length(init_lu)
+
+  # Number of LU transitions
+  # Note: we assume any state can transition to any other state.
+  # This simplifies greatly the implementation of a generic solution on the Fortran side
+  n_lu_tr <- n_lu ^ 2
+
+  # If luc is null, we create  dummy LU transition matrix containing one all-zero transition
+  if (is.null(luc))
+    luc <- data.frame(rep(0.0, n_lu_tr))
+
+  n_lu_tr_years <- ncol(luc)
+
   # select relevant columns of the forcing data
   forcing <- forcing %>%
     select(
@@ -443,7 +463,12 @@ run_biomee_f_bysite <- function(
       n_annual         = as.integer(runyears), 
       n_annual_cohorts = as.integer(params_siml$nyeartrend), # to get cohort outputs after spinup year
       #n_annual_cohorts = as.integer(runyears), # to get cohort outputs from year 1
-      forcing          = as.matrix(forcing)
+      forcing          = as.matrix(forcing),
+      n_lu             = as.integer(n_lu),
+      lu               = as.vector(init_lu),
+      n_lu_tr          = as.integer(n_lu_tr),
+      n_lu_tr_years    = as.integer(n_lu_tr_years),
+      luc              = as.matrix(luc)
     )
     
     # If simulation is very long, output gets massive.

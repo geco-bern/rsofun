@@ -262,6 +262,11 @@ contains
     nt_annual,                    &    
     nt_annual_cohorts,            &    
     forcing,                      &
+    n_lu,                         &
+    init_lu,                      &
+    n_lu_tr,                      &
+    n_lu_tr_years,                &
+    luc,                          &
     output_daily_tile,            &
     output_annual_tile,           &
     output_annual_cohorts_year,   &
@@ -355,9 +360,9 @@ contains
     real(kind=c_double), intent(in) :: par_mort_under
 
     ! naked arrays
-    integer(kind=c_int),  intent(in) :: n_params_species
+    integer(kind=c_int), intent(in) :: n_params_species
     real(kind=c_double), dimension(n_params_species,55), intent(in) :: params_species
-    integer(kind=c_int),  intent(in) :: n_init_cohort
+    integer(kind=c_int), intent(in) :: n_init_cohort
     real(kind=c_double), dimension(n_init_cohort,9),  intent(in) :: init_cohort
 
     ! initial soil pool size
@@ -365,6 +370,13 @@ contains
     real(kind=c_double), intent(in) :: init_slow_soil_C
     real(kind=c_double), intent(in) :: init_Nmineral
     real(kind=c_double), intent(in) :: N_input
+
+    ! LULUC
+    integer(kind=c_int), intent(in) :: n_lu
+    real(kind=c_double), dimension(n_lu), intent(in) :: init_lu
+    integer(kind=c_int), intent(in) :: n_lu_tr
+    integer(kind=c_int), intent(in) :: n_lu_tr_years
+    real(kind=c_double), dimension(n_lu_tr,n_lu_tr_years), intent(in) :: luc
 
     integer(kind=c_int), intent(in) :: nt
     integer(kind=c_int), intent(in) :: nt_daily
@@ -573,6 +585,12 @@ contains
     myinterface%init_soil%init_Nmineral    = real( init_Nmineral )
     myinterface%init_soil%N_input          = real( N_input )
 
+    ! Initial LU and LUC
+    allocate(myinterface%init_lu(n_lu))
+    myinterface%init_lu = real(init_lu)
+    allocate(myinterface%luc(n_lu_tr, n_lu_tr_years))
+    myinterface%luc = real(luc)
+
     !----------------------------------------------------------------
     ! INTERPRET FORCING
     !----------------------------------------------------------------
@@ -681,7 +699,9 @@ contains
     deallocate(myinterface%pco2)
     deallocate(myinterface%params_species)
     deallocate(myinterface%init_cohort)
- 
+    deallocate(myinterface%init_lu)
+    deallocate(myinterface%luc)
+
   end subroutine biomee_f
 
   !////////////////////////////////////////////////////////////////

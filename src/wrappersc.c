@@ -158,6 +158,11 @@ void F77_NAME(biomee_f)(
     int    *nt_annual,                
     int    *nt_annual_cohorts,                
     double *forcing,
+    int    *n_lu,
+    double *init_lu,
+    int    *n_lu_tr,
+    int    *n_lu_tr_years,
+    double *luc,
     double *output_daily_tile,
     double *output_annual_tile,   
     double *output_annual_cohorts_year,
@@ -243,7 +248,12 @@ extern SEXP biomee_f_C(
     SEXP n_daily,
     SEXP n_annual,                
     SEXP n_annual_cohorts,                
-    SEXP forcing
+    SEXP forcing,
+    SEXP n_lu,
+    SEXP init_lu,
+    SEXP n_lu_tr,
+    SEXP n_lu_tr_years,
+    SEXP luc
     ){
 
     // // Number of time steps (same in forcing and output)
@@ -337,6 +347,11 @@ extern SEXP biomee_f_C(
         INTEGER(n_annual),                
         INTEGER(n_annual_cohorts),                
         REAL(forcing),
+        INTEGER(n_lu),
+        REAL(init_lu),
+        INTEGER(n_lu_tr),
+        INTEGER(n_lu_tr_years),
+        REAL(luc),
         REAL(output_daily_tile),
         REAL(output_annual_tile),  
         REAL(output_annual_cohorts_year),
@@ -425,7 +440,7 @@ extern SEXP biomee_f_C(
 /////////////////////////////////////////////////////////////
 static const R_CallMethodDef CallEntries[] = {
   {"pmodel_f_C",   (DL_FUNC) &pmodel_f_C,   23},  // Specify number of arguments to C wrapper as the last number here
-  {"biomee_f_C",   (DL_FUNC) &biomee_f_C,   46},  // Number of arguments of the C wrapper function for biomee (the SEXP variables, not the output)
+  {"biomee_f_C",   (DL_FUNC) &biomee_f_C,   51},  // Number of arguments of the C wrapper function for biomee (the SEXP variables, not the output)
   {NULL,         NULL,                0}
 };
 
