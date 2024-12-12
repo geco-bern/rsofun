@@ -1,63 +1,19 @@
-#' R wrapper for SOFUN P-model
+#' Run P-model (R wrapper)
 #' 
-#' Call to the Fortran P-model
+#' Run P-model Fortran model on single site.
 #'
 #' @param sitename Site name.
 #' @param params_siml Simulation parameters.
-#' \describe{
-#'       \item{spinup}{A logical value indicating whether this simulation does spin-up.}
-#'       \item{spinupyears}{Number of spin-up years.}
-#'       \item{recycle}{Length of standard recycling period, in years.}
-#'       \item{outdt}{An integer indicating the output periodicity.}
-#'       \item{ltre}{A logical value, \code{TRUE} if evergreen tree.}
-#'       \item{ltne}{A logical value, \code{TRUE} if evergreen tree and N-fixing.}
-#'       \item{ltrd}{A logical value, \code{TRUE} if deciduous tree.}
-#'       \item{ltnd}{A logical value, \code{TRUE} if deciduous tree and N-fixing.}
-#'       \item{lgr3}{A logical value, \code{TRUE} if grass with C3 photosynthetic pathway.}
-#'       \item{lgn3}{A logical value, \code{TRUE} if grass with C3 photosynthetic
-#'       pathway and N-fixing.}
-#'       \item{lgr4}{A logical value, \code{TRUE} if grass with C4 photosynthetic pathway.}
-#' }
-#' @param site_info A list of site meta info. Required:
-#' \describe{
-#'       \item{lon}{Longitude of the site location.}
-#'       \item{lat}{Latitude of the site location.}
-#'       \item{elv}{Elevation of the site location, in meters.}
-#'       \item{whc}{A numeric value for the total root zone water holding capacity (in mm), used
-#'       for simulating the soil water balance.}
-#' }
-#' @param forcing A data frame of forcing climate data, used as input 
-#'  (see \code{\link{p_model_drivers}}
-#'  for a detailed description of its structure and contents).
-#' @param params_modl A named list of free (calibratable) model parameters.
-#' \describe{
-#'   \item{kphio}{The quantum yield efficiency at optimal temperature \eqn{\varphi_0}, 
-#'    in mol mol\eqn{^{-1}}.
-#'    When temperature dependence is used, it corresponds to the multiplicative
-#'    parameter \eqn{c} (see Details).}
-#'   \item{kphio_par_a}{The shape parameter \eqn{a} of the temperature-dependency of
-#'    quantum yield efficiency (see Details).
-#'    To disable the temperature dependence, set \code{kphio_par_a = 0}.}
-#'   \item{kphio_par_b}{The optimal temperature parameter \eqn{b} of the temperature
-#'    dependent quantum yield efficiency (see Details), in \eqn{^o}C.}
-#'   \item{soilm_thetastar}{The threshold parameter \eqn{\theta^{*}} in the 
-#'    soil moisture stress function (see Details), given in mm.
-#'    To turn off the soil moisture stress, set \code{soilm_thetastar = 0}.}
-#'   \item{soilm_betao}{The intercept parameter \eqn{\beta_{0}} in the
-#'    soil moisture stress function (see Details). This is the parameter calibrated 
-#'    in Stocker et al. 2020 GMD.}
-#'   \item{beta_unitcostratio}{The unit cost of carboxylation, corresponding to
-#'    \eqn{\beta = b / a'} in Eq. 3 of Stocker et al. 2020 GMD.}
-#'   \item{rd_to_vcmax}{Ratio of Rdark (dark respiration) to Vcmax25.}
-#'   \item{tau_acclim}{Acclimation time scale of photosynthesis, in days.}
-#'   \item{kc_jmax}{Parameter for Jmax cost ratio (corresponding to c\eqn{^*} in
-#'   Stocker et al. 2020 GMD).} 
-#' }
+#' @param site_info Site meta info in a data.frame.
+#' @param forcing A data frame of forcing climate data, used as input.
+#' @param params_modl A named list of free (calibratable) model parameters. See \code{\link{runread_pmodel}}
 #' @param makecheck A logical specifying whether checks are performed 
 #'  to verify forcings and model parameters. \code{TRUE} by default.
 #' @param verbose A logical specifying whether to print warnings.
 #' Defaults to \code{TRUE}.
 #'
+#' For further specifications of above inputs and examples see \code{\link{p_model_drivers}} or \code{\link{p_model_drivers_vcmax25}}
+
 #' @import dplyr
 #' 
 #' @returns Model output is provided as a tidy dataframe, with columns:

@@ -166,11 +166,15 @@
 #' rsofun P-model output data
 #'
 #' Example output dataset from a p-model run using \code{\link{p_model_drivers}}
+#' See \code{\link{run_pmodel_f_bysite}} for a detailed 
+#' description of the outputs.
 "p_model_output"
 
 #' rsofun P-model output data (using vcmax25 drivers)
 #'
 #' Example output dataset from a p-model run using \code{\link{p_model_drivers_vcmax25}}
+#' See \code{\link{run_pmodel_f_bysite}} for a detailed 
+#' description of the outputs.
 "p_model_output_vcmax25"
 
 #' rsofun BiomeE driver data (Leuning photosynthesis model)
@@ -208,9 +212,9 @@
 #'   \item{site_info}{Site meta info in a data.frame.
 #' This data structure can be freely used for documenting the dataset, but must include at least the following data:
 #'     \describe{
-#'       \item{lon}{Longitude of the site location.}
-#'       \item{lat}{Latitude of the site location.}
-#'       \item{elv}{Elevation of the site location, in meters.}
+#'       \item{lon}{Longitude of the site location in degrees east.}
+#'       \item{lat}{Latitude of the site location in degrees north.}
+#'       \item{elv}{Elevation of the site location, in meters above sea level.}
 #'     }}
 #'   \item{forcing}{Forcing data.frame used as input
 #'     \describe{
@@ -355,9 +359,13 @@
 #' rsofun BiomeE (P-model) output data
 #'
 #' Example output dataset from a BiomeE-model run (p-model)
+#' See \code{\link{run_biomee_f_bysite}} for a detailed 
+#' description of the outputs.
 "biomee_p_model_output"
 
 #' rsofun BiomeE (gs_leuning) output data
 #'
 #' Example output dataset from a BiomeE-model run (gs_leuning)
+#' See \code{\link{run_biomee_f_bysite}} for a detailed 
+#' description of the outputs.
 "biomee_gs_leuning_output"
