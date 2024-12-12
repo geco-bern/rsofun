@@ -1,4 +1,4 @@
-# rsofun v5.1.0
+# rsofun (development version v5.1.0)
 
 * new BiomeE behavior to recycle last year of forcing if requested simulation time span (`nyeartrend`) is longer than 
 available forcing data

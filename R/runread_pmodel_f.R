@@ -3,7 +3,7 @@
 #' Runs P-model for multiple sites.
 #'
 #' @param drivers A nested data frame with one row for each site and columns
-#' named according to the arguments of function \code{\link{runread_pmodel_f_bysite}}.
+#' named according to the arguments of function \code{\link{runread_pmodel_f}}.
 #' Namely \code{sitename, params_siml, site_info} and \code{forcing}.
 #' @param par A named list of free (calibratable) model parameters.
 #' \describe{
