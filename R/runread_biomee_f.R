@@ -3,7 +3,7 @@
 #' Runs BiomeE model for multiple sites.
 #'
 #' @param drivers A nested data frame with one row for each site and columns
-#' named according to the arguments of function \code{\link{run_biomee_f_bysite()}}.
+#' named according to the arguments of function \code{\link{run_biomee_f_bysite}}.
 #' Namely \code{sitename, params_siml, site_info} and \code{forcing}.
 #' @param makecheck A logical specifying whether checks are performed 
 #'  to verify forcings and model parameters. \code{TRUE} by default.

@@ -8,7 +8,7 @@ runread_pmodel_f(drivers, par, makecheck = TRUE, parallel = FALSE, ncores = 1)
 }
 \arguments{
 \item{drivers}{A nested data frame with one row for each site and columns
-named according to the arguments of function \code{\link{runread_pmodel_f_bysite()}}.
+named according to the arguments of function \code{\link{runread_pmodel_f_bysite}}.
 Namely \code{sitename, params_siml, site_info} and \code{forcing}.}
 
 \item{par}{A named list of free (calibratable) model parameters.

@@ -23,7 +23,7 @@ run_pmodel_f_bysite(
 
 \item{forcing}{A data frame of forcing climate data, used as input.}
 
-\item{params_modl}{A named list of free (calibratable) model parameters. See \code{\link{runread_pmodel}}}
+\item{params_modl}{A named list of free (calibratable) model parameters. See \code{\link{runread_pmodel_f}}}
 
 \item{makecheck}{A logical specifying whether checks are performed 
 to verify forcings and model parameters. \code{TRUE} by default.}
