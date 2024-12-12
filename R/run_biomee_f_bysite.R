@@ -345,6 +345,11 @@ run_biomee_f_bysite <- function(
       any_of(forcing_features)
     )
 
+  if ('init_n_cohorts' %in% names(init_cohort)) {
+    warning("Warning: Ignoring column 'init_n_cohorts' under 'init_cohort' in drivers. It has been phased out and should be removed from drivers.")
+    init_cohort <- select(init_cohort, -init_n_cohorts)
+  }
+
 
   # validate input
   if (makecheck){
@@ -373,43 +378,12 @@ run_biomee_f_bysite <- function(
         return(TRUE)
       }
     })
-
-    if ('init_n_cohorts' %in% names(init_cohort)) {
-      warning("Error: column 'init_n_cohorts' under 'init_cohort' has been phased out and must be removed from the drivers.")
-      data_integrity <- append(data_integrity, FALSE)
-    }
     
     # only run simulation if all checked variables are valid
     # suppress warning on coercion of list to single logical
     if (suppressWarnings(!all(as.vector(data_integrity)))) {
       continue <- FALSE
     }
-
-    # simulation parameters to check
-    # check_param <- c(
-    #   "spinup",
-    #   "spinupyears",
-    #   "recycle",
-    #   "firstyeartrend",
-    #   "nyeartrend",
-    #   "steps_per_day",
-    #   "do_U_shaped_mortality",
-    #   "update_annualLAImax",
-    #   "do_closedN_run"
-    # )
-    # parameter_integrity <- lapply(check_param, function(check_var){
-    #   if (any(is.nanull(params_siml[check_var]))){
-    #     warning(sprintf("Error: Missing value in %s for %s",
-    #                     check_var, sitename))
-    #     return(FALSE)
-    #   } else {
-    #     return(TRUE)
-    #   }
-    # })
-    
-    # if (suppressWarnings(!all(parameter_integrity))){
-    #   continue <- FALSE
-    # }
   }
   
   if (continue) {
