@@ -36,7 +36,7 @@
 #'     \describe{
 #'       \item{spinup}{A logical value indicating whether this simulation does spin-up.}
 #'       \item{spinupyears}{Number of spin-up years.}
-#'       \item{recycle}{Length of standard recycling period, in years.}
+#'       \item{recycle}{Number of first N years of forcing data.frame that are recycled for spin-up.}
 #'       \item{outdt}{An integer indicating the output periodicity.}
 #'       \item{ltre}{A logical value, \code{TRUE} if evergreen tree.}
 #'       \item{ltne}{A logical value, \code{TRUE} if evergreen tree and N-fixing.}
@@ -166,11 +166,15 @@
 #' rsofun P-model output data
 #'
 #' Example output dataset from a p-model run using \code{\link{p_model_drivers}}
+#' See \code{\link{run_pmodel_f_bysite}} for a detailed 
+#' description of the outputs.
 "p_model_output"
 
 #' rsofun P-model output data (using vcmax25 drivers)
 #'
 #' Example output dataset from a p-model run using \code{\link{p_model_drivers_vcmax25}}
+#' See \code{\link{run_pmodel_f_bysite}} for a detailed 
+#' description of the outputs.
 "p_model_output_vcmax25"
 
 #' rsofun BiomeE driver data (Leuning photosynthesis model)
@@ -188,10 +192,10 @@
 #'     \describe{
 #'       \item{spinup}{Flag indicating whether this simulation does spin-up.}
 #'       \item{spinupyears}{Number of spin-up years.}
-#'       \item{recycle}{Length of standard recycling period (years).}
-#'       \item{firstyeartrend}{First transient year.}
-#'       \item{nyeartrend}{Number of transient years.}
-#'       \item{steps_per_day}{Time resolution (day-1).}
+#'       \item{recycle}{Number of first N years of forcing data.frame that are recycled for spin-up.}
+#'       \item{firstyeartrend}{Year of first transient year (AD) (optional). Is only used to set years in output data frames. Defaults to 0 if not provided.}
+#'       \item{nyeartrend}{Number of transient years (optional). Determines the length of simulation output after spin-up. Defaults to number of years contained in the forcing data. (If longer than forcing data, last year of forcing is repeated until the end (spin-down).)}
+#'       \item{steps_per_day}{Time resolution of the forcing (day-1).}
 #'       \item{do_U_shaped_mortality}{Flag indicating whether U-shaped
 #'         mortality is used.}
 #'       \item{update_annualLAImax}{Flag indicating whether updating
@@ -208,9 +212,9 @@
 #'   \item{site_info}{Site meta info in a data.frame.
 #' This data structure can be freely used for documenting the dataset, but must include at least the following data:
 #'     \describe{
-#'       \item{lon}{Longitude of the site location.}
-#'       \item{lat}{Latitude of the site location.}
-#'       \item{elv}{Elevation of the site location, in meters.}
+#'       \item{lon}{Longitude of the site location in degrees east.}
+#'       \item{lat}{Latitude of the site location in degrees north.}
+#'       \item{elv}{Elevation of the site location, in meters above sea level.}
 #'     }}
 #'   \item{forcing}{Forcing data.frame used as input
 #'     \describe{
@@ -256,7 +260,7 @@
 #'       \item{phenotype}{Integer set to 0 for deciduous and 1 for evergreen.}
 #'       \item{pt}{Integer indicating the type of plant according to photosynthesis:
 #'         0 for C3; 1 for C4}
-#'       \item{alpha_FR}{Fine root turnonver rate (year\eqn{^{-1}}).}
+#'       \item{alpha_FR}{Fine root turnover rate (year\eqn{^{-1}}).}
 #'       \item{rho_FR}{Material density of fine roots (kg C m\eqn{^{-3}}).}
 #'       \item{root_r}{Radius of the fine roots, in m.}
 #'       \item{root_zeta}{e-folding parameter of root vertical distribution, in m.}
@@ -355,9 +359,13 @@
 #' rsofun BiomeE (P-model) output data
 #'
 #' Example output dataset from a BiomeE-model run (p-model)
+#' See \code{\link{run_biomee_f_bysite}} for a detailed 
+#' description of the outputs.
 "biomee_p_model_output"
 
 #' rsofun BiomeE (gs_leuning) output data
 #'
 #' Example output dataset from a BiomeE-model run (gs_leuning)
+#' See \code{\link{run_biomee_f_bysite}} for a detailed 
+#' description of the outputs.
 "biomee_gs_leuning_output"

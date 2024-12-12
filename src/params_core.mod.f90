@@ -66,7 +66,7 @@ module md_params_core
   real, parameter :: dummy = -9999.0             ! arbitrary dummy value
 
   type outtype_steering
-    integer :: year
+    integer :: year            ! current simulation year
     integer :: climateyear     ! year AD for which climate is read in (recycling during spinup or when climate is held const.)
     integer :: climateyear_idx ! year index for which climate is read in.
     integer :: forcingyear     ! year AD for which forcings are read in (=firstyeartrend during spinup)
@@ -126,7 +126,7 @@ contains
         out_steering%add_ninorg = .false.
       end if
 
-      if (year<=steering%spinupyears) then
+      if (year <= steering%spinupyears) then
         ! during spinup
         out_steering%spinup = .true.
         cycleyear = get_cycleyear( year, steering%spinupyears, steering%recycle )
@@ -139,7 +139,7 @@ contains
         out_steering%spinup          = .false.
         out_steering%climateyear_idx = year - steering%spinupyears
         out_steering%climateyear     = out_steering%climateyear_idx + steering%firstyeartrend - 1
-        out_steering%forcingyear = out_steering%climateyear
+        out_steering%forcingyear     = out_steering%climateyear
         out_steering%forcingyear_idx = out_steering%climateyear_idx
       endif
       out_steering%outyear = year + steering%firstyeartrend - steering%spinupyears - 1
@@ -150,13 +150,13 @@ contains
         out_steering%dofree_alloc = .false.
       end if
 
-      if ( (year==spinupyr_soilequil_1 .or. year==spinupyr_soilequil_2 ) .and. year<=steering%spinupyears) then
+      if ( (year == spinupyr_soilequil_1 .or. year == spinupyr_soilequil_2) .and. year <= steering%spinupyears) then
         out_steering%do_soilequil = .true.
       else
         out_steering%do_soilequil = .false.
       end if
 
-      if ( year<=steering%spinupyears .and. ( year > ( spinupyr_soilequil_1 - steering%recycle ) .and. &
+      if ( year <= steering%spinupyears .and. ( year > ( spinupyr_soilequil_1 - steering%recycle ) .and. &
               year <= spinupyr_soilequil_1 .or. year > ( spinupyr_soilequil_2 - steering%recycle ) .and. &
               year <= spinupyr_soilequil_2 ) ) then
         out_steering%average_soil = .true.
@@ -164,7 +164,7 @@ contains
         out_steering%average_soil = .false.
       end if
 
-      if ( year<=steering%spinupyears .and. year <= spinupyr_soilequil_1 ) then
+      if ( year <= steering%spinupyears .and. year <= spinupyr_soilequil_1 ) then
         out_steering%project_nmin = .true.
       else
         out_steering%project_nmin = .false.

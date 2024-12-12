@@ -59,13 +59,17 @@ contains
     logical, intent(in) :: in_netrad
 
     ! local variables
-    integer :: idx_start, idx_end
-    ! integer, dimension(2) :: shape_forcing
+    integer :: idx_start, idx_end, forcing_years, idx
 
     ! function return variable
     type( climate_type ), dimension(ndayyear) :: out_climate
 
-    idx_start = (climateyear_idx - 1) * ndayyear + 1
+    forcing_years = size(forcing(:, 1)) / ndayyear
+    ! If we are simulating more years than the forcing array contains,
+    ! We repeat the last year of the forcing.
+    idx = MIN(climateyear_idx, forcing_years)
+
+    idx_start = (idx - 1) * ndayyear + 1
     idx_end   = idx_start + ndayyear - 1
     
     ! Test if forcing dimensions are correct
@@ -113,11 +117,16 @@ contains
 
     ! local variables 
     integer :: readyear_idx
-    integer :: idx_start, idx_end
+    integer :: idx_start, idx_end, forcing_years, idx
 
     readyear_idx = forcingyear - firstyeartrend + 1
 
-    idx_start = (readyear_idx - 1) * ndayyear + 1
+    forcing_years = size(forcing(:, 1)) / ndayyear
+    ! If we are simulating more years than the forcing array contains,
+    ! We repeat the last year of the forcing.
+    idx = MIN(readyear_idx, forcing_years)
+
+    idx_start = (idx - 1) * ndayyear + 1
     idx_end   = idx_start + ndayyear - 1
 
     pco2 = sum(real(forcing(idx_start:idx_end, 8)))/ndayyear
@@ -138,9 +147,14 @@ contains
     type( vegcover_type ), dimension(ndayyear) :: out_vegcover
 
     ! local variables 
-    integer :: idx_start, idx_end
+    integer :: idx_start, idx_end, forcing_years, idx
 
-    idx_start = (forcingyear_idx - 1) * ndayyear + 1
+    forcing_years = size(forcing(:, 1)) / ndayyear
+    ! If we are simulating more years than the forcing array contains,
+    ! We repeat the last year of the forcing.
+    idx = MIN(forcingyear_idx, forcing_years)
+
+    idx_start = (idx - 1) * ndayyear + 1
     idx_end   = idx_start + ndayyear - 1
 
     out_vegcover(:)%dfapar = real(forcing(idx_start:idx_end, 9))

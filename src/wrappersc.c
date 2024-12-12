@@ -117,6 +117,7 @@ void F77_NAME(biomee_f)(
     int    *recycle,              
     int    *firstyeartrend,                  
     int    *nyeartrend,
+    int    *steps_per_day,
     int    *do_U_shaped_mortality, //LOGICAL
     int    *update_annualLAImax, //LOGICAL
     int    *do_closedN_run, //LOGICAL
@@ -156,8 +157,7 @@ void F77_NAME(biomee_f)(
     int    *nt_daily,                 
     int    *nt_annual,                
     int    *nt_annual_cohorts,                
-    double *forcing,                  
-    int    *steps_per_day,
+    double *forcing,
     double *output_daily_tile,
     double *output_annual_tile,   
     double *output_annual_cohorts_year,
@@ -203,6 +203,7 @@ extern SEXP biomee_f_C(
     SEXP recycle,                 
     SEXP firstyeartrend,                  
     SEXP nyeartrend,
+    SEXP steps_per_day,
     SEXP do_U_shaped_mortality,             
     SEXP update_annualLAImax,                   
     SEXP do_closedN_run,
@@ -242,8 +243,7 @@ extern SEXP biomee_f_C(
     SEXP n_daily,
     SEXP n_annual,                
     SEXP n_annual_cohorts,                
-    SEXP forcing,
-    SEXP steps_per_day
+    SEXP forcing
     ){
 
     // // Number of time steps (same in forcing and output)
@@ -296,6 +296,7 @@ extern SEXP biomee_f_C(
         INTEGER(recycle),                 
         INTEGER(firstyeartrend),                  
         INTEGER(nyeartrend),
+        INTEGER(steps_per_day),
         INTEGER(do_U_shaped_mortality),
         INTEGER(update_annualLAImax),
         INTEGER(do_closedN_run),
@@ -335,8 +336,7 @@ extern SEXP biomee_f_C(
         INTEGER(n_daily),                 
         INTEGER(n_annual),                
         INTEGER(n_annual_cohorts),                
-        REAL(forcing),             
-        INTEGER(steps_per_day),
+        REAL(forcing),
         REAL(output_daily_tile),
         REAL(output_annual_tile),  
         REAL(output_annual_cohorts_year),

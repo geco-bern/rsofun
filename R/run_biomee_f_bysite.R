@@ -4,23 +4,17 @@
 #'
 #' @param sitename Site name.
 #' @param params_siml Simulation parameters.
-#' See examples \code{\link{biomee_gs_leuning_drivers}} or \code{\link{biomee_p_model_drivers}}
 #' @param site_info Site meta info in a data.frame.
-#' See examples \code{\link{biomee_gs_leuning_drivers}} or \code{\link{biomee_p_model_drivers}}
-#' @param forcing Forcing data.frame used as input.
-#' See examples \code{\link{biomee_gs_leuning_drivers}} or \code{\link{biomee_p_model_drivers}}
+#' @param forcing A data frame of forcing climate data, used as input.
 #' @param params_tile Tile-level model parameters, into a single row data.frame.
-#' See examples \code{\link{biomee_gs_leuning_drivers}} or \code{\link{biomee_p_model_drivers}}
 #' @param params_species A data.frame containing species-specific model parameters,
 #'   with one species per row. See examples \code{\link{biomee_gs_leuning_drivers}} or \code{\link{biomee_p_model_drivers}}
 #' @param init_cohort A data.frame of initial cohort specifications.
-#' See examples \code{\link{biomee_gs_leuning_drivers}} or \code{\link{biomee_p_model_drivers}}
 #' @param init_soil A data.frame of initial soil pools.
-#' See examples \code{\link{biomee_gs_leuning_drivers}} or \code{\link{biomee_p_model_drivers}}
-#' @param makecheck Flag specifying whether checks are performed to verify model inputs and parameters.
+#' @param makecheck A logical specifying whether checks are performed 
+#'  to verify forcings and model parameters. \code{TRUE} by default.
 #'
-#' @export
-#' @useDynLib rsofun
+#' For further specifications of above inputs and examples see \code{\link{biomee_gs_leuning_drivers}} or \code{\link{biomee_p_model_drivers}}
 #' 
 #' @returns Model output is provided as a list, with elements:
 #' \describe{
@@ -225,7 +219,10 @@
 #'     \item{deathrate}{Mortality rate of this cohort (yr\eqn{^{-1}}).}
 #'   }}
 #' }
-#' 
+#'
+#' @export
+#' @useDynLib rsofun
+#'
 #' @examples
 #' \donttest{
 #' # Example BiomeE model run
@@ -260,27 +257,32 @@ run_biomee_f_bysite <- function(
   
   # predefine variables for CRAN check compliance
   type <- NULL
-  
-  forcing_features <- c(
-    'ppfd',
-    'temp',
-    'vpd',
-    'rain',
-    'wind',
-    'patm',
-    'co2'
-  )
-  
-  # select relevant columns of the forcing data
-  forcing <- forcing %>%
-    select(
-      any_of(forcing_features)
-    )
-  
+
+  # base state, always execute the call
+  continue <- TRUE
+
+  # record number of years in forcing data
+  # frame to use as default values (unless provided othrwise as params_siml$nyeartrend)
+  ndayyear <- 365
+  forcing_years <- nrow(forcing)/(ndayyear * params_siml$steps_per_day)
+
+  `%nin%` <- Negate(`%in%`)
+  # Default value for nyeartrend
+  if ('nyeartrend' %nin% names(params_siml)) {
+    params_siml$nyeartrend <- forcing_years
+  }
+  # Default value for firstyeartrend
+  # If not provided, we anchor to 0, meaning that spinup years are negative and transient years are positive.
+  # firstyeartrend is currently not used.
+  if ('firstyeartrend' %nin% names(params_siml)) {
+    params_siml$firstyeartrend <- 0
+  }
+
   runyears <- ifelse(
     params_siml$spinup,
     (params_siml$spinupyears + params_siml$nyeartrend),
-    params_siml$nyeartrend)
+    params_siml$nyeartrend
+  )
   
   n_daily  <- params_siml$nyeartrend * 365
   
@@ -325,37 +327,93 @@ run_biomee_f_bysite <- function(
             params_siml$method_mortality))
   }
   
-  # base state, always execute the call
-  continue <- TRUE
+  # re-define units and naming of forcing dataframe
+  # keep the order of columns - it's critical for Fortran (reading by column number)
+  forcing_features <- c(
+    'ppfd',
+    'temp',
+    'vpd',
+    'rain',
+    'wind',
+    'patm',
+    'co2'
+  )
   
+  # select relevant columns of the forcing data
+  forcing <- forcing %>%
+    select(
+      any_of(forcing_features)
+    )
+
+  if ('init_n_cohorts' %in% names(init_cohort)) {
+    warning("Warning: Ignoring column 'init_n_cohorts' under 'init_cohort' in drivers. It has been phased out and should be removed from drivers.")
+    init_cohort <- select(init_cohort, -'init_n_cohorts')
+  }
+
+
   # validate input
   if (makecheck){
-    # Add input and parameter checks here if applicable.
-    data_integrity <- lapply(
-      forcing_features,
-      function(check_var){
-        if (any(is.nanull(forcing[check_var]))){
-          warning(
-            sprintf("Error: Missing forcing %s for site %s",
-                    check_var, sitename))
-          return(FALSE)
-        } else {
-          return(TRUE)
-        }
-      })
 
-    if ('init_n_cohorts' %in% names(init_cohort)) {
-      warning("Error: column 'init_n_cohorts' under 'init_cohort' has been phased out and must be removed from the drivers.")
-      data_integrity <- append(data_integrity, FALSE)
+    is.nanull <- function(x) ifelse(any(is.null(x), is.na(x)), TRUE, FALSE)
+
+    if (params_siml$nyeartrend < forcing_years) {
+      warning(sprintf(
+        "Info: provided value of nyeartrend is less than the number of years of forcing data (%i). Only the first %i will be used."
+        , forcing_years, params_siml$nyeartrend))
     }
+    if (params_siml$nyeartrend > forcing_years) {
+      warning(sprintf(
+        "Info: provided value of nyeartrend is greater than the number of years of forcing data (%i). The final year will be repeated as much as needed."
+        , forcing_years))
+    }
+
+    # create a loop to loop over a list of variables
+    # to check validity
+    data_integrity <- lapply(forcing_features, function(check_var){
+      if (any(is.nanull(forcing[check_var]))){
+        warning(sprintf("Error: Missing forcing %s for site %s",
+                        check_var, sitename))
+        return(FALSE)
+      } else {
+        return(TRUE)
+      }
+    })
     
-    # only return true if all checked variables are TRUE
+    # only run simulation if all checked variables are valid
     # suppress warning on coercion of list to single logical
-    continue <- suppressWarnings(all(as.vector(data_integrity)))
+    if (suppressWarnings(!all(as.vector(data_integrity)))) {
+      continue <- FALSE
+    }
+
+    # simulation parameters to check
+    check_param <- c(
+      "spinup",
+      "spinupyears",
+      "recycle",
+      "firstyeartrend",
+      "nyeartrend",
+      "steps_per_day",
+      "do_U_shaped_mortality",
+      "update_annualLAImax",
+      "do_closedN_run"
+    )
+    parameter_integrity <- lapply(check_param, function(check_var){
+      if (any(is.nanull(params_siml[check_var]))){
+        warning(sprintf("Error: Missing value in %s for %s",
+                        check_var, sitename))
+        return(FALSE)
+      } else {
+        return(TRUE)
+      }
+    })
+
+    if (suppressWarnings(!all(parameter_integrity))){
+      continue <- FALSE
+    }
   }
   
   if (continue) {
-    
+
     ## C wrapper call
     biomeeout <- .Call(
       
@@ -367,6 +425,7 @@ run_biomee_f_bysite <- function(
       recycle               = as.integer(params_siml$recycle),
       firstyeartrend        = as.integer(params_siml$firstyeartrend),
       nyeartrend            = as.integer(params_siml$nyeartrend),
+      steps_per_day         = as.integer(params_siml$steps_per_day),
       do_U_shaped_mortality = as.logical(params_siml$do_U_shaped_mortality),
       update_annualLAImax   = as.logical(params_siml$update_annualLAImax),
       do_closedN_run        = as.logical(params_siml$do_closedN_run),
@@ -417,8 +476,7 @@ run_biomee_f_bysite <- function(
       n_annual         = as.integer(runyears), 
       n_annual_cohorts = as.integer(params_siml$nyeartrend), # to get cohort outputs after spinup year
       #n_annual_cohorts = as.integer(runyears), # to get cohort outputs from year 1
-      forcing          = as.matrix(forcing),
-      steps_per_day    = as.integer(params_siml$steps_per_day)
+      forcing          = as.matrix(forcing)
     )
     
     # If simulation is very long, output gets massive.

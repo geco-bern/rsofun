@@ -12,5 +12,7 @@ p_model_output_vcmax25
 }
 \description{
 Example output dataset from a p-model run using \code{\link{p_model_drivers_vcmax25}}
+See \code{\link{run_pmodel_f_bysite}} for a detailed 
+description of the outputs.
 }
 \keyword{datasets}

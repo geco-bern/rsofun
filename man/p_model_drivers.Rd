@@ -36,7 +36,7 @@ A tibble of driver data:
     \describe{
       \item{spinup}{A logical value indicating whether this simulation does spin-up.}
       \item{spinupyears}{Number of spin-up years.}
-      \item{recycle}{Length of standard recycling period, in years.}
+      \item{recycle}{Number of first N years of forcing data.frame that are recycled for spin-up.}
       \item{outdt}{An integer indicating the output periodicity.}
       \item{ltre}{A logical value, \code{TRUE} if evergreen tree.}
       \item{ltne}{A logical value, \code{TRUE} if evergreen tree and N-fixing.}
