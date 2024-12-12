@@ -33,9 +33,9 @@ A tibble of driver data.
   \item{site_info}{Site meta info in a data.frame.
 This data structure can be freely used for documenting the dataset, but must include at least the following data:
     \describe{
-      \item{lon}{Longitude of the site location.}
-      \item{lat}{Latitude of the site location.}
-      \item{elv}{Elevation of the site location, in meters.}
+      \item{lon}{Longitude of the site location in degrees east.}
+      \item{lat}{Latitude of the site location in degrees north.}
+      \item{elv}{Elevation of the site location, in meters above sea level.}
     }}
   \item{forcing}{Forcing data.frame used as input
     \describe{

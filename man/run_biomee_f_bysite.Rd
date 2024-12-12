@@ -19,28 +19,25 @@ run_biomee_f_bysite(
 \arguments{
 \item{sitename}{Site name.}
 
-\item{params_siml}{Simulation parameters.
-See examples \code{\link{biomee_gs_leuning_drivers}} or \code{\link{biomee_p_model_drivers}}}
+\item{params_siml}{Simulation parameters.}
 
-\item{site_info}{Site meta info in a data.frame.
-See examples \code{\link{biomee_gs_leuning_drivers}} or \code{\link{biomee_p_model_drivers}}}
+\item{site_info}{Site meta info in a data.frame.}
 
-\item{forcing}{Forcing data.frame used as input.
-See examples \code{\link{biomee_gs_leuning_drivers}} or \code{\link{biomee_p_model_drivers}}}
+\item{forcing}{A data frame of forcing climate data, used as input.}
 
-\item{params_tile}{Tile-level model parameters, into a single row data.frame.
-See examples \code{\link{biomee_gs_leuning_drivers}} or \code{\link{biomee_p_model_drivers}}}
+\item{params_tile}{Tile-level model parameters, into a single row data.frame.}
 
 \item{params_species}{A data.frame containing species-specific model parameters,
 with one species per row. See examples \code{\link{biomee_gs_leuning_drivers}} or \code{\link{biomee_p_model_drivers}}}
 
-\item{init_cohort}{A data.frame of initial cohort specifications.
-See examples \code{\link{biomee_gs_leuning_drivers}} or \code{\link{biomee_p_model_drivers}}}
+\item{init_cohort}{A data.frame of initial cohort specifications.}
 
-\item{init_soil}{A data.frame of initial soil pools.
-See examples \code{\link{biomee_gs_leuning_drivers}} or \code{\link{biomee_p_model_drivers}}}
+\item{init_soil}{A data.frame of initial soil pools.}
 
-\item{makecheck}{Flag specifying whether checks are performed to verify model inputs and parameters.}
+\item{makecheck}{A logical specifying whether checks are performed 
+ to verify forcings and model parameters. \code{TRUE} by default.
+
+For further specifications of above inputs and examples see \code{\link{biomee_gs_leuning_drivers}} or \code{\link{biomee_p_model_drivers}}}
 }
 \value{
 Model output is provided as a list, with elements:
