@@ -165,24 +165,32 @@ run_pmodel_f_bysite <- function(
 ){
   
   # predefine variables for CRAN check compliance
-  ccov <- temp <- rain <- vpd <- ppfd <- netrad <-
-    fsun <- snow <- co2 <- fapar <- patm <- tmin <- tmax <- . <- NULL
+  ccov <- fsun <- . <- NULL
   
   # base state, always execute the call
   continue <- TRUE
   
-  # record first year and number of years in forcing data 
-  # frame (may need to overwrite later)
+  # record first year and number of years in forcing data
+  # frame (may need to overwrite later) to use as default values
   ndayyear <- 365
-  
-  firstyeartrend_forcing <- forcing %>%
+  forcing_years <- nrow(forcing)/ndayyear
+
+  firstyear_forcing <- forcing %>%
     dplyr::ungroup() %>%
     dplyr::slice(1) %>%
     dplyr::pull(date) %>%
     format("%Y") %>%
     as.numeric()
-  
-  nyeartrend_forcing <- nrow(forcing)/ndayyear
+
+  # Default value for nyeartrend
+  if ('nyeartrend' %in% names(params_siml)) {stop("Unexpectedly received params_siml$nyeartrend for p-model.")}
+  params_siml$nyeartrend <- forcing_years
+
+  # Default value for firstyeartrend
+  # For p-model we anchor to the first year of the forcing, meaning that spinup
+  # years are before the first year of forcing
+  if ('firstyeartrend' %in% names(params_siml)) {stop("Unexpectedly received params_siml$firstyeartrend for p-model.")}
+  params_siml$firstyeartrend <- firstyear_forcing
   
   # determine number of seconds per time step
   times <- forcing %>%
@@ -194,21 +202,24 @@ run_pmodel_f_bysite <- function(
   
   # re-define units and naming of forcing dataframe
   # keep the order of columns - it's critical for Fortran (reading by column number)
+  forcing_features <- c(
+      'temp',
+      'rain',
+      'vpd',
+      'ppfd',
+      'netrad',
+      'fsun',
+      'snow',
+      'co2',
+      'fapar',
+      'patm',
+      'tmin',
+      'tmax'
+  )
   forcing <- forcing %>% 
     dplyr::mutate(fsun = (100-ccov)/100) %>% 
     dplyr::select(
-      temp,
-      rain,
-      vpd,
-      ppfd,
-      netrad,
-      fsun,
-      snow,
-      co2,
-      fapar,
-      patm,
-      tmin,
-      tmax
+        all_of(forcing_features)
     )
   
   # validate input
@@ -219,6 +230,9 @@ run_pmodel_f_bysite <- function(
       "temp",
       "rain",
       "vpd",
+      # 'ppfd',   # TODO: activate check for these. Use forcing_features instead of check_vars
+      # 'netrad', # TODO: activate check for these. Use forcing_features instead of check_vars
+      # 'fsun',   # TODO: activate check for these. Use forcing_features instead of check_vars
       "snow",
       "co2",
       "fapar",
@@ -229,7 +243,6 @@ run_pmodel_f_bysite <- function(
     
     # create a loop to loop over a list of variables
     # to check validity
-    
     data_integrity <- lapply(check_vars, function(check_var){
       if (any(is.nanull(forcing[check_var]))){
         warning(sprintf("Error: Missing value in %s for %s",
@@ -240,11 +253,13 @@ run_pmodel_f_bysite <- function(
       }
     })
     
+    # only run simulation if all checked variables are valid
+    # suppress warning on coercion of list to single logical
     if (suppressWarnings(!all(data_integrity))){
       continue <- FALSE
     }
     
-    # parameters to check
+    # simulation parameters to check
     check_param <- c(
       "spinup",
       "spinupyears",
@@ -279,7 +294,7 @@ run_pmodel_f_bysite <- function(
       continue <- FALSE
     }
     
-    # Check model parameters
+    # model parameters to check
     if( sum( names(params_modl) %in% c('kphio', 'kphio_par_a', 'kphio_par_b',
                                        'soilm_thetastar', 'soilm_betao',
                                        'beta_unitcostratio', 'rd_to_vcmax', 
@@ -308,24 +323,6 @@ run_pmodel_f_bysite <- function(
   
   if(continue){
     
-    # convert to matrix
-    forcing <- as.matrix(forcing)
-    
-    # number of rows in matrix (pre-allocation of memory)
-    n <- as.integer(nrow(forcing))
-    
-    # Model parameters as vector in order
-    par <- c(
-      as.numeric(params_modl$kphio),
-      as.numeric(params_modl$kphio_par_a),
-      as.numeric(params_modl$kphio_par_b),
-      as.numeric(params_modl$soilm_thetastar),
-      as.numeric(params_modl$soilm_betao),
-      as.numeric(params_modl$beta_unitcostratio),
-      as.numeric(params_modl$rd_to_vcmax),
-      as.numeric(params_modl$tau_acclim),
-      as.numeric(params_modl$kc_jmax)
-    )
     
     ## C wrapper call
     out <- .Call(
@@ -336,8 +333,8 @@ run_pmodel_f_bysite <- function(
       spinup                    = as.logical(params_siml$spinup),
       spinupyears               = as.integer(params_siml$spinupyears),
       recycle                   = as.integer(params_siml$recycle),
-      firstyeartrend            = as.integer(firstyeartrend_forcing),
-      nyeartrend                = as.integer(nyeartrend_forcing),
+      firstyeartrend            = as.integer(params_siml$firstyeartrend),
+      nyeartrend                = as.integer(params_siml$nyeartrend),
       secs_per_tstep            = as.integer(secs_per_tstep),
       in_ppfd                   = as.logical(in_ppfd),
       in_netrad                 = as.logical(in_netrad),
@@ -353,15 +350,23 @@ run_pmodel_f_bysite <- function(
       latitude                  = as.numeric(site_info$lat),
       altitude                  = as.numeric(site_info$elv),
       whc                       = as.numeric(site_info$whc),
-      n                         = n,
-      par                       = par, 
-      forcing                   = forcing
+      n                         = as.integer(nrow(forcing)), # number of rows in matrix (pre-allocation of memory)
+      par                       = c(as.numeric(params_modl$kphio), # model parameters as vector in order
+                                    as.numeric(params_modl$kphio_par_a),
+                                    as.numeric(params_modl$kphio_par_b),
+                                    as.numeric(params_modl$soilm_thetastar),
+                                    as.numeric(params_modl$soilm_betao),
+                                    as.numeric(params_modl$beta_unitcostratio),
+                                    as.numeric(params_modl$rd_to_vcmax),
+                                    as.numeric(params_modl$tau_acclim),
+                                    as.numeric(params_modl$kc_jmax)),
+      forcing                   = as.matrix(forcing)
     )
     
     # Prepare output to be a nice looking tidy data frame (tibble)
     ddf <- init_dates_dataframe(
-      yrstart = firstyeartrend_forcing,
-      yrend = firstyeartrend_forcing + nyeartrend_forcing - 1,
+      yrstart = params_siml$firstyeartrend,
+      yrend = params_siml$firstyeartrend + params_siml$nyeartrend - 1,
       noleap = TRUE)
     
     out <- out %>%

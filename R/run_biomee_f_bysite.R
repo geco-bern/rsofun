@@ -260,23 +260,14 @@ run_biomee_f_bysite <- function(
   
   # predefine variables for CRAN check compliance
   type <- NULL
-  
-  forcing_features <- c(
-    'ppfd',
-    'temp',
-    'vpd',
-    'rain',
-    'wind',
-    'patm',
-    'co2'
-  )
-  
-  # select relevant columns of the forcing data
-  forcing <- forcing %>%
-    select(
-      any_of(forcing_features)
-    )
-  forcing_years <- nrow(forcing)/(365 * params_siml$steps_per_day)
+
+  # base state, always execute the call
+  continue <- TRUE
+
+  # record number of years in forcing data
+  # frame to use as default values (unless provided othrwise as params_siml$nyeartrend)
+  ndayyear <- 365
+  forcing_years <- nrow(forcing)/(ndayyear * params_siml$steps_per_day)
 
   `%nin%` <- Negate(`%in%`)
   # Default value for nyeartrend
@@ -339,9 +330,25 @@ run_biomee_f_bysite <- function(
             params_siml$method_mortality))
   }
   
-  # base state, always execute the call
-  continue <- TRUE
+  # re-define units and naming of forcing dataframe
+  # keep the order of columns - it's critical for Fortran (reading by column number)
+  forcing_features <- c(
+    'ppfd',
+    'temp',
+    'vpd',
+    'rain',
+    'wind',
+    'patm',
+    'co2'
+  )
   
+  # select relevant columns of the forcing data
+  forcing <- forcing %>%
+    select(
+      any_of(forcing_features)
+    )
+
+
   # validate input
   if (makecheck){
     if (params_siml$nyeartrend < forcing_years) {
@@ -355,28 +362,28 @@ run_biomee_f_bysite <- function(
         , forcing_years))
     }
 
-    # Add input and parameter checks here if applicable.
-    data_integrity <- lapply(
-      forcing_features,
-      function(check_var){
-        if (any(is.nanull(forcing[check_var]))){
-          warning(
-            sprintf("Error: Missing forcing %s for site %s",
-                    check_var, sitename))
-          return(FALSE)
-        } else {
-          return(TRUE)
-        }
-      })
+    # create a loop to loop over a list of variables
+    # to check validity
+    data_integrity <- lapply(forcing_features, function(check_var){
+      if (any(is.nanull(forcing[check_var]))){
+        warning(sprintf("Error: Missing forcing %s for site %s",
+                        check_var, sitename))
+        return(FALSE)
+      } else {
+        return(TRUE)
+      }
+    })
 
     if ('init_n_cohorts' %in% names(init_cohort)) {
       warning("Error: column 'init_n_cohorts' under 'init_cohort' has been phased out and must be removed from the drivers.")
       data_integrity <- append(data_integrity, FALSE)
     }
     
-    # only return true if all checked variables are TRUE
+    # only run simulation if all checked variables are valid
     # suppress warning on coercion of list to single logical
-    continue <- suppressWarnings(all(as.vector(data_integrity)))
+    if (suppressWarnings(!all(as.vector(data_integrity)))) {
+      continue <- FALSE
+    }
   }
   
   if (continue) {
