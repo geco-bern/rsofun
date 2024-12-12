@@ -84,16 +84,16 @@ to optimize model parameters.</p>
 <dd><p>Number of spin-up years.</p></dd>
 
       <dt>recycle</dt>
-<dd><p>Length of standard recycling period (years).</p></dd>
+<dd><p>Number of first N years of forcing data.frame that are recycled for spin-up.</p></dd>
 
       <dt>firstyeartrend</dt>
-<dd><p>First transient year.</p></dd>
+<dd><p>Year of first transient year (AD) (optional). Is only used to set years in output data frames. Defaults to 0 if not provided.</p></dd>
 
       <dt>nyeartrend</dt>
-<dd><p>Number of transient years.</p></dd>
+<dd><p>Number of transient years (optional). Determines the length of simulation output after spin-up. Defaults to number of years contained in the forcing data. (If longer than forcing data, last year of forcing is repeated until the end (spin-down).)</p></dd>
 
       <dt>steps_per_day</dt>
-<dd><p>Time resolution (day-1).</p></dd>
+<dd><p>Time resolution of the forcing (day-1).</p></dd>
 
       <dt>do_U_shaped_mortality</dt>
 <dd><p>Flag indicating whether U-shaped
@@ -123,13 +123,13 @@ to optimize model parameters.</p>
   <dt>site_info</dt>
 <dd><p>Site meta info in a data.frame.
 This data structure can be freely used for documenting the dataset, but must include at least the following data:</p><dl><dt>lon</dt>
-<dd><p>Longitude of the site location.</p></dd>
+<dd><p>Longitude of the site location in degrees east.</p></dd>
 
       <dt>lat</dt>
-<dd><p>Latitude of the site location.</p></dd>
+<dd><p>Latitude of the site location in degrees north.</p></dd>
 
       <dt>elv</dt>
-<dd><p>Elevation of the site location, in meters.</p></dd>
+<dd><p>Elevation of the site location, in meters above sea level.</p></dd>
 
 
 </dl></dd>
@@ -238,7 +238,7 @@ This data structure can be freely used for documenting the dataset, but must inc
         0 for C3; 1 for C4</p></dd>
 
       <dt>alpha_FR</dt>
-<dd><p>Fine root turnonver rate (year\(^{-1}\)).</p></dd>
+<dd><p>Fine root turnover rate (year\(^{-1}\)).</p></dd>
 
       <dt>rho_FR</dt>
 <dd><p>Material density of fine roots (kg C m\(^{-3}\)).</p></dd>
