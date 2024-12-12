@@ -347,7 +347,7 @@ run_biomee_f_bysite <- function(
 
   if ('init_n_cohorts' %in% names(init_cohort)) {
     warning("Warning: Ignoring column 'init_n_cohorts' under 'init_cohort' in drivers. It has been phased out and should be removed from drivers.")
-    init_cohort <- select(init_cohort, -init_n_cohorts)
+    init_cohort <- select(init_cohort, -'init_n_cohorts')
   }
 
 
