@@ -66,7 +66,7 @@ extern SEXP pmodel_f_C(
     ){
 
     // Number of time steps (same in forcing and output)
-    const int nt = INTEGER(n)[0] ;
+    const int nt = asInteger(n);
 
     // Specify output
     // 2nd agument to allocMatrix is number of rows, 3rd is number of columns
@@ -216,20 +216,28 @@ extern SEXP biomee_f_C(
     ){
 
     // Number of time steps (same in forcing and output)
-    int nt_daily = INTEGER(n_daily)[0];
-    int nt_annual = INTEGER(n_annual)[0];
-    int nt_annual_cohorts = INTEGER(n_annual_cohorts)[0];
+    int nt_daily = asInteger(n_daily);
+    int nt_annual = asInteger(n_annual);
+    int nt_annual_cohorts = asInteger(n_annual_cohorts);
     int n_init_cohort, nt, n_lu, n_lu_tr, n_lu_tr_years;
     SEXP Rdim;
     // Output as list
     SEXP out_list = PROTECT( allocVector(VECSXP, 3) );
 
+    /*// Example of 4 dimension array
+    // Dimensions
+    int pDims[4] = {2, 3, 4, 5};
+    SEXP dims = allocVector(INTSXP, 4);
+    // INTEGER(dims) is a int* which we initialise with pDims
+    memcpy(INTEGER(dims), pDims, 4 * sizeof(int));
+    // Allocate 4D array
+    SEXP test = PROTECT(allocArray(INTSXP, dims));*/
 
     // Extracting array dimensions (they need to be passed to fortran separately)
     Rdim = getAttrib(init_cohort,R_DimSymbol);
-    n_init_cohort = INTEGER(Rdim)[0];
+    n_init_cohort = asInteger(Rdim);
     Rdim = getAttrib(forcing,R_DimSymbol);
-    nt = INTEGER(Rdim)[0];
+    nt = asInteger(Rdim);
     n_lu = length(init_lu);
     Rdim = getAttrib(luc,R_DimSymbol);
     n_lu_tr = INTEGER(Rdim)[0];
@@ -302,7 +310,7 @@ extern SEXP biomee_f_C(
     SET_VECTOR_ELT(out_list, 0,  output_daily_tile);
     SET_VECTOR_ELT(out_list, 1, output_annual_tile);
     SET_VECTOR_ELT(out_list, 2, output_annual_cohort_tile);
-    
+
     UNPROTECT(4);
 
     return out_list;
