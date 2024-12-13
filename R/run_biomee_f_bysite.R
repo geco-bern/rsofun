@@ -5,7 +5,7 @@
 #' @param sitename Site name.
 #' @param params_siml Simulation parameters.
 #' @param site_info Site meta info in a data.frame.
-#' @param forcing A data frame of forcing climate data, used as input.
+#' @param forcing A data.frame of forcing climate data, used as input.
 #' @param init_lu Initial land use state array used as input (optional).
 #' @param luc Land use change (transition matrix) data.frame used as input (optional).
 #' @param params_tile Tile-level model parameters, into a single row data.frame.
@@ -13,15 +13,13 @@
 #'   with one species per row.
 #' @param init_cohort A data.frame of initial cohort specifications.
 #' @param init_soil A data.frame of initial soil pools.
-#' @param makecheck A logical specifying whether checks are performed 
-#'  to verify forcings and model parameters. \code{TRUE} by default.
+#' @param makecheck A logical specifying whether checks are performed to verify forcings and model parameters. \code{TRUE} by default.
 #'
-#' For further specifications of above inputs and examples see \code{\link{biomee_gs_leuning_drivers}} or \code{\link{biomee_p_model_drivers}}
+#' For further specifications of above inputs and examples see \code{\link{biomee_gs_leuning_drivers}} or \code{\link{biomee_p_model_drivers}}.
 #' 
 #' @returns Model output is provided as a list, with elements:
 #' \describe{
-#'   \item{\code{output_hourly_tile}}{A data.frame containing hourly predictions
-#'     .
+#'   \item{\code{output_hourly_tile}}{A data.frame containing hourly predictions.
 #'     \describe{
 #'       \item{year}{Year of the simulation.}
 #'       \item{doy}{Day of the year.}
@@ -39,8 +37,7 @@
 #'       \item{FLDCAP}{Field capacity (vol/vol).}
 #'       \item{WILTPT}{Wilting point (vol/vol).}
 #'     }}
-#'   \item{\code{output_daily_tile}}{A data.frame with daily outputs at a tile
-#'     level.
+#'   \item{\code{output_daily_tile}}{A data.frame with daily outputs at a tile level.
 #'     \describe{
 #'       \item{year}{Year of the simulation.}
 #'       \item{doy}{Day of the year.}

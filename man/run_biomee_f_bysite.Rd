@@ -25,7 +25,7 @@ run_biomee_f_bysite(
 
 \item{site_info}{Site meta info in a data.frame.}
 
-\item{forcing}{A data frame of forcing climate data, used as input.}
+\item{forcing}{A data.frame of forcing climate data, used as input.}
 
 \item{params_tile}{Tile-level model parameters, into a single row data.frame.}
 
@@ -36,10 +36,9 @@ with one species per row.}
 
 \item{init_soil}{A data.frame of initial soil pools.}
 
-\item{makecheck}{A logical specifying whether checks are performed 
- to verify forcings and model parameters. \code{TRUE} by default.
+\item{makecheck}{A logical specifying whether checks are performed to verify forcings and model parameters. \code{TRUE} by default.
 
-For further specifications of above inputs and examples see \code{\link{biomee_gs_leuning_drivers}} or \code{\link{biomee_p_model_drivers}}}
+For further specifications of above inputs and examples see \code{\link{biomee_gs_leuning_drivers}} or \code{\link{biomee_p_model_drivers}}.}
 
 \item{init_lu}{Initial land use state array used as input (optional).}
 
@@ -48,8 +47,7 @@ For further specifications of above inputs and examples see \code{\link{biomee_g
 \value{
 Model output is provided as a list, with elements:
 \describe{
-  \item{\code{output_hourly_tile}}{A data.frame containing hourly predictions
-    .
+  \item{\code{output_hourly_tile}}{A data.frame containing hourly predictions.
     \describe{
       \item{year}{Year of the simulation.}
       \item{doy}{Day of the year.}
@@ -67,8 +65,7 @@ Model output is provided as a list, with elements:
       \item{FLDCAP}{Field capacity (vol/vol).}
       \item{WILTPT}{Wilting point (vol/vol).}
     }}
-  \item{\code{output_daily_tile}}{A data.frame with daily outputs at a tile
-    level.
+  \item{\code{output_daily_tile}}{A data.frame with daily outputs at a tile level.
     \describe{
       \item{year}{Year of the simulation.}
       \item{doy}{Day of the year.}
