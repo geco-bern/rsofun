@@ -5,12 +5,12 @@
 \alias{biomee_p_model_output}
 \title{rsofun BiomeE (P-model) output data}
 \format{
-An object of class \code{tbl_df} (inherits from \code{tbl}, \code{data.frame}) with 1 rows and 2 columns.
+See \code{\link{biomee_gs_leuning_output}}
 }
 \usage{
 biomee_p_model_output
 }
 \description{
-Example output dataset from a BiomeE-model run (p-model)
+Example output dataset from a BiomeE-model run using divers \code{\link{biomee_p_model_drivers}}
 }
 \keyword{datasets}
