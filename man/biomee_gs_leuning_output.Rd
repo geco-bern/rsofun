@@ -216,5 +216,7 @@ biomee_gs_leuning_output
 }
 \description{
 Example output dataset from a BiomeE-model run using divers \code{\link{biomee_gs_leuning_drivers}}
+See \code{\link{run_biomee_f_bysite}} for a detailed 
+description of the outputs.
 }
 \keyword{datasets}

@@ -1,63 +1,19 @@
-#' R wrapper for SOFUN P-model
+#' Run P-model (R wrapper)
 #' 
-#' Call to the Fortran P-model
+#' Run P-model Fortran model on single site.
 #'
 #' @param sitename Site name.
 #' @param params_siml Simulation parameters.
-#' \describe{
-#'       \item{spinup}{A logical value indicating whether this simulation does spin-up.}
-#'       \item{spinupyears}{Number of spin-up years.}
-#'       \item{recycle}{Length of standard recycling period, in years.}
-#'       \item{outdt}{An integer indicating the output periodicity.}
-#'       \item{ltre}{A logical value, \code{TRUE} if evergreen tree.}
-#'       \item{ltne}{A logical value, \code{TRUE} if evergreen tree and N-fixing.}
-#'       \item{ltrd}{A logical value, \code{TRUE} if deciduous tree.}
-#'       \item{ltnd}{A logical value, \code{TRUE} if deciduous tree and N-fixing.}
-#'       \item{lgr3}{A logical value, \code{TRUE} if grass with C3 photosynthetic pathway.}
-#'       \item{lgn3}{A logical value, \code{TRUE} if grass with C3 photosynthetic
-#'       pathway and N-fixing.}
-#'       \item{lgr4}{A logical value, \code{TRUE} if grass with C4 photosynthetic pathway.}
-#' }
-#' @param site_info A list of site meta info. Required:
-#' \describe{
-#'       \item{lon}{Longitude of the site location.}
-#'       \item{lat}{Latitude of the site location.}
-#'       \item{elv}{Elevation of the site location, in meters.}
-#'       \item{whc}{A numeric value for the total root zone water holding capacity (in mm), used
-#'       for simulating the soil water balance.}
-#' }
-#' @param forcing A data frame of forcing climate data, used as input 
-#'  (see \code{\link{p_model_drivers}}
-#'  for a detailed description of its structure and contents).
-#' @param params_modl A named list of free (calibratable) model parameters.
-#' \describe{
-#'   \item{kphio}{The quantum yield efficiency at optimal temperature \eqn{\varphi_0}, 
-#'    in mol mol\eqn{^{-1}}.
-#'    When temperature dependence is used, it corresponds to the multiplicative
-#'    parameter \eqn{c} (see Details).}
-#'   \item{kphio_par_a}{The shape parameter \eqn{a} of the temperature-dependency of
-#'    quantum yield efficiency (see Details).
-#'    To disable the temperature dependence, set \code{kphio_par_a = 0}.}
-#'   \item{kphio_par_b}{The optimal temperature parameter \eqn{b} of the temperature
-#'    dependent quantum yield efficiency (see Details), in \eqn{^o}C.}
-#'   \item{soilm_thetastar}{The threshold parameter \eqn{\theta^{*}} in the 
-#'    soil moisture stress function (see Details), given in mm.
-#'    To turn off the soil moisture stress, set \code{soilm_thetastar = 0}.}
-#'   \item{soilm_betao}{The intercept parameter \eqn{\beta_{0}} in the
-#'    soil moisture stress function (see Details). This is the parameter calibrated 
-#'    in Stocker et al. 2020 GMD.}
-#'   \item{beta_unitcostratio}{The unit cost of carboxylation, corresponding to
-#'    \eqn{\beta = b / a'} in Eq. 3 of Stocker et al. 2020 GMD.}
-#'   \item{rd_to_vcmax}{Ratio of Rdark (dark respiration) to Vcmax25.}
-#'   \item{tau_acclim}{Acclimation time scale of photosynthesis, in days.}
-#'   \item{kc_jmax}{Parameter for Jmax cost ratio (corresponding to c\eqn{^*} in
-#'   Stocker et al. 2020 GMD).} 
-#' }
+#' @param site_info Site meta info in a data.frame.
+#' @param forcing A data frame of forcing climate data, used as input.
+#' @param params_modl A named list of free (calibratable) model parameters. See \code{\link{runread_pmodel_f}}
 #' @param makecheck A logical specifying whether checks are performed 
 #'  to verify forcings and model parameters. \code{TRUE} by default.
 #' @param verbose A logical specifying whether to print warnings.
 #' Defaults to \code{TRUE}.
 #'
+#' For further specifications of above inputs and examples see \code{\link{p_model_drivers}} or \code{\link{p_model_drivers_vcmax25}}
+
 #' @import dplyr
 #' 
 #' @returns Model output is provided as a tidy dataframe, with columns:
@@ -165,24 +121,32 @@ run_pmodel_f_bysite <- function(
 ){
   
   # predefine variables for CRAN check compliance
-  ccov <- temp <- rain <- vpd <- ppfd <- netrad <-
-    fsun <- snow <- co2 <- fapar <- patm <- tmin <- tmax <- . <- NULL
+  ccov <- fsun <- . <- NULL
   
   # base state, always execute the call
   continue <- TRUE
   
-  # record first year and number of years in forcing data 
-  # frame (may need to overwrite later)
+  # record first year and number of years in forcing data
+  # frame (may need to overwrite later) to use as default values
   ndayyear <- 365
-  
-  firstyeartrend_forcing <- forcing %>%
+  forcing_years <- nrow(forcing)/ndayyear
+
+  firstyear_forcing <- forcing %>%
     dplyr::ungroup() %>%
     dplyr::slice(1) %>%
     dplyr::pull(date) %>%
     format("%Y") %>%
     as.numeric()
-  
-  nyeartrend_forcing <- nrow(forcing)/ndayyear
+
+  # Default value for nyeartrend
+  if ('nyeartrend' %in% names(params_siml)) {stop("Unexpectedly received params_siml$nyeartrend for p-model.")}
+  params_siml$nyeartrend <- forcing_years
+
+  # Default value for firstyeartrend
+  # For p-model we anchor to the first year of the forcing, meaning that spinup
+  # years are before the first year of forcing
+  if ('firstyeartrend' %in% names(params_siml)) {stop("Unexpectedly received params_siml$firstyeartrend for p-model.")}
+  params_siml$firstyeartrend <- firstyear_forcing
   
   # determine number of seconds per time step
   times <- forcing %>%
@@ -194,31 +158,39 @@ run_pmodel_f_bysite <- function(
   
   # re-define units and naming of forcing dataframe
   # keep the order of columns - it's critical for Fortran (reading by column number)
+  forcing_features <- c(
+      'temp',
+      'rain',
+      'vpd',
+      'ppfd',
+      'netrad',
+      'fsun',
+      'snow',
+      'co2',
+      'fapar',
+      'patm',
+      'tmin',
+      'tmax'
+  )
   forcing <- forcing %>% 
     dplyr::mutate(fsun = (100-ccov)/100) %>% 
     dplyr::select(
-      temp,
-      rain,
-      vpd,
-      ppfd,
-      netrad,
-      fsun,
-      snow,
-      co2,
-      fapar,
-      patm,
-      tmin,
-      tmax
+        all_of(forcing_features)
     )
   
   # validate input
   if (makecheck){
+
+    is.nanull <- function(x) ifelse(any(is.null(x), is.na(x)), TRUE, FALSE)
     
     # list variable to check for
     check_vars <- c(
       "temp",
       "rain",
       "vpd",
+      # 'ppfd',   # TODO: activate check for these. Use forcing_features instead of check_vars
+      # 'netrad', # TODO: activate check for these. Use forcing_features instead of check_vars
+      # 'fsun',   # TODO: activate check for these. Use forcing_features instead of check_vars
       "snow",
       "co2",
       "fapar",
@@ -229,7 +201,6 @@ run_pmodel_f_bysite <- function(
     
     # create a loop to loop over a list of variables
     # to check validity
-    
     data_integrity <- lapply(check_vars, function(check_var){
       if (any(is.nanull(forcing[check_var]))){
         warning(sprintf("Error: Missing value in %s for %s",
@@ -240,11 +211,13 @@ run_pmodel_f_bysite <- function(
       }
     })
     
+    # only run simulation if all checked variables are valid
+    # suppress warning on coercion of list to single logical
     if (suppressWarnings(!all(data_integrity))){
       continue <- FALSE
     }
     
-    # parameters to check
+    # simulation parameters to check
     check_param <- c(
       "spinup",
       "spinupyears",
@@ -279,7 +252,7 @@ run_pmodel_f_bysite <- function(
       continue <- FALSE
     }
     
-    # Check model parameters
+    # model parameters to check
     if( sum( names(params_modl) %in% c('kphio', 'kphio_par_a', 'kphio_par_b',
                                        'soilm_thetastar', 'soilm_betao',
                                        'beta_unitcostratio', 'rd_to_vcmax', 
@@ -308,24 +281,6 @@ run_pmodel_f_bysite <- function(
   
   if(continue){
     
-    # convert to matrix
-    forcing <- as.matrix(forcing)
-    
-    # number of rows in matrix (pre-allocation of memory)
-    n <- as.integer(nrow(forcing))
-    
-    # Model parameters as vector in order
-    par <- c(
-      as.numeric(params_modl$kphio),
-      as.numeric(params_modl$kphio_par_a),
-      as.numeric(params_modl$kphio_par_b),
-      as.numeric(params_modl$soilm_thetastar),
-      as.numeric(params_modl$soilm_betao),
-      as.numeric(params_modl$beta_unitcostratio),
-      as.numeric(params_modl$rd_to_vcmax),
-      as.numeric(params_modl$tau_acclim),
-      as.numeric(params_modl$kc_jmax)
-    )
     
     ## C wrapper call
     out <- .Call(
@@ -336,8 +291,8 @@ run_pmodel_f_bysite <- function(
       spinup                    = as.logical(params_siml$spinup),
       spinupyears               = as.integer(params_siml$spinupyears),
       recycle                   = as.integer(params_siml$recycle),
-      firstyeartrend            = as.integer(firstyeartrend_forcing),
-      nyeartrend                = as.integer(nyeartrend_forcing),
+      firstyeartrend            = as.integer(params_siml$firstyeartrend),
+      nyeartrend                = as.integer(params_siml$nyeartrend),
       secs_per_tstep            = as.integer(secs_per_tstep),
       in_ppfd                   = as.logical(in_ppfd),
       in_netrad                 = as.logical(in_netrad),
@@ -353,15 +308,23 @@ run_pmodel_f_bysite <- function(
       latitude                  = as.numeric(site_info$lat),
       altitude                  = as.numeric(site_info$elv),
       whc                       = as.numeric(site_info$whc),
-      n                         = n,
-      par                       = par, 
-      forcing                   = forcing
+      n                         = as.integer(nrow(forcing)), # number of rows in matrix (pre-allocation of memory)
+      par                       = c(as.numeric(params_modl$kphio), # model parameters as vector in order
+                                    as.numeric(params_modl$kphio_par_a),
+                                    as.numeric(params_modl$kphio_par_b),
+                                    as.numeric(params_modl$soilm_thetastar),
+                                    as.numeric(params_modl$soilm_betao),
+                                    as.numeric(params_modl$beta_unitcostratio),
+                                    as.numeric(params_modl$rd_to_vcmax),
+                                    as.numeric(params_modl$tau_acclim),
+                                    as.numeric(params_modl$kc_jmax)),
+      forcing                   = as.matrix(forcing)
     )
     
     # Prepare output to be a nice looking tidy data frame (tibble)
     ddf <- init_dates_dataframe(
-      yrstart = firstyeartrend_forcing,
-      yrend = firstyeartrend_forcing + nyeartrend_forcing - 1,
+      yrstart = params_siml$firstyeartrend,
+      yrend = params_siml$firstyeartrend + params_siml$nyeartrend - 1,
       noleap = TRUE)
     
     out <- out %>%

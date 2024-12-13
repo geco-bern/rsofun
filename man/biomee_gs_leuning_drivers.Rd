@@ -13,9 +13,9 @@ A tibble of driver data.
     \describe{
       \item{spinup}{Flag indicating whether this simulation does spin-up.}
       \item{spinupyears}{Number of spin-up years.}
-      \item{recycle}{Length of the recycling period during spin-up, in years.}
-      \item{firstyeartrend}{Year of first transient year (AD). For anchoring the otherwise time series to the historical time scale. Currently unused.}
-      \item{nyeartrend}{Number of transient years (optional). Default: number of years contained in the forcing data. If provided, overrides default and extends forcing data by repeating last year (if applicable).}
+      \item{recycle}{Number of first N years of forcing data.frame that are recycled for spin-up.}
+      \item{firstyeartrend}{Year of first transient year (AD) (optional). Is only used to set years in output data frames. Defaults to 0 if not provided.}
+      \item{nyeartrend}{Number of transient years (optional). Determines the length of simulation output after spin-up. Defaults to number of years contained in the forcing data. (If longer than forcing data, last year of forcing is repeated until the end (spin-down).)}
       \item{steps_per_day}{Time resolution of the forcing (day-1).}
       \item{do_U_shaped_mortality}{Flag indicating whether U-shaped
         mortality is used.}
@@ -33,9 +33,9 @@ A tibble of driver data.
   \item{site_info}{Site meta info in a data.frame.
 This data structure can be freely used for documenting the dataset, but must include at least the following data:
     \describe{
-      \item{lon}{Longitude of the site location.}
-      \item{lat}{Latitude of the site location.}
-      \item{elv}{Elevation of the site location, in meters.}
+      \item{lon}{Longitude of the site location in degrees east.}
+      \item{lat}{Latitude of the site location in degrees north.}
+      \item{elv}{Elevation of the site location, in meters above sea level.}
     }}
   \item{forcing}{Forcing data.frame used as input
     \describe{

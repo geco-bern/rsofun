@@ -78,6 +78,15 @@ init_dates_dataframe <- function(
     ))
   
   # convert to decimal date
+  numeric_year <- function(x){
+    y <- as.numeric(format(x, format="%Y"))
+    doy <- as.numeric(format(x, format="%j")) - 1
+    
+    ifelse(y %% 4 == 0, 
+          round(y + doy/366, 3), 
+          round(y + doy/365, 3)
+    )
+  }
   date_range$year_dec <- numeric_year(date_range$date)
   
   # leap year filter

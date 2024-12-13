@@ -2,14 +2,14 @@
 % Please edit documentation in R/runread_pmodel_f.R
 \name{runread_pmodel_f}
 \alias{runread_pmodel_f}
-\title{Run the P-model}
+\title{Run P-model}
 \usage{
 runread_pmodel_f(drivers, par, makecheck = TRUE, parallel = FALSE, ncores = 1)
 }
 \arguments{
 \item{drivers}{A nested data frame with one row for each site and columns
-named according to the arguments of function \code{\link{run_pmodel_f_bysite}},
-namely \code{sitename, params_siml, site_info} and \code{forcing}.}
+named according to the arguments of function \code{\link{runread_pmodel_f}}.
+Namely \code{sitename, params_siml, site_info} and \code{forcing}.}
 
 \item{par}{A named list of free (calibratable) model parameters.
 \describe{
@@ -36,8 +36,8 @@ namely \code{sitename, params_siml, site_info} and \code{forcing}.}
   Stocker et al. 2020 GMD).} 
 }}
 
-\item{makecheck}{A logical specifying whether checks are performed to verify
-forcings. Defaults to \code{TRUE}.}
+\item{makecheck}{A logical specifying whether checks are performed 
+to verify forcings and model parameters. \code{TRUE} by default.}
 
 \item{parallel}{A logical specifying whether simulations are to be
 parallelised (sending data from a certain number of sites to each core).
@@ -50,10 +50,12 @@ computing (by default \code{ncores = 2}).}
 A data frame (tibble) with one row for each site, site information 
 stored in the nested column \code{site_info} and outputs stored in the nested 
 column \code{data}. See \code{\link{run_pmodel_f_bysite}} for a detailed 
-description of the outputs.
+description of the outputs. 
+Example outputs are provided as \code{\link{biomee_p_model_output}} and
+\code{\link{biomee_gs_leuning_output}}.
 }
 \description{
-Runs the P-model and loads output in once.
+Runs P-model for multiple sites.
 }
 \details{
 Depending on the input model parameters, it's possible to run the 
