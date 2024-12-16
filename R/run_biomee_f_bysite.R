@@ -6,11 +6,9 @@
 #' @param params_siml Simulation parameters.
 #' @param site_info Site meta info in a data.frame.
 #' @param forcing A data.frame of forcing climate data, used as input.
-#' @param init_lu Initial land use state array used as input (optional).
-#' @param luc Land use change (transition matrix) data.frame used as input (optional).
 #' @param params_tile Tile-level model parameters, into a single row data.frame.
 #' @param params_species A data.frame containing species-specific model parameters,
-#'   with one species per row.
+#'   with one species per row. See examples \code{\link{biomee_gs_leuning_drivers}} or \code{\link{biomee_p_model_drivers}}
 #' @param init_cohort A data.frame of initial cohort specifications.
 #' @param init_soil A data.frame of initial soil pools.
 #' @param makecheck A logical specifying whether checks are performed to verify forcings and model parameters. \code{TRUE} by default.
