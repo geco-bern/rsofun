@@ -230,25 +230,7 @@ contains
     longitude,                    &      
     latitude,                     &     
     altitude,                     &             
-    soiltype,                     &      
-    FLDCAP,                       &    
-    WILTPT,                       &    
-    K1,                           &
-    K2,                           &
-    K_nitrogen,                   &        
-    MLmixRatio,                   &  
-    etaN,                         &        
-    LMAmin,                       &     
-    fsc_fine,                     &      
-    fsc_wood,                     &     
-    GR_factor,                    & 
-    l_fract,                      & 
-    retransN,                     & 
-    f_initialBSW,                 & 
-    f_N_add,                      & 
-    tf_base,                      &     
-    par_mort,                     &
-    par_mort_under,               &
+    params_tile,                  &
     n_params_species,             &
     params_species,               &
     n_init_cohort,                &
@@ -302,33 +284,13 @@ contains
     real(kind=c_double),  intent(in) :: latitude
     real(kind=c_double),  intent(in) :: altitude
 
-    ! Tile parameters
-    integer(kind=c_int), intent(in) :: soiltype
-    real(kind=c_double), intent(in) :: FLDCAP
-    real(kind=c_double), intent(in) :: WILTPT
-    real(kind=c_double), intent(in) :: K1
-    real(kind=c_double), intent(in) :: K2
-    real(kind=c_double), intent(in) :: K_nitrogen
-    real(kind=c_double), intent(in) :: MLmixRatio
-    real(kind=c_double), intent(in) :: etaN
-    real(kind=c_double), intent(in) :: LMAmin
-    real(kind=c_double), intent(in) :: fsc_fine
-    real(kind=c_double), intent(in) :: fsc_wood
-    real(kind=c_double), intent(in) :: GR_factor
-    real(kind=c_double), intent(in) :: l_fract
-    real(kind=c_double), intent(in) :: retransN
-    real(kind=c_double), intent(in) :: f_initialBSW
-    real(kind=c_double), intent(in) :: f_N_add
-    real(kind=c_double), intent(in) :: tf_base
-    real(kind=c_double), intent(in) :: par_mort
-    real(kind=c_double), intent(in) :: par_mort_under
-
     ! naked arrays
     integer(kind=c_int), intent(in) :: n_params_species
     real(kind=c_double), dimension(n_params_species,55), intent(in) :: params_species
     integer(kind=c_int), intent(in) :: n_init_cohort
     real(kind=c_double), dimension(n_init_cohort,9),  intent(in) :: init_cohort
     real(kind=c_double), dimension(4),  intent(in) :: init_soil
+    real(kind=c_double), dimension(19),  intent(in) :: params_tile
 
     ! LULUC
     integer(kind=c_int), intent(in) :: n_lu
@@ -416,25 +378,25 @@ contains
     myinterface%grid%elv = real( altitude )   
 
     ! Tile parameters
-    myinterface%params_tile%soiltype     = int(soiltype)
-    myinterface%params_tile%FLDCAP       = real( FLDCAP )
-    myinterface%params_tile%WILTPT       = real( WILTPT )
-    myinterface%params_tile%K1           = real( K1 )
-    myinterface%params_tile%K2           = real( K2 )
-    myinterface%params_tile%K_nitrogen   = real( K_nitrogen )
-    myinterface%params_tile%MLmixRatio   = real( MLmixRatio )
-    myinterface%params_tile%etaN         = real( etaN )
-    myinterface%params_tile%LMAmin       = real( LMAmin )
-    myinterface%params_tile%fsc_fine     = real( fsc_fine )
-    myinterface%params_tile%fsc_wood     = real( fsc_wood )
-    myinterface%params_tile%GR_factor    = real( GR_factor )
-    myinterface%params_tile%l_fract      = real( l_fract )
-    myinterface%params_tile%retransN     = real( retransN )
-    myinterface%params_tile%f_initialBSW = real( f_initialBSW )
-    myinterface%params_tile%f_N_add      = real( f_N_add )
-    myinterface%params_tile%tf_base      = real( tf_base )
-    myinterface%params_tile%par_mort     = real( par_mort )
-    myinterface%params_tile%par_mort_under  = real( par_mort_under )
+    myinterface%params_tile%soiltype     = int( params_tile(1) )
+    myinterface%params_tile%FLDCAP       = real( params_tile(2) )
+    myinterface%params_tile%WILTPT       = real( params_tile(3) )
+    myinterface%params_tile%K1           = real( params_tile(4) )
+    myinterface%params_tile%K2           = real( params_tile(5) )
+    myinterface%params_tile%K_nitrogen   = real( params_tile(6) )
+    myinterface%params_tile%MLmixRatio   = real( params_tile(7) )
+    myinterface%params_tile%etaN         = real( params_tile(8) )
+    myinterface%params_tile%LMAmin       = real( params_tile(9) )
+    myinterface%params_tile%fsc_fine     = real( params_tile(10) )
+    myinterface%params_tile%fsc_wood     = real( params_tile(11) )
+    myinterface%params_tile%GR_factor    = real( params_tile(12) )
+    myinterface%params_tile%l_fract      = real( params_tile(13) )
+    myinterface%params_tile%retransN     = real( params_tile(14) )
+    myinterface%params_tile%f_initialBSW = real( params_tile(15) )
+    myinterface%params_tile%f_N_add      = real( params_tile(16) )
+    myinterface%params_tile%tf_base      = real( params_tile(17) )
+    myinterface%params_tile%par_mort     = real( params_tile(18) )
+    myinterface%params_tile%par_mort_under  = real( params_tile(19) )
 
     ! Species parameters
     allocate(myinterface%params_species(n_params_species))

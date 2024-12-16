@@ -453,25 +453,7 @@ run_biomee_f_bysite <- function(
       altitude              = as.numeric(site_info$elv),
       
       ## Tile-level parameters
-      soiltype       = as.integer(params_tile$soiltype),
-      FLDCAP         = as.numeric(params_tile$FLDCAP),
-      WILTPT         = as.numeric(params_tile$WILTPT),
-      K1             = as.numeric(params_tile$K1),
-      K2             = as.numeric(params_tile$K2),
-      K_nitrogen     = as.numeric(params_tile$K_nitrogen),
-      MLmixRatio     = as.numeric(params_tile$MLmixRatio),
-      etaN           = as.numeric(params_tile$etaN),
-      LMAmin         = as.numeric(params_tile$LMAmin),
-      fsc_fine       = as.numeric(params_tile$fsc_fine),
-      fsc_wood       = as.numeric(params_tile$fsc_wood),
-      GR_factor      = as.numeric(params_tile$GR_factor),
-      l_fract        = as.numeric(params_tile$l_fract),
-      retransN       = as.numeric(params_tile$retransN),
-      f_initialBSW   = as.numeric(params_tile$f_initialBSW),
-      f_N_add        = as.numeric(params_tile$f_N_add),
-      tf_base        = as.numeric(params_tile$tf_base),
-      par_mort       = as.numeric(params_tile$par_mort),
-      par_mort_under = as.numeric(params_tile$par_mort_under),
+      params_tile      = as.matrix(params_tile),
       
       ## Species-specific parameters
       n_params_species = as.integer(nrow(params_species)),
