@@ -298,6 +298,9 @@ run_biomee_f_bysite <- function(
     (params_siml$spinupyears + params_siml$nyeartrend),
     params_siml$nyeartrend
   )
+
+  n_annual_cohorts <- params_siml$nyeartrend # to get cohort outputs after spinup year
+  #n_annual_cohorts = runyears # to get cohort outputs from year 1
   
   n_daily  <- params_siml$nyeartrend * 365
   
@@ -456,7 +459,6 @@ run_biomee_f_bysite <- function(
       params_tile      = as.matrix(params_tile),
       
       ## Species-specific parameters
-      n_params_species = as.integer(nrow(params_species)),
       params_species   = as.matrix(params_species),
       
       ## initial cohort
@@ -467,8 +469,8 @@ run_biomee_f_bysite <- function(
 
       n_daily          = as.integer(n_daily), 
       n_annual         = as.integer(runyears),
-      n_annual_cohorts = as.integer(params_siml$nyeartrend), # to get cohort outputs after spinup year
-      #n_annual_cohorts = as.integer(runyears), # to get cohort outputs from year 1
+      n_annual_cohorts = as.integer(n_annual_cohorts),
+
       forcing          = as.matrix(forcing),
       lu               = as.vector(init_lu),
       luc              = as.matrix(luc)

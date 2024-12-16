@@ -161,7 +161,6 @@ extern SEXP biomee_f_C(
     SEXP latitude,                  
     SEXP altitude,                 
     SEXP params_tile,
-    SEXP n_params_species,
     SEXP params_species,
     SEXP init_cohort,
     SEXP init_soil,
@@ -177,7 +176,7 @@ extern SEXP biomee_f_C(
     int nt_daily = asInteger(n_daily);
     int nt_annual = asInteger(n_annual);
     int nt_annual_cohorts = asInteger(n_annual_cohorts);
-    int n_init_cohort, nt, n_lu, n_lu_tr, n_lu_tr_years;
+    int n_init_cohort, n_params_species, nt, n_lu, n_lu_tr, n_lu_tr_years;
     SEXP Rdim;
     // Output as list
     SEXP out_list = PROTECT( allocVector(VECSXP, 3) );
@@ -192,6 +191,8 @@ extern SEXP biomee_f_C(
     SEXP test = PROTECT(allocArray(INTSXP, dims));*/
 
     // Extracting array dimensions (they need to be passed to fortran separately)
+    Rdim = getAttrib(params_species,R_DimSymbol);
+    n_params_species = asInteger(Rdim);
     Rdim = getAttrib(init_cohort,R_DimSymbol);
     n_init_cohort = asInteger(Rdim);
     Rdim = getAttrib(forcing,R_DimSymbol);
@@ -224,7 +225,7 @@ extern SEXP biomee_f_C(
         REAL(latitude),                  
         REAL(altitude),                  
         REAL(params_tile),
-        INTEGER(n_params_species),
+        &n_params_species,
         REAL(params_species),
         &n_init_cohort,
         REAL(init_cohort),
@@ -258,7 +259,7 @@ extern SEXP biomee_f_C(
 /////////////////////////////////////////////////////////////
 static const R_CallMethodDef CallEntries[] = {
   {"pmodel_f_C",   (DL_FUNC) &pmodel_f_C,   23},  // Specify number of arguments to C wrapper as the last number here
-  {"biomee_f_C",   (DL_FUNC) &biomee_f_C,   25},  // Number of arguments of the C wrapper function for biomee (the SEXP variables, not the output)
+  {"biomee_f_C",   (DL_FUNC) &biomee_f_C,   24},  // Number of arguments of the C wrapper function for biomee (the SEXP variables, not the output)
   { NULL,          NULL,                    0 }
 };
 
