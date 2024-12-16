@@ -259,19 +259,14 @@ run_biomee_f_bysite <- function(
 
   # If init_lu is null, we create dummy LU initial state containing only one state (with a fraction of 1)
   if (is.null(init_lu))
-    init_lu <- c(1.0)
+    init_lu <- data.frame(name=c('data'), fraction=c(1.0))
 
   # Number of LU states
-  n_lu <- length(init_lu)
-
-  # Number of LU transitions
-  # Note: we assume any state can transition to any other state.
-  # This simplifies greatly the implementation of a generic solution on the Fortran side
-  n_lu_tr <- n_lu ^ 2
+  n_lu <- nrow(init_lu)
 
   # If luc is null, we create  dummy LU transition matrix containing one all-zero transition
   if (is.null(luc))
-    luc <- data.frame(rep(0.0, n_lu_tr))
+    luc_forcing <- array(rep(0, n_lu ^ 2), c(n_lu, n_lu, 1))
 
   # base state, always execute the call
   continue <- TRUE
@@ -302,7 +297,7 @@ run_biomee_f_bysite <- function(
   n_annual_cohorts <- params_siml$nyeartrend # to get cohort outputs after spinup year
   #n_annual_cohorts = runyears # to get cohort outputs from year 1
   
-  n_daily  <- params_siml$nyeartrend * 365
+  n_daily  <- params_siml$nyeartrend * ndayyear
   
   # Types of photosynthesis model
   if (params_siml$method_photosynth == "gs_leuning"){
@@ -472,8 +467,8 @@ run_biomee_f_bysite <- function(
       n_annual_cohorts = as.integer(n_annual_cohorts),
 
       forcing          = as.matrix(forcing),
-      lu               = as.vector(init_lu),
-      luc              = as.matrix(luc)
+      init_lu          = as.matrix(select(init_lu, -'name')),
+      luc              = as.array(luc_forcing)
     )
     
     # If simulation is very long, output gets massive.

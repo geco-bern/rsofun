@@ -136,9 +136,8 @@ void F77_NAME(biomee_f)(
     double *forcing,
     int    *n_lu,
     double *init_lu,
-    int    *n_lu_tr,
     int    *n_lu_tr_years,
-    double *luc,
+    double *luc_forcing,
     double *output_daily_tile,
     double *output_annual_tile,
     double *output_annual_cohorts
@@ -169,14 +168,14 @@ extern SEXP biomee_f_C(
     SEXP n_annual_cohorts,                
     SEXP forcing,
     SEXP init_lu,
-    SEXP luc
+    SEXP luc_forcing
     ){
 
     // Number of time steps (same in forcing and output)
     int nt_daily = asInteger(n_daily);
     int nt_annual = asInteger(n_annual);
     int nt_annual_cohorts = asInteger(n_annual_cohorts);
-    int n_init_cohort, n_params_species, nt, n_lu, n_lu_tr, n_lu_tr_years;
+    int n_init_cohort, n_params_species, nt, n_lu, n_lu_tr_years;
     SEXP Rdim;
     // Output as list
     SEXP out_list = PROTECT( allocVector(VECSXP, 3) );
@@ -197,10 +196,11 @@ extern SEXP biomee_f_C(
     n_init_cohort = asInteger(Rdim);
     Rdim = getAttrib(forcing,R_DimSymbol);
     nt = asInteger(Rdim);
-    n_lu = length(init_lu);
-    Rdim = getAttrib(luc,R_DimSymbol);
-    n_lu_tr = INTEGER(Rdim)[0];
-    n_lu_tr_years = INTEGER(Rdim)[1];
+    Rdim = getAttrib(init_lu,R_DimSymbol);
+    n_lu = asInteger(Rdim);
+    Rdim = getAttrib(luc_forcing,R_DimSymbol);
+    n_lu_tr_years = INTEGER(Rdim)[2];
+
 
     // Specify output
     // 2nd agument to allocMatrix is number of rows, 3rd is number of columns.
@@ -237,9 +237,8 @@ extern SEXP biomee_f_C(
         REAL(forcing),
         &n_lu,
         REAL(init_lu),
-        &n_lu_tr,
         &n_lu_tr_years,
-        REAL(luc),
+        REAL(luc_forcing),
         REAL(output_daily_tile),
         REAL(output_annual_tile),
         REAL(output_annual_cohort_tile)

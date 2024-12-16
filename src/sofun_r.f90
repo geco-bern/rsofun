@@ -243,9 +243,8 @@ contains
     forcing,                      &
     n_lu,                         &
     init_lu,                      &
-    n_lu_tr,                      &
     n_lu_tr_years,                &
-    luc,                          &
+    luc_forcing,                  &
     output_daily_tile,            &
     output_annual_tile,           &
     output_annual_cohorts         &
@@ -294,10 +293,9 @@ contains
 
     ! LULUC
     integer(kind=c_int), intent(in) :: n_lu
-    real(kind=c_double), dimension(n_lu), intent(in) :: init_lu
-    integer(kind=c_int), intent(in) :: n_lu_tr
+    real(kind=c_double), dimension(n_lu,1), intent(in) :: init_lu
     integer(kind=c_int), intent(in) :: n_lu_tr_years
-    real(kind=c_double), dimension(n_lu_tr,n_lu_tr_years), intent(in) :: luc
+    real(kind=c_double), dimension(n_lu,n_lu,n_lu_tr_years), intent(in) :: luc_forcing
 
     integer(kind=c_int), intent(in) :: nt
     integer(kind=c_int), intent(in) :: nt_daily
@@ -322,7 +320,7 @@ contains
     type(outtype_annual_tile)                                         :: out_biosphere_annual_tile
     type(outtype_annual_cohorts), dimension(out_max_cohorts)          :: out_biosphere_annual_cohorts
 
-    integer                 :: yr
+    integer :: yr
     
     integer :: idx
     integer :: idx_daily_start
@@ -475,9 +473,9 @@ contains
 
     ! Initial LU and LUC
     allocate(myinterface%lu_states(n_lu))
-    myinterface%lu_states = real(init_lu)
-    allocate(myinterface%lu_transitions(n_lu, n_lu))
-    myinterface%lu_transitions = 0.0
+    myinterface%lu_states = real(init_lu(:,1))
+    !allocate(myinterface%lu_transitions(n_lu, n_lu))
+    !myinterface%lu_transitions = 0.0
 
     !----------------------------------------------------------------
     ! INTERPRET FORCING
@@ -556,7 +554,7 @@ contains
     deallocate(myinterface%params_species)
     deallocate(myinterface%init_cohort)
     deallocate(myinterface%lu_states)
-    deallocate(myinterface%lu_transitions)
+    !deallocate(myinterface%lu_transitions)
 
   end subroutine biomee_f
 
