@@ -453,40 +453,38 @@ run_biomee_f_bysite <- function(
       altitude              = as.numeric(site_info$elv),
       
       ## Tile-level parameters
-      soiltype     = as.integer(params_tile$soiltype),
-      FLDCAP       = as.numeric(params_tile$FLDCAP),
-      WILTPT       = as.numeric(params_tile$WILTPT),
-      K1           = as.numeric(params_tile$K1),
-      K2           = as.numeric(params_tile$K2),
-      K_nitrogen   = as.numeric(params_tile$K_nitrogen),
-      MLmixRatio   = as.numeric(params_tile$MLmixRatio),
-      etaN         = as.numeric(params_tile$etaN),
-      LMAmin       = as.numeric(params_tile$LMAmin),
-      fsc_fine     = as.numeric(params_tile$fsc_fine),
-      fsc_wood     = as.numeric(params_tile$fsc_wood),
-      GR_factor    = as.numeric(params_tile$GR_factor),
-      l_fract      = as.numeric(params_tile$l_fract),
-      retransN     = as.numeric(params_tile$retransN),
-      f_initialBSW = as.numeric(params_tile$f_initialBSW),
-      f_N_add      = as.numeric(params_tile$f_N_add),
-      tf_base      = as.numeric(params_tile$tf_base),
-      par_mort     = as.numeric(params_tile$par_mort),
+      soiltype       = as.integer(params_tile$soiltype),
+      FLDCAP         = as.numeric(params_tile$FLDCAP),
+      WILTPT         = as.numeric(params_tile$WILTPT),
+      K1             = as.numeric(params_tile$K1),
+      K2             = as.numeric(params_tile$K2),
+      K_nitrogen     = as.numeric(params_tile$K_nitrogen),
+      MLmixRatio     = as.numeric(params_tile$MLmixRatio),
+      etaN           = as.numeric(params_tile$etaN),
+      LMAmin         = as.numeric(params_tile$LMAmin),
+      fsc_fine       = as.numeric(params_tile$fsc_fine),
+      fsc_wood       = as.numeric(params_tile$fsc_wood),
+      GR_factor      = as.numeric(params_tile$GR_factor),
+      l_fract        = as.numeric(params_tile$l_fract),
+      retransN       = as.numeric(params_tile$retransN),
+      f_initialBSW   = as.numeric(params_tile$f_initialBSW),
+      f_N_add        = as.numeric(params_tile$f_N_add),
+      tf_base        = as.numeric(params_tile$tf_base),
+      par_mort       = as.numeric(params_tile$par_mort),
       par_mort_under = as.numeric(params_tile$par_mort_under),
       
       ## Species-specific parameters
       n_params_species = as.integer(nrow(params_species)),
-      params_species = as.matrix(params_species),
+      params_species   = as.matrix(params_species),
       
       ## initial cohort
-      init_cohort = as.matrix(init_cohort),
+      init_cohort      = as.matrix(init_cohort),
       
       ## initial soil pools
-      init_fast_soil_C = as.numeric(init_soil$init_fast_soil_C),
-      init_slow_soil_C = as.numeric(init_soil$init_slow_soil_C),
-      init_Nmineral    = as.numeric(init_soil$init_Nmineral),
-      N_input          = as.numeric(init_soil$N_input),
+      init_soil        = as.matrix(init_soil),
+
       n_daily          = as.integer(n_daily), 
-      n_annual         = as.integer(runyears), 
+      n_annual         = as.integer(runyears),
       n_annual_cohorts = as.integer(params_siml$nyeartrend), # to get cohort outputs after spinup year
       #n_annual_cohorts = as.integer(runyears), # to get cohort outputs from year 1
       forcing          = as.matrix(forcing),

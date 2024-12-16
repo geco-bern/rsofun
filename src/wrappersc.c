@@ -146,10 +146,7 @@ void F77_NAME(biomee_f)(
     double *params_species,
     int    *n_init_cohort,
     double *init_cohort,
-    double *init_fast_soil_C,
-    double *init_slow_soil_C,
-    double *init_Nmineral,
-    double *N_input,
+    double *init_soil,
     int    *nt,
     int    *nt_daily,
     int    *nt_annual,
@@ -203,10 +200,7 @@ extern SEXP biomee_f_C(
     SEXP n_params_species,
     SEXP params_species,
     SEXP init_cohort,
-    SEXP init_fast_soil_C,
-    SEXP init_slow_soil_C,
-    SEXP init_Nmineral,
-    SEXP N_input,
+    SEXP init_soil,
     SEXP n_daily,
     SEXP n_annual,                
     SEXP n_annual_cohorts,                
@@ -288,10 +282,7 @@ extern SEXP biomee_f_C(
         REAL(params_species),
         &n_init_cohort,
         REAL(init_cohort),
-        REAL(init_fast_soil_C),
-        REAL(init_slow_soil_C),                   
-        REAL(init_Nmineral),                   
-        REAL(N_input),                  
+        REAL(init_soil),
         &nt,
         &nt_daily,
         &nt_annual,
@@ -321,7 +312,7 @@ extern SEXP biomee_f_C(
 /////////////////////////////////////////////////////////////
 static const R_CallMethodDef CallEntries[] = {
   {"pmodel_f_C",   (DL_FUNC) &pmodel_f_C,   23},  // Specify number of arguments to C wrapper as the last number here
-  {"biomee_f_C",   (DL_FUNC) &biomee_f_C,   46},  // Number of arguments of the C wrapper function for biomee (the SEXP variables, not the output)
+  {"biomee_f_C",   (DL_FUNC) &biomee_f_C,   43},  // Number of arguments of the C wrapper function for biomee (the SEXP variables, not the output)
   { NULL,          NULL,                    0 }
 };
 

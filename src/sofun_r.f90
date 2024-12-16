@@ -253,10 +253,7 @@ contains
     params_species,               &
     n_init_cohort,                &
     init_cohort,                  &
-    init_fast_soil_C,             &
-    init_slow_soil_C,             &              
-    init_Nmineral,                &           
-    N_input,                      &     
+    init_soil,                    &
     nt,                           &  
     nt_daily,                     &    
     nt_annual,                    &    
@@ -270,40 +267,6 @@ contains
     output_daily_tile,            &
     output_annual_tile,           &
     output_annual_cohorts         &
-    !output_annual_cohorts_year,   &
-    !output_annual_cohorts_cID,    &
-    !output_annual_cohorts_PFT,    &
-    !output_annual_cohorts_layer,  &
-    !output_annual_cohorts_density,&
-    !output_annual_cohorts_flayer, &
-    !output_annual_cohorts_DBH,    &
-    !output_annual_cohorts_dDBH,   &
-    !output_annual_cohorts_height, &
-    !output_annual_cohorts_age,    &
-    !output_annual_cohorts_BA,     &
-    !output_annual_cohorts_dBA,    &
-    !output_annual_cohorts_Acrown, &
-    !output_annual_cohorts_Aleaf,  &
-    !output_annual_cohorts_nsc,    &
-    !output_annual_cohorts_nsn,    &
-    !output_annual_cohorts_seedC,  &
-    !output_annual_cohorts_leafC,  &
-    !output_annual_cohorts_rootC,  &
-    !output_annual_cohorts_sapwC,  &
-    !output_annual_cohorts_woodC,  &
-    !output_annual_cohorts_treeG,  &
-    !output_annual_cohorts_fseed,  &
-    !output_annual_cohorts_fleaf,  &
-    !output_annual_cohorts_froot,  &
-    !output_annual_cohorts_fwood,  &
-    !output_annual_cohorts_GPP,    &
-    !output_annual_cohorts_NPP,    &
-    !output_annual_cohorts_Rauto,  &
-    !output_annual_cohorts_Nupt,   &
-    !output_annual_cohorts_Nfix,   &
-    !output_annual_cohorts_n_deadtrees,  &
-    !output_annual_cohorts_c_deadtrees,  &
-    !output_annual_cohorts_deathrate  &
     ) bind(C, name = "biomee_f_")
      
     !////////////////////////////////////////////////////////////////
@@ -365,12 +328,7 @@ contains
     real(kind=c_double), dimension(n_params_species,55), intent(in) :: params_species
     integer(kind=c_int), intent(in) :: n_init_cohort
     real(kind=c_double), dimension(n_init_cohort,9),  intent(in) :: init_cohort
-
-    ! initial soil pool size
-    real(kind=c_double), intent(in) :: init_fast_soil_C
-    real(kind=c_double), intent(in) :: init_slow_soil_C
-    real(kind=c_double), intent(in) :: init_Nmineral
-    real(kind=c_double), intent(in) :: N_input
+    real(kind=c_double), dimension(4),  intent(in) :: init_soil
 
     ! LULUC
     integer(kind=c_int), intent(in) :: n_lu
@@ -548,10 +506,10 @@ contains
     myinterface%init_cohort(:)%init_cohort_nsc     = real(init_cohort(:,8))
 
     ! Initial soil pools
-    myinterface%init_soil%init_fast_soil_C = real( init_fast_soil_C )
-    myinterface%init_soil%init_slow_soil_C = real( init_slow_soil_C )
-    myinterface%init_soil%init_Nmineral    = real( init_Nmineral )
-    myinterface%init_soil%N_input          = real( N_input )
+    myinterface%init_soil%init_fast_soil_C = real( init_soil(1) )
+    myinterface%init_soil%init_slow_soil_C = real( init_soil(2) )
+    myinterface%init_soil%init_Nmineral    = real( init_soil(3) )
+    myinterface%init_soil%N_input          = real( init_soil(4) )
 
     ! Initial LU and LUC
     allocate(myinterface%lu_states(n_lu))
