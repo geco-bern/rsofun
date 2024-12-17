@@ -190,8 +190,103 @@
 #' )
 #' }
 
-`%nin%` <- Negate(`%in%`)
-ndayyear <- 365
+run_biomee_f_bysite <- function(
+  sitename,
+  params_siml,
+  site_info,
+  forcing,
+  params_tile,
+  params_species,
+  init_cohort,
+  init_soil,
+  makecheck = TRUE,
+  init_lu = NULL,
+  luc_forcing = NULL
+){
+  ndayyear <- 365
+  # record number of years in forcing data
+  # frame to use as default values (unless provided othrwise as params_siml$nyeartrend)
+  forcing_years <- nrow(forcing)/(ndayyear * params_siml$steps_per_day)
+
+  params_siml <- build_params_siml(params_siml, forcing_years, makecheck)
+  init_lu <- build_init_lu(init_lu)
+  luc_forcing <- build_luc_forcing(luc_forcing, init_lu)
+
+
+  n_daily  <- params_siml$nyeartrend * ndayyear
+  n_annual <- ifelse(
+    params_siml$spinup,
+    (params_siml$spinupyears + params_siml$nyeartrend),
+    params_siml$nyeartrend
+  )
+  n_annual_cohorts <- params_siml$nyeartrend
+
+  ## C wrapper call
+  biomeeout <- .Call(
+    'biomee_f_C',
+    params_siml      = as.matrix(prepare_params_siml(params_siml)),
+    site_info        = as.matrix(prepare_site_info(site_info)),
+    params_tile      = as.matrix(prepare_params_tile(params_tile)),
+    params_species   = as.matrix(prepare_params_species(params_species)),
+    init_cohort      = as.matrix(prepare_init_cohorts(init_cohort)),
+    init_soil        = as.matrix(prepare_init_soil(init_soil)),
+    forcing          = as.matrix(prepare_forcing(forcing)),
+    init_lu          = as.matrix(prepare_init_lu(init_lu)),
+    luc_forcing      = as.array(prepare_luc_forcing(luc_forcing)),
+    n_daily          = as.integer(n_daily),
+    n_annual         = as.integer(n_annual),
+    n_annual_cohorts = as.integer(n_annual_cohorts)
+  )
+
+  # If simulation is very long, output gets massive.
+  # E.g., In a 3000 years-simulation 'biomeeout' is 11.5 GB.
+  # In such cases (here, more than 5 GB), ignore hourly and daily outputs at tile and cohort levels
+  size_of_object_gb <- as.numeric(
+    gsub(
+      pattern = " Gb",
+      replacement = "",
+      format(
+        utils::object.size(biomeeout),
+        units = "GB"
+      )
+    )
+  )
+
+  if (size_of_object_gb >= 5){
+    warning(
+      sprintf("Warning: Excessive size of output object (%s) for %s.
+              Hourly and daily outputs at tile and cohort levels are not returned.",
+              format(
+                utils::object.size(biomeeout),
+                units = "GB"
+              ),
+              sitename))
+  }
+
+  # daily_tile
+  if (size_of_object_gb < 5){
+    output_daily_tile <- daily_tile_output(biomeeout[[1]])
+  } else {
+    output_daily_tile <- NA
+  }
+
+  # annual tile
+  output_annual_tile <- annual_tile_output(biomeeout[[2]])
+
+  # annual cohorts
+  output_annual_cohorts <- annual_cohort_output(biomeeout[[3]])
+
+
+  # format the output in a structured list
+  out <- list(
+    output_daily_tile = output_daily_tile,
+    output_annual_tile = output_annual_tile,
+    output_annual_cohorts = output_annual_cohorts
+  )
+
+  return(out)
+
+}
 
 ###### Build and prepare inputs #######
 # build_xxx functions check the parameters/data and add default parameters
@@ -200,6 +295,7 @@ ndayyear <- 365
 # In particular, we remove columns containing characters (to not encounter issues within Fortran).
 
 build_params_siml <- function(params_siml, forcing_years, makecheck){
+  `%nin%` <- Negate(`%in%`)
   if ("spinup" %nin% names(params_siml))
     params_siml$spinup <- params_siml$spinupyears > 0
   else
@@ -615,103 +711,6 @@ annual_cohort_output <- function(raw_data){
   output_annual_cohorts <- output_annual_cohorts[!is.na(output_annual_cohorts$year),]
 
   return(output_annual_cohorts)
-}
-
-run_biomee_f_bysite <- function(
-    sitename,
-    params_siml,
-    site_info,
-    forcing,
-    params_tile,
-    params_species,
-    init_cohort,
-    init_soil,
-    makecheck = TRUE,
-    init_lu = NULL,
-    luc_forcing = NULL
-){
-  # record number of years in forcing data
-  # frame to use as default values (unless provided othrwise as params_siml$nyeartrend)
-  forcing_years <- nrow(forcing)/(ndayyear * params_siml$steps_per_day)
-
-  params_siml <- build_params_siml(params_siml, forcing_years, makecheck)
-  init_lu <- build_init_lu(init_lu)
-  luc_forcing <- build_luc_forcing(luc_forcing, init_lu)
-
-
-  n_daily  <- params_siml$nyeartrend * ndayyear
-  n_annual <- ifelse(
-    params_siml$spinup,
-    (params_siml$spinupyears + params_siml$nyeartrend),
-    params_siml$nyeartrend
-  )
-  n_annual_cohorts <- params_siml$nyeartrend
-
-  ## C wrapper call
-  biomeeout <- .Call(
-    'biomee_f_C',
-    params_siml      = as.matrix(prepare_params_siml(params_siml)),
-    site_info        = as.matrix(prepare_site_info(site_info)),
-    params_tile      = as.matrix(prepare_params_tile(params_tile)),
-    params_species   = as.matrix(prepare_params_species(params_species)),
-    init_cohort      = as.matrix(prepare_init_cohorts(init_cohort)),
-    init_soil        = as.matrix(prepare_init_soil(init_soil)),
-    forcing          = as.matrix(prepare_forcing(forcing)),
-    init_lu          = as.matrix(prepare_init_lu(init_lu)),
-    luc_forcing      = as.array(prepare_luc_forcing(luc_forcing)),
-    n_daily          = as.integer(n_daily),
-    n_annual         = as.integer(n_annual),
-    n_annual_cohorts = as.integer(n_annual_cohorts)
-  )
-
-  # If simulation is very long, output gets massive.
-  # E.g., In a 3000 years-simulation 'biomeeout' is 11.5 GB.
-  # In such cases (here, more than 5 GB), ignore hourly and daily outputs at tile and cohort levels
-  size_of_object_gb <- as.numeric(
-    gsub(
-      pattern = " Gb",
-      replacement = "",
-      format(
-        utils::object.size(biomeeout),
-        units = "GB"
-      )
-    )
-  )
-
-  if (size_of_object_gb >= 5){
-    warning(
-      sprintf("Warning: Excessive size of output object (%s) for %s.
-              Hourly and daily outputs at tile and cohort levels are not returned.",
-              format(
-                utils::object.size(biomeeout),
-                units = "GB"
-              ),
-              sitename))
-  }
-
-  # daily_tile
-  if (size_of_object_gb < 5){
-    output_daily_tile <- daily_tile_output(biomeeout[[1]])
-  } else {
-    output_daily_tile <- NA
-  }
-
-  # annual tile
-  output_annual_tile <- annual_tile_output(biomeeout[[2]])
-
-  # annual cohorts
-  output_annual_cohorts <- annual_cohort_output(biomeeout[[3]])
-
-
-  # format the output in a structured list
-  out <- list(
-    output_daily_tile = output_daily_tile,
-    output_annual_tile = output_annual_tile,
-    output_annual_cohorts = output_annual_cohorts
-  )
-
-  return(out)
-  
 }
 
 .onUnload <- function(libpath) {

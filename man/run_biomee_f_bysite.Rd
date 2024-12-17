@@ -15,7 +15,7 @@ run_biomee_f_bysite(
   init_soil,
   makecheck = TRUE,
   init_lu = NULL,
-  luc = NULL
+  luc_forcing = NULL
 )
 }
 \arguments{
