@@ -12,6 +12,8 @@
 #' @param init_cohort A data.frame of initial cohort specifications.
 #' @param init_soil A data.frame of initial soil pools.
 #' @param makecheck A logical specifying whether checks are performed to verify forcings and model parameters. \code{TRUE} by default.
+#' @param init_lu A data.frame of initial land unit (LU) specifications.
+#' @param luc_forcing A data.frame of land use change (LUC).
 #'
 #' For further specifications of above inputs and examples see \code{\link{biomee_gs_leuning_drivers}} or \code{\link{biomee_p_model_drivers}}.
 #' 
@@ -211,7 +213,8 @@ run_biomee_f_bysite <- function(
   # Add default parameters (backward compatibility layer)
   params_siml <- build_params_siml(params_siml, forcing_years, makecheck)
   init_lu     <- build_init_lu(init_lu)
-  luc_forcing <- build_luc_forcing(luc_forcing, init_lu)
+  n_lu <- nrow(init_lu) # Number of LU states
+  luc_forcing <- build_luc_forcing(luc_forcing, n_lu)
 
   # Set up variables used by C wrapper to build output arrays
   n_daily  <- params_siml$nyeartrend * ndayyear
@@ -220,7 +223,7 @@ run_biomee_f_bysite <- function(
     (params_siml$spinupyears + params_siml$nyeartrend),
     params_siml$nyeartrend
   )
-  n_annual_cohorts <- params_siml$nyeartrend
+  n_annual_trans <- params_siml$nyeartrend
 
   ## C wrapper call (using prepped data)
   biomeeout <- .Call(
@@ -236,9 +239,15 @@ run_biomee_f_bysite <- function(
     luc_forcing      = as.array(prepare_luc_forcing(luc_forcing)),
     n_daily          = as.integer(n_daily),
     n_annual         = as.integer(n_annual),
-    n_annual_cohorts = as.integer(n_annual_cohorts)
+    n_annual_trans = as.integer(n_annual_trans)
   )
 
+  out <- build_out(biomeeout, init_lu$name)
+
+  return(out)
+}
+
+build_out <- function(biomeeout, lu_names){
   # If simulation is very long, output gets massive.
   # E.g., In a 3000 years-simulation 'biomeeout' is 11.5 GB.
   # In such cases (here, more than 5 GB), ignore hourly and daily outputs at tile and cohort levels
@@ -253,10 +262,12 @@ run_biomee_f_bysite <- function(
     )
   )
 
-  if (size_of_object_gb >= 5){
+  trimmed_object <- size_of_object_gb >= 5
+
+  if (trimmed_object){
     warning(
       sprintf("Warning: Excessive size of output object (%s) for %s.
-              Hourly and daily outputs at tile and cohort levels are not returned.",
+              Daily outputs are not returned.",
               format(
                 utils::object.size(biomeeout),
                 units = "GB"
@@ -264,29 +275,49 @@ run_biomee_f_bysite <- function(
               sitename))
   }
 
+  n_lu <- length(lu_names)
+
+  if (n_lu == 1)
+    out <- list("data"=build_lu_out(biomeeout, 1, trimmed_object))
+  else {
+    out <- list() #TODO: LU aggregation
+    for (lu in 1:n_lu) {
+      res <- build_lu_out(biomeeout, lu, trimmed_object)
+      out <- append(out, list(res))
+    }
+    names(out) <- lu_names
+  }
+
+  return(out)
+}
+
+build_lu_out <- function(biomeeout, lu, trimmed_object){
   # daily_tile
-  if (size_of_object_gb < 5){
-    output_daily_tile <- daily_tile_output(biomeeout[[1]])
+  if (!trimmed_object){
+    output_daily_tile <- daily_tile_output(biomeeout[[1]][,,lu])
   } else {
     output_daily_tile <- NA
   }
 
   # annual tile
-  output_annual_tile <- annual_tile_output(biomeeout[[2]])
+  output_annual_tile <- annual_tile_output(biomeeout[[2]][,,lu])
 
   # annual cohorts
-  output_annual_cohorts <- annual_cohort_output(biomeeout[[3]])
+  output_annual_cohorts <- annual_cohort_output(biomeeout[[3]][,,,lu])
+
+  # Annual land use
+  output_annual_land_use <- land_use_annual_tile_output(biomeeout[[4]][,,lu])
 
 
   # format the output in a structured list
-  out <- list(
+  out_lu <- list(
     output_daily_tile = output_daily_tile,
     output_annual_tile = output_annual_tile,
-    output_annual_cohorts = output_annual_cohorts
+    output_annual_cohorts = output_annual_cohorts,
+    output_annual_land_use = output_annual_land_use
   )
 
-  return(out)
-
+  return(out_lu)
 }
 
 ###### Build and prepare inputs #######
@@ -372,17 +403,17 @@ build_params_siml <- function(params_siml, forcing_years, makecheck){
 
 prepare_params_siml <- function(params_siml){
   params_siml <- params_siml %>% select(
-    spinup,
-    spinupyears,
-    recycle,
-    firstyeartrend,
-    nyeartrend,
-    steps_per_day,
-    do_U_shaped_mortality,
-    update_annualLAImax,
-    do_closedN_run,
-    code_method_photosynth,
-    code_method_mortality
+    "spinup",
+    "spinupyears",
+    "recycle",
+    "firstyeartrend",
+    "nyeartrend",
+    "steps_per_day",
+    "do_U_shaped_mortality",
+    "update_annualLAImax",
+    "do_closedN_run",
+    "code_method_photosynth",
+    "code_method_mortality"
   )
 
   return(params_siml)
@@ -391,7 +422,7 @@ prepare_params_siml <- function(params_siml){
 build_init_lu <- function(init_lu){
   # If init_lu is null, we create dummy LU initial state containing only one state (with a fraction of 1)
   if (is.null(init_lu))
-    init_lu <- data.frame(name=c('data'), fraction=c(1.0))
+    init_lu <- data.frame(name=c('primary'), fraction=c(1.0))
 
   return(init_lu)
 }
@@ -403,10 +434,7 @@ prepare_init_lu <- function(init_lu){
   return(init_lu)
 }
 
-build_luc_forcing <- function(luc_forcing, init_lu){
-  # Number of LU states
-  n_lu <- nrow(init_lu)
-
+build_luc_forcing <- function(luc_forcing, n_lu){
   # If luc is null, we create  dummy LU transition matrix containing one all-zero transition
   if (is.null(luc_forcing))
     luc_forcing <- array(rep(0, n_lu ^ 2), c(n_lu, n_lu, 1))
@@ -421,22 +449,22 @@ prepare_luc_forcing <- function(luc_forcing){
 prepare_forcing <- function(forcing){
   forcing <- forcing %>%
     select(
-      ppfd,
-      temp,
-      vpd,
-      rain,
-      wind,
-      patm,
-      co2
+      "ppfd",
+      "temp",
+      "vpd",
+      "rain",
+      "wind",
+      "patm",
+      "co2"
     )
   return(forcing)
 }
 
 prepare_site_info <- function(site_info){
   site_info <- site_info %>% select(
-    lon,
-    lat,
-    elv
+    "lon",
+    "lat",
+    "elv"
   )
   return(site_info)
 }
@@ -445,14 +473,14 @@ prepare_init_cohorts <- function(init_cohort){
   if ('init_n_cohorts' %in% names(init_cohort)) {
     warning("Warning: Ignoring column 'init_n_cohorts' under 'init_cohort' in drivers. It has been phased out and should be removed from drivers.")
     init_cohort <- init_cohort %>% select(
-      init_cohort_species,
-      init_cohort_nindivs,
-      init_cohort_bl,
-      init_cohort_br,
-      init_cohort_bsw,
-      init_cohort_bHW,
-      init_cohort_seedC,
-      init_cohort_nsc
+      "init_cohort_species",
+      "init_cohort_nindivs",
+      "init_cohort_bl",
+      "init_cohort_br",
+      "init_cohort_bsw",
+      "init_cohort_bHW",
+      "init_cohort_seedC",
+      "init_cohort_nsc"
     )
   }
 
@@ -461,96 +489,96 @@ prepare_init_cohorts <- function(init_cohort){
 
 prepare_params_tile <- function(params_tile){
   params_tile <- params_tile %>% select(
-    soiltype,
-    FLDCAP,
-    WILTPT,
-    K1,
-    K2,
-    K_nitrogen,
-    MLmixRatio,
-    etaN,
-    LMAmin,
-    fsc_fine,
-    fsc_wood,
-    GR_factor,
-    l_fract,
-    retransN,
-    f_initialBSW,
-    f_N_add ,
-    tf_base,
-    par_mort,
-    par_mort_under
+    "soiltype",
+    "FLDCAP",
+    "WILTPT",
+    "K1",
+    "K2",
+    "K_nitrogen",
+    "MLmixRatio",
+    "etaN",
+    "LMAmin",
+    "fsc_fine",
+    "fsc_wood",
+    "GR_factor",
+    "l_fract",
+    "retransN",
+    "f_initialBSW",
+    "f_N_add",
+    "tf_base",
+    "par_mort",
+    "par_mort_under"
   )
   return(params_tile)
 }
 
 prepare_params_species <- function(params_species){
   params_species <- params_species %>% select(
-    lifeform,
-    phenotype,
-    pt,
-    alpha_FR,
-    rho_FR,
-    root_r,
-    root_zeta,
-    Kw_root,
-    leaf_size,
-    Vmax,
-    Vannual,
-    wet_leaf_dreg,
-    m_cond,
-    alpha_phot,
-    gamma_L,
-    gamma_LN,
-    gamma_SW,
-    gamma_FR,
-    tc_crit,
-    tc_crit_on,
-    gdd_crit,
-    betaON,
-    betaOFF,
-    alphaHT,
-    thetaHT,
-    alphaCA,
-    thetaCA,
-    alphaBM,
-    thetaBM,
-    seedlingsize,
-    maturalage,
-    v_seed,
-    mortrate_d_c,
-    mortrate_d_u,
-    LMA,
-    leafLS,
-    LNbase,
-    CNleafsupport,
-    rho_wood,
-    taperfactor,
-    lAImax,
-    tauNSC,
-    fNSNmax,
-    phiCSA,
-    CNleaf0,
-    CNsw0,
-    CNwood0,
-    CNroot0,
-    CNseed0,
-    Nfixrate0,
-    NfixCost0,
-    internal_gap_frac,
-    kphio,
-    phiRL,
-    LAI_light
+    "lifeform",
+    "phenotype",
+    "pt",
+    "alpha_FR",
+    "rho_FR",
+    "root_r",
+    "root_zeta",
+    "Kw_root",
+    "leaf_size",
+    "Vmax",
+    "Vannual",
+    "wet_leaf_dreg",
+    "m_cond",
+    "alpha_phot",
+    "gamma_L",
+    "gamma_LN",
+    "gamma_SW",
+    "gamma_FR",
+    "tc_crit",
+    "tc_crit_on",
+    "gdd_crit",
+    "betaON",
+    "betaOFF",
+    "alphaHT",
+    "thetaHT",
+    "alphaCA",
+    "thetaCA",
+    "alphaBM",
+    "thetaBM",
+    "seedlingsize",
+    "maturalage",
+    "v_seed",
+    "mortrate_d_c",
+    "mortrate_d_u",
+    "LMA",
+    "leafLS",
+    "LNbase",
+    "CNleafsupport",
+    "rho_wood",
+    "taperfactor",
+    "lAImax",
+    "tauNSC",
+    "fNSNmax",
+    "phiCSA",
+    "CNleaf0",
+    "CNsw0",
+    "CNwood0",
+    "CNroot0",
+    "CNseed0",
+    "Nfixrate0",
+    "NfixCost0",
+    "internal_gap_frac",
+    "kphio",
+    "phiRL",
+    "LAI_light"
   )
   return(params_species)
 }
 
 prepare_init_soil <- function(init_soil){
   init_soil <- init_soil %>% select(
-    init_fast_soil_C,
-    init_slow_soil_C,
-    init_Nmineral,
-    N_input
+    "init_fast_soil_C",
+    "init_slow_soil_C",
+    "init_Nmineral",
+    "N_input"
   )
 }
 
@@ -657,10 +685,83 @@ annual_tile_output <- function(raw_data){
     "n_deadtrees",
     "c_deadtrees",
     "m_turnover",
-    "c_turnover_time",
-    "lu_fraction"
+    "c_turnover_time"
   )
   return(output_annual_tile)
+}
+
+annual_tile_output <- function(raw_data){
+  output_annual_tile <- as.data.frame(raw_data, stringAsFactor = FALSE)
+  colnames(output_annual_tile) <- c(
+    "year",
+    "CAI",
+    "LAI",
+    "Density",
+    "DBH",
+    "Density12",
+    "DBH12",
+    "QMD12",
+    "NPP",
+    "GPP",
+    "Rauto",
+    "Rh",
+    "rain",
+    "SoilWater",
+    "Transp",
+    "Evap",
+    "Runoff",
+    "plantC",
+    "soilC",
+    "plantN",
+    "soilN",
+    "totN",
+    "NSC",
+    "SeedC",
+    "leafC",
+    "rootC",
+    "SapwoodC",
+    "WoodC",
+    "NSN",
+    "SeedN",
+    "leafN",
+    "rootN",
+    "SapwoodN",
+    "WoodN",
+    "McrbC",
+    "fastSOM",
+    "SlowSOM",
+    "McrbN",
+    "fastSoilN",
+    "slowSoilN",
+    "mineralN",
+    "N_fxed",
+    "N_uptk",
+    "N_yrMin",
+    "N_P2S",
+    "N_loss",
+    "totseedC",
+    "totseedN",
+    "Seedling_C",
+    "Seedling_N",
+    "MaxAge",
+    "MaxVolume",
+    "MaxDBH",
+    "NPPL",
+    "NPPW",
+    "n_deadtrees",
+    "c_deadtrees",
+    "m_turnover",
+    "c_turnover_time"
+  )
+  return(output_annual_tile)
+}
+
+land_use_annual_tile_output <- function(raw_data){
+  output_annual_land_use <- as.data.frame(raw_data, stringAsFactor = FALSE)
+  colnames(output_annual_land_use) <- c(
+    "fraction"
+  )
+  return(output_annual_land_use)
 }
 
 annual_cohort_output <- function(raw_data){
@@ -702,7 +803,7 @@ annual_cohort_output <- function(raw_data){
     "deathrate"
   )
 
-  data_flatten <- matrix(raw_data, prod(dim(raw_data)[1:2]), dim(raw_data)[3])
+  data_flatten <- as.matrix(raw_data, prod(dim(raw_data)[1:2]), dim(raw_data)[3])
   output_annual_cohorts <- as.data.frame(data_flatten, stringAsFactor = FALSE)
   colnames(output_annual_cohorts) <- annual_values
 

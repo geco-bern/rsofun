@@ -100,8 +100,8 @@ runread_biomee_f <- function(
         run_biomee_f_bysite,
         makecheck = makecheck
       )) %>% 
-      dplyr::select(sitename, data) 
-    
+      dplyr::select(sitename, data) |> tidyr::unnest_wider(data)
+
   }
   
   return(df_out)

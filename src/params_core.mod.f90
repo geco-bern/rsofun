@@ -18,7 +18,7 @@ module md_params_core
   integer, parameter :: out_max_cohorts = 50     ! maximum number of cohorts
 
   integer, parameter :: nvars_daily_tile = 35
-  integer, parameter :: nvars_annual_tile = 60
+  integer, parameter :: nvars_annual_tile = 59
   integer, parameter :: nvars_annual_cohorts = 35
 
   !===== Physical constants

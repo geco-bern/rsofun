@@ -148,8 +148,6 @@ module md_interface_biomee
     type(paramstype_tile)                                 :: params_tile
     type(inittype_cohort), dimension(:), allocatable      :: init_cohort
     type(inittype_soil)                                   :: init_soil
-    type(real), dimension(:), allocatable                 :: lu_states
-    type(real), dimension(:,:), allocatable               :: lu_transitions
     integer                                               :: datalines
     integer                                               :: steps_per_day
     real                                                  :: dt_fast_yr
@@ -262,7 +260,6 @@ module md_interface_biomee
     real :: c_deadtrees
     real :: m_turnover
     real :: c_turnover_time
-    real :: lu_fraction
   end type outtype_annual_tile
 
   type outtype_annual_cohorts ! fno2

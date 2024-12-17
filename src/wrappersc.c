@@ -128,7 +128,8 @@ void F77_NAME(biomee_f)(
     double *luc_forcing,
     double *output_daily_tile,
     double *output_annual_tile,
-    double *output_annual_cohorts
+    double *output_annual_cohorts,
+    double *output_annual_luluc
   );
 
 // C wrapper function for biomee
@@ -144,26 +145,15 @@ extern SEXP biomee_f_C(
     SEXP luc_forcing,
     SEXP n_daily,
     SEXP n_annual,
-    SEXP n_annual_cohorts
+    SEXP n_annual_trans
     ){
 
     // Number of time steps (same in forcing and output)
     int nt_daily = asInteger(n_daily);
     int nt_annual = asInteger(n_annual);
-    int nt_annual_cohorts = asInteger(n_annual_cohorts);
+    int nt_annual_trans = asInteger(n_annual_trans);
     int n_init_cohort, n_params_species, nt, n_lu, n_lu_tr_years;
     SEXP Rdim;
-    // Output as list
-    SEXP out_list = PROTECT( allocVector(VECSXP, 3) );
-
-    /*// Example of 4 dimension array
-    // Dimensions
-    int pDims[4] = {2, 3, 4, 5};
-    SEXP dims = allocVector(INTSXP, 4);
-    // INTEGER(dims) is a int* which we initialise with pDims
-    memcpy(INTEGER(dims), pDims, 4 * sizeof(int));
-    // Allocate 4D array
-    SEXP test = PROTECT(allocArray(INTSXP, dims));*/
 
     // Extracting array dimensions (they need to be passed to fortran separately)
     Rdim = getAttrib(params_species,R_DimSymbol);
@@ -179,11 +169,18 @@ extern SEXP biomee_f_C(
 
 
     // Specify output
-    // 2nd agument to allocMatrix is number of rows, 3rd is number of columns.
-    SEXP output_daily_tile             = PROTECT( allocMatrix(REALSXP, nt_daily, 35) );
-    SEXP output_annual_tile            = PROTECT( allocMatrix(REALSXP, nt_annual, 60) );
-    SEXP output_annual_cohort_tile     = PROTECT( alloc3DArray(REALSXP, 50, nt_annual_cohorts, 35) );
-    
+    SEXP out_list = PROTECT( allocVector(VECSXP, 4) );
+    SEXP output_daily_tile             = PROTECT( alloc3DArray(REALSXP, nt_daily, 35, n_lu) );
+    SEXP output_annual_tile            = PROTECT( alloc3DArray(REALSXP, nt_annual, 59, n_lu) );
+    SEXP output_annual_luluc           = PROTECT( alloc3DArray(REALSXP, nt_annual_trans, 1, n_lu) );
+    // Dimensions
+    int pDims[4] = {50, nt_annual_trans, 35, n_lu};
+    SEXP dims = allocVector(INTSXP, 4);
+    // INTEGER(dims) is a int* which we initialise with pDims
+    memcpy(INTEGER(dims), pDims, 4 * sizeof(int));
+    // Allocate 4D array
+    SEXP output_annual_cohort_tile = PROTECT(allocArray(REALSXP, dims));
+
     // Fortran subroutine call
     F77_CALL(biomee_f)(
         REAL(params_siml),
@@ -197,7 +194,7 @@ extern SEXP biomee_f_C(
         &nt,
         &nt_daily,
         &nt_annual,
-        &nt_annual_cohorts,
+        &nt_annual_trans,
         REAL(forcing),
         &n_lu,
         REAL(init_lu),
@@ -205,14 +202,16 @@ extern SEXP biomee_f_C(
         REAL(luc_forcing),
         REAL(output_daily_tile),
         REAL(output_annual_tile),
-        REAL(output_annual_cohort_tile)
+        REAL(output_annual_cohort_tile),
+        REAL(output_annual_luluc)
         );
 
-    SET_VECTOR_ELT(out_list, 0,  output_daily_tile);
+    SET_VECTOR_ELT(out_list, 0, output_daily_tile);
     SET_VECTOR_ELT(out_list, 1, output_annual_tile);
     SET_VECTOR_ELT(out_list, 2, output_annual_cohort_tile);
+    SET_VECTOR_ELT(out_list, 3, output_annual_luluc);
 
-    UNPROTECT(4);
+    UNPROTECT(5);
 
     return out_list;
 }

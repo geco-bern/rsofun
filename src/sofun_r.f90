@@ -227,7 +227,7 @@ contains
     nt,                           &  
     nt_daily,                     &    
     nt_annual,                    &    
-    nt_annual_cohorts,            &    
+    nt_annual_trans,              &
     forcing,                      &
     n_lu,                         &
     init_lu,                      &
@@ -235,8 +235,9 @@ contains
     luc_forcing,                  &
     output_daily_tile,            &
     output_annual_tile,           &
-    output_annual_cohorts         &
-    ) bind(C, name = "biomee_f_")
+    output_annual_cohorts,        &
+    output_annual_luluc_tile      &
+  ) bind(C, name = "biomee_f_")
      
     !////////////////////////////////////////////////////////////////
     ! Main subroutine to handle I/O with C and R. 
@@ -262,6 +263,7 @@ contains
     real(kind=c_double), dimension(19), intent(in) :: params_tile
     real(kind=c_double), dimension(11), intent(in) :: params_siml
     real(kind=c_double), dimension(3),  intent(in) :: site_info
+    real(kind=c_double), dimension(nt,7), intent(in) :: forcing
 
     ! LULUC
     integer(kind=c_int), intent(in) :: n_lu
@@ -272,21 +274,19 @@ contains
     integer(kind=c_int), intent(in) :: nt
     integer(kind=c_int), intent(in) :: nt_daily
     integer(kind=c_int), intent(in) :: nt_annual
-    integer(kind=c_int), intent(in) :: nt_annual_cohorts
+    integer(kind=c_int), intent(in) :: nt_annual_trans
 
-    ! input and output arrays (naked) to be passed back to C/R
-    real(kind=c_double), dimension(nt,7), intent(in) :: forcing
-
-    real(kind=c_double), dimension(nt_daily,nvars_daily_tile), intent(out) :: output_daily_tile
-
-    real(kind=c_double), dimension(nt_annual,nvars_annual_tile), intent(out) :: output_annual_tile
-
-    real(kind=c_double), dimension(out_max_cohorts, nt_annual_cohorts, nvars_annual_cohorts), intent(out) :: output_annual_cohorts
+    ! ooutput arrays (naked) to be passed back to C/R
+    real(kind=c_double), dimension(nt_daily,nvars_daily_tile, n_lu), intent(out) :: output_daily_tile
+    real(kind=c_double), dimension(nt_annual,nvars_annual_tile, n_lu), intent(out) :: output_annual_tile
+    real(kind=c_double), dimension(out_max_cohorts, nt_annual_trans, nvars_annual_cohorts, n_lu), &
+            intent(out) :: output_annual_cohorts
+    real(kind=c_double), dimension(nt_annual_trans,1, n_lu), intent(out) :: output_annual_luluc_tile
 
     ! local variables
-    type(outtype_daily_tile),     dimension(ndayyear)                 :: out_biosphere_daily_tile
-    type(outtype_annual_tile)                                         :: out_biosphere_annual_tile
-    type(outtype_annual_cohorts), dimension(out_max_cohorts)          :: out_biosphere_annual_cohorts
+    type(outtype_daily_tile),     dimension(ndayyear)           :: out_biosphere_daily_tile
+    type(outtype_annual_tile)                                   :: out_biosphere_annual_tile
+    type(outtype_annual_cohorts), dimension(out_max_cohorts)    :: out_biosphere_annual_cohorts
 
     integer :: yr, idx, idx_daily_start, idx_daily_end
 
@@ -435,12 +435,6 @@ contains
     myinterface%init_soil%init_Nmineral    = real( init_soil(3) )
     myinterface%init_soil%N_input          = real( init_soil(4) )
 
-    ! Initial LU and LUC
-    allocate(myinterface%lu_states(n_lu))
-    myinterface%lu_states = real(init_lu(:,1))
-    !allocate(myinterface%lu_transitions(n_lu, n_lu))
-    !myinterface%lu_transitions = 0.0
-
     !----------------------------------------------------------------
     ! INTERPRET FORCING
     !----------------------------------------------------------------
@@ -487,15 +481,14 @@ contains
         idx_daily_start = (yr - myinterface%params_siml%steering%spinupyears - 1) * ndayyear + 1
         idx_daily_end   = idx_daily_start + ndayyear - 1
 
-        call populate_outarray_daily_tile( out_biosphere_daily_tile(:), output_daily_tile(idx_daily_start:idx_daily_end,:))
+        call populate_outarray_daily_tile( out_biosphere_daily_tile(:), output_daily_tile(idx_daily_start:idx_daily_end, :, 1))
 
       end if
 
       !----------------------------------------------------------------
       ! Output out_annual_tile (calling subroutine)
       !----------------------------------------------------------------
-      out_biosphere_annual_tile%lu_fraction = myinterface%lu_states(1)
-      call populate_outarray_annual_tile( out_biosphere_annual_tile, output_annual_tile(yr,:) )
+      call populate_outarray_annual_tile( out_biosphere_annual_tile, output_annual_tile(yr, :, 1) )
 
       !----------------------------------------------------------------
       ! Output output_annual_cohorts (without subroutine)
@@ -507,7 +500,7 @@ contains
 
         idx =  yr - myinterface%params_siml%steering%spinupyears
 
-        call populate_outarray_annual_cohort(out_biosphere_annual_cohorts, output_annual_cohorts(:, idx,:))
+        call populate_outarray_annual_cohort(out_biosphere_annual_cohorts, output_annual_cohorts(:, idx,:, 1))
 
        end if
 
@@ -517,8 +510,6 @@ contains
     deallocate(myinterface%pco2)
     deallocate(myinterface%params_species)
     deallocate(myinterface%init_cohort)
-    deallocate(myinterface%lu_states)
-    !deallocate(myinterface%lu_transitions)
 
   end subroutine biomee_f
 
@@ -535,7 +526,7 @@ contains
     type(outtype_daily_tile), dimension(ndayyear), intent(in) :: daily_tile
     real(kind=dp), dimension(ndayyear, nvars_daily_tile), intent(inout) :: out_daily_tile
 
-    out_daily_tile(:, 1)  = dble(daily_tile(:)%year) 
+    out_daily_tile(:, 1)  = dble(daily_tile(:)%year)
     out_daily_tile(:, 2)  = dble(daily_tile(:)%doy)
     out_daily_tile(:, 3)  = dble(daily_tile(:)%Tc)
     out_daily_tile(:, 4)  = dble(daily_tile(:)%Prcp)
@@ -646,7 +637,6 @@ contains
     out_annual_tile(57) = dble(annual_tile%c_deadtrees)
     out_annual_tile(58) = dble(annual_tile%m_turnover)
     out_annual_tile(59) = dble(annual_tile%c_turnover_time)
-    out_annual_tile(60) = dble(annual_tile%lu_fraction)
 
   end subroutine populate_outarray_annual_tile
 
