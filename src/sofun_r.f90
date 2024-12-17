@@ -314,9 +314,7 @@ contains
     real(kind=c_double), dimension(out_max_cohorts, nt_annual_cohorts, nvars_annual_cohorts), intent(out) :: output_annual_cohorts
 
     ! local variables
-    ! type(outtype_biosphere) :: out_biosphere  ! holds all the output used for calculating the cost or maximum likelihood function 
     type(outtype_daily_tile),     dimension(ndayyear)                 :: out_biosphere_daily_tile
-    ! type(outtype_daily_cohorts),  dimension(ndayyear,out_max_cohorts) :: out_biosphere_daily_cohorts
     type(outtype_annual_tile)                                         :: out_biosphere_annual_tile
     type(outtype_annual_cohorts), dimension(out_max_cohorts)          :: out_biosphere_annual_cohorts
 

@@ -17,24 +17,6 @@
 #' 
 #' @returns Model output is provided as a list, with elements:
 #' \describe{
-#'   \item{\code{output_hourly_tile}}{A data.frame containing hourly predictions.
-#'     \describe{
-#'       \item{year}{Year of the simulation.}
-#'       \item{doy}{Day of the year.}
-#'       \item{hour}{Hour of the day.}
-#'       \item{rad}{Radiation, in W m\eqn{^{-2}}.}
-#'       \item{Tair}{Air temperature, in Kelvin.}
-#'       \item{Prcp}{Precipitation, in mm m\eqn{^{-2}}.}
-#'       \item{GPP}{Gross primary production (kg C m\eqn{^{-2}} hour\eqn{^{-1}}).}
-#'       \item{Resp}{Plant respiration (kg C m\eqn{^{-2}} hour\eqn{^{-1}}).}
-#'       \item{Transp}{Transpiration (mm m\eqn{^{-2}}).}
-#'       \item{Evap}{Evaporation (mm m\eqn{^{-2}}).}
-#'       \item{Runoff}{Water runoff (mm m\eqn{^{-2}}).}
-#'       \item{Soilwater}{Soil water content in root zone (kg m\eqn{^{-2}}).}
-#'       \item{wcl}{Volumetric soil water content for each layer (vol/vol).}
-#'       \item{FLDCAP}{Field capacity (vol/vol).}
-#'       \item{WILTPT}{Wilting point (vol/vol).}
-#'     }}
 #'   \item{\code{output_daily_tile}}{A data.frame with daily outputs at a tile level.
 #'     \describe{
 #'       \item{year}{Year of the simulation.}
@@ -72,39 +54,6 @@
 #'       \item{slowSoilN}{Slow soil nitrogen pool (kg N m\eqn{^{-2}}).}
 #'       \item{mineralN}{Mineral nitrogen pool (kg N m\eqn{^{-2}}).}
 #'       \item{N_uptk}{Nitrogen uptake (kg N m\eqn{^{-2}}).}
-#'     }}
-#'   \item{\code{output_daily_cohorts}}{A data.frame with daily predictions
-#'     for each canopy cohort.
-#'     \describe{
-#'       \item{year}{Year of the simulation.}
-#'       \item{doy}{Day of the year.}
-#'       \item{hour}{Hour of the day.}
-#'       \item{cID}{An integer indicating the cohort identity.}
-#'       \item{PFT}{An integer indicating the Plant Functional Type.}
-#'       \item{layer}{An integer indicating the crown layer, numbered from top
-#'         to bottom.}
-#'       \item{density}{Number of trees per area (trees ha\eqn{^{-1}}).}
-#'       \item{f_layer}{Fraction of layer area occupied by this cohort.}
-#'       \item{LAI}{Leaf area index (m\eqn{^2}/m\eqn{^2}).}
-#'       \item{gpp}{Gross primary productivity (kg C tree\eqn{^{-1}} day\eqn{^{-1}}).}
-#'       \item{resp}{Plant autotrophic respiration (kg C tree\eqn{^{-1}} day\eqn{^{-1}}).}
-#'       \item{transp}{Transpiration (mm tree\eqn{^{-1}} day\eqn{^{-1}}).}
-#'       \item{NPPleaf}{Carbon allocated to leaves (kg C tree\eqn{^{-1}} day\eqn{^{-1}}).}
-#'       \item{NPProot}{Carbon allocated to fine roots (kg C tree\eqn{^{-1}} day\eqn{^{-1}}).}
-#'       \item{NPPwood}{Carbon allocated to wood (kg C tree\eqn{^{-1}} day\eqn{^{-1}}).}
-#'       \item{NSC}{Nonstructural carbohydrates of a tree in this cohort (kg C 
-#'         tree\eqn{^{-1}}).}
-#'       \item{seedC}{Seed biomass of a tree in this cohort (kg C tree\eqn{^{-1}}).}
-#'       \item{leafC}{Leaf biomass of a tree in this cohort (kg C tree\eqn{^{-1}}).}
-#'       \item{rootC}{Fine root biomass of a tree in this cohort (kg C tree\eqn{^{-1}}).}
-#'       \item{SW_C}{Sapwood biomass of a tree in this cohort (kg C tree\eqn{^{-1}}).}
-#'       \item{HW_C}{Heartwood biomass of a tree in this cohort (kg C tree\eqn{^{-1}}).}
-#'       \item{NSN}{Nonstructural nitrogen of a tree in this cohort (kg N tree\eqn{^{-1}}).}
-#'       \item{seedN}{Seed nitrogen of a tree in this cohort (kg N tree\eqn{^{-1}}).}
-#'       \item{leafN}{Leaf nitrogen of a tree in this cohort (kg N tree\eqn{^{-1}}).}
-#'       \item{rootN}{Fine root nitrogen of a tree in this cohort (kg N tree\eqn{^{-1}}).}
-#'       \item{SW_N}{Sapwood nitrogen of a tree in this cohort (kg N tree\eqn{^{-1}}).}
-#'       \item{HW_N}{Heartwood nitrogen of a tree in this cohort (kg N tree\eqn{^{-1}}).}
 #'     }}
 #'   \item{\code{output_annual_tile}}{A data.frame with annual outputs at tile level.
 #'   \describe{
@@ -442,6 +391,9 @@ run_biomee_f_bysite <- function(
       do_closedN_run        = as.logical(params_siml$do_closedN_run),
       code_method_photosynth= as.integer(code_method_photosynth),
       code_method_mortality = as.integer(code_method_mortality),
+      n_daily               = as.integer(n_daily),
+      n_annual              = as.integer(runyears),
+      n_annual_cohorts      = as.integer(n_annual_cohorts),
       
       ## site meta info
       longitude             = as.numeric(site_info$lon),
@@ -459,10 +411,6 @@ run_biomee_f_bysite <- function(
       
       ## initial soil pools
       init_soil        = as.matrix(init_soil),
-
-      n_daily          = as.integer(n_daily), 
-      n_annual         = as.integer(runyears),
-      n_annual_cohorts = as.integer(n_annual_cohorts),
 
       forcing          = as.matrix(forcing),
       init_lu          = as.matrix(select(init_lu, -'name')),
