@@ -208,11 +208,12 @@ run_biomee_f_bysite <- function(
   # frame to use as default values (unless provided othrwise as params_siml$nyeartrend)
   forcing_years <- nrow(forcing)/(ndayyear * params_siml$steps_per_day)
 
+  # Add default parameters (backward compatibility layer)
   params_siml <- build_params_siml(params_siml, forcing_years, makecheck)
-  init_lu <- build_init_lu(init_lu)
+  init_lu     <- build_init_lu(init_lu)
   luc_forcing <- build_luc_forcing(luc_forcing, init_lu)
 
-
+  # Set up variables used by C wrapper to build output arrays
   n_daily  <- params_siml$nyeartrend * ndayyear
   n_annual <- ifelse(
     params_siml$spinup,
@@ -221,7 +222,7 @@ run_biomee_f_bysite <- function(
   )
   n_annual_cohorts <- params_siml$nyeartrend
 
-  ## C wrapper call
+  ## C wrapper call (using prepped data)
   biomeeout <- .Call(
     'biomee_f_C',
     params_siml      = as.matrix(prepare_params_siml(params_siml)),
