@@ -109,20 +109,8 @@ extern SEXP pmodel_f_C(
 // biomee
 /////////////////////////////////////////////////////////////
 void F77_NAME(biomee_f)(
-    int    *spinup, // LOGICAL type is not supported in the C interface (LTO)
-    int    *spinupyears,               
-    int    *recycle,              
-    int    *firstyeartrend,                  
-    int    *nyeartrend,
-    int    *steps_per_day,
-    int    *do_U_shaped_mortality, //LOGICAL
-    int    *update_annualLAImax, //LOGICAL
-    int    *do_closedN_run, //LOGICAL
-    int    *code_method_photosynth,
-    int    *code_method_mortality,                   
-    double *longitude,                  
-    double *latitude,                  
-    double *altitude,
+    double *params_sim,
+    double *site_info,
     double *params_tile,
     int    *n_params_species,
     double *params_species,
@@ -141,34 +129,22 @@ void F77_NAME(biomee_f)(
     double *output_daily_tile,
     double *output_annual_tile,
     double *output_annual_cohorts
-    );
+  );
 
 // C wrapper function for biomee
 extern SEXP biomee_f_C(
-    SEXP spinup,                
-    SEXP spinupyears,
-    SEXP recycle,                 
-    SEXP firstyeartrend,                  
-    SEXP nyeartrend,
-    SEXP steps_per_day,
-    SEXP do_U_shaped_mortality,             
-    SEXP update_annualLAImax,                   
-    SEXP do_closedN_run,
-    SEXP code_method_photosynth,
-    SEXP code_method_mortality,
-    SEXP n_daily,
-    SEXP n_annual,
-    SEXP n_annual_cohorts,
-    SEXP longitude,                  
-    SEXP latitude,                  
-    SEXP altitude,                 
+    SEXP params_siml,
+    SEXP site_info,
     SEXP params_tile,
     SEXP params_species,
     SEXP init_cohort,
     SEXP init_soil,
     SEXP forcing,
     SEXP init_lu,
-    SEXP luc_forcing
+    SEXP luc_forcing,
+    SEXP n_daily,
+    SEXP n_annual,
+    SEXP n_annual_cohorts
     ){
 
     // Number of time steps (same in forcing and output)
@@ -210,20 +186,8 @@ extern SEXP biomee_f_C(
     
     // Fortran subroutine call
     F77_CALL(biomee_f)(
-        INTEGER(spinup),
-        INTEGER(spinupyears),                  
-        INTEGER(recycle),                 
-        INTEGER(firstyeartrend),                  
-        INTEGER(nyeartrend),
-        INTEGER(steps_per_day),
-        INTEGER(do_U_shaped_mortality),
-        INTEGER(update_annualLAImax),
-        INTEGER(do_closedN_run),
-        INTEGER(code_method_photosynth),
-        INTEGER(code_method_mortality),              
-        REAL(longitude),                  
-        REAL(latitude),                  
-        REAL(altitude),                  
+        REAL(params_siml),
+        REAL(site_info),
         REAL(params_tile),
         &n_params_species,
         REAL(params_species),
@@ -258,7 +222,7 @@ extern SEXP biomee_f_C(
 /////////////////////////////////////////////////////////////
 static const R_CallMethodDef CallEntries[] = {
   {"pmodel_f_C",   (DL_FUNC) &pmodel_f_C,   23},  // Specify number of arguments to C wrapper as the last number here
-  {"biomee_f_C",   (DL_FUNC) &biomee_f_C,   24},  // Number of arguments of the C wrapper function for biomee (the SEXP variables, not the output)
+  {"biomee_f_C",   (DL_FUNC) &biomee_f_C,   12},  // Number of arguments of the C wrapper function for biomee (the SEXP variables, not the output)
   { NULL,          NULL,                    0 }
 };
 

@@ -216,20 +216,8 @@ contains
   !//////////////////////////////////////////////////////////////////////////
 
   subroutine biomee_f(            &
-    spinup,                       &   
-    spinupyears,                  &        
-    recycle,                      &    
-    firstyeartrend,               &           
-    nyeartrend,                   &
-    steps_per_day,                &
-    do_U_shaped_mortality,        &
-    update_annualLAImax,          &                 
-    do_closedN_run,               &
-    code_method_photosynth,       &
-    code_method_mortality,        &             
-    longitude,                    &      
-    latitude,                     &     
-    altitude,                     &             
+    params_siml,                  &
+    site_info,                    &
     params_tile,                  &
     n_params_species,             &
     params_species,               &
@@ -265,31 +253,15 @@ contains
 
     implicit none
 
-    ! Simulation parameters
-    integer(kind=c_int), intent(in) :: spinup                 ! logical type is not supported in the C interface (LTO)
-    integer(kind=c_int),  intent(in) :: spinupyears
-    integer(kind=c_int),  intent(in) :: recycle
-    integer(kind=c_int),  intent(in) :: firstyeartrend
-    integer(kind=c_int),  intent(in) :: nyeartrend
-
-    integer(kind=c_int), intent(in) :: do_U_shaped_mortality  ! logical
-    integer(kind=c_int), intent(in) :: update_annualLAImax    ! logical
-    integer(kind=c_int), intent(in) :: do_closedN_run         ! logical
-    integer(kind=c_int),  intent(in) :: code_method_photosynth
-    integer(kind=c_int),  intent(in) :: code_method_mortality
-
-    ! site information
-    real(kind=c_double),  intent(in) :: longitude
-    real(kind=c_double),  intent(in) :: latitude
-    real(kind=c_double),  intent(in) :: altitude
-
     ! naked arrays
     integer(kind=c_int), intent(in) :: n_params_species
     real(kind=c_double), dimension(n_params_species,55), intent(in) :: params_species
     integer(kind=c_int), intent(in) :: n_init_cohort
     real(kind=c_double), dimension(n_init_cohort,9),  intent(in) :: init_cohort
     real(kind=c_double), dimension(4),  intent(in) :: init_soil
-    real(kind=c_double), dimension(19),  intent(in) :: params_tile
+    real(kind=c_double), dimension(19), intent(in) :: params_tile
+    real(kind=c_double), dimension(11), intent(in) :: params_siml
+    real(kind=c_double), dimension(3),  intent(in) :: site_info
 
     ! LULUC
     integer(kind=c_int), intent(in) :: n_lu
@@ -305,8 +277,6 @@ contains
     ! input and output arrays (naked) to be passed back to C/R
     real(kind=c_double), dimension(nt,7), intent(in) :: forcing
 
-    integer(kind=c_int), intent(in) :: steps_per_day  ! Forcing resolution
-
     real(kind=c_double), dimension(nt_daily,nvars_daily_tile), intent(out) :: output_daily_tile
 
     real(kind=c_double), dimension(nt_annual,nvars_annual_tile), intent(out) :: output_annual_tile
@@ -318,20 +288,16 @@ contains
     type(outtype_annual_tile)                                         :: out_biosphere_annual_tile
     type(outtype_annual_cohorts), dimension(out_max_cohorts)          :: out_biosphere_annual_cohorts
 
-    integer :: yr
-    
-    integer :: idx
-    integer :: idx_daily_start
-    integer :: idx_daily_end
+    integer :: yr, idx, idx_daily_start, idx_daily_end
 
     !----------------------------------------------------------------
     ! POPULATE MYINTERFACE WITH ARGUMENTS FROM R
     !----------------------------------------------------------------
-    myinterface%params_siml%steering%do_spinup        = spinup /= 0
-    myinterface%params_siml%steering%spinupyears      = spinupyears
-    myinterface%params_siml%steering%recycle          = recycle
-    myinterface%params_siml%steering%firstyeartrend   = firstyeartrend
-    myinterface%params_siml%steering%nyeartrend       = nyeartrend
+    myinterface%params_siml%steering%do_spinup        = int(params_siml(1)) /= 0
+    myinterface%params_siml%steering%spinupyears      = int(params_siml(2))
+    myinterface%params_siml%steering%recycle          = int(params_siml(3))
+    myinterface%params_siml%steering%firstyeartrend   = int(params_siml(4))
+    myinterface%params_siml%steering%nyeartrend       = int(params_siml(5))
 
     if (myinterface%params_siml%steering%do_spinup) then
       myinterface%params_siml%steering%runyears = myinterface%params_siml%steering%nyeartrend &
@@ -342,36 +308,36 @@ contains
     endif
 
     ! Simulation parameters
-    myinterface%params_siml%do_U_shaped_mortality = do_U_shaped_mortality /= 0
-    myinterface%params_siml%update_annualLAImax   = update_annualLAImax /= 0
-    myinterface%params_siml%do_closedN_run        = do_closedN_run /= 0
+    myinterface%params_siml%do_U_shaped_mortality = int(params_siml(7)) /= 0
+    myinterface%params_siml%update_annualLAImax   = int(params_siml(8)) /= 0
+    myinterface%params_siml%do_closedN_run        = int(params_siml(9)) /= 0
 
     ! this needs to be consistent with translation to code in run_biomee_f_bysite.R
-    if (code_method_photosynth == 1) then
+    if (int(params_siml(10)) == 1) then
       myinterface%params_siml%method_photosynth = "gs_leuning"
-    else if (code_method_photosynth == 2) then
+    else
       myinterface%params_siml%method_photosynth = "pmodel"
     end if
 
-    ! this needs to be consistent with translation to code in run_biomee_f_bysite.R
-    if (code_method_mortality == 1) then
+    select case( int(params_siml(11)) )
+      case (1)
       myinterface%params_siml%method_mortality = "cstarvation"
-    else if (code_method_mortality == 2) then
+      case (2)
       myinterface%params_siml%method_mortality = "growthrate"
-    else if (code_method_mortality == 3) then
+      case (3)
       myinterface%params_siml%method_mortality = "dbh"
-    else if (code_method_mortality == 4) then
+      case (4)
       myinterface%params_siml%method_mortality = "const_selfthin"
-    else if (code_method_mortality == 5) then
+      case (5)
       myinterface%params_siml%method_mortality = "bal"
-    end if
+    end select
 
     !----------------------------------------------------------------
     ! GET GRID INFORMATION
     !----------------------------------------------------------------
-    myinterface%grid%lon = real( longitude )
-    myinterface%grid%lat = real( latitude )
-    myinterface%grid%elv = real( altitude )   
+    myinterface%grid%lon = real( site_info(1) )
+    myinterface%grid%lat = real( site_info(2) )
+    myinterface%grid%elv = real( site_info(3) )
 
     ! Tile parameters
     myinterface%params_tile%soiltype     = int( params_tile(1) )
@@ -478,7 +444,7 @@ contains
     !----------------------------------------------------------------
     ! INTERPRET FORCING
     !----------------------------------------------------------------
-    myinterface%steps_per_day = steps_per_day
+    myinterface%steps_per_day = params_siml(6) ! Forcing resolution
     ntstepsyear = myinterface%steps_per_day * ndayyear
     myinterface%dt_fast_yr = 1.0 / ntstepsyear
     myinterface%step_seconds = secs_per_day / myinterface%steps_per_day ! seconds_per_year * dt_fast_yr
