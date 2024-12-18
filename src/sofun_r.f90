@@ -281,7 +281,7 @@ contains
     real(kind=c_double), dimension(nt_annual,nvars_annual_tile, n_lu), intent(out) :: output_annual_tile
     real(kind=c_double), dimension(out_max_cohorts, nt_annual_trans, nvars_annual_cohorts, n_lu), &
             intent(out) :: output_annual_cohorts
-    real(kind=c_double), dimension(nt_annual_trans,1, n_lu), intent(out) :: output_annual_luluc_tile
+    real(kind=c_double), dimension(nt_annual,1, n_lu), intent(out) :: output_annual_luluc_tile
 
     ! local variables
     type(outtype_daily_tile),     dimension(ndayyear)           :: out_biosphere_daily_tile
@@ -434,6 +434,10 @@ contains
     myinterface%init_soil%init_slow_soil_C = real( init_soil(2) )
     myinterface%init_soil%init_Nmineral    = real( init_soil(3) )
     myinterface%init_soil%N_input          = real( init_soil(4) )
+
+    ! LULUC
+    ! We initilize to 0 so that LU with 0 area can simply be skipped.
+    output_annual_luluc_tile = 0
 
     !----------------------------------------------------------------
     ! INTERPRET FORCING

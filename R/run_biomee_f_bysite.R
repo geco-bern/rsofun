@@ -201,9 +201,9 @@ run_biomee_f_bysite <- function(
   params_species,
   init_cohort,
   init_soil,
-  makecheck = TRUE,
   init_lu = NULL,
-  luc_forcing = NULL
+  luc_forcing = NULL,
+  makecheck = TRUE
 ){
   ndayyear <- 365
   # record number of years in forcing data
@@ -277,8 +277,9 @@ build_out <- function(biomeeout, lu_names){
 
   n_lu <- length(lu_names)
 
-  if (n_lu == 1)
+  if (n_lu == 1) {
     out <- list("data"=build_lu_out(biomeeout, 1, trimmed_object))
+  }
   else {
     out <- list() #TODO: LU aggregation
     for (lu in 1:n_lu) {
@@ -292,22 +293,23 @@ build_out <- function(biomeeout, lu_names){
 }
 
 build_lu_out <- function(biomeeout, lu, trimmed_object){
+  # Note: drop=FALSE is important to prevent R from drpping dimensions when length is 1.
+
   # daily_tile
   if (!trimmed_object){
-    output_daily_tile <- daily_tile_output(biomeeout[[1]][,,lu])
+    output_daily_tile <- daily_tile_output(biomeeout[[1]][,,lu,drop=FALSE])
   } else {
     output_daily_tile <- NA
   }
 
   # annual tile
-  output_annual_tile <- annual_tile_output(biomeeout[[2]][,,lu])
+  output_annual_tile <- annual_tile_output(biomeeout[[2]][,,lu,drop=FALSE])
 
   # annual cohorts
-  output_annual_cohorts <- annual_cohort_output(biomeeout[[3]][,,,lu])
+  output_annual_cohorts <- annual_cohort_output(biomeeout[[3]][,,,lu,drop=FALSE])
 
   # Annual land use
-  output_annual_land_use <- land_use_annual_tile_output(biomeeout[[4]][,,lu])
-
+  output_annual_land_use <- land_use_annual_tile_output(biomeeout[[4]][,,lu,drop=FALSE])
 
   # format the output in a structured list
   out_lu <- list(
@@ -583,8 +585,8 @@ prepare_init_soil <- function(init_soil){
 }
 
 daily_tile_output <- function(raw_data){
-  output_daily_tile <- as.data.frame(raw_data, stringAsFactor = FALSE)
-  colnames(output_daily_tile) <- c(
+  df <- as.data.frame(raw_data)
+  colnames(df) <- c(
     "year",
     "doy",
     "Tc",
@@ -621,12 +623,12 @@ daily_tile_output <- function(raw_data){
     "mineralN",
     "N_uptk"
   )
-  return(output_daily_tile)
+  return(df)
 }
 
 annual_tile_output <- function(raw_data){
-  output_annual_tile <- as.data.frame(raw_data, stringAsFactor = FALSE)
-  colnames(output_annual_tile) <- c(
+  df <- as.data.frame(raw_data)
+  colnames(df) <- c(
     "year",
     "CAI",
     "LAI",
@@ -687,12 +689,12 @@ annual_tile_output <- function(raw_data){
     "m_turnover",
     "c_turnover_time"
   )
-  return(output_annual_tile)
+  return(df)
 }
 
 annual_tile_output <- function(raw_data){
-  output_annual_tile <- as.data.frame(raw_data, stringAsFactor = FALSE)
-  colnames(output_annual_tile) <- c(
+  df <- as.data.frame(raw_data)
+  colnames(df) <- c(
     "year",
     "CAI",
     "LAI",
@@ -753,15 +755,15 @@ annual_tile_output <- function(raw_data){
     "m_turnover",
     "c_turnover_time"
   )
-  return(output_annual_tile)
+  return(df)
 }
 
 land_use_annual_tile_output <- function(raw_data){
-  output_annual_land_use <- as.data.frame(raw_data, stringAsFactor = FALSE)
-  colnames(output_annual_land_use) <- c(
+  df <- as.data.frame(raw_data)
+  colnames(df) <- c(
     "fraction"
   )
-  return(output_annual_land_use)
+  return(df)
 }
 
 annual_cohort_output <- function(raw_data){
@@ -803,16 +805,17 @@ annual_cohort_output <- function(raw_data){
     "deathrate"
   )
 
-  data_flatten <- as.matrix(raw_data, prod(dim(raw_data)[1:2]), dim(raw_data)[3])
-  output_annual_cohorts <- as.data.frame(data_flatten, stringAsFactor = FALSE)
-  colnames(output_annual_cohorts) <- annual_values
+  dimensions <- dim(raw_data)
+  dim(raw_data) <- c(prod(dimensions[1:2]), dimensions[3])
+  df <- as.data.frame(raw_data)
+  colnames(df) <- annual_values
 
   ## drop rows (cohorts) with no values
-  output_annual_cohorts$year[output_annual_cohorts$year == -9999 |
-                               output_annual_cohorts$year == 0] <- NA
-  output_annual_cohorts <- output_annual_cohorts[!is.na(output_annual_cohorts$year),]
+  df$year[df$year == -9999 |
+                  df$year == 0] <- NA
+  df <- df[!is.na(df$year),]
 
-  return(output_annual_cohorts)
+  return(df)
 }
 
 .onUnload <- function(libpath) {

@@ -168,11 +168,13 @@ extern SEXP biomee_f_C(
     n_lu_tr_years = INTEGER(Rdim)[2];
 
 
-    // Specify output
+    // Output list
     SEXP out_list = PROTECT( allocVector(VECSXP, 4) );
+
+    /******* Output sub-lists *******/
     SEXP output_daily_tile             = PROTECT( alloc3DArray(REALSXP, nt_daily, 35, n_lu) );
     SEXP output_annual_tile            = PROTECT( alloc3DArray(REALSXP, nt_annual, 59, n_lu) );
-    SEXP output_annual_luluc           = PROTECT( alloc3DArray(REALSXP, nt_annual_trans, 1, n_lu) );
+
     // Dimensions
     int pDims[4] = {50, nt_annual_trans, 35, n_lu};
     SEXP dims = allocVector(INTSXP, 4);
@@ -180,6 +182,9 @@ extern SEXP biomee_f_C(
     memcpy(INTEGER(dims), pDims, 4 * sizeof(int));
     // Allocate 4D array
     SEXP output_annual_cohort_tile = PROTECT(allocArray(REALSXP, dims));
+
+    SEXP output_annual_luluc           = PROTECT( alloc3DArray(REALSXP, nt_annual, 1, n_lu) );
+    /****************/
 
     // Fortran subroutine call
     F77_CALL(biomee_f)(
