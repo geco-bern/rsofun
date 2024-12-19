@@ -37,7 +37,7 @@ module md_gpp_biomee
 
 contains
 
-  subroutine gpp( forcing, vegn, init )
+  subroutine gpp( forcing, vegn, first_simu_step )
     !//////////////////////////////////////////////////////////////////////
     ! GPP
     ! Calculates light availability and photosynthesis for each cohort 
@@ -58,7 +58,7 @@ contains
 
     type(climate_type), intent(in):: forcing
     type(vegn_tile_type), intent(inout) :: vegn
-    logical, intent(in) :: init   ! is true on the very first simulation day (first subroutine call of each gridcell)
+    logical, intent(in) :: first_simu_step   ! is true on the very first simulation step
 
     ! local variables used for BiomeE-Allocation part
     type(cohort_type), pointer :: cc
@@ -168,14 +168,6 @@ contains
             cana_co2, cc%extinct, fs+fw, &
             psyn, resp, w_scale2, transp )
 
-          !===============================
-          ! XXX Experiment: increasing net photosynthesis 15% and 30%
-          !===============================
-          ! if (myinterface%steering%year>myinterface%params_siml%spinupyears) then
-          !   psyn = psyn * 1.30
-          !   resp = resp * 1.30
-          ! endif
-
           ! store the calculated photosynthesis, photorespiration, and transpiration for future use in growth
           cc%An_op   = psyn   ! molC s-1 m-2 of leaves ! net photosynthesis, mol C/(m2 of leaves s)
           cc%An_cl   = -resp  ! molC s-1 m-2 of leaves
@@ -204,7 +196,7 @@ contains
       ! Calculate environmental conditions with memory, time scale 
       ! relevant for Rubisco turnover
       !----------------------------------------------------------------
-      if (init) then
+      if (first_simu_step) then
         co2_memory  = forcing%CO2 * 1.0e6
         temp_memory = (forcing%Tair - kTkelvin)
         vpd_memory  = forcing%vpd

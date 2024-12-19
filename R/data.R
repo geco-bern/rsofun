@@ -190,8 +190,8 @@
 #'   \item{params_siml}{Simulation parameters as a data.frame, including
 #'   the following data:
 #'     \describe{
-#'       \item{spinup}{Flag indicating whether this simulation does spin-up.}
-#'       \item{spinupyears}{Number of spin-up years.}
+#'       \item{spinup}{Flag indicating whether this simulation does spin-up (deprecated).}
+#'       \item{spinupyears}{Number of spin-up years. Set to 0 for no spinup.}
 #'       \item{recycle}{Number of first N years of forcing data.frame that are recycled for spin-up.}
 #'       \item{firstyeartrend}{Year of first transient year (AD) (optional). Is only used to set years in output data frames. Defaults to 0 if not provided.}
 #'       \item{nyeartrend}{Number of transient years (optional). Determines the length of simulation output after spin-up. Defaults to number of years contained in the forcing data. (If longer than forcing data, last year of forcing is repeated until the end (spin-down).)}
@@ -356,16 +356,14 @@
 #' Dataset. https://doi.org/10.18140/FLX/1440134
 "biomee_validation"
 
-#' rsofun BiomeE (P-model) output data
-#'
-#' Example output dataset from a BiomeE-model run (p-model)
-#' See \code{\link{run_biomee_f_bysite}} for a detailed 
-#' description of the outputs.
-"biomee_p_model_output"
-
 #' rsofun BiomeE (gs_leuning) output data
 #'
-#' Example output dataset from a BiomeE-model run (gs_leuning)
-#' See \code{\link{run_biomee_f_bysite}} for a detailed 
-#' description of the outputs.
+#' Example output dataset from a BiomeE-model run using divers \code{\link{biomee_gs_leuning_drivers}}
+#' See \code{\link{run_biomee_f_bysite}} for a detailed description of the outputs.
 "biomee_gs_leuning_output"
+
+#' rsofun BiomeE (P-model) output data
+#'
+#' Example output dataset from a BiomeE-model run using divers \code{\link{biomee_p_model_drivers}}
+#' See \code{\link{run_biomee_f_bysite}} for a detailed description of the outputs.
+"biomee_p_model_output"

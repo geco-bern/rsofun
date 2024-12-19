@@ -34,7 +34,6 @@ siteinfo <- siteinfo %>%
 
 # load model parameters (valid ones)
 params_siml_gs_leuning <- tibble(
-  spinup = TRUE,
   spinupyears = 250,
   recycle = 1,
   firstyeartrend = 2009,
