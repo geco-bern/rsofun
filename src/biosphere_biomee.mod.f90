@@ -36,7 +36,7 @@ contains
     use md_sofunutils, only: aggregate
 
     ! Input vairables
-    type(outtype_steering), intent(inout) :: state
+    type(outtype_steering), intent(in) :: state
 
     ! return variables
     type(outtype_daily_tile),     dimension(ndayyear)                , intent(out) :: out_biosphere_daily_tile
