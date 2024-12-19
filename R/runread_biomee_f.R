@@ -43,8 +43,10 @@ runread_biomee_f <- function(
   params_tile <- params_species <- init_cohort <- init_soil <-
   init_lu <- luc_forcing <- . <- NULL
 
-  if (parallel != (ncores > 0))
-    warning("Warning: parallel in driver is deprecated. Please set ncores to 0 to disable parallel execution.")
+  if (parallel != (ncores > 0)) {
+    warning("Warning: parallel flag is deprecated. Please set ncores to 0 to disable parallel execution.")
+    parallel <- (ncores > 0)
+  }
 
   parameters <- c(
     "sitename",
@@ -59,6 +61,14 @@ runread_biomee_f <- function(
     "luc_forcing"
   )
 
+  # Add potentially missing columns using NULL
+  `%nin%` <- Negate(`%in%`)
+  empty_col <- vector("list", nrow(drivers))
+  if ('init_lu' %nin% colnames(drivers))
+    drivers <- dplyr::mutate(drivers, 'init_lu'=empty_col)
+  if ('luc_forcing' %nin% colnames(drivers))
+    drivers <- dplyr::mutate(drivers, 'luc_forcing'=empty_col)
+
   df <- drivers %>%
     dplyr::select(any_of(parameters))
   
@@ -70,8 +80,6 @@ runread_biomee_f <- function(
         packages = c("dplyr", "purrr", "rsofun")
       )
 
-    # TODO: init_lu and luc_forcing are commented out because otherwise an error
-    # is thrown when they are not provided by the user. Needs to be fixed somehow.
     df <- df %>%
       multidplyr::partition(cl) %>%
       dplyr::mutate('data' = purrr::pmap(list(
@@ -82,14 +90,13 @@ runread_biomee_f <- function(
         params_tile,
         params_species,
         init_cohort,
-        init_soil#,
-        #init_lu,
-        #luc_forcing
+        init_soil,
+        init_lu,
+        luc_forcing
       ), run_biomee_f_bysite)) %>%
       dplyr::collect()
     
   } else {
-    
     df <- df %>%
       dplyr::mutate('data' = purrr::pmap(
         .,

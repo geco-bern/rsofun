@@ -242,12 +242,12 @@ run_biomee_f_bysite <- function(
     n_annual_trans = as.integer(n_annual_trans)
   )
 
-  out <- build_out(biomeeout, init_lu$name)
+  out <- build_out(biomeeout, init_lu$name, sitename)
 
   return(out)
 }
 
-build_out <- function(biomeeout, lu_names){
+build_out <- function(biomeeout, lu_names, sitename){
   # If simulation is very long, output gets massive.
   # E.g., In a 3000 years-simulation 'biomeeout' is 11.5 GB.
   # In such cases (here, more than 5 GB), ignore hourly and daily outputs at tile and cohort levels
@@ -332,8 +332,10 @@ build_params_siml <- function(params_siml, forcing_years, makecheck){
   `%nin%` <- Negate(`%in%`)
   if ("spinup" %nin% names(params_siml))
     params_siml$spinup <- params_siml$spinupyears > 0
-  else if (params_siml$spinup != (params_siml$spinupyears > 0))
-    warning("Warning: spinup in driver is deprecated. Please set spinupyears to 0 to disable spinup.")
+  else if (params_siml$spinup != (params_siml$spinupyears > 0)) {
+    warning("Warning: spinup flag is deprecated. Please set spinupyears to 0 to disable spinup.")
+    params_siml$spinup <- (params_siml$spinupyears > 0)
+  }
 
   # Default value for nyeartrend
   if ('nyeartrend' %nin% names(params_siml)) {
