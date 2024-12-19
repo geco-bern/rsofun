@@ -49,6 +49,7 @@ contains
     integer :: dayloop_idx, fastloop_idx, simu_steps
     real, dimension(ndayyear) :: daily_temp  ! Daily temperatures (average)
     real    :: tsoil
+    logical :: first_simu_step
 
     !----------------------------------------------------------------
     ! INITIALISATIONS
@@ -112,7 +113,8 @@ contains
           !----------------------------------------------------------------
           ! Sub-daily time step at resolution given by forcing (can be 1 = daily)
           !----------------------------------------------------------------
-          call vegn_CNW_budget( vegn, myinterface%climate(simu_steps), (simu_steps == 1), tsoil )
+          first_simu_step = state%init .and. (simu_steps == 1)
+          call vegn_CNW_budget( vegn, myinterface%climate(simu_steps), first_simu_step, tsoil )
          
           call hourly_diagnostics( vegn, myinterface%climate(simu_steps) )
          

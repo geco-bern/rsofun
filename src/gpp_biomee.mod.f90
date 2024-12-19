@@ -37,7 +37,7 @@ module md_gpp_biomee
 
 contains
 
-  subroutine gpp( forcing, vegn, init )
+  subroutine gpp( forcing, vegn, first_simu_step )
     !//////////////////////////////////////////////////////////////////////
     ! GPP
     ! Calculates light availability and photosynthesis for each cohort 
@@ -58,7 +58,7 @@ contains
 
     type(climate_type), intent(in):: forcing
     type(vegn_tile_type), intent(inout) :: vegn
-    logical, intent(in) :: init   ! is true on the very first simulation day (first subroutine call of each gridcell)
+    logical, intent(in) :: first_simu_step   ! is true on the very first simulation step
 
     ! local variables used for BiomeE-Allocation part
     type(cohort_type), pointer :: cc
@@ -196,7 +196,7 @@ contains
       ! Calculate environmental conditions with memory, time scale 
       ! relevant for Rubisco turnover
       !----------------------------------------------------------------
-      if (init) then
+      if (first_simu_step) then
         co2_memory  = forcing%CO2 * 1.0e6
         temp_memory = (forcing%Tair - kTkelvin)
         vpd_memory  = forcing%vpd
