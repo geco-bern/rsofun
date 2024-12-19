@@ -523,17 +523,15 @@ contains
   end subroutine summarize_tile
 
 
-  subroutine hourly_diagnostics(vegn, forcing)  !, iyears, idoy, ihour, out_hourly_tile
+  subroutine hourly_diagnostics(vegn, forcing)
     !////////////////////////////////////////////////////////////////////////
     ! Updates sub-daily tile-level variables and takes running daily sums
     !------------------------------------------------------------------------
     use md_forcing_biomee, only: climate_type
-    use md_interface_biomee, only: outtype_hourly_tile, myinterface
+    use md_interface_biomee, only: myinterface
 
     type(vegn_tile_type), intent(inout) :: vegn
     type(climate_type),intent(in):: forcing
-    ! integer, intent(in) :: iyears, idoy, ihour
-    ! type(outtype_hourly_tile),intent(out) :: out_hourly_tile 
 
     ! local variables
     type(cohort_type), pointer :: cc    ! current cohort
@@ -564,24 +562,6 @@ contains
     ! NEP is equal to NNP minus soil respiration
     vegn%nep = vegn%npp - vegn%rh
 
-    !  if (.not. myinterface%steering%spinup) then
-    !   out_hourly_tile%year      =  iyears    
-    !   out_hourly_tile%doy       =  idoy   
-    !   out_hourly_tile%hour      =  ihour    
-    !   out_hourly_tile%rad       =  forcing%radiation    !forcingData 
-    !   out_hourly_tile%Tair      =  forcing%Tair         !forcingData  
-    !   out_hourly_tile%Prcp      =  forcing%rain         !forcingData 
-    !   out_hourly_tile%GPP       =  vegn%GPP  
-    !   out_hourly_tile%Resp      =  vegn%resp   
-    !   out_hourly_tile%Transp    =  vegn%transp
-    !   out_hourly_tile%Evap      =  vegn%evap   
-    !   out_hourly_tile%Runoff    =  vegn%runoff   
-    !   out_hourly_tile%Soilwater =  vegn%soilwater
-    !   out_hourly_tile%wcl       =  vegn%wcl(1)    
-    !   out_hourly_tile%FLDCAP    =  vegn%FLDCAP
-    !   out_hourly_tile%WILTPT    =  vegn%WILTPT
-    ! end if
-
     ! Daily summary:
     vegn%dailyNup  = vegn%dailyNup  + vegn%N_uptake
     vegn%dailyGPP  = vegn%dailyGPP  + vegn%gpp
@@ -596,16 +576,15 @@ contains
   end subroutine hourly_diagnostics
 
 
-  subroutine daily_diagnostics( vegn , iyears, idoy, out_daily_tile )  ! , out_daily_cohorts 
+  subroutine daily_diagnostics( vegn , iyears, idoy, out_daily_tile )
     !////////////////////////////////////////////////////////////////////////
     ! Updates daily tile-level variables and takes running annual sums
     !------------------------------------------------------------------------
     use md_forcing_biomee, only: climate_type
-    use md_interface_biomee, only: outtype_daily_cohorts, outtype_daily_tile
+    use md_interface_biomee, only: outtype_daily_tile
 
     type(vegn_tile_type), intent(inout) :: vegn
     integer, intent(in) :: iyears, idoy
-    ! type(outtype_daily_cohorts), dimension(out_max_cohorts), intent(out) :: out_daily_cohorts
     type(outtype_daily_tile), intent(out) :: out_daily_tile
 
     ! local variables

@@ -135,7 +135,7 @@ contains
         vegn%Tc_daily = daily_temp(doy)
 
         ! sum over fast time steps and cohorts
-        call daily_diagnostics( vegn, iyears, idoy, out_biosphere_daily_tile(doy)  )  ! , out_biosphere_daily_cohorts(doy,:)
+        call daily_diagnostics( vegn, iyears, idoy, out_biosphere_daily_tile(doy)  )
         
         ! Determine start and end of season and maximum leaf (root) mass
         call vegn_phenology( vegn )
