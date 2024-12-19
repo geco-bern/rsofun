@@ -576,7 +576,7 @@ contains
   end subroutine hourly_diagnostics
 
 
-  subroutine daily_diagnostics( vegn , iyears, idoy, out_daily_tile )
+  subroutine daily_diagnostics( vegn , iyears, idoy, state, out_daily_tile )
     !////////////////////////////////////////////////////////////////////////
     ! Updates daily tile-level variables and takes running annual sums
     !------------------------------------------------------------------------
@@ -585,6 +585,7 @@ contains
 
     type(vegn_tile_type), intent(inout) :: vegn
     integer, intent(in) :: iyears, idoy
+    type(outtype_steering), intent(in) :: state
     type(outtype_daily_tile), intent(out) :: out_daily_tile
 
     ! local variables
@@ -611,7 +612,7 @@ contains
     ! Tile level, daily
     call summarize_tile(vegn)
 
-    if (.not. myinterface%steering%spinup) then
+    if (.not. state%spinup) then
       out_daily_tile%year      = iyears
       out_daily_tile%doy       = idoy
       out_daily_tile%Tc        = vegn%tc_daily

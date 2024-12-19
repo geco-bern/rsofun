@@ -15,7 +15,6 @@ module md_params_siml_biomee
   type paramstype_siml_biomee
 
     type(steering_parameters) :: steering
-
     logical :: do_U_shaped_mortality
     logical :: update_annualLAImax
     logical :: do_closedN_run

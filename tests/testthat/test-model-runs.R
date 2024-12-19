@@ -143,6 +143,9 @@ test_that("biomee output check (p-model)", {
     makecheck = TRUE,
     parallel = FALSE)
 
+  print(colMeans(out$data[[1]]$output_annual_tile))
+  print(colMeans(biomee_p_model_output$data[[1]]$output_annual_tile))
+
   expect_true(all.equal(colMeans(out$data[[1]]$output_daily_tile), colMeans(biomee_p_model_output$data[[1]]$output_daily_tile), tolerance = 1e-4))
   expect_true(all.equal(colMeans(out$data[[1]]$output_annual_tile), colMeans(biomee_p_model_output$data[[1]]$output_annual_tile), tolerance = 1e-4))
   expect_true(all.equal(colMeans(out$data[[1]]$output_annual_cohorts), colMeans(biomee_p_model_output$data[[1]]$output_annual_cohorts), tolerance = 1e-4))

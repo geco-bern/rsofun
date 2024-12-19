@@ -247,6 +247,7 @@ run_biomee_f_bysite <- function(
   return(out)
 }
 
+# Build R output
 build_out <- function(biomeeout, lu_names, sitename){
   # If simulation is very long, output gets massive.
   # E.g., In a 3000 years-simulation 'biomeeout' is 11.5 GB.

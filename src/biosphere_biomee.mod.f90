@@ -20,6 +20,7 @@ module md_biosphere_biomee
 contains
 
   subroutine biosphere_annual( &
+    state, &
     out_biosphere_daily_tile, &
     out_biosphere_annual_tile, &
     out_biosphere_annual_cohorts &
@@ -34,6 +35,9 @@ contains
     use md_gpp_biomee, only: getpar_modl_gpp
     use md_sofunutils, only: aggregate
 
+    ! Input vairables
+    type(outtype_steering), intent(inout) :: state
+
     ! return variables
     type(outtype_daily_tile),     dimension(ndayyear)                , intent(out) :: out_biosphere_daily_tile
     type(outtype_annual_tile)                                        , intent(out) :: out_biosphere_annual_tile
@@ -43,15 +47,13 @@ contains
     integer :: moy         ! Month of year
     integer :: doy         ! Day of year
     integer :: dayloop_idx, fastloop_idx, simu_steps
-    logical, save :: init  ! is true only on the first step of the simulation
     real, dimension(ndayyear) :: daily_temp  ! Daily temperatures (average)
     real    :: tsoil
-    integer, save :: iyears, idoy
 
     !----------------------------------------------------------------
     ! INITIALISATIONS
     !----------------------------------------------------------------
-    if (myinterface%steering%init) then ! is true for the first year
+    if (state%init) then ! is true for the first year
 
       ! Parameter initialization: Initialize PFT parameters
       call initialize_PFT_data()
@@ -63,16 +65,12 @@ contains
       ! module-specific parameter specification
       call getpar_modl_gpp()
 
-      iyears = 1
-      idoy   = 0
-      init = .true.
-
     endif
 
     !---------------------------------------------
     ! Reset diagnostics and counters
     !---------------------------------------------
-    simu_steps = 0
+    simu_steps = 0 ! fast loop
     doy = 0
     call Zero_diagnostics( vegn )
 
@@ -90,11 +88,6 @@ contains
       dayloop: do dayloop_idx=1,ndaymonth(moy)
 
         doy = doy + 1
-        idoy = idoy + 1
-
-        ! print*,'----------------------'
-        ! print*,'YEAR, DOY ', myinterface%steering%year, doy
-        ! print*,'----------------------'
 
         ! The algorithm for computing soil temp from air temp works with a daily period.
         ! vegn%wcl(2) is updated in the fast loop, but not much so it is ok to use
@@ -103,8 +96,8 @@ contains
         tsoil = air_to_soil_temp(vegn%thetaS, &
                 daily_temp - kTkelvin, &
                 doy, &
-                myinterface%steering%init, &
-                myinterface%steering%finalize &
+                state%init, &
+                state%finalize &
                 ) + kTkelvin
 
         !----------------------------------------------------------------
@@ -113,17 +106,15 @@ contains
         ! get daily mean temperature from hourly/half-hourly data
         fastloop: do fastloop_idx = 1,myinterface%steps_per_day
 
-          simu_steps    = simu_steps + 1
+          simu_steps   = simu_steps + 1
           vegn%thetaS  = (vegn%wcl(2) - WILTPT) / (FLDCAP - WILTPT)
 
           !----------------------------------------------------------------
           ! Sub-daily time step at resolution given by forcing (can be 1 = daily)
           !----------------------------------------------------------------
-          call vegn_CNW_budget( vegn, myinterface%climate(simu_steps), init, tsoil )
+          call vegn_CNW_budget( vegn, myinterface%climate(simu_steps), (simu_steps == 1), tsoil )
          
           call hourly_diagnostics( vegn, myinterface%climate(simu_steps) )
-         
-          init = .false.
          
         enddo fastloop ! hourly or half-hourly
 
@@ -135,7 +126,7 @@ contains
         vegn%Tc_daily = daily_temp(doy)
 
         ! sum over fast time steps and cohorts
-        call daily_diagnostics( vegn, iyears, idoy, out_biosphere_daily_tile(doy)  )
+        call daily_diagnostics( vegn, state%year, doy, state, out_biosphere_daily_tile(doy)  )
         
         ! Determine start and end of season and maximum leaf (root) mass
         call vegn_phenology( vegn )
@@ -150,7 +141,6 @@ contains
     !----------------------------------------------------------------
     ! Annual calls
     !----------------------------------------------------------------
-    idoy = 0
 
     if ( myinterface%params_siml%update_annualLAImax ) call vegn_annualLAImax_update( vegn )
     
@@ -162,7 +152,7 @@ contains
     ! output to be consistent with cohort identities.
     ! Note: Relayering happens in phenology leading to a reshuffling of the cohorts and affecting cohort identities.
     !---------------------------------------------
-    call annual_diagnostics( vegn, iyears, out_biosphere_annual_cohorts, out_biosphere_annual_tile )
+    call annual_diagnostics( vegn, state%year, out_biosphere_annual_cohorts, out_biosphere_annual_tile )
 
     !---------------------------------------------
     ! Reproduction and mortality
@@ -194,13 +184,10 @@ contains
     !---------------------------------------------
     call annual_diagnostics_post_mortality( vegn, out_biosphere_annual_cohorts, out_biosphere_annual_tile )
 
-    ! update the years of model run
-    iyears = iyears + 1
-
     !----------------------------------------------------------------
     ! Finalize run: deallocating memory
     !----------------------------------------------------------------
-    if (myinterface%steering%finalize) then
+    if (state%finalize) then
       deallocate(vegn)
     end if
     

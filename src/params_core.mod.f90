@@ -64,20 +64,20 @@ module md_params_core
   real, parameter :: dummy = -9999.0             ! arbitrary dummy value
 
   type outtype_steering
-    integer :: year            ! current simulation year
-    integer :: climateyear     ! year AD for which climate is read in (recycling during spinup or when climate is held const.)
-    integer :: climateyear_idx ! year index for which climate is read in.
-    integer :: forcingyear     ! year AD for which forcings are read in (=firstyeartrend during spinup)
-    integer :: forcingyear_idx ! year index for which forcings are read in (=1 during spinup)
-    integer :: outyear         ! year AD written to output
-    logical :: spinup          ! is true during spinup
-    logical :: init            ! is true in first simulation year
-    logical :: finalize        ! is true in the last simulation year
-    logical :: do_soilequil    ! true in year of analytical soil equilibration (during spinup)
-    logical :: average_soil    ! true in years before analytical soil equilibration, when average in and out are taken
-    logical :: project_nmin    ! true in all years before analytical soil equilibration, when projected soil N mineralisation is used
-    logical :: dofree_alloc    ! true if allocation is not fixed by 'frac_leaf'
-    logical :: add_ninorg      ! true in the first few years to get it started
+    integer :: year = 0           ! current simulation year
+    integer :: climateyear        ! year AD for which climate is read in (recycling during spinup or when climate is held const.)
+    integer :: climateyear_idx    ! year index for which climate is read in.
+    integer :: forcingyear        ! year AD for which forcings are read in (=firstyeartrend during spinup)
+    integer :: forcingyear_idx    ! year index for which forcings are read in (=1 during spinup)
+    integer :: outyear            ! year AD written to output
+    logical :: spinup             ! is true during spinup
+    logical :: init     = .true.  ! is true in first simulation year
+    logical :: finalize = .false. ! is true in the last simulation year
+    logical :: do_soilequil       ! true in year of analytical soil equilibration (during spinup)
+    logical :: average_soil       ! true in years before analytical soil equilibration, when average in and out are taken
+    logical :: project_nmin       ! true in all years before analytical soil equilibration, when projected soil N mineralisation is used
+    logical :: dofree_alloc       ! true if allocation is not fixed by 'frac_leaf'
+    logical :: add_ninorg         ! true in the first few years to get it started
   end type outtype_steering
 
   type steering_parameters

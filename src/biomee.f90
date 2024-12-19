@@ -50,6 +50,9 @@ contains
 
     implicit none
 
+    ! mutble state keeping track of simulation state
+    type(outtype_steering) :: state
+
     ! naked arrays
     integer(kind=c_int), intent(in) :: n_params_species
     real(kind=c_double), dimension(n_params_species,55), intent(in) :: params_species
@@ -128,12 +131,10 @@ contains
       myinterface%params_siml%method_mortality = "bal"
     end select
 
-    !----------------------------------------------------------------
-    ! GET GRID INFORMATION
-    !----------------------------------------------------------------
-    myinterface%grid%lon = real( site_info(1) )
-    myinterface%grid%lat = real( site_info(2) )
-    myinterface%grid%elv = real( site_info(3) )
+    ! Site info
+    ! myinterface%site_info%lon = real( site_info(1) )
+    ! myinterface%site_info%lat = real( site_info(2) )
+    ! myinterface%site_info%elv = real( site_info(3) )
 
     ! Tile parameters
     myinterface%params_tile%soiltype     = int( params_tile(1) )
@@ -244,13 +245,12 @@ contains
     myinterface%step_seconds = secs_per_day / myinterface%steps_per_day ! seconds_per_year * dt_fast_yr
 
     allocate(myinterface%climate(ntstepsyear))
-    allocate(myinterface%pco2(ntstepsyear))
 
     yearloop: do yr=1, myinterface%params_siml%steering%runyears
       !----------------------------------------------------------------
       ! Define simulations "steering" variables (forcingyear, etc.)
       !----------------------------------------------------------------
-      myinterface%steering = get_steering( yr, myinterface%params_siml%steering )
+      state = get_steering( yr, myinterface%params_siml%steering )
 
       !----------------------------------------------------------------
       ! Get external (environmental) forcing (for biomee, co2 is in myinterface%climate)
@@ -260,13 +260,14 @@ contains
          nt, &
          ntstepsyear, &
          forcing, &
-         myinterface%steering%climateyear_idx &
+         state%climateyear_idx &
       )
 
       !----------------------------------------------------------------
       ! Call biosphere (wrapper for all modules, contains time loops)
       !----------------------------------------------------------------
       call biosphere_annual( &
+        state, &
         out_biosphere_daily_tile, &
         out_biosphere_annual_tile, &
         out_biosphere_annual_cohorts &
@@ -276,9 +277,9 @@ contains
       ! Output out_daily_tile (calling subroutine)
       !----------------------------------------------------------------
       ! Output only for transient years
-      if (.not. myinterface%steering%spinup) then  
+      if (.not. state%spinup) then
 
-        idx_daily_start = (yr - myinterface%params_siml%steering%spinupyears - 1) * ndayyear + 1
+        idx_daily_start = (state%year - myinterface%params_siml%steering%spinupyears - 1) * ndayyear + 1
         idx_daily_end   = idx_daily_start + ndayyear - 1
 
         call populate_outarray_daily_tile( out_biosphere_daily_tile(:), output_daily_tile(idx_daily_start:idx_daily_end, :, 1))
@@ -288,7 +289,7 @@ contains
       !----------------------------------------------------------------
       ! Output out_annual_tile (calling subroutine)
       !----------------------------------------------------------------
-      call populate_outarray_annual_tile( out_biosphere_annual_tile, output_annual_tile(yr, :, 1) )
+      call populate_outarray_annual_tile( out_biosphere_annual_tile, output_annual_tile(state%year, :, 1) )
 
       !----------------------------------------------------------------
       ! Output output_annual_cohorts (without subroutine)
@@ -296,9 +297,9 @@ contains
       ! To get outputs only after spinupyears make if below and 
       ! also in run_biomee_f_bysite.R make n_annual_cohorts = as.integer(params_siml$nyeartrend)
 
-      if (.not. myinterface%steering%spinup) then  
+      if (.not.state%spinup) then
 
-        idx =  yr - myinterface%params_siml%steering%spinupyears
+        idx =  state%year - myinterface%params_siml%steering%spinupyears
 
         call populate_outarray_annual_cohort(out_biosphere_annual_cohorts, output_annual_cohorts(:, idx,:, 1))
 
@@ -307,7 +308,6 @@ contains
     end do yearloop
 
     deallocate(myinterface%climate)
-    deallocate(myinterface%pco2)
     deallocate(myinterface%params_species)
     deallocate(myinterface%init_cohort)
 

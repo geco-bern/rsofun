@@ -6,7 +6,6 @@ module md_interface_biomee
   use md_forcing_biomee, only: climate_type
   use md_params_siml_biomee, only: paramstype_siml_biomee
   use md_params_core
-  use md_grid, only: gridtype
 
   implicit none
 
@@ -138,24 +137,19 @@ module md_interface_biomee
   end type inittype_soil
 
   type interfacetype_biosphere
-    integer                                               :: year
-    real, dimension(:), allocatable                       :: pco2
-    type(gridtype)                                        :: grid
     type(climate_type), dimension(:), allocatable         :: climate
-    type(outtype_steering)                                :: steering
     type(paramstype_siml_biomee)                          :: params_siml
     type(spec_data_type), dimension(:), allocatable       :: params_species
     type(paramstype_tile)                                 :: params_tile
     type(inittype_cohort), dimension(:), allocatable      :: init_cohort
     type(inittype_soil)                                   :: init_soil
-    integer                                               :: datalines
     integer                                               :: steps_per_day
     real                                                  :: dt_fast_yr
     real                                                  :: step_seconds
   end type interfacetype_biosphere
 
   ! Data structure containing the parameters and forcing data.
-  ! Should not be mutated (it is now for historical reasons)
+  ! Should not be mutated (it is the case now for historical reasons)
   type(interfacetype_biosphere) :: myinterface
 
   !----------------------------------------------------------------
