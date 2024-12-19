@@ -43,9 +43,9 @@ runread_biomee_f <- function(
   params_tile <- params_species <- init_cohort <- init_soil <-
   init_lu <- luc_forcing <- . <- NULL
 
-  if (parallel != (ncores > 0)) {
-    warning("Warning: parallel flag is deprecated. Please set ncores to 0 to disable parallel execution.")
-    parallel <- (ncores > 0)
+  if (parallel != (ncores > 1)) {
+    warning("Warning: parallel flag is deprecated. Please set ncores to 1 to disable parallel execution.")
+    parallel <- (ncores > 1)
   }
 
   parameters <- c(

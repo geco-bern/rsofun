@@ -433,7 +433,7 @@ build_init_lu <- function(init_lu){
 
 prepare_init_lu <- function(init_lu){
   init_lu <- init_lu %>% select(
-    fraction
+    'fraction'
   )
   return(init_lu)
 }
