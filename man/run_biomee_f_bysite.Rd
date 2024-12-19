@@ -13,9 +13,9 @@ run_biomee_f_bysite(
   params_species,
   init_cohort,
   init_soil,
-  makecheck = TRUE,
   init_lu = NULL,
-  luc_forcing = NULL
+  luc_forcing = NULL,
+  makecheck = TRUE
 )
 }
 \arguments{
@@ -36,9 +36,13 @@ with one species per row. See examples \code{\link{biomee_gs_leuning_drivers}} o
 
 \item{init_soil}{A data.frame of initial soil pools.}
 
-\item{makecheck}{A logical specifying whether checks are performed to verify forcings and model parameters. \code{TRUE} by default.
+\item{init_lu}{A data.frame of initial land unit (LU) specifications.}
+
+\item{luc_forcing}{A data.frame of land use change (LUC).
 
 For further specifications of above inputs and examples see \code{\link{biomee_gs_leuning_drivers}} or \code{\link{biomee_p_model_drivers}}.}
+
+\item{makecheck}{A logical specifying whether checks are performed to verify forcings and model parameters. \code{TRUE} by default.}
 }
 \value{
 Model output is provided as a list, with elements:

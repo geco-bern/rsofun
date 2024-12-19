@@ -332,8 +332,8 @@ build_params_siml <- function(params_siml, forcing_years, makecheck){
   `%nin%` <- Negate(`%in%`)
   if ("spinup" %nin% names(params_siml))
     params_siml$spinup <- params_siml$spinupyears > 0
-  else
-    warning("Info: spinup in driver is deprecated. Please set spinupyears to 0 to disable spinup.")
+  else if (params_siml$spinup != (params_siml$spinupyears > 0))
+    warning("Warning: spinup in driver is deprecated. Please set spinupyears to 0 to disable spinup.")
 
   # Default value for nyeartrend
   if ('nyeartrend' %nin% names(params_siml)) {
