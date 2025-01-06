@@ -1,4 +1,4 @@
-module datatypes
+module datatypes_biomee
   !////////////////////////////////////////////////////////////////
   ! Module containing BiomeE state variable and parameter 
   ! definitions.
@@ -22,6 +22,19 @@ module datatypes
             fsc_fine, fsc_wood, LMAmin, GR_factor, tf_base, par_mort, par_mort_under, l_fract, &
             retransN, f_initialBSW,f_N_add, A_mort, B_mort,DBHtp
 
+  !=============== Number of parameters=====================================================
+  integer, public, parameter :: nvars_daily_tile     = 35
+  integer, public, parameter :: nvars_annual_tile    = 59
+  integer, public, parameter :: nvars_annual_cohorts = 35
+  integer, public, parameter :: out_max_cohorts      = 50        ! maximum number of cohorts
+  integer, public, parameter :: nvars_forcing        = 7
+  integer, public, parameter :: nvars_site_info      = 3
+  integer, public, parameter :: nvars_params_siml    = 11
+  integer, public, parameter :: nvars_params_tile    = 19
+  integer, public, parameter :: nvars_init_soil      = 4
+  integer, public, parameter :: nvars_init_cohorts   = 9
+  integer, public, parameter :: nvars_params_species = 55
+
   !=============== Constants =============================================================
   logical, public, parameter :: read_from_parameter_file = .TRUE.
   integer, public, parameter :: max_lev                  = MAX_LEVELS            ! Soil layers, for soil water dynamics
@@ -33,7 +46,7 @@ module datatypes
 
   !===== Soil water hydrualics
   real, public, parameter :: rzone                       = 2.0                   ! m
-  real, public, parameter ::  thksl(max_lev)              = (/0.05, 0.45, 1.5/)   ! m, thickness of soil layers
+  real, public, parameter ::  thksl(max_lev)              = (/0.05, 0.45, 1.5/)  ! m, thickness of soil layers
   real, public, parameter :: psi_wilt                    = -150.0                ! matric head at wilting
   real, public, parameter :: K_rel_min                   = 1.e-12
   real, public, parameter :: rate_fc                     = 0.1/86400             ! 0.1 mm/d drainage rate at FC
@@ -936,4 +949,4 @@ contains
     endif
   end subroutine Recover_N_balance
 
-end module datatypes
+end module datatypes_biomee

@@ -8,7 +8,7 @@ module md_classdefs
   ! - organic material, consisting of carbon and nitrogen (inherits
   !   their defitions).
   !----------------------------------------------------------------
-  use md_params_core
+  use md_params_core, only: eps
 
   implicit none
 

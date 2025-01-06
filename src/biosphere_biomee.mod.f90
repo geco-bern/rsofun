@@ -5,10 +5,9 @@ module md_biosphere_biomee
   ! Does not contain any input/output; this is done in SR sofun.
   ! Code adopted from BiomeE https://doi.org/10.5281/zenodo.7125963.
   !----------------------------------------------------------------
-  use datatypes
+  use datatypes_biomee
   use md_vegetation_biomee
   use md_soil_biomee
-  use md_params_core
   use md_soiltemp, only: air_to_soil_temp
   
   implicit none

@@ -3,7 +3,7 @@ module md_vegetation_biomee
   ! Contains all vegetation-related subroutines for BiomeE.
   ! Code is adopted from BiomeE https://doi.org/10.5281/zenodo.7125963.
   !---------------------------------------------------------------  
-  use datatypes
+  use datatypes_biomee
   use md_soil_biomee
   use md_interface_biomee, only: myinterface
 

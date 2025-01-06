@@ -41,11 +41,10 @@ contains
     ! simulation's forcing as time series
     ! test xxx
     !----------------------------------------------------------------
-    ! use md_params_soil_biomee, only: getsoil
     use md_forcing_biomee, only: getclimate, &
       climate_type
     use md_interface_biomee
-    use md_params_core
+    use datatypes_biomee
     use md_biosphere_biomee, only: biosphere_annual
 
     implicit none
@@ -53,27 +52,28 @@ contains
     ! mutble state keeping track of simulation state
     type(outtype_steering) :: state
 
+    ! Array dimensions
+    integer(kind=c_int), intent(in) :: nt                ! Forcing array dimension
+    integer(kind=c_int), intent(in) :: nt_daily          ! Number of simulated days
+    integer(kind=c_int), intent(in) :: nt_annual         ! Number of years (spinup + transient)
+    integer(kind=c_int), intent(in) :: nt_annual_trans   ! Number of transient years
+
     ! naked arrays
     integer(kind=c_int), intent(in) :: n_params_species
-    real(kind=c_double), dimension(n_params_species,55), intent(in) :: params_species
+    real(kind=c_double), dimension(n_params_species, nvars_params_species), intent(in) :: params_species
     integer(kind=c_int), intent(in) :: n_init_cohort
-    real(kind=c_double), dimension(n_init_cohort,9),  intent(in) :: init_cohort
-    real(kind=c_double), dimension(4),  intent(in) :: init_soil
-    real(kind=c_double), dimension(19), intent(in) :: params_tile
-    real(kind=c_double), dimension(11), intent(in) :: params_siml
-    real(kind=c_double), dimension(3),  intent(in) :: site_info
-    real(kind=c_double), dimension(nt,7), intent(in) :: forcing
+    real(kind=c_double), dimension(n_init_cohort,nvars_init_cohorts),  intent(in)  :: init_cohort
+    real(kind=c_double), dimension(nvars_init_soil),  intent(in)  :: init_soil
+    real(kind=c_double), dimension(nvars_params_tile), intent(in) :: params_tile
+    real(kind=c_double), dimension(nvars_params_siml), intent(in) :: params_siml
+    real(kind=c_double), dimension(nvars_site_info),  intent(in)  :: site_info
+    real(kind=c_double), dimension(nt,nvars_forcing), intent(in)  :: forcing
 
     ! LULUC
     integer(kind=c_int), intent(in) :: n_lu
     real(kind=c_double), dimension(n_lu,1), intent(in) :: init_lu
     integer(kind=c_int), intent(in) :: n_lu_tr_years
     real(kind=c_double), dimension(n_lu,n_lu,n_lu_tr_years), intent(in) :: luc_forcing
-
-    integer(kind=c_int), intent(in) :: nt
-    integer(kind=c_int), intent(in) :: nt_daily
-    integer(kind=c_int), intent(in) :: nt_annual
-    integer(kind=c_int), intent(in) :: nt_annual_trans
 
     ! ooutput arrays (naked) to be passed back to C/R
     real(kind=c_double), dimension(nt_daily,nvars_daily_tile, n_lu), intent(out) :: output_daily_tile
@@ -131,7 +131,7 @@ contains
       myinterface%params_siml%method_mortality = "bal"
     end select
 
-    ! Site info
+    ! Site info (not used for now)
     ! myinterface%site_info%lon = real( site_info(1) )
     ! myinterface%site_info%lat = real( site_info(2) )
     ! myinterface%site_info%elv = real( site_info(3) )
@@ -320,7 +320,7 @@ contains
 
     use, intrinsic :: iso_fortran_env, dp=>real64, sp=>real32, in=>int32
     use md_interface_biomee, only: outtype_daily_tile
-    use md_params_core
+    use datatypes_biomee
 
     ! arguments
     type(outtype_daily_tile), dimension(ndayyear), intent(in) :: daily_tile
@@ -372,7 +372,7 @@ contains
 
     use, intrinsic :: iso_fortran_env, dp=>real64, sp=>real32, in=>int32
     use md_interface_biomee, only: outtype_annual_tile
-    use md_params_core
+    use datatypes_biomee
 
     ! arguments
     type(outtype_annual_tile), intent(in) :: annual_tile
@@ -445,7 +445,7 @@ contains
 
     use, intrinsic :: iso_fortran_env, dp=>real64, sp=>real32, in=>int32
     use md_interface_biomee, only: outtype_annual_cohorts
-    use md_params_core
+    use datatypes_biomee
 
     ! arguments
     type(outtype_annual_cohorts), dimension(out_max_cohorts), intent(in) :: annual_cohorts
