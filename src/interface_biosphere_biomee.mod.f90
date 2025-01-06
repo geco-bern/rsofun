@@ -136,6 +136,12 @@ module md_interface_biomee
     real :: N_input
   end type inittype_soil
 
+  type site_info_type
+    real :: lon
+    real :: lat
+    real :: elv ! elevation
+  endtype site_info_type
+
   type interfacetype_biosphere
     type(climate_type), dimension(:), allocatable         :: climate
     type(paramstype_siml_biomee)                          :: params_siml
@@ -143,6 +149,7 @@ module md_interface_biomee
     type(paramstype_tile)                                 :: params_tile
     type(inittype_cohort), dimension(:), allocatable      :: init_cohort
     type(inittype_soil)                                   :: init_soil
+    type(site_info_type)                                  :: site_info
     integer                                               :: steps_per_day
     real                                                  :: dt_fast_yr
     real                                                  :: step_seconds

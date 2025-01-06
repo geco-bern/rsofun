@@ -141,10 +141,10 @@ contains
       myinterface%params_siml%method_mortality = "bal"
     end select
 
-    ! Site info (not used for now)
-    ! myinterface%site_info%lon = real( site_info(1) )
-    ! myinterface%site_info%lat = real( site_info(2) )
-    ! myinterface%site_info%elv = real( site_info(3) )
+    ! Site info
+    myinterface%site_info%lon = real( site_info(1) )
+    myinterface%site_info%lat = real( site_info(2) )
+    myinterface%site_info%elv = real( site_info(3) )
 
     ! Tile parameters
     myinterface%params_tile%soiltype                 = int( params_tile(1) )
