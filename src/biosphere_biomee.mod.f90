@@ -108,12 +108,13 @@ contains
         fastloop: do fastloop_idx = 1,myinterface%steps_per_day
 
           simu_steps   = simu_steps + 1
+          first_simu_step = state%init .and. (simu_steps == 1)
+
           vegn%thetaS  = (vegn%wcl(2) - WILTPT) / (FLDCAP - WILTPT)
 
           !----------------------------------------------------------------
           ! Sub-daily time step at resolution given by forcing (can be 1 = daily)
           !----------------------------------------------------------------
-          first_simu_step = state%init .and. (simu_steps == 1)
           call vegn_CNW_budget( vegn, myinterface%climate(simu_steps), first_simu_step, tsoil )
          
           call hourly_diagnostics( vegn, myinterface%climate(simu_steps) )
