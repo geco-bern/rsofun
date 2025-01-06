@@ -766,6 +766,7 @@ annual_tile_output <- function(raw_data){
 land_use_annual_tile_output <- function(raw_data){
   df <- as.data.frame(raw_data)
   colnames(df) <- c(
+    "year",
     "fraction"
   )
   return(df)

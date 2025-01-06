@@ -47,7 +47,7 @@ contains
     use md_interface_biomee
     use datatypes_biomee
     use md_biosphere_biomee, only: biosphere_annual
-    use md_luluc, only: update_lu_state
+    use md_luluc, only: update_lu_state, populate_outarray_annual_land_use
 
     implicit none
 
@@ -243,13 +243,13 @@ contains
     myinterface%init_soil%N_input                  = real( init_soil(4) )
 
     ! LULUC initializations
-    lu_state = init_lu(:, 1)
+    lu_state = real(init_lu(:, 1))
     output_annual_luluc_tile = 0
 
     !----------------------------------------------------------------
     ! INTERPRET FORCING
     !----------------------------------------------------------------
-    myinterface%steps_per_day = params_siml(6) ! Forcing resolution
+    myinterface%steps_per_day = int(params_siml(6)) ! Forcing resolution
     ntstepsyear = myinterface%steps_per_day * ndayyear
     myinterface%dt_fast_yr = 1.0 / ntstepsyear
     myinterface%step_seconds = secs_per_day / myinterface%steps_per_day ! seconds_per_year * dt_fast_yr
@@ -319,13 +319,15 @@ contains
 
       end do
 
-      ! Update luluc state
+      !----------------------------------------------------------------
+      ! Update LULUC state and fill output
+      !----------------------------------------------------------------
       if ((.not.state%spinup) .and. (state%forcingyear_idx <= n_lu_tr_years)) then
 
         call update_lu_state(lu_state, real(luc_forcing(:,:,state%forcingyear_idx)), n_lu)
-        output_annual_luluc_tile(state%year,1,:) = lu_state
 
       end if
+      call populate_outarray_annual_land_use(state%year, lu_state, output_annual_luluc_tile(state%year,:,:))
 
     end do yearloop
 

@@ -26,7 +26,7 @@ module datatypes_biomee
   integer, public, parameter :: nvars_daily_tile     = 35
   integer, public, parameter :: nvars_annual_tile    = 59
   integer, public, parameter :: nvars_annual_cohorts = 35
-  integer, public, parameter :: nvars_lu_out         = 1
+  integer, public, parameter :: nvars_lu_out         = 2
   integer, public, parameter :: out_max_cohorts      = 50        ! maximum number of cohorts
 
   !=============== Number of parameters (out) ==============================================
