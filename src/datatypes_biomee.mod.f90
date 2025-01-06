@@ -22,11 +22,14 @@ module datatypes_biomee
             fsc_fine, fsc_wood, LMAmin, GR_factor, tf_base, par_mort, par_mort_under, l_fract, &
             retransN, f_initialBSW,f_N_add, A_mort, B_mort,DBHtp
 
-  !=============== Number of parameters=====================================================
+  !=============== Number of parameters (out) ==============================================
   integer, public, parameter :: nvars_daily_tile     = 35
   integer, public, parameter :: nvars_annual_tile    = 59
   integer, public, parameter :: nvars_annual_cohorts = 35
+  integer, public, parameter :: nvars_lu_out         = 1
   integer, public, parameter :: out_max_cohorts      = 50        ! maximum number of cohorts
+
+  !=============== Number of parameters (out) ==============================================
   integer, public, parameter :: nvars_forcing        = 7
   integer, public, parameter :: nvars_site_info      = 3
   integer, public, parameter :: nvars_params_siml    = 11
@@ -34,6 +37,7 @@ module datatypes_biomee
   integer, public, parameter :: nvars_init_soil      = 4
   integer, public, parameter :: nvars_init_cohorts   = 9
   integer, public, parameter :: nvars_params_species = 55
+  integer, public, parameter :: nvars_init_lu        = 1
 
   !=============== Constants =============================================================
   logical, public, parameter :: read_from_parameter_file = .TRUE.

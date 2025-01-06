@@ -68,6 +68,7 @@ module md_params_core
     logical :: spinup             ! is true during spinup
     logical :: init     = .true.  ! is true in first simulation year
     logical :: finalize = .false. ! is true in the last simulation year
+    ! Note: climateyear_idx == forcingyear_idx during transient phase. During spinup however, climateyear cycles, while forcing year is constant (= 1).
   end type outtype_steering
 
   type steering_parameters

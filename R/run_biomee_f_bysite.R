@@ -13,7 +13,9 @@
 #' @param init_soil A data.frame of initial soil pools.
 #' @param makecheck A logical specifying whether checks are performed to verify forcings and model parameters. \code{TRUE} by default.
 #' @param init_lu A data.frame of initial land unit (LU) specifications.
-#' @param luc_forcing A data.frame of land use change (LUC).
+#' @param luc_forcing A data.frame of land use change (LUC) used during transient phase.
+#' During spinup, the initial land unit fractions are used (i.e. no transition).
+#' If applicable, the last state is maintained until the end of the transient phase (i.e. no transition).
 #'
 #' For further specifications of above inputs and examples see \code{\link{biomee_gs_leuning_drivers}} or \code{\link{biomee_p_model_drivers}}.
 #' 
@@ -425,7 +427,7 @@ prepare_params_siml <- function(params_siml){
 }
 
 build_init_lu <- function(init_lu){
-  # If init_lu is null, we create dummy LU initial state containing only one state (with a fraction of 1)
+  # If init_lu is null, we create a dummy LU initial state containing only one state (with a fraction of 1)
   if (is.null(init_lu))
     init_lu <- data.frame(name=c('primary'), fraction=c(1.0))
 
