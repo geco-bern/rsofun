@@ -88,6 +88,7 @@ contains
     type(outtype_daily_tile),     dimension(ndayyear)           :: out_biosphere_daily_tile
     type(outtype_annual_tile)                                   :: out_biosphere_annual_tile
     type(outtype_annual_cohorts), dimension(out_max_cohorts)    :: out_biosphere_annual_cohorts
+    type(vegn_tile_type), dimension(n_lu)                       :: vegn_tiles ! One tile per LU
     real :: lu_state(n_lu) ! Current LU fractions
     real(kind=c_double) :: nan
 
@@ -256,6 +257,9 @@ contains
 
     allocate(myinterface%climate(ntstepsyear))
 
+    ! Initialize PFT parameters
+    call initialize_PFT_data()
+
     yearloop: do yr=1, myinterface%params_siml%steering%runyears
       !----------------------------------------------------------------
       ! Define simulations "steering" variables (forcingyear, etc.)
@@ -282,6 +286,7 @@ contains
           !----------------------------------------------------------------
           call biosphere_annual( &
             state, &
+            vegn_tiles(lu_idx), &
             out_biosphere_daily_tile, &
             out_biosphere_annual_tile, &
             out_biosphere_annual_cohorts &

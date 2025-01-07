@@ -2138,9 +2138,9 @@ contains
           ! spdata(i)%LAImax = MAX(LAImin, MIN(LAI_nitrogen, sp%LAI_light))
 
           ! turn off N limitation
-          spdata(i)%LAImax = MAX(LAImin, sp%LAI_light)
+          sp%LAImax = MAX(LAImin, sp%LAI_light)
 
-          spdata(i)%underLAImax = MIN(sp%LAImax, 1.2)
+          sp%underLAImax = MIN(sp%LAImax, 1.2)
 
           ! print*,'sp%LAI_light', sp%LAI_light
 
@@ -2178,15 +2178,13 @@ contains
     !////////////////////////////////////////////////////////////////
     ! Code from BiomeE-Allocation
     !---------------------------------------------------------------
-    type(vegn_tile_type), intent(inout), pointer :: vegn
-    ! -local vars -------
+    type(vegn_tile_type), intent(inout) :: vegn
+
+    ! Local variables
     type(cohort_type), dimension(:), pointer :: cc
     type(cohort_type), pointer :: cx
     real    :: btotal
     integer :: i, istat, init_n_cohorts
-    ! integer :: io           ! i/o status for the namelist
-    ! integer :: ierr         ! error code, returned by i/o routines
-    ! integer :: nml_unit
 
     ! Take tile parameters from myinterface (they are read from the namelist file in initialize_PFT() otherwise)
     soiltype    = myinterface%params_tile%soiltype 

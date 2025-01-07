@@ -14,12 +14,11 @@ module md_biosphere_biomee
   private
   public biosphere_annual
 
-  type(vegn_tile_type), pointer :: vegn
-
 contains
 
   subroutine biosphere_annual( &
     state, &
+    vegn, &
     out_biosphere_daily_tile, &
     out_biosphere_annual_tile, &
     out_biosphere_annual_cohorts &
@@ -35,14 +34,17 @@ contains
     use md_sofunutils, only: aggregate
 
     ! Input vairables
-    type(outtype_steering), intent(in) :: state
+    type(outtype_steering), intent(in)  :: state
 
-    ! return variables
+    ! Inout variable
+    type(vegn_tile_type), intent(inout) :: vegn
+
+    ! Return variables
     type(outtype_daily_tile),     dimension(ndayyear)                , intent(out) :: out_biosphere_daily_tile
     type(outtype_annual_tile)                                        , intent(out) :: out_biosphere_annual_tile
     type(outtype_annual_cohorts), dimension(out_max_cohorts)         , intent(out) :: out_biosphere_annual_cohorts
 
-    ! ! local variables
+    ! Local variables
     integer :: moy         ! Month of year
     integer :: doy         ! Day of year
     integer :: dayloop_idx, fastloop_idx, simu_steps
@@ -55,11 +57,6 @@ contains
     !----------------------------------------------------------------
     if (state%init) then ! is true for the first year
 
-      ! Parameter initialization: Initialize PFT parameters
-      call initialize_PFT_data()
-
-      ! Initialize vegetation tile and plant cohorts
-      allocate( vegn )
       call initialize_vegn_tile( vegn )
 
       ! module-specific parameter specification
@@ -185,83 +182,8 @@ contains
     ! Update post-mortality metrics
     !---------------------------------------------
     call annual_diagnostics_post_mortality( vegn, out_biosphere_annual_cohorts, out_biosphere_annual_tile )
-
-    !----------------------------------------------------------------
-    ! Finalize run: deallocating memory
-    !----------------------------------------------------------------
-    if (state%finalize) then
-      deallocate(vegn)
-    end if
     
   end subroutine biosphere_annual
-
-  subroutine initialize_PFT_data()
-
-    ! ---- local vars ------
-    integer :: i
-
-    associate(spdata => myinterface%params_species)
-
-      spdata%prob_g        = 1.0
-      spdata%prob_e        = 1.0
-
-      spdata%underLAImax = spdata%LAImax
-
-      ! specific root area
-      spdata%SRA           = 2.0/(spdata%root_r*spdata%rho_FR)
-
-      ! calculate alphaBM parameter of allometry. note that rho_wood was re-introduced for this calculation
-      spdata%alphaBM = spdata%rho_wood * spdata%taperfactor * PI/4. * spdata%alphaHT ! 5200
-
-      ! Vmax as a function of LNbase
-      spdata%Vmax = 0.02 * spdata%LNbase ! 0.03125 * sp%LNbase ! Vmax/LNbase= 25E-6/0.8E-3 = 0.03125 !
-
-      ! CN0 of leaves
-      spdata%LNA     = spdata%LNbase +  spdata%LMA/spdata%CNleafsupport
-      spdata%CNleaf0 = spdata%LMA/spdata%LNA
-      ! Leaf life span as a function of LMA
-      spdata%leafLS = c_LLS * spdata%LMA
-
-      do i = 1, size(spdata)
-        call init_derived_species_data(spdata(i))
-      enddo
-
-    end associate
-
-  end subroutine initialize_pft_data
-
-
-  subroutine init_derived_species_data(sp)
-
-    type(spec_data_type), intent(inout) :: sp
-
-    ! ---- local vars ------
-    integer :: j
-    real :: rdepth(0:MAX_LEVELS)
-    real :: residual
-
-    ! root vertical profile
-    rdepth=0.0
-    do j=1,MAX_LEVELS
-      rdepth(j) = rdepth(j-1)+thksl(j)
-      sp%root_frac(j) = exp(-rdepth(j-1)/sp%root_zeta)- &
-              exp(-rdepth(j)  /sp%root_zeta)
-    enddo
-    residual = exp(-rdepth(MAX_LEVELS)/sp%root_zeta)
-    do j=1,MAX_LEVELS
-      sp%root_frac(j) = sp%root_frac(j) + residual*thksl(j)/rdepth(MAX_LEVELS)
-    enddo
-
-    if(sp%leafLS>1.0)then
-      sp%phenotype = 1
-    else
-      sp%phenotype = 0
-    endif
-
-    ! Leaf turnover rate, (leaf longevity as a function of LMA)
-    sp%alpha_L = 1.0/sp%leafLS * sp%phenotype
-
-  end subroutine init_derived_species_data
 
 end module md_biosphere_biomee
 
