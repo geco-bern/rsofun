@@ -27,7 +27,7 @@ contains
 
   subroutine vegn_CNW_budget( vegn, forcing, first_simu_step, tsoil )
     !////////////////////////////////////////////////////////////////
-    ! hourly carbon, nitrogen, and water dynamics, Weng 2016-11-25
+    ! Fast loop carbon, nitrogen, and water dynamics, Weng 2016-11-25
     ! include Nitrogen uptake and carbon budget
     ! C_growth is calculated here to drive plant growth and reproduciton
     !---------------------------------------------------------------
@@ -60,7 +60,8 @@ contains
       ! Maintenance respiration
       call plant_respiration( cc, forcing%tair ) ! get resp per tree per time step
 
-      cc%resp = cc%resp + (cc%resg * myinterface%step_seconds) / secs_per_day ! put growth respiration to tot resp
+      ! We add the growth respiration scaled from daily to timestap
+      cc%resp = cc%resp + (cc%resg * myinterface%step_seconds) / secs_per_day
       cc%resp = cc%resp * myinterface%params_tile%tf_base          ! scaling for calibration
       cc%npp  = cc%gpp - cc%resp       ! kgC tree-1 step-1
 
@@ -99,10 +100,8 @@ contains
     associate (spdata => myinterface%params_species)
 
       sp = cc%species
-      ! tf_base = myinterface%params_tile%tf_base
 
       ! temperature response function
-      ! tf  = tf_base * exp(9000.0 * (1.0/298.16 - 1.0/tairK))
       tf  = exp(9000.0 * (1.0/298.16 - 1.0/tairK))
 
       !  tfs = thermal_inhibition(tsoil)  ! original
@@ -2167,7 +2166,7 @@ contains
     real    :: btotal
     integer :: i, istat, init_n_cohorts
 
-    ! Take tile parameters from myinterface (they are read from the namelist file in initialize_PFT() otherwise)
+    ! Take tile parameters from myinterface (they are read from the namelist file in initialize_PFT_data() otherwise)
     soiltype    = myinterface%params_tile%soiltype 
     FLDCAP      = myinterface%params_tile%FLDCAP 
     WILTPT      = myinterface%params_tile%WILTPT 
@@ -2183,10 +2182,7 @@ contains
     l_fract     = myinterface%params_tile%l_fract      
     retransN    = myinterface%params_tile%retransN     
     f_initialBSW= myinterface%params_tile%f_initialBSW 
-    f_N_add     = myinterface%params_tile%f_N_add  
-    tf_base     = myinterface%params_tile%tf_base  !calibratable
-    par_mort    = myinterface%params_tile%par_mort  !calibratable
-    par_mort_under  = myinterface%params_tile%par_mort_under  !calibratable
+    f_N_add     = myinterface%params_tile%f_N_add
 
     !  Read parameters from the parameter file (namelist)
 

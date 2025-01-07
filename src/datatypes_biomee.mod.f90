@@ -19,8 +19,8 @@ module datatypes_biomee
 
   !=============== Public parameters =======================================================
   public :: MaxCohortID, K1, K2, K_nitrogen, etaN, MLmixRatio, &
-            fsc_fine, fsc_wood, LMAmin, GR_factor, tf_base, par_mort, par_mort_under, l_fract, &
-            retransN, f_initialBSW,f_N_add, A_mort, B_mort,DBHtp
+            fsc_fine, fsc_wood, LMAmin, GR_factor, l_fract, &
+            retransN, f_initialBSW, f_N_add
 
   !=============== Number of parameters (out) ==============================================
   integer, public, parameter :: nvars_daily_tile     = 35
@@ -74,6 +74,17 @@ module datatypes_biomee
   !===== Hydrolics
   real, public, parameter :: psi_leaf                    = -2.31 *1.0e6 ! pa, Katul et al. 2003, for clay soil
 
+  !===== deathrate = mortrate_d_u * (1+A*exp(B*DBH))/(1+exp(B*DBH))
+  real, public, parameter  :: A_mort     = 9.0    ! A coefficient in understory mortality rate correction, 1/year
+  real, public, parameter  :: B_mort     = -60.0  ! B coefficient in understory mortality rate correction, 1/m
+  real, public, parameter  :: DBHtp      = 2.0    !  m, for canopy tree's mortality rate
+
+  !===== Ensheng's growth parameters
+  real, parameter   :: f_LFR_max  = 0.85    ! max allocation to leaves and fine roots
+
+  !===== Leaf life span
+  real, parameter   :: c_LLS  = 28.57143    ! yr/ (kg C m-2), c_LLS=1/LMAs, where LMAs = 0.035
+
   !=============== Cohort level data type =============================================================
   type :: cohort_type
 
@@ -112,7 +123,7 @@ module datatypes_biomee
     real    :: resp               = 0.0          ! plant respiration, kg C timestep-1 tree-1
     real    :: resl               = 0.0          ! leaf respiration, kg C timestep-1 tree-1
     real    :: resr               = 0.0          ! root respiration, kg C timestep-1 tree-1
-    real    :: resg               = 0.0          ! growth respiration, kg C timestep-1 tree-1
+    real    :: resg               = 0.0          ! growth respiration, kg C day-1 tree-1 (attention, this one is day-1)
 
     real    :: dailyTrsp          = dummy        ! kg H2O day-1 tree-1
     real    :: dailyGPP           = dummy        ! kg C day-1 tree-1
@@ -284,42 +295,6 @@ module datatypes_biomee
 
   end type vegn_tile_type
 
-  !=============== Soil data type ============================================================
-  type :: soil_pars_type
-    real    :: GMD                                ! geometric mean partice diameter, mm
-    real    :: GSD                                ! geometric standard deviation of particle size
-    real    :: vwc_wilt
-    real    :: vwc_fc
-    real    :: vwc_sat
-    real    :: vlc_min
-    real    :: k_sat_ref                          ! hydraulic conductivity of saturated soil, kg/(m2 s)
-    real    :: psi_sat_ref                        ! saturation soil water potential, m
-    real    :: chb                                ! Soil texture parameter
-    real    :: alpha                              ! vertical changes of soil property, 1: no change
-    real    :: heat_capacity_dry
-    real    :: tfreeze
-  end type soil_pars_type
-
-  type :: soil_prog_type
-    real    :: wl
-    real    :: ws
-    real    :: T
-  end type soil_prog_type
-
-  type :: soil_tile_type
-    integer                       :: tag          ! kind of the soil
-    type(soil_pars_type)          :: pars
-    type(soil_prog_type), pointer :: prog(:)
-    real,                 pointer :: w_fc(:)
-    real,                 pointer :: w_wilt(:)
-    real                          :: Eg_part_ref
-    real                          :: z0_scalar
-    real, pointer                 :: heat_capacity_dry(:)
-    real, pointer                 :: e(:),f(:)
-    real                          :: uptake_T     ! update temperature from previous time step
-    real, pointer                 :: psi(:)       ! soil water potential
-  end type soil_tile_type  
-
   !=============== PFT-specific parameters ======================================================
   integer :: MaxCohortID = 0
 
@@ -343,22 +318,6 @@ module datatypes_biomee
   real   :: retransN                                ! retranslocation coefficient of Nitrogen
   real   :: f_initialBSW      
   real   :: f_N_add                                 ! re-fill of N for sapwood
-
-  !===== Ensheng's growth parameters
-  real   :: f_LFR_max  = 0.85                       ! max allocation to leaves and fine roots 
-
-  !===== Leaf life span 
-  real   :: c_LLS  = 28.57143                       ! yr/ (kg C m-2), c_LLS=1/LMAs, where LMAs = 0.035
-
-  !===== Calibratable parameters
-  real   :: tf_base                                 ! calibratable scalar for respiration
-  real   :: par_mort                                ! generic calibratable parameter for mortality module
-  real   :: par_mort_under                          ! generic calibratable parameter for mortality understory module
-
-  !===== deathrate = mortrate_d_u * (1+A*exp(B*DBH))/(1+exp(B*DBH))
-  real  :: A_mort     = 9.0    ! A coefficient in understory mortality rate correction, 1/year
-  real  :: B_mort     = -60.0  ! B coefficient in understory mortality rate correction, 1/m
-  real  :: DBHtp      = 2.0    !  m, for canopy tree's mortality rate
 
 contains
 
@@ -536,7 +495,7 @@ contains
     use md_interface_biomee, only: myinterface
 
     type(vegn_tile_type), intent(inout) :: vegn
-    type(climate_type),intent(in):: forcing
+    type(climate_type), intent(in):: forcing
 
     ! local variables
     type(cohort_type), pointer :: cc    ! current cohort
