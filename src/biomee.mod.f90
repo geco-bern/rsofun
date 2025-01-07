@@ -148,9 +148,9 @@ contains
     myinterface%site_info%elv = real( site_info(3) )
 
     ! Tile parameters
-    myinterface%params_tile%soiltype                 = int( params_tile(1) )
-    myinterface%params_tile%FLDCAP                   = real( params_tile(2) )
-    myinterface%params_tile%WILTPT                   = real( params_tile(3) )
+    myinterface%params_tile%soiltype                 = int( params_tile(1) )  ! Sand = 1, LoamySand = 2, SandyLoam = 3, SiltLoam = 4, FrittedClay = 5, Loam = 6, Clay = 7
+    myinterface%params_tile%FLDCAP                   = real( params_tile(2) ) ! vol / vol
+    myinterface%params_tile%WILTPT                   = real( params_tile(3) ) ! vol / vol
     myinterface%params_tile%K1                       = real( params_tile(4) )
     myinterface%params_tile%K2                       = real( params_tile(5) )
     myinterface%params_tile%K_nitrogen               = real( params_tile(6) )

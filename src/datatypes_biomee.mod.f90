@@ -18,9 +18,7 @@ module datatypes_biomee
             annual_diagnostics, initialize_PFT_data
 
   !=============== Public parameters =======================================================
-  public :: MaxCohortID, K1, K2, K_nitrogen, etaN, MLmixRatio, &
-            fsc_fine, fsc_wood, LMAmin, GR_factor, l_fract, &
-            retransN, f_initialBSW, f_N_add
+  public :: MaxCohortID
 
   !=============== Number of parameters (out) ==============================================
   integer, public, parameter :: nvars_daily_tile     = 35
@@ -239,9 +237,6 @@ module datatypes_biomee
     real    :: initialN0          = 0.0           ! initial available N (kg N m-2)
 
     !=====  Soil water
-    integer :: soiltype                           ! lookup table for soil hydrologic parameters
-    real    :: FLDCAP                             ! soil property: field capacity
-    real    :: WILTPT                             ! soil property: wilting point 
     real    :: evap                               ! kg H2O m-2 timestep-1
     real    :: transp                             ! kg H2O m-2 timestep-1
     real    :: runoff                             ! Water runoff of the veg tile, unit?
@@ -297,27 +292,6 @@ module datatypes_biomee
 
   !=============== PFT-specific parameters ======================================================
   integer :: MaxCohortID = 0
-
-  !=============== Params_tile in R =============================================================
-  !===== Soil water properties
-  real   :: soiltype                                !Sand = 1, LoamySand = 2, SandyLoam = 3, SiltLoam = 4, FrittedClay = 5, Loam = 6, Clay = 7
-  real   :: FLDCAP                                  ! vol/vol 
-  real   :: WILTPT                                  ! vol/vol
-
-  !===== Carbon pools
-  real   :: K1                                      ! Fast soil C decomposition rate (yr-1)
-  real   :: K2                                      ! slow soil C decomposition rate (yr-1)
-  real   :: K_nitrogen                              ! mineral Nitrogen turnover rate
-  real   :: MLmixRatio                              ! the ratio of C and N returned to litters from microbes
-  real   :: etaN                                    ! N loss through runoff (organic and mineral)
-  real   :: LMAmin                                  ! minimum LMA, boundary condition
-  real   :: fsc_fine                                ! fraction of fast turnover carbon in fine biomass
-  real   :: fsc_wood                                ! fraction of fast turnover carbon in wood biomass
-  real   :: GR_factor                               ! growth respiration factor
-  real   :: l_fract                                 ! fraction of the carbon retained after leaf drop
-  real   :: retransN                                ! retranslocation coefficient of Nitrogen
-  real   :: f_initialBSW      
-  real   :: f_N_add                                 ! re-fill of N for sapwood
 
 contains
 

@@ -41,8 +41,10 @@ contains
 
     !! Water supply from each layer
       do i=1, max_lev ! Calculate water uptake potential layer by layer
-         freewater(i) = max(0.0,((vegn%wcl(i)-WILTPT) * thksl(i) * 1000.0))
-         thetaS(i)    = max(0.0, (vegn%wcl(i)-WILTPT)/(FLDCAP-WILTPT))
+         freewater(i) = max(0.0,((vegn%wcl(i)-myinterface%params_tile%WILTPT) * thksl(i) * 1000.0))
+         thetaS(i)    = max(0.0, &
+                 (vegn%wcl(i)-myinterface%params_tile%WILTPT) &
+                         / (myinterface%params_tile%FLDCAP-myinterface%params_tile%WILTPT))
          dpsiSR(i) = 1.5 *1.0e6 * thetaS(i)**2 ! Pa
          ! Layer allocation, water uptake capacity
          totWsup(i) = 0.0 ! Potential water uptake per layer by all cohorts
@@ -146,7 +148,7 @@ contains
           slope = (calc_esat(Tair+0.1)-calc_esat(Tair))/0.1
           psyc = forcing%P_air * cp * 1.0e3 * kMa / (H2OLv * h2o_molmass)
           Cmolar = forcing%P_air/(kR * TairK) ! mole density of air (mol/m3)
-          rsoil = exp(8.206-4.255*fldcap) ! s m-1, Liu Yanlan et al. 2017, PNAS
+          rsoil = exp(8.206-4.255*myinterface%params_tile%FLDCAP) ! s m-1, Liu Yanlan et al. 2017, PNAS
           !Rsoil=3.0E+10 * (FILDCP-vegn%wcl(1))**16 ! Kondo et al. 1990
           !rsoil=7500 * exp(-50.0*vegn%wcl(1))  ! s m-1
           raero = 50./(forcing%windU + 0.2)
@@ -156,34 +158,18 @@ contains
     !     &     (slope*Y+psyc*(rswv+rbw+raero)/(rbH_L+raero))
           Esoil=(slope*Rsoilabs + rhocp*Dair/raero)/ &
                 (slope + psyc*(1.0+rsoil/raero)) *   &
-                max(vegn%wcl(1),0.0)/FLDCAP ! (vegn%wcl(1)-ws0)/(FLDCAP-ws0)
+                max(vegn%wcl(1),0.0)/myinterface%params_tile%FLDCAP ! (vegn%wcl(1)-ws0)/(FLDCAP-ws0)
 
       !Calculate Esoil, kg m-2 step-1
       vegn%evap = min(Esoil/H2OLv * myinterface%step_seconds, 0.2*vegn%wcl(1) * thksl(1) *1000.) ! kg m-2 step-1
       !vegn%wcl(1) = vegn%wcl(1) - vegn%evap/(thksl(1) *1000.)
       WaterBudgetL(1) = WaterBudgetL(1) - vegn%evap
-    ! print*,'slope', slope
-    ! print*,'Rsoilabs', Rsoilabs
-    ! print*,'rhocp', rhocp
-    ! print*,'Dair', Dair
-    ! print*,'raero', raero
-    ! print*,'psyc', psyc
-    ! print*,'rsoil', rsoil
-    ! print*,'vegn%wcl(1)', vegn%wcl(1)
-    ! print*,'FLDCAP', FLDCAP
-
-    ! print*,'vegn%evap',vegn%evap
-    ! print*,'Esoil',Esoil
-    ! print*,'H2OLv',H2OLv
-    ! print*,'myinterface%step_seconds',myinterface%step_seconds
-    ! print*,'vegn%wcl(1)',vegn%wcl(1)
-    ! print*,'thksl(1)',thksl(1)
 
     !! soil water refill by precipitation
       rainwater =  forcing%rain * myinterface%step_seconds
       if(rainwater > 0.0)then
          do i=1, max_lev
-            W_deficit(i) = (FLDCAP - vegn%wcl(i)) * thksl(i)*1000.0
+            W_deficit(i) = (myinterface%params_tile%FLDCAP - vegn%wcl(i)) * thksl(i)*1000.0
             W_add(i) = min(rainwater, W_deficit(i))
             rainwater = rainwater - W_add(i)
             !vegn%wcl(i) = vegn%wcl(i) + W_add(i)/(thksl(i)*1000.0)
