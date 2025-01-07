@@ -793,25 +793,6 @@ contains
             endif
           endif
 
-        ! else if ((trim(myinterface%params_siml%method_mortality) == "growthrate")) then
-          
-        !   ! set calibratable parameter
-        !   param_gr_under = myinterface%params_tile%par_mort_under
-        !   param_gr       = myinterface%params_tile%par_mort
-
-        !   ! Understory mortality
-        !   if (cc%layer > 1) then !
-        !     deathrate = param_gr_under * sp%mortrate_d_u * &
-        !              (1. + A_mort*exp(B_mort*cc%dbh))/ &
-        !              (1. +        exp(B_mort*cc%dbh)) 
-        !   else  
-        !   ! Canopy mortality
-        !   ! deathrate = param_gr * 0.05 *    &
-        !   !                  (1.*exp(1*(cc%psapw%c%c12+cc%pwood%c%c12-cc%ABG_ys-6.0))/ &
-        !   !                  (1. + exp(1*(cc%psapw%c%c12+cc%pwood%c%c12-cc%ABG_ys-6.0))))
-        !   deathrate = min(1.0, param_dbh * 0.015 * cc%dbh ** 1.5) ! 1.5, 1.6, 1.7
-        !   endif
-
         else if ((trim(myinterface%params_siml%method_mortality) == "dbh")) then 
      
           ! set calibratable parameter

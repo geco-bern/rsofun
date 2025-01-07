@@ -183,7 +183,7 @@ contains
             cc%An_cl   = 0.0
             cc%gpp     = 0.0
             cc%transp  = 0.0
-            cc%w_scale = -9999
+            cc%w_scale = dummy
 
           endif
         end associate
@@ -265,7 +265,7 @@ contains
           cc%An_op   = 0.0
           cc%An_cl   = 0.0
           cc%transp  = 0.0
-          cc%w_scale = -9999            
+          cc%w_scale = dummy
 
           ! quantities per tree and cumulated over seconds in time step (kgC step-1 tree-1 )
           cc%gpp = par * fapar_tree(i) * out_pmodel%lue * cc%crownarea * myinterface%step_seconds * 1.0e-3
@@ -278,7 +278,7 @@ contains
           cc%An_op   = 0.0
           cc%An_cl   = 0.0
           cc%transp  = 0.0
-          cc%w_scale = -9999
+          cc%w_scale = dummy
           cc%resl    = 0.0
           cc%gpp     = 0.0
 

@@ -101,7 +101,7 @@ contains
       real    :: WaterBudgetL(max_lev)
       integer :: i,j
 
-      ! Water uptaken by roots, hourly
+      ! Water uptaken by roots, per timestep
       WaterBudgetL = 0.0
       vegn%transp = 0.0
       do j = 1, vegn%n_cohorts
