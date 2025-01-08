@@ -469,8 +469,6 @@ contains
     logical :: cc_firstday = .false.
     logical :: TURN_ON_life = .false., TURN_OFF_life
 
-    vegn%litter = 0   ! daily litter
-
     ! update vegn GDD and tc_pheno
     vegn%gdd      = vegn%gdd + max(0.0, vegn%tc_daily - 278.15)
     vegn%tc_pheno = vegn%tc_pheno * 0.8 + vegn%Tc_daily * 0.2
