@@ -97,10 +97,10 @@ contains
     ! Canopy light absorption
     !-----------------------------------------------------------
     ! ! Calculate kappa according to sun zenith angle 
-    ! kappa = cc%extinct/max(cosz,0.01)
+    ! kappa = extinct/max(cosz,0.01)
     
     ! Use constant light extinction coefficient
-    kappa = 0.5         !cc%extinct
+    kappa = 0.5         ! extinct
 
     ! Sum leaf area over cohorts in each crown layer -> LAIlayer(layer)
     f_gap = 0.1 ! 0.1
@@ -165,7 +165,7 @@ contains
 
           call gs_leuning(rad_top, rad_net, TairK, cana_q, cc%lai, &
             p_surf, water_supply, cc%species, sp%pt, &
-            cana_co2, cc%extinct, fs+fw, &
+            cana_co2, extinct, fs+fw, &
             psyn, resp, w_scale2, transp )
 
           ! store the calculated photosynthesis, photorespiration, and transpiration for future use in growth

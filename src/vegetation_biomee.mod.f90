@@ -785,7 +785,7 @@ contains
         deadtrees = cc%nindivs * deathrate
 
         ! record mortality rates at cohort level
-        cc%deathratevalue = deathrate
+        cc%deathrate = deathrate
 
         ! Carbon and Nitrogen from dead plants to soil pools
         call plant2soil(vegn, cc, deadtrees)
@@ -1925,7 +1925,7 @@ contains
   end function
 
 
-  subroutine initialize_cohort_from_biomass(cc, btot)
+  subroutine initialize_cohort_from_biomass(cc)
     !////////////////////////////////////////////////////////////////
     ! calculate tree height, DBH, height, and crown area by initial biomass
     ! The allometry equations are from Ray Dybzinski et al. 2011 and Forrior et al. in review
@@ -1935,15 +1935,9 @@ contains
     ! Code from BiomeE-Allocation
     !---------------------------------------------------------------
     type(cohort_type), intent(inout) :: cc
-    real, intent(in) :: btot ! total biomass per individual, kg C
     associate(sp=>myinterface%params_species(cc%species))
     
-    cc%DBH        = (btot / sp%alphaBM) ** ( 1.0/sp%thetaBM )
-    cc%height     = sp%alphaHT * cc%dbh ** sp%thetaHT
-    cc%crownarea  = sp%alphaCA * cc%dbh ** sp%thetaCA
-    cc%bl_max     = sp%LMA   * sp%LAImax        * cc%crownarea/max(1,cc%layer)
-    cc%br_max     = sp%phiRL * sp%LAImax/sp%SRA * cc%crownarea/max(1,cc%layer)
-    cc%NSNmax     = sp%fNSNmax*(cc%bl_max/(sp%CNleaf0*sp%leafLS)+cc%br_max/sp%CNroot0)
+    call init_cohort_allometry(cc)
     cc%plabl%c%c12        = 2.0 * (cc%bl_max + cc%br_max)
     
     call rootarea_and_verticalprofile( cc )
@@ -1969,7 +1963,6 @@ contains
     real    :: btot ! total biomass per individual, kg C
 
     associate(sp=>myinterface%params_species(cc%species))
-      !if (sp%lifeform>0) then
       btot = max(0.0001, cc%pwood%c%c12 + cc%psapw%c%c12)
       layer = max(1, cc%layer)
 
@@ -2077,7 +2070,6 @@ contains
     ! Local variables
     type(cohort_type), dimension(:), pointer :: cc
     type(cohort_type), pointer :: cx
-    real    :: btotal
     integer :: i, istat, init_n_cohorts
 
     ! Initialize plant cohorts
@@ -2101,8 +2093,7 @@ contains
       cx%pleaf%c%c12 = myinterface%init_cohort(i)%init_cohort_bl
       cx%proot%c%c12 = myinterface%init_cohort(i)%init_cohort_br
       cx%pseed%c%c12 = myinterface%init_cohort(i)%init_cohort_seedC
-      btotal         = cx%psapw%c%c12 + cx%pwood%c%c12  ! kgC /tree
-      call initialize_cohort_from_biomass(cx, btotal)
+      call initialize_cohort_from_biomass(cx)
     enddo
     if (init_n_cohorts > 0) MaxCohortID = cx%ccID
 

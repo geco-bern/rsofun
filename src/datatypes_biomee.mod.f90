@@ -17,8 +17,10 @@ module datatypes_biomee
   public :: Zero_diagnostics, hourly_diagnostics, daily_diagnostics, &
             annual_diagnostics, initialize_PFT_data
 
-  !=============== Public parameters =======================================================
-  public :: MaxCohortID
+  !=============== PFT-specific parameters ======================================================
+  ! This is a shared variable used to give each cohort a unique ID (a simplpe counter)
+  ! It is fine to share accross tiles.
+  integer, public :: MaxCohortID = 0
 
   !=============== Number of parameters (out) ==============================================
   integer, public, parameter :: nvars_daily_tile     = 35
@@ -38,136 +40,122 @@ module datatypes_biomee
   integer, public, parameter :: nvars_init_lu        = 1
 
   !=============== Constants =============================================================
-  logical, public, parameter :: read_from_parameter_file = .TRUE.
   integer, public, parameter :: max_lev                  = MAX_LEVELS            ! Soil layers, for soil water dynamics
-  integer, public, parameter :: num_l                    = MAX_LEVELS            ! Soil layers
-  integer, public, parameter :: LEAF_ON                  = 1
   integer, public, parameter :: LEAF_OFF                 = 0
+  integer, public, parameter :: LEAF_ON                  = 1
   integer, public, parameter :: PT_C3                    = 0                     ! physiology types
   integer, public, parameter :: PT_C4                    = 1                     ! physiology types
 
+  !===== Photosynthesis
+  real, public, parameter  :: extinct = 0.75        ! light extinction coefficient in the canopy for photosynthesis
+
   !===== Soil water hydrualics
-  real, public, parameter :: rzone                       = 2.0                   ! m
-  real, public, parameter ::  thksl(max_lev)              = (/0.05, 0.45, 1.5/)  ! m, thickness of soil layers
-  real, public, parameter :: psi_wilt                    = -150.0                ! matric head at wilting
-  real, public, parameter :: K_rel_min                   = 1.e-12
-  real, public, parameter :: rate_fc                     = 0.1/86400             ! 0.1 mm/d drainage rate at FC
-  real, public, parameter :: ws0                         = 0.02                  ! hygroscopic point
-  real, public, parameter :: Edepth                      = 0.05                  ! m, the depth of soil for surface evaporation
-  integer, public, parameter :: & ! soil types
-                    Sand        = 1, &
-                    LoamySand   = 2, &
-                    SandyLoam   = 3, &
-                    SiltLoam    = 4, &
-                    FrittedClay = 5, &
-                    Loam        = 6, &
-                    Clay        = 7
-  integer, public, parameter :: PHEN_DECIDIOUS           = 0                     ! phenology type
-  integer, public, parameter :: PHEN_EVERGREEN           = 1                     ! phenology type
+  real, public, parameter ::  thksl(max_lev)             = (/0.05, 0.45, 1.5/)  ! m, thickness of soil layers
 
   !===== Soil SOM reference C/N ratios
-  real, public, parameter :: CN0metabolicL               = 15.0 
-  real, public, parameter :: CN0structuralL              = 40.0
-
-  !===== Hydrolics
-  real, public, parameter :: psi_leaf                    = -2.31 *1.0e6 ! pa, Katul et al. 2003, for clay soil
+  real, parameter :: CN0metabolicL                       = 15.0
+  real, parameter :: CN0structuralL                      = 40.0
 
   !===== deathrate = mortrate_d_u * (1+A*exp(B*DBH))/(1+exp(B*DBH))
-  real, public, parameter  :: A_mort     = 9.0    ! A coefficient in understory mortality rate correction, 1/year
-  real, public, parameter  :: B_mort     = -60.0  ! B coefficient in understory mortality rate correction, 1/m
-  real, public, parameter  :: DBHtp      = 2.0    !  m, for canopy tree's mortality rate
+  real, parameter  :: A_mort     = 9.0    ! A coefficient in understory mortality rate correction, 1/year
+  real, parameter  :: B_mort     = -60.0  ! B coefficient in understory mortality rate correction, 1/m
 
   !===== Ensheng's growth parameters
-  real, parameter   :: f_LFR_max  = 0.85    ! max allocation to leaves and fine roots
+  real, parameter  :: f_LFR_max  = 0.85    ! max allocation to leaves and fine roots
 
   !===== Leaf life span
-  real, parameter   :: c_LLS  = 28.57143    ! yr/ (kg C m-2), c_LLS=1/LMAs, where LMAs = 0.035
+  real, parameter  :: c_LLS   = 28.57143    ! yr/ (kg C m-2), c_LLS=1/LMAs, where LMAs = 0.035
 
   !=============== Cohort level data type =============================================================
   type :: cohort_type
 
-    !===== Biological prognostic variables
-    integer :: ccID       = 0            ! cohort ID
-    integer :: species    = 1            ! vegetation species
-    real    :: gdd        = 0.0          ! for phenology
-    integer :: status     = 0            ! growth status of plant: 1 for ON, 0 for OFF
+    !===== Metadata
+    integer :: ccID       = dummy        ! cohort ID
     integer :: layer      = 1            ! the layer of this cohort (numbered from top, top layer=1)
-    integer :: firstlayer = 0            ! 0 = never been in the first layer; 1 = at least one year in first layer
     real    :: layerfrac  = 0.0          ! fraction of layer area occupied by this cohort
-    real    :: leaf_age   = 0.0          ! leaf age (years)
+    integer :: firstlayer = 0            ! 0 = never been in the first layer; 1 = at least one year in first layer
 
     !===== Population structure
-    real :: nindivs   = 1.0          ! density of vegetation, tree/m2
-    real :: age       = 0.0          ! age of cohort, years
-    real :: dbh       = 0.0          ! diameter at breast height, m
-    real :: height    = 0.0          ! vegetation height, m
-    real :: crownarea = 1.0          ! crown area, m2 tree-1
-    real :: leafarea  = 0.0          ! total area of leaves, m2 tree-1
-    real :: lai       = 0.0          ! crown leaf area index, m2/m2
-    real :: BA        = 0.0          ! tree basal area, m2 tree-1
-    real :: Volume    = 0.0          ! tree basal volume, m3 tree-1
+    real :: nindivs   = 1.0              ! density of vegetation, tree/m2
+    real :: age       = 0.0              ! age of cohort, years
+    real :: topyear   = 0.0              ! the years that a cohort is in top layer
+    real :: dbh       = 0.0              ! diameter at breast height, m
+    real :: height    = 0.0              ! vegetation height, m
+    real :: crownarea = 1.0              ! crown area, m2 tree-1
+    real :: leafarea  = 0.0              ! total area of leaves, m2 tree-1
+    real :: lai       = 0.0              ! crown leaf area index, m2/m2
+    real :: BA        = 0.0              ! tree basal area, m2 tree-1
+    real :: Volume    = 0.0              ! tree basal volume, m3 tree-1
+
+    !===== Biological prognostic variables
+    integer :: species    = 1            ! vegetation species
+    real    :: gdd        = 0.0          ! growing degree-day (phenology)
+    integer :: status     = LEAF_OFF     ! growth status of plant
+    real    :: leaf_age   = 0.0          ! leaf age (years)
 
     !===== Organic pools
-    type(orgpool) :: pleaf                       ! leaf biomass, kg tree-1
-    type(orgpool) :: proot                       ! root biomass, kg tree-1
-    type(orgpool) :: psapw                       ! sapwood biomass, kg tree-1
-    type(orgpool) :: pwood                       ! heartwood (non-living) biomass, kg tree-1
-    type(orgpool) :: pseed                       ! biomass put aside for future progeny, kg tree-1
-    type(orgpool) :: plabl                       ! labile pool, temporary storage of N and C, kg tree-1
+    type(orgpool) :: pleaf               ! leaf biomass, kg tree-1
+    type(orgpool) :: proot               ! root biomass, kg tree-1
+    type(orgpool) :: psapw               ! sapwood biomass, kg tree-1
+    type(orgpool) :: pwood               ! heartwood (non-living) biomass, kg tree-1
+    type(orgpool) :: pseed               ! biomass put aside for future progeny, kg tree-1
+    type(orgpool) :: plabl               ! labile pool, temporary storage of N and C, kg tree-1
 
-    !===== Carbon fluxes
-    real    :: gpp                = 0.0          ! gross primary productivity, kg C timestep-1 tree-1
-    real    :: npp                = 0.0          ! net primary productivity, kg C timestep-1 tree-1
-    real    :: resp               = 0.0          ! plant respiration, kg C timestep-1 tree-1
-    real    :: resl               = 0.0          ! leaf respiration, kg C timestep-1 tree-1
-    real    :: resr               = 0.0          ! root respiration, kg C timestep-1 tree-1
-    real    :: resg               = 0.0          ! growth respiration, kg C day-1 tree-1 (attention, this one is day-1)
+    !===== Fast step fluxes, kg timestep-1 tree-1
+    real    :: gpp         = 0.0                  ! gross primary productivity, kg C timestep-1 tree-1
+    real    :: npp         = 0.0                  ! net primary productivity, kg C timestep-1 tree-1
+    real    :: resp        = 0.0                  ! plant respiration, kg C timestep-1 tree-1
+    real    :: resl        = 0.0                  ! leaf respiration, kg C timestep-1 tree-1
+    real    :: resr        = 0.0                  ! root respiration, kg C timestep-1 tree-1
+    real    :: N_uptake    = 0.0                  ! N uptake at each step per tree, kg N timestep-1 tree-1
+    real    :: fixedN      = 0.0                  ! fixed N at each step per tree, kg N timestep-1 tree-1
 
-    real    :: dailyTrsp          = dummy        ! kg H2O day-1 tree-1
-    real    :: dailyGPP           = dummy        ! kg C day-1 tree-1
-    real    :: dailyNPP           = dummy        ! kg C day-1 tree-1
-    real    :: dailyResp          = dummy        ! kg C day-1 tree-1
-    real    :: dailyNup           = dummy        ! kg N day-1 tree-1
-    real    :: dailyfixedN        = dummy        ! kg N day-1 tree-1
-    real    :: annualTrsp         = dummy        ! kg H2O yr-1 tree-1
-    real    :: annualGPP          = dummy        ! kg C yr-1 tree-1
-    real    :: annualNPP          = dummy        ! kg C yr-1 tree-1
-    real    :: annualResp         = dummy        ! kg C yr-1 tree-1
-    real    :: NPPleaf            = dummy        ! C allocated to leaf, kg C yr-1 tree-1
-    real    :: NPProot            = dummy        ! C allocated to root, kg C yr-1 tree-1
-    real    :: NPPwood            = dummy        ! C allocated to wood, kg C yr-1 tree-1
-    real    :: n_deadtrees        = 0.0          ! plant to soil N flux due to mortality (kg N m-2 yr-1)
-    real    :: c_deadtrees        = 0.0          ! plant to soil C flux due to mortality (kg C m-2 yr-1)
-    real    :: m_turnover         = 0.0          ! C turnover due to mortality and tissue turnover (kg C m-2 yr-1)
-    real    :: deathratevalue     = 0.0
+    !===== Daily fluxes, kg day-1 tree-1
+    real    :: dailyTrsp          = dummy         ! kg H2O day-1 tree-1
+    real    :: dailyGPP           = dummy         ! kg C day-1 tree-1
+    real    :: dailyNPP           = dummy         ! kg C day-1 tree-1
+    real    :: dailyResp          = dummy         ! kg C day-1 tree-1
+    real    :: dailyNup           = dummy         ! kg N day-1 tree-1
+    real    :: dailyfixedN        = dummy         ! kg N day-1 tree-1
 
-    !===== Nitrogen model related parameters
-    real    :: NSNmax             = 0.0
-    real    :: N_uptake           = 0.0           ! N uptake at each step per tree, kg N timestep-1 tree-1
+    !===== Annual fluxes, kg yr-1 tree-1
+    real    :: annualTrsp         = dummy         ! kg H2O yr-1 tree-1
+    real    :: annualGPP          = dummy         ! kg C yr-1 tree-1
+    real    :: annualNPP          = dummy         ! kg C yr-1 tree-1
+    real    :: annualResp         = dummy         ! kg C yr-1 tree-1
+    real    :: NPPleaf            = dummy         ! C allocated to leaf, kg C yr-1 tree-1
+    real    :: NPProot            = dummy         ! C allocated to root, kg C yr-1 tree-1
+    real    :: NPPwood            = dummy         ! C allocated to wood, kg C yr-1 tree-1
     real    :: annualNup          = 0.0           ! annual N uptake, kg N yr-1 tree-1
-    real    :: fixedN             = 0.0           ! fixed N at each step per tree, kg N timestep-1 tree-1
     real    :: annualfixedN       = 0.0           ! annual N fixation, kg N yr-1 tree-1
+
+    !===== Annual fluxes due to tree death, kg m-2 yr-1
+    real    :: n_deadtrees        = 0.0           ! plant to soil N flux due to mortality (kg N m-2 yr-1)
+    real    :: c_deadtrees        = 0.0           ! plant to soil C flux due to mortality (kg C m-2 yr-1)
+    real    :: m_turnover         = 0.0           ! C turnover due to mortality and tissue turnover (kg C m-2 yr-1)
+    real    :: deathrate          = 0.0           ! Deathrate (0 to 1)
+
+    !===== Nitrogen model related variables
+    real    :: NSNmax             = 0.0
     real    :: bl_max             = 0.0           ! Max. leaf biomass, kg C tree-1
     real    :: br_max             = 0.0           ! Max. fine root biomass, kg C tree-1
-    real    :: CSAsw              = 0.0
-    real    :: topyear            = 0.0           ! the years that a plant in top layer
 
     !===== Water uptake-related variables
     real    :: rootarea           = dummy         ! total fine root area per tree
     real    :: rootareaL(max_lev) = 0.0           ! Root length per layer, m of root/m
     real    :: WupL(max_lev)      = 0.0           ! normalized vertical distribution of uptake
     real    :: W_supply           = dummy         ! potential water uptake rate per unit time per tree
-    real    :: transp             = dummy         ! transpiration rate per tree per timestep, kg H2O timestep-1 tree-1
+    real    :: transp             = dummy         ! water transpired per tree per timestep, kg H2O timestep-1 tree-1
 
-    !===== Photosynthesis
+    !===== Photosynthesis variables
     real    :: An_op              = 0.0           ! mol C/(m2 of leaf per year)
     real    :: An_cl              = 0.0           ! mol C/(m2 of leaf per year)
     real    :: w_scale            = dummy
-    real    :: C_growth           = 0.0           ! Carbon gain since last growth, kg C tree-1
-    real    :: N_growth           = 0.0           ! Nitrogen used for plant tissue growth
-    real    :: extinct            = 0.75          ! light extinction coefficient in the canopy for photosynthesis
+    real    :: C_growth           = 0.0           ! Carbon gain since last growth, kg C day-1 tree-1
+    real    :: N_growth           = 0.0           ! Nitrogen used for plant tissue growth, kg N day-1 tree-1
+    real    :: resg               = 0.0           ! growth respiration, kg C day-1 tree-1
 
-    !===== Memory
+    !===== Memory variables used for computing deltas
     real    :: DBH_ys            = dummy          ! DBH at the begining of a year (growing season)
     real    :: BA_ys             = dummy          ! Basal area at the beginning og a year
 
@@ -285,11 +273,6 @@ module datatypes_biomee
     real :: totNewCN = 0.0                       ! New cohort N (all compartments but seed), kg N m-2
 
   end type vegn_tile_type
-
-  !=============== PFT-specific parameters ======================================================
-  ! This is a shared variable used to give each cohort a unique ID (a simplpe counter)
-  ! It is fine to share accross tiles.
-  integer :: MaxCohortID = 0
 
 contains
 
@@ -703,7 +686,7 @@ contains
       out_annual_cohorts(i)%Nfix        = cc%annualfixedN
       out_annual_cohorts(i)%n_deadtrees = cc%n_deadtrees
       out_annual_cohorts(i)%c_deadtrees = cc%c_deadtrees
-      out_annual_cohorts(i)%deathrate   = cc%deathratevalue
+      out_annual_cohorts(i)%deathrate   = cc%deathrate
 
     enddo
 
@@ -723,7 +706,7 @@ contains
       vegn%NPPW         = vegn%NPPW          + cc%NPPwood * cc%nindivs 
       vegn%n_deadtrees  = vegn%n_deadtrees   + cc%n_deadtrees
       vegn%c_deadtrees  = vegn%c_deadtrees   + cc%c_deadtrees
-      vegn%m_turnover   = vegn%m_turnover    + cc%m_turnover  
+      vegn%m_turnover   = vegn%m_turnover    + cc%m_turnover
     enddo
 
     plantC    = vegn%plabl%c%c12 + vegn%pseed%c%c12 + vegn%pleaf%c%c12 + vegn%proot%c%c12 + vegn%psapw%c%c12 + vegn%pwood%c%c12
@@ -823,7 +806,7 @@ contains
       cc => vegn%cohorts(i)
       out_annual_cohorts(i)%n_deadtrees = cc%n_deadtrees
       out_annual_cohorts(i)%c_deadtrees = cc%c_deadtrees
-      out_annual_cohorts(i)%deathrate   = cc%deathratevalue
+      out_annual_cohorts(i)%deathrate   = cc%deathrate
 
     enddo
 

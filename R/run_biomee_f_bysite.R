@@ -165,8 +165,8 @@
 #'     \item{N_fix}{Nitrogen fixation (kg N tree\eqn{^{-1}} yr\eqn{^{-1}}).}
 #'     \item{maxLAI}{Maximum leaf area index for a tree (m\eqn{^2} m\eqn{^{-2}}).}
 #'     \item{Volume}{Tree volume (m\eqn{^3}).}
-#'     \item{n_deadtrees}{Number of trees that died (trees yr\eqn{^{-1}}).}
-#'     \item{c_deadtrees}{Carbon biomass of trees that died (kg C yr\eqn{^{-1}}).}
+#'     \item{n_deadtrees}{Plant to soil N flux due to mortality (kg N yr\eqn{^{-1}} m\eqn{^{-2}}).}
+#'     \item{c_deadtrees}{Plant to soil C flux due to mortality (kg C yr\eqn{^{-1}} m\eqn{^{-2}}).}
 #'     \item{deathrate}{Mortality rate of this cohort (yr\eqn{^{-1}}).}
 #'   }}
 #' }
