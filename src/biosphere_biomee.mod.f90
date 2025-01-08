@@ -143,8 +143,6 @@ contains
     ! Annual calls
     !----------------------------------------------------------------
 
-    if ( myinterface%params_siml%update_annualLAImax ) call vegn_annualLAImax_update( vegn )
-    
     !---------------------------------------------
     ! Get annual diagnostics and outputs in once. 
     ! Needs to be called here 

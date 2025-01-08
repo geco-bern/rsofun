@@ -13,7 +13,7 @@ module md_vegetation_biomee
   ! public subroutines
   public :: initialize_cohort_from_biomass, initialize_vegn_tile
   public :: vegn_CNW_budget, vegn_phenology, vegn_growth_EW
-  public :: vegn_reproduction, vegn_annualLAImax_update
+  public :: vegn_reproduction
   public :: vegn_nat_mortality, vegn_species_switch
   public :: relayer_cohorts, vegn_mergecohorts, kill_lowdensity_cohorts
   public :: kill_old_grass
@@ -1974,63 +1974,6 @@ contains
     end associate
   
   end subroutine init_cohort_allometry
-
-
-  subroutine vegn_annualLAImax_update( vegn )
-    !////////////////////////////////////////////////////////////////
-    ! used for updating LAImax according to mineral N in soil
-    ! Potential problems:
-    !   1. All species LAImax are updated
-    !   2. For evergreen, LAImax can be less than current LAI.
-    !  Weng, 2017-08-02
-    ! Code from BiomeE-Allocation
-    !---------------------------------------------------------------
-    type(vegn_tile_type), intent(inout) :: vegn
-    ! local variables
-    ! type(cohort_type), pointer :: cc
-    real   :: LAImin, LAIfixedN, LAImineralN
-    real   :: LAI_Nitrogen
-    ! real   :: fixedN, rootN
-    logical:: fixedN_based
-    integer :: i
-    ! Calculating LAI max based on mineral N or mineralN + fixed N
-    fixedN_based =  .False. ! .True. !
-    LAImin       = 0.5
-
-    !fixedN = 0.0
-    !do i = 1,vegn%n_cohorts
-    !      cc => vegn%cohorts(i)
-    !      fixedN = fixedN + cc%annualfixedN * cc%crownarea * cc%nindivs
-    !enddo
-    ! Mineral+fixed N-based LAImax
-    ! LAI_fixedN = sp%Nfixrate0 * sp%LMA * sp%CNleaf0 * sp%leafLS / sp%LMA
-    ! cc%br_max = sp%phiRL*cc%bl_max/(sp%LMA*sp%SRA)
-
-    vegn%previousN = 0.8 * vegn%previousN + 0.2 * vegn%annualN
-    associate (spdata => myinterface%params_species )
-      do i=1,size(spdata)
-        associate (sp => spdata(i))
-
-          LAIfixedN  = 0.5 * sp%Nfixrate0 * sp%CNleaf0 * sp%leafLS
-          LAImineralN = 0.5 * vegn%previousN * sp%CNleaf0 * sp%leafLS / sp%LMA
-
-          !LAImineralN = vegn%previousN/(sp%LMA/(sp%CNleaf0*sp%leafLS)+sp%phiRL*sp%alpha_FR/sp%SRA /sp%CNroot0)
-          LAI_nitrogen = LAIfixedN + LAImineralN
-          ! spdata(i)%LAImax = MAX(LAImin, MIN(LAI_nitrogen, sp%LAI_light))
-
-          ! turn off N limitation
-          sp%LAImax = MAX(LAImin, sp%LAI_light)
-
-          sp%underLAImax = MIN(sp%LAImax, 1.2)
-
-          ! print*,'sp%LAI_light', sp%LAI_light
-
-        end associate
-
-      enddo
-    end associate
-  
-  end subroutine vegn_annualLAImax_update
 
 
   function leaf_area_from_biomass(bl,species) result (area)

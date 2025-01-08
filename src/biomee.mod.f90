@@ -119,17 +119,16 @@ contains
 
     ! Simulation parameters
     myinterface%params_siml%do_U_shaped_mortality = int(params_siml(7)) /= 0
-    myinterface%params_siml%update_annualLAImax   = int(params_siml(8)) /= 0
-    myinterface%params_siml%do_closedN_run        = int(params_siml(9)) /= 0
+    myinterface%params_siml%do_closedN_run        = int(params_siml(8)) /= 0
 
     ! this needs to be consistent with translation to code in run_biomee_f_bysite.R
-    if (int(params_siml(10)) == 1) then
+    if (int(params_siml(9)) == 1) then
       myinterface%params_siml%method_photosynth = "gs_leuning"
     else
       myinterface%params_siml%method_photosynth = "pmodel"
     end if
 
-    select case( int(params_siml(11)) )
+    select case( int(params_siml(10)) )
       case (1)
       myinterface%params_siml%method_mortality = "cstarvation"
       case (2)
@@ -210,7 +209,7 @@ contains
     myinterface%params_species(:)%CNleafsupport      = real( params_species(:,38))
     myinterface%params_species(:)%rho_wood           = real( params_species(:,39)) ! prescribed
     myinterface%params_species(:)%taperfactor        = real( params_species(:,40))
-    myinterface%params_species(:)%lAImax             = real( params_species(:,41))
+    ! myinterface%params_species(:)%lAImax             = real( params_species(:,41)) ! overriden
     myinterface%params_species(:)%tauNSC             = real( params_species(:,42))
     myinterface%params_species(:)%fNSNmax            = real( params_species(:,43))
     myinterface%params_species(:)%phiCSA             = real( params_species(:,44))

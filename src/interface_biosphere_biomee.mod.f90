@@ -110,7 +110,7 @@ module md_interface_biomee
     real    :: mortrate_d_u                       ! yearly mortality rate in understory
 
     !===== Population level variables
-    real    :: LAImax, underLAImax                ! max. LAI - Mutated at runtime!!
+    real    :: LAImax, underLAImax                ! max. LAI - Overridden
     real    :: LAI_light                          ! light controlled maximum LAI
     real    :: internal_gap_frac                  ! fraction of internal gaps in the canopy
 

@@ -417,7 +417,6 @@ prepare_params_siml <- function(params_siml){
     "nyeartrend",
     "steps_per_day",
     "do_U_shaped_mortality",
-    "update_annualLAImax",
     "do_closedN_run",
     "code_method_photosynth",
     "code_method_mortality"

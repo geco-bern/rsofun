@@ -198,8 +198,6 @@
 #'       \item{steps_per_day}{Time resolution of the forcing (day-1).}
 #'       \item{do_U_shaped_mortality}{Flag indicating whether U-shaped
 #'         mortality is used.}
-#'       \item{update_annualLAImax}{Flag indicating whether updating
-#'         LAImax according to mineral N in soil.}
 #'       \item{do_closedN_run}{Flag indicating whether doing N closed
 #'         runs to recover N balance enforcing 0.2 kg N m-2 in the inorganic N pool.}
 #'       \item{code_method_photosynth}{String specifying the method of photosynthesis
@@ -285,7 +283,7 @@
 #'       \item{betaOFF}{Critical soil moisture for phenology offset.}
 #'       \item{seedlingsize}{Initial size of seedlings, in kg C per individual.}
 #'       \item{LNbase}{Basal leaf N per unit area, in kg N m\eqn{^{-2}}.}
-#'       \item{lAImax}{Maximum crown LAI (leaf area index).}
+#'       \item{lAImax}{Maximum crown LAI (leaf area index) (not used, see LAI_light).}
 #'       \item{Nfixrate0}{Reference N fixation rate (kg N kg C\eqn{^{-1}} root).}
 #'       \item{NfixCost0}{Carbon cost of N fixation (kg C kg N\eqn{^{-1}}).}
 #'       \item{phiCSA}{Ratio of sapwood area to leaf area.}

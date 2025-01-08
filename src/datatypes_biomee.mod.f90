@@ -32,7 +32,7 @@ module datatypes_biomee
   !=============== Number of parameters (out) ==============================================
   integer, public, parameter :: nvars_forcing        = 7
   integer, public, parameter :: nvars_site_info      = 3
-  integer, public, parameter :: nvars_params_siml    = 11
+  integer, public, parameter :: nvars_params_siml    = 10
   integer, public, parameter :: nvars_params_tile    = 19
   integer, public, parameter :: nvars_init_soil      = 4
   integer, public, parameter :: nvars_init_cohorts   = 9
@@ -863,7 +863,8 @@ contains
       spdata%prob_g        = 1.0
       spdata%prob_e        = 1.0
 
-      spdata%underLAImax = spdata%LAImax
+      spdata%LAImax = MAX(0.5, spdata%LAI_light)
+      spdata%underLAImax = MIN(spdata%LAImax, 1.2)
 
       ! specific root area
       spdata%SRA           = 2.0/(spdata%root_r*spdata%rho_FR)
