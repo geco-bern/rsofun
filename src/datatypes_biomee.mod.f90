@@ -180,10 +180,6 @@ module datatypes_biomee
 
     integer  :: n_cohorts         = 0.0
 
-    !===== For reseting vegetation
-    integer :: n_initialCC = 0
-    type(cohort_type), pointer :: initialCC(:) => NULL()
-
     !===== Cohorts nested inside tile
     type(cohort_type), pointer :: cohorts(:) => NULL()
 
@@ -291,6 +287,8 @@ module datatypes_biomee
   end type vegn_tile_type
 
   !=============== PFT-specific parameters ======================================================
+  ! This is a shared variable used to give each cohort a unique ID (a simplpe counter)
+  ! It is fine to share accross tiles.
   integer :: MaxCohortID = 0
 
 contains

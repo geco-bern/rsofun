@@ -17,7 +17,7 @@ module md_vegetation_biomee
   public :: vegn_nat_mortality, vegn_species_switch
   public :: relayer_cohorts, vegn_mergecohorts, kill_lowdensity_cohorts
   public :: kill_old_grass
-  public :: vegn_annual_starvation,Zero_diagnostics, reset_vegn_initial
+  public :: vegn_annual_starvation,Zero_diagnostics
 
 contains
 
@@ -1959,40 +1959,6 @@ contains
   
   end subroutine initialize_cohort_from_biomass
 
-  !============= Reset to Initial Vegetation States =====================
-   !Weng, 12/20/2022
-   subroutine reset_vegn_initial(vegn)
-    type(vegn_tile_type),intent(inout),pointer :: vegn
-
-    !--------local vars -------
-    type(cohort_type),dimension(:), pointer :: cc,cc1
-    type(cohort_type), pointer :: cp
-    integer :: i, istat
-
-    !Reset to initial plant cohorts
-    allocate(cc(1:vegn%n_initialCC), STAT = istat)
-    cc1 => vegn%cohorts ! Remember the current cohorts in vegn
-    cc = vegn%initialCC ! Copy the initial cohorts to a new cohor array
-    vegn%cohorts => cc  ! Set the vegn%cohorts as the initial cohorts
-    vegn%n_cohorts = vegn%n_initialCC ! size(vegn%cohorts)
-
-    !Release memory
-    deallocate(cc1) ! Remove the old cohorts
-    cc => null()
-
-    ! Relayering and summary
-    call relayer_cohorts(vegn)
-    call summarize_tile(vegn)
-
-    ! ID each cohort
-    do i=1, vegn%n_cohorts
-       cp => vegn%cohorts(i)
-       cp%ccID = MaxCohortID + i
-    enddo
-    if (vegn%n_cohorts > 0) MaxCohortID = cp%ccID
-
-   end subroutine reset_vegn_initial
-
   subroutine init_cohort_allometry( cc )
     !////////////////////////////////////////////////////////////////
     ! Code from BiomeE-Allocation
@@ -2114,7 +2080,6 @@ contains
     real    :: btotal
     integer :: i, istat, init_n_cohorts
 
-    ! xxx seems new from d-ben - missing if?
     ! Initialize plant cohorts
     init_n_cohorts = size(myinterface%init_cohort)
     allocate(cc(1:init_n_cohorts), STAT = istat)
@@ -2128,7 +2093,7 @@ contains
       cx%layer       = 1
       cx%age         = 0
       cx%species     = INT(myinterface%init_cohort(i)%init_cohort_species)
-      cx%ccID        =  i
+      cx%ccID        = i
       cx%nindivs     = myinterface%init_cohort(i)%init_cohort_nindivs ! trees/m2
       cx%plabl%c%c12 = myinterface%init_cohort(i)%init_cohort_nsc
       cx%psapw%c%c12 = myinterface%init_cohort(i)%init_cohort_bsw
@@ -2174,15 +2139,6 @@ contains
                       vegn%pmicr%n%n14 + vegn%psoil_fs%n%n14 +       &
                       vegn%psoil_sl%n%n14 + vegn%ninorg%n14
     vegn%totN =  vegn%initialN0
-
-    ! For reset: Keep initial plant cohorts
-    allocate(cc(1:init_n_cohorts), STAT = istat)
-    cc = vegn%cohorts
-    vegn%initialCC   => cc
-    vegn%n_initialCC = init_n_cohorts
-    cc => null()
-
-    ! xxx up to here new from d-ben
 
   end subroutine initialize_vegn_tile
 
