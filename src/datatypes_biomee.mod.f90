@@ -66,6 +66,16 @@ module datatypes_biomee
   !===== Leaf life span
   real, parameter  :: c_LLS   = 28.57143    ! yr/ (kg C m-2), c_LLS=1/LMAs, where LMAs = 0.035
 
+  type :: common_fluxes
+    ! Note: the unit depends on the context
+    real    :: Trsp          = 0.0
+    real    :: GPP           = 0.0
+    real    :: NPP           = 0.0
+    real    :: Resp          = 0.0
+    real    :: Nup           = 0.0
+    real    :: fixedN        = 0.0
+  end type common_fluxes
+
   !=============== Cohort level data type =============================================================
   type :: cohort_type
 
@@ -111,23 +121,13 @@ module datatypes_biomee
     real    :: fixedN      = 0.0                  ! fixed N at each step per tree, kg N timestep-1 tree-1
 
     !===== Daily fluxes, kg day-1 tree-1
-    real    :: dailyTrsp          = dummy         ! kg H2O day-1 tree-1
-    real    :: dailyGPP           = dummy         ! kg C day-1 tree-1
-    real    :: dailyNPP           = dummy         ! kg C day-1 tree-1
-    real    :: dailyResp          = dummy         ! kg C day-1 tree-1
-    real    :: dailyNup           = dummy         ! kg N day-1 tree-1
-    real    :: dailyfixedN        = dummy         ! kg N day-1 tree-1
+    type(common_fluxes) :: daily_fluxes
 
     !===== Annual fluxes, kg yr-1 tree-1
-    real    :: annualTrsp         = dummy         ! kg H2O yr-1 tree-1
-    real    :: annualGPP          = dummy         ! kg C yr-1 tree-1
-    real    :: annualNPP          = dummy         ! kg C yr-1 tree-1
-    real    :: annualResp         = dummy         ! kg C yr-1 tree-1
+    type(common_fluxes) :: annual_fluxes
     real    :: NPPleaf            = dummy         ! C allocated to leaf, kg C yr-1 tree-1
     real    :: NPProot            = dummy         ! C allocated to root, kg C yr-1 tree-1
     real    :: NPPwood            = dummy         ! C allocated to wood, kg C yr-1 tree-1
-    real    :: annualNup          = 0.0           ! annual N uptake, kg N yr-1 tree-1
-    real    :: annualfixedN       = 0.0           ! annual N fixation, kg N yr-1 tree-1
 
     !===== Annual fluxes due to tree death, kg m-2 yr-1
     real    :: n_deadtrees        = 0.0           ! plant to soil N flux due to mortality (kg N m-2 yr-1)
@@ -278,6 +278,20 @@ module datatypes_biomee
 
 contains
 
+  subroutine update_fluxes(fluxes, delta)
+    ! Add delta quantities to partial fluxes (accounting)
+    type(common_fluxes), intent(inout) :: fluxes
+    type(common_fluxes), intent(in) :: delta
+
+    fluxes%Trsp   = fluxes%Trsp   + delta%Trsp
+    fluxes%GPP    = fluxes%GPP    + delta%GPP
+    fluxes%NPP    = fluxes%NPP    + delta%NPP
+    fluxes%Resp   = fluxes%Resp   + delta%Resp
+    fluxes%Nup    = fluxes%Nup    + delta%Nup
+    fluxes%fixedN = fluxes%fixedN + delta%fixedN
+
+  end subroutine update_fluxes
+
   !==============for diagnostics============================================
   subroutine Zero_diagnostics(vegn)
 
@@ -285,6 +299,7 @@ contains
     type(vegn_tile_type), intent(inout) :: vegn
 
     ! local variables
+    type(common_fluxes) :: cf
     type(cohort_type), pointer :: cc
     integer :: i
     
@@ -322,20 +337,10 @@ contains
       cc%transp       = 0.0
 
       ! daily
-      cc%dailyTrsp    = 0.0
-      cc%dailyGPP     = 0.0
-      cc%dailyNPP     = 0.0
-      cc%dailyResp    = 0.0
-      cc%dailyNup     = 0.0
-      cc%dailyfixedN  = 0.0
+      cc%daily_fluxes = cf
 
       ! annual
-      cc%annualTrsp   = 0.0
-      cc%annualGPP    = 0.0
-      cc%annualNPP    = 0.0
-      cc%annualResp   = 0.0
-      cc%annualNup    = 0.0
-      cc%annualfixedN = 0.0
+      cc%annual_fluxes = cf
       cc%NPPleaf      = 0.0
       cc%NPProot      = 0.0
       cc%NPPwood      = 0.0
@@ -469,10 +474,7 @@ contains
       cc => vegn%cohorts(i)
 
       ! cohort daily
-      cc%dailyTrsp = cc%dailyTrsp + cc%transp
-      cc%dailyGPP  = cc%dailygpp  + cc%gpp
-      cc%dailyNPP  = cc%dailyNpp  + cc%Npp
-      cc%dailyResp = cc%dailyResp + cc%Resp
+      call update_fluxes(cc%daily_fluxes, common_fluxes(cc%transp, cc%gpp, cc%Npp, cc%Resp, cc%N_uptake, cc%fixedN))
 
       ! Tile hourly
       vegn%GPP    = vegn%GPP    + cc%gpp    * cc%nindivs
@@ -511,6 +513,7 @@ contains
 
     ! local variables
     type(cohort_type), pointer :: cc    ! current cohort
+    type(common_fluxes) :: cf
     integer :: i
 
     ! cohorts output
@@ -518,16 +521,10 @@ contains
       cc => vegn%cohorts(i)
 
       ! running annual sum
-      cc%annualGPP  = cc%annualGPP  + cc%dailyGPP
-      cc%annualNPP  = cc%annualNPP  + cc%dailyNPP
-      cc%annualResp = cc%annualResp + cc%dailyResp
-      cc%annualTrsp = cc%annualTrsp + cc%dailyTrsp
+      call update_fluxes(cc%annual_fluxes, cc%daily_fluxes)
 
       ! Zero Daily variables
-      cc%dailyTrsp = 0.0
-      cc%dailyGPP  = 0.0
-      cc%dailyNPP  = 0.0
-      cc%dailyResp = 0.0
+      cc%daily_fluxes = cf
     enddo
 
     ! Tile level, daily
@@ -681,11 +678,11 @@ contains
       out_annual_cohorts(i)%fleaf       = fleaf
       out_annual_cohorts(i)%froot       = froot
       out_annual_cohorts(i)%fwood       = fwood
-      out_annual_cohorts(i)%GPP         = cc%annualGPP
-      out_annual_cohorts(i)%NPP         = cc%annualNPP
-      out_annual_cohorts(i)%Rauto       = cc%annualResp
-      out_annual_cohorts(i)%Nupt        = cc%annualNup
-      out_annual_cohorts(i)%Nfix        = cc%annualfixedN
+      out_annual_cohorts(i)%GPP         = cc%annual_fluxes%GPP
+      out_annual_cohorts(i)%NPP         = cc%annual_fluxes%NPP
+      out_annual_cohorts(i)%Rauto       = cc%annual_fluxes%Resp
+      out_annual_cohorts(i)%Nupt        = cc%annual_fluxes%Nup
+      out_annual_cohorts(i)%Nfix        = cc%annual_fluxes%fixedN
       out_annual_cohorts(i)%n_deadtrees = cc%n_deadtrees
       out_annual_cohorts(i)%c_deadtrees = cc%c_deadtrees
       out_annual_cohorts(i)%deathrate   = cc%deathrate
@@ -703,7 +700,7 @@ contains
 
     do i = 1, vegn%n_cohorts
       cc => vegn%cohorts(i)
-      vegn%annualfixedN = vegn%annualfixedN  + cc%annualfixedN * cc%nindivs
+      vegn%annualfixedN = vegn%annualfixedN  + cc%annual_fluxes%fixedN * cc%nindivs
       vegn%NPPL         = vegn%NPPL          + cc%NPPleaf * cc%nindivs
       vegn%NPPW         = vegn%NPPW          + cc%NPPwood * cc%nindivs 
       vegn%n_deadtrees  = vegn%n_deadtrees   + cc%n_deadtrees

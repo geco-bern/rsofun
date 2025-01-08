@@ -124,7 +124,6 @@ contains
       ! Obligate Nitrogen Fixation
       cc%fixedN = fnsc*spdata(sp)%NfixRate0 * cc%proot%c%c12 * tf * myinterface%dt_fast_yr ! kgN tree-1 step-1
       r_Nfix    = spdata(sp)%NfixCost0 * cc%fixedN ! + 0.25*spdata(sp)%NfixCost0 * cc%N_uptake    ! tree-1 step-1
-      cc%annualfixedN = cc%annualfixedN + cc%fixedN
 
       ! LeafN    = spdata(sp)%LNA * cc%leafarea  ! gamma_SW is sapwood respiration rate (kgC m-2 Acambium yr-1)
       r_stem   = fnsc*spdata(sp)%gamma_SW  * Acambium * tf * myinterface%dt_fast_yr ! kgC tree-1 step-1
@@ -1391,7 +1390,6 @@ contains
     real    :: totNup    ! kgN m-2
     real    :: avgNup
     real    :: rho_N_up, N_roots   ! actual N uptake rate
-    ! logical :: NSN_not_full
     integer :: i
 
     ! We artificially refill N inorg
@@ -1402,19 +1400,20 @@ contains
     ! how many roots it has and how many roots other individuals have.
     N_Roots  = 0.0
     vegn%N_uptake = 0.0
+    
+    do i = 1, vegn%n_cohorts
+      cc => vegn%cohorts(i)
+      associate (sp => myinterface%params_species(cc%species))
+
+      cc%N_uptake  = 0.0 ! We MUST ALWAYS reset it (whether or not vegn%ninorg%n14 > 0.0)
+      cc%NSNmax = sp%fNSNmax*(cc%bl_max/(sp%CNleaf0*sp%leafLS)+cc%br_max/sp%CNroot0)
+      if (cc%plabl%n%n14 < cc%NSNmax) N_Roots = N_Roots + cc%proot%c%c12 * cc%nindivs
+
+      end associate
+    enddo
 
     if (vegn%ninorg%n14 > 0.0) then
-    
-      do i = 1, vegn%n_cohorts
-        cc => vegn%cohorts(i)
-        associate (sp => myinterface%params_species(cc%species))
 
-        cc%NSNmax = sp%fNSNmax*(cc%bl_max/(sp%CNleaf0*sp%leafLS)+cc%br_max/sp%CNroot0) !5.0 * (cc%bl_max/sp%CNleaf0 + cc%br_max/sp%CNroot0)) !
-        if (cc%plabl%n%n14 < cc%NSNmax) N_Roots = N_Roots + cc%proot%c%c12 * cc%nindivs
-
-        end associate
-      enddo
-      
       ! M-M equation for Nitrogen absoption, McMurtrie et al. 2012, Ecology & Evolution
       ! rate at given root biomass and period of time
       if (N_roots>0.0) then
@@ -1428,22 +1427,19 @@ contains
         avgNup = totNup / N_roots ! kgN time step-1 kg roots-1
         
         ! Nitrogen uptaken by each cohort (N_uptake) - proportional to cohort's root mass
-        vegn%N_uptake = 0.0
         do i = 1, vegn%n_cohorts
           cc => vegn%cohorts(i)
-          cc%N_uptake  = 0.0
           if (cc%plabl%n%n14 < cc%NSNmax) then
 
             cc%N_uptake    = cc%proot%c%c12 * avgNup ! min(cc%proot%c%c12*avgNup, cc%NSNmax-cc%plabl%n%n14)
             cc%plabl%n%n14 = cc%plabl%n%n14 + cc%N_uptake
-            cc%annualNup   = cc%annualNup + cc%N_uptake
 
             ! subtract N from mineral N
             vegn%ninorg%n14 = vegn%ninorg%n14 - cc%N_uptake * cc%nindivs
             vegn%N_uptake   = vegn%N_uptake + cc%N_uptake * cc%nindivs
           endif
         enddo
-        cc =>null()
+        cc => null()
 
       endif ! N_roots>0
     endif
