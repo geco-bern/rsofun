@@ -93,9 +93,6 @@ module datatypes_biomee
     real :: height    = 0.0              ! vegetation height, m
     real :: crownarea = 1.0              ! crown area, m2 tree-1
     real :: leafarea  = 0.0              ! total area of leaves, m2 tree-1
-    real :: lai       = 0.0              ! crown leaf area index, m2/m2
-    real :: BA        = 0.0              ! tree basal area, m2 tree-1
-    real :: Volume    = 0.0              ! tree basal volume, m3 tree-1
 
     !===== Biological prognostic variables
     integer :: species    = 1            ! vegetation species
@@ -156,8 +153,8 @@ module datatypes_biomee
     real    :: resg               = 0.0           ! growth respiration, kg C day-1 tree-1
 
     !===== Memory variables used for computing deltas
-    real    :: DBH_ys            = dummy          ! DBH at the begining of a year (growing season)
-    real    :: BA_ys             = dummy          ! Basal area at the beginning og a year
+    real    :: DBH_ys            = 0.0            ! DBH at the begining of a year (growing season)
+    real    :: BA_ys             = 0.0            ! Basal area at the beginning og a year
 
   end type cohort_type
 
@@ -277,6 +274,29 @@ module datatypes_biomee
   end type vegn_tile_type
 
 contains
+  function lai(cohort) result(res)
+    ! Leaf area index: surface of leaves per m2 of crown
+    real :: res
+    type(cohort_type) :: cohort
+
+    res = cohort%leafarea / cohort%crownarea !(cohort%crownarea *(1.0-sp%internal_gap_frac))
+  end function lai
+
+  function basal_area(cohort) result(ba)
+    ! Tree basal area, m2 tree-1
+    real :: ba
+    type(cohort_type) :: cohort
+
+    ba = pi/4 * cohort%dbh * cohort%dbh
+  end function basal_area
+
+  function volume(cohort) result(vol)
+    ! Tree basal volume, m3 tree-1
+    real :: vol
+    type(cohort_type) :: cohort
+
+    vol = (cohort%psapw%c%c12 + cohort%pwood%c%c12) / myinterface%params_species(cohort%species)%rho_wood
+  end function volume
 
   subroutine update_fluxes(fluxes, delta)
     ! Add delta quantities to partial fluxes (accounting)
@@ -299,7 +319,6 @@ contains
     type(vegn_tile_type), intent(inout) :: vegn
 
     ! local variables
-    type(common_fluxes) :: cf
     type(cohort_type), pointer :: cc
     integer :: i
     
@@ -326,6 +345,10 @@ contains
     do i = 1, vegn%n_cohorts
       cc => vegn%cohorts(i)
 
+      ! Save last year's values
+      cc%DBH_ys       = cc%dbh
+      cc%BA_ys        = basal_area(cc)
+
       cc%C_growth     = 0.0
       cc%N_growth     = 0.0
       cc%gpp          = 0.0
@@ -336,16 +359,14 @@ contains
       cc%resg         = 0.0
       cc%transp       = 0.0
 
-      ! daily
-      cc%daily_fluxes = cf
+      ! Reset daily
+      cc%daily_fluxes = common_fluxes()
 
       ! annual
-      cc%annual_fluxes = cf
+      cc%annual_fluxes = common_fluxes()
       cc%NPPleaf      = 0.0
       cc%NPProot      = 0.0
       cc%NPPwood      = 0.0
-      cc%DBH_ys       = cc%dbh
-      cc%BA_ys        = cc%BA
       cc%n_deadtrees  = 0.0
       cc%c_deadtrees  = 0.0
       cc%m_turnover   = 0.0
@@ -426,15 +447,9 @@ contains
         vegn%DBH12pow2  = vegn%DBH12pow2 + cc%dbh      * cc%dbh     * cc%nindivs
       endif
 
-      if (cc%age    > vegn%MaxAge)       vegn%MaxAge    = cc%age
-      if (cc%Volume > vegn%MaxVolume)    vegn%MaxVolume = cc%Volume ! maxloc(cc%age)
-      if (cc%dbh    > vegn%MaxDBH)       vegn%MaxDBH    = cc%dbh    ! maxloc(cc%age)
-
-      ! vegn%NPPL      = vegn%NPPL   + fleaf * cc%nindivs
-      ! vegn%NPPW      = vegn%NPPW   + fwood * cc%nindivs
-
-      ! vegn%n_deadtrees = vegn%n_deadtrees + cc%n_deadtrees
-      ! vegn%c_deadtrees = vegn%c_deadtrees + cc%c_deadtrees
+      vegn%MaxAge    = MAX(cc%age, vegn%MaxAge)
+      vegn%MaxVolume = MAX(volume(cc), vegn%MaxVolume)
+      vegn%MaxDBH    = MAX(cc%dbh, vegn%MaxDBH)
 
     enddo
 
@@ -513,7 +528,6 @@ contains
 
     ! local variables
     type(cohort_type), pointer :: cc    ! current cohort
-    type(common_fluxes) :: cf
     integer :: i
 
     ! cohorts output
@@ -523,8 +537,8 @@ contains
       ! running annual sum
       call update_fluxes(cc%annual_fluxes, cc%daily_fluxes)
 
-      ! Zero Daily variables
-      cc%daily_fluxes = cf
+      ! Reset daily variables
+      cc%daily_fluxes = common_fluxes()
     enddo
 
     ! Tile level, daily
@@ -599,7 +613,7 @@ contains
 
     ! local variables
     type(cohort_type), pointer :: cc
-    real :: treeG, fseed, fleaf=0, froot, fwood=0, dDBH, dBA
+    real :: treeG, fseed, fleaf=0, froot, fwood=0, dDBH, BA, dBA
     real :: plantC, plantN, soilC, soilN
     integer :: i
 
@@ -648,9 +662,8 @@ contains
       froot     = cc%NPProot / treeG
       fwood     = cc%NPPwood / treeG
       dDBH      = cc%dbh - cc%DBH_ys !in m
-      cc%BA     = pi/4 * cc%dbh * cc%dbh
-      dBA       = cc%BA - cc%BA_ys
-      cc%Volume = (cc%psapw%c%c12 + cc%pwood%c%c12) / myinterface%params_species(cc%species)%rho_wood
+      BA        = basal_area(cc)
+      dBA       = BA - cc%BA_ys
 
       out_annual_cohorts(i)%year        = iyears
       out_annual_cohorts(i)%cID         = cc%ccID
@@ -662,7 +675,7 @@ contains
       out_annual_cohorts(i)%dDBH        = dDBH * 100     ! *100 to convert m in cm
       out_annual_cohorts(i)%height      = cc%height
       out_annual_cohorts(i)%age         = cc%age
-      out_annual_cohorts(i)%BA          = cc%BA
+      out_annual_cohorts(i)%BA          = BA
       out_annual_cohorts(i)%dBA         = dBA
       out_annual_cohorts(i)%Acrown      = cc%crownarea
       out_annual_cohorts(i)%Aleaf       = cc%leafarea

@@ -163,7 +163,7 @@ contains
           fw = 0.0
           fs = 0.0
 
-          call gs_leuning(rad_top, rad_net, TairK, cana_q, cc%lai, &
+          call gs_leuning(rad_top, rad_net, TairK, cana_q, lai(cc), &
             p_surf, water_supply, cc%species, sp%pt, &
             cana_co2, extinct, fs+fw, &
             psyn, resp, w_scale2, transp )

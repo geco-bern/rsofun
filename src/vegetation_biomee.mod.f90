@@ -365,8 +365,6 @@ contains
         cc%height    = cc%height    + dHeight
         cc%crownarea = cc%crownarea + dCA
         cc%leafarea  = leaf_area_from_biomass(cc%pleaf%c%c12, cc%species)
-        ! cc%lai is surface of leaves per m2 of crown
-        cc%lai       = cc%leafarea/cc%crownarea !(cc%crownarea *(1.0-sp%internal_gap_frac))
         ! vegn%LAI is the surface of leaves per m2 of ground/tile
         vegn%LAI     = vegn%LAI + cc%leafarea * cc%nindivs
 
@@ -462,8 +460,6 @@ contains
     ! local variables
     type(cohort_type), pointer :: cc
     integer :: i
-    ! real    :: grassdensity   ! for grasses only
-    ! real    :: BL_u,BL_c
     real    :: ccNSC, ccNSN
     logical :: cc_firstday = .false.
     logical :: TURN_ON_life = .false., TURN_OFF_life
@@ -482,14 +478,14 @@ contains
       associate (sp => myinterface%params_species(cc%species) )
 
       ! for evergreen
-      if (sp%phenotype==1 .and. cc%status==LEAF_OFF) cc%status=LEAF_ON
+      if (sp%phenotype == 1 .and. cc%status == LEAF_OFF) cc%status=LEAF_ON
 
       ! for deciduous and grasses
       TURN_ON_life = (sp%phenotype == 0 .and. &
         cc%status    == LEAF_OFF       .and. &
         cc%gdd        > sp%gdd_crit    .and. &
         vegn%tc_pheno > sp%tc_crit_on) .and. &
-        (sp%lifeform .ne. 0 .OR.(sp%lifeform .eq. 0 .and. cc%layer==1))
+        (sp%lifeform /= 0 .OR.(sp%lifeform == 0 .and. cc%layer == 1))
 
       cc_firstday = .false.
       if (TURN_ON_life) then
@@ -1277,8 +1273,7 @@ contains
       cc%proot%n%n14 = cc%proot%n%n14 - dNR
 
       ! update leaf area and LAI
-      cc%leafarea= leaf_area_from_biomass(cc%pleaf%c%c12, cc%species)
-      cc%lai     = cc%leafarea / (cc%crownarea *(1.0-sp%internal_gap_frac))
+      cc%leafarea = leaf_area_from_biomass(cc%pleaf%c%c12, cc%species)
 
       ! update NPP for leaves, fine roots, and wood
       cc%NPPleaf = cc%NPPleaf - myinterface%params_tile%l_fract * dBL
@@ -1842,10 +1837,6 @@ contains
       
       x1 = c1%nindivs/(c1%nindivs+c2%nindivs)
       x2 = c2%nindivs/(c1%nindivs+c2%nindivs)
-      !else
-      !   x1 = 0.5
-      !   x2 = 0.5
-      !endif
 
       ! update number of individuals in merged cohort
       c2%nindivs = c1%nindivs + c2%nindivs
@@ -1858,14 +1849,6 @@ contains
       c2%pseed%c%c12 = x1*c1%pseed%c%c12 + x2*c2%pseed%c%c12
       c2%plabl%c%c12 = x1*c1%plabl%c%c12 + x2*c2%plabl%c%c12
 
-      ! Allometry
-      c2%dbh = x1*c1%dbh + x2*c2%dbh
-      c2%height = x1*c1%height + x2*c2%height
-      c2%crownarea = x1*c1%crownarea + x2*c2%crownarea
-      c2%age = x1*c1%age + x2*c2%age
-      c2%C_growth = x1*c1%C_growth + x2*c2%C_growth
-      c2%topyear = x1*c1%topyear + x2*c2%topyear
-
       ! Nitrogen
       c2%pleaf%n%n14 = x1*c1%pleaf%n%n14 + x2*c2%pleaf%n%n14
       c2%proot%n%n14 = x1*c1%proot%n%n14 + x2*c2%proot%n%n14
@@ -1873,10 +1856,13 @@ contains
       c2%pwood%n%n14 = x1*c1%pwood%n%n14 + x2*c2%pwood%n%n14
       c2%pseed%n%n14 = x1*c1%pseed%n%n14 + x2*c2%pseed%n%n14
       c2%plabl%n%n14 = x1*c1%plabl%n%n14 + x2*c2%plabl%n%n14
-      
-      !  calculate the resulting dry heat capacity
-      c2%leafarea = leaf_area_from_biomass(c2%pleaf%c%c12, c2%species)
-      call init_cohort_allometry(c2) !Enseng comments
+
+      ! Cohort age
+      c2%age = x1*c1%age + x2*c2%age
+      c2%topyear = x1*c1%topyear + x2*c2%topyear
+
+      ! Allometry
+      call init_cohort_allometry(c2)
     endif
 
   end subroutine merge_cohorts
@@ -1956,6 +1942,8 @@ contains
     integer :: layer
     real    :: btot ! total biomass per individual, kg C
 
+    cc%leafarea = leaf_area_from_biomass(cc%pleaf%c%c12, cc%species)
+
     associate(sp=>myinterface%params_species(cc%species))
       btot = max(0.0001, cc%pwood%c%c12 + cc%psapw%c%c12)
       layer = max(1, cc%layer)
@@ -1983,14 +1971,8 @@ contains
     real :: area ! returned value
     real,    intent(in) :: bl      ! biomass of leaves, kg C/individual
     integer, intent(in) :: species ! species
-    ! integer, intent(in) :: layer, firstlayer
-    ! modified by Weng (2014-01-09), 07-18-2017
+
     area = bl/myinterface%params_species(species)%LMA
-    !if (layer > 1.AND. firstlayer == 0) then
-    !   area = bl/(0.5*myinterface%params_species(species)%LMA) ! half thickness for leaves in understory
-    !else
-    !   area = bl/myinterface%params_species(species)%LMA
-    !endif
   
   end function
   
