@@ -128,8 +128,8 @@ contains
       ! LeafN    = spdata(sp)%LNA * cc%leafarea  ! gamma_SW is sapwood respiration rate (kgC m-2 Acambium yr-1)
       r_stem   = fnsc*spdata(sp)%gamma_SW  * Acambium * tf * myinterface%dt_fast_yr ! kgC tree-1 step-1
       r_root   = fnsc*spdata(sp)%gamma_FR  * cc%proot%n%n14 * tf * myinterface%dt_fast_yr ! root respiration ~ root N
-      cc%fast_fluxes%resp = cc%resl + r_stem + r_root + r_Nfix   !kgC tree-1 step-1
       cc%resr = r_root + r_Nfix ! tree-1 step-1
+      cc%fast_fluxes%resp = cc%resl + r_stem + cc%resr   !kgC tree-1 step-1
 
     end associate
 
@@ -270,32 +270,6 @@ contains
         !==================================
         ! Turn off N effects on allocation  (for running the simulations)
         !==================================
-        
-        ! IF(cc%N_growth < N_demand)THEN
-        !     ! a new method, Weng, 2019-05-21
-        !     ! same ratio reduction for leaf, root, and seed if(cc%N_growth < N_demand)
-        !     Nsupplyratio = MAX(0.0, MIN(1.0, cc%N_growth/N_demand))
-        !     !r_N_SD = (cc%N_growth-cc%C_growth/sp%CNsw0)/(N_demand-cc%C_growth/sp%CNsw0) ! fixed wood CN
-        !     r_N_SD = cc%N_growth/N_demand ! = Nsupplyratio
-        !     if(sp%lifeform > 0 )then ! for trees
-        !        if(r_N_SD<=1.0 .and. r_N_SD>0.0)then
-        !         dBSW =  dBSW + (1.0-r_N_SD) * (dBL+dBR+dSeed)
-        !         dBR  =  r_N_SD * dBR
-        !         dBL  =  r_N_SD * dBL
-        !         dSeed=  r_N_SD * dSeed
-        !        elseif(r_N_SD <= 0.0)then
-        !         dBSW = cc%N_growth/sp%CNsw0
-        !         dBR  =  0.0
-        !         dBL  =  0.0
-        !         dSeed=  0.0
-        !        endif
-        !     else ! for grasses
-        !        dBR  =  Nsupplyratio * dBR
-        !        dBL  =  Nsupplyratio * dBL
-        !        dSeed=  Nsupplyratio * dSeed
-        !        dBSW =  Nsupplyratio * dBSW
-        !     endif
-        ! ENDIF
 
         ! Nitrogen available for all tisues, including wood
         if (cc%N_growth < N_demand) then
@@ -366,8 +340,6 @@ contains
         ! vegn%LAI is the surface of leaves per m2 of ground/tile
         vegn%LAI     = vegn%LAI + cc%leafarea * cc%nindivs
 
-        call rootarea_and_verticalprofile( cc )
-
         ! convert sapwood to heartwood for woody plants ! Nitrogen from sapwood to heart wood
         if (sp%lifeform > 0) then
           CSAsw  = cc%bl_max/sp%LMA * sp%phiCSA * cc%height ! with Plant hydraulics, Weng, 2016-11-30
@@ -426,27 +398,6 @@ contains
     cc => null()
 
   end subroutine vegn_growth_EW
-
-
-  subroutine rootarea_and_verticalprofile( cc )
-    !////////////////////////////////////////////////////////////////
-    ! Weng: partioning root area into layers, 10-24-2017
-    ! Code from BiomeE-Allocation
-    !---------------------------------------------------------------
-    type(cohort_type), intent(inout) :: cc
-    
-    ! local variables
-    integer :: j
-
-    associate (sp => myinterface%params_species(cc%species) )
-      cc%rootarea  = cc%proot%c%c12 * sp%SRA
-      do j=1,max_lev
-       cc%rootareaL(j) = cc%rootarea * sp%root_frac(j)
-     enddo
-    end associate
-  
-  end subroutine rootarea_and_verticalprofile
-
 
   subroutine vegn_phenology( vegn )
     !////////////////////////////////////////////////////////////////
@@ -525,7 +476,6 @@ contains
         cc%plabl%n%n14 = ccNSN/cc%nindivs - &
           (cc%pleaf%n%n14 + cc%psapw%n%n14 + cc%pwood%n%n14 + cc%proot%n%n14 + cc%pseed%n%n14)
 
-        call rootarea_and_verticalprofile( cc )
         call init_cohort_allometry( cc )
       endif
       end associate
@@ -1005,8 +955,6 @@ contains
         cc%NPProot = cc%NPProot + cc%proot%c%c12
         cc%NPPwood = cc%NPPwood + cc%psapw%c%c12 + cc%pwood%c%c12
 
-        call rootarea_and_verticalprofile( cc )
-
         ! Nitrogen pools
         cc%pleaf%n%n14  = cc%pleaf%c%c12/sp%CNleaf0
         cc%proot%n%n14  = cc%proot%c%c12/sp%CNroot0
@@ -1399,8 +1347,7 @@ contains
         cc => vegn%cohorts(i)
         associate (sp => myinterface%params_species(cc%species))
 
-          cc%NSNmax = sp%fNSNmax*(cc%bl_max/(sp%CNleaf0*sp%leafLS)+cc%br_max/sp%CNroot0)
-          if (cc%plabl%n%n14 < cc%NSNmax) N_Roots = N_Roots + cc%proot%c%c12 * cc%nindivs
+          if (cc%plabl%n%n14 < NSNmax(cc)) N_Roots = N_Roots + cc%proot%c%c12 * cc%nindivs
 
         end associate
       enddo
@@ -1420,7 +1367,7 @@ contains
         ! Nitrogen uptaken by each cohort (N_uptake) - proportional to cohort's root mass
         do i = 1, vegn%n_cohorts
           cc => vegn%cohorts(i)
-          if (cc%plabl%n%n14 < cc%NSNmax) then
+          if (cc%plabl%n%n14 < NSNmax(cc)) then
 
             cc%fast_fluxes%Nup = cc%proot%c%c12 * avgNup ! min(cc%proot%c%c12*avgNup, cc%NSNmax-cc%plabl%n%n14)
             cc%plabl%n%n14 = cc%plabl%n%n14 + cc%fast_fluxes%Nup
@@ -1915,8 +1862,6 @@ contains
     call init_cohort_allometry(cc)
     cc%plabl%c%c12        = 2.0 * (cc%bl_max + cc%br_max)
     
-    call rootarea_and_verticalprofile( cc )
-    
     ! N pools
     cc%plabl%n%n14    = 5.0 * (cc%bl_max / sp%CNleaf0 + cc%br_max / sp%CNroot0)
     cc%pleaf%n%n14  = cc%pleaf%c%c12 / sp%CNleaf0
@@ -1953,7 +1898,6 @@ contains
       ! values are not used by the model
       cc%bl_max = sp%LMA   * sp%LAImax        * cc%crownarea/layer
       cc%br_max = sp%phiRL * sp%LAImax/sp%SRA * cc%crownarea/layer
-      cc%NSNmax = sp%fNSNmax * (cc%bl_max / (sp%CNleaf0 * sp%leafLS) + cc%br_max / sp%CNroot0)
     end associate
   
   end subroutine init_cohort_allometry
@@ -2031,10 +1975,7 @@ contains
     vegn%wcl = myinterface%params_tile%FLDCAP
 
     ! Update soil water
-    vegn%SoilWater = 0.0
-    do i=1, max_lev
-      vegn%SoilWater = vegn%SoilWater + vegn%wcl(i)*thksl(i)*1000.0
-    enddo
+    vegn%SoilWater = SUM(vegn%wcl(:)*thksl(:)*1000.0)
     vegn%thetaS = 1.0
     
     ! tile

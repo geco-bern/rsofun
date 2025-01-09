@@ -157,7 +157,7 @@ contains
           cana_co2 = forcing%CO2 ! co2 concentration in canopy air space, mol CO2/mol dry air
 
           ! recalculate the water supply to mol H20 per m2 of leaf per second
-          water_supply = cc%W_supply / (cc%leafarea * myinterface%step_seconds * h2o_molmass * 1e-3) ! mol m-2 leafarea s-1
+          water_supply = W_supply(cc) / (cc%leafarea * myinterface%step_seconds * h2o_molmass * 1e-3) ! mol m-2 leafarea s-1
 
           !call get_vegn_wet_frac (cohort, fw=fw, fs=fs)
           fw = 0.0
@@ -171,7 +171,6 @@ contains
           ! store the calculated photosynthesis, photorespiration, and transpiration for future use in growth
           cc%An_op   = psyn   ! molC s-1 m-2 of leaves ! net photosynthesis, mol C/(m2 of leaves s)
           cc%An_cl   = -resp  ! molC s-1 m-2 of leaves
-          cc%w_scale = w_scale2
           cc%fast_fluxes%trsp = transp * h2o_molmass * 1e-3 * cc%leafarea * myinterface%step_seconds      ! Transpiration (kgH2O/(tree step), Weng, 2017-10-16
           cc%resl = -resp * c_molmass * 1e-3 * cc%leafarea * myinterface%step_seconds ! kgC tree-1 step-1
           cc%fast_fluxes%gpp = (psyn - resp) * c_molmass * 1e-3 * cc%leafarea * myinterface%step_seconds ! kgC step-1 tree-1
@@ -183,7 +182,6 @@ contains
             cc%An_cl   = 0.0
             cc%fast_fluxes%gpp   = 0.0
             cc%fast_fluxes%trsp  = 0.0
-            cc%w_scale = dummy
 
           endif
         end associate
@@ -265,7 +263,6 @@ contains
           cc%An_op   = 0.0
           cc%An_cl   = 0.0
           cc%fast_fluxes%trsp  = 0.0
-          cc%w_scale = dummy
 
           ! quantities per tree and cumulated over seconds in time step (kgC step-1 tree-1 )
           cc%fast_fluxes%gpp = par * fapar_tree(i) * out_pmodel%lue * cc%crownarea * myinterface%step_seconds * 1.0e-3
@@ -277,7 +274,6 @@ contains
           ! no leaves means no photosynthesis and no stomatal conductance either
           cc%An_op   = 0.0
           cc%An_cl   = 0.0
-          cc%w_scale = dummy
           cc%resl    = 0.0
           cc%fast_fluxes%gpp   = 0.0
           cc%fast_fluxes%trsp  = 0.0
@@ -320,7 +316,7 @@ contains
     !real,    intent(out)   :: gs   ! stomatal conductance, m/s
     real,    intent(out)   :: apot ! net photosynthesis, mol C/(m2 s)
     real,    intent(out)   :: acl  ! leaf respiration, mol C/(m2 s)
-    real,    intent(out)   :: w_scale2,transp  ! transpiration, mol H20/(m2 of leaf s)
+    real,    intent(out)   :: w_scale2, transp  ! transpiration, mol H20/(m2 of leaf s)
     
     ! local variables     
     ! photosynthesis

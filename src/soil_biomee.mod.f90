@@ -6,7 +6,7 @@ module md_soil_biomee
   ! 2016 Global Change Biology along the graidient of temperature. 
   ! Code is adopted from BiomeE https://doi.org/10.5281/zenodo.7125963.
   !-------------------------------------------------------------------------
- use md_interface_biomee, only: myinterface
+ use md_interface_biomee, only: myinterface, MAX_LEVELS
  use datatypes_biomee
  use md_sofunutils, only: calc_esat
  implicit none
@@ -26,21 +26,21 @@ contains
 
     !========================================================================
     ! Weng 2017-10-18 ! compute available water for photosynthesis
-    subroutine water_supply_layer( vegn)
+    subroutine water_supply_layer( vegn )
       use md_forcing_biomee, only: climate_type
       type(vegn_tile_type), intent(inout) :: vegn
 
     !----- local var --------------
       type(cohort_type),pointer :: cc
-      real :: fWup(max_lev)      ! fraction to the actual soil water
-      real :: freewater(max_lev)
-      real :: totWsup(max_lev) ! potential water uptake, mol s-1 m-2
-      real :: thetaS(max_lev) ! soil moisture index (0~1)
-      real :: dpsiSR(max_lev) ! pressure difference between soil water and root water, Pa
+      real :: fWup(MAX_LEVELS)      ! fraction to the actual soil water
+      real :: freewater(MAX_LEVELS)
+      real :: totWsup(MAX_LEVELS) ! potential water uptake, mol s-1 m-2
+      real :: thetaS(MAX_LEVELS) ! soil moisture index (0~1)
+      real :: dpsiSR(MAX_LEVELS) ! pressure difference between soil water and root water, Pa
       integer :: i,j
 
     !! Water supply from each layer
-      do i=1, max_lev ! Calculate water uptake potential layer by layer
+      do i=1, MAX_LEVELS ! Calculate water uptake potential layer by layer
          freewater(i) = max(0.0,((vegn%wcl(i)-myinterface%params_tile%WILTPT) * thksl(i) * 1000.0))
          thetaS(i)    = max(0.0, &
                  (vegn%wcl(i)-myinterface%params_tile%WILTPT) &
@@ -51,7 +51,7 @@ contains
          do j = 1, vegn%n_cohorts
             cc => vegn%cohorts(j)
             associate ( sp => myinterface%params_species(cc%species) )
-            cc%WupL(i) = cc%rootareaL(i)*sp%Kw_root*dpsiSR(i) * (myinterface%step_seconds*h2o_molmass*1e-3) ! kg H2O tree-1 step-1
+            cc%WupL(i) = rootareaL(cc, i)*sp%Kw_root*dpsiSR(i) * (myinterface%step_seconds*h2o_molmass*1e-3) ! kg H2O tree-1 step-1
             totWsup(i) = totWsup(i) + cc%WupL(i) * cc%nindivs ! water uptake per layer by all cohorts
             end associate
          enddo
@@ -64,11 +64,6 @@ contains
          enddo ! cohort for each layer
       enddo    ! all layers
 
-    ! total water suplly for each cohort
-      do j = 1, vegn%n_cohorts
-         cc => vegn%cohorts(j)
-         cc%W_supply = sum(cc%WupL(:))
-      enddo
      end subroutine water_supply_layer
 
     ! ============================================================================
@@ -84,7 +79,7 @@ contains
 
     !----- local var --------------
       type(cohort_type),pointer :: cc
-      real    :: rainwater,W_deficit(max_lev),W_add(max_lev)
+      real    :: rainwater,W_deficit(MAX_LEVELS),W_add(MAX_LEVELS)
       real    :: kappa  ! light extinction coefficient of corwn layers
       real    :: Esoil      ! soil surface evaporation, kg m-2 s-1
       real    :: Rsoilabs   ! W/m2
@@ -99,8 +94,9 @@ contains
       real    :: Cmolar ! mole density of air (mol/m3)
       real    :: rsoil  ! s m-1
       real    :: raero
-      real    :: transp,fsupply ! fraction of transpiration from a soil layer
-      real    :: WaterBudgetL(max_lev)
+      real    :: transp, fsupply ! fraction of transpiration from a soil layer
+      real    :: wsupply
+      real    :: WaterBudgetL(MAX_LEVELS)
       integer :: i,j
 
       ! Water uptaken by roots, per timestep
@@ -111,13 +107,9 @@ contains
           ! cc%W_supply = sum(cc%WupL(:))
           ! cc%transp   = min(cc%transp,cc%W_supply)
           ! deduct from soil water pool
-          if(cc%W_supply>0.0)then
-             do i=1,max_lev
-                fsupply = cc%WupL(i)/cc%W_supply
-                transp  = fsupply * cc%fast_fluxes%trsp * cc%nindivs
-                !vegn%wcl(i) = vegn%wcl(i) - transp/(thksl(i)*1000.0)
-                WaterBudgetL(i) = WaterBudgetL(i) - transp
-             enddo
+          wsupply = W_supply(cc)
+          if(wsupply > 0.0) then
+              WaterBudgetL(:) = WaterBudgetL(:) - cc%WupL(:)/wsupply * cc%fast_fluxes%trsp * cc%nindivs
           endif
       enddo ! all cohorts
 
@@ -158,24 +150,21 @@ contains
     !! soil water refill by precipitation
       rainwater =  forcing%rain * myinterface%step_seconds
       if(rainwater > 0.0)then
-         do i=1, max_lev
+         do i=1, MAX_LEVELS
             W_deficit(i) = (myinterface%params_tile%FLDCAP - vegn%wcl(i)) * thksl(i)*1000.0
             W_add(i) = min(rainwater, W_deficit(i))
             rainwater = rainwater - W_add(i)
             !vegn%wcl(i) = vegn%wcl(i) + W_add(i)/(thksl(i)*1000.0)
             WaterBudgetL(i) = WaterBudgetL(i) + W_add(i)
 
-            if(rainwater<=0.0)exit
+            if(rainwater<=0.0) exit
          enddo
       endif
       vegn%runoff = rainwater ! mm step-1
 
       ! Total soil water
-      vegn%SoilWater = 0.0
-      do i=1,max_lev
-         vegn%wcl(i) = vegn%wcl(i) +  WaterBudgetL(i)/(thksl(i)*1000.0)
-         vegn%SoilWater = vegn%SoilWater + vegn%wcl(i)*thksl(i)*1000.0
-      enddo
+      vegn%wcl(:) = vegn%wcl(:) +  WaterBudgetL(:)/(thksl(:)*1000.0)
+      vegn%SoilWater = SUM(vegn%wcl(:)*thksl(:)*1000.0)
 
     end subroutine SoilWaterDynamicsLayer
 
