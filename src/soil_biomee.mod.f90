@@ -105,7 +105,6 @@ contains
 
       ! Water uptaken by roots, per timestep
       WaterBudgetL = 0.0
-      vegn%transp = 0.0
       do j = 1, vegn%n_cohorts
           cc => vegn%cohorts(j)
           ! Compare with soil water
@@ -115,10 +114,9 @@ contains
           if(cc%W_supply>0.0)then
              do i=1,max_lev
                 fsupply = cc%WupL(i)/cc%W_supply
-                transp  = fsupply * cc%transp * cc%nindivs
+                transp  = fsupply * cc%fast_fluxes%trsp * cc%nindivs
                 !vegn%wcl(i) = vegn%wcl(i) - transp/(thksl(i)*1000.0)
                 WaterBudgetL(i) = WaterBudgetL(i) - transp
-                vegn%transp = vegn%transp + transp
              enddo
           endif
       enddo ! all cohorts
@@ -128,15 +126,7 @@ contains
          kappa = 0.75
     !    thermodynamic parameters for air
 
-    ! print*, forcing%radiation, kappa, vegn%LAI    ! xxx debug
-
           Rsoilabs = forcing%radiation * exp(-kappa*vegn%LAI)
-
-    ! print*,'forcing%radiation', forcing%radiation
-    ! print*,'kappa', kappa
-    ! print*,'vegn%LAI', vegn%LAI
-    ! print*,'Rsoilabs', Rsoilabs
-    ! print*, 'transp', transp
 
           Hgrownd = 0.0
           TairK = forcing%Tair

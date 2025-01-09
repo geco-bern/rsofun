@@ -61,13 +61,13 @@ contains
       call plant_respiration( cc, forcing%tair ) ! get resp per tree per time step
 
       ! We add the growth respiration scaled from daily to timestap
-      cc%resp = cc%resp + (cc%resg * myinterface%step_seconds) / secs_per_day
-      cc%resp = cc%resp * myinterface%params_tile%tf_base          ! scaling for calibration
-      cc%npp  = cc%gpp - cc%resp       ! kgC tree-1 step-1
+      cc%fast_fluxes%resp = cc%fast_fluxes%resp + (cc%resg * myinterface%step_seconds) / secs_per_day
+      cc%fast_fluxes%resp = cc%fast_fluxes%resp * myinterface%params_tile%tf_base          ! scaling for calibration
+      cc%fast_fluxes%npp  = cc%fast_fluxes%gpp - cc%fast_fluxes%resp       ! kgC tree-1 step-1
 
       ! detach photosynthesis model from plant growth
-      cc%plabl%c%c12 = cc%plabl%c%c12 + cc%npp
-      cc%plabl%n%n14 = cc%plabl%n%n14 + cc%fixedN
+      cc%plabl%c%c12 = cc%plabl%c%c12 + cc%fast_fluxes%npp
+      cc%plabl%n%n14 = cc%plabl%n%n14 + cc%fast_fluxes%fixedN
 
     enddo ! all cohorts
     
@@ -122,13 +122,13 @@ contains
       !endif
 
       ! Obligate Nitrogen Fixation
-      cc%fixedN = fnsc*spdata(sp)%NfixRate0 * cc%proot%c%c12 * tf * myinterface%dt_fast_yr ! kgN tree-1 step-1
-      r_Nfix    = spdata(sp)%NfixCost0 * cc%fixedN ! + 0.25*spdata(sp)%NfixCost0 * cc%N_uptake    ! tree-1 step-1
+      cc%fast_fluxes%fixedN = fnsc*spdata(sp)%NfixRate0 * cc%proot%c%c12 * tf * myinterface%dt_fast_yr ! kgN tree-1 step-1
+      r_Nfix    = spdata(sp)%NfixCost0 * cc%fast_fluxes%fixedN ! + 0.25*spdata(sp)%NfixCost0 * cc%N_uptake    ! tree-1 step-1
 
       ! LeafN    = spdata(sp)%LNA * cc%leafarea  ! gamma_SW is sapwood respiration rate (kgC m-2 Acambium yr-1)
       r_stem   = fnsc*spdata(sp)%gamma_SW  * Acambium * tf * myinterface%dt_fast_yr ! kgC tree-1 step-1
       r_root   = fnsc*spdata(sp)%gamma_FR  * cc%proot%n%n14 * tf * myinterface%dt_fast_yr ! root respiration ~ root N
-      cc%resp = cc%resl + r_stem + r_root + r_Nfix   !kgC tree-1 step-1
+      cc%fast_fluxes%resp = cc%resl + r_stem + r_root + r_Nfix   !kgC tree-1 step-1
       cc%resr = r_root + r_Nfix ! tree-1 step-1
 
     end associate
@@ -182,7 +182,7 @@ contains
 
   subroutine vegn_growth_EW( vegn )
     !////////////////////////////////////////////////////////////////
-    ! updates cohort biomass pools, LAI, and height using accumulated 
+    ! updates cohort biomass pools, LAI, and height using accumulated
     ! C_growth and bHW_gain
     ! Code from BiomeE-Allocation
     !---------------------------------------------------------------
@@ -209,15 +209,13 @@ contains
     real :: LF_deficit, FR_deficit
     real :: N_demand,Nsupplyratio,extraN
     real :: r_N_SD
-    logical :: do_editor_scheme = .False.
     integer :: i
-    do_editor_scheme = .False. ! .True.
 
     ! Turnover of leaves and fine roots
     call vegn_tissue_turnover( vegn )
 
     ! Allocate C_gain to tissues
-    vegn%LAI = 0.0    ! added here, otherwise LAI is the sum of current and new, Beni 24 Aug 2022
+    vegn%LAI = 0.0
     do i = 1, vegn%n_cohorts   
       cc => vegn%cohorts(i)
 
@@ -1394,20 +1392,18 @@ contains
     ! It considers competition here. How much N one can absorp depends on 
     ! how many roots it has and how many roots other individuals have.
     N_Roots  = 0.0
-    vegn%N_uptake = 0.0
-    
-    do i = 1, vegn%n_cohorts
-      cc => vegn%cohorts(i)
-      associate (sp => myinterface%params_species(cc%species))
-
-      cc%N_uptake  = 0.0 ! We MUST ALWAYS reset it (whether or not vegn%ninorg%n14 > 0.0)
-      cc%NSNmax = sp%fNSNmax*(cc%bl_max/(sp%CNleaf0*sp%leafLS)+cc%br_max/sp%CNroot0)
-      if (cc%plabl%n%n14 < cc%NSNmax) N_Roots = N_Roots + cc%proot%c%c12 * cc%nindivs
-
-      end associate
-    enddo
 
     if (vegn%ninorg%n14 > 0.0) then
+
+      do i = 1, vegn%n_cohorts
+        cc => vegn%cohorts(i)
+        associate (sp => myinterface%params_species(cc%species))
+
+          cc%NSNmax = sp%fNSNmax*(cc%bl_max/(sp%CNleaf0*sp%leafLS)+cc%br_max/sp%CNroot0)
+          if (cc%plabl%n%n14 < cc%NSNmax) N_Roots = N_Roots + cc%proot%c%c12 * cc%nindivs
+
+        end associate
+      enddo
 
       ! M-M equation for Nitrogen absoption, McMurtrie et al. 2012, Ecology & Evolution
       ! rate at given root biomass and period of time
@@ -1426,12 +1422,11 @@ contains
           cc => vegn%cohorts(i)
           if (cc%plabl%n%n14 < cc%NSNmax) then
 
-            cc%N_uptake    = cc%proot%c%c12 * avgNup ! min(cc%proot%c%c12*avgNup, cc%NSNmax-cc%plabl%n%n14)
-            cc%plabl%n%n14 = cc%plabl%n%n14 + cc%N_uptake
+            cc%fast_fluxes%Nup = cc%proot%c%c12 * avgNup ! min(cc%proot%c%c12*avgNup, cc%NSNmax-cc%plabl%n%n14)
+            cc%plabl%n%n14 = cc%plabl%n%n14 + cc%fast_fluxes%Nup
 
             ! subtract N from mineral N
-            vegn%ninorg%n14 = vegn%ninorg%n14 - cc%N_uptake * cc%nindivs
-            vegn%N_uptake   = vegn%N_uptake + cc%N_uptake * cc%nindivs
+            vegn%ninorg%n14 = vegn%ninorg%n14 - cc%fast_fluxes%Nup * cc%nindivs
           endif
         enddo
         cc => null()

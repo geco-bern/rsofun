@@ -109,13 +109,10 @@ module datatypes_biomee
     type(orgpool) :: plabl               ! labile pool, temporary storage of N and C, kg tree-1
 
     !===== Fast step fluxes, kg timestep-1 tree-1
-    real    :: gpp         = 0.0                  ! gross primary productivity, kg C timestep-1 tree-1
-    real    :: npp         = 0.0                  ! net primary productivity, kg C timestep-1 tree-1
-    real    :: resp        = 0.0                  ! plant respiration, kg C timestep-1 tree-1
+    type(common_fluxes) :: fast_fluxes
+
     real    :: resl        = 0.0                  ! leaf respiration, kg C timestep-1 tree-1
     real    :: resr        = 0.0                  ! root respiration, kg C timestep-1 tree-1
-    real    :: N_uptake    = 0.0                  ! N uptake at each step per tree, kg N timestep-1 tree-1
-    real    :: fixedN      = 0.0                  ! fixed N at each step per tree, kg N timestep-1 tree-1
 
     !===== Daily fluxes, kg day-1 tree-1
     type(common_fluxes) :: daily_fluxes
@@ -142,7 +139,6 @@ module datatypes_biomee
     real    :: rootareaL(max_lev) = 0.0           ! Root length per layer, m of root/m
     real    :: WupL(max_lev)      = 0.0           ! normalized vertical distribution of uptake
     real    :: W_supply           = dummy         ! potential water uptake rate per unit time per tree
-    real    :: transp             = dummy         ! water transpired per tree per timestep, kg H2O timestep-1 tree-1
 
     !===== Photosynthesis variables
     real    :: An_op              = 0.0           ! mol C/(m2 of leaf per year)
@@ -207,7 +203,7 @@ module datatypes_biomee
     real    :: m_turnover         = 0.0           ! C turnover due to mortality and tissue turnover (kg C m-2 yr-1)
 
     !===== Leaf area index
-    real    :: LAI                                ! leaf area index
+    real    :: LAI                                ! leaf area index (surface of leaves per m2 of ground/tile)
     real    :: CAI                                ! crown area index
 
     !=====  Averaged quantities for PPA phenology
@@ -219,6 +215,7 @@ module datatypes_biomee
     real    :: totN               = 0.0
     real    :: N_input            = 0.0           ! annual N input (kg N m-2 yr-1)
     real    :: N_uptake           = 0.0           ! N uptake at each time step, kg N m-2 timestep-1
+    real    :: fixedN             = 0.0           ! fixed N at each time step, kg N m-2 timestep-1
     real    :: annualN            = 0.0           ! annual available N in a year
     real    :: Nloss_yr           = 0.0           ! annual N loss
     real    :: N_P2S_yr           = 0.0           ! N turnover (plant to soil) (kg N m-2 yr-1)
@@ -351,13 +348,12 @@ contains
 
       cc%C_growth     = 0.0
       cc%N_growth     = 0.0
-      cc%gpp          = 0.0
-      cc%npp          = 0.0
-      cc%resp         = 0.0
+
       cc%resl         = 0.0
       cc%resr         = 0.0
       cc%resg         = 0.0
-      cc%transp       = 0.0
+
+      cc%fast_fluxes = common_fluxes()
 
       ! Reset daily
       cc%daily_fluxes = common_fluxes()
@@ -481,35 +477,45 @@ contains
     vegn%age = vegn%age + myinterface%dt_fast_yr
 
     ! Tile summary
-    vegn%GPP    = 0
-    vegn%NPP    = 0
-    vegn%Resp   = 0
+    vegn%transp   = 0.0
+    vegn%GPP      = 0.0
+    vegn%NPP      = 0.0
+    vegn%Resp     = 0.0
+    vegn%N_uptake = 0.0
+    vegn%fixedN   = 0.0
 
     do i = 1, vegn%n_cohorts
       cc => vegn%cohorts(i)
 
       ! cohort daily
-      call update_fluxes(cc%daily_fluxes, common_fluxes(cc%transp, cc%gpp, cc%Npp, cc%Resp, cc%N_uptake, cc%fixedN))
+      call update_fluxes(cc%daily_fluxes, cc%fast_fluxes)
 
       ! Tile hourly
-      vegn%GPP    = vegn%GPP    + cc%gpp    * cc%nindivs
-      vegn%NPP    = vegn%NPP    + cc%Npp    * cc%nindivs
-      vegn%Resp   = vegn%Resp   + cc%Resp   * cc%nindivs
+      vegn%transp   = vegn%transp   + cc%fast_fluxes%trsp     * cc%nindivs
+      vegn%GPP      = vegn%GPP      + cc%fast_fluxes%gpp      * cc%nindivs
+      vegn%NPP      = vegn%NPP      + cc%fast_fluxes%Npp      * cc%nindivs
+      vegn%Resp     = vegn%Resp     + cc%fast_fluxes%Resp     * cc%nindivs
+      vegn%N_uptake = vegn%N_uptake + cc%fast_fluxes%Nup      * cc%nindivs
+      vegn%fixedN   = vegn%fixedN   + cc%fast_fluxes%fixedN   * cc%nindivs
+
+      ! Reset fast fluxes
+      cc%fast_fluxes = common_fluxes()
     enddo
 
     ! NEP is equal to NNP minus soil respiration
     vegn%nep = vegn%npp - vegn%rh
 
     ! Daily summary:
-    vegn%dailyNup  = vegn%dailyNup  + vegn%N_uptake
-    vegn%dailyGPP  = vegn%dailyGPP  + vegn%gpp
-    vegn%dailyNPP  = vegn%dailyNPP  + vegn%npp
-    vegn%dailyResp = vegn%dailyResp + vegn%resp
-    vegn%dailyRh   = vegn%dailyRh   + vegn%rh
-    vegn%dailyTrsp = vegn%dailyTrsp + vegn%transp
-    vegn%dailyEvap = vegn%dailyEvap + vegn%evap
-    vegn%dailyRoff = vegn%dailyRoff + vegn%runoff
-    vegn%dailyPrcp = vegn%dailyPrcp + forcing%rain * myinterface%step_seconds
+    vegn%dailyNup    = vegn%dailyNup     + vegn%N_uptake
+    vegn%dailyfixedN = vegn%dailyfixedN  + vegn%fixedN
+    vegn%dailyGPP    = vegn%dailyGPP     + vegn%gpp
+    vegn%dailyNPP    = vegn%dailyNPP     + vegn%npp
+    vegn%dailyResp   = vegn%dailyResp    + vegn%resp
+    vegn%dailyRh     = vegn%dailyRh      + vegn%rh
+    vegn%dailyTrsp   = vegn%dailyTrsp    + vegn%transp
+    vegn%dailyEvap   = vegn%dailyEvap    + vegn%evap
+    vegn%dailyRoff   = vegn%dailyRoff    + vegn%runoff
+    vegn%dailyPrcp   = vegn%dailyPrcp    + forcing%rain * myinterface%step_seconds
 
   end subroutine hourly_diagnostics
 
