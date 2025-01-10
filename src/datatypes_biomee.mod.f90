@@ -223,31 +223,7 @@ contains
 
     do i = 1, vegn%n_cohorts
       cc => vegn%cohorts(i)
-
-      ! Save last year's values
-      cc%DBH_ys       = cc%dbh
-      cc%BA_ys        = basal_area(cc)
-
-      cc%C_growth     = 0.0
-      cc%N_growth     = 0.0
-
-      cc%resl         = 0.0
-      cc%resr         = 0.0
-      cc%resg         = 0.0
-
-      cc%fast_fluxes = common_fluxes()
-
-      ! Reset daily
-      cc%daily_fluxes = common_fluxes()
-
-      ! annual
-      cc%annual_fluxes = common_fluxes()
-      cc%NPPleaf      = 0.0
-      cc%NPProot      = 0.0
-      cc%NPPwood      = 0.0
-      cc%n_deadtrees  = 0.0
-      cc%c_deadtrees  = 0.0
-      cc%m_turnover   = 0.0
+      call reset_cohort(cc)
     enddo
   
   end subroutine Zero_diagnostics

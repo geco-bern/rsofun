@@ -378,7 +378,7 @@ contains
 
         endif
 
-        ! Grasses have the saem bl_max regardless of their layer position
+        ! Grasses have the same bl_max regardless of their layer position
         if (sp%lifeform == 0) then
           cc%bl_max = BL_c
           cc%br_max = sp%phiRL * cc%bl_max/(sp%LMA * sp%SRA)
@@ -684,7 +684,7 @@ contains
           else  
             ! Canopy mortality
             if (cc%bl_max > 0) then
-            deathrate = param_nsc * 0.05 * (exp(-3.5*(cc%plabl%c%c12/cc%bl_max))/(0.01+exp(-3.5*(cc%plabl%c%c12/cc%bl_max)))) ! -3.5,-2.5,-2
+              deathrate = param_nsc * 0.05 * (exp(-3.5*(cc%plabl%c%c12/cc%bl_max))/(0.01+exp(-3.5*(cc%plabl%c%c12/cc%bl_max)))) ! -3.5,-2.5,-2
             endif
           endif
 

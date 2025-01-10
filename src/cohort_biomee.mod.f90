@@ -10,11 +10,12 @@ module md_cohort
 
   ! define data types and constants
   implicit none
+  private
   !=============== Public types ===========================================================
   public :: cohort_type
 
   !=============== Public subroutines =====================================================
-  public :: rootarea, W_supply, NSNmax
+  public :: rootarea, W_supply, NSNmax, reset_cohort, basal_area, volume, rootareaL, lai
 
   integer, public, parameter :: LEAF_OFF                 = 0
   integer, public, parameter :: LEAF_ON                  = 1
@@ -24,23 +25,26 @@ module md_cohort
   !=============== Cohort level data type =============================================================
   type :: cohort_type
 
+    !======================== State
+    ! The cohort state contains cohort properties which persist across the years
+
     !===== Metadata
     integer :: ccID       = -1           ! cohort ID
     integer :: layer      = 1            ! the layer of this cohort (numbered from top, top layer=1)
     real    :: layerfrac  = 0.0          ! fraction of layer area occupied by this cohort
     integer :: firstlayer = 0            ! 0 = never been in the first layer; 1 = at least one year in first layer
+    integer :: species    = 1            ! vegetation species
 
     !===== Population structure
     real :: nindivs   = 1.0              ! density of vegetation, tree/m2
     real :: age       = 0.0              ! age of cohort, years
-    real :: topyear   = 0.0              ! the years that a cohort is in top layer
+    real :: topyear   = 0.0              ! number of years the cohort is in top layer
     real :: dbh       = 0.0              ! diameter at breast height, m
     real :: height    = 0.0              ! vegetation height, m
     real :: crownarea = 1.0              ! crown area, m2 tree-1
     real :: leafarea  = 0.0              ! total area of leaves, m2 tree-1
 
     !===== Biological prognostic variables
-    integer :: species    = 1            ! vegetation species
     real    :: gdd        = 0.0          ! growing degree-day (phenology)
     integer :: status     = LEAF_OFF     ! growth status of plant
     real    :: leaf_age   = 0.0          ! leaf age (years)
@@ -53,11 +57,17 @@ module md_cohort
     type(orgpool) :: pseed               ! biomass put aside for future progeny, kg tree-1
     type(orgpool) :: plabl               ! labile pool, temporary storage of N and C, kg tree-1
 
+    !===== Nitrogen model related variables (persistent from year to year)
+    real    :: bl_max             = 0.0           ! Max. leaf biomass, kg C tree-1
+    real    :: br_max             = 0.0           ! Max. fine root biomass, kg C tree-1
+
+    !=================== Temporary variables
+    ! Contrary to the state vairbales, temporary variables are reset every step, day, or year (as appropriate).
+
     !===== Fast step fluxes, kg timestep-1 tree-1
     type(common_fluxes) :: fast_fluxes
-
-    real    :: resl        = 0.0                  ! leaf respiration, kg C timestep-1 tree-1
-    real    :: resr        = 0.0                  ! root respiration, kg C timestep-1 tree-1
+    real    :: resl              = 0.0            ! leaf respiration, kg C timestep-1 tree-1
+    real    :: resr              = 0.0            ! root respiration, kg C timestep-1 tree-1
 
     !===== Daily fluxes, kg day-1 tree-1
     type(common_fluxes) :: daily_fluxes
@@ -74,12 +84,8 @@ module md_cohort
     real    :: m_turnover         = 0.0           ! C turnover due to mortality and tissue turnover (kg C m-2 yr-1)
     real    :: deathrate          = 0.0           ! Deathrate (0 to 1)
 
-    !===== Nitrogen model related variables
-    real    :: bl_max             = 0.0           ! Max. leaf biomass, kg C tree-1
-    real    :: br_max             = 0.0           ! Max. fine root biomass, kg C tree-1
-
     !===== Water uptake-related variables
-    real    :: WupL(MAX_LEVELS)      = 0.0        ! normalized vertical distribution of uptake
+    real    :: WupL(MAX_LEVELS)   = 0.0           ! normalized vertical distribution of uptake
 
     !===== Photosynthesis variables
     real    :: An_op              = 0.0           ! mol C/(m2 of leaf per year)
@@ -91,10 +97,46 @@ module md_cohort
     !===== Memory variables used for computing deltas
     real    :: DBH_ys            = 0.0            ! DBH at the begining of a year (growing season)
     real    :: BA_ys             = 0.0            ! Basal area at the beginning og a year
-
   end type cohort_type
 
 contains
+
+  subroutine reset_cohort(cc)
+    ! Reset cohort scrap data (used yearly)
+    type(cohort_type), intent(inout) :: cc
+
+    ! Save last year's values
+    cc%DBH_ys       = cc%dbh
+    cc%BA_ys        = basal_area(cc)
+
+    cc%WupL(:)      = 0.0
+
+    cc%An_op        = 0.0
+    cc%An_cl        = 0.0
+    cc%N_growth     = 0.0
+    cc%N_growth     = 0.0
+
+    cc%resl         = 0.0
+    cc%resr         = 0.0
+    cc%resg         = 0.0
+
+    cc%fast_fluxes = common_fluxes()
+
+    ! Reset daily
+    cc%daily_fluxes = common_fluxes()
+
+    ! annual
+    cc%annual_fluxes = common_fluxes()
+    cc%NPPleaf      = 0.0
+    cc%NPProot      = 0.0
+    cc%NPPwood      = 0.0
+
+    cc%n_deadtrees  = 0.0
+    cc%c_deadtrees  = 0.0
+    cc%m_turnover   = 0.0
+    cc%deathrate    = 0.0
+  end subroutine reset_cohort
+
   function NSNmax(cohort) result(res)
     real :: res
     type(cohort_type) :: cohort
