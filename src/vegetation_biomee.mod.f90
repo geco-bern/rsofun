@@ -114,7 +114,7 @@ contains
       Acambium = PI * cc%DBH ** exp_acambium * cc%height * 1.2
 
       ! Facultive Nitrogen fixation
-      !if (cc%plabl%n%n14 < cc%NSNmax .and. cc%plabl%c%c12 > 0.5 * NSCtarget) then
+      !if (cc%plabl%n%n14 < cc%NSNmax() .and. cc%plabl%c%c12 > 0.5 * NSCtarget) then
       !   cc%fixedN = spdata(sp)%NfixRate0 * cc%proot%c%c12 * tf * myinterface%dt_fast_yr ! kgN tree-1 step-1
       !else
       !   cc%fixedN = 0.0 ! spdata(sp)%NfixRate0 * cc%proot%c%c12 * tf * myinterface%dt_fast_yr ! kgN tree-1 step-1
@@ -1346,7 +1346,7 @@ contains
         cc => vegn%cohorts(i)
         associate (sp => myinterface%params_species(cc%species))
 
-          if (cc%plabl%n%n14 < NSNmax(cc)) N_Roots = N_Roots + cc%proot%c%c12 * cc%nindivs
+          if (cc%plabl%n%n14 < cc%NSNmax()) N_Roots = N_Roots + cc%proot%c%c12 * cc%nindivs
 
         end associate
       enddo
@@ -1366,9 +1366,9 @@ contains
         ! Nitrogen uptaken by each cohort (N_uptake) - proportional to cohort's root mass
         do i = 1, vegn%n_cohorts
           cc => vegn%cohorts(i)
-          if (cc%plabl%n%n14 < NSNmax(cc)) then
+          if (cc%plabl%n%n14 < cc%NSNmax()) then
 
-            cc%fast_fluxes%Nup = cc%proot%c%c12 * avgNup ! min(cc%proot%c%c12*avgNup, cc%NSNmax-cc%plabl%n%n14)
+            cc%fast_fluxes%Nup = cc%proot%c%c12 * avgNup ! min(cc%proot%c%c12*avgNup, cc%NSNmax()-cc%plabl%n%n14)
             cc%plabl%n%n14 = cc%plabl%n%n14 + cc%fast_fluxes%Nup
 
             ! subtract N from mineral N

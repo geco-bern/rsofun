@@ -223,7 +223,7 @@ contains
 
     do i = 1, vegn%n_cohorts
       cc => vegn%cohorts(i)
-      call reset_cohort(cc)
+      call cc%reset_cohort()
     enddo
   
   end subroutine Zero_diagnostics
@@ -302,7 +302,7 @@ contains
       endif
 
       vegn%MaxAge    = MAX(cc%age, vegn%MaxAge)
-      vegn%MaxVolume = MAX(volume(cc), vegn%MaxVolume)
+      vegn%MaxVolume = MAX(cc%volume(), vegn%MaxVolume)
       vegn%MaxDBH    = MAX(cc%dbh, vegn%MaxDBH)
 
     enddo
@@ -522,7 +522,7 @@ contains
       froot     = cc%NPProot / treeG
       fwood     = cc%NPPwood / treeG
       dDBH      = cc%dbh - cc%DBH_ys !in m
-      BA        = basal_area(cc)
+      BA        = cc%basal_area()
       dBA       = BA - cc%BA_ys
 
       out_annual_cohorts(i)%year        = iyears

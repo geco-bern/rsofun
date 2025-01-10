@@ -51,7 +51,7 @@ contains
          do j = 1, vegn%n_cohorts
             cc => vegn%cohorts(j)
             associate ( sp => myinterface%params_species(cc%species) )
-            cc%WupL(i) = rootareaL(cc, i)*sp%Kw_root*dpsiSR(i) * (myinterface%step_seconds*h2o_molmass*1e-3) ! kg H2O tree-1 step-1
+            cc%WupL(i) = cc%rootareaL(i)*sp%Kw_root*dpsiSR(i) * (myinterface%step_seconds*h2o_molmass*1e-3) ! kg H2O tree-1 step-1
             totWsup(i) = totWsup(i) + cc%WupL(i) * cc%nindivs ! water uptake per layer by all cohorts
             end associate
          enddo
@@ -104,10 +104,10 @@ contains
       do j = 1, vegn%n_cohorts
           cc => vegn%cohorts(j)
           ! Compare with soil water
-          ! cc%W_supply = sum(cc%WupL(:))
-          ! cc%transp   = min(cc%transp,cc%W_supply)
+          ! cc%W_supply() = sum(cc%WupL(:))
+          ! cc%transp   = min(cc%transp,cc%W_supply())
           ! deduct from soil water pool
-          wsupply = W_supply(cc)
+          wsupply = cc%W_supply()
           if(wsupply > 0.0) then
               WaterBudgetL(:) = WaterBudgetL(:) - cc%WupL(:)/wsupply * cc%fast_fluxes%trsp * cc%nindivs
           endif

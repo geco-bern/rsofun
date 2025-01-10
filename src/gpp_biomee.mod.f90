@@ -148,13 +148,13 @@ contains
           cana_co2 = forcing%CO2 ! co2 concentration in canopy air space, mol CO2/mol dry air
 
           ! recalculate the water supply to mol H20 per m2 of leaf per second
-          water_supply = W_supply(cc) / (cc%leafarea * myinterface%step_seconds * h2o_molmass * 1e-3) ! mol m-2 leafarea s-1
+          water_supply = cc%W_supply() / (cc%leafarea * myinterface%step_seconds * h2o_molmass * 1e-3) ! mol m-2 leafarea s-1
 
           !call get_vegn_wet_frac (cohort, fw=fw, fs=fs)
           fw = 0.0
           fs = 0.0
 
-          call gs_leuning(rad_top, rad_net, TairK, cana_q, lai(cc), &
+          call gs_leuning(rad_top, rad_net, TairK, cana_q, cc%lai(), &
             p_surf, water_supply, cc%species, sp%pt, &
             cana_co2, extinct, fs+fw, &
             psyn, resp, w_scale2, transp )

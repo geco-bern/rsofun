@@ -15,7 +15,7 @@ module md_cohort
   public :: cohort_type
 
   !=============== Public subroutines =====================================================
-  public :: rootarea, W_supply, NSNmax, reset_cohort, basal_area, volume, rootareaL, lai
+
 
   integer, public, parameter :: LEAF_OFF                 = 0
   integer, public, parameter :: LEAF_ON                  = 1
@@ -97,106 +97,127 @@ module md_cohort
     !===== Memory variables used for computing deltas
     real    :: DBH_ys            = 0.0            ! DBH at the begining of a year (growing season)
     real    :: BA_ys             = 0.0            ! Basal area at the beginning og a year
+    
+    contains
+
+      !========= Derived variables
+      ! Variables which are function of any state or temporary variable defined above.
+      ! They can be used like any normal variable except that they are followed by parenthesis
+      ! (indicating that they are being evaluated every time).
+      ! The advantage is that they cannot be out-of-sync with the underlying data, at the cost of a negligeable
+      ! increase in the number of operations.
+
+      procedure NSNmax
+      procedure W_supply
+      procedure rootareaL
+      procedure lai
+      procedure basal_area
+      procedure volume
+
+      !========== Other member procedures
+
+      procedure reset_cohort
+
   end type cohort_type
 
 contains
 
-  subroutine reset_cohort(cc)
-    ! Reset cohort scrap data (used yearly)
-    type(cohort_type), intent(inout) :: cc
+  subroutine reset_cohort(self)
+    ! Reset cohort temporary data (used yearly)
+    class(cohort_type), intent(inout) :: self
 
     ! Save last year's values
-    cc%DBH_ys       = cc%dbh
-    cc%BA_ys        = basal_area(cc)
+    self%DBH_ys        = self%dbh
+    self%BA_ys         = basal_area(self)
 
-    cc%WupL(:)      = 0.0
+    self%WupL(:)       = 0.0
 
-    cc%An_op        = 0.0
-    cc%An_cl        = 0.0
-    cc%N_growth     = 0.0
-    cc%N_growth     = 0.0
+    self%An_op         = 0.0
+    self%An_cl         = 0.0
+    self%N_growth      = 0.0
+    self%N_growth      = 0.0
 
-    cc%resl         = 0.0
-    cc%resr         = 0.0
-    cc%resg         = 0.0
+    self%resl          = 0.0
+    self%resr          = 0.0
+    self%resg          = 0.0
 
-    cc%fast_fluxes = common_fluxes()
+    self%fast_fluxes   = common_fluxes()
 
     ! Reset daily
-    cc%daily_fluxes = common_fluxes()
+    self%daily_fluxes  = common_fluxes()
 
     ! annual
-    cc%annual_fluxes = common_fluxes()
-    cc%NPPleaf      = 0.0
-    cc%NPProot      = 0.0
-    cc%NPPwood      = 0.0
+    self%annual_fluxes = common_fluxes()
+    self%NPPleaf       = 0.0
+    self%NPProot       = 0.0
+    self%NPPwood       = 0.0
 
-    cc%n_deadtrees  = 0.0
-    cc%c_deadtrees  = 0.0
-    cc%m_turnover   = 0.0
-    cc%deathrate    = 0.0
+    self%n_deadtrees   = 0.0
+    self%c_deadtrees   = 0.0
+    self%m_turnover    = 0.0
+    self%deathrate     = 0.0
   end subroutine reset_cohort
 
-  function NSNmax(cohort) result(res)
+  function NSNmax(self) result(res)
     real :: res
-    type(cohort_type) :: cohort
+    class(cohort_type) :: self
 
     ! Local variable
     type(spec_data_type) :: sp
 
-    sp = myinterface%params_species(cohort%species)
+    sp = myinterface%params_species(self%species)
 
     res = sp%fNSNmax * &
-            (cohort%bl_max / (sp%CNleaf0 * sp%leafLS) + cohort%br_max / sp%CNroot0)
+            (self%bl_max / (sp%CNleaf0 * sp%leafLS) + self%br_max / sp%CNroot0)
   end function NSNmax
 
-  function W_supply(cohort) result(res)
+  function W_supply(self) result(res)
     ! potential water uptake rate per unit time per tree
     real :: res
-    type(cohort_type) :: cohort
+    class(cohort_type) :: self
 
-    res = sum(cohort%WupL(:))
+    res = sum(self%WupL(:))
   end function W_supply
 
-  function rootareaL(cohort, level) result(res)
+  function rootareaL(self, level) result(res)
     ! Root length per layer, m of root/m
     real :: res
     integer :: level
-    type(cohort_type) :: cohort
+    class(cohort_type) :: self
 
-    res = rootarea(cohort) * myinterface%params_species(cohort%species)%root_frac(level)
+    res = rootarea(self) * myinterface%params_species(self%species)%root_frac(level)
   end function rootareaL
 
-  function rootarea(cohort) result(res)
+  function rootarea(self) result(res)
     ! total fine root area per tree
     real :: res
-    type(cohort_type) :: cohort
+    class(cohort_type) :: self
 
-    res  = cohort%proot%c%c12 * myinterface%params_species(cohort%species)%SRA
+    res  = self%proot%c%c12 * myinterface%params_species(self%species)%SRA
   end function rootarea
 
-  function lai(cohort) result(res)
+  function lai(self) result(res)
     ! Leaf area index: surface of leaves per m2 of crown
     real :: res
-    type(cohort_type) :: cohort
+    class(cohort_type) :: self
 
-    res = cohort%leafarea / cohort%crownarea !(cohort%crownarea *(1.0-sp%internal_gap_frac))
+    res = self%leafarea / self%crownarea !(cohort%crownarea *(1.0-sp%internal_gap_frac))
   end function lai
 
-  function basal_area(cohort) result(res)
+  function basal_area(self) result(res)
     ! Tree basal area, m2 tree-1
     real :: res
-    type(cohort_type) :: cohort
+    class(cohort_type) :: self
 
-    res = pi/4 * cohort%dbh * cohort%dbh
+    res = pi/4 * self%dbh * self%dbh
   end function basal_area
 
-  function volume(cohort) result(res)
+  function volume(self) result(res)
     ! Tree basal volume, m3 tree-1
     real :: res
-    type(cohort_type) :: cohort
+    class(cohort_type) :: self
 
-    res = (cohort%psapw%c%c12 + cohort%pwood%c%c12) / myinterface%params_species(cohort%species)%rho_wood
+    res = (self%psapw%c%c12 + self%pwood%c%c12) / myinterface%params_species(self%species)%rho_wood
   end function volume
 
 end module md_cohort
