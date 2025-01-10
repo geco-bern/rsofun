@@ -25,7 +25,7 @@ contains
   !============= Carbon, nitrogen and water budget    =====================
   !========================================================================
 
-  subroutine vegn_CNW_budget( vegn, forcing, first_simu_step, tsoil )
+  subroutine vegn_CNW_budget( vegn, forcing, tsoil )
     !////////////////////////////////////////////////////////////////
     ! Fast loop carbon, nitrogen, and water dynamics, Weng 2016-11-25
     ! include Nitrogen uptake and carbon budget
@@ -37,7 +37,6 @@ contains
     type(vegn_tile_type), intent(inout) :: vegn
     type(climate_type), intent(in) :: forcing
     ! is true on the very first simulation step (first subroutine call of each gridcell)
-    logical, intent(in) :: first_simu_step
     real, intent(in) :: tsoil  ! Soil temperature in K
 
     ! local variables
@@ -45,7 +44,7 @@ contains
     integer:: i
 
     ! Photosynsthesis
-    call gpp( forcing, vegn, first_simu_step )
+    call gpp( forcing, vegn )
     
     ! Update soil water
     call SoilWaterDynamicsLayer( forcing, vegn )

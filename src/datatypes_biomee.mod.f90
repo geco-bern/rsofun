@@ -12,7 +12,7 @@ module datatypes_biomee
   ! define data types and constants
   implicit none
   !=============== Public types ===========================================================
-  public :: spec_data_type, cohort_type, vegn_tile_type
+  public :: spec_data_type, cohort_type, vegn_tile_type, dampended_forcing_type
 
   !=============== Public subroutines =====================================================
   public :: Zero_diagnostics, hourly_diagnostics, daily_diagnostics, &
@@ -40,6 +40,9 @@ module datatypes_biomee
   integer, public, parameter :: nvars_params_species = 55
   integer, public, parameter :: nvars_init_lu        = 1
 
+  !===== Model
+  integer, public, parameter :: NLAYERS_MAX = 9     ! maximum number of canopy layers to be considered
+
   !===== Photosynthesis
   real, public, parameter  :: extinct = 0.75        ! light extinction coefficient in the canopy for photosynthesis
 
@@ -59,6 +62,15 @@ module datatypes_biomee
 
   !===== Leaf life span
   real, parameter  :: c_LLS   = 28.57143    ! yr/ (kg C m-2), c_LLS=1/LMAs, where LMAs = 0.035
+
+  type :: dampended_forcing_type
+    logical :: initialized = .False.
+    real :: co2  = 0.0
+    real :: vpd  = 0.0
+    real :: temp = 0.0
+    real :: patm = 0.0
+    real, dimension(NLAYERS_MAX) :: par = dummy ! Initialization to a dummy value. Important! Keep it.
+  end type dampended_forcing_type
 
   !=============== Tile level data type ============================================================
   type :: vegn_tile_type
@@ -171,6 +183,9 @@ module datatypes_biomee
     real    :: totSeedN           = 0.0           ! Total seed N, kg N yr-1 m-2
     real    :: totNewCC           = 0.0           ! New cohort C (all compartments but seed), kg C yr-1 m-2
     real    :: totNewCN           = 0.0           ! New cohort N (all compartments but seed), kg N yr-1 m-2
+
+    ! Scrap variable used by gpp()
+    type(dampended_forcing_type) :: dampended_forcing
 
   end type vegn_tile_type
 

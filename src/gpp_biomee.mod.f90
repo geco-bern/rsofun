@@ -37,7 +37,7 @@ module md_gpp_biomee
 
 contains
 
-  subroutine gpp( forcing, vegn, first_simu_step )
+  subroutine gpp( forcing, vegn )
     !//////////////////////////////////////////////////////////////////////
     ! GPP
     ! Calculates light availability and photosynthesis for each cohort 
@@ -58,11 +58,9 @@ contains
 
     type(climate_type), intent(in):: forcing
     type(vegn_tile_type), intent(inout) :: vegn
-    logical, intent(in) :: first_simu_step   ! is true on the very first simulation step
 
     ! local variables used for BiomeE-Allocation part
     type(cohort_type), pointer :: cc
-    integer, parameter :: nlayers_max = 9                  ! maximum number of canopy layers to be considered 
     real   :: rad_top                                      ! downward radiation at the top of the canopy, W/m2
     real   :: rad_net                                      ! net radiation absorbed by the canopy, W/m2
     real   :: Tair, TairK                                  ! air temperature, degC and degK
@@ -82,15 +80,10 @@ contains
     real, dimension(vegn%n_cohorts) :: fapar_tree          ! tree-level fAPAR based on LAI within the crown
     real, dimension(nlayers_max-1) :: fapar_layer
 
-    integer:: i, layer=0
+    integer:: i
 
     ! local variables used for P-model part
     real :: tk, kphio_temp
-    real, save :: co2_memory
-    real, save :: vpd_memory
-    real, save :: temp_memory
-    real, save :: patm_memory
-    real, dimension(nlayers_max), save :: par_memory
     type(outtype_pmodel) :: out_pmodel      ! list of P-model output variables
 
     !-----------------------------------------------------------
@@ -109,10 +102,9 @@ contains
     fapar_layer(:) = 0.0
     do i = 1, vegn%n_cohorts
       cc => vegn%cohorts(i)
-      layer = Max(1, Min(cc%layer, nlayers_max))
-      LAIlayer(layer) = LAIlayer(layer) + cc%leafarea * cc%nindivs / (1.0 - f_gap)
+      LAIlayer(cc%layer) = LAIlayer(cc%layer) + cc%leafarea * cc%nindivs / (1.0 - f_gap)
       fapar_tree(i) = 1.0 - exp(-kappa * cc%leafarea / cc%crownarea)   ! at individual-level: cc%leafarea represents leaf area index within the crown
-      fapar_layer(layer) = fapar_layer(layer) + fapar_tree(i) * cc%crownarea * cc%nindivs
+      fapar_layer(cc%layer) = fapar_layer(cc%layer) + fapar_tree(i) * cc%crownarea * cc%nindivs
     enddo
 
     ! Get light received at each crown layer as a fraction of top-of-canopy -> f_light(layer) 
@@ -143,13 +135,12 @@ contains
         if (cc%status == LEAF_ON) then   !.and. cc%lai > 0.1
 
           ! Convert forcing data
-          layer    = Max (1, Min(cc%layer, nlayers_max))
-          rad_top  = f_light(layer) * forcing%radiation ! downward radiation at the top of the canopy, W/m2
+          rad_top  = f_light(cc%layer) * forcing%radiation ! downward radiation at the top of the canopy, W/m2
 
           !===============================
           ! ORIGINAL
           !===============================
-          rad_net  = f_light(layer) * forcing%radiation * 0.9 ! net radiation absorbed by the canopy, W/m2
+          rad_net  = f_light(cc%layer) * forcing%radiation * 0.9 ! net radiation absorbed by the canopy, W/m2
           p_surf   = forcing%P_air  ! Pa
           TairK    = forcing%Tair ! K
           Tair     = forcing%Tair - 273.16 ! degC
@@ -194,19 +185,22 @@ contains
       ! Calculate environmental conditions with memory, time scale 
       ! relevant for Rubisco turnover
       !----------------------------------------------------------------
-      if (first_simu_step) then
-        co2_memory  = forcing%CO2 * 1.0e6
-        temp_memory = (forcing%Tair - kTkelvin)
-        vpd_memory  = forcing%vpd
-        patm_memory = forcing%P_air
-        par_memory = -1.0 ! We initialize par_memory to a dummy value used to detect the need for initialization,
-        ! as the initialization process using init flags is error prone given the dunmaic the adjuction of layers.
-      end if 
-      
-      co2_memory  = dampen_variability( forcing%CO2 * 1.0e6,        params_gpp%tau_acclim, co2_memory )
-      temp_memory = dampen_variability( (forcing%Tair - kTkelvin),  params_gpp%tau_acclim, temp_memory)
-      vpd_memory  = dampen_variability( forcing%vpd,                params_gpp%tau_acclim, vpd_memory )
-      patm_memory = dampen_variability( forcing%P_air,              params_gpp%tau_acclim, patm_memory )
+      if (.not. vegn%dampended_forcing%initialized) then
+        vegn%dampended_forcing%co2  = forcing%CO2 * 1.0e6
+        vegn%dampended_forcing%temp = (forcing%Tair - kTkelvin)
+        vegn%dampended_forcing%vpd  = forcing%vpd
+        vegn%dampended_forcing%patm = forcing%P_air
+        vegn%dampended_forcing%initialized = .True.
+      else
+        vegn%dampended_forcing%co2  = dampen_variability( forcing%CO2 * 1.0e6,        params_gpp%tau_acclim, &
+                vegn%dampended_forcing%co2 )
+        vegn%dampended_forcing%temp = dampen_variability( (forcing%Tair - kTkelvin),  params_gpp%tau_acclim, &
+                vegn%dampended_forcing%temp)
+        vegn%dampended_forcing%vpd  = dampen_variability( forcing%vpd,                &
+                params_gpp%tau_acclim, vegn%dampended_forcing%vpd )
+        vegn%dampended_forcing%patm = dampen_variability( forcing%P_air,              &
+                params_gpp%tau_acclim, vegn%dampended_forcing%patm )
+      end if
 
       tk = forcing%Tair + kTkelvin
 
@@ -218,9 +212,6 @@ contains
         cc => vegn%cohorts(i)
         associate ( sp => myinterface%params_species(cc%species) )
 
-        ! get canopy layer of this cohort
-        layer = max(1, min(cc%layer, nlayers_max))
-
         !----------------------------------------------------------------
         ! Instantaneous temperature effect on quantum yield efficiency
         !----------------------------------------------------------------
@@ -231,12 +222,13 @@ contains
                 params_gpp%kphio_par_b )
 
         ! photosynthetically active radiation level at this layer
-        par = f_light(layer) * forcing%radiation * kfFEC * 1.0e-6
+        par = f_light(cc%layer) * forcing%radiation * kfFEC * 1.0e-6
         ! slowly varying light conditions per layer, relevant for acclimation (P-model quantities)
-        if (par_memory(layer) <= -1.0) then
-          par_memory(layer) = par
+        if (vegn%dampended_forcing%par(cc%layer) == dummy) then
+          vegn%dampended_forcing%par(cc%layer) = par
         else
-          par_memory(layer) = dampen_variability(par, params_gpp%tau_acclim, par_memory(layer))
+          vegn%dampended_forcing%par(cc%layer) = dampen_variability(par, params_gpp%tau_acclim, &
+                  vegn%dampended_forcing%par(cc%layer))
         end if
 
         if (cc%status == LEAF_ON) then
@@ -249,11 +241,11 @@ contains
                                 kphio          = kphio_temp, &
                                 beta           = params_gpp%beta, &
                                 kc_jmax        = params_gpp%kc_jmax, &
-                                ppfd           = par_memory(layer), &
-                                co2            = co2_memory, &
-                                tc             = temp_memory, &
-                                vpd            = vpd_memory, &
-                                patm           = patm_memory, &
+                                ppfd           = vegn%dampended_forcing%par(cc%layer), &
+                                co2            = vegn%dampended_forcing%co2, &
+                                tc             = vegn%dampended_forcing%temp, &
+                                vpd            = vegn%dampended_forcing%vpd, &
+                                patm           = vegn%dampended_forcing%patm, &
                                 c4             = .false., &
                                 method_optci   = "prentice14", &
                                 method_jmaxlim = "wang17" &
