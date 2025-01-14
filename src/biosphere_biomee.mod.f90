@@ -173,14 +173,13 @@ contains
     call kill_old_grass( vegn )
     
     call relayer_cohorts( vegn )
-    
-    call vegn_mergecohorts( vegn )
+
 
     !---------------------------------------------
     ! Update post-mortality metrics
     !---------------------------------------------
     call annual_diagnostics_post_mortality( vegn, out_biosphere_annual_cohorts, out_biosphere_annual_tile )
-    
+
   end subroutine biosphere_annual
 
 end module md_biosphere_biomee

@@ -60,7 +60,9 @@ contains
     type(vegn_tile_type), intent(inout) :: vegn
 
     ! local variables used for BiomeE-Allocation part
-    type(cohort_type), pointer :: cc
+    type(cohort_type), pointer :: cc => NULL()
+    type(cohort_item), pointer :: it => NULL()
+    integer :: i = 0
     real   :: rad_top                                      ! downward radiation at the top of the canopy, W/m2
     real   :: rad_net                                      ! net radiation absorbed by the canopy, W/m2
     real   :: Tair, TairK                                  ! air temperature, degC and degK
@@ -72,15 +74,14 @@ contains
     real   :: psyn                                         ! net photosynthesis, mol C/(m2 of leaves s)
     real   :: resp                                         ! leaf respiration, mol C/(m2 of leaves s)
     real   :: w_scale2, transp                             ! mol H20 per m2 of leaf per second
-    real   :: kappa                                        ! light extinction coefficient of crown layers
+    real   :: kappa = 0.5                                  ! light extinction coefficient of crown layers
     real   :: f_light(nlayers_max+1)                       ! incident light fraction at top of a given layer
-    real   :: LAIlayer(nlayers_max)                        ! leaf area index per layer, corrected for gaps (representative for the tree-covered fraction)
-    real   :: accuCAI, f_gap
+    real   :: LAIlayer(nlayers_max) = 0.0                  ! leaf area index per layer, corrected for gaps (representative for the tree-covered fraction)
+    real   :: accuCAI = 0.0
+    real   :: f_gap = 0.1
     real   :: par                                          ! just for temporary use
-    real, dimension(vegn%n_cohorts) :: fapar_tree          ! tree-level fAPAR based on LAI within the crown
-    real, dimension(nlayers_max-1) :: fapar_layer
-
-    integer:: i
+    real, dimension(NCohortMax) :: fapar_tree     = 0.0    ! tree-level fAPAR based on LAI within the crown
+    real, dimension(nlayers_max-1) :: fapar_layer = 0.0
 
     ! local variables used for P-model part
     real :: tk, kphio_temp
@@ -91,21 +92,18 @@ contains
     !-----------------------------------------------------------
     ! ! Calculate kappa according to sun zenith angle 
     ! kappa = extinct/max(cosz,0.01)
-    
-    ! Use constant light extinction coefficient
-    kappa = 0.5         ! extinct
 
     ! Sum leaf area over cohorts in each crown layer -> LAIlayer(layer)
-    f_gap = 0.1 ! 0.1
-    accuCAI = 0.0
-    LAIlayer(:) = 0.0
-    fapar_layer(:) = 0.0
-    do i = 1, vegn%n_cohorts
-      cc => vegn%cohorts(i)
+    i = 0
+    it => vegn%next
+    do while (associated(it))
+      cc => it%cohort
+      i = i + 1
       LAIlayer(cc%layer) = LAIlayer(cc%layer) + cc%leafarea * cc%nindivs / (1.0 - f_gap)
       fapar_tree(i) = 1.0 - exp(-kappa * cc%leafarea / cc%crownarea)   ! at individual-level: cc%leafarea represents leaf area index within the crown
       fapar_layer(cc%layer) = fapar_layer(cc%layer) + fapar_tree(i) * cc%crownarea * cc%nindivs
-    enddo
+      it => it%next
+    end do
 
     ! Get light received at each crown layer as a fraction of top-of-canopy -> f_light(layer) 
     f_light(:) = 0.0
@@ -127,9 +125,10 @@ contains
       ! Photosynthesis
       accuCAI = 0.0
 
-      cohortsloop_leuning: do i = 1, vegn%n_cohorts
+      it => vegn%next
+      do while (associated(it))
 
-        cc => vegn%cohorts(i)
+        cc => it%cohort
         associate ( sp => myinterface%params_species(cc%species) )
 
         if (cc%status == LEAF_ON) then   !.and. cc%lai > 0.1
@@ -176,7 +175,9 @@ contains
 
           endif
         end associate
-      enddo cohortsloop_leuning
+
+        it => it%next
+      end do
 
     else if (trim(myinterface%params_siml%method_photosynth) == "pmodel") then
       !===========================================================
@@ -207,9 +208,12 @@ contains
       !----------------------------------------------------------------
       ! Photosynthesis for each cohort
       !----------------------------------------------------------------
-      cohortsloop_pmodel: do i = 1, vegn%n_cohorts
+      i = 0
+      it => vegn%next
+      do while (associated(it))
 
-        cc => vegn%cohorts(i)
+        cc => it%cohort
+        i = i + 1
         associate ( sp => myinterface%params_species(cc%species) )
 
         !----------------------------------------------------------------
@@ -224,7 +228,7 @@ contains
         ! photosynthetically active radiation level at this layer
         par = f_light(cc%layer) * forcing%radiation * kfFEC * 1.0e-6
         ! slowly varying light conditions per layer, relevant for acclimation (P-model quantities)
-        if (vegn%dampended_forcing%par(cc%layer) == dummy) then
+        if (vegn%dampended_forcing%par(cc%layer) <= dummy) then
           vegn%dampended_forcing%par(cc%layer) = par
         else
           vegn%dampended_forcing%par(cc%layer) = dampen_variability(par, params_gpp%tau_acclim, &
@@ -274,7 +278,8 @@ contains
 
         end associate
 
-      end do cohortsloop_pmodel
+        it => it%next
+      end do
 
     end if
 
