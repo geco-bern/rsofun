@@ -18,7 +18,7 @@ module md_cohort_linked_list
   type :: cohort_item
     integer :: uid ! Unique id. To be filled with 'new_uid()'
     type(cohort_type) :: cohort
-    type(cohort_item), pointer :: next => NULL() ! Pointer to next cohort_item
+    type(cohort_item), pointer :: next => NULL() ! Pointer to next cohort_item. Important to nullify here!
 
     contains
 

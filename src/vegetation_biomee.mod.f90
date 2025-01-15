@@ -40,8 +40,8 @@ contains
     real, intent(in) :: tsoil  ! Soil temperature in K
 
     ! local variables
-    type(cohort_type), pointer :: cc => NULL()
-    type(cohort_item), pointer :: it => NULL()
+    type(cohort_type), pointer :: cc
+    type(cohort_item), pointer :: it
 
     ! Photosynsthesis
     call gpp( forcing, vegn )
@@ -147,16 +147,14 @@ contains
     ! added by Weng, 12-06-2016
     ! Code from BiomeE-Allocation
     !---------------------------------------------------------------
-    implicit none
     type(cohort_type), intent(inout) :: cc
     
     ! local variables
     real :: NSCtarget
     real :: C_push, C_pull
     real :: N_push, N_pull
-    real :: LFR_rate ! make these two variables to PFT-specific parameters
-    ! make these two variables to PFT-specific parameters
-    LFR_rate = 1.0 ! 1.0/5.0 ! filling rate/day
+    real, parameter :: LFR_rate = 1.0  ! filling rate/day
+
     associate ( sp => cc%sp() )
       NSCtarget = 3.0 * (cc%bl_max + cc%br_max)      ! kgC/tree
       ! Fetch C from labile C pool if it is in the growing season
@@ -189,7 +187,8 @@ contains
     type(vegn_tile_type), intent(inout) :: vegn
 
     ! local variables
-    type(cohort_type), pointer :: cc => NULL()
+    type(cohort_type), pointer :: cc
+    type(cohort_item), pointer :: it
     real :: CSAtot ! total cross section area, m2
     real :: CSAsw  ! Sapwood cross sectional area, m2
     real :: CSAwd  ! Heartwood cross sectional area, m2
@@ -204,12 +203,10 @@ contains
     real :: dCA ! tendency of crown area, m2/individual
     real :: dHeight ! tendency of vegetation height
     real :: dNS    ! Nitrogen from SW to HW
-    ! real :: sw2nsc = 0.0 ! conversion of sapwood to non-structural carbon
     real :: BL_u, BL_c
     real :: LF_deficit, FR_deficit
     real :: N_demand,Nsupplyratio,extraN
     real :: r_N_SD
-    type(cohort_item), pointer :: it => NULL()
 
     ! Turnover of leaves and fine roots
     call vegn_tissue_turnover( vegn )
@@ -410,11 +407,15 @@ contains
     type(vegn_tile_type), intent(inout) :: vegn
 
     ! local variables
-    type(cohort_type), pointer :: cc => NULL()
-    type(cohort_item), pointer :: it => NULL()
+    type(cohort_type), pointer :: cc
+    type(cohort_item), pointer :: it
     real    :: ccNSC, ccNSN
-    logical :: cc_firstday = .false.
-    logical :: TURN_ON_life = .false., TURN_OFF_life
+    logical :: do_relayer ! flag to tell if we should call relayer_cohort()
+    logical :: cc_firstday
+    logical :: TURN_ON_life
+    logical :: TURN_OFF_life
+
+    do_relayer = .false.
 
     ! update vegn GDD and tc_pheno
     vegn%gdd      = vegn%gdd + max(0.0, vegn%tc_daily - 278.15)
@@ -444,11 +445,11 @@ contains
       if (TURN_ON_life) then
         cc%status = LEAF_ON ! Turn on a growing season
         cc_firstday = .True.
+        do_relayer = .True.
       endif
 
       ! Reset grass density at the first day of a growing season
-      ! if (cc_firstday .and. sp%lifeform == 0 .and. cc%age > 2.0) then
-      if  (sp%lifeform ==0 .and. (cc_firstday .and. cc%age>0.5)) then
+      if  (sp%lifeform == 0 .and. (cc_firstday .and. cc%age > 0.5)) then
         
         ! reset grass density and size for perenials
         ccNSC   = (cc%plabl%c%c12 + cc%pleaf%c%c12 + cc%psapw%c%c12 + &
@@ -487,15 +488,14 @@ contains
       it => it%next
     end do
 
-    ! if (TURN_ON_life) call relayer_cohorts( vegn )
-    if (cc_firstday) call relayer_cohorts(vegn)
+    if (do_relayer) call relayer_cohorts(vegn)
 
     ! OFF of a growing season
     it => vegn%next
     do while (associated(it))
       cc => it%cohort
 
-      associate (sp => cc%sp() )
+      associate (sp => cc%sp())
       TURN_OFF_life = (sp%phenotype  == 0 .and.     &
       cc%status == LEAF_ON .and.     &
       cc%gdd > sp%gdd_crit+600. .and. &
@@ -528,10 +528,9 @@ contains
     type(vegn_tile_type), intent(inout) :: vegn
 
     ! local variables
-    real    :: dBL, dBR, dNL, dNR, dBStem, dNStem      ! per day
-    real    :: leaf_fall_rate, root_mort_rate      ! per day
-
-    leaf_fall_rate = 0.05; root_mort_rate = 0.025
+    real :: dBL, dBR, dNL, dNR, dBStem, dNStem      ! per day
+    real, parameter :: leaf_fall_rate = 0.05    ! per day
+    real, parameter :: root_mort_rate = 0.025   ! per day
 
     ! End a growing season: leaves fall for deciduous
     associate (sp => cc%sp() )
@@ -579,21 +578,24 @@ contains
     type(vegn_tile_type), intent(inout) :: vegn
 
     ! ---- local vars
-    type(cohort_type), pointer :: cc => NULL()
-    type(cohort_item), pointer :: it => NULL()
+    type(cohort_type), pointer :: cc
+    type(cohort_item), pointer :: it
 
-    real :: deathrate = 0 ! mortality rate, 1/year
+    real :: deathrate ! mortality rate, 1/year
     real :: deadtrees ! number of trees that died over the time step
 
     ! real, parameter :: min_nindivs = 1e-5 ! 2e-15 ! 1/m. If nindivs is less than this number, 
     ! then the entire cohort is killed; 2e-15 is approximately 1 individual per Earth
-    real :: cCAI = 0.0
+    real :: cCAI ! Cumulative CAI
     real :: dn ! number of trees that died due to CAI_partial>CAI_max
     real :: param_dbh_under 
     real :: param_nsc_under
     real :: param_dbh 
     real :: param_nsc
     real :: CAI_max
+
+    cCAI = 0.0
+    deathrate = 0.0
 
     if ((trim(myinterface%params_siml%method_mortality) == "const_selfthin")) then
       ! Work in progress.
@@ -726,8 +728,8 @@ contains
     ! local variables --------
     real :: deathrate ! mortality rate, 1/year
     real :: deadtrees ! number of trees that died over the time step
-    type(cohort_type), pointer :: cc => NULL()
-    type(cohort_item), pointer :: it => NULL()
+    type(cohort_type), pointer :: cc
+    type(cohort_item), pointer :: it
 
     it => vegn%next
     do while (associated(it))
@@ -820,9 +822,9 @@ contains
     type(vegn_tile_type), intent(inout) :: vegn
 
     ! local variables
-    type(cohort_type), pointer :: cc => NULL()
-    type(cohort_item), pointer :: new => NULL() ! new cohort
-    type(cohort_item), pointer :: it => NULL()
+    type(cohort_type), pointer :: cc
+    type(cohort_item), pointer :: new ! new cohort
+    type(cohort_item), pointer :: it
     integer, dimension(NCohortMax) :: reproPFTs
     real,    dimension(NCohortMax) :: seedC, seedN ! seed pool of productible PFTs
     integer :: nPFTs ! number of new cohorts to be created
@@ -905,7 +907,7 @@ contains
       new%cohort%pwood%n%n14  = new%cohort%pwood%c%c12/sp%CNwood0
       new%cohort%pseed%n%n14  = 0.0
 
-      if (new%cohort%nindivs>0.0) then
+      if (new%cohort%nindivs > 0.0) then
         new%cohort%plabl%n%n14 = sp%seedlingsize * seedN(k) / seedC(k) -  &
           (new%cohort%pleaf%n%n14 + new%cohort%proot%n%n14 + new%cohort%psapw%n%n14 + new%cohort%pwood%n%n14)
       end if
@@ -961,12 +963,15 @@ contains
     real, parameter :: layer_vegn_cover = 1.0   ! i.e. max 1m2 vegetation per m2 ground
 
     ! local variables
-    integer :: L = 1 ! layer index (top-down)
-    real    :: frac = 0.0 ! fraction of the layer covered so far by the canopies
+    integer :: L ! layer index (top-down)
+    real    :: frac ! fraction of the layer covered so far by the canopies
 
-    type(cohort_item), pointer :: old => NULL()
-    type(cohort_item), pointer :: new => NULL()
-    type(cohort_item), pointer :: it => NULL()
+    type(cohort_item), pointer :: old
+    type(cohort_item), pointer :: new
+    type(cohort_item), pointer :: it
+
+    L = 1
+    frac = 0.0
     it => vegn%next
     vegn%next => NULL() ! We start with an empty cohort list
 
@@ -1100,8 +1105,8 @@ contains
     type(vegn_tile_type), intent(inout) :: vegn
 
     ! local variables
-    type(cohort_type), pointer :: cc => NULL()
-    type(cohort_item), pointer :: it => NULL()
+    type(cohort_type), pointer :: cc
+    type(cohort_item), pointer :: it
     real :: alpha_L   ! turnover rate of leaves
     real :: alpha_S   ! turnover rate of stems
     real :: dBL, dBR, dBStem  ! leaf and fine root carbon tendencies
@@ -1161,11 +1166,11 @@ contains
     real, intent(in) :: tsoil ! average temperature of soil, deg K
 
     ! local variables
-    type(cohort_type), pointer :: cc => NULL()
-    type(cohort_item), pointer :: it => NULL()
+    type(cohort_type), pointer :: cc
+    type(cohort_item), pointer :: it
 
-    real    :: rho_N_up0 = 0.1 ! hourly N uptake rate, fraction of the total mineral N
-    real    :: N_roots0  = 0.4 ! root biomass at half max N-uptake rate, kg C m-2
+    real, parameter :: rho_N_up0 = 0.1 ! hourly N uptake rate, fraction of the total mineral N
+    real, parameter :: N_roots0  = 0.4 ! root biomass at half max N-uptake rate, kg C m-2
 
     real    :: totNup    ! kgN m-2
     real    :: avgNup
@@ -1239,22 +1244,23 @@ contains
     !----------------------------------------------------------------------
     type(vegn_tile_type), intent(inout) :: vegn
     real                , intent(in)    :: tsoil ! soil temperature, deg K
-    real :: CUE0=0.4  ! default microbial CUE
-    real :: phoMicrobial = 2.5 ! turnover rate of microbes (yr-1)
+    real, parameter :: CUE0=0.4  ! default microbial CUE
+    real, parameter :: phoMicrobial = 2.5 ! turnover rate of microbes (yr-1)
+    real, parameter :: CNm = 10.0  ! Microbial C/N ratio
+    real, parameter :: fNM=0.0  ! mineral N available for microbes
     real :: CUEfast,CUEslow
-    real :: CNm = 10.0  ! Microbial C/N ratio
-    real :: NforM, fNM=0.0  ! mineral N available for microbes
+    real :: NforM
     real :: micr_C_loss, fast_L_loss, slow_L_loss
-    real :: runoff ! kg m-2 /step
     real :: N_loss
     real :: DON_fast,DON_slow,DON_loss ! Dissolved organic N loss, kg N m-2 step-1
-    real :: fDON=0.0   ! 0.02     ! fractio of DON production in decomposition
+    real, parameter :: runoff = 0.2    ! kg m-2 /step
+    real, parameter :: fDON = 0.25     ! fractio of DON production in decomposition
     real :: fast_N_free 
     real :: slow_N_free 
     real :: CNfast, CNslow
     real :: A  ! decomp rate reduction due to moisture and temperature    
 
-    runoff = vegn%runoff  !* myinterface%dt_fast_yr !kgH2O m-2 yr-1 ->kgH2O m-2/time step, weng 2017-10-15
+    ! runoff = vegn%runoff
   
     ! CN ratios of soil C pools
     CNfast = vegn%psoil_fs%c%c12 / vegn%psoil_fs%n%n14
@@ -1288,9 +1294,6 @@ contains
                       + slow_L_loss * CUEslow
     vegn%psoil_fs%c%c12 = vegn%psoil_fs%c%c12 - fast_L_loss
     vegn%psoil_sl%c%c12 = vegn%psoil_sl%c%c12 - slow_L_loss
-
-    fDON        = 0.25 ! 0.25 ! * myinterface%dt_fast_yr ! 0.05 !* myinterface%dt_fast_yr
-    runoff      = 0.2 ! 0.2 ! mm day-1
     
     ! Assume it is proportional to decomposition rates
     ! Find some papers!!
@@ -1408,10 +1411,10 @@ contains
     type(vegn_tile_type), intent(inout) :: vegn
 
     ! local variables
-    type(cohort_item), pointer :: it1 => NULL()
-    type(cohort_item), pointer :: it2 => NULL()
-    it1 => vegn%next
+    type(cohort_item), pointer :: it1
+    type(cohort_item), pointer :: it2
 
+    it1 => vegn%next
     do while (associated(it1))
       it2 => it1%next
       do while (associated(it2))
@@ -1437,9 +1440,11 @@ contains
     type(vegn_tile_type), intent(inout) :: vegn
     ! local variables
     real, parameter :: mindensity = 0.25E-4
-    logical :: at_least_one_survivor = .FALSE.
+    logical :: at_least_one_survivor
 
-    type(cohort_item), pointer :: it => NULL()
+    type(cohort_item), pointer :: it
+
+    at_least_one_survivor = .FALSE.
 
     ! We first check that we won't kill all the cohorts
     it => vegn%next
@@ -1473,8 +1478,10 @@ contains
 
     ! ---- local vars
     logical :: OldGrass
-    logical :: at_least_one_survivor = .FALSE.
-    type(cohort_item), pointer :: it => NULL()
+    logical :: at_least_one_survivor
+    type(cohort_item), pointer :: it
+
+    at_least_one_survivor = .FALSE.
 
     ! We check that there will be at least one survivor
     it => vegn%next
@@ -1622,8 +1629,8 @@ contains
 
     ! Local variables
     integer :: i, init_n_cohorts
-    type(cohort_type), pointer :: cc => NULL()
-    type(cohort_item), pointer :: new => NULL()
+    type(cohort_type), pointer :: cc
+    type(cohort_item), pointer :: new
 
     ! Initialize plant cohorts
     init_n_cohorts = size(myinterface%init_cohort)

@@ -14,7 +14,7 @@ module tests
 
       ! Inout variable
       type(vegn_tile_type) :: vegn
-      type(cohort_item), pointer :: ptr => NULL()
+      type(cohort_item), pointer :: ptr
       integer :: start_uid
 
       if (vegn%n_cohorts() /= 0) STOP 'Wrong cohort number (expected 0)'
@@ -39,7 +39,7 @@ module tests
       if (ptr%uid - start_uid /= 3) STOP 'Wrong uid (expected: 3)'
       if( vegn%next%cohort%height /= 6) STOP 'Wrong value (expected 6)'
 
-      ptr => vegn%remove_cohort(2) ! second (midle)
+      ptr => vegn%remove_cohort(2 + start_uid) ! second (midle)
 
       if (vegn%n_cohorts() /= 2) STOP 'Wrong cohort number (expected 2)'
       if( ptr%uid - start_uid /= 1) STOP 'Wrong uid (expected: 1)'
@@ -49,16 +49,16 @@ module tests
       if( ptr%cohort%height /= 10) STOP 'Wrong value (expected 10)'
 
       if( vegn%next%uid - start_uid /= 3) STOP 'Wrong uid (expected: 3)'
-      ptr => vegn%remove_cohort(3) !first
+      ptr => vegn%remove_cohort(3 + start_uid) !first
       if (vegn%n_cohorts() /= 1) STOP 'Wrong cohort number (expected 1)'
       if( vegn%next%cohort%height /= 10) STOP 'Wrong value (expected 10)'
       if( ptr%cohort%height /= 10) STOP 'Wrong value (expected 10)'
 
-      ptr => vegn%remove_cohort(3) !not existing uid
+      ptr => vegn%remove_cohort(3 + start_uid) !not existing uid
       if (vegn%n_cohorts() /= 1) STOP 'Wrong cohort number (expected 1)'
       if (associated(ptr)) STOP 'Expected: FALSE'
 
-      ptr => vegn%remove_cohort(1) !last one
+      ptr => vegn%remove_cohort(1 + start_uid) !last one
       if (vegn%n_cohorts() /= 0) STOP 'Wrong cohort number (expected 0)'
       if (associated(ptr)) STOP 'Expected: FALSE'
 
@@ -75,11 +75,11 @@ module tests
       if (ptr%uid - start_uid /= 5) STOP 'Wrong uid (expected: 5)'
       if( vegn%next%cohort%height /= 5) STOP 'Wrong value (expected 5)'
 
-      ptr => vegn%remove_cohort(4) !last one
+      ptr => vegn%remove_cohort(4 + start_uid) !last one
       if (vegn%n_cohorts() /= 1) STOP 'Wrong cohort number (expected 1)'
       if (associated(ptr)) STOP 'Expected: FALSE'
 
-      ptr => vegn%remove_cohort(5) !last one
+      ptr => vegn%remove_cohort(5 + start_uid) !last one
       if (vegn%n_cohorts() /= 0) STOP 'Wrong cohort number (expected 0)'
       if (associated(ptr)) STOP 'Expected: FALSE'
 

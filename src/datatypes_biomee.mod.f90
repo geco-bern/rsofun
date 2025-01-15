@@ -78,7 +78,7 @@ module datatypes_biomee
   type :: vegn_tile_type
 
     !===== Linked list of cohorts
-    type(cohort_item), pointer :: next => NULL()
+    type(cohort_item), pointer :: next => NULL() ! Important to nullify here!
 
     !===== Tile-level forest inventory information
     real    :: area                               ! m2
@@ -202,7 +202,7 @@ contains
     ! Free all allocated memory
     class(vegn_tile_type) :: self
 
-    type(cohort_item), pointer :: ptr => NULL()
+    type(cohort_item), pointer :: ptr
 
     do while (associated(self%next))
       ptr => self%next
@@ -217,11 +217,11 @@ contains
     logical :: increasing
 
     ! Local variable
-    type(cohort_item), pointer :: selected_item => NULL()
-    type(cohort_item), pointer :: selected_prev => NULL() ! Pointer to parent of node pointed by 'selected_item'
-    type(cohort_item), pointer :: old_cohorts => NULL()
-    type(cohort_item), pointer :: it => NULL()
-    type(cohort_item), pointer :: prev => NULL() ! Pointer to parent of node pointed by 'it'
+    type(cohort_item), pointer :: selected_item
+    type(cohort_item), pointer :: selected_prev ! Pointer to parent of node pointed by 'selected_item'
+    type(cohort_item), pointer :: old_cohorts
+    type(cohort_item), pointer :: it
+    type(cohort_item), pointer :: prev ! Pointer to parent of node pointed by 'it'
     old_cohorts => self%next
     self%next => NULL()
 
@@ -263,7 +263,7 @@ contains
     class(vegn_tile_type) :: self
 
     ! Local variable
-    type(cohort_item), pointer :: it => NULL()
+    type(cohort_item), pointer :: it ! iterator
 
     res = 0
 
@@ -293,25 +293,25 @@ contains
     class(vegn_tile_type) :: self
 
     ! Local variable
-    type(cohort_item), pointer :: iterator => NULL()
-    type(cohort_item), pointer :: prev_it => NULL()
+    type(cohort_item), pointer :: it
+    type(cohort_item), pointer :: prev_it
 
-    iterator => self%next
+    it => self%next
     prev_it => NULL() ! Important, otherwise may otherwise still be associated from a previous call to this method!
 
-    do while (associated(iterator))
-      if (iterator%uid == uid) then
-        res => iterator%next
+    do while (associated(it))
+      if (it%uid == uid) then
+        res => it%next
         if (associated(prev_it)) then
           prev_it%next => res
         else
           self%next => res
         end if
-        deallocate(iterator)
+        deallocate(it)
         exit
       else
-        prev_it  => iterator
-        iterator => iterator%next
+        prev_it  => it
+        it => it%next
       end if
     end do
   end function remove_cohort
@@ -379,8 +379,8 @@ contains
     type(vegn_tile_type), intent(inout) :: vegn
 
     ! local variables
-    type(cohort_type), pointer :: cc => NULL()
-    type(cohort_item), pointer :: it => NULL()
+    type(cohort_type), pointer :: cc
+    type(cohort_item), pointer :: it
 
     ! State variables
     call orginit(vegn%plabl)
@@ -458,8 +458,8 @@ contains
     type(climate_type), intent(in):: forcing
 
     ! local variables
-    type(cohort_type), pointer :: cc => NULL()
-    type(cohort_item), pointer :: it => NULL()
+    type(cohort_type), pointer :: cc
+    type(cohort_item), pointer :: it
 
     vegn%age = vegn%age + myinterface%dt_fast_yr
 
@@ -523,8 +523,8 @@ contains
     type(outtype_daily_tile), intent(out) :: out_daily_tile
 
     ! local variables
-    type(cohort_type), pointer :: cc => NULL()
-    type(cohort_item), pointer :: it => NULL()
+    type(cohort_type), pointer :: cc
+    type(cohort_item), pointer :: it
 
     it => vegn%next
     do while (associated(it))
@@ -609,11 +609,13 @@ contains
     type(outtype_annual_tile) :: out_annual_tile
 
     ! local variables
-    real :: treeG, fseed, fleaf=0, froot, fwood=0, dDBH, BA, dBA
+    real :: treeG, fseed, fleaf, froot, fwood, dDBH, BA, dBA
     real :: plantC, plantN, soilC, soilN
-    type(cohort_type), pointer :: cc => NULL()
-    type(cohort_item), pointer :: it => NULL()
-    integer :: i = 0
+    type(cohort_type), pointer :: cc
+    type(cohort_item), pointer :: it
+    integer :: i
+
+    i = 0
 
     ! re-initialise to avoid elements not updated when number 
     ! of cohorts declines from one year to the next
@@ -807,9 +809,11 @@ contains
     type(outtype_annual_tile) :: out_annual_tile
 
     ! local variables
-    type(cohort_type), pointer :: cc => NULL()
-    type(cohort_item), pointer :: it => NULL()
-    integer :: i = 0
+    type(cohort_type), pointer :: cc
+    type(cohort_item), pointer :: it
+    integer :: i
+
+    i = 0
 
     ! re-initialise to avoid elements not updated when number
     ! of cohorts declines from one year to the next

@@ -23,9 +23,6 @@ module md_classdefs
     nmvRec, ncp, ncpRec, nsub, ninit, orgfrac, cfrac, nfrac, orgplus, &
     cplus, nplus, orgminus, cminus, nminus, cton, ntoc, update_fluxes
 
-  ! ! Minimum precision
-  ! real, parameter :: epsilon = 1.0e-5 
-
 
   ! Carbon, so far contains only c12 (to be extended for c13)
   type carbon
@@ -101,7 +98,6 @@ contains
     type(orgpool), intent(inout) :: to
     real, intent(inout) :: outc
     real, intent(inout) :: outn
-    ! real, optional, intent(in) :: d13C
 
     outc = outc + amount%c%c12
     outn = outn + amount%n%n14

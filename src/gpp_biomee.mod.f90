@@ -60,9 +60,9 @@ contains
     type(vegn_tile_type), intent(inout) :: vegn
 
     ! local variables used for BiomeE-Allocation part
-    type(cohort_type), pointer :: cc => NULL()
-    type(cohort_item), pointer :: it => NULL()
-    integer :: i = 0
+    type(cohort_type), pointer :: cc
+    type(cohort_item), pointer :: it
+    integer :: i
     real   :: rad_top                                      ! downward radiation at the top of the canopy, W/m2
     real   :: rad_net                                      ! net radiation absorbed by the canopy, W/m2
     real   :: Tair, TairK                                  ! air temperature, degC and degK
@@ -74,18 +74,22 @@ contains
     real   :: psyn                                         ! net photosynthesis, mol C/(m2 of leaves s)
     real   :: resp                                         ! leaf respiration, mol C/(m2 of leaves s)
     real   :: w_scale2, transp                             ! mol H20 per m2 of leaf per second
-    real   :: kappa = 0.5                                  ! light extinction coefficient of crown layers
     real   :: f_light(nlayers_max+1)                       ! incident light fraction at top of a given layer
-    real   :: LAIlayer(nlayers_max) = 0.0                  ! leaf area index per layer, corrected for gaps (representative for the tree-covered fraction)
-    real   :: accuCAI = 0.0
-    real   :: f_gap = 0.1
+    real   :: LAIlayer(nlayers_max)                        ! leaf area index per layer, corrected for gaps (representative for the tree-covered fraction)
+    real   :: accuCAI
     real   :: par                                          ! just for temporary use
-    real, dimension(NCohortMax) :: fapar_tree     = 0.0    ! tree-level fAPAR based on LAI within the crown
-    real, dimension(nlayers_max-1) :: fapar_layer = 0.0
+    real, dimension(NCohortMax)    :: fapar_tree           ! tree-level fAPAR based on LAI within the crown
+    real, dimension(nlayers_max-1) :: fapar_layer
+    real, parameter :: kappa = 0.5                         ! light extinction coefficient of crown layers
+    real, parameter :: f_gap = 0.1
 
     ! local variables used for P-model part
     real :: tk, kphio_temp
     type(outtype_pmodel) :: out_pmodel      ! list of P-model output variables
+
+    fapar_tree(:) = 0.0
+    fapar_layer(:) = 0.0
+    LAIlayer(:) = 0.0
 
     !-----------------------------------------------------------
     ! Canopy light absorption

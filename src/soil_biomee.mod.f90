@@ -38,7 +38,7 @@ contains
       real :: thetaS(MAX_LEVELS) ! soil moisture index (0~1)
       real :: dpsiSR(MAX_LEVELS) ! pressure difference between soil water and root water, Pa
       integer :: i
-      type(cohort_item), pointer :: it => NULL()
+      type(cohort_item), pointer :: it
 
     !! Water supply from each layer
       do i=1, MAX_LEVELS ! Calculate water uptake potential layer by layer
@@ -102,7 +102,7 @@ contains
       real    :: wsupply
       real    :: WaterBudgetL(MAX_LEVELS)
       integer :: i
-      type(cohort_item), pointer :: it => NULL()
+      type(cohort_item), pointer :: it
 
       ! Water uptaken by roots, per timestep
       WaterBudgetL = 0.0
