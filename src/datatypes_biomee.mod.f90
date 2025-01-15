@@ -211,9 +211,10 @@ contains
     end do
   end subroutine clean
 
-  subroutine sort_cohorts_by_height(self)
-    ! Sort cohorts by decreasing height
+  subroutine sort_cohorts_by_height(self, increasing)
+    ! Sort cohorts by height
     class(vegn_tile_type) :: self
+    logical :: increasing
 
     ! Local variable
     type(cohort_item), pointer :: selected_item => NULL()
@@ -233,7 +234,7 @@ contains
       selected_prev => NULL()
       ! We pick the smallest element of the old list
       do while (associated(it))
-        if ((.not. associated(selected_item)) .or. (it%cohort%height < selected_item%cohort%height)) then
+        if ((.not. associated(selected_item)) .or. (increasing .neqv. (it%cohort%height < selected_item%cohort%height))) then
           selected_item => it
           selected_prev => prev
         end if

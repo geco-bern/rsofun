@@ -609,9 +609,9 @@ contains
       ! set calibratable mortality parameter
       CAI_max = myinterface%params_tile%par_mort
 
-      ! This thinning method depends on the order of the cohorts (smallest cohorts thinned in priority)
-      ! We sort the cohorts by decreasing height
-      call vegn%sort_cohorts_by_height()
+      ! This thinning method depends on the order of the cohorts (oldest cohorts tends to die first)
+      ! We sort the cohorts by increasing height
+      call vegn%sort_cohorts_by_height(.true.)
 
       ! calculate cai_partial and the number of cohorts with cai_partial < CAI_max (keep them)
       it => vegn%next
@@ -638,7 +638,7 @@ contains
         associate ( sp => cc%sp())
 
         if ((trim(myinterface%params_siml%method_mortality) == "cstarvation")) then
-          
+
           ! set calibratable parameter
           param_nsc_under = myinterface%params_tile%par_mort_under
           param_nsc       = myinterface%params_tile%par_mort
@@ -657,7 +657,7 @@ contains
           endif
 
         else if ((trim(myinterface%params_siml%method_mortality) == "dbh")) then 
-     
+
           ! set calibratable parameter
           param_dbh_under = myinterface%params_tile%par_mort_under
           param_dbh       = myinterface%params_tile%par_mort
@@ -970,7 +970,7 @@ contains
     it => vegn%next
     vegn%next => NULL() ! We start with an empty cohort list
 
-    call vegn%sort_cohorts_by_height()
+    call vegn%sort_cohorts_by_height(.false.)
 
     ! For each cohort present in the old list
     do while (associated(it))

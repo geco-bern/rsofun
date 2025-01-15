@@ -83,7 +83,7 @@ module tests
       if (vegn%n_cohorts() /= 0) STOP 'Wrong cohort number (expected 0)'
       if (associated(ptr)) STOP 'Expected: FALSE'
 
-      call vegn%sort_cohorts_by_height()
+      call vegn%sort_cohorts_by_height(.false.)
 
       if (vegn%n_cohorts() /= 0) STOP 'Wrong cohort number (expected 0)'
 
@@ -92,7 +92,7 @@ module tests
 
       if (vegn%n_cohorts() /= 1) STOP 'Wrong cohort number (expected 1)'
 
-      call vegn%sort_cohorts_by_height()
+      call vegn%sort_cohorts_by_height(.false.)
 
       if (vegn%n_cohorts() /= 1) STOP 'Wrong cohort number (expected 1)'
 
@@ -103,12 +103,19 @@ module tests
 
       if (vegn%n_cohorts() /= 3) STOP 'Wrong cohort number (expected 3)'
 
-      call vegn%sort_cohorts_by_height()
+      call vegn%sort_cohorts_by_height(.false.)
 
       if (vegn%n_cohorts() /= 3) STOP 'Wrong cohort number (expected 3)'
       if( vegn%next%cohort%height /= 10) STOP 'Wrong value (expected 10)'
       if( vegn%next%next%cohort%height /= 5) STOP 'Wrong value (expected 5)'
       if( vegn%next%next%next%cohort%height /= 2) STOP 'Wrong value (expected 2)'
+
+      call vegn%sort_cohorts_by_height(.true.)
+
+      if (vegn%n_cohorts() /= 3) STOP 'Wrong cohort number (expected 3)'
+      if( vegn%next%cohort%height /= 2) STOP 'Wrong value (expected 2)'
+      if( vegn%next%next%cohort%height /= 5) STOP 'Wrong value (expected 5)'
+      if( vegn%next%next%next%cohort%height /= 10) STOP 'Wrong value (expected 10)'
 
       call vegn%clean()
 
