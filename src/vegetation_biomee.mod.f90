@@ -878,46 +878,47 @@ contains
     do k = 1, nPFTs
 
       new => vegn%new_cohort()
+      cc => new%cohort
 
       ! update child cohort parameters
       associate (sp => myinterface%params_species(reproPFTs(k)))
 
       ! density
-      new%cohort%nindivs = seedC(k)/sp%seedlingsize
+      cc%nindivs = seedC(k)/sp%seedlingsize
 
-      new%cohort%species    = reproPFTs(k)
+      cc%species    = reproPFTs(k)
 
       ! Carbon pools
-      new%cohort%pleaf%c%c12 = 0.0 * sp%seedlingsize
-      new%cohort%proot%c%c12 = 0.1 * sp%seedlingsize
-      new%cohort%psapw%c%c12 = myinterface%params_tile%f_initialBSW * sp%seedlingsize
-      new%cohort%pwood%c%c12 = 0.0 * sp%seedlingsize
-      new%cohort%pseed%c%c12 = 0.0
-      new%cohort%plabl%c%c12 = sp%seedlingsize - cc%psapw%c%c12 - cc%proot%c%c12
+      cc%pleaf%c%c12 = 0.0 * sp%seedlingsize
+      cc%proot%c%c12 = 0.1 * sp%seedlingsize
+      cc%psapw%c%c12 = myinterface%params_tile%f_initialBSW * sp%seedlingsize
+      cc%pwood%c%c12 = 0.0 * sp%seedlingsize
+      cc%pseed%c%c12 = 0.0
+      cc%plabl%c%c12 = sp%seedlingsize - cc%psapw%c%c12 - cc%proot%c%c12
 
       ! beni: added seedling growth for NPP accounting (for output)
-      new%cohort%NPPleaf = new%cohort%pleaf%c%c12
-      new%cohort%NPProot = new%cohort%proot%c%c12
-      new%cohort%NPPwood = new%cohort%psapw%c%c12 + new%cohort%pwood%c%c12
+      cc%NPPleaf = cc%pleaf%c%c12
+      cc%NPProot = cc%proot%c%c12
+      cc%NPPwood = cc%psapw%c%c12 + cc%pwood%c%c12
 
       ! Nitrogen pools
-      new%cohort%pleaf%n%n14  = new%cohort%pleaf%c%c12/sp%CNleaf0
-      new%cohort%proot%n%n14  = new%cohort%proot%c%c12/sp%CNroot0
-      new%cohort%psapw%n%n14  = new%cohort%psapw%c%c12/sp%CNsw0
-      new%cohort%pwood%n%n14  = new%cohort%pwood%c%c12/sp%CNwood0
-      new%cohort%pseed%n%n14  = 0.0
+      cc%pleaf%n%n14  = cc%pleaf%c%c12/sp%CNleaf0
+      cc%proot%n%n14  = cc%proot%c%c12/sp%CNroot0
+      cc%psapw%n%n14  = cc%psapw%c%c12/sp%CNsw0
+      cc%pwood%n%n14  = cc%pwood%c%c12/sp%CNwood0
+      cc%pseed%n%n14  = 0.0
 
-      if (new%cohort%nindivs > 0.0) then
-        new%cohort%plabl%n%n14 = sp%seedlingsize * seedN(k) / seedC(k) -  &
-          (new%cohort%pleaf%n%n14 + new%cohort%proot%n%n14 + new%cohort%psapw%n%n14 + new%cohort%pwood%n%n14)
+      if (cc%nindivs > 0.0) then
+        cc%plabl%n%n14 = sp%seedlingsize * seedN(k) / seedC(k) -  &
+          (cc%pleaf%n%n14 + cc%proot%n%n14 + cc%psapw%n%n14 + cc%pwood%n%n14)
       end if
 
-      vegn%totNewCC = vegn%totNewCC + new%cohort%nindivs*(new%cohort%pleaf%c%c12 + new%cohort%proot%c%c12 + &
-              new%cohort%psapw%c%c12 + new%cohort%pwood%c%c12 + new%cohort%plabl%c%c12)
-      vegn%totNewCN = vegn%totNewCN + new%cohort%nindivs*(cc%pleaf%n%n14 + new%cohort%proot%n%n14 + &
-              new%cohort%psapw%n%n14 + new%cohort%pwood%n%n14 + new%cohort%plabl%n%n14)
+      vegn%totNewCC = vegn%totNewCC + cc%nindivs*(cc%pleaf%c%c12 + cc%proot%c%c12 + &
+              cc%psapw%c%c12 + cc%pwood%c%c12 + cc%plabl%c%c12)
+      vegn%totNewCN = vegn%totNewCN + cc%nindivs*(cc%pleaf%n%n14 + cc%proot%n%n14 + &
+              cc%psapw%n%n14 + cc%pwood%n%n14 + cc%plabl%n%n14)
 
-      call init_cohort_allometry( new%cohort )
+      call init_cohort_allometry( cc )
 
       end associate
     enddo
