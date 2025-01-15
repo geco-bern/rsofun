@@ -129,7 +129,7 @@ contains
       do while (associated(it))
 
         cc => it%cohort
-        associate ( sp => myinterface%params_species(cc%species) )
+        associate ( sp => cc%sp() )
 
         if (cc%status == LEAF_ON) then   !.and. cc%lai > 0.1
 
@@ -214,7 +214,7 @@ contains
 
         cc => it%cohort
         i = i + 1
-        associate ( sp => myinterface%params_species(cc%species) )
+        associate ( sp => cc%sp() )
 
         !----------------------------------------------------------------
         ! Instantaneous temperature effect on quantum yield efficiency

@@ -112,6 +112,7 @@ module md_cohort
       procedure volume
       procedure merge_in
       procedure layerfrac
+      procedure sp
 
       !========== Other member procedures
 
@@ -120,6 +121,13 @@ module md_cohort
   end type cohort_type
 
 contains
+
+  function sp(self) result(res)
+    type(spec_data_type) :: res
+    class(cohort_type) :: self
+
+    res = myinterface%params_species(self%species)
+  end function sp
 
   subroutine merge_in(self, other)
     !////////////////////////////////////////////////////////////////
@@ -203,7 +211,7 @@ contains
     ! Local variable
     type(spec_data_type) :: sp
 
-    sp = myinterface%params_species(self%species)
+    sp = self%sp()
 
     res = sp%fNSNmax * &
             (self%bl_max / (sp%CNleaf0 * sp%leafLS) + self%br_max / sp%CNroot0)
@@ -223,7 +231,12 @@ contains
     integer :: level
     class(cohort_type) :: self
 
-    res = rootarea(self) * myinterface%params_species(self%species)%root_frac(level)
+    ! Local variable
+    type(spec_data_type) :: sp
+
+    sp = self%sp()
+
+    res = rootarea(self) * sp%root_frac(level)
   end function rootareaL
 
   function rootarea(self) result(res)
@@ -231,7 +244,12 @@ contains
     real :: res
     class(cohort_type) :: self
 
-    res  = self%proot%c%c12 * myinterface%params_species(self%species)%SRA
+    ! Local variable
+    type(spec_data_type) :: sp
+
+    sp = self%sp()
+
+    res  = self%proot%c%c12 * sp%SRA
   end function rootarea
 
   function lai(self) result(res)
@@ -254,8 +272,12 @@ contains
     ! Tree basal volume, m3 tree-1
     real :: res
     class(cohort_type) :: self
+    ! Local variable
+    type(spec_data_type) :: sp
 
-    res = (self%psapw%c%c12 + self%pwood%c%c12) / myinterface%params_species(self%species)%rho_wood
+    sp = self%sp()
+
+    res = (self%psapw%c%c12 + self%pwood%c%c12) / sp%rho_wood
   end function volume
 
   function layerfrac(self) result(res)

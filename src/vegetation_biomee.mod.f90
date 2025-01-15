@@ -157,7 +157,7 @@ contains
     real :: LFR_rate ! make these two variables to PFT-specific parameters
     ! make these two variables to PFT-specific parameters
     LFR_rate = 1.0 ! 1.0/5.0 ! filling rate/day
-    associate ( sp => myinterface%params_species(cc%species) )
+    associate ( sp => cc%sp() )
       NSCtarget = 3.0 * (cc%bl_max + cc%br_max)      ! kgC/tree
       ! Fetch C from labile C pool if it is in the growing season
       if (cc%status == LEAF_ON) then ! growing season
@@ -221,7 +221,7 @@ contains
       cc => it%cohort
 
       ! call biomass_allocation( cc )
-      associate (sp => myinterface%params_species(cc%species))
+      associate (sp => cc%sp())
 
       if (cc%status == LEAF_ON) then
 
@@ -428,7 +428,7 @@ contains
       ! update GDD for each cohort
       cc%gdd = cc%gdd + max(0.0, vegn%tc_daily - 278.15) ! GDD5
 
-      associate (sp => myinterface%params_species(cc%species) )
+      associate (sp => cc%sp() )
 
       ! for evergreen
       if (sp%phenotype == 1 .and. cc%status == LEAF_OFF) cc%status=LEAF_ON
@@ -495,7 +495,7 @@ contains
     do while (associated(it))
       cc => it%cohort
 
-      associate (sp => myinterface%params_species(cc%species) )
+      associate (sp => cc%sp() )
       TURN_OFF_life = (sp%phenotype  == 0 .and.     &
       cc%status == LEAF_ON .and.     &
       cc%gdd > sp%gdd_crit+600. .and. &
@@ -534,7 +534,7 @@ contains
     leaf_fall_rate = 0.05; root_mort_rate = 0.025
 
     ! End a growing season: leaves fall for deciduous
-    associate (sp => myinterface%params_species(cc%species) )
+    associate (sp => cc%sp() )
     
     if (cc%status == LEAF_OFF .AND. cc%pleaf%c%c12 > 0.0) then
 
@@ -635,7 +635,7 @@ contains
       it => vegn%next
       do while (associated(it))
         cc => it%cohort
-        associate ( sp => myinterface%params_species(cc%species))
+        associate ( sp => cc%sp())
 
         if ((trim(myinterface%params_siml%method_mortality) == "cstarvation")) then
           
@@ -774,7 +774,7 @@ contains
     real :: lossC_fine,lossC_coarse
     real :: lossN_fine,lossN_coarse
 
-    associate (sp => myinterface%params_species(cc%species))
+    associate (sp => cc%sp())
 
       ! Carbon and Nitrogen from plants to soil pools
       lossC_coarse  = deadtrees * &
@@ -935,7 +935,7 @@ contains
     logical can_reproduce ! return value
     type(cohort_type), intent(in) :: cc
 
-    associate (sp => myinterface%params_species(cc%species) )! F2003
+    associate (sp => cc%sp() )
       can_reproduce = (cc%layer == 1 .and. &
         cc%nindivs > 0.0 .and. &
         cc%age > sp%maturalage.and. &
@@ -1038,7 +1038,7 @@ contains
     real :: loss_coarse, loss_fine, lossN_coarse, lossN_fine
     real :: dAleaf ! leaf area decrease due to dBL
 
-    associate ( sp => myinterface%params_species(cc%species) )
+    associate ( sp => cc%sp() )
 
       dAleaf = leaf_area_from_biomass(dBL, cc%species)
 
@@ -1111,7 +1111,7 @@ contains
     it => vegn%next
     do while (associated(it))
       cc => it%cohort
-      associate ( sp => myinterface%params_species(cc%species) )
+      associate ( sp => cc%sp() )
 
       !    Turnover of leaves and roots regardless of the STATUS of leaf
       !    longevity. Deciduous: 0; Evergreen 0.035/LMa
@@ -1184,7 +1184,7 @@ contains
       it => vegn%next
       do while (associated(it))
         cc => it%cohort
-        associate (sp => myinterface%params_species(cc%species))
+        associate (sp => cc%sp())
 
           if (cc%plabl%n%n14 < cc%NSNmax()) N_Roots = N_Roots + cc%proot%c%c12 * cc%nindivs
 
@@ -1418,7 +1418,7 @@ contains
         if (cohorts_can_be_merged(it1%cohort, it2%cohort)) then
           call it1%cohort%merge_in(it2%cohort)
           call init_cohort_allometry(it1%cohort)
-          it2 => vegn%remove(it2%uid)
+          it2 => vegn%remove_cohort(it2%uid)
         else
           it2 => it2%next
         end if
@@ -1458,7 +1458,7 @@ contains
             it => it%next
           else
             call plant2soil(vegn, it%cohort, it%cohort%nindivs)
-            it => vegn%remove(it%uid)
+            it => vegn%remove_cohort(it%uid)
           end if
       end do
     end if
@@ -1479,7 +1479,7 @@ contains
     ! We check that there will be at least one survivor
     it => vegn%next
     do while (associated(it))
-      associate(sp=>myinterface%params_species(it%cohort%species))
+      associate(sp=>it%cohort%sp())
         OldGrass = (sp%lifeform == 0 .and. it%cohort%age > 3.0)
         if (.not. OldGrass) then
           at_least_one_survivor = .TRUE.
@@ -1492,11 +1492,11 @@ contains
     if (at_least_one_survivor) then
       it => vegn%next
       do while (associated(it))
-        associate(sp=>myinterface%params_species(it%cohort%species))
+        associate(sp=>it%cohort%sp())
           OldGrass = (sp%lifeform == 0 .and. it%cohort%age > 3.0)
           if (OldGrass) then
             call plant2soil(vegn, it%cohort, it%cohort%nindivs)
-            it => vegn%remove(it%uid)
+            it => vegn%remove_cohort(it%uid)
           else
             it => it%next
           end if
@@ -1552,7 +1552,7 @@ contains
     ! Code from BiomeE-Allocation
     !---------------------------------------------------------------
     type(cohort_type), intent(inout) :: cc
-    associate(sp=>myinterface%params_species(cc%species))
+    associate(sp=>cc%sp())
     
     call init_cohort_allometry(cc)
     cc%plabl%c%c12        = 2.0 * (cc%bl_max + cc%br_max)
@@ -1579,7 +1579,7 @@ contains
 
     cc%leafarea = leaf_area_from_biomass(cc%pleaf%c%c12, cc%species)
 
-    associate(sp=>myinterface%params_species(cc%species))
+    associate(sp=>cc%sp())
       btot = max(0.0001, cc%pwood%c%c12 + cc%psapw%c%c12)
       layer = max(1, cc%layer)
 

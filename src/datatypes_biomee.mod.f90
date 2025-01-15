@@ -191,12 +191,25 @@ module datatypes_biomee
 
     procedure n_cohorts
     procedure new_cohort
-    procedure remove
+    procedure remove_cohort
     procedure sort_cohorts_by_height
+    procedure clean
 
   end type vegn_tile_type
 
 contains
+  subroutine clean(self)
+    ! Free all allocated memory
+    class(vegn_tile_type) :: self
+
+    type(cohort_item), pointer :: ptr => NULL()
+
+    do while (associated(self%next))
+      ptr => self%next
+      self%next => ptr%next
+      deallocate(ptr)
+    end do
+  end subroutine clean
 
   subroutine sort_cohorts_by_height(self)
     ! Sort cohorts by decreasing height
@@ -272,7 +285,7 @@ contains
     self%next => new_item
   end function new_cohort
 
-  function remove(self, uid) result(res)
+  function remove_cohort(self, uid) result(res)
     ! Remove item with uid and return next item in the list
     type(cohort_item), pointer :: res
     integer :: uid
@@ -300,7 +313,7 @@ contains
         iterator => iterator%next
       end if
     end do
-  end function remove
+  end function remove_cohort
 
   !==============for diagnostics============================================
   subroutine Zero_diagnostics(vegn)

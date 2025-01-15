@@ -52,7 +52,7 @@ contains
          it => vegn%next
          do while (associated(it))
              cc => it%cohort
-            associate ( sp => myinterface%params_species(cc%species) )
+            associate ( sp => cc%sp() )
             cc%WupL(i) = cc%rootareaL(i)*sp%Kw_root*dpsiSR(i) * (myinterface%step_seconds*h2o_molmass*1e-3) ! kg H2O tree-1 step-1
             totWsup(i) = totWsup(i) + cc%WupL(i) * cc%nindivs ! water uptake per layer by all cohorts
             end associate
