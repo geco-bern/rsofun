@@ -324,7 +324,6 @@ contains
 
     ! local variables
     type(cohort_item), pointer :: it
-    it => vegn%next
 
     ! daily
     call zero_daily_diagnostics(vegn)
@@ -346,6 +345,7 @@ contains
     vegn%n_deadtrees  = 0.0
     vegn%c_deadtrees  = 0.0
 
+    it => vegn%next
     do while (associated(it))
       call it%cohort%reset_cohort()
       it => it%next
@@ -525,9 +525,8 @@ contains
     ! local variables
     type(cohort_type), pointer :: cc => NULL()
     type(cohort_item), pointer :: it => NULL()
-    it => vegn%next
 
-    ! cohorts output
+    it => vegn%next
     do while (associated(it))
       cc => it%cohort
 
@@ -709,9 +708,11 @@ contains
     vegn%c_deadtrees = 0
     vegn%m_turnover  = 0
 
+    it => vegn%next
     do while (associated(it))
 
       cc => it%cohort
+
       vegn%annualfixedN = vegn%annualfixedN  + cc%annual_fluxes%fixedN * cc%nindivs
       vegn%NPPL         = vegn%NPPL          + cc%NPPleaf * cc%nindivs
       vegn%NPPW         = vegn%NPPW          + cc%NPPwood * cc%nindivs 
