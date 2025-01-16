@@ -84,7 +84,7 @@ contains
     real, parameter :: f_gap = 0.1
 
     ! local variables used for P-model part
-    real :: tk, kphio_temp
+    real :: kphio_temp
     type(outtype_pmodel) :: out_pmodel      ! list of P-model output variables
 
     fapar_tree(:) = 0.0
@@ -195,6 +195,7 @@ contains
         vegn%dampended_forcing%temp = (forcing%Tair - kTkelvin)
         vegn%dampended_forcing%vpd  = forcing%vpd
         vegn%dampended_forcing%patm = forcing%P_air
+        vegn%dampended_forcing%par = forcing%radiation
         vegn%dampended_forcing%initialized = .True.
       else
         vegn%dampended_forcing%co2  = dampen_variability( forcing%CO2 * 1.0e6,        params_gpp%tau_acclim, &
@@ -205,9 +206,18 @@ contains
                 params_gpp%tau_acclim, vegn%dampended_forcing%vpd )
         vegn%dampended_forcing%patm = dampen_variability( forcing%P_air,              &
                 params_gpp%tau_acclim, vegn%dampended_forcing%patm )
+        vegn%dampended_forcing%par = dampen_variability( forcing%radiation,              &
+                params_gpp%tau_acclim, vegn%dampended_forcing%par )
       end if
 
-      tk = forcing%Tair + kTkelvin
+      !----------------------------------------------------------------
+      ! Instantaneous temperature effect on quantum yield efficiency
+      !----------------------------------------------------------------
+      kphio_temp = calc_kphio_temp( (forcing%Tair - kTkelvin), &
+              .false., &    ! no C4
+              params_gpp%kphio, &
+              params_gpp%kphio_par_a, &
+              params_gpp%kphio_par_b )
 
       !----------------------------------------------------------------
       ! Photosynthesis for each cohort
@@ -220,26 +230,10 @@ contains
         i = i + 1
         associate ( sp => cc%sp() )
 
-        !----------------------------------------------------------------
-        ! Instantaneous temperature effect on quantum yield efficiency
-        !----------------------------------------------------------------
-        kphio_temp = calc_kphio_temp( (forcing%Tair - kTkelvin), &
-                .false., &    ! no C4
-                params_gpp%kphio, &
-                params_gpp%kphio_par_a, &
-                params_gpp%kphio_par_b )
+       if (cc%status == LEAF_ON) then
 
-        ! photosynthetically active radiation level at this layer
-        par = f_light(cc%layer) * forcing%radiation * kfFEC * 1.0e-6
-        ! slowly varying light conditions per layer, relevant for acclimation (P-model quantities)
-        if (vegn%dampended_forcing%par(cc%layer) <= dummy) then
-          vegn%dampended_forcing%par(cc%layer) = par
-        else
-          vegn%dampended_forcing%par(cc%layer) = dampen_variability(par, params_gpp%tau_acclim, &
-                  vegn%dampended_forcing%par(cc%layer))
-        end if
-
-        if (cc%status == LEAF_ON) then
+          ! photosynthetically active radiation level at this layer
+          par = f_light(cc%layer) * vegn%dampended_forcing%par * kfFEC * 1.0e-6
 
           !----------------------------------------------------------------
           ! P-model call for C3 plants to get a list of variables that are 
@@ -249,7 +243,7 @@ contains
                                 kphio          = kphio_temp, &
                                 beta           = params_gpp%beta, &
                                 kc_jmax        = params_gpp%kc_jmax, &
-                                ppfd           = vegn%dampended_forcing%par(cc%layer), &
+                                ppfd           = par, &
                                 co2            = vegn%dampended_forcing%co2, &
                                 tc             = vegn%dampended_forcing%temp, &
                                 vpd            = vegn%dampended_forcing%vpd, &

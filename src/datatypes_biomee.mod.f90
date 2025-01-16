@@ -71,7 +71,7 @@ module datatypes_biomee
     real :: vpd  = 0.0
     real :: temp = 0.0
     real :: patm = 0.0
-    real, dimension(NLAYERS_MAX) :: par = dummy ! Initialization to a dummy value. Important! Keep it.
+    real :: par = 0.0
   end type dampended_forcing_type
 
   !=============== Tile level data type ============================================================
