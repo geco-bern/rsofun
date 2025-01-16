@@ -228,9 +228,8 @@ contains
 
         cc => it%cohort
         i = i + 1
-        associate ( sp => cc%sp() )
 
-       if (cc%status == LEAF_ON) then
+        if (cc%status == LEAF_ON) then
 
           ! photosynthetically active radiation level at this layer
           par = f_light(cc%layer) * vegn%dampended_forcing%par * kfFEC * 1.0e-6
@@ -273,8 +272,6 @@ contains
           cc%fast_fluxes%trsp  = 0.0
 
         endif
-
-        end associate
 
         it => it%next
       end do
