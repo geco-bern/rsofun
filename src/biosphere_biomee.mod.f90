@@ -180,6 +180,8 @@ contains
     !---------------------------------------------
     call annual_diagnostics_post_mortality( vegn, out_biosphere_annual_cohorts, out_biosphere_annual_tile )
 
+    call vegn%sort_cohorts_by_height(.false.)
+
   end subroutine biosphere_annual
 
 end module md_biosphere_biomee
