@@ -1534,7 +1534,7 @@ contains
 
       sameSizeTree = (spdata(c1%species)%lifeform > 0).and.  &
         (spdata(c2%species)%lifeform > 0).and.  &
-        ((abs(c1%DBH - c2%DBH)/c2%DBH < 0.2 ) .or.  &
+        ((abs(c1%DBH - c2%DBH)/(c1%DBH + c2%DBH) < 0.1 ) .or.  &
         (abs(c1%DBH - c2%DBH) < 0.001))  ! it'll be always true for grasses
 
       sameSizeGrass= (spdata(c1%species)%lifeform == 0) .and. &
