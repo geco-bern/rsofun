@@ -274,17 +274,60 @@ contains
     end do
   end function n_cohorts
 
-  function new_cohort(self) result(new_item)
-    ! Prepend a new cohort to the list and return its pointer
+  function new_cohort(self, head) result(new_item)
+    ! Insert a new cohort to the list and return its pointer.
+    ! By default, cohorts are added to the head of the list. If head=.False., they are added at the tail.
     type(cohort_item), pointer :: new_item
+    logical, optional :: head
+    logical :: head_option
     class(vegn_tile_type) :: self
+    type(cohort_item), pointer :: it
 
     new_item => NULL()
     allocate(new_item)
     new_item%uid = next_uid()
+
+    if(present(head)) then
+      head_option = head
+    else
+      head_option = .True.
+    end if
+    if (head_option) then
+      call insert_head(self, new_item)
+    else
+      call insert_tail(self, new_item)
+    end if
+  end function new_cohort
+
+  subroutine insert_tail(self, new_item)
+    ! Prepend a new cohort to the list and return its pointer
+    type(cohort_item), pointer :: new_item
+    class(vegn_tile_type) :: self
+    type(cohort_item), pointer :: it
+
+    if (associated(self%next)) then
+      it => self%next
+      do while (associated(it))
+        if (associated(it%next)) then
+          it => it%next
+          exit
+        else
+          it%next => new_item
+        end if
+      end do
+    else
+      self%next => new_item
+    end if
+  end subroutine insert_tail
+
+  subroutine insert_head(self, new_item)
+    ! Prepend a new cohort to the list and return its pointer
+    type(cohort_item), pointer :: new_item
+    class(vegn_tile_type) :: self
+
     new_item%next => self%next
     self%next => new_item
-  end function new_cohort
+  end subroutine insert_head
 
   function remove_cohort(self, uid) result(res)
     ! Remove item with uid and return next item in the list

@@ -62,24 +62,24 @@ module tests
       if (vegn%n_cohorts() /= 0) STOP 'Wrong cohort number (expected 0)'
       if (associated(ptr)) STOP 'Expected: FALSE'
 
-      ptr => vegn%new_cohort()
+      ptr => vegn%new_cohort(.false.)
       ptr%cohort%height = 10
 
       if (vegn%n_cohorts() /= 1) STOP 'Wrong cohort number (expected 1)'
       if (ptr%uid - start_uid /= 4) STOP 'Wrong uid (expected: 4)'
 
-      ptr => vegn%new_cohort()
+      ptr => vegn%new_cohort(.false.)
       ptr%cohort%height = 5
 
       if (vegn%n_cohorts() /= 2) STOP 'Wrong cohort number (expected 2)'
       if (ptr%uid - start_uid /= 5) STOP 'Wrong uid (expected: 5)'
-      if( vegn%next%cohort%height /= 5) STOP 'Wrong value (expected 5)'
 
-      ptr => vegn%remove_cohort(4 + start_uid) !last one
+      ptr => vegn%remove_cohort(5 + start_uid) !remove tail
       if (vegn%n_cohorts() /= 1) STOP 'Wrong cohort number (expected 1)'
+      if (vegn%next%uid - start_uid /= 4) STOP 'Wrong uid (expected: 4)'
       if (associated(ptr)) STOP 'Expected: FALSE'
 
-      ptr => vegn%remove_cohort(5 + start_uid) !last one
+      ptr => vegn%remove_cohort(4 + start_uid) !last one
       if (vegn%n_cohorts() /= 0) STOP 'Wrong cohort number (expected 0)'
       if (associated(ptr)) STOP 'Expected: FALSE'
 
