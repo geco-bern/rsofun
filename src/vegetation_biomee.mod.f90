@@ -861,8 +861,8 @@ contains
           reproPFTs(nPFTs) = cc%species ! PFT number
           pft_idx = nPFTs
         endif
-          seedC(pft_idx)     = cc%pseed%c%c12 * cc%nindivs ! seed carbon
-          seedN(pft_idx)     = cc%pseed%n%n14 * cc%nindivs ! seed nitrogen
+          seedC(pft_idx) = seedC(pft_idx) + cc%pseed%c%c12 * cc%nindivs ! seed carbon
+          seedN(pft_idx) = seedN(pft_idx) + cc%pseed%n%n14 * cc%nindivs ! seed nitrogen
           vegn%totSeedC = vegn%totSeedC + cc%pseed%c%c12  * cc%nindivs
           vegn%totSeedN = vegn%totSeedN + cc%pseed%n%n14  * cc%nindivs
 
