@@ -65,13 +65,16 @@ module datatypes_biomee
   !===== Leaf life span
   real, parameter  :: c_LLS   = 28.57143    ! yr/ (kg C m-2), c_LLS=1/LMAs, where LMAs = 0.035
 
+  !===== Default cohort insertion: true -> head, false -> tail
+  logical, parameter :: default_insert = .True.
+
   type :: dampended_forcing_type
     logical :: initialized = .False.
     real :: co2  = 0.0
     real :: vpd  = 0.0
     real :: temp = 0.0
     real :: patm = 0.0
-    real :: par = 0.0
+    real :: par  = 0.0
   end type dampended_forcing_type
 
   !=============== Tile level data type ============================================================
@@ -195,6 +198,9 @@ module datatypes_biomee
     procedure remove_cohort
     procedure sort_cohorts_by_height
     procedure clean
+    procedure insert_cohort
+    procedure insert_head
+    procedure insert_tail
 
   end type vegn_tile_type
 
@@ -291,7 +297,7 @@ contains
     if(present(head)) then
       head_option = head
     else
-      head_option = .True.
+      head_option = default_insert
     end if
     if (head_option) then
       call insert_head(self, new_item)
@@ -299,6 +305,25 @@ contains
       call insert_tail(self, new_item)
     end if
   end function new_cohort
+
+  subroutine insert_cohort(self, new_item, head)
+    ! Insert a cohort
+    logical, optional :: head
+    logical :: head_option
+    type(cohort_item), pointer :: new_item
+    class(vegn_tile_type) :: self
+
+    if(present(head)) then
+      head_option = head
+    else
+      head_option = default_insert
+    end if
+    if (head_option) then
+      call insert_head(self, new_item)
+    else
+      call insert_tail(self, new_item)
+    end if
+  end subroutine insert_cohort
 
   subroutine insert_tail(self, new_item)
     ! Prepend a new cohort to the list and return its pointer

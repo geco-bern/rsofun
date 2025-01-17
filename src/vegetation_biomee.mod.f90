@@ -967,9 +967,9 @@ contains
     integer :: L ! layer index (top-down)
     real    :: frac ! fraction of the layer covered so far by the canopies
 
-    type(cohort_item), pointer :: old
-    type(cohort_item), pointer :: new
-    type(cohort_item), pointer :: it
+    type(cohort_item), pointer :: ptr ! placeholder pointer
+    type(cohort_item), pointer :: new ! Pointer for new cohort
+    type(cohort_item), pointer :: it  ! iterator
 
     L = 1
     frac = 0.0
@@ -981,48 +981,39 @@ contains
     ! For each cohort present in the old list
     do while (associated(it))
       ! If the cohort has NA we skip it
-      old => it
-      if (ieee_is_nan(old%cohort%crownarea) .or. ieee_is_nan(old%cohort%nindivs)) then
+      ptr => it
+      if (ieee_is_nan(ptr%cohort%crownarea) .or. ieee_is_nan(ptr%cohort%nindivs)) then
+
         it => it%next
-        deallocate(old)
-        old => NULL()
+        deallocate(ptr)
+        ptr => NULL()
+
       else ! oterhwise
 
-        ! We add a copy of the cohort to the new cohort list
-        new => vegn%new_cohort()
-        new%cohort = it%cohort
-        new%cohort%layer = L
+        ! We set the layer
+        it%cohort%layer = L
         if (L == 1) then
-          new%cohort%firstlayer = 1
+          it%cohort%firstlayer = 1
         endif
 
-        ! We take at most the fraction whih would fill the current layer
-        new%cohort%nindivs = min( &
-                new%cohort%nindivs, &
-                (layer_vegn_cover - frac)/new%cohort%crownarea &
-                )
-        ! We subtract what we took from the old cohort
-        it%cohort%nindivs = it%cohort%nindivs - new%cohort%nindivs
-        ! If what remains is very small,
-        if (it%cohort%layerfrac() < tolerance) then
-
-          ! we just add it to the new cohort
-          new%cohort%nindivs = new%cohort%nindivs + it%cohort%nindivs
-          ! and we point to the next cohort of the old list
-          old => it
-          it => it%next
-          deallocate(old)
-          old => NULL()
-        endif
-
-        ! We update the current layer fraction
-        frac = frac + new%cohort%layerfrac()
-
-        ! If the fraction is full, we open-up a new fraction
-        if (layer_vegn_cover - frac < tolerance) then
+        ! If the current cohort does not fit in the remaining fraction on the layer
+        if (it%cohort%layerfrac() > layer_vegn_cover - frac) then
+          ! We add a copy of the cohort to the new cohort list
+          new => vegn%new_cohort()
+          new%cohort = it%cohort
+          new%cohort%nindivs = (layer_vegn_cover - frac)/new%cohort%crownarea
+          it%cohort%nindivs = it%cohort%nindivs - new%cohort%nindivs
+          ! We keep it as we want to continue processing it at the next iteration
+          ! Since the current layer is filled-up, we open-up a new fraction
           L = L + 1
           frac = 0.0
-        endif
+        else
+          ! Otherwise we update the current layer fraction and insert the current cohort
+          frac = frac + it%cohort%layerfrac()
+          it => it%next ! Attention, this line must be here!
+          ptr%next => NULL() ! Imporant
+          call vegn%insert_cohort(ptr)
+        end if
 
       end if
     end do
