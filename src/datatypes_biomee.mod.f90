@@ -77,8 +77,9 @@ module datatypes_biomee
   !=============== Tile level data type ============================================================
   type :: vegn_tile_type
 
-    !===== Linked list of cohorts
-    type(cohort_item), pointer :: next => NULL() ! Important to nullify here!
+    !===== Cohort heap
+    ! Implemented as a linked list, 'heap' points to the first cohort of the heap
+    type(cohort_item), pointer :: heap => NULL() ! Important to nullify here!
 
     !===== Tile-level forest inventory information
     real    :: area                               ! m2
@@ -204,9 +205,9 @@ contains
 
     type(cohort_item), pointer :: ptr
 
-    do while (associated(self%next))
-      ptr => self%next
-      self%next => ptr%next
+    do while (associated(self%heap))
+      ptr => self%heap
+      self%heap => ptr%next
       deallocate(ptr)
     end do
   end subroutine clean
@@ -220,10 +221,10 @@ contains
     type(cohort_item), pointer :: selected_item
     type(cohort_item), pointer :: selected_prev ! Pointer to parent of node pointed by 'selected_item'
     type(cohort_item), pointer :: old_cohorts
-    type(cohort_item), pointer :: it
+    type(cohort_item), pointer :: it !iterator
     type(cohort_item), pointer :: prev ! Pointer to parent of node pointed by 'it'
-    old_cohorts => self%next
-    self%next => NULL()
+    old_cohorts => self%heap
+    self%heap => NULL()
 
     ! Repeat until the old list is empty
     do while (associated(old_cohorts))
@@ -250,8 +251,8 @@ contains
       end if
 
       ! We insert it in the head
-      selected_item%next => self%next
-      self%next => selected_item
+      selected_item%next => self%heap
+      self%heap => selected_item
 
     end do
 
@@ -267,7 +268,7 @@ contains
 
     res = 0
 
-    it => self%next
+    it => self%heap
     do while (associated(it))
       res = res + 1
       it => it%next
@@ -281,7 +282,7 @@ contains
     logical, optional :: head
     logical :: head_option
     class(vegn_tile_type) :: self
-    type(cohort_item), pointer :: it
+    type(cohort_item), pointer :: it !iterator
 
     new_item => NULL()
     allocate(new_item)
@@ -303,10 +304,10 @@ contains
     ! Prepend a new cohort to the list and return its pointer
     type(cohort_item), pointer :: new_item
     class(vegn_tile_type) :: self
-    type(cohort_item), pointer :: it
+    type(cohort_item), pointer :: it !iterator
 
-    if (associated(self%next)) then
-      it => self%next
+    if (associated(self%heap)) then
+      it => self%heap
       do while (associated(it))
         if (associated(it%next)) then
           it => it%next
@@ -316,7 +317,7 @@ contains
         end if
       end do
     else
-      self%next => new_item
+      self%heap => new_item
     end if
   end subroutine insert_tail
 
@@ -325,8 +326,8 @@ contains
     type(cohort_item), pointer :: new_item
     class(vegn_tile_type) :: self
 
-    new_item%next => self%next
-    self%next => new_item
+    new_item%next => self%heap
+    self%heap => new_item
   end subroutine insert_head
 
   function remove_cohort(self, uid) result(res)
@@ -336,10 +337,10 @@ contains
     class(vegn_tile_type) :: self
 
     ! Local variable
-    type(cohort_item), pointer :: it
+    type(cohort_item), pointer :: it !iterator
     type(cohort_item), pointer :: prev_it
 
-    it => self%next
+    it => self%heap
     prev_it => NULL() ! Important, otherwise may otherwise still be associated from a previous call to this method!
 
     do while (associated(it))
@@ -348,7 +349,7 @@ contains
         if (associated(prev_it)) then
           prev_it%next => res
         else
-          self%next => res
+          self%heap => res
         end if
         deallocate(it)
         exit
@@ -366,7 +367,7 @@ contains
     type(vegn_tile_type), intent(inout) :: vegn
 
     ! local variables
-    type(cohort_item), pointer :: it
+    type(cohort_item), pointer :: it !iterator
 
     ! daily
     call zero_daily_diagnostics(vegn)
@@ -388,7 +389,7 @@ contains
     vegn%n_deadtrees  = 0.0
     vegn%c_deadtrees  = 0.0
 
-    it => vegn%next
+    it => vegn%heap
     do while (associated(it))
       call it%cohort%reset_cohort()
       it => it%next
@@ -423,7 +424,7 @@ contains
 
     ! local variables
     type(cohort_type), pointer :: cc
-    type(cohort_item), pointer :: it
+    type(cohort_item), pointer :: it !iterator
 
     ! State variables
     call orginit(vegn%plabl)
@@ -446,7 +447,7 @@ contains
     vegn%MaxVolume  = 0.0
     vegn%MaxDBH     = 0.0
 
-    it => vegn%next
+    it => vegn%heap
     do while (associated(it))
       cc => it%cohort
 
@@ -514,7 +515,7 @@ contains
     vegn%N_uptake = 0.0
     vegn%fixedN   = 0.0
 
-    it => vegn%next
+    it => vegn%heap
     do while (associated(it))
       cc => it%cohort
 
@@ -569,7 +570,7 @@ contains
     type(cohort_type), pointer :: cc
     type(cohort_item), pointer :: it
 
-    it => vegn%next
+    it => vegn%heap
     do while (associated(it))
       cc => it%cohort
 
@@ -694,7 +695,7 @@ contains
     out_annual_cohorts(:)%Nfix        = dummy
 
     ! Cohorts ouput
-    it => vegn%next
+    it => vegn%heap
     do while (associated(it))
       cc => it%cohort
       i = i + 1
@@ -753,7 +754,7 @@ contains
     vegn%c_deadtrees = 0
     vegn%m_turnover  = 0
 
-    it => vegn%next
+    it => vegn%heap
     do while (associated(it))
 
       cc => it%cohort
@@ -865,7 +866,7 @@ contains
     out_annual_cohorts(:)%deathrate   = dummy
 
     ! Cohorts ouput
-    it => vegn%next
+    it => vegn%heap
     do while (associated(it))
 
       cc => it%cohort
@@ -881,7 +882,7 @@ contains
     vegn%c_deadtrees = 0
     vegn%m_turnover  = 0
 
-    it => vegn%next
+    it => vegn%heap
     do while (associated(it))
       cc => it%cohort
       vegn%n_deadtrees  = vegn%n_deadtrees   + cc%n_deadtrees

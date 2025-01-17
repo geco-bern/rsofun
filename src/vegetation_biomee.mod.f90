@@ -50,7 +50,7 @@ contains
     call SoilWaterDynamicsLayer( forcing, vegn )
     
     ! Respiration and allocation for growth
-    it => vegn%next
+    it => vegn%heap
     do while (associated(it))
       cc => it%cohort
       ! increment the cohort age
@@ -213,7 +213,7 @@ contains
 
     ! Allocate C_gain to tissues
     vegn%LAI = 0.0
-    it => vegn%next
+    it => vegn%heap
     do while (associated(it))
       cc => it%cohort
 
@@ -422,7 +422,7 @@ contains
     vegn%tc_pheno = vegn%tc_pheno * 0.8 + vegn%Tc_daily * 0.2
 
     ! ON and OFF of phenology: change the indicator of growing season for deciduous
-    it => vegn%next
+    it => vegn%heap
     do while (associated(it))
       cc => it%cohort
 
@@ -491,7 +491,7 @@ contains
     if (do_relayer) call relayer_cohorts(vegn)
 
     ! OFF of a growing season
-    it => vegn%next
+    it => vegn%heap
     do while (associated(it))
       cc => it%cohort
 
@@ -616,7 +616,7 @@ contains
       call vegn%sort_cohorts_by_height(.true.)
 
       ! calculate cai_partial and the number of cohorts with cai_partial < CAI_max (keep them)
-      it => vegn%next
+      it => vegn%heap
       do while (associated(it))
         cc => it%cohort
         cCAI = cCAI + cc%layerfrac()
@@ -634,7 +634,7 @@ contains
  
     else
 
-      it => vegn%next
+      it => vegn%heap
       do while (associated(it))
         cc => it%cohort
         associate ( sp => cc%sp())
@@ -731,7 +731,7 @@ contains
     type(cohort_type), pointer :: cc
     type(cohort_item), pointer :: it
 
-    it => vegn%next
+    it => vegn%heap
     do while (associated(it))
       cc => it%cohort
 
@@ -843,7 +843,7 @@ contains
 
     ! We loop through each cohort and add C and N to species-specific seed pools
     ! whenever a cohort can reproduce
-    it => vegn%next
+    it => vegn%heap
     do while (associated(it))
       cc => it%cohort
 
@@ -973,8 +973,8 @@ contains
 
     L = 1
     frac = 0.0
-    it => vegn%next
-    vegn%next => NULL() ! We start with an empty cohort list
+    it => vegn%heap
+    vegn%heap => NULL() ! We start with an empty cohort list
 
     call vegn%sort_cohorts_by_height(.false.)
 
@@ -1114,7 +1114,7 @@ contains
     real :: dNL, dNR, dNStem  ! leaf and fine root nitrogen tendencies
 
     ! update plant carbon and nitrogen for all cohorts
-    it => vegn%next
+    it => vegn%heap
     do while (associated(it))
       cc => it%cohort
       associate ( sp => cc%sp() )
@@ -1187,7 +1187,7 @@ contains
 
     if (vegn%ninorg%n14 > 0.0) then
 
-      it => vegn%next
+      it => vegn%heap
       do while (associated(it))
         cc => it%cohort
         associate (sp => cc%sp())
@@ -1212,7 +1212,7 @@ contains
         avgNup = totNup / N_roots ! kgN time step-1 kg roots-1
         
         ! Nitrogen uptaken by each cohort (N_uptake) - proportional to cohort's root mass
-        it => vegn%next
+        it => vegn%heap
         do while (associated(it))
           cc => it%cohort
           if (cc%plabl%n%n14 < cc%NSNmax()) then
@@ -1415,7 +1415,7 @@ contains
     type(cohort_item), pointer :: it1
     type(cohort_item), pointer :: it2
 
-    it1 => vegn%next
+    it1 => vegn%heap
     do while (associated(it1))
       it2 => it1%next
       do while (associated(it2))
@@ -1448,7 +1448,7 @@ contains
     at_least_one_survivor = .FALSE.
 
     ! We first check that we won't kill all the cohorts
-    it => vegn%next
+    it => vegn%heap
     do while (associated(it))
       if (it%cohort%nindivs > mindensity) then
         at_least_one_survivor = .TRUE.
@@ -1458,7 +1458,7 @@ contains
     enddo
 
     if (at_least_one_survivor) then
-      it => vegn%next
+      it => vegn%heap
       do while (associated(it))
           if (it%cohort%nindivs > mindensity) then
             it => it%next
@@ -1485,7 +1485,7 @@ contains
     at_least_one_survivor = .FALSE.
 
     ! We check that there will be at least one survivor
-    it => vegn%next
+    it => vegn%heap
     do while (associated(it))
       associate(sp=>it%cohort%sp())
         OldGrass = (sp%lifeform == 0 .and. it%cohort%age > 3.0)
@@ -1498,7 +1498,7 @@ contains
     end do
 
     if (at_least_one_survivor) then
-      it => vegn%next
+      it => vegn%heap
       do while (associated(it))
         associate(sp=>it%cohort%sp())
           OldGrass = (sp%lifeform == 0 .and. it%cohort%age > 3.0)

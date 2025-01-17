@@ -99,7 +99,7 @@ contains
 
     ! Sum leaf area over cohorts in each crown layer -> LAIlayer(layer)
     i = 0
-    it => vegn%next
+    it => vegn%heap
     do while (associated(it))
       cc => it%cohort
       i = i + 1
@@ -129,7 +129,7 @@ contains
       ! Photosynthesis
       accuCAI = 0.0
 
-      it => vegn%next
+      it => vegn%heap
       do while (associated(it))
 
         cc => it%cohort
@@ -223,7 +223,7 @@ contains
       ! Photosynthesis for each cohort
       !----------------------------------------------------------------
       i = 0
-      it => vegn%next
+      it => vegn%heap
       do while (associated(it))
 
         cc => it%cohort

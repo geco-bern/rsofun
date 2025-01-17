@@ -49,7 +49,7 @@ contains
          dpsiSR(i) = 1.5 *1.0e6 * thetaS(i)**2 ! Pa
          ! Layer allocation, water uptake capacity
          totWsup(i) = 0.0 ! Potential water uptake per layer by all cohorts
-         it => vegn%next
+         it => vegn%heap
          do while (associated(it))
              cc => it%cohort
             associate ( sp => cc%sp() )
@@ -59,7 +59,7 @@ contains
             it => it%next
          end do
          ! adjust cc%WupL(i) according to available water
-         it => vegn%next
+         it => vegn%heap
          do while (associated(it))
              cc => it%cohort
             if(totWsup(i)>0.0) &
@@ -106,7 +106,7 @@ contains
 
       ! Water uptaken by roots, per timestep
       WaterBudgetL = 0.0
-      it => vegn%next
+      it => vegn%heap
       do while (associated(it))
           cc => it%cohort
           ! Compare with soil water
