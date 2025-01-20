@@ -78,7 +78,7 @@ contains
     real   :: LAIlayer(nlayers_max)                        ! leaf area index per layer, corrected for gaps (representative for the tree-covered fraction)
     real   :: accuCAI
     real   :: par                                          ! just for temporary use
-    real, dimension(NCohortMax)    :: fapar_tree           ! tree-level fAPAR based on LAI within the crown
+    real, allocatable :: fapar_tree(:)                     ! tree-level fAPAR based on LAI within the crown
     real, dimension(nlayers_max-1) :: fapar_layer
     real, parameter :: kappa = 0.5                         ! light extinction coefficient of crown layers
     real, parameter :: f_gap = 0.1
@@ -87,7 +87,7 @@ contains
     real :: kphio_temp
     type(outtype_pmodel) :: out_pmodel      ! list of P-model output variables
 
-    fapar_tree(:) = 0.0
+    allocate(fapar_tree(vegn%n_cohorts())) ! no need to deallocate
     fapar_layer(:) = 0.0
     LAIlayer(:) = 0.0
 

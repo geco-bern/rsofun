@@ -960,7 +960,6 @@ contains
     type(vegn_tile_type), intent(inout) :: vegn ! input cohorts
 
     ! ---- local constants
-    real, parameter :: tolerance = 1e-4         ! Just to decide an approx of 0
     real, parameter :: layer_vegn_cover = 1.0   ! i.e. max 1m2 vegetation per m2 ground
 
     ! local variables
@@ -982,6 +981,7 @@ contains
     do while (associated(it))
       ! If the cohort has NA we skip it
       ptr => it
+
       if (ieee_is_nan(ptr%cohort%crownarea) .or. ieee_is_nan(ptr%cohort%nindivs)) then
 
         it => it%next
@@ -1017,8 +1017,6 @@ contains
 
       end if
     end do
-
-    call vegn_mergecohorts( vegn )
 
   end subroutine relayer_cohorts
 

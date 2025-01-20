@@ -174,6 +174,8 @@ contains
     
     call relayer_cohorts( vegn )
 
+    call vegn_mergecohorts( vegn )
+
 
     !---------------------------------------------
     ! Update post-mortality metrics

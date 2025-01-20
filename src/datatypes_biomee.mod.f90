@@ -734,37 +734,41 @@ contains
       BA        = cc%basal_area()
       dBA       = BA - cc%BA_ys
 
-      out_annual_cohorts(i)%year        = iyears
-      out_annual_cohorts(i)%cID         = cc%ccID
-      out_annual_cohorts(i)%PFT         = cc%species
-      out_annual_cohorts(i)%layer       = cc%layer
-      out_annual_cohorts(i)%density     = cc%nindivs * 10000
-      out_annual_cohorts(i)%flayer      = cc%layerfrac()
-      out_annual_cohorts(i)%dbh         = cc%dbh * 100   ! *100 to convert m in cm
-      out_annual_cohorts(i)%dDBH        = dDBH * 100     ! *100 to convert m in cm
-      out_annual_cohorts(i)%height      = cc%height
-      out_annual_cohorts(i)%age         = cc%age
-      out_annual_cohorts(i)%BA          = BA
-      out_annual_cohorts(i)%dBA         = dBA
-      out_annual_cohorts(i)%Acrown      = cc%crownarea
-      out_annual_cohorts(i)%Aleaf       = cc%leafarea
-      out_annual_cohorts(i)%nsc         = cc%plabl%c%c12
-      out_annual_cohorts(i)%nsn         = cc%plabl%n%n14
-      out_annual_cohorts(i)%seedC       = cc%pseed%c%c12
-      out_annual_cohorts(i)%leafC       = cc%pleaf%c%c12
-      out_annual_cohorts(i)%rootC       = cc%proot%c%c12
-      out_annual_cohorts(i)%sapwC       = cc%psapw%c%c12
-      out_annual_cohorts(i)%woodC       = cc%pwood%c%c12
-      out_annual_cohorts(i)%treeG       = treeG
-      out_annual_cohorts(i)%fseed       = fseed 
-      out_annual_cohorts(i)%fleaf       = fleaf
-      out_annual_cohorts(i)%froot       = froot
-      out_annual_cohorts(i)%fwood       = fwood
-      out_annual_cohorts(i)%GPP         = cc%annual_fluxes%GPP
-      out_annual_cohorts(i)%NPP         = cc%annual_fluxes%NPP
-      out_annual_cohorts(i)%Rauto       = cc%annual_fluxes%Resp
-      out_annual_cohorts(i)%Nupt        = cc%annual_fluxes%Nup
-      out_annual_cohorts(i)%Nfix        = cc%annual_fluxes%fixedN
+      if (i <= NCohortMax) then
+
+        out_annual_cohorts(i)%year        = iyears
+        out_annual_cohorts(i)%cID         = cc%ccID
+        out_annual_cohorts(i)%PFT         = cc%species
+        out_annual_cohorts(i)%layer       = cc%layer
+        out_annual_cohorts(i)%density     = cc%nindivs * 10000
+        out_annual_cohorts(i)%flayer      = cc%layerfrac()
+        out_annual_cohorts(i)%dbh         = cc%dbh * 100   ! *100 to convert m in cm
+        out_annual_cohorts(i)%dDBH        = dDBH * 100     ! *100 to convert m in cm
+        out_annual_cohorts(i)%height      = cc%height
+        out_annual_cohorts(i)%age         = cc%age
+        out_annual_cohorts(i)%BA          = BA
+        out_annual_cohorts(i)%dBA         = dBA
+        out_annual_cohorts(i)%Acrown      = cc%crownarea
+        out_annual_cohorts(i)%Aleaf       = cc%leafarea
+        out_annual_cohorts(i)%nsc         = cc%plabl%c%c12
+        out_annual_cohorts(i)%nsn         = cc%plabl%n%n14
+        out_annual_cohorts(i)%seedC       = cc%pseed%c%c12
+        out_annual_cohorts(i)%leafC       = cc%pleaf%c%c12
+        out_annual_cohorts(i)%rootC       = cc%proot%c%c12
+        out_annual_cohorts(i)%sapwC       = cc%psapw%c%c12
+        out_annual_cohorts(i)%woodC       = cc%pwood%c%c12
+        out_annual_cohorts(i)%treeG       = treeG
+        out_annual_cohorts(i)%fseed       = fseed
+        out_annual_cohorts(i)%fleaf       = fleaf
+        out_annual_cohorts(i)%froot       = froot
+        out_annual_cohorts(i)%fwood       = fwood
+        out_annual_cohorts(i)%GPP         = cc%annual_fluxes%GPP
+        out_annual_cohorts(i)%NPP         = cc%annual_fluxes%NPP
+        out_annual_cohorts(i)%Rauto       = cc%annual_fluxes%Resp
+        out_annual_cohorts(i)%Nupt        = cc%annual_fluxes%Nup
+        out_annual_cohorts(i)%Nfix        = cc%annual_fluxes%fixedN
+
+      end if
 
       it => it%next
 
@@ -894,8 +898,10 @@ contains
     it => vegn%heap
     do while (associated(it))
 
-      cc => it%cohort
       i = i + 1
+      ! If we overflow the max number of cohorts, skip the remaining cohorts
+      if (i > NCohortMax) exit
+      cc => it%cohort
       out_annual_cohorts(i)%n_deadtrees = cc%n_deadtrees
       out_annual_cohorts(i)%c_deadtrees = cc%c_deadtrees
       out_annual_cohorts(i)%deathrate   = cc%deathrate
