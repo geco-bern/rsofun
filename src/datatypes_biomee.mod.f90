@@ -66,10 +66,12 @@ module datatypes_biomee
   real, parameter  :: c_LLS   = 28.57143    ! yr/ (kg C m-2), c_LLS=1/LMAs, where LMAs = 0.035
 
   !===== Default cohort insertion: true -> head, false -> tail
+  ! This does not have much impact on the results (only digits far behind the decimal point),
+  ! but inserting to head is faster and the implementation is simpler.
   logical, parameter :: default_insert = .True.
 
   type :: dampended_forcing_type
-    logical :: initialized = .False.
+    logical :: initialized = .true.
     real :: co2  = 0.0
     real :: vpd  = 0.0
     real :: temp = 0.0
@@ -82,6 +84,8 @@ module datatypes_biomee
 
     !===== Cohort heap
     ! Implemented as a linked list, 'heap' points to the first cohort of the heap
+    ! Cohorts should not assumed to be ranked in any specific order.
+    ! Use sort_cohorts_by_height() or implement a method following the same principle if needed.
     type(cohort_item), pointer :: heap => NULL() ! Important to nullify here!
 
     !===== Tile-level forest inventory information
