@@ -4,7 +4,6 @@ module biomee_mod
   !----------------------------------------------------------------
   use, intrinsic :: iso_c_binding, only: c_double, c_int, c_char, c_bool
   use, intrinsic :: ieee_arithmetic
-  use tests
 
   implicit none
 
@@ -94,8 +93,6 @@ contains
     real(kind=c_double) :: nan
 
     integer :: yr, idx, idx_daily_start, idx_daily_end, lu_idx
-
-    ! call test_linked_list()
 
     ! Initialize outputs to NaN
     nan = ieee_value(nan, ieee_quiet_nan)

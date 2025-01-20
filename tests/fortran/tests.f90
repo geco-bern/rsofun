@@ -1,6 +1,6 @@
 module tests
     !////////////////////////////////////////////////////////////////
-    ! Module containing unit tests
+    ! Module containing fortran unit tests
     ! Attention: works in combination with default_insert = .true.
     !----------------------------------------------------------------
     use datatypes_biomee

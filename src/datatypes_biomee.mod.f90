@@ -209,6 +209,14 @@ module datatypes_biomee
   end type vegn_tile_type
 
 contains
+
+  !!!!========= ATTENTION ============!!!
+  ! The functions below are notoriously difficult to implement properly.
+  ! Be sure to know what you are doing before doing any change.
+  ! It is wise to add tests.f90 in tests/fortran to this project and run the functions defined there
+  ! after each change to ensure that everything is still working properly.
+  ! Ideally tests.f90 should be part of the normal unit tests (but then it cannot use STOP or PRINT).
+
   subroutine clean(self)
     ! Free all allocated memory
     class(vegn_tile_type) :: self
