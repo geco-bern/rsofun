@@ -37,7 +37,8 @@ contains
       real :: totWsup(MAX_LEVELS) ! potential water uptake, mol s-1 m-2
       real :: thetaS(MAX_LEVELS) ! soil moisture index (0~1)
       real :: dpsiSR(MAX_LEVELS) ! pressure difference between soil water and root water, Pa
-      integer :: i,j
+      integer :: i
+      type(cohort_item), pointer :: it
 
     !! Water supply from each layer
       do i=1, MAX_LEVELS ! Calculate water uptake potential layer by layer
@@ -48,20 +49,24 @@ contains
          dpsiSR(i) = 1.5 *1.0e6 * thetaS(i)**2 ! Pa
          ! Layer allocation, water uptake capacity
          totWsup(i) = 0.0 ! Potential water uptake per layer by all cohorts
-         do j = 1, vegn%n_cohorts
-            cc => vegn%cohorts(j)
-            associate ( sp => myinterface%params_species(cc%species) )
+         it => vegn%heap
+         do while (associated(it))
+             cc => it%cohort
+            associate ( sp => cc%sp() )
             cc%WupL(i) = cc%rootareaL(i)*sp%Kw_root*dpsiSR(i) * (myinterface%step_seconds*h2o_molmass*1e-3) ! kg H2O tree-1 step-1
             totWsup(i) = totWsup(i) + cc%WupL(i) * cc%nindivs ! water uptake per layer by all cohorts
             end associate
-         enddo
+            it => it%next
+         end do
          ! adjust cc%WupL(i) according to available water
-         do j = 1, vegn%n_cohorts
-            cc => vegn%cohorts(j)
+         it => vegn%heap
+         do while (associated(it))
+             cc => it%cohort
             if(totWsup(i)>0.0) &
                 fWup(i) = Min(0.25 * freewater(i) / totWsup(i),1.0)! ratio of available soil water
             cc%WupL(i) = fWup(i) * cc%WupL(i) ! kg tree-1 step-1
-         enddo ! cohort for each layer
+            it => it%next
+         end do ! cohort for each layer
       enddo    ! all layers
 
      end subroutine water_supply_layer
@@ -94,15 +99,16 @@ contains
       real    :: Cmolar ! mole density of air (mol/m3)
       real    :: rsoil  ! s m-1
       real    :: raero
-      real    :: transp, fsupply ! fraction of transpiration from a soil layer
       real    :: wsupply
       real    :: WaterBudgetL(MAX_LEVELS)
-      integer :: i,j
+      integer :: i
+      type(cohort_item), pointer :: it
 
       ! Water uptaken by roots, per timestep
       WaterBudgetL = 0.0
-      do j = 1, vegn%n_cohorts
-          cc => vegn%cohorts(j)
+      it => vegn%heap
+      do while (associated(it))
+          cc => it%cohort
           ! Compare with soil water
           ! cc%W_supply() = sum(cc%WupL(:))
           ! cc%transp   = min(cc%transp,cc%W_supply())
@@ -111,7 +117,8 @@ contains
           if(wsupply > 0.0) then
               WaterBudgetL(:) = WaterBudgetL(:) - cc%WupL(:)/wsupply * cc%fast_fluxes%trsp * cc%nindivs
           endif
-      enddo ! all cohorts
+          it => it%next
+      end do ! all cohorts
 
     !! Soil surface evaporation
     !    calculate kappa  ! light extinction coefficient of corwn layers

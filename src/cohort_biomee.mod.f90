@@ -1,8 +1,6 @@
 module md_cohort
   !////////////////////////////////////////////////////////////////
-  ! Module containing BiomeE state variable and parameter 
-  ! definitions.
-  ! Code adopted from BiomeE https://doi.org/10.5281/zenodo.7125963.
+  ! Module containing BiomeE cohort definitions
   !----------------------------------------------------------------
   use md_interface_biomee, only: myinterface, spec_data_type, MAX_LEVELS
   use md_params_core, only: pi
@@ -31,7 +29,6 @@ module md_cohort
     !===== Metadata
     integer :: ccID       = -1           ! cohort ID
     integer :: layer      = 1            ! the layer of this cohort (numbered from top, top layer=1)
-    real    :: layerfrac  = 0.0          ! fraction of layer area occupied by this cohort
     integer :: firstlayer = 0            ! 0 = never been in the first layer; 1 = at least one year in first layer
     integer :: species    = 1            ! vegetation species
 
@@ -113,6 +110,9 @@ module md_cohort
       procedure lai
       procedure basal_area
       procedure volume
+      procedure merge_in
+      procedure layerfrac
+      procedure sp
 
       !========== Other member procedures
 
@@ -121,6 +121,52 @@ module md_cohort
   end type cohort_type
 
 contains
+
+  function sp(self) result(res)
+    type(spec_data_type) :: res
+    class(cohort_type) :: self
+
+    res = myinterface%params_species(self%species)
+  end function sp
+
+  subroutine merge_in(self, other)
+    !////////////////////////////////////////////////////////////////
+    ! Merge other cohort into self
+    !---------------------------------------------------------------
+    class(cohort_type), intent(inout) :: self
+    type(cohort_type), intent(in) :: other
+    real :: x1, x2 ! normalized relative weights
+
+    if (other%nindivs > 0.0 .or. self%nindivs > 0.0) then
+
+      x1 = other%nindivs / (other%nindivs + self%nindivs)
+      x2 = self%nindivs / (other%nindivs + self%nindivs)
+
+      ! update number of individuals in merged cohort
+      self%nindivs = other%nindivs + self%nindivs
+
+      ! Carbon
+      self%pleaf%c%c12 = x1*other%pleaf%c%c12 + x2*self%pleaf%c%c12
+      self%proot%c%c12 = x1*other%proot%c%c12 + x2*self%proot%c%c12
+      self%psapw%c%c12 = x1*other%psapw%c%c12 + x2*self%psapw%c%c12
+      self%pwood%c%c12 = x1*other%pwood%c%c12 + x2*self%pwood%c%c12
+      self%pseed%c%c12 = x1*other%pseed%c%c12 + x2*self%pseed%c%c12
+      self%plabl%c%c12 = x1*other%plabl%c%c12 + x2*self%plabl%c%c12
+
+      ! Nitrogen
+      self%pleaf%n%n14 = x1*other%pleaf%n%n14 + x2*self%pleaf%n%n14
+      self%proot%n%n14 = x1*other%proot%n%n14 + x2*self%proot%n%n14
+      self%psapw%n%n14 = x1*other%psapw%n%n14 + x2*self%psapw%n%n14
+      self%pwood%n%n14 = x1*other%pwood%n%n14 + x2*self%pwood%n%n14
+      self%pseed%n%n14 = x1*other%pseed%n%n14 + x2*self%pseed%n%n14
+      self%plabl%n%n14 = x1*other%plabl%n%n14 + x2*self%plabl%n%n14
+
+      ! Cohort age
+      self%age = x1*other%age + x2*self%age
+      self%topyear = x1*other%topyear + x2*self%topyear
+    endif
+
+  end subroutine merge_in
 
   subroutine reset_cohort(self)
     ! Reset cohort temporary data (used yearly)
@@ -165,7 +211,7 @@ contains
     ! Local variable
     type(spec_data_type) :: sp
 
-    sp = myinterface%params_species(self%species)
+    sp = self%sp()
 
     res = sp%fNSNmax * &
             (self%bl_max / (sp%CNleaf0 * sp%leafLS) + self%br_max / sp%CNroot0)
@@ -185,7 +231,12 @@ contains
     integer :: level
     class(cohort_type) :: self
 
-    res = rootarea(self) * myinterface%params_species(self%species)%root_frac(level)
+    ! Local variable
+    type(spec_data_type) :: sp
+
+    sp = self%sp()
+
+    res = rootarea(self) * sp%root_frac(level)
   end function rootareaL
 
   function rootarea(self) result(res)
@@ -193,7 +244,12 @@ contains
     real :: res
     class(cohort_type) :: self
 
-    res  = self%proot%c%c12 * myinterface%params_species(self%species)%SRA
+    ! Local variable
+    type(spec_data_type) :: sp
+
+    sp = self%sp()
+
+    res  = self%proot%c%c12 * sp%SRA
   end function rootarea
 
   function lai(self) result(res)
@@ -216,8 +272,20 @@ contains
     ! Tree basal volume, m3 tree-1
     real :: res
     class(cohort_type) :: self
+    ! Local variable
+    type(spec_data_type) :: sp
 
-    res = (self%psapw%c%c12 + self%pwood%c%c12) / myinterface%params_species(self%species)%rho_wood
+    sp = self%sp()
+
+    res = (self%psapw%c%c12 + self%pwood%c%c12) / sp%rho_wood
   end function volume
+
+  function layerfrac(self) result(res)
+    ! Fraction of layer area occupied by this cohort
+    real :: res
+    class(cohort_type) :: self
+
+    res = self%nindivs * self%crownarea
+  end function layerfrac
 
 end module md_cohort

@@ -6,7 +6,7 @@ FT_OBJS = params_core.mod.o sofunutils.mod.o grid_siterun.mod.o params_siml_pmod
     forcing_siterun_pmodel.mod.o forcing_siterun_biomee.mod.o interface_biosphere_pmodel.mod.o interface_biosphere_biomee.mod.o \
     tile_pmodel.mod.o plant_pmodel.mod.o soiltemp_sitch.mod.o waterbal_splash.mod.o vegdynamics_pmodel.mod.o gpp_pmodel.mod.o \
     gpp_biomee.mod.o photosynth_pmodel.mod.o biosphere_pmodel.mod.o biosphere_biomee.mod.o vegetation_biomee.mod.o soil_biomee.mod.o \
-    datatypes_biomee.mod.o luluc.mod.o cohort_biomee.mod.o pmodel.mod.o biomee.mod.o
+    datatypes_biomee.mod.o luluc.mod.o cohort_biomee.mod.o cohort_linked_list_biomee.mod.o pmodel.mod.o biomee.mod.o tests.o
 
 all: $(SHLIB)
 
@@ -17,7 +17,7 @@ $(SHLIB): $(FT_OBJS) $(C_OBJS)
 pmodel.mod.o: interface_biosphere_pmodel.mod.o params_core.mod.o \
     biosphere_pmodel.mod.o params_siml_pmodel.mod.o
 biomee.mod.o: interface_biosphere_biomee.mod.o biosphere_biomee.mod.o \
-    params_siml_biomee.mod.o datatypes_biomee.mod.o luluc.mod.o
+    params_siml_biomee.mod.o datatypes_biomee.mod.o luluc.mod.o tests.o
 interface_biosphere_pmodel.mod.o: forcing_siterun_pmodel.mod.o params_siml_pmodel.mod.o params_core.mod.o
 interface_biosphere_biomee.mod.o: forcing_siterun_biomee.mod.o params_siml_biomee.mod.o params_core.mod.o
 forcing_siterun_pmodel.mod.o: params_core.mod.o params_siml_pmodel.mod.o grid_siterun.mod.o sofunutils.mod.o
@@ -36,12 +36,14 @@ biosphere_biomee.mod.o: interface_biosphere_biomee.mod.o datatypes_biomee.mod.o 
     soiltemp_sitch.mod.o sofunutils.mod.o
 soil_biomee.mod.o: datatypes_biomee.mod.o sofunutils.mod.o
 vegetation_biomee.mod.o: datatypes_biomee.mod.o soil_biomee.mod.o gpp_biomee.mod.o
-datatypes_biomee.mod.o: interface_biosphere_biomee.mod.o params_core.mod.o classdefs.mod.o cohort_biomee.mod.o
+datatypes_biomee.mod.o: interface_biosphere_biomee.mod.o params_core.mod.o classdefs.mod.o cohort_biomee.mod.o cohort_linked_list_biomee.mod.o
 cohort_biomee.mod.o: interface_biosphere_biomee.mod.o params_core.mod.o classdefs.mod.o
+cohort_linked_list_biomee.mod.o: cohort_biomee.mod.o
 sofunutils.mod.o: params_core.mod.o
 params_siml_biomee.mod.o: params_core.mod.o
 params_siml_pmodel.mod.o: params_core.mod.o
 classdefs.mod.o: params_core.mod.o
+tests.o: datatypes_biomee.mod.o
 
 # Dependency of the C wrapper
 wrappersc.o: pmodel.mod.o biomee.mod.o

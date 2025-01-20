@@ -8,6 +8,7 @@ module datatypes_biomee
   use md_params_core
   use md_classdefs
   use md_cohort
+  use md_cohort_linked_list
 
   ! define data types and constants
   implicit none
@@ -22,13 +23,14 @@ module datatypes_biomee
   ! This is a shared variable used to give each cohort a unique ID (a simplpe counter)
   ! It is fine to share accross tiles.
   integer, public :: MaxCohortID = 0
+  integer, public, parameter :: NCohortMax = 50 ! maximum number of cohorts
 
   !=============== Number of parameters (out) ==============================================
   integer, public, parameter :: nvars_daily_tile     = 35
   integer, public, parameter :: nvars_annual_tile    = 59
   integer, public, parameter :: nvars_annual_cohorts = 35
   integer, public, parameter :: nvars_lu_out         = 2
-  integer, public, parameter :: out_max_cohorts      = 50        ! maximum number of cohorts
+  integer, public, parameter :: out_max_cohorts      = NCohortMax
 
   !=============== Number of parameters (out) ==============================================
   integer, public, parameter :: nvars_forcing        = 7
@@ -63,8 +65,13 @@ module datatypes_biomee
   !===== Leaf life span
   real, parameter  :: c_LLS   = 28.57143    ! yr/ (kg C m-2), c_LLS=1/LMAs, where LMAs = 0.035
 
+  !===== Default cohort insertion: true -> head, false -> tail
+  ! This does not have much impact on the results (only digits far behind the decimal point),
+  ! but inserting to head is faster and the implementation is simpler.
+  logical, parameter :: default_insert = .True.
+
   type :: dampended_forcing_type
-    logical :: initialized = .False.
+    logical :: initialized = .true.
     real :: co2  = 0.0
     real :: vpd  = 0.0
     real :: temp = 0.0
@@ -75,10 +82,11 @@ module datatypes_biomee
   !=============== Tile level data type ============================================================
   type :: vegn_tile_type
 
-    integer  :: n_cohorts         = 0.0
-
-    !===== Cohorts nested inside tile
-    type(cohort_type), pointer :: cohorts(:) => NULL()
+    !===== Cohort heap
+    ! Implemented as a linked list, 'heap' points to the first cohort of the heap
+    ! Cohorts should not assumed to be ranked in any specific order.
+    ! Use sort_cohorts_by_height() or implement a method following the same principle if needed.
+    type(cohort_item), pointer :: heap => NULL() ! Important to nullify here!
 
     !===== Tile-level forest inventory information
     real    :: area                               ! m2
@@ -187,9 +195,199 @@ module datatypes_biomee
     ! Scrap variable used by gpp()
     type(dampended_forcing_type) :: dampended_forcing
 
+    contains
+
+    procedure n_cohorts
+    procedure new_cohort
+    procedure remove_cohort
+    procedure sort_cohorts_by_height
+    procedure clean
+    procedure insert_cohort
+    procedure insert_head
+    procedure insert_tail
+
   end type vegn_tile_type
 
 contains
+  subroutine clean(self)
+    ! Free all allocated memory
+    class(vegn_tile_type) :: self
+
+    type(cohort_item), pointer :: ptr
+
+    do while (associated(self%heap))
+      ptr => self%heap
+      self%heap => ptr%next
+      deallocate(ptr)
+    end do
+  end subroutine clean
+
+  subroutine sort_cohorts_by_height(self, increasing)
+    ! Sort cohorts by height
+    class(vegn_tile_type) :: self
+    logical :: increasing
+
+    ! Local variable
+    type(cohort_item), pointer :: selected_item
+    type(cohort_item), pointer :: selected_prev ! Pointer to parent of node pointed by 'selected_item'
+    type(cohort_item), pointer :: old_cohorts
+    type(cohort_item), pointer :: it !iterator
+    type(cohort_item), pointer :: prev ! Pointer to parent of node pointed by 'it'
+    old_cohorts => self%heap
+    self%heap => NULL()
+
+    ! Repeat until the old list is empty
+    do while (associated(old_cohorts))
+      it => old_cohorts
+      ! We reset the pointers
+      prev => NULL()
+      selected_item => NULL()
+      selected_prev => NULL()
+      ! We pick the smallest element of the old list
+      do while (associated(it))
+        if ((.not. associated(selected_item)) .or. (increasing .neqv. (it%cohort%height < selected_item%cohort%height))) then
+          selected_item => it
+          selected_prev => prev
+        end if
+        prev => it
+        it => it%next
+      end do
+
+      ! We remove it from the old list
+      if (associated(selected_prev)) then
+        selected_prev%next => selected_item%next
+      else
+        old_cohorts => selected_item%next
+      end if
+
+      ! We insert it in the head
+      selected_item%next => self%heap
+      self%heap => selected_item
+
+    end do
+
+  end subroutine sort_cohorts_by_height
+
+  function n_cohorts(self) result(res)
+    ! Returns the current number of cohorts
+    integer :: res
+    class(vegn_tile_type) :: self
+
+    ! Local variable
+    type(cohort_item), pointer :: it ! iterator
+
+    res = 0
+
+    it => self%heap
+    do while (associated(it))
+      res = res + 1
+      it => it%next
+    end do
+  end function n_cohorts
+
+  function new_cohort(self, head) result(new_item)
+    ! Insert a new cohort to the list and return its pointer.
+    ! By default, cohorts are added to the head of the list. If head=.False., they are added at the tail.
+    type(cohort_item), pointer :: new_item
+    logical, optional :: head
+    logical :: head_option
+    class(vegn_tile_type) :: self
+    type(cohort_item), pointer :: it !iterator
+
+    new_item => NULL()
+    allocate(new_item)
+    new_item%uid = next_uid()
+
+    if(present(head)) then
+      head_option = head
+    else
+      head_option = default_insert
+    end if
+    if (head_option) then
+      call insert_head(self, new_item)
+    else
+      call insert_tail(self, new_item)
+    end if
+  end function new_cohort
+
+  subroutine insert_cohort(self, new_item, head)
+    ! Insert a cohort
+    logical, optional :: head
+    logical :: head_option
+    type(cohort_item), pointer :: new_item
+    class(vegn_tile_type) :: self
+
+    if(present(head)) then
+      head_option = head
+    else
+      head_option = default_insert
+    end if
+    if (head_option) then
+      call insert_head(self, new_item)
+    else
+      call insert_tail(self, new_item)
+    end if
+  end subroutine insert_cohort
+
+  subroutine insert_tail(self, new_item)
+    ! Prepend a new cohort to the list and return its pointer
+    type(cohort_item), pointer :: new_item
+    class(vegn_tile_type) :: self
+    type(cohort_item), pointer :: it !iterator
+
+    if (associated(self%heap)) then
+      it => self%heap
+      do while (associated(it))
+        if (associated(it%next)) then
+          it => it%next
+        else
+          it%next => new_item
+          exit
+        end if
+      end do
+    else
+      self%heap => new_item
+    end if
+  end subroutine insert_tail
+
+  subroutine insert_head(self, new_item)
+    ! Prepend a new cohort to the list and return its pointer
+    type(cohort_item), pointer :: new_item
+    class(vegn_tile_type) :: self
+
+    new_item%next => self%heap
+    self%heap => new_item
+  end subroutine insert_head
+
+  function remove_cohort(self, uid) result(res)
+    ! Remove item with uid and return next item in the list
+    type(cohort_item), pointer :: res
+    integer :: uid
+    class(vegn_tile_type) :: self
+
+    ! Local variable
+    type(cohort_item), pointer :: it !iterator
+    type(cohort_item), pointer :: prev_it
+
+    it => self%heap
+    prev_it => NULL() ! Important, otherwise may otherwise still be associated from a previous call to this method!
+
+    do while (associated(it))
+      if (it%uid == uid) then
+        res => it%next
+        if (associated(prev_it)) then
+          prev_it%next => res
+        else
+          self%heap => res
+        end if
+        deallocate(it)
+        exit
+      else
+        prev_it  => it
+        it => it%next
+      end if
+    end do
+  end function remove_cohort
 
   !==============for diagnostics============================================
   subroutine Zero_diagnostics(vegn)
@@ -198,9 +396,8 @@ contains
     type(vegn_tile_type), intent(inout) :: vegn
 
     ! local variables
-    type(cohort_type), pointer :: cc
-    integer :: i
-    
+    type(cohort_item), pointer :: it !iterator
+
     ! daily
     call zero_daily_diagnostics(vegn)
 
@@ -221,10 +418,11 @@ contains
     vegn%n_deadtrees  = 0.0
     vegn%c_deadtrees  = 0.0
 
-    do i = 1, vegn%n_cohorts
-      cc => vegn%cohorts(i)
-      call cc%reset_cohort()
-    enddo
+    it => vegn%heap
+    do while (associated(it))
+      call it%cohort%reset_cohort()
+      it => it%next
+    end do
   
   end subroutine Zero_diagnostics
 
@@ -255,7 +453,7 @@ contains
 
     ! local variables
     type(cohort_type), pointer :: cc
-    integer :: i
+    type(cohort_item), pointer :: it !iterator
 
     ! State variables
     call orginit(vegn%plabl)
@@ -278,8 +476,10 @@ contains
     vegn%MaxVolume  = 0.0
     vegn%MaxDBH     = 0.0
 
-    do i = 1, vegn%n_cohorts
-      cc => vegn%cohorts(i)
+    it => vegn%heap
+    do while (associated(it))
+      cc => it%cohort
+
       ! organic pools
       call orgcp(cc%plabl, vegn%plabl, cc%nindivs)
       call orgcp(cc%pleaf, vegn%pleaf, cc%nindivs)
@@ -305,6 +505,8 @@ contains
       vegn%MaxVolume = MAX(cc%volume(), vegn%MaxVolume)
       vegn%MaxDBH    = MAX(cc%dbh, vegn%MaxDBH)
 
+      it => it%next
+
     enddo
 
     if (vegn%nindivs>0.0)   vegn%DBH   = vegn%DBH / vegn%nindivs  
@@ -329,8 +531,8 @@ contains
     type(climate_type), intent(in):: forcing
 
     ! local variables
-    type(cohort_type), pointer :: cc    ! current cohort
-    integer :: i
+    type(cohort_type), pointer :: cc
+    type(cohort_item), pointer :: it
 
     vegn%age = vegn%age + myinterface%dt_fast_yr
 
@@ -342,8 +544,9 @@ contains
     vegn%N_uptake = 0.0
     vegn%fixedN   = 0.0
 
-    do i = 1, vegn%n_cohorts
-      cc => vegn%cohorts(i)
+    it => vegn%heap
+    do while (associated(it))
+      cc => it%cohort
 
       ! cohort daily
       call update_fluxes(cc%daily_fluxes, cc%fast_fluxes)
@@ -358,6 +561,8 @@ contains
 
       ! Reset fast fluxes
       cc%fast_fluxes = common_fluxes()
+
+      it => it%next
     enddo
 
     ! NEP is equal to NNP minus soil respiration
@@ -391,18 +596,20 @@ contains
     type(outtype_daily_tile), intent(out) :: out_daily_tile
 
     ! local variables
-    type(cohort_type), pointer :: cc    ! current cohort
-    integer :: i
+    type(cohort_type), pointer :: cc
+    type(cohort_item), pointer :: it
 
-    ! cohorts output
-    do i = 1, vegn%n_cohorts
-      cc => vegn%cohorts(i)
+    it => vegn%heap
+    do while (associated(it))
+      cc => it%cohort
 
       ! running annual sum
       call update_fluxes(cc%annual_fluxes, cc%daily_fluxes)
 
       ! Reset daily variables
       cc%daily_fluxes = common_fluxes()
+
+      it => it%next
     enddo
 
     ! Tile level, daily
@@ -475,12 +682,15 @@ contains
     type(outtype_annual_tile) :: out_annual_tile
 
     ! local variables
-    type(cohort_type), pointer :: cc
-    real :: treeG, fseed, fleaf=0, froot, fwood=0, dDBH, BA, dBA
+    real :: treeG, fseed, fleaf, froot, fwood, dDBH, BA, dBA
     real :: plantC, plantN, soilC, soilN
+    type(cohort_type), pointer :: cc
+    type(cohort_item), pointer :: it
     integer :: i
 
-    ! re-initialise to avoid elements not updated when number 
+    i = 0
+
+    ! re-initialise to avoid elements not updated when number
     ! of cohorts declines from one year to the next
     out_annual_cohorts(:)%year        = dummy
     out_annual_cohorts(:)%cID         = dummy
@@ -514,8 +724,11 @@ contains
     out_annual_cohorts(:)%Nfix        = dummy
 
     ! Cohorts ouput
-    do i = 1, vegn%n_cohorts
-      cc => vegn%cohorts(i)
+    it => vegn%heap
+    do while (associated(it))
+      cc => it%cohort
+      i = i + 1
+
       treeG     = cc%pseed%c%c12 + cc%NPPleaf + cc%NPProot + cc%NPPwood
       fseed     = cc%pseed%c%c12 / treeG
       fleaf     = cc%NPPleaf / treeG
@@ -525,37 +738,43 @@ contains
       BA        = cc%basal_area()
       dBA       = BA - cc%BA_ys
 
-      out_annual_cohorts(i)%year        = iyears
-      out_annual_cohorts(i)%cID         = cc%ccID
-      out_annual_cohorts(i)%PFT         = cc%species
-      out_annual_cohorts(i)%layer       = cc%layer
-      out_annual_cohorts(i)%density     = cc%nindivs * 10000
-      out_annual_cohorts(i)%flayer      = cc%layerfrac
-      out_annual_cohorts(i)%dbh         = cc%dbh * 100   ! *100 to convert m in cm
-      out_annual_cohorts(i)%dDBH        = dDBH * 100     ! *100 to convert m in cm
-      out_annual_cohorts(i)%height      = cc%height
-      out_annual_cohorts(i)%age         = cc%age
-      out_annual_cohorts(i)%BA          = BA
-      out_annual_cohorts(i)%dBA         = dBA
-      out_annual_cohorts(i)%Acrown      = cc%crownarea
-      out_annual_cohorts(i)%Aleaf       = cc%leafarea
-      out_annual_cohorts(i)%nsc         = cc%plabl%c%c12
-      out_annual_cohorts(i)%nsn         = cc%plabl%n%n14
-      out_annual_cohorts(i)%seedC       = cc%pseed%c%c12
-      out_annual_cohorts(i)%leafC       = cc%pleaf%c%c12
-      out_annual_cohorts(i)%rootC       = cc%proot%c%c12
-      out_annual_cohorts(i)%sapwC       = cc%psapw%c%c12
-      out_annual_cohorts(i)%woodC       = cc%pwood%c%c12
-      out_annual_cohorts(i)%treeG       = treeG
-      out_annual_cohorts(i)%fseed       = fseed 
-      out_annual_cohorts(i)%fleaf       = fleaf
-      out_annual_cohorts(i)%froot       = froot
-      out_annual_cohorts(i)%fwood       = fwood
-      out_annual_cohorts(i)%GPP         = cc%annual_fluxes%GPP
-      out_annual_cohorts(i)%NPP         = cc%annual_fluxes%NPP
-      out_annual_cohorts(i)%Rauto       = cc%annual_fluxes%Resp
-      out_annual_cohorts(i)%Nupt        = cc%annual_fluxes%Nup
-      out_annual_cohorts(i)%Nfix        = cc%annual_fluxes%fixedN
+      if (i <= NCohortMax) then
+
+        out_annual_cohorts(i)%year        = iyears
+        out_annual_cohorts(i)%cID         = cc%ccID
+        out_annual_cohorts(i)%PFT         = cc%species
+        out_annual_cohorts(i)%layer       = cc%layer
+        out_annual_cohorts(i)%density     = cc%nindivs * 10000
+        out_annual_cohorts(i)%flayer      = cc%layerfrac()
+        out_annual_cohorts(i)%dbh         = cc%dbh * 100   ! *100 to convert m in cm
+        out_annual_cohorts(i)%dDBH        = dDBH * 100     ! *100 to convert m in cm
+        out_annual_cohorts(i)%height      = cc%height
+        out_annual_cohorts(i)%age         = cc%age
+        out_annual_cohorts(i)%BA          = BA
+        out_annual_cohorts(i)%dBA         = dBA
+        out_annual_cohorts(i)%Acrown      = cc%crownarea
+        out_annual_cohorts(i)%Aleaf       = cc%leafarea
+        out_annual_cohorts(i)%nsc         = cc%plabl%c%c12
+        out_annual_cohorts(i)%nsn         = cc%plabl%n%n14
+        out_annual_cohorts(i)%seedC       = cc%pseed%c%c12
+        out_annual_cohorts(i)%leafC       = cc%pleaf%c%c12
+        out_annual_cohorts(i)%rootC       = cc%proot%c%c12
+        out_annual_cohorts(i)%sapwC       = cc%psapw%c%c12
+        out_annual_cohorts(i)%woodC       = cc%pwood%c%c12
+        out_annual_cohorts(i)%treeG       = treeG
+        out_annual_cohorts(i)%fseed       = fseed
+        out_annual_cohorts(i)%fleaf       = fleaf
+        out_annual_cohorts(i)%froot       = froot
+        out_annual_cohorts(i)%fwood       = fwood
+        out_annual_cohorts(i)%GPP         = cc%annual_fluxes%GPP
+        out_annual_cohorts(i)%NPP         = cc%annual_fluxes%NPP
+        out_annual_cohorts(i)%Rauto       = cc%annual_fluxes%Resp
+        out_annual_cohorts(i)%Nupt        = cc%annual_fluxes%Nup
+        out_annual_cohorts(i)%Nfix        = cc%annual_fluxes%fixedN
+
+      end if
+
+      it => it%next
 
     enddo
 
@@ -568,14 +787,20 @@ contains
     vegn%c_deadtrees = 0
     vegn%m_turnover  = 0
 
-    do i = 1, vegn%n_cohorts
-      cc => vegn%cohorts(i)
+    it => vegn%heap
+    do while (associated(it))
+
+      cc => it%cohort
+
       vegn%annualfixedN = vegn%annualfixedN  + cc%annual_fluxes%fixedN * cc%nindivs
       vegn%NPPL         = vegn%NPPL          + cc%NPPleaf * cc%nindivs
       vegn%NPPW         = vegn%NPPW          + cc%NPPwood * cc%nindivs 
       vegn%n_deadtrees  = vegn%n_deadtrees   + cc%n_deadtrees
       vegn%c_deadtrees  = vegn%c_deadtrees   + cc%c_deadtrees
       vegn%m_turnover   = vegn%m_turnover    + cc%m_turnover
+
+      it => it%next
+
     enddo
 
     plantC    = vegn%plabl%c%c12 + vegn%pseed%c%c12 + vegn%pleaf%c%c12 + vegn%proot%c%c12 + vegn%psapw%c%c12 + vegn%pwood%c%c12
@@ -662,7 +887,10 @@ contains
 
     ! local variables
     type(cohort_type), pointer :: cc
+    type(cohort_item), pointer :: it
     integer :: i
+
+    i = 0
 
     ! re-initialise to avoid elements not updated when number
     ! of cohorts declines from one year to the next
@@ -671,23 +899,32 @@ contains
     out_annual_cohorts(:)%deathrate   = dummy
 
     ! Cohorts ouput
-    do i = 1, vegn%n_cohorts
-      cc => vegn%cohorts(i)
+    it => vegn%heap
+    do while (associated(it))
+
+      i = i + 1
+      ! If we overflow the max number of cohorts, skip the remaining cohorts
+      if (i > NCohortMax) exit
+      cc => it%cohort
       out_annual_cohorts(i)%n_deadtrees = cc%n_deadtrees
       out_annual_cohorts(i)%c_deadtrees = cc%c_deadtrees
       out_annual_cohorts(i)%deathrate   = cc%deathrate
 
+      it => it%next
     enddo
 
     vegn%n_deadtrees = 0
     vegn%c_deadtrees = 0
     vegn%m_turnover  = 0
 
-    do i = 1, vegn%n_cohorts
-      cc => vegn%cohorts(i)
+    it => vegn%heap
+    do while (associated(it))
+      cc => it%cohort
       vegn%n_deadtrees  = vegn%n_deadtrees   + cc%n_deadtrees
       vegn%c_deadtrees  = vegn%c_deadtrees   + cc%c_deadtrees
       vegn%m_turnover   = vegn%m_turnover    + cc%m_turnover
+
+      it => it%next
     enddo
 
     out_annual_tile%N_P2S           = vegn%N_P2S_yr
