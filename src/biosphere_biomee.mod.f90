@@ -161,6 +161,8 @@ contains
     ! (~Eq. 2 in Weng et al., 2015 BG)
 
     call vegn_nat_mortality( vegn )
+
+    call kill_old_grass( vegn )
     
     ! seed C and germination probability (~Eq. 1 in Weng et al., 2015 BG)
     call vegn_reproduction( vegn )
@@ -168,21 +170,14 @@ contains
     !---------------------------------------------
     ! Re-organize cohorts
     !---------------------------------------------
-    call kill_lowdensity_cohorts( vegn )
-
-    call kill_old_grass( vegn )
-    
     call relayer_cohorts( vegn )
 
     call vegn_mergecohorts( vegn )
-
 
     !---------------------------------------------
     ! Update post-mortality metrics
     !---------------------------------------------
     call annual_diagnostics_post_mortality( vegn, out_biosphere_annual_cohorts, out_biosphere_annual_tile )
-
-    call vegn%sort_cohorts_by_height(.false.)
 
   end subroutine biosphere_annual
 

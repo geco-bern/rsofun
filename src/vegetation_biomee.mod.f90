@@ -970,12 +970,13 @@ contains
     type(cohort_item), pointer :: new ! Pointer for new cohort
     type(cohort_item), pointer :: it  ! iterator
 
+    ! We sort the cohorts be decreasing height (important to do it here!)
+    call vegn%sort_cohorts_by_height(.false.)
+
     L = 1
     frac = 0.0
     it => vegn%heap
     vegn%heap => NULL() ! We start with an empty cohort list
-
-    call vegn%sort_cohorts_by_height(.false.)
 
     ! For each cohort present in the old list
     do while (associated(it))
