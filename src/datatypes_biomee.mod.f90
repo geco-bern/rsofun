@@ -336,9 +336,9 @@ contains
       do while (associated(it))
         if (associated(it%next)) then
           it => it%next
-          exit
         else
           it%next => new_item
+          exit
         end if
       end do
     else

@@ -1,6 +1,7 @@
 module tests
     !////////////////////////////////////////////////////////////////
     ! Module containing unit tests
+    ! Attention: works in combination with default_insert = .true.
     !----------------------------------------------------------------
     use datatypes_biomee
 
@@ -74,14 +75,19 @@ module tests
       if (vegn%n_cohorts() /= 2) STOP 'Wrong cohort number (expected 2)'
       if (ptr%uid - start_uid /= 5) STOP 'Wrong uid (expected: 5)'
 
-      ptr => vegn%remove_cohort(5 + start_uid) !remove tail
-      if (vegn%n_cohorts() /= 1) STOP 'Wrong cohort number (expected 1)'
+      ptr => vegn%new_cohort(.false.)
+      ptr%cohort%height = 2
+
+      if (vegn%n_cohorts() /= 3) STOP 'Wrong cohort number (expected 3)'
+      if (ptr%uid - start_uid /= 6) STOP 'Wrong uid (expected: 6)'
+
+      ptr => vegn%remove_cohort(6 + start_uid) !remove tail
+      if (vegn%n_cohorts() /= 2) STOP 'Wrong cohort number (expected 2)'
       if (vegn%heap%uid - start_uid /= 4) STOP 'Wrong uid (expected: 4)'
       if (associated(ptr)) STOP 'Expected: FALSE'
 
-      ptr => vegn%remove_cohort(4 + start_uid) !last one
+      call vegn%clean() !Remove all
       if (vegn%n_cohorts() /= 0) STOP 'Wrong cohort number (expected 0)'
-      if (associated(ptr)) STOP 'Expected: FALSE'
 
       call vegn%sort_cohorts_by_height(.false.)
 
