@@ -33,13 +33,13 @@ module md_cohort
     integer :: species    = 1            ! vegetation species
 
     !===== Population structure
-    real :: nindivs   = 1.0              ! density of vegetation, tree/m2
-    real :: age       = 0.0              ! age of cohort, years
-    real :: topyear   = 0.0              ! number of years the cohort is in top layer
-    real :: dbh       = 0.0              ! diameter at breast height, m
-    real :: height    = 0.0              ! vegetation height, m
-    real :: crownarea = 1.0              ! crown area, m2 tree-1
-    real :: leafarea  = 0.0              ! total area of leaves, m2 tree-1
+    real :: nindivs       = 0.0          ! density of vegetation, tree/m2
+    real :: age           = 0.0          ! age of cohort, years
+    real :: topyear       = 0.0          ! number of years the cohort is in top layer
+    real :: dbh           = 0.0          ! diameter at breast height, m
+    real :: height        = 0.0          ! vegetation height, m
+    real :: crownarea     = 0.0          ! crown area, m2 tree-1
+    real :: leafarea      = 0.0          ! total area of leaves, m2 tree-1
 
     !===== Biological prognostic variables
     real    :: gdd        = 0.0          ! growing degree-day (phenology)
@@ -55,16 +55,16 @@ module md_cohort
     type(orgpool) :: plabl               ! labile pool, temporary storage of N and C, kg tree-1
 
     !===== Nitrogen model related variables (persistent from year to year)
-    real    :: bl_max             = 0.0           ! Max. leaf biomass, kg C tree-1
-    real    :: br_max             = 0.0           ! Max. fine root biomass, kg C tree-1
+    real    :: bl_max     = 0.0          ! Max. leaf biomass, kg C tree-1
+    real    :: br_max     = 0.0          ! Max. fine root biomass, kg C tree-1
 
     !=================== Temporary variables
     ! Contrary to the state vairbales, temporary variables are reset every step, day, or year (as appropriate).
 
     !===== Fast step fluxes, kg timestep-1 tree-1
     type(common_fluxes) :: fast_fluxes
-    real    :: resl              = 0.0            ! leaf respiration, kg C timestep-1 tree-1
-    real    :: resr              = 0.0            ! root respiration, kg C timestep-1 tree-1
+    real    :: resl               = 0.0           ! leaf respiration, kg C timestep-1 tree-1
+    real    :: resr               = 0.0           ! root respiration, kg C timestep-1 tree-1
 
     !===== Daily fluxes, kg day-1 tree-1
     type(common_fluxes) :: daily_fluxes

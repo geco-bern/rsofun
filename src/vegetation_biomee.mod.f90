@@ -1563,7 +1563,7 @@ contains
     
     call init_cohort_allometry(cc)
     cc%plabl%c%c12        = 2.0 * (cc%bl_max + cc%br_max)
-    
+
     ! N pools
     cc%plabl%n%n14    = 5.0 * (cc%bl_max / sp%CNleaf0 + cc%br_max / sp%CNroot0)
     cc%pleaf%n%n14  = cc%pleaf%c%c12 / sp%CNleaf0
@@ -1588,18 +1588,17 @@ contains
 
     associate(sp=>cc%sp())
       btot = max(0.0001, cc%pwood%c%c12 + cc%psapw%c%c12)
-      layer = max(1, cc%layer)
 
       cc%dbh        = (btot / sp%alphaBM) ** ( 1.0/sp%thetaBM )
       cc%height     = sp%alphaHT * cc%dbh ** sp%thetaHT
       cc%crownarea  = sp%alphaCA * cc%dbh ** sp%thetaCA
 
       ! calculations of bl_max and br_max are here only for the sake of the
-      ! diagnostics, because otherwise those fields are inherited from the 
+      ! diagnostics, because otherwise those fields are inherited from the
       ! parent cohort and produce spike in the output, even though these spurious
       ! values are not used by the model
-      cc%bl_max = sp%LMA   * sp%LAImax        * cc%crownarea/layer
-      cc%br_max = sp%phiRL * sp%LAImax/sp%SRA * cc%crownarea/layer
+      cc%bl_max = sp%LMA   * sp%LAImax        * cc%crownarea/cc%layer
+      cc%br_max = sp%phiRL * sp%LAImax/sp%SRA * cc%crownarea/cc%layer
     end associate
   
   end subroutine init_cohort_allometry
