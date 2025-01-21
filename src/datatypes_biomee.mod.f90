@@ -19,10 +19,7 @@ module datatypes_biomee
   public :: Zero_diagnostics, hourly_diagnostics, daily_diagnostics, &
             annual_diagnostics, initialize_PFT_data
 
-  !=============== PFT-specific parameters ======================================================
-  ! This is a shared variable used to give each cohort a unique ID (a simplpe counter)
-  ! It is fine to share accross tiles.
-  integer, public :: MaxCohortID = 0
+  !=============== Parameters ======================================================
   integer, public, parameter :: NCohortMax = 50 ! maximum number of cohorts
 
   !=============== Number of parameters (out) ==============================================
@@ -747,6 +744,7 @@ contains
     it => vegn%heap
     do while (associated(it))
       cc => it%cohort
+
       i = i + 1
 
       treeG     = cc%pseed%c%c12 + cc%NPPleaf + cc%NPProot + cc%NPPwood
@@ -761,7 +759,7 @@ contains
       if (i <= NCohortMax) then
 
         out_annual_cohorts(i)%year        = iyears
-        out_annual_cohorts(i)%cID         = cc%ccID
+        out_annual_cohorts(i)%cID         = it%uid
         out_annual_cohorts(i)%PFT         = cc%species
         out_annual_cohorts(i)%layer       = cc%layer
         out_annual_cohorts(i)%density     = cc%nindivs * 10000
@@ -921,7 +919,6 @@ contains
     ! Cohorts ouput
     it => vegn%heap
     do while (associated(it))
-
       i = i + 1
       ! If we overflow the max number of cohorts, skip the remaining cohorts
       if (i > NCohortMax) exit

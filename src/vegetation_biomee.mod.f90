@@ -1631,7 +1631,6 @@ contains
       cc%layer       = 1 ! They are initially all in layer 1 (top layer)
       cc%age         = 0
       cc%species     = INT(myinterface%init_cohort(i)%init_cohort_species)
-      cc%ccID        = i
       cc%nindivs     = myinterface%init_cohort(i)%init_cohort_nindivs ! trees/m2
       cc%plabl%c%c12 = myinterface%init_cohort(i)%init_cohort_nsc
       cc%psapw%c%c12 = myinterface%init_cohort(i)%init_cohort_bsw
@@ -1640,7 +1639,6 @@ contains
       cc%proot%c%c12 = myinterface%init_cohort(i)%init_cohort_br
       cc%pseed%c%c12 = myinterface%init_cohort(i)%init_cohort_seedC
       call initialize_cohort_from_biomass(cc)
-      MaxCohortID = cc%ccID
 
     enddo
 

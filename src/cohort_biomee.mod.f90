@@ -27,7 +27,6 @@ module md_cohort
     ! The cohort state contains cohort properties which persist across the years
 
     !===== Metadata
-    integer :: ccID       = -1           ! cohort ID
     integer :: layer      = 1            ! the layer of this cohort (numbered from top, top layer=1)
     integer :: firstlayer = 0            ! 0 = never been in the first layer; 1 = at least one year in first layer
     integer :: species    = 1            ! vegetation species
