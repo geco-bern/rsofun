@@ -241,6 +241,7 @@ contains
     type(cohort_item), pointer :: old_cohorts
     type(cohort_item), pointer :: it !iterator
     type(cohort_item), pointer :: prev ! Pointer to parent of node pointed by 'it'
+    logical :: new_winner
     old_cohorts => self%heap
     self%heap => NULL()
 
@@ -253,7 +254,13 @@ contains
       selected_prev => NULL()
       ! We pick the smallest element of the old list
       do while (associated(it))
-        if ((.not. associated(selected_item)) .or. (increasing .neqv. (it%cohort%height < selected_item%cohort%height))) then
+        ! The use of new_winner below is meant at implementing the following offending line:
+        ! if ((.not. associated(selected_item)) .or. (increasing .neqv. (it%cohort%height < selected_item%cohort%height))) then
+        ! The line above works fine with -O2, but fails in -O0 as the compiler then evaluate both terms, which creates a
+        ! segfault in case selected_item is not associated.
+        new_winner = .not. associated(selected_item)
+        if (.not. new_winner) new_winner = (increasing .neqv. (it%cohort%height < selected_item%cohort%height))
+        if (new_winner) then
           selected_item => it
           selected_prev => prev
         end if
@@ -318,7 +325,7 @@ contains
   end function new_cohort
 
   subroutine insert_cohort(self, new_item, head)
-    ! Insert a cohort
+    ! Insert an already existing cohort (useful for shuffling)
     logical, optional :: head
     logical :: head_option
     type(cohort_item), pointer :: new_item
@@ -337,7 +344,7 @@ contains
   end subroutine insert_cohort
 
   subroutine insert_tail(self, new_item)
-    ! Prepend a new cohort to the list and return its pointer
+    ! Prepend an already existing cohort (useful for shuffling)
     type(cohort_item), pointer :: new_item
     class(vegn_tile_type) :: self
     type(cohort_item), pointer :: it !iterator
