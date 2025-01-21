@@ -110,9 +110,9 @@ contains
       ! With nitrogen model, leaf respiration is a function of leaf nitrogen
       !NSCtarget = 3.0 * (cc%bl_max + cc%br_max)
       fnsc = 1.0 ! min(max(0.0,cc%plabl%c%c12/NSCtarget),1.0)
-      ! Acambium = PI * cc%DBH * cc%height * 1.2 ! see Weng et al. 2015: Acambium~D^1.5 -> H~D^0.5 and D*H is proportional to D^1.5
+      ! Acambium = PI * cc%dbh() * cc%height() * 1.2 ! see Weng et al. 2015: Acambium~D^1.5 -> H~D^0.5 and D*H is proportional to D^1.5
       exp_acambium = 1.5 !(1.5 - 2) Use this exponent to make Acambium~D^2. Ensheng suggested range 1.5 to 2.
-      Acambium = PI * cc%DBH ** exp_acambium * cc%height * 1.2
+      Acambium = PI * cc%dbh() ** exp_acambium * cc%height() * 1.2
 
       ! Facultive Nitrogen fixation
       !if (cc%plabl%n%n14 < cc%NSNmax() .and. cc%plabl%c%c12 > 0.5 * NSCtarget) then
@@ -125,7 +125,7 @@ contains
       cc%fast_fluxes%fixedN = fnsc*spdata(sp)%NfixRate0 * cc%proot%c%c12 * tf * myinterface%dt_fast_yr ! kgN tree-1 step-1
       r_Nfix    = spdata(sp)%NfixCost0 * cc%fast_fluxes%fixedN ! + 0.25*spdata(sp)%NfixCost0 * cc%N_uptake    ! tree-1 step-1
 
-      ! LeafN    = spdata(sp)%LNA * cc%leafarea  ! gamma_SW is sapwood respiration rate (kgC m-2 Acambium yr-1)
+      ! LeafN    = spdata(sp)%LNA * cc%leafarea()  ! gamma_SW is sapwood respiration rate (kgC m-2 Acambium yr-1)
       r_stem   = fnsc*spdata(sp)%gamma_SW  * Acambium * tf * myinterface%dt_fast_yr ! kgC tree-1 step-1
       r_root   = fnsc*spdata(sp)%gamma_FR  * cc%proot%n%n14 * tf * myinterface%dt_fast_yr ! root respiration ~ root N
       cc%resr = r_root + r_Nfix ! tree-1 step-1
@@ -189,7 +189,6 @@ contains
     ! local variables
     type(cohort_type), pointer :: cc
     type(cohort_item), pointer :: it
-    real :: CSAtot ! total cross section area, m2
     real :: CSAsw  ! Sapwood cross sectional area, m2
     real :: CSAwd  ! Heartwood cross sectional area, m2
     real :: DBHwd  ! diameter of heartwood at breast height, m
@@ -325,27 +324,15 @@ contains
         cc%NPProot = cc%NPProot + dBR
         cc%NPPwood = cc%NPPwood + dBSW
 
-        ! update breast height diameter given increase of bsw
-        dDBH    = dBSW / (sp%thetaBM * sp%alphaBM * cc%DBH**(sp%thetaBM - 1.0))
-        ! Using taylor of order 1. But why not using the true expression for computing cc%height and cc%crownarea directly?
-        dHeight = sp%thetaHT * sp%alphaHT * cc%DBH**(sp%thetaHT - 1) * dDBH
-        dCA     = sp%thetaCA * sp%alphaCA * cc%DBH**(sp%thetaCA - 1) * dDBH
-
-        ! update plant architecture
-        cc%DBH       = cc%DBH       + dDBH
-        cc%height    = cc%height    + dHeight
-        cc%crownarea = cc%crownarea + dCA
-        cc%leafarea  = leaf_area_from_biomass(cc%pleaf%c%c12, cc%species)
         ! vegn%LAI is the surface of leaves per m2 of ground/tile
-        vegn%LAI     = vegn%LAI + cc%leafarea * cc%nindivs
+        vegn%LAI     = vegn%LAI + cc%leafarea() * cc%nindivs
 
         ! convert sapwood to heartwood for woody plants ! Nitrogen from sapwood to heart wood
         if (sp%lifeform > 0) then
-          CSAsw  = cc%bl_max/sp%LMA * sp%phiCSA * cc%height ! with Plant hydraulics, Weng, 2016-11-30
-          CSAtot = 0.25 * PI * cc%DBH**2
-          CSAwd  = max(0.0, CSAtot - CSAsw)
+          CSAsw  = cc%bl_max/sp%LMA * sp%phiCSA * cc%height() ! with Plant hydraulics, Weng, 2016-11-30
+          CSAwd  = max(0.0, cc%basal_area() - CSAsw)
           DBHwd  = 2.0 * sqrt(CSAwd/PI)
-          BSWmax = sp%alphaBM * (cc%DBH**sp%thetaBM - DBHwd**sp%thetaBM)
+          BSWmax = sp%alphaBM * (cc%dbh()**sp%thetaBM - DBHwd**sp%thetaBM)
           dBHW   = max(cc%psapw%c%c12 - BSWmax, 0.0)
           dNS    = dBHW / cc%psapw%c%c12 * cc%psapw%n%n14
 
@@ -357,9 +344,9 @@ contains
         endif
 
         ! update bl_max and br_max daily
-        BL_c = sp%LMA * sp%LAImax * cc%crownarea * &
-                (1.0-sp%internal_gap_frac) /max(1,cc%layer)
-        BL_u = sp%LMA*cc%crownarea*(1.0-sp%internal_gap_frac) * &
+        BL_c = sp%LMA * sp%LAImax * cc%crownarea() * &
+                (1.0-sp%internal_gap_frac) / cc%layer
+        BL_u = sp%LMA*cc%crownarea()*(1.0-sp%internal_gap_frac) * &
                 sp%underLAImax
 
         if (cc%layer == 1) cc%topyear = cc%topyear + 1.0 / 365.0
@@ -481,7 +468,8 @@ contains
         cc%plabl%n%n14 = ccNSN/cc%nindivs - &
           (cc%pleaf%n%n14 + cc%psapw%n%n14 + cc%pwood%n%n14 + cc%proot%n%n14 + cc%pseed%n%n14)
 
-        call init_cohort_allometry( cc )
+        call init_bl_br(cc)
+
       endif
       end associate
 
@@ -593,6 +581,7 @@ contains
     real :: param_dbh 
     real :: param_nsc
     real :: CAI_max
+    real :: dbh ! cache variable
 
     cCAI = 0.0
     deathrate = 0.0
@@ -629,7 +618,7 @@ contains
         cCAI = cCAI + cc%layerfrac()
         if (cCAI > CAI_max) then
           ! Trees to delete
-          dn = MIN((cCAI - CAI_max) / cc%crownarea, cc%nindivs)
+          dn = MIN((cCAI - CAI_max) / cc%crownarea(), cc%nindivs)
 
           ! Carbon and Nitrogen from dead plants to soil pools
           call plant2soil(vegn, cc, dn)
@@ -648,6 +637,8 @@ contains
         cc => it%cohort
         associate ( sp => cc%sp())
 
+          dbh = cc%dbh()
+
         if ((trim(myinterface%params_siml%method_mortality) == "cstarvation")) then
 
           ! set calibratable parameter
@@ -657,8 +648,8 @@ contains
           ! Understory mortality
           if (cc%layer > 1) then !
             deathrate = param_nsc_under * sp%mortrate_d_u * &
-                     (1. + A_mort*exp(B_mort*cc%dbh))/ &
-                     (1. +        exp(B_mort*cc%dbh)) 
+                     (1. + A_mort*exp(B_mort*dbh))/ &
+                     (1. +        exp(B_mort*dbh))
 
           else  
             ! Canopy mortality
@@ -680,17 +671,17 @@ contains
               deathrate = sp%mortrate_d_c
             endif
           else                    ! for trees
-            if (cc%layer > 1) then ! Understory layer mortality Weng 2015: deathrate = 0.075*(1+9*exp(-60*cc%dbh))/(1+exp(-60*cc%dbh))
+            if (cc%layer > 1) then ! Understory layer mortality Weng 2015: deathrate = 0.075*(1+9*exp(-60*cc%dbh()))/(1+exp(-60*cc%dbh()))
               deathrate = param_dbh_under * sp%mortrate_d_u * &
-                     (1.0 + A_mort*exp(B_mort*cc%dbh))/ &
-                     (1.0 +        exp(B_mort*cc%dbh)) 
+                     (1.0 + A_mort*exp(B_mort*dbh))/ &
+                     (1.0 +        exp(B_mort*dbh))
 
-            else  ! First layer mortality Weng 2015: deathrate = 0.01*(1+5*exp(4*(cc%dbh-2)))/(1+exp(4*(cc%dbh-2)))
+            else  ! First layer mortality Weng 2015: deathrate = 0.01*(1+5*exp(4*(cc%dbh()-2)))/(1+exp(4*(cc%dbh()-2)))
               if (myinterface%params_siml%do_U_shaped_mortality) then
                 ! deathrate = param_dbh * 0.1 *    &
-                !            (1.*exp(2.*(cc%dbh-1))/  &
-                !            (1. + exp(2.*(cc%dbh-1))))
-                deathrate = min(1.0, param_dbh * cc%dbh ** 1.5) ! 1.5, 2.5, 5
+                !            (1.*exp(2.*(cc%dbh()-1))/  &
+                !            (1. + exp(2.*(cc%dbh()-1))))
+                deathrate = min(1.0, param_dbh * dbh ** 1.5) ! 1.5, 2.5, 5
               else
                 deathrate = sp%mortrate_d_c
               endif
@@ -789,12 +780,12 @@ contains
 
       ! Carbon and Nitrogen from plants to soil pools
       lossC_coarse  = deadtrees * &
-              (cc%pwood%c%c12 + cc%psapw%c%c12 + cc%pleaf%c%c12 - cc%leafarea * myinterface%params_tile%LMAmin)
+              (cc%pwood%c%c12 + cc%psapw%c%c12 + cc%pleaf%c%c12 - cc%leafarea() * myinterface%params_tile%LMAmin)
       lossC_fine    = deadtrees * &
-              (cc%plabl%c%c12 + cc%pseed%c%c12 + cc%proot%c%c12 + cc%leafarea * myinterface%params_tile%LMAmin)
+              (cc%plabl%c%c12 + cc%pseed%c%c12 + cc%proot%c%c12 + cc%leafarea() * myinterface%params_tile%LMAmin)
 
-      lossN_coarse = deadtrees * (cc%pwood%n%n14 + cc%psapw%n%n14 + cc%pleaf%n%n14 - cc%leafarea*sp%LNbase)
-      lossN_fine   = deadtrees * (cc%plabl%n%n14 + cc%pseed%n%n14 + cc%proot%n%n14 + cc%leafarea*sp%LNbase)
+      lossN_coarse = deadtrees * (cc%pwood%n%n14 + cc%psapw%n%n14 + cc%pleaf%n%n14 - cc%leafarea()*sp%LNbase)
+      lossN_fine   = deadtrees * (cc%plabl%n%n14 + cc%pseed%n%n14 + cc%proot%n%n14 + cc%leafarea()*sp%LNbase)
 
       vegn%psoil_fs%c%c12 = vegn%psoil_fs%c%c12 + myinterface%params_tile%fsc_fine * lossC_fine + &
               myinterface%params_tile%fsc_wood * lossC_coarse
@@ -897,6 +888,8 @@ contains
 
       cc%species    = reproPFTs(k)
 
+      call init_bl_br(cc)
+
       ! Carbon pools
       cc%pleaf%c%c12 = 0.0 * sp%seedlingsize
       cc%proot%c%c12 = 0.1 * sp%seedlingsize
@@ -926,8 +919,6 @@ contains
               cc%psapw%c%c12 + cc%pwood%c%c12 + cc%plabl%c%c12)
       vegn%totNewCN = vegn%totNewCN + cc%nindivs*(cc%pleaf%n%n14 + cc%proot%n%n14 + &
               cc%psapw%n%n14 + cc%pwood%n%n14 + cc%plabl%n%n14)
-
-      call init_cohort_allometry( cc )
 
       end associate
     enddo
@@ -992,7 +983,7 @@ contains
       ! If the cohort has NA we skip it
       ptr => it
 
-      if (ieee_is_nan(ptr%cohort%crownarea) .or. ieee_is_nan(ptr%cohort%nindivs)) then
+      if (ieee_is_nan(ptr%cohort%crownarea()) .or. ieee_is_nan(ptr%cohort%nindivs)) then
 
         it => it%next
         deallocate(ptr)
@@ -1011,7 +1002,7 @@ contains
           ! We add a copy of the cohort to the new cohort list
           new => vegn%new_cohort()
           new%cohort = it%cohort
-          new%cohort%nindivs = (layer_vegn_cover - frac)/new%cohort%crownarea
+          new%cohort%nindivs = (layer_vegn_cover - frac)/new%cohort%crownarea()
           it%cohort%nindivs = it%cohort%nindivs - new%cohort%nindivs
           ! We keep it as we want to continue processing it at the next iteration
           ! Since the current layer is filled-up, we open-up a new fraction
@@ -1059,9 +1050,6 @@ contains
       cc%pleaf%n%n14 = cc%pleaf%n%n14 - dNL
       cc%psapw%n%n14 = cc%psapw%n%n14 - dNStem
       cc%proot%n%n14 = cc%proot%n%n14 - dNR
-
-      ! update leaf area and LAI
-      cc%leafarea = leaf_area_from_biomass(cc%pleaf%c%c12, cc%species)
 
       ! update NPP for leaves, fine roots, and wood
       cc%NPPleaf = cc%NPPleaf - myinterface%params_tile%l_fract * dBL
@@ -1420,7 +1408,7 @@ contains
       do while (associated(it2))
         if (cohorts_can_be_merged(it1%cohort, it2%cohort)) then
           call it1%cohort%merge_in(it2%cohort)
-          call init_cohort_allometry(it1%cohort)
+          call init_bl_br(it1%cohort)
           it2 => vegn%remove_cohort(it2%uid)
         else
           it2 => it2%next
@@ -1520,7 +1508,14 @@ contains
     !---------------------------------------------------------------
     logical :: res
     type(cohort_type) :: c1,c2
+
+    ! Local variables
     logical :: sameSpecies, sameLayer, sameSize, sameSizeTree, sameSizeGrass
+    real :: c1_dbh, c2_dbh, dbh_diff
+
+    c1_dbh = c1%dbh()
+    c2_dbh = c2%dbh()
+    dbh_diff = abs(c1_dbh - c2_dbh)
 
     associate (spdata => myinterface%params_species)
 
@@ -1533,12 +1528,12 @@ contains
 
       sameSizeTree = (spdata(c1%species)%lifeform > 0).and.  &
         (spdata(c2%species)%lifeform > 0).and.  &
-        ((abs(c1%DBH - c2%DBH)/(c1%DBH + c2%DBH) < 0.1 ) .or.  &
-        (abs(c1%DBH - c2%DBH) < 0.001))  ! it'll be always true for grasses
+        ((dbh_diff/(c1_dbh + c2_dbh) < 0.1 ) .or.  &
+        (dbh_diff < 0.001))  ! it'll be always true for grasses
 
       sameSizeGrass= (spdata(c1%species)%lifeform == 0) .and. &
         (spdata(c2%species)%lifeform == 0) .and. &
-        (abs(c1%DBH - c2%DBH) < eps .and. c1%age > 2. .and. c2%age > 2.)  ! it'll be always true for grasses
+        (dbh_diff < eps .and. c1%age > 2. .and. c2%age > 2.)  ! it'll be always true for grasses
 
       sameSize = sameSizeTree .or. sameSizeGrass
 
@@ -1560,8 +1555,9 @@ contains
     !---------------------------------------------------------------
     type(cohort_type), intent(inout) :: cc
     associate(sp=>cc%sp())
-    
-    call init_cohort_allometry(cc)
+
+    call init_bl_br(cc)
+
     cc%plabl%c%c12        = 2.0 * (cc%bl_max + cc%br_max)
 
     ! N pools
@@ -1575,34 +1571,28 @@ contains
   
   end subroutine initialize_cohort_from_biomass
 
-  subroutine init_cohort_allometry( cc )
+  subroutine init_bl_br( cc )
     !////////////////////////////////////////////////////////////////
     ! Code from BiomeE-Allocation
     !---------------------------------------------------------------
     type(cohort_type), intent(inout) :: cc
-    ! ----- local var -----------
-    integer :: layer
-    real    :: btot ! total biomass per individual, kg C
 
-    cc%leafarea = leaf_area_from_biomass(cc%pleaf%c%c12, cc%species)
+    ! Local varibale
+    real :: crownarea ! Cache variable
+
+    crownarea = cc%crownarea()
 
     associate(sp=>cc%sp())
-      btot = max(0.0001, cc%pwood%c%c12 + cc%psapw%c%c12)
-
-      cc%dbh        = (btot / sp%alphaBM) ** ( 1.0/sp%thetaBM )
-      cc%height     = sp%alphaHT * cc%dbh ** sp%thetaHT
-      cc%crownarea  = sp%alphaCA * cc%dbh ** sp%thetaCA
-
       ! calculations of bl_max and br_max are here only for the sake of the
       ! diagnostics, because otherwise those fields are inherited from the
       ! parent cohort and produce spike in the output, even though these spurious
       ! values are not used by the model
-      cc%bl_max = sp%LMA   * sp%LAImax        * cc%crownarea/cc%layer
-      cc%br_max = sp%phiRL * sp%LAImax/sp%SRA * cc%crownarea/cc%layer
+      cc%bl_max = sp%LMA   * sp%LAImax        * crownarea / cc%layer
+      cc%br_max = sp%phiRL * sp%LAImax/sp%SRA * crownarea / cc%layer
     end associate
-  
-  end subroutine init_cohort_allometry
 
+  end subroutine init_bl_br
+  
 
   function leaf_area_from_biomass(bl,species) result (area)
     !////////////////////////////////////////////////////////////////
@@ -1613,9 +1603,9 @@ contains
     integer, intent(in) :: species ! species
 
     area = bl/myinterface%params_species(species)%LMA
-  
+
   end function
-  
+
   !=======================================================================
   !==================== Vegetation initializations =======================
   !=======================================================================

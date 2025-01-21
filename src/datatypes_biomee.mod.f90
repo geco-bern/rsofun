@@ -242,6 +242,7 @@ contains
     type(cohort_item), pointer :: it !iterator
     type(cohort_item), pointer :: prev ! Pointer to parent of node pointed by 'it'
     logical :: new_winner
+    real :: selected_height ! cache variable
     old_cohorts => self%heap
     self%heap => NULL()
 
@@ -255,14 +256,15 @@ contains
       ! We pick the smallest element of the old list
       do while (associated(it))
         ! The use of new_winner below is meant at implementing the following offending line:
-        ! if ((.not. associated(selected_item)) .or. (increasing .neqv. (it%cohort%height < selected_item%cohort%height))) then
+        ! if ((.not. associated(selected_item)) .or. (increasing .neqv. (it%cohort%height() < selected_item%cohort%height()))) then
         ! The line above works fine with -O2, but fails in -O0 as the compiler then evaluate both terms, which creates a
         ! segfault in case selected_item is not associated.
         new_winner = .not. associated(selected_item)
-        if (.not. new_winner) new_winner = (increasing .neqv. (it%cohort%height < selected_item%cohort%height))
+        if (.not. new_winner) new_winner = (increasing .neqv. (it%cohort%height() < selected_height))
         if (new_winner) then
           selected_item => it
           selected_prev => prev
+          selected_height = selected_item%cohort%height()
         end if
         prev => it
         it => it%next
@@ -470,6 +472,7 @@ contains
     ! local variables
     type(cohort_type), pointer :: cc
     type(cohort_item), pointer :: it !iterator
+    real :: dbh ! cache variable
 
     ! State variables
     call orginit(vegn%plabl)
@@ -504,22 +507,23 @@ contains
       call orgcp(cc%pwood, vegn%pwood, cc%nindivs)
       call orgcp(cc%pseed, vegn%pseed, cc%nindivs)
 
-      vegn%CAI          = vegn%CAI      + cc%crownarea * cc%nindivs
-      vegn%LAI          = vegn%LAI      + cc%leafarea  * cc%nindivs
+      vegn%CAI          = vegn%CAI      + cc%crownarea() * cc%nindivs
+      vegn%LAI          = vegn%LAI      + cc%leafarea()  * cc%nindivs
       
       ! New tile outputs
-      vegn%DBH          = vegn%DBH      + cc%dbh       * cc%nindivs
+      dbh = cc%dbh()
+      vegn%DBH          = vegn%DBH      + dbh            * cc%nindivs
       vegn%nindivs      = vegn%nindivs  + cc%nindivs
 
-      if (cc%dbh > 0.12) then
-        vegn%DBH12      = vegn%DBH12     + cc%dbh      * cc%nindivs 
+      if (dbh > 0.12) then
+        vegn%DBH12      = vegn%DBH12     + dbh           * cc%nindivs
         vegn%nindivs12  = vegn%nindivs12 + cc%nindivs
-        vegn%DBH12pow2  = vegn%DBH12pow2 + cc%dbh      * cc%dbh     * cc%nindivs
+        vegn%DBH12pow2  = vegn%DBH12pow2 + dbh ** 2      * cc%nindivs
       endif
 
       vegn%MaxAge    = MAX(cc%age, vegn%MaxAge)
       vegn%MaxVolume = MAX(cc%volume(), vegn%MaxVolume)
-      vegn%MaxDBH    = MAX(cc%dbh, vegn%MaxDBH)
+      vegn%MaxDBH    = MAX(dbh, vegn%MaxDBH)
 
       it => it%next
 
@@ -750,7 +754,7 @@ contains
       fleaf     = cc%NPPleaf / treeG
       froot     = cc%NPProot / treeG
       fwood     = cc%NPPwood / treeG
-      dDBH      = cc%dbh - cc%DBH_ys !in m
+      dDBH      = cc%dbh() - cc%DBH_ys !in m
       BA        = cc%basal_area()
       dBA       = BA - cc%BA_ys
 
@@ -762,14 +766,14 @@ contains
         out_annual_cohorts(i)%layer       = cc%layer
         out_annual_cohorts(i)%density     = cc%nindivs * 10000
         out_annual_cohorts(i)%flayer      = cc%layerfrac()
-        out_annual_cohorts(i)%dbh         = cc%dbh * 100   ! *100 to convert m in cm
+        out_annual_cohorts(i)%dbh         = cc%dbh() * 100   ! *100 to convert m in cm
         out_annual_cohorts(i)%dDBH        = dDBH * 100     ! *100 to convert m in cm
-        out_annual_cohorts(i)%height      = cc%height
+        out_annual_cohorts(i)%height      = cc%height()
         out_annual_cohorts(i)%age         = cc%age
         out_annual_cohorts(i)%BA          = BA
         out_annual_cohorts(i)%dBA         = dBA
-        out_annual_cohorts(i)%Acrown      = cc%crownarea
-        out_annual_cohorts(i)%Aleaf       = cc%leafarea
+        out_annual_cohorts(i)%Acrown      = cc%crownarea()
+        out_annual_cohorts(i)%Aleaf       = cc%leafarea()
         out_annual_cohorts(i)%nsc         = cc%plabl%c%c12
         out_annual_cohorts(i)%nsn         = cc%plabl%n%n14
         out_annual_cohorts(i)%seedC       = cc%pseed%c%c12

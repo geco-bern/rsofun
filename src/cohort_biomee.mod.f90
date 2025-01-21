@@ -36,10 +36,6 @@ module md_cohort
     real :: nindivs       = 0.0          ! density of vegetation, tree/m2
     real :: age           = 0.0          ! age of cohort, years
     real :: topyear       = 0.0          ! number of years the cohort is in top layer
-    real :: dbh           = 0.0          ! diameter at breast height, m
-    real :: height        = 0.0          ! vegetation height, m
-    real :: crownarea     = 0.0          ! crown area, m2 tree-1
-    real :: leafarea      = 0.0          ! total area of leaves, m2 tree-1
 
     !===== Biological prognostic variables
     real    :: gdd        = 0.0          ! growing degree-day (phenology)
@@ -105,6 +101,10 @@ module md_cohort
       ! increase in the number of operations.
 
       procedure NSNmax
+      procedure leafarea
+      procedure crownarea
+      procedure height
+      procedure dbh
       procedure W_supply
       procedure rootareaL
       procedure lai
@@ -173,7 +173,7 @@ contains
     class(cohort_type), intent(inout) :: self
 
     ! Save last year's values
-    self%DBH_ys        = self%dbh
+    self%DBH_ys        = self%dbh()
     self%BA_ys         = basal_area(self)
 
     self%WupL(:)       = 0.0
@@ -217,6 +217,60 @@ contains
             (self%bl_max / (sp%CNleaf0 * sp%leafLS) + self%br_max / sp%CNroot0)
   end function NSNmax
 
+  function dbh(self) result(res)
+  ! diameter at breast height, m
+    real :: res
+    class(cohort_type) :: self
+
+    ! Local variable
+    type(spec_data_type) :: sp
+    real :: btot
+
+    btot = max(0.0001, self%pwood%c%c12 + self%psapw%c%c12)
+    sp = self%sp()
+
+    res = (btot / sp%alphaBM) ** ( 1.0/sp%thetaBM )
+  end function dbh
+
+  function crownarea(self) result(res)
+  ! crown area, m2 tree-1
+    real :: res
+    class(cohort_type) :: self
+
+    ! Local variable
+    type(spec_data_type) :: sp
+
+    sp = self%sp()
+
+    res = sp%alphaCA * self%dbh() ** sp%thetaCA
+  end function crownarea
+
+  function leafarea(self) result(res)
+  ! total area of leaves, m2 tree-1
+    real :: res
+    class(cohort_type) :: self
+
+    ! Local variable
+    type(spec_data_type) :: sp
+
+    sp = self%sp()
+
+    res = self%pleaf%c%c12 / sp%LMA
+  end function leafarea
+
+  function height(self) result(res)
+    ! vegetation height, m
+    real :: res
+    class(cohort_type) :: self
+
+    ! Local variable
+    type(spec_data_type) :: sp
+
+    sp = self%sp()
+
+    res = sp%alphaHT * self%dbh() ** sp%thetaHT
+  end function height
+
   function W_supply(self) result(res)
     ! potential water uptake rate per unit time per tree
     real :: res
@@ -257,7 +311,7 @@ contains
     real :: res
     class(cohort_type) :: self
 
-    res = self%leafarea / self%crownarea !(cohort%crownarea *(1.0-sp%internal_gap_frac))
+    res = self%leafarea() / self%crownarea() !(cohort%crownarea() *(1.0-sp%internal_gap_frac))
   end function lai
 
   function basal_area(self) result(res)
@@ -265,7 +319,7 @@ contains
     real :: res
     class(cohort_type) :: self
 
-    res = pi/4 * self%dbh * self%dbh
+    res = pi/4 * self%dbh() * self%dbh()
   end function basal_area
 
   function volume(self) result(res)
@@ -285,7 +339,7 @@ contains
     real :: res
     class(cohort_type) :: self
 
-    res = self%nindivs * self%crownarea
+    res = self%nindivs * self%crownarea()
   end function layerfrac
 
 end module md_cohort
