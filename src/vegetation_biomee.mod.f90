@@ -601,12 +601,18 @@ contains
       ! Work in progress.
 
       ! Remove a big amount of very small trees first
-      if (cc%layer > 1) deathrate = 0.2 !sp%mortrate_d_u
-      deadtrees = cc%nindivs * deathrate
-      call plant2soil(vegn, cc, deadtrees)
+      it => vegn%heap
+      do while (associated(it))
+        cc => it%cohort
 
-      ! Update plant density
-      cc%nindivs = cc%nindivs - deadtrees
+        if (cc%layer > 1) deathrate = 0.2 !sp%mortrate_d_u
+        deadtrees = cc%nindivs * deathrate
+        call plant2soil(vegn, cc, deadtrees)
+        ! Update plant density
+        cc%nindivs = cc%nindivs - deadtrees
+
+        it => it%next
+      end do
 
       ! set calibratable mortality parameter
       CAI_max = myinterface%params_tile%par_mort
@@ -619,6 +625,7 @@ contains
       it => vegn%heap
       do while (associated(it))
         cc => it%cohort
+
         cCAI = cCAI + cc%layerfrac()
         if (cCAI > CAI_max) then
           ! Trees to delete
@@ -630,6 +637,8 @@ contains
           ! Update plant density
           cc%nindivs = cc%nindivs - dn
         end if
+
+        it => it%next
       enddo
  
     else
@@ -1642,9 +1651,9 @@ contains
       cc%proot%c%c12 = myinterface%init_cohort(i)%init_cohort_br
       cc%pseed%c%c12 = myinterface%init_cohort(i)%init_cohort_seedC
       call initialize_cohort_from_biomass(cc)
+      MaxCohortID = cc%ccID
 
     enddo
-    MaxCohortID = cc%ccID
 
     ! Split initial layer in smaller layers (if it is full)
     call relayer_cohorts( vegn )

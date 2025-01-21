@@ -368,6 +368,7 @@ contains
 
   function remove_cohort(self, uid) result(res)
     ! Remove item with uid and return next item in the list
+    ! or NULL if no item was removed (or no item follows in the list)
     type(cohort_item), pointer :: res
     integer :: uid
     class(vegn_tile_type) :: self
@@ -376,6 +377,7 @@ contains
     type(cohort_item), pointer :: it !iterator
     type(cohort_item), pointer :: prev_it
 
+    res => NULL()
     it => self%heap
     prev_it => NULL() ! Important, otherwise may otherwise still be associated from a previous call to this method!
 
