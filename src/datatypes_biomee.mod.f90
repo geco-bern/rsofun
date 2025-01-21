@@ -300,7 +300,6 @@ contains
     logical, optional :: head
     logical :: head_option
     class(vegn_tile_type) :: self
-    type(cohort_item), pointer :: it !iterator
 
     new_item => NULL()
     allocate(new_item)
