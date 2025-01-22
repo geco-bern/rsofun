@@ -62,18 +62,13 @@ module datatypes_biomee
   !===== Leaf life span
   real, parameter  :: c_LLS   = 28.57143    ! yr/ (kg C m-2), c_LLS=1/LMAs, where LMAs = 0.035
 
-  !===== Default cohort insertion: true -> head, false -> tail
-  ! This does not have much impact on the results (only digits far behind the decimal point),
-  ! but inserting to head is faster and the implementation is simpler.
-  logical, parameter :: default_insert = .True.
-
   type :: dampended_forcing_type
     logical :: initialized = .true.
     real :: co2  = 0.0
     real :: vpd  = 0.0
     real :: temp = 0.0
     real :: patm = 0.0
-    real :: par = 0.0
+    real :: par  = 0.0
   end type dampended_forcing_type
 
   !=============== Tile level data type ============================================================
@@ -201,9 +196,8 @@ module datatypes_biomee
     procedure sort_cohorts_by_uid
     procedure, private :: sort_cohorts
     procedure clean
-    procedure insert_cohort
-    procedure insert_head
-    procedure insert_tail
+    procedure, private :: insert_head
+    procedure, private :: insert_tail
 
   end type vegn_tile_type
 
@@ -342,48 +336,18 @@ contains
     end do
   end function n_cohorts
 
-  function new_cohort(self, head) result(new_item)
-    ! Insert a new cohort to the list and return its pointer.
-    ! By default, cohorts are added to the head of the list. If head=.False., they are added at the tail.
+  function new_cohort(self) result(new_item)
+    ! Insert a new cohort at the head of the list and return its pointer.
     type(cohort_item), pointer :: new_item
-    logical, optional :: head
-    logical :: head_option
     class(vegn_tile_type) :: self
 
     new_item => NULL()
     allocate(new_item)
     new_item%uid = next_uid()
 
-    if(present(head)) then
-      head_option = head
-    else
-      head_option = default_insert
-    end if
-    if (head_option) then
-      call insert_head(self, new_item)
-    else
-      call insert_tail(self, new_item)
-    end if
+    call insert_head(self, new_item)
+
   end function new_cohort
-
-  subroutine insert_cohort(self, new_item, head)
-    ! Insert an already existing cohort (useful for shuffling)
-    logical, optional :: head
-    logical :: head_option
-    type(cohort_item), pointer :: new_item
-    class(vegn_tile_type) :: self
-
-    if(present(head)) then
-      head_option = head
-    else
-      head_option = default_insert
-    end if
-    if (head_option) then
-      call insert_head(self, new_item)
-    else
-      call insert_tail(self, new_item)
-    end if
-  end subroutine insert_cohort
 
   subroutine insert_tail(self, new_item)
     ! Prepend an already existing cohort (useful for shuffling)

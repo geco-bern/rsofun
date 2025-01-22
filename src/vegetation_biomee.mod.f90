@@ -19,6 +19,8 @@ module md_vegetation_biomee
   public :: kill_old_grass
   public :: vegn_annual_starvation, Zero_diagnostics
 
+  real, public, parameter :: mindensity = 0.25E-4 ! Minimum cohort density
+
 contains
 
   !========================================================================
@@ -963,58 +965,56 @@ contains
     integer :: L ! layer index (top-down)
     real    :: frac ! fraction of the layer covered so far by the canopies
 
-    type(cohort_item), pointer :: ptr ! placeholder pointer
     type(cohort_item), pointer :: new ! Pointer for new cohort
     type(cohort_item), pointer :: it  ! iterator
+    real :: density_a, density_b
 
     ! We sort the cohorts be decreasing height (important to do it here!)
     call vegn%sort_cohorts_by_height(.false.)
 
     L = 1
     frac = 0.0
-    it => vegn%heap
-    vegn%heap => NULL() ! We start with an empty cohort list
 
     ! For each cohort present in the old list
+    it => vegn%heap
     do while (associated(it))
-      ! If the cohort has NA we skip it
-      ptr => it
 
-      if (ieee_is_nan(ptr%cohort%crownarea()) .or. ieee_is_nan(ptr%cohort%nindivs)) then
-
-        it => it%next
-        deallocate(ptr)
-        ptr => NULL()
-
-      else ! oterhwise
-
-        ! We set the layer
-        it%cohort%layer = L
-        if (L == 1) then
-          it%cohort%firstlayer = 1
-        endif
-
-        if (L < NLAYERS_MAX .and. it%cohort%layerfrac() > layer_vegn_cover - frac) then
-          ! If the current cohort does not fit in the remaining fraction on the layer,
-          ! we add a copy of the cohort to the new cohort list
-          ! We check if L < NLAYERS_MAX as we do not want to create more layers than the max specified amount.
-          new => vegn%new_cohort()
-          new%cohort = it%cohort
-          new%cohort%nindivs = (layer_vegn_cover - frac) / new%cohort%crownarea()
-          it%cohort%nindivs = it%cohort%nindivs - new%cohort%nindivs
-          ! We keep it as we want to continue processing it at the next iteration
-          ! Since the current layer is filled-up, we open-up a new fraction
-          L = L + 1
-          frac = 0.0
-        else
-          ! Otherwise we update the current layer fraction and insert the current cohort
-          frac = frac + it%cohort%layerfrac()
-          it => it%next ! Attention, this line must be here!
-          ptr%next => NULL() ! Imporant
-          call vegn%insert_cohort(ptr)
-        end if
-
+      if (ieee_is_nan(it%cohort%crownarea()) .or. ieee_is_nan(it%cohort%nindivs)) then
+        ! If the cohort has NA we skip it
+        it => vegn%remove_cohort(it%uid)
+        cycle
       end if
+
+      ! We set the layer
+      it%cohort%layer = L
+      if (L == 1) then
+        it%cohort%firstlayer = 1
+      endif
+
+      if ( &
+        L < NLAYERS_MAX .and. &! We check if L < NLAYERS_MAX as we do not want to create more layers than the max specified amount.
+        it%cohort%layerfrac() > layer_vegn_cover - frac &
+      ) then
+        ! If the current cohort does not fit in the remaining fraction on the layer,
+        ! we add a copy of the cohort to the new cohort list
+
+        ! If the densities are sufficient we split the cohort in two
+        ! This check is meant to prevent creating very small cohorts which will be killed in kill_low_density_cohort
+        new => vegn%new_cohort()
+        new%cohort = it%cohort
+        new%cohort%nindivs = (layer_vegn_cover - frac) / it%cohort%crownarea()
+        it%cohort%nindivs = it%cohort%nindivs - new%cohort%nindivs
+
+        ! We keep it as we want to continue processing it at the next iteration
+        ! Since the current layer is filled-up, we open-up a new fraction
+        L = L + 1
+        frac = 0.0
+      else
+        ! Otherwise, we have used-up the whole cohort, we update the current layer fraction and insert the current cohort
+        frac = frac + it%cohort%layerfrac()
+        it => it%next
+      end if
+
     end do
 
   end subroutine relayer_cohorts
@@ -1400,9 +1400,8 @@ contains
     type(cohort_item), pointer :: it1
     type(cohort_item), pointer :: it2
 
-    ! This sort is not technically necessary, but
-    ! is helpful for debugging
-    call vegn%sort_cohorts_by_uid(.true.)
+    ! This sort is not technically necessary, but is helpful for debugging
+    !call vegn%sort_cohorts_by_uid(.true.)
 
     it1 => vegn%heap
     do while (associated(it1))
@@ -1429,7 +1428,6 @@ contains
     !---------------------------------------------------------------
     type(vegn_tile_type), intent(inout) :: vegn
     ! local variables
-    real, parameter :: mindensity = 0.25E-4
     logical :: at_least_one_survivor
 
     type(cohort_item), pointer :: it
@@ -1446,12 +1444,15 @@ contains
       it => it%next
     enddo
 
+    ! If at least one cohort survives, we kill the low density ones
+    ! Otherwise er do not kill anyone.
     if (at_least_one_survivor) then
       it => vegn%heap
       do while (associated(it))
           if (it%cohort%nindivs > mindensity) then
             it => it%next
           else
+            ! if the density is below the threshold, we kill it.
             call plant2soil(vegn, it%cohort, it%cohort%nindivs)
             it => vegn%remove_cohort(it%uid)
           end if
@@ -1629,9 +1630,6 @@ contains
     do i = 1, init_n_cohorts
       new => vegn%new_cohort()
       cc => new%cohort
-      cc%status      = LEAF_OFF
-      cc%layer       = 1 ! They are initially all in layer 1 (top layer)
-      cc%age         = 0
       cc%species     = INT(myinterface%init_cohort(i)%init_cohort_species)
       cc%nindivs     = myinterface%init_cohort(i)%init_cohort_nindivs ! trees/m2
       cc%plabl%c%c12 = myinterface%init_cohort(i)%init_cohort_nsc
