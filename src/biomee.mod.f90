@@ -48,6 +48,7 @@ contains
     use datatypes_biomee
     use md_biosphere_biomee, only: biosphere_annual
     use md_luluc, only: update_lu_state, populate_outarray_annual_land_use
+    use md_cohort_linked_list, only: reset_uid
 
     implicit none
 
@@ -99,6 +100,9 @@ contains
     output_daily_tile = nan
     output_annual_tile = nan
     output_annual_cohorts = nan
+
+    ! Initialise the cohort UIDs
+    call reset_uid()
 
     !----------------------------------------------------------------
     ! POPULATE MYINTERFACE WITH ARGUMENTS FROM R

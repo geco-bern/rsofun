@@ -11,7 +11,7 @@ module md_cohort_linked_list
   public :: cohort_item
 
   !=============== Public procedures ===========================================================
-  public :: next_uid
+  public :: next_uid, reset_uid
 
   integer, private :: CurrentCohortUid = 0
 
@@ -27,6 +27,12 @@ module md_cohort_linked_list
   end type cohort_item
 
 contains
+
+  subroutine reset_uid()
+    ! Call this method once when starting a new simulation
+
+    CurrentCohortUid = 0
+  end subroutine reset_uid
 
   function has_next(self) result(res)
     logical :: res

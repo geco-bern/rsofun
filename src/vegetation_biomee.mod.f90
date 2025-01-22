@@ -702,8 +702,6 @@ contains
 
         ! Update plant density
         cc%nindivs = cc%nindivs - deadtrees
-        ! vegn%n_deadtrees = deadtrees
-        ! vegn%c_deadtrees = vegn%c_deadtrees + deadtrees*(cc%plabl%c%c12 + cc%pseed%c%c12 + cc%pleaf%c%c12 + cc%proot%c%c12 + cc%psapw%c%c12 + cc%pwood%c%c12)
         end associate
 
         it => it%next
@@ -805,7 +803,6 @@ contains
       cc%n_deadtrees = lossN_coarse + lossN_fine
       cc%c_deadtrees = lossC_coarse + lossC_fine
       cc%m_turnover  = cc%m_turnover + cc%c_deadtrees
-      !cc%m_turnover  = cc%m_turnover + deadtrees * (cc%pwood%c%c12 + cc%psapw%c%c12)
 
     end associate
 
@@ -997,12 +994,13 @@ contains
           it%cohort%firstlayer = 1
         endif
 
-        ! If the current cohort does not fit in the remaining fraction on the layer
-        if (it%cohort%layerfrac() > layer_vegn_cover - frac) then
-          ! We add a copy of the cohort to the new cohort list
+        if (L < NLAYERS_MAX .and. it%cohort%layerfrac() > layer_vegn_cover - frac) then
+          ! If the current cohort does not fit in the remaining fraction on the layer,
+          ! we add a copy of the cohort to the new cohort list
+          ! We check if L < NLAYERS_MAX as we do not want to create more layers than the max specified amount.
           new => vegn%new_cohort()
           new%cohort = it%cohort
-          new%cohort%nindivs = (layer_vegn_cover - frac)/new%cohort%crownarea()
+          new%cohort%nindivs = (layer_vegn_cover - frac) / new%cohort%crownarea()
           it%cohort%nindivs = it%cohort%nindivs - new%cohort%nindivs
           ! We keep it as we want to continue processing it at the next iteration
           ! Since the current layer is filled-up, we open-up a new fraction

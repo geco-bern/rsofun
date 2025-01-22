@@ -263,41 +263,41 @@ module md_interface_biomee
     real :: c_turnover_time
   end type outtype_annual_tile
 
-  type outtype_annual_cohorts ! fno2
-    real :: year
-    real :: cID
-    real :: PFT
-    real :: layer
-    real :: density
-    real :: flayer
-    real :: DBH
-    real :: dDBH
-    real :: height
-    real :: age
-    real :: BA
-    real :: dBA
-    real :: Acrown
-    real :: Aleaf
-    real :: nsc
-    real :: nsn
-    real :: seedC
-    real :: leafC
-    real :: rootC
-    real :: sapwC
-    real :: woodC
-    real :: treeG
-    real :: fseed
-    real :: fleaf
-    real :: froot
-    real :: fwood
-    real :: GPP
-    real :: NPP
-    real :: Rauto
-    real :: Nupt
-    real :: Nfix
-    real :: n_deadtrees
-    real :: c_deadtrees
-    real :: deathrate
+  type outtype_annual_cohorts
+    real :: year         = dummy
+    real :: cID          = dummy
+    real :: PFT          = dummy
+    real :: layer        = dummy
+    real :: density      = dummy
+    real :: flayer       = dummy
+    real :: DBH          = dummy
+    real :: dDBH         = dummy
+    real :: height       = dummy
+    real :: age          = dummy
+    real :: BA           = dummy
+    real :: dBA          = dummy
+    real :: Acrown       = dummy
+    real :: Aleaf        = dummy
+    real :: nsc          = dummy
+    real :: nsn          = dummy
+    real :: seedC        = dummy
+    real :: leafC        = dummy
+    real :: rootC        = dummy
+    real :: sapwC        = dummy
+    real :: woodC        = dummy
+    real :: treeG        = dummy
+    real :: fseed        = dummy
+    real :: fleaf        = dummy
+    real :: froot        = dummy
+    real :: fwood        = dummy
+    real :: GPP          = dummy
+    real :: NPP          = dummy
+    real :: Rauto        = dummy
+    real :: Nupt         = dummy
+    real :: Nfix         = dummy
+    real :: n_deadtrees  = dummy
+    real :: c_deadtrees  = dummy
+    real :: deathrate    = dummy
   end type outtype_annual_cohorts
 
 contains

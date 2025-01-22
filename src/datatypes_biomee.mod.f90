@@ -209,10 +209,8 @@ contains
 
   !!!!========= ATTENTION ============!!!
   ! The functions below are notoriously difficult to implement properly.
-  ! Be sure to know what you are doing before doing any change.
-  ! It is wise to add tests.f90 in tests/fortran to this project and run the functions defined there
-  ! after each change to ensure that everything is still working properly.
-  ! Ideally tests.f90 should be part of the normal unit tests (but then it cannot use STOP or PRINT).
+  ! Be sure to know what you are doing before doing any change, and be sure to
+  ! thoroughly test each function which you modify.
 
   subroutine clean(self)
     ! Free all allocated memory
@@ -707,39 +705,6 @@ contains
 
     i = 0
 
-    ! re-initialise to avoid elements not updated when number
-    ! of cohorts declines from one year to the next
-    out_annual_cohorts(:)%year        = dummy
-    out_annual_cohorts(:)%cID         = dummy
-    out_annual_cohorts(:)%PFT         = dummy
-    out_annual_cohorts(:)%layer       = dummy
-    out_annual_cohorts(:)%density     = dummy
-    out_annual_cohorts(:)%flayer      = dummy
-    out_annual_cohorts(:)%DBH         = dummy
-    out_annual_cohorts(:)%dDBH        = dummy
-    out_annual_cohorts(:)%height      = dummy
-    out_annual_cohorts(:)%age         = dummy
-    out_annual_cohorts(:)%BA          = dummy
-    out_annual_cohorts(:)%dBA         = dummy
-    out_annual_cohorts(:)%Acrown      = dummy
-    out_annual_cohorts(:)%Aleaf       = dummy
-    out_annual_cohorts(:)%nsc         = dummy
-    out_annual_cohorts(:)%nsn         = dummy
-    out_annual_cohorts(:)%seedC       = dummy
-    out_annual_cohorts(:)%leafC       = dummy
-    out_annual_cohorts(:)%rootC       = dummy
-    out_annual_cohorts(:)%sapwC       = dummy
-    out_annual_cohorts(:)%woodC       = dummy
-    out_annual_cohorts(:)%treeG       = dummy
-    out_annual_cohorts(:)%fseed       = dummy
-    out_annual_cohorts(:)%fleaf       = dummy
-    out_annual_cohorts(:)%froot       = dummy
-    out_annual_cohorts(:)%fwood       = dummy
-    out_annual_cohorts(:)%GPP         = dummy
-    out_annual_cohorts(:)%NPP         = dummy
-    out_annual_cohorts(:)%Nupt        = dummy
-    out_annual_cohorts(:)%Nfix        = dummy
-
     ! Cohorts ouput
     it => vegn%heap
     do while (associated(it))
@@ -908,24 +873,18 @@ contains
     type(cohort_item), pointer :: it
     integer :: i
 
-    i = 0
-
-    ! re-initialise to avoid elements not updated when number
-    ! of cohorts declines from one year to the next
-    out_annual_cohorts(:)%n_deadtrees = dummy
-    out_annual_cohorts(:)%c_deadtrees = dummy
-    out_annual_cohorts(:)%deathrate   = dummy
-
     ! Cohorts ouput
     it => vegn%heap
     do while (associated(it))
-      i = i + 1
-      ! If we overflow the max number of cohorts, skip the remaining cohorts
-      if (i > NCohortMax) exit
       cc => it%cohort
-      out_annual_cohorts(i)%n_deadtrees = cc%n_deadtrees
-      out_annual_cohorts(i)%c_deadtrees = cc%c_deadtrees
-      out_annual_cohorts(i)%deathrate   = cc%deathrate
+      do i = 1, NCohortMax
+        if (out_annual_cohorts(i)%cID == it%uid) then
+          out_annual_cohorts(i)%n_deadtrees = cc%n_deadtrees
+          out_annual_cohorts(i)%c_deadtrees = cc%c_deadtrees
+          out_annual_cohorts(i)%deathrate   = cc%deathrate
+          exit
+        end if
+      end do
 
       it => it%next
     enddo
