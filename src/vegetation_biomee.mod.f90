@@ -1400,6 +1400,10 @@ contains
     type(cohort_item), pointer :: it1
     type(cohort_item), pointer :: it2
 
+    ! This sort is not technically necessary, but
+    ! is helpful for debugging
+    call vegn%sort_cohorts_by_uid(.true.)
+
     it1 => vegn%heap
     do while (associated(it1))
       it2 => it1%next

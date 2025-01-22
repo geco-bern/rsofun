@@ -198,6 +198,8 @@ module datatypes_biomee
     procedure new_cohort
     procedure remove_cohort
     procedure sort_cohorts_by_height
+    procedure sort_cohorts_by_uid
+    procedure, private :: sort_cohorts
     procedure clean
     procedure insert_cohort
     procedure insert_head
@@ -225,10 +227,22 @@ contains
     end do
   end subroutine clean
 
-  subroutine sort_cohorts_by_height(self, increasing)
-    ! Sort cohorts by height
+  subroutine sort_cohorts(self, increasing, func)
+    ! Low-level implementation for sorting cohort
+    ! The cohort order is defined by applying the function 'func' to the cohorts and comparing these values
+    ! between themselves.
+    ! 'increasing' defines if the values should be ranked by increasing order.
+    interface
+      function func_sort(item) result(res)
+        import :: cohort_item
+        type(cohort_item) :: item
+        real :: res
+      end function func_sort
+    end interface
+
     class(vegn_tile_type) :: self
     logical :: increasing
+    procedure(func_sort) :: func
 
     ! Local variable
     type(cohort_item), pointer :: selected_item
@@ -237,7 +251,7 @@ contains
     type(cohort_item), pointer :: it !iterator
     type(cohort_item), pointer :: prev ! Pointer to parent of node pointed by 'it'
     logical :: new_winner
-    real :: selected_height ! cache variable
+    real :: selected_value ! cache variable
     old_cohorts => self%heap
     self%heap => NULL()
 
@@ -255,11 +269,11 @@ contains
         ! The line above works fine with -O2, but fails in -O0 as the compiler then evaluate both terms, which creates a
         ! segfault in case selected_item is not associated.
         new_winner = .not. associated(selected_item)
-        if (.not. new_winner) new_winner = (increasing .neqv. (it%cohort%height() < selected_height))
+        if (.not. new_winner) new_winner = (increasing .neqv. (func(it) < selected_value))
         if (new_winner) then
           selected_item => it
           selected_prev => prev
-          selected_height = selected_item%cohort%height()
+          selected_value = func(selected_item)
         end if
         prev => it
         it => it%next
@@ -277,8 +291,39 @@ contains
       self%heap => selected_item
 
     end do
+  end subroutine sort_cohorts
+
+  function get_height(item) result(res)
+    type(cohort_item) :: item
+    real :: res
+
+    res = item%cohort%height()
+  end function get_height
+
+  subroutine sort_cohorts_by_height(self, increasing)
+    ! Sort cohorts by height
+    class(vegn_tile_type) :: self
+    logical :: increasing
+
+    call self%sort_cohorts(increasing, get_height)
 
   end subroutine sort_cohorts_by_height
+
+  function get_uid(item) result(res)
+    type(cohort_item) :: item
+    real :: res
+
+    res = real(item%uid)
+  end function get_uid
+
+  subroutine sort_cohorts_by_uid(self, increasing)
+    ! Sort cohorts by uid
+    class(vegn_tile_type) :: self
+    logical :: increasing
+
+    call self%sort_cohorts(increasing, get_uid)
+
+  end subroutine sort_cohorts_by_uid
 
   function n_cohorts(self) result(res)
     ! Returns the current number of cohorts
