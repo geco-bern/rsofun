@@ -78,7 +78,9 @@ module datatypes_biomee
     ! Implemented as a linked list, 'heap' points to the first cohort of the heap
     ! Cohorts should not assumed to be ranked in any specific order.
     ! Use sort_cohorts_by_height() or implement a method following the same principle if needed.
-    type(cohort_item), pointer :: heap => NULL() ! Important to nullify here!
+    type(cohort_item), pointer :: heap => null() ! Important to nullify here!
+    ! Heap of killed cohort for diagnostics purpose. It is empied at the end of each year.
+    type(cohort_item), pointer :: heap_killed => null() ! Important to nullify here!
 
     !===== Tile-level forest inventory information
     real    :: area                               ! m2
@@ -191,101 +193,125 @@ module datatypes_biomee
 
     procedure n_cohorts
     procedure new_cohort
-    procedure remove_cohort
     procedure sort_cohorts_by_height
     procedure sort_cohorts_by_uid
-    procedure, private :: sort_cohorts
-    procedure clean
-    procedure, private :: insert_head
-    procedure, private :: insert_tail
+    procedure shut_down
+    procedure kill_fraction
+    procedure kill_cohort
+    procedure merge
+    procedure split
+    procedure, private :: plant2soil
 
   end type vegn_tile_type
 
 contains
 
-  !!!!========= ATTENTION ============!!!
-  ! The functions below are notoriously difficult to implement properly.
-  ! Be sure to know what you are doing before doing any change, and be sure to
-  ! thoroughly test each function which you modify.
+  subroutine plant2soil(self, cc, deadtrees)
+    !////////////////////////////////////////////////////////////////
+    ! Transfer of deat biomass to litter pools
+    ! Code from BiomeE-Allocation
+    !---------------------------------------------------------------
+    class(vegn_tile_type), intent(inout) :: self
+    type(cohort_type),    intent(inout) :: cc
+    real,                 intent(in)    :: deadtrees ! dead trees/m2
 
-  subroutine clean(self)
+    ! local variables --------
+    real :: lossC_fine,lossC_coarse
+    real :: lossN_fine,lossN_coarse
+
+    associate (sp => cc%sp())
+
+      ! Carbon and Nitrogen from plants to soil pools
+      lossC_coarse  = deadtrees * &
+              (cc%pwood%c%c12 + cc%psapw%c%c12 + cc%pleaf%c%c12 - cc%leafarea() * myinterface%params_tile%LMAmin)
+      lossC_fine    = deadtrees * &
+              (cc%plabl%c%c12 + cc%pseed%c%c12 + cc%proot%c%c12 + cc%leafarea() * myinterface%params_tile%LMAmin)
+
+      lossN_coarse = deadtrees * (cc%pwood%n%n14 + cc%psapw%n%n14 + cc%pleaf%n%n14 - cc%leafarea()*sp%LNbase)
+      lossN_fine   = deadtrees * (cc%plabl%n%n14 + cc%pseed%n%n14 + cc%proot%n%n14 + cc%leafarea()*sp%LNbase)
+
+      self%psoil_fs%c%c12 = self%psoil_fs%c%c12 + myinterface%params_tile%fsc_fine * lossC_fine + &
+              myinterface%params_tile%fsc_wood * lossC_coarse
+      self%psoil_sl%c%c12 = self%psoil_sl%c%c12 + (1.0 - myinterface%params_tile%fsc_fine) * lossC_fine + &
+              (1.0-myinterface%params_tile%fsc_wood) * lossC_coarse
+
+      self%psoil_fs%n%n14 = self%psoil_fs%n%n14 + myinterface%params_tile%fsc_fine * lossN_fine + &
+              myinterface%params_tile%fsc_wood * lossN_coarse
+      self%psoil_sl%n%n14 = self%psoil_sl%n%n14 + (1.0 - myinterface%params_tile%fsc_fine) * lossN_fine + &
+              (1.0-myinterface%params_tile%fsc_wood) * lossN_coarse
+
+      ! annual N from plants to soil
+      self%N_P2S_yr = self%N_P2S_yr + lossN_fine + lossN_coarse
+
+      ! record mortality
+      ! cohort level
+      cc%n_deadtrees = lossN_coarse + lossN_fine
+      cc%c_deadtrees = lossC_coarse + lossC_fine
+      cc%m_turnover  = cc%m_turnover + cc%c_deadtrees
+
+    end associate
+
+  end subroutine plant2soil
+
+  subroutine split(self, item, fraction)
+    class(vegn_tile_type) :: self
+    type(cohort_item), pointer :: item, new
+    real :: fraction
+
+    new => self%new_cohort()
+    new%cohort = item%cohort
+    new%cohort%nindivs = item%cohort%nindivs * fraction
+    item%cohort%nindivs = item%cohort%nindivs - new%cohort%nindivs
+  end subroutine split
+
+  function merge(self, c1, c2) result(next_item)
+    ! Merge cohort c2 into c1 and return item following c2
+    class(vegn_tile_type) :: self
+    type(cohort_item), pointer :: c1, c2
+    type(cohort_item), pointer :: next_item
+
+
+    call c1%cohort%merge_in(c2%cohort)
+    next_item => destroy_cohort(c2, self%heap)
+  end function merge
+
+  subroutine kill_fraction(self, item, deathrate)
+    ! Kill fraction 'fraction' of cohort of uid 'uid'
+    ! This creates a new cohort in 'heap_killed' with nindivis = cohort%nindivis * fraction
+    ! And the original cohort is the complement: nindivis = cohort%nindivis * (1-fraction)
+    ! If fraction is 0, nothing happens.
+    ! If fraction is 1, the cohort is moved from heap to heap_killed.
+    class(vegn_tile_type), intent(inout) :: self
+    type(cohort_item), pointer, intent(inout) :: item
+    real, intent(in) :: deathrate
+
+    ! Local variables
+    type(cohort_item), pointer :: killed
+    type(cohort_item), pointer :: ptr
+
+    if (deathrate <= 0.0) then
+      return
+    elseif (deathrate >= 1.0) then
+      ptr => self%kill_cohort(item)
+    else
+
+      killed => self%new_cohort(.true.)
+      killed%cohort = item%cohort
+      killed%cohort%nindivs = item%cohort%nindivs * deathrate
+      item%cohort%nindivs = item%cohort%nindivs - killed%cohort%nindivs
+      item%cohort%deathrate = deathrate ! deathrate having affected this cohort
+      killed%cohort%nindivs = deathrate ! deathrate having spawned this killed_cohort
+
+    end if
+  end subroutine kill_fraction
+
+  subroutine shut_down(self)
     ! Free all allocated memory
     class(vegn_tile_type) :: self
 
-    type(cohort_item), pointer :: ptr
-
-    do while (associated(self%heap))
-      ptr => self%heap
-      self%heap => ptr%next
-      deallocate(ptr)
-    end do
-  end subroutine clean
-
-  subroutine sort_cohorts(self, increasing, func)
-    ! Low-level implementation for sorting cohort
-    ! The cohort order is defined by applying the function 'func' to the cohorts and comparing these values
-    ! between themselves.
-    ! 'increasing' defines if the values should be ranked by increasing order.
-    interface
-      function func_sort(item) result(res)
-        import :: cohort_item
-        type(cohort_item) :: item
-        real :: res
-      end function func_sort
-    end interface
-
-    class(vegn_tile_type) :: self
-    logical :: increasing
-    procedure(func_sort) :: func
-
-    ! Local variable
-    type(cohort_item), pointer :: selected_item
-    type(cohort_item), pointer :: selected_prev ! Pointer to parent of node pointed by 'selected_item'
-    type(cohort_item), pointer :: old_cohorts
-    type(cohort_item), pointer :: it !iterator
-    type(cohort_item), pointer :: prev ! Pointer to parent of node pointed by 'it'
-    logical :: new_winner
-    real :: selected_value ! cache variable
-    old_cohorts => self%heap
-    self%heap => NULL()
-
-    ! Repeat until the old list is empty
-    do while (associated(old_cohorts))
-      it => old_cohorts
-      ! We reset the pointers
-      prev => NULL()
-      selected_item => NULL()
-      selected_prev => NULL()
-      ! We pick the smallest element of the old list
-      do while (associated(it))
-        ! The use of new_winner below is meant at implementing the following offending line:
-        ! if ((.not. associated(selected_item)) .or. (increasing .neqv. (it%cohort%height() < selected_item%cohort%height()))) then
-        ! The line above works fine with -O2, but fails in -O0 as the compiler then evaluate both terms, which creates a
-        ! segfault in case selected_item is not associated.
-        new_winner = .not. associated(selected_item)
-        if (.not. new_winner) new_winner = (increasing .neqv. (func(it) < selected_value))
-        if (new_winner) then
-          selected_item => it
-          selected_prev => prev
-          selected_value = func(selected_item)
-        end if
-        prev => it
-        it => it%next
-      end do
-
-      ! We remove it from the old list
-      if (associated(selected_prev)) then
-        selected_prev%next => selected_item%next
-      else
-        old_cohorts => selected_item%next
-      end if
-
-      ! We insert it in the head
-      selected_item%next => self%heap
-      self%heap => selected_item
-
-    end do
-  end subroutine sort_cohorts
+    call destroy_all(self%heap)
+    call destroy_all(self%heap_killed)
+  end subroutine shut_down
 
   function get_height(item) result(res)
     type(cohort_item) :: item
@@ -299,7 +325,7 @@ contains
     class(vegn_tile_type) :: self
     logical :: increasing
 
-    call self%sort_cohorts(increasing, get_height)
+    call sort_cohorts(self%heap, increasing, get_height)
 
   end subroutine sort_cohorts_by_height
 
@@ -315,7 +341,7 @@ contains
     class(vegn_tile_type) :: self
     logical :: increasing
 
-    call self%sort_cohorts(increasing, get_uid)
+    call sort_cohorts(self%heap, increasing, get_uid)
 
   end subroutine sort_cohorts_by_uid
 
@@ -336,27 +362,38 @@ contains
     end do
   end function n_cohorts
 
-  function new_cohort(self) result(new_item)
+  function new_cohort(self, killed) result(new_item)
     ! Insert a new cohort at the head of the list and return its pointer.
+    ! If 'killed' is set, the cohort is inserted in 'heap_killed' rather than 'heap'.
     type(cohort_item), pointer :: new_item
     class(vegn_tile_type) :: self
+    logical, optional :: killed
+    logical :: killed_opt
 
-    new_item => NULL()
-    allocate(new_item)
-    new_item%uid = next_uid()
+    killed_opt = .false.
 
-    call insert_head(self, new_item)
+    if(present(killed)) killed_opt = killed
+
+    new_item => create_cohort()
+
+    if (killed_opt) then
+      call insert_head(new_item, self%heap_killed)
+    else
+      call insert_head(new_item, self%heap)
+    end if
 
   end function new_cohort
 
-  subroutine insert_tail(self, new_item)
+  subroutine insert_tail(new_item, linked_list)
     ! Prepend an already existing cohort (useful for shuffling)
-    type(cohort_item), pointer :: new_item
-    class(vegn_tile_type) :: self
+    type(cohort_item), pointer, intent(in) :: new_item
+    type(cohort_item), pointer, intent(inout) :: linked_list
+
+    ! Local variable
     type(cohort_item), pointer :: it !iterator
 
-    if (associated(self%heap)) then
-      it => self%heap
+    if (associated(linked_list)) then
+      it => linked_list
       do while (associated(it))
         if (associated(it%next)) then
           it => it%next
@@ -366,50 +403,38 @@ contains
         end if
       end do
     else
-      self%heap => new_item
+      linked_list => new_item
     end if
   end subroutine insert_tail
 
-  subroutine insert_head(self, new_item)
+  subroutine insert_head(new_item, linked_list)
     ! Prepend a new cohort to the list and return its pointer
-    type(cohort_item), pointer :: new_item
-    class(vegn_tile_type) :: self
+    type(cohort_item), pointer, intent(in) :: new_item
+    type(cohort_item), pointer, intent(inout) :: linked_list
 
-    new_item%next => self%heap
-    self%heap => new_item
+    new_item%next => linked_list
+    linked_list => new_item
   end subroutine insert_head
 
-  function remove_cohort(self, uid) result(res)
-    ! Remove item with uid and return next item in the list
-    ! or NULL if no item was removed (or no item follows in the list)
-    type(cohort_item), pointer :: res
-    integer :: uid
-    class(vegn_tile_type) :: self
+  function kill_cohort(self, item) result(next_item)
+    ! Move item to heap_killed and return pointer to next
+    class(vegn_tile_type), intent(inout) :: self
+    type(cohort_item), pointer, intent(inout) :: item
+    type(cohort_item), pointer :: next_item
 
     ! Local variable
-    type(cohort_item), pointer :: it !iterator
-    type(cohort_item), pointer :: prev_it
+    type(cohort_item), pointer :: ptr
 
-    res => NULL()
-    it => self%heap
-    prev_it => NULL() ! Important, otherwise may otherwise still be associated from a previous call to this method!
+    next_item => null()
 
-    do while (associated(it))
-      if (it%uid == uid) then
-        res => it%next
-        if (associated(prev_it)) then
-          prev_it%next => res
-        else
-          self%heap => res
-        end if
-        deallocate(it)
-        exit
-      else
-        prev_it  => it
-        it => it%next
-      end if
-    end do
-  end function remove_cohort
+    item%cohort%deathrate = 1.0
+    ptr => remove_cohort(item%uid, self%heap)
+    if (associated(ptr)) then
+      next_item => ptr%next
+      ptr%next => null()
+      call insert_head(ptr, self%heap_killed)
+    end if
+  end function kill_cohort
 
   !==============for diagnostics============================================
   subroutine Zero_diagnostics(vegn)
@@ -786,10 +811,7 @@ contains
 
       vegn%annualfixedN = vegn%annualfixedN  + cc%annual_fluxes%fixedN * cc%nindivs
       vegn%NPPL         = vegn%NPPL          + cc%NPPleaf * cc%nindivs
-      vegn%NPPW         = vegn%NPPW          + cc%NPPwood * cc%nindivs 
-      vegn%n_deadtrees  = vegn%n_deadtrees   + cc%n_deadtrees
-      vegn%c_deadtrees  = vegn%c_deadtrees   + cc%c_deadtrees
-      vegn%m_turnover   = vegn%m_turnover    + cc%m_turnover
+      vegn%NPPW         = vegn%NPPW          + cc%NPPwood * cc%nindivs
 
       it => it%next
 

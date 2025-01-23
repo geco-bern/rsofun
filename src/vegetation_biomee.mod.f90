@@ -572,7 +572,6 @@ contains
     type(cohort_item), pointer :: it
 
     real :: deathrate ! mortality rate, 1/year
-    real :: deadtrees ! number of trees that died over the time step
 
     ! real, parameter :: min_nindivs = 1e-5 ! 2e-15 ! 1/m. If nindivs is less than this number, 
     ! then the entire cohort is killed; 2e-15 is approximately 1 individual per Earth
@@ -597,10 +596,7 @@ contains
         cc => it%cohort
 
         if (cc%layer > 1) deathrate = 0.2 !sp%mortrate_d_u
-        deadtrees = cc%nindivs * deathrate
-        call plant2soil(vegn, cc, deadtrees)
-        ! Update plant density
-        cc%nindivs = cc%nindivs - deadtrees
+        call vegn%kill_fraction(it, deathrate)
 
         it => it%next
       end do
@@ -620,13 +616,10 @@ contains
         cCAI = cCAI + cc%layerfrac()
         if (cCAI > CAI_max) then
           ! Trees to delete
-          dn = MIN((cCAI - CAI_max) / cc%crownarea(), cc%nindivs)
+          deathrate = MIN((cCAI - CAI_max) / cc%layerfrac(), 1.0)
 
           ! Carbon and Nitrogen from dead plants to soil pools
-          call plant2soil(vegn, cc, dn)
-
-          ! Update plant density
-          cc%nindivs = cc%nindivs - dn
+          call vegn%kill_fraction(it, deathrate)
         end if
 
         it => it%next
@@ -693,17 +686,10 @@ contains
         endif
 
         ! previous setup allowed death rates > 1 (hence negative ind)
-        deathrate = min(1.0, deathrate + 0.01) 
-        deadtrees = cc%nindivs * deathrate
+        deathrate = min(1.0, deathrate + 0.01)
 
-        ! record mortality rates at cohort level
-        cc%deathrate = deathrate
+        call vegn%kill_fraction(it, deathrate)
 
-        ! Carbon and Nitrogen from dead plants to soil pools
-        call plant2soil(vegn, cc, deadtrees)
-
-        ! Update plant density
-        cc%nindivs = cc%nindivs - deadtrees
         end associate
 
         it => it%next
@@ -726,90 +712,26 @@ contains
     type(vegn_tile_type), intent(inout) :: vegn
 
     ! local variables --------
-    real :: deathrate ! mortality rate, 1/year
-    real :: deadtrees ! number of trees that died over the time step
     type(cohort_type), pointer :: cc
     type(cohort_item), pointer :: it
+
+    ! Local variable
+    type(cohort_item), pointer :: ptr
 
     it => vegn%heap
     do while (associated(it))
       cc => it%cohort
-
-      ! Mortality due to starvation
-      deathrate = 0.0
      
       if (cc%plabl%c%c12 < 0.01*cc%bl_max) then
 
-        deathrate = 1.0
-        deadtrees = cc%nindivs * deathrate !individuals / m2
+        ptr => vegn%kill_cohort(it)
 
-        ! Carbon and Nitrogen from plants to soil pools
-        call plant2soil(vegn, cc, deadtrees)
-
-        ! update cohort individuals
-        cc%nindivs = 0.0 ! cc%nindivs*(1.0 - deathrate)
-
-        ! print*,'i, deadtrees', i, deadtrees
-
-      else
-        deathrate = 0.0
       endif
 
       it => it%next
     end do
-    ! Remove the cohorts with 0 individuals
-    call kill_lowdensity_cohorts( vegn )
 
   end subroutine vegn_annual_starvation
-
-
-  subroutine plant2soil(vegn, cc, deadtrees)
-    !////////////////////////////////////////////////////////////////
-    ! Transfer of deat biomass to litter pools
-    ! Code from BiomeE-Allocation
-    !---------------------------------------------------------------
-    type(vegn_tile_type), intent(inout) :: vegn
-    type(cohort_type),    intent(inout) :: cc
-    real,                 intent(in)    :: deadtrees ! dead trees/m2
-
-    ! local variables --------
-    real :: lossC_fine,lossC_coarse
-    real :: lossN_fine,lossN_coarse
-
-    associate (sp => cc%sp())
-
-      ! Carbon and Nitrogen from plants to soil pools
-      lossC_coarse  = deadtrees * &
-              (cc%pwood%c%c12 + cc%psapw%c%c12 + cc%pleaf%c%c12 - cc%leafarea() * myinterface%params_tile%LMAmin)
-      lossC_fine    = deadtrees * &
-              (cc%plabl%c%c12 + cc%pseed%c%c12 + cc%proot%c%c12 + cc%leafarea() * myinterface%params_tile%LMAmin)
-
-      lossN_coarse = deadtrees * (cc%pwood%n%n14 + cc%psapw%n%n14 + cc%pleaf%n%n14 - cc%leafarea()*sp%LNbase)
-      lossN_fine   = deadtrees * (cc%plabl%n%n14 + cc%pseed%n%n14 + cc%proot%n%n14 + cc%leafarea()*sp%LNbase)
-
-      vegn%psoil_fs%c%c12 = vegn%psoil_fs%c%c12 + myinterface%params_tile%fsc_fine * lossC_fine + &
-              myinterface%params_tile%fsc_wood * lossC_coarse
-      vegn%psoil_sl%c%c12 = vegn%psoil_sl%c%c12 + (1.0 - myinterface%params_tile%fsc_fine) * lossC_fine + &
-              (1.0-myinterface%params_tile%fsc_wood) * lossC_coarse
-
-      vegn%psoil_fs%n%n14 = vegn%psoil_fs%n%n14 + myinterface%params_tile%fsc_fine * lossN_fine + &
-              myinterface%params_tile%fsc_wood * lossN_coarse
-      vegn%psoil_sl%n%n14 = vegn%psoil_sl%n%n14 + (1.0 - myinterface%params_tile%fsc_fine) * lossN_fine + &
-              (1.0-myinterface%params_tile%fsc_wood) * lossN_coarse
-
-      ! annual N from plants to soil
-      vegn%N_P2S_yr = vegn%N_P2S_yr + lossN_fine + lossN_coarse
-
-      ! record mortality
-      ! cohort level
-      cc%n_deadtrees = lossN_coarse + lossN_fine
-      cc%c_deadtrees = lossC_coarse + lossC_fine
-      cc%m_turnover  = cc%m_turnover + cc%c_deadtrees
-
-    end associate
-
-  end subroutine plant2soil
-
 
   subroutine vegn_reproduction( vegn )
     !////////////////////////////////////////////////////////////////
@@ -949,7 +871,6 @@ contains
 
 
   subroutine relayer_cohorts( vegn )
-    use, intrinsic :: ieee_arithmetic
     !////////////////////////////////////////////////////////////////
     ! Arrange crowns into canopy layers according to their height and 
     ! crown areas.
@@ -962,8 +883,9 @@ contains
     real, parameter :: layer_vegn_cover = 1.0   ! i.e. max 1m2 vegetation per m2 ground
 
     ! local variables
-    integer :: L ! layer index (top-down)
-    real    :: frac ! fraction of the layer covered so far by the canopies
+    integer :: L        ! layer index (top-down)
+    real    :: frac     ! fraction of the layer covered so far by the canopies
+    real    :: fraction ! fraction to split off
 
     type(cohort_item), pointer :: new ! Pointer for new cohort
     type(cohort_item), pointer :: it  ! iterator
@@ -979,12 +901,6 @@ contains
     it => vegn%heap
     do while (associated(it))
 
-      if (ieee_is_nan(it%cohort%crownarea()) .or. ieee_is_nan(it%cohort%nindivs)) then
-        ! If the cohort has NA we skip it
-        it => vegn%remove_cohort(it%uid)
-        cycle
-      end if
-
       ! We set the layer
       it%cohort%layer = L
       if (L == 1) then
@@ -998,12 +914,8 @@ contains
         ! If the current cohort does not fit in the remaining fraction on the layer,
         ! we add a copy of the cohort to the new cohort list
 
-        ! If the densities are sufficient we split the cohort in two
-        ! This check is meant to prevent creating very small cohorts which will be killed in kill_low_density_cohort
-        new => vegn%new_cohort()
-        new%cohort = it%cohort
-        new%cohort%nindivs = (layer_vegn_cover - frac) / it%cohort%crownarea()
-        it%cohort%nindivs = it%cohort%nindivs - new%cohort%nindivs
+        fraction = (layer_vegn_cover - frac) / it%cohort%layerfrac()
+        call vegn%split(it, fraction)
 
         ! We keep it as we want to continue processing it at the next iteration
         ! Since the current layer is filled-up, we open-up a new fraction
@@ -1408,9 +1320,8 @@ contains
       it2 => it1%next
       do while (associated(it2))
         if (cohorts_can_be_merged(it1%cohort, it2%cohort)) then
-          call it1%cohort%merge_in(it2%cohort)
+          it2 => vegn%merge(it1, it2)
           call init_bl_br(it1%cohort)
-          it2 => vegn%remove_cohort(it2%uid)
         else
           it2 => it2%next
         end if
@@ -1453,8 +1364,7 @@ contains
             it => it%next
           else
             ! if the density is below the threshold, we kill it.
-            call plant2soil(vegn, it%cohort, it%cohort%nindivs)
-            it => vegn%remove_cohort(it%uid)
+            it => vegn%kill_cohort(it)
           end if
       end do
     end if
@@ -1493,8 +1403,7 @@ contains
         associate(sp=>it%cohort%sp())
           OldGrass = (sp%lifeform == 0 .and. it%cohort%age > 3.0)
           if (OldGrass) then
-            call plant2soil(vegn, it%cohort, it%cohort%nindivs)
-            it => vegn%remove_cohort(it%uid)
+            it => vegn%kill_cohort(it)
           else
             it => it%next
           end if

@@ -2,7 +2,8 @@ module md_cohort_linked_list
   !////////////////////////////////////////////////////////////////
   ! Module containing cohort linked list
   !----------------------------------------------------------------
-  use md_cohort
+  ! Do NOT import anything else!
+  use md_cohort, only: cohort_type
 
   ! define data types and constants
   implicit none
@@ -11,14 +12,14 @@ module md_cohort_linked_list
   public :: cohort_item
 
   !=============== Public procedures ===========================================================
-  public :: next_uid, reset_uid
+  public :: create_cohort, reset_uid, destroy_all, destroy_cohort, sort_cohorts, remove_cohort
 
   integer, private :: CurrentCohortUid = 0
 
   type :: cohort_item
     integer :: uid ! Unique id. To be filled with 'new_uid()'
-    type(cohort_type) :: cohort
-    type(cohort_item), pointer :: next => NULL() ! Pointer to next cohort_item. Important to nullify here!
+    type(cohort_type) :: cohort ! This value should NEVER be used within this file
+    type(cohort_item), pointer :: next => null() ! Pointer to next cohort_item. Important to nullify here!
 
     contains
 
@@ -28,13 +29,13 @@ module md_cohort_linked_list
 
 contains
 
-  subroutine reset_uid()
-    ! Call this method once when starting a new simulation
-
-    CurrentCohortUid = 0
-  end subroutine reset_uid
+  !!!!========= ATTENTION ============!!!
+  ! The functions below are notoriously difficult to implement properly.
+  ! Be sure to know what you are doing before doing any change, and be sure to
+  ! thoroughly test each function which you modify!
 
   function has_next(self) result(res)
+    ! Returns true if this element is followed by another item
     logical :: res
     class(cohort_item) :: self
 
@@ -42,10 +43,175 @@ contains
   end function has_next
 
   function next_uid() result(res)
-  integer :: res
+    ! Get the next unique ID
+    ! Should be called when creating new elements
+    integer :: res
 
-  CurrentCohortUid = CurrentCohortUid + 1
-  res = CurrentCohortUid
-end function next_uid
+    CurrentCohortUid = CurrentCohortUid + 1
+    res = CurrentCohortUid
+  end function next_uid
+
+  function create_cohort() result(new_cohort)
+    ! Create a new cohort
+    type(cohort_item), pointer :: new_cohort
+
+    new_cohort => null()
+    allocate(new_cohort)
+    new_cohort%uid = next_uid()
+
+  end function create_cohort
+
+  subroutine reset_uid()
+    ! Reset the uinique ID counter
+    ! Call this method once when starting a new simulation
+
+    CurrentCohortUid = 0
+  end subroutine reset_uid
+
+  subroutine destroy_all(chain)
+    ! Destroy the provided chain.
+    ! Follow all the element of a chain, freeing the memory for each.
+    ! After the subroutine has returned, the parameter takes the value null().
+    type(cohort_item), pointer, intent(inout) :: chain
+
+    ! Local variable
+    type(cohort_item), pointer :: ptr
+
+    do while (associated(chain))
+      ptr => chain
+      chain => ptr%next
+      deallocate(ptr)
+      ptr => null()
+    end do
+  end subroutine
+
+  subroutine sort_cohorts(linked_list, increasing, func)
+    ! Low-level implementation for sorting cohort
+    ! The cohort order is defined by applying the function 'func' to the cohorts and comparing these values
+    ! between themselves.
+    ! 'increasing' defines if the values should be ranked by increasing order.
+
+    use, intrinsic :: ieee_arithmetic
+
+    interface
+      function func_sort(item) result(res)
+        import :: cohort_item
+        type(cohort_item) :: item
+        real :: res
+      end function func_sort
+    end interface
+
+    type(cohort_item), pointer, intent(inout) :: linked_list
+    logical, intent(in) :: increasing
+    procedure(func_sort) :: func
+
+    ! Local variable
+    type(cohort_item), pointer :: selected_item
+    type(cohort_item), pointer :: selected_prev ! Pointer to parent of node pointed by 'selected_item'
+    type(cohort_item), pointer :: old_cohorts
+    type(cohort_item), pointer :: it !iterator
+    type(cohort_item), pointer :: prev ! Pointer to parent of node pointed by 'it'
+    logical :: new_winner
+    real :: selected_value, current_value ! cache variable
+    old_cohorts => linked_list
+    linked_list => null()
+
+    ! Repeat until the old list is empty
+    do while (associated(old_cohorts))
+      it => old_cohorts
+      ! We reset the pointers
+      prev => null()
+      selected_item => null()
+      selected_prev => null()
+      ! We pick the smallest element of the old list
+      do while (associated(it))
+        current_value = func(it)
+        if (ieee_is_nan(current_value)) then
+          ! If the cohort has NA we skip it
+          it => remove_cohort(it%uid, old_cohorts)
+          cycle
+        end if
+        ! The use of new_winner below is meant at implementing the following offending line:
+        ! if ((.not. associated(selected_item)) .or. (increasing .neqv. (it%cohort%height() < selected_item%cohort%height()))) then
+        ! The line above works fine with -O2, but fails in -O0 as the compiler then evaluate both terms, which creates a
+        ! segfault in case selected_item is not associated.
+        new_winner = .not. associated(selected_item)
+        if (.not. new_winner) new_winner = (increasing .neqv. (current_value < selected_value))
+        if (new_winner) then
+          selected_item => it
+          selected_prev => prev
+          selected_value = current_value
+        end if
+        prev => it
+        it => it%next
+      end do
+
+      ! We remove it from the old list
+      if (associated(selected_prev)) then
+        selected_prev%next => selected_item%next
+      else
+        old_cohorts => selected_item%next
+      end if
+
+      ! We insert it in the head
+      selected_item%next => linked_list
+      linked_list => selected_item
+
+    end do
+  end subroutine sort_cohorts
+
+  function remove_cohort(uid, linked_list) result(next_item)
+    ! Remove item with uid and return next item in the list
+    ! or NULL if no item was removed (or no item follows in the list)
+    integer, intent(in) :: uid
+    type(cohort_item), pointer, intent(inout) :: linked_list
+    type(cohort_item), pointer :: next_item
+
+    ! Local variable
+    type(cohort_item), pointer :: it !iterator
+    type(cohort_item), pointer :: prev_it
+
+    next_item => null()
+    it => linked_list
+    prev_it => null() ! Important, otherwise may otherwise still be associated from a previous call to this method!
+
+    do while (associated(it))
+      if (it%uid == uid) then
+        next_item => it%next
+        if (associated(prev_it)) then
+          ! We plug the previous item on the next
+          prev_it%next => next_item
+        else
+          ! Or we plug the head if it was the first element
+          linked_list => next_item
+        end if
+        next_item => it
+        exit
+      else
+        prev_it  => it
+        it => it%next
+      end if
+    end do
+  end function remove_cohort
+
+  function destroy_cohort(item, linked_list) result(next_item)
+    ! Destroy item and return next item in the list
+    ! or NULL if no item was removed (or no item follows in the list)
+    type(cohort_item), pointer :: next_item
+    type(cohort_item), pointer, intent(inout) :: item
+    type(cohort_item), pointer, intent(inout) :: linked_list
+
+    ! Local variable
+    type(cohort_item), pointer :: ptr
+
+    ptr => remove_cohort(item%uid, linked_list)
+    if (associated(ptr)) then
+      next_item => ptr%next
+      deallocate(ptr)
+      ptr => null()
+    else
+      next_item => null()
+    end if
+  end function destroy_cohort
 
 end module md_cohort_linked_list

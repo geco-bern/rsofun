@@ -344,7 +344,7 @@ contains
     deallocate(myinterface%params_species)
     deallocate(myinterface%init_cohort)
     do idx = 1, n_lu
-      call vegn_tiles(idx)%clean()
+      call vegn_tiles(idx)%shut_down()
     end do
 
 
