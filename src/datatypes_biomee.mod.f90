@@ -275,7 +275,7 @@ contains
     next_item => destroy_cohort(c2, self%heap)
   end function merge_cohorts
 
-  subroutine kill_fraction(self, item, deathrate)
+  function kill_fraction(self, item, deathrate) result(next_item)
     ! Kill fraction 'fraction' of cohort of uid 'uid'
     ! This creates a new cohort in 'heap_killed' with nindivis = cohort%nindivis * fraction
     ! And the original cohort is the complement: nindivis = cohort%nindivis * (1-fraction)
@@ -284,15 +284,15 @@ contains
     class(vegn_tile_type), intent(inout) :: self
     type(cohort_item), pointer, intent(inout) :: item
     real, intent(in) :: deathrate
+    type(cohort_item), pointer :: next_item
 
     ! Local variables
     type(cohort_item), pointer :: killed
-    type(cohort_item), pointer :: ptr
 
     if (deathrate <= 0.0) then
-      return
+      next_item => null()
     elseif (deathrate >= 1.0) then
-      ptr => self%kill_cohort(item)
+      next_item => self%kill_cohort(item)
     else
 
       killed => self%new_cohort(.true.)
@@ -301,9 +301,10 @@ contains
       item%cohort%nindivs = item%cohort%nindivs - killed%cohort%nindivs
       item%cohort%deathrate = deathrate ! deathrate having affected this cohort
       killed%cohort%nindivs = deathrate ! deathrate having spawned this killed_cohort
+      next_item => item%next()
 
     end if
-  end subroutine kill_fraction
+  end function kill_fraction
 
   subroutine shut_down(self)
     ! Free all allocated memory
@@ -350,16 +351,7 @@ contains
     integer :: res
     class(vegn_tile_type) :: self
 
-    ! Local variable
-    type(cohort_item), pointer :: it ! iterator
-
-    res = 0
-
-    it => self%heap
-    do while (associated(it))
-      res = res + 1
-      it => it%next()
-    end do
+    res = length(self%heap)
   end function n_cohorts
 
   function new_cohort(self, killed) result(new_item)
@@ -389,18 +381,9 @@ contains
     type(cohort_item), pointer, intent(inout) :: item
     type(cohort_item), pointer :: next_item
 
-    ! Local variable
-    type(cohort_item), pointer :: ptr
-
-    next_item => null()
-
     item%cohort%deathrate = 1.0
-    ptr => detach_cohort(item%uid, self%heap)
-    if (associated(ptr)) then
-      next_item => ptr%next()
-      ptr%next_ptr => null()
-      call insert_head(ptr, self%heap_killed)
-    end if
+    next_item => detach_cohort(item, self%heap)
+    call insert_head(item, self%heap_killed)
   end function kill_cohort
 
   !==============for diagnostics============================================

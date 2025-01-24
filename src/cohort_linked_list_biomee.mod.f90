@@ -12,13 +12,13 @@ module md_cohort_linked_list
   public :: cohort_item
 
   !=============== Public procedures ===========================================================
-  public :: create_cohort, reset_uid, destroy_all, destroy_cohort, sort_cohorts, detach_cohort, insert_head
+  public :: create_cohort, reset_uid, destroy_all, destroy_cohort, sort_cohorts, detach_cohort, insert_head, length
 
   integer, private :: CurrentCohortUid = 0
 
   type :: abstract_linked_list
 
-    type(cohort_item), pointer :: next_ptr => null() ! Pointer to next cohort_item. Important to nullify here!
+    type(cohort_item), private, pointer :: next_ptr => null() ! Pointer to next cohort_item. Important to nullify here!
 
     contains
 
@@ -29,7 +29,7 @@ module md_cohort_linked_list
 
   type, extends(abstract_linked_list) :: cohort_item
     integer :: uid ! Unique id. To be filled with 'new_uid()'
-    type(cohort_type) :: cohort ! This value should NEVER be used within this file
+    type(cohort_type) :: cohort
   end type cohort_item
 
 contains
@@ -54,6 +54,23 @@ contains
 
     res = associated(self%next_ptr)
   end function has_next
+
+  function length(linked_list) result(res)
+    ! Returns the current number of cohorts
+    integer :: res
+    type(cohort_item), pointer, intent(in) :: linked_list
+
+    ! Local variable
+    type(cohort_item), pointer :: it ! iterator
+
+    res = 0
+
+    it => linked_list
+    do while (associated(it))
+      res = res + 1
+      it => it%next()
+    end do
+  end function length
 
   function next_uid() result(res)
     ! Get the next unique ID
@@ -173,12 +190,12 @@ contains
     end do
   end subroutine sort_cohorts
 
-  function detach_cohort(uid, linked_list) result(next_item)
+  function detach_cohort(item, linked_list) result(next_item)
     ! Remove given item and return next item in the list
     ! or NULL if it was not found (or no item follows in the list)
     ! Attention, the item is not deleted from memory. Use destroy_cohort for this.
     ! ATTENTION: The provided item's next element is set to NULL, even if it was not found.
-    integer, intent(in) :: uid
+    type(cohort_item), pointer, intent(in) :: item
     type(cohort_item), pointer, intent(inout) :: linked_list
     type(cohort_item), pointer :: next_item
 
@@ -187,26 +204,38 @@ contains
     type(cohort_item), pointer :: prev_it
 
     next_item => null()
-    it => linked_list
-    prev_it => null() ! Important, otherwise may otherwise still be associated from a previous call to this method!
 
-    do while (associated(it))
-      if (it%uid == uid) then
-        next_item => it%next_ptr
-        if (associated(prev_it)) then
-          ! We plug the previous item on the next
-          prev_it%next_ptr => next_item
+    if (associated(item)) then
+
+      it => linked_list
+      prev_it => null() ! Important, otherwise may otherwise still be associated from a previous call to this method!
+
+      do while (associated(it))
+        if (associated(it, item)) then
+          next_item => it%next_ptr
+          if (associated(prev_it)) then
+            ! We plug the previous item on the next
+            prev_it%next_ptr => next_item
+          else
+            ! Or we plug the head if it was the first element
+            linked_list => next_item
+          end if
+          exit
         else
-          ! Or we plug the head if it was the first element
-          linked_list => next_item
+          prev_it => it
+          it => it%next_ptr
         end if
-        next_item => it
-        exit
-      else
-        prev_it  => it
-        it => it%next_ptr
-      end if
-    end do
+      end do
+
+      ! Commenting the code below may help detecting pointer issues
+      !if (.not. associated(it)) then
+      !  PRINT *, 'NOT FOUND'
+      !  STOP *, item%uid
+      !end if
+
+      ! We set next pointer to NULL in the detached item.
+      item%next_ptr => null()
+    endif
   end function detach_cohort
 
   function destroy_cohort(item, linked_list) result(next_item)
@@ -216,16 +245,10 @@ contains
     type(cohort_item), pointer, intent(inout) :: item
     type(cohort_item), pointer, intent(inout) :: linked_list
 
-    ! Local variable
-    type(cohort_item), pointer :: ptr
-
-    ptr => detach_cohort(item%uid, linked_list)
-    if (associated(ptr)) then
-      next_item => ptr%next_ptr
-      deallocate(ptr)
-      ptr => null()
-    else
-      next_item => null()
+    next_item => detach_cohort(item, linked_list)
+    if (associated(item)) then
+      deallocate(item)
+      item => null()
     end if
   end function destroy_cohort
 

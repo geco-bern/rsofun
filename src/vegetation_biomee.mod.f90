@@ -592,9 +592,7 @@ contains
         cc => it%cohort
 
         if (cc%layer > 1) deathrate = 0.2 !sp%mortrate_d_u
-        call vegn%kill_fraction(it, deathrate)
-
-        it => it%next()
+        it => vegn%kill_fraction(it, deathrate)
       end do
 
       ! set calibratable mortality parameter
@@ -615,10 +613,10 @@ contains
           deathrate = MIN((cCAI - CAI_max) / cc%layerfrac(), 1.0)
 
           ! Carbon and Nitrogen from dead plants to soil pools
-          call vegn%kill_fraction(it, deathrate)
+          it => vegn%kill_fraction(it, deathrate)
+        else
+          it => it%next()
         end if
-
-        it => it%next()
       enddo
  
     else
@@ -684,11 +682,9 @@ contains
         ! previous setup allowed death rates > 1 (hence negative ind)
         deathrate = min(1.0, deathrate + 0.01)
 
-        call vegn%kill_fraction(it, deathrate)
+        it => vegn%kill_fraction(it, deathrate)
 
         end associate
-
-        it => it%next()
       end do
 
     endif
@@ -711,20 +707,15 @@ contains
     type(cohort_type), pointer :: cc
     type(cohort_item), pointer :: it
 
-    ! Local variable
-    type(cohort_item), pointer :: ptr
-
     it => vegn%heap
     do while (associated(it))
       cc => it%cohort
      
       if (cc%plabl%c%c12 < 0.01*cc%bl_max) then
-
-        ptr => vegn%kill_cohort(it)
-
+        it => vegn%kill_cohort(it)
+      else
+        it => it%next()
       endif
-
-      it => it%next()
     end do
 
   end subroutine vegn_annual_starvation
