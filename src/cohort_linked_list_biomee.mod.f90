@@ -44,10 +44,10 @@ module md_cohort_linked_list
     procedure length
     procedure head
     procedure :: destroy_all
-    procedure :: detach_cohort
-    procedure :: destroy_cohort
+    procedure :: detach_item
+    procedure :: destroy_item
     procedure :: insert_item
-    procedure :: sort_cohorts
+    procedure :: sort
     procedure, private :: next_uid
 
   end type cohort_pool
@@ -149,7 +149,7 @@ contains
     end do
   end subroutine
 
-  subroutine sort_cohorts(self, increasing, func)
+  subroutine sort(self, increasing, func)
     ! Sort items given a function 'func' mapping an item to a real value.
     ! 'increasing' defines if the values should be ranked by increasing order.
 
@@ -182,7 +182,7 @@ contains
     do while (associated(it))
       if (ieee_is_nan(func(it))) then
         ! If the cohort has NA we skip it
-        it => self%destroy_cohort(it)
+        it => self%destroy_item(it)
       else
         it => it%next()
       end if
@@ -228,12 +228,12 @@ contains
       self%head_internal => selected_item
 
     end do
-  end subroutine sort_cohorts
+  end subroutine sort
 
-  function detach_cohort(self, item) result(next_item)
+  function detach_item(self, item) result(next_item)
     ! Remove given item and return next item in the list
     ! or NULL if it was not found (or no item follows in the list)
-    ! Attention, the item is not deleted from memory. Use destroy_cohort for this.
+    ! Attention, the item is not deleted from memory. Use destroy_item for this.
     ! ATTENTION: The provided item's next element is set to NULL, even if it was not found.
     class(cohort_pool), intent(inout) :: self
     type(cohort_item), pointer, intent(in) :: item
@@ -276,24 +276,24 @@ contains
       ! We set next pointer to NULL in the detached item.
       item%next_ptr => null()
     endif
-  end function detach_cohort
+  end function detach_item
 
-  function destroy_cohort(self, item) result(next_item)
+  function destroy_item(self, item) result(next_item)
     ! Destroy item and return next item in the list
     ! or NULL if no item was removed (or no item follows in the list)
     class(cohort_pool), intent(inout) :: self
     type(cohort_item), pointer :: next_item
     type(cohort_item), pointer, intent(inout) :: item
 
-    next_item => self%detach_cohort(item)
+    next_item => self%detach_item(item)
     if (associated(item)) then
       deallocate(item)
       item => null()
     end if
-  end function destroy_cohort
+  end function destroy_item
 
   subroutine insert_item(self, new_item)
-    ! Prepend a new cohort to the list and return its pointer
+    ! Prepend a new item to the head of the list and return its pointer
     class(cohort_pool), intent(inout) :: self
     type(cohort_item), pointer, intent(in) :: new_item
 

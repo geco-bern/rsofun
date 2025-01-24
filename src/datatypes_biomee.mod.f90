@@ -198,7 +198,7 @@ module datatypes_biomee
     procedure kill_fraction
     procedure kill_cohort
     procedure merge_cohorts
-    procedure split
+    procedure split_cohort
     procedure, private :: plant2soil
 
   end type vegn_tile_type
@@ -252,7 +252,7 @@ contains
 
   end subroutine plant2soil
 
-  subroutine split(self, item, fraction)
+  subroutine split_cohort(self, item, fraction)
     class(vegn_tile_type) :: self
     type(cohort_item), pointer :: item, new
     real :: fraction
@@ -261,7 +261,7 @@ contains
     new%cohort = item%cohort
     new%cohort%nindivs = item%cohort%nindivs * fraction
     item%cohort%nindivs = item%cohort%nindivs - new%cohort%nindivs
-  end subroutine split
+  end subroutine split_cohort
 
   function merge_cohorts(self, c1, c2) result(next_item)
     ! Merge cohort c2 into c1 and return item following c2
@@ -271,7 +271,7 @@ contains
 
 
     call c1%cohort%merge_in(c2%cohort)
-    next_item => self%cohorts%destroy_cohort(c2)
+    next_item => self%cohorts%destroy_item(c2)
   end function merge_cohorts
 
   function kill_fraction(self, item, deathrate) result(next_item)
@@ -323,7 +323,7 @@ contains
     class(vegn_tile_type) :: self
     logical :: increasing
 
-    call self%cohorts%sort_cohorts(increasing, get_height)
+    call self%cohorts%sort(increasing, get_height)
 
   end subroutine sort_cohorts_by_height
 
@@ -339,7 +339,7 @@ contains
     class(vegn_tile_type) :: self
     logical :: increasing
 
-    call self%cohorts%sort_cohorts(increasing, get_uid)
+    call self%cohorts%sort(increasing, get_uid)
 
   end subroutine sort_cohorts_by_uid
 
@@ -379,7 +379,7 @@ contains
     type(cohort_item), pointer :: next_item
 
     item%cohort%deathrate = 1.0
-    next_item => self%cohorts%detach_cohort(item)
+    next_item => self%cohorts%detach_item(item)
     call self%killed_cohorts%insert_item(item)
   end function kill_cohort
 

@@ -900,7 +900,7 @@ contains
         ! we add a copy of the cohort to the new cohort list
 
         fraction = (layer_vegn_cover - frac) / it%cohort%layerfrac()
-        call vegn%split(it, fraction)
+        call vegn%split_cohort(it, fraction)
 
         ! We keep it as we want to continue processing it at the next iteration
         ! Since the current layer is filled-up, we open-up a new fraction
