@@ -32,6 +32,7 @@ module md_cohort_linked_list
     contains
 
     procedure uid
+    procedure clone
 
   end type cohort_item
 
@@ -43,11 +44,11 @@ module md_cohort_linked_list
 
     procedure length
     procedure head
-    procedure :: destroy_all
-    procedure :: detach_item
-    procedure :: destroy_item
-    procedure :: insert_item
-    procedure :: sort
+    procedure destroy_all
+    procedure detach_item
+    procedure destroy_item
+    procedure insert_item
+    procedure sort
     procedure, private :: next_uid
 
   end type cohort_stack
@@ -66,6 +67,29 @@ contains
 
     res = self%uid_internal
   end function uid
+
+  function clone(self, keep_uid) result(ptr)
+    ! Clone this item.
+    ! If keep_uid is true, the uid is also copied (default: false)
+    ! Note: to create a new cohort from scratch, use new_cohort() instead.
+    class(cohort_item), intent(in) :: self
+    logical, optional, intent(in) :: keep_uid
+    logical :: keep_uid_opt
+
+    ! Local variable
+    type(cohort_item), pointer :: ptr
+
+    keep_uid_opt = .false.
+
+    if (present(keep_uid)) keep_uid_opt = keep_uid
+
+    ptr => create_cohort()
+    ptr%cohort = self%cohort
+    if (keep_uid_opt) then
+      ptr%uid_internal = self%uid_internal
+    end if
+
+  end function clone
 
   function next(self) result(next_item)
     ! Returns the next item, or NULL if none.
@@ -153,8 +177,6 @@ contains
     ! Sort items given a function 'func' mapping an item to a real value.
     ! 'increasing' defines if the values should be ranked by increasing order.
 
-    use, intrinsic :: ieee_arithmetic
-
     interface
       function func_sort(item) result(res)
         import :: cohort_item
@@ -176,17 +198,6 @@ contains
     logical :: new_winner
     real :: selected_value, current_value ! cache variable
 
-    ! We start by deleting malformed items
-    ! Is that really necessary???
-    it => self%head_internal
-    do while (associated(it))
-      if (ieee_is_nan(func(it))) then
-        ! If the cohort has NA we skip it
-        it => self%destroy_item(it)
-      else
-        it => it%next()
-      end if
-    end do
 
     old_cohorts => self%head_internal
     self%head_internal => null()

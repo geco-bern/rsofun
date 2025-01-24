@@ -254,13 +254,15 @@ contains
   end subroutine plant2soil
 
   subroutine split_cohort(self, item, fraction)
+    ! Split a cohort into two. The initial cohort gets scaled by (1 - fraction),
+    ! while a newly created cohort, inserted in the cohort list, gets the complement (fraction).
     class(vegn_tile_type) :: self
     type(cohort_item), pointer :: item, new
     real :: fraction
 
-    new => self%new_cohort()
-    new%cohort = item%cohort
+    new => item%clone()
     new%cohort%nindivs = item%cohort%nindivs * fraction
+    call self%cohort_list%insert_item(new)
     item%cohort%nindivs = item%cohort%nindivs - new%cohort%nindivs
   end subroutine split_cohort
 
@@ -309,12 +311,12 @@ contains
     elseif (frac >= 1.0) then
       next_item => self%kill_cohort(item)
     else
-      killed => self%new_cohort(.true.)
-      killed%cohort = item%cohort
+      killed => item%clone(.true.)
       killed%cohort%nindivs = item%cohort%nindivs * frac
+      killed%cohort%deathrate = frac ! fraction having spawned this killed_cohort
+      call self%killed_cohort_list%insert_item(killed)
       item%cohort%nindivs = item%cohort%nindivs - killed%cohort%nindivs
       item%cohort%deathrate = frac ! fraction having affected this cohort
-      killed%cohort%deathrate = frac ! fraction having spawned this killed_cohort
       next_item => item%next()
     end if
   end function thin_cohort
@@ -367,24 +369,13 @@ contains
     res = self%cohort_list%length()
   end function n_cohorts
 
-  function new_cohort(self, killed) result(new_item)
+  function new_cohort(self) result(new_item)
     ! Insert a new cohort at the head of the list and return its pointer.
-    ! If 'killed' is set, the cohort is inserted in 'killed_cohorts' rather than 'cohorts'.
     type(cohort_item), pointer :: new_item
     class(vegn_tile_type) :: self
-    logical, optional :: killed
-    logical :: killed_opt
-
-    killed_opt = .false.
-
-    if(present(killed)) killed_opt = killed
 
     new_item => create_cohort()
-    if (killed_opt) then
-      call self%killed_cohort_list%insert_item(new_item)
-    else
-      call self%cohort_list%insert_item(new_item)
-    end if
+    call self%cohort_list%insert_item(new_item)
 
   end function new_cohort
 
