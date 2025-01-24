@@ -52,7 +52,7 @@ module datatypes_biomee
   real, parameter :: CN0metabolicL                       = 15.0
   real, parameter :: CN0structuralL                      = 40.0
 
-  !===== deathrate = mortrate_d_u * (1+A*exp(B*DBH))/(1+exp(B*DBH))
+  !===== fraction = mortrate_d_u * (1+A*exp(B*DBH))/(1+exp(B*DBH))
   real, parameter  :: A_mort     = 9.0    ! A coefficient in understory mortality rate correction, 1/year
   real, parameter  :: B_mort     = -60.0  ! B coefficient in understory mortality rate correction, 1/m
 
@@ -77,9 +77,9 @@ module datatypes_biomee
     ! Linked list of cohorts
     ! Cohorts should not assumed to be ranked in any specific order.
     ! Use sort_cohorts_by_height() or implement a method following the same principle if needed.
-    type(cohort_pool) :: cohorts
+    type(cohort_stack), private :: cohort_list
     ! Linked list of killed cohort for diagnostics purpose. It is empied at the end of each year.
-    type(cohort_pool) :: killed_cohorts
+    type(cohort_stack), private :: killed_cohort_list
 
     !===== Tile-level forest inventory information
     real    :: area                               ! m2
@@ -191,14 +191,15 @@ module datatypes_biomee
     contains
 
     procedure n_cohorts
+    procedure cohorts
     procedure new_cohort
     procedure sort_cohorts_by_height
     procedure sort_cohorts_by_uid
     procedure shut_down
-    procedure kill_fraction
-    procedure kill_cohort
+    procedure thin_cohort
     procedure merge_cohorts
     procedure split_cohort
+    procedure, private :: kill_cohort
     procedure, private :: plant2soil
 
   end type vegn_tile_type
@@ -271,44 +272,59 @@ contains
 
 
     call c1%cohort%merge_in(c2%cohort)
-    next_item => self%cohorts%destroy_item(c2)
+    next_item => self%cohort_list%destroy_item(c2)
   end function merge_cohorts
 
-  function kill_fraction(self, item, deathrate) result(next_item)
-    ! Kill fraction 'fraction' of cohort of uid 'uid'
-    ! This creates a new cohort in 'killed_cohorts' with nindivis = cohort%nindivis * fraction
+  function cohorts(self) result(head_cohort)
+    ! Return the head of the cohort list for iteration purpose.
+    class(vegn_tile_type), intent(inout) :: self
+    type(cohort_item), pointer :: head_cohort
+
+    head_cohort => self%cohort_list%head()
+  end function cohorts
+
+  function thin_cohort(self, item, fraction) result(next_item)
+    ! Thin the provided cohort by applying a deathrate = 'fraction'.
+    ! By default fraction = 1.0, which means that the whole cohort disappears.
+    !
+    ! Implementation details:
+    ! This creates a new cohort in 'killed_cohort_list' with nindivis = cohort%nindivis * fraction
     ! And the original cohort is the complement: nindivis = cohort%nindivis * (1-fraction)
     ! If fraction is 0, nothing happens.
     ! If fraction is 1, the cohort is moved from cohorts to killed_cohorts.
     class(vegn_tile_type), intent(inout) :: self
     type(cohort_item), pointer, intent(inout) :: item
-    real, intent(in) :: deathrate
+    real, optional, intent(in) :: fraction
     type(cohort_item), pointer :: next_item
 
     ! Local variables
     type(cohort_item), pointer :: killed
+    real :: frac
 
-    if (deathrate <= 0.0) then
+    frac = 1.0
+    if (present(fraction)) frac = fraction
+
+    if (frac <= 0.0) then
       next_item => null()
-    elseif (deathrate >= 1.0) then
+    elseif (frac >= 1.0) then
       next_item => self%kill_cohort(item)
     else
       killed => self%new_cohort(.true.)
       killed%cohort = item%cohort
-      killed%cohort%nindivs = item%cohort%nindivs * deathrate
+      killed%cohort%nindivs = item%cohort%nindivs * frac
       item%cohort%nindivs = item%cohort%nindivs - killed%cohort%nindivs
-      item%cohort%deathrate = deathrate ! deathrate having affected this cohort
-      killed%cohort%nindivs = deathrate ! deathrate having spawned this killed_cohort
+      item%cohort%deathrate = frac ! fraction having affected this cohort
+      killed%cohort%deathrate = frac ! fraction having spawned this killed_cohort
       next_item => item%next()
     end if
-  end function kill_fraction
+  end function thin_cohort
 
   subroutine shut_down(self)
     ! Free all allocated memory
     class(vegn_tile_type) :: self
 
-    call self%cohorts%destroy_all()
-    call self%killed_cohorts%destroy_all()
+    call self%cohort_list%destroy_all()
+    call self%killed_cohort_list%destroy_all()
   end subroutine shut_down
 
   function get_height(item) result(res)
@@ -323,7 +339,7 @@ contains
     class(vegn_tile_type) :: self
     logical :: increasing
 
-    call self%cohorts%sort(increasing, get_height)
+    call self%cohort_list%sort(increasing, get_height)
 
   end subroutine sort_cohorts_by_height
 
@@ -339,7 +355,7 @@ contains
     class(vegn_tile_type) :: self
     logical :: increasing
 
-    call self%cohorts%sort(increasing, get_uid)
+    call self%cohort_list%sort(increasing, get_uid)
 
   end subroutine sort_cohorts_by_uid
 
@@ -348,7 +364,7 @@ contains
     integer :: res
     class(vegn_tile_type) :: self
 
-    res = self%cohorts%length()
+    res = self%cohort_list%length()
   end function n_cohorts
 
   function new_cohort(self, killed) result(new_item)
@@ -365,9 +381,9 @@ contains
 
     new_item => create_cohort()
     if (killed_opt) then
-      call self%killed_cohorts%insert_item(new_item)
+      call self%killed_cohort_list%insert_item(new_item)
     else
-      call self%cohorts%insert_item(new_item)
+      call self%cohort_list%insert_item(new_item)
     end if
 
   end function new_cohort
@@ -379,8 +395,8 @@ contains
     type(cohort_item), pointer :: next_item
 
     item%cohort%deathrate = 1.0
-    next_item => self%cohorts%detach_item(item)
-    call self%killed_cohorts%insert_item(item)
+    next_item => self%cohort_list%detach_item(item)
+    call self%killed_cohort_list%insert_item(item)
   end function kill_cohort
 
   !==============for diagnostics============================================
@@ -412,7 +428,7 @@ contains
     vegn%n_deadtrees  = 0.0
     vegn%c_deadtrees  = 0.0
 
-    it => vegn%cohorts%head()
+    it => vegn%cohorts()
     do while (associated(it))
       call it%cohort%reset_cohort()
       it => it%next()
@@ -471,7 +487,7 @@ contains
     vegn%MaxVolume  = 0.0
     vegn%MaxDBH     = 0.0
 
-    it => vegn%cohorts%head()
+    it => vegn%cohorts()
     do while (associated(it))
       cc => it%cohort
 
@@ -540,7 +556,7 @@ contains
     vegn%N_uptake = 0.0
     vegn%fixedN   = 0.0
 
-    it => vegn%cohorts%head()
+    it => vegn%cohorts()
     do while (associated(it))
       cc => it%cohort
 
@@ -595,7 +611,7 @@ contains
     type(cohort_type), pointer :: cc
     type(cohort_item), pointer :: it
 
-    it => vegn%cohorts%head()
+    it => vegn%cohorts()
     do while (associated(it))
       cc => it%cohort
 
@@ -687,7 +703,7 @@ contains
     i = 0
 
     ! Cohorts ouput
-    it => vegn%cohorts%head()
+    it => vegn%cohorts()
     do while (associated(it))
       cc => it%cohort
 
@@ -751,7 +767,7 @@ contains
     vegn%c_deadtrees = 0
     vegn%m_turnover  = 0
 
-    it => vegn%cohorts%head()
+    it => vegn%cohorts()
     do while (associated(it))
 
       cc => it%cohort
@@ -852,7 +868,7 @@ contains
     integer :: i
 
     ! Cohorts ouput
-    it => vegn%cohorts%head()
+    it => vegn%cohorts()
     do while (associated(it))
       cc => it%cohort
       do i = 1, NCohortMax
@@ -871,7 +887,7 @@ contains
     vegn%c_deadtrees = 0
     vegn%m_turnover  = 0
 
-    it => vegn%cohorts%head()
+    it => vegn%cohorts()
     do while (associated(it))
       cc => it%cohort
       vegn%n_deadtrees  = vegn%n_deadtrees   + cc%n_deadtrees

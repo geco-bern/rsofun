@@ -9,12 +9,12 @@ module md_cohort_linked_list
   implicit none
   private
   !=============== Public types ===========================================================
-  public :: cohort_item, cohort_pool
+  public :: cohort_item, cohort_stack
 
   !=============== Public procedures ===========================================================
   public :: create_cohort
 
-  type :: cohort_pool_item
+  type :: cohort_stack_item
 
     type(cohort_item), private, pointer :: next_ptr => null() ! Pointer to next cohort_item. Important to nullify here!
 
@@ -23,9 +23,9 @@ module md_cohort_linked_list
     procedure has_next
     procedure next
 
-  end type cohort_pool_item
+  end type cohort_stack_item
 
-  type, extends(cohort_pool_item) :: cohort_item
+  type, extends(cohort_stack_item) :: cohort_item
     integer, private :: uid_internal = 0 ! Unique id. It is automatically set when inserted in a linked_list if 0.
     type(cohort_type) :: cohort
 
@@ -35,7 +35,7 @@ module md_cohort_linked_list
 
   end type cohort_item
 
-  type :: cohort_pool
+  type :: cohort_stack
     integer, private :: current_uid = 0
     type(cohort_item), private, pointer :: head_internal => null() ! Pointer to head of linked list. Important to nullify here!
 
@@ -50,7 +50,7 @@ module md_cohort_linked_list
     procedure :: sort
     procedure, private :: next_uid
 
-  end type cohort_pool
+  end type cohort_stack
 
 contains
 
@@ -69,7 +69,7 @@ contains
 
   function next(self) result(next_item)
     ! Returns the next item, or NULL if none.
-    class(cohort_pool_item), intent(in) :: self
+    class(cohort_stack_item), intent(in) :: self
     type(cohort_item), pointer :: next_item
 
     next_item => self%next_ptr
@@ -77,7 +77,7 @@ contains
 
   pure function has_next(self) result(res)
     ! Returns true if this element is followed by another item
-    class(cohort_pool_item), intent(in) :: self
+    class(cohort_stack_item), intent(in) :: self
     logical :: res
 
     res = associated(self%next_ptr)
@@ -86,7 +86,7 @@ contains
   function length(self) result(res)
     ! Returns the current number of items in this linked list
     integer :: res
-    class(cohort_pool), intent(in) :: self
+    class(cohort_stack), intent(in) :: self
 
     ! Local variable
     type(cohort_item), pointer :: it ! iterator
@@ -104,7 +104,7 @@ contains
     ! Destroy all items in this linked list.
     ! Follow all the element of a chain, freeing the memory for each.
     ! After the subroutine has returned, the parameter takes the value null().
-    class(cohort_pool), intent(in) :: self
+    class(cohort_stack), intent(in) :: self
 
     ! Local variable
     type(cohort_item), pointer :: ptr
@@ -116,7 +116,7 @@ contains
   function next_uid(self) result(res)
     ! Get the next unique ID
     ! Private
-    class(cohort_pool), intent(inout) :: self
+    class(cohort_stack), intent(inout) :: self
     integer :: res
 
     self%current_uid = self%current_uid + 1
@@ -136,7 +136,7 @@ contains
     ! Destroy all items in this linked list.
     ! Follow all the element of a chain, freeing the memory for each.
     ! After the subroutine has returned, the parameter takes the value null().
-    class(cohort_pool), intent(inout) :: self
+    class(cohort_stack), intent(inout) :: self
 
     ! Local variable
     type(cohort_item), pointer :: ptr
@@ -163,7 +163,7 @@ contains
       end function func_sort
     end interface
 
-    class(cohort_pool), intent(inout) :: self
+    class(cohort_stack), intent(inout) :: self
     logical, intent(in) :: increasing
     procedure(func_sort) :: func
 
@@ -235,7 +235,7 @@ contains
     ! or NULL if it was not found (or no item follows in the list)
     ! Attention, the item is not deleted from memory. Use destroy_item for this.
     ! ATTENTION: The provided item's next element is set to NULL, even if it was not found.
-    class(cohort_pool), intent(inout) :: self
+    class(cohort_stack), intent(inout) :: self
     type(cohort_item), pointer, intent(in) :: item
     type(cohort_item), pointer :: next_item
 
@@ -281,7 +281,7 @@ contains
   function destroy_item(self, item) result(next_item)
     ! Destroy item and return next item in the list
     ! or NULL if no item was removed (or no item follows in the list)
-    class(cohort_pool), intent(inout) :: self
+    class(cohort_stack), intent(inout) :: self
     type(cohort_item), pointer :: next_item
     type(cohort_item), pointer, intent(inout) :: item
 
@@ -294,7 +294,7 @@ contains
 
   subroutine insert_item(self, new_item)
     ! Prepend a new item to the head of the list and return its pointer
-    class(cohort_pool), intent(inout) :: self
+    class(cohort_stack), intent(inout) :: self
     type(cohort_item), pointer, intent(in) :: new_item
 
     if (new_item%uid_internal == 0) new_item%uid_internal = self%next_uid()
