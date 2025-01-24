@@ -74,13 +74,12 @@ module datatypes_biomee
   !=============== Tile level data type ============================================================
   type :: vegn_tile_type
 
-    !===== Cohort heap
-    ! Implemented as a linked list, 'heap' points to the first cohort of the heap
+    ! Linked list of cohorts
     ! Cohorts should not assumed to be ranked in any specific order.
     ! Use sort_cohorts_by_height() or implement a method following the same principle if needed.
-    type(cohort_item), pointer :: heap => null() ! Important to nullify here!
-    ! Heap of killed cohort for diagnostics purpose. It is empied at the end of each year.
-    type(cohort_item), pointer :: heap_killed => null() ! Important to nullify here!
+    type(cohort_pool) :: cohorts
+    ! Linked list of killed cohort for diagnostics purpose. It is empied at the end of each year.
+    type(cohort_pool) :: killed_cohorts
 
     !===== Tile-level forest inventory information
     real    :: area                               ! m2
@@ -272,15 +271,15 @@ contains
 
 
     call c1%cohort%merge_in(c2%cohort)
-    next_item => destroy_cohort(c2, self%heap)
+    next_item => self%cohorts%destroy_cohort(c2)
   end function merge_cohorts
 
   function kill_fraction(self, item, deathrate) result(next_item)
     ! Kill fraction 'fraction' of cohort of uid 'uid'
-    ! This creates a new cohort in 'heap_killed' with nindivis = cohort%nindivis * fraction
+    ! This creates a new cohort in 'killed_cohorts' with nindivis = cohort%nindivis * fraction
     ! And the original cohort is the complement: nindivis = cohort%nindivis * (1-fraction)
     ! If fraction is 0, nothing happens.
-    ! If fraction is 1, the cohort is moved from heap to heap_killed.
+    ! If fraction is 1, the cohort is moved from cohorts to killed_cohorts.
     class(vegn_tile_type), intent(inout) :: self
     type(cohort_item), pointer, intent(inout) :: item
     real, intent(in) :: deathrate
@@ -294,7 +293,6 @@ contains
     elseif (deathrate >= 1.0) then
       next_item => self%kill_cohort(item)
     else
-
       killed => self%new_cohort(.true.)
       killed%cohort = item%cohort
       killed%cohort%nindivs = item%cohort%nindivs * deathrate
@@ -302,7 +300,6 @@ contains
       item%cohort%deathrate = deathrate ! deathrate having affected this cohort
       killed%cohort%nindivs = deathrate ! deathrate having spawned this killed_cohort
       next_item => item%next()
-
     end if
   end function kill_fraction
 
@@ -310,8 +307,8 @@ contains
     ! Free all allocated memory
     class(vegn_tile_type) :: self
 
-    call destroy_all(self%heap)
-    call destroy_all(self%heap_killed)
+    call self%cohorts%destroy_all()
+    call self%killed_cohorts%destroy_all()
   end subroutine shut_down
 
   function get_height(item) result(res)
@@ -326,7 +323,7 @@ contains
     class(vegn_tile_type) :: self
     logical :: increasing
 
-    call sort_cohorts(self%heap, increasing, get_height)
+    call self%cohorts%sort_cohorts(increasing, get_height)
 
   end subroutine sort_cohorts_by_height
 
@@ -342,7 +339,7 @@ contains
     class(vegn_tile_type) :: self
     logical :: increasing
 
-    call sort_cohorts(self%heap, increasing, get_uid)
+    call self%cohorts%sort_cohorts(increasing, get_uid)
 
   end subroutine sort_cohorts_by_uid
 
@@ -351,12 +348,12 @@ contains
     integer :: res
     class(vegn_tile_type) :: self
 
-    res = length(self%heap)
+    res = self%cohorts%length()
   end function n_cohorts
 
   function new_cohort(self, killed) result(new_item)
     ! Insert a new cohort at the head of the list and return its pointer.
-    ! If 'killed' is set, the cohort is inserted in 'heap_killed' rather than 'heap'.
+    ! If 'killed' is set, the cohort is inserted in 'killed_cohorts' rather than 'cohorts'.
     type(cohort_item), pointer :: new_item
     class(vegn_tile_type) :: self
     logical, optional :: killed
@@ -368,22 +365,22 @@ contains
 
     new_item => create_cohort()
     if (killed_opt) then
-      call insert_head(new_item, self%heap_killed)
+      call self%killed_cohorts%insert_item(new_item)
     else
-      call insert_head(new_item, self%heap)
+      call self%cohorts%insert_item(new_item)
     end if
 
   end function new_cohort
 
   function kill_cohort(self, item) result(next_item)
-    ! Move item to heap_killed and return pointer to next
+    ! Move item to killed_cohorts and return pointer to next
     class(vegn_tile_type), intent(inout) :: self
     type(cohort_item), pointer, intent(inout) :: item
     type(cohort_item), pointer :: next_item
 
     item%cohort%deathrate = 1.0
-    next_item => detach_cohort(item, self%heap)
-    call insert_head(item, self%heap_killed)
+    next_item => self%cohorts%detach_cohort(item)
+    call self%killed_cohorts%insert_item(item)
   end function kill_cohort
 
   !==============for diagnostics============================================
@@ -415,7 +412,7 @@ contains
     vegn%n_deadtrees  = 0.0
     vegn%c_deadtrees  = 0.0
 
-    it => vegn%heap
+    it => vegn%cohorts%head()
     do while (associated(it))
       call it%cohort%reset_cohort()
       it => it%next()
@@ -474,7 +471,7 @@ contains
     vegn%MaxVolume  = 0.0
     vegn%MaxDBH     = 0.0
 
-    it => vegn%heap
+    it => vegn%cohorts%head()
     do while (associated(it))
       cc => it%cohort
 
@@ -543,7 +540,7 @@ contains
     vegn%N_uptake = 0.0
     vegn%fixedN   = 0.0
 
-    it => vegn%heap
+    it => vegn%cohorts%head()
     do while (associated(it))
       cc => it%cohort
 
@@ -598,7 +595,7 @@ contains
     type(cohort_type), pointer :: cc
     type(cohort_item), pointer :: it
 
-    it => vegn%heap
+    it => vegn%cohorts%head()
     do while (associated(it))
       cc => it%cohort
 
@@ -690,7 +687,7 @@ contains
     i = 0
 
     ! Cohorts ouput
-    it => vegn%heap
+    it => vegn%cohorts%head()
     do while (associated(it))
       cc => it%cohort
 
@@ -754,7 +751,7 @@ contains
     vegn%c_deadtrees = 0
     vegn%m_turnover  = 0
 
-    it => vegn%heap
+    it => vegn%cohorts%head()
     do while (associated(it))
 
       cc => it%cohort
@@ -855,7 +852,7 @@ contains
     integer :: i
 
     ! Cohorts ouput
-    it => vegn%heap
+    it => vegn%cohorts%head()
     do while (associated(it))
       cc => it%cohort
       do i = 1, NCohortMax
@@ -874,7 +871,7 @@ contains
     vegn%c_deadtrees = 0
     vegn%m_turnover  = 0
 
-    it => vegn%heap
+    it => vegn%cohorts%head()
     do while (associated(it))
       cc => it%cohort
       vegn%n_deadtrees  = vegn%n_deadtrees   + cc%n_deadtrees
