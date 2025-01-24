@@ -28,8 +28,13 @@ module md_cohort_linked_list
   end type abstract_linked_list
 
   type, extends(abstract_linked_list) :: cohort_item
-    integer :: uid ! Unique id. To be filled with 'new_uid()'
+    integer, private :: uid_internal ! Unique id. To be filled with 'new_uid()'
     type(cohort_type) :: cohort
+
+    contains
+
+    procedure uid
+
   end type cohort_item
 
 contains
@@ -38,6 +43,14 @@ contains
   ! The functions below are notoriously difficult to implement properly.
   ! Be sure to know what you are doing before doing any change, and be sure to
   ! thoroughly test each function which you modify!
+
+  function uid(self) result(res)
+    ! Returns the uid
+    class(cohort_item), intent(in) :: self
+    integer :: res
+
+    res = self%uid_internal
+  end function uid
 
   function next(self) result(next_item)
     ! Returns true if this element is followed by another item
@@ -87,7 +100,7 @@ contains
 
     new_cohort => null()
     allocate(new_cohort)
-    new_cohort%uid = next_uid()
+    new_cohort%uid_internal = next_uid()
 
   end function create_cohort
 

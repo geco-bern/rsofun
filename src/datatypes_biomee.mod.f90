@@ -334,7 +334,7 @@ contains
     type(cohort_item) :: item
     real :: res
 
-    res = real(item%uid)
+    res = real(item%uid())
   end function get_uid
 
   subroutine sort_cohorts_by_uid(self, increasing)
@@ -708,7 +708,7 @@ contains
       if (i <= NCohortMax) then
 
         out_annual_cohorts(i)%year        = iyears
-        out_annual_cohorts(i)%cID         = it%uid
+        out_annual_cohorts(i)%cID         = it%uid()
         out_annual_cohorts(i)%PFT         = cc%species
         out_annual_cohorts(i)%layer       = cc%layer
         out_annual_cohorts(i)%density     = cc%nindivs * 10000
@@ -859,7 +859,7 @@ contains
     do while (associated(it))
       cc => it%cohort
       do i = 1, NCohortMax
-        if (int(out_annual_cohorts(i)%cID) == it%uid) then
+        if (int(out_annual_cohorts(i)%cID) == it%uid()) then
           out_annual_cohorts(i)%n_deadtrees = cc%n_deadtrees
           out_annual_cohorts(i)%c_deadtrees = cc%c_deadtrees
           out_annual_cohorts(i)%deathrate   = cc%deathrate
