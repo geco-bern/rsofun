@@ -198,7 +198,7 @@ module datatypes_biomee
     procedure shut_down
     procedure kill_fraction
     procedure kill_cohort
-    procedure merge
+    procedure merge_cohorts
     procedure split
     procedure, private :: plant2soil
 
@@ -264,7 +264,7 @@ contains
     item%cohort%nindivs = item%cohort%nindivs - new%cohort%nindivs
   end subroutine split
 
-  function merge(self, c1, c2) result(next_item)
+  function merge_cohorts(self, c1, c2) result(next_item)
     ! Merge cohort c2 into c1 and return item following c2
     class(vegn_tile_type) :: self
     type(cohort_item), pointer :: c1, c2
@@ -273,7 +273,7 @@ contains
 
     call c1%cohort%merge_in(c2%cohort)
     next_item => destroy_cohort(c2, self%heap)
-  end function merge
+  end function merge_cohorts
 
   subroutine kill_fraction(self, item, deathrate)
     ! Kill fraction 'fraction' of cohort of uid 'uid'
@@ -358,7 +358,7 @@ contains
     it => self%heap
     do while (associated(it))
       res = res + 1
-      it => it%next
+      it => it%next()
     end do
   end function n_cohorts
 
@@ -375,7 +375,6 @@ contains
     if(present(killed)) killed_opt = killed
 
     new_item => create_cohort()
-
     if (killed_opt) then
       call insert_head(new_item, self%heap_killed)
     else
@@ -383,38 +382,6 @@ contains
     end if
 
   end function new_cohort
-
-  subroutine insert_tail(new_item, linked_list)
-    ! Prepend an already existing cohort (useful for shuffling)
-    type(cohort_item), pointer, intent(in) :: new_item
-    type(cohort_item), pointer, intent(inout) :: linked_list
-
-    ! Local variable
-    type(cohort_item), pointer :: it !iterator
-
-    if (associated(linked_list)) then
-      it => linked_list
-      do while (associated(it))
-        if (associated(it%next)) then
-          it => it%next
-        else
-          it%next => new_item
-          exit
-        end if
-      end do
-    else
-      linked_list => new_item
-    end if
-  end subroutine insert_tail
-
-  subroutine insert_head(new_item, linked_list)
-    ! Prepend a new cohort to the list and return its pointer
-    type(cohort_item), pointer, intent(in) :: new_item
-    type(cohort_item), pointer, intent(inout) :: linked_list
-
-    new_item%next => linked_list
-    linked_list => new_item
-  end subroutine insert_head
 
   function kill_cohort(self, item) result(next_item)
     ! Move item to heap_killed and return pointer to next
@@ -428,10 +395,10 @@ contains
     next_item => null()
 
     item%cohort%deathrate = 1.0
-    ptr => remove_cohort(item%uid, self%heap)
+    ptr => detach_cohort(item%uid, self%heap)
     if (associated(ptr)) then
-      next_item => ptr%next
-      ptr%next => null()
+      next_item => ptr%next()
+      ptr%next_ptr => null()
       call insert_head(ptr, self%heap_killed)
     end if
   end function kill_cohort
@@ -468,7 +435,7 @@ contains
     it => vegn%heap
     do while (associated(it))
       call it%cohort%reset_cohort()
-      it => it%next
+      it => it%next()
     end do
   
   end subroutine Zero_diagnostics
@@ -554,7 +521,7 @@ contains
       vegn%MaxVolume = MAX(cc%volume(), vegn%MaxVolume)
       vegn%MaxDBH    = MAX(dbh, vegn%MaxDBH)
 
-      it => it%next
+      it => it%next()
 
     enddo
 
@@ -611,7 +578,7 @@ contains
       ! Reset fast fluxes
       cc%fast_fluxes = common_fluxes()
 
-      it => it%next
+      it => it%next()
     enddo
 
     ! NEP is equal to NNP minus soil respiration
@@ -658,7 +625,7 @@ contains
       ! Reset daily variables
       cc%daily_fluxes = common_fluxes()
 
-      it => it%next
+      it => it%next()
     enddo
 
     ! Tile level, daily
@@ -791,7 +758,7 @@ contains
 
       end if
 
-      it => it%next
+      it => it%next()
 
     enddo
 
@@ -813,7 +780,7 @@ contains
       vegn%NPPL         = vegn%NPPL          + cc%NPPleaf * cc%nindivs
       vegn%NPPW         = vegn%NPPW          + cc%NPPwood * cc%nindivs
 
-      it => it%next
+      it => it%next()
 
     enddo
 
@@ -909,7 +876,7 @@ contains
     do while (associated(it))
       cc => it%cohort
       do i = 1, NCohortMax
-        if (out_annual_cohorts(i)%cID == it%uid) then
+        if (int(out_annual_cohorts(i)%cID) == it%uid) then
           out_annual_cohorts(i)%n_deadtrees = cc%n_deadtrees
           out_annual_cohorts(i)%c_deadtrees = cc%c_deadtrees
           out_annual_cohorts(i)%deathrate   = cc%deathrate
@@ -917,7 +884,7 @@ contains
         end if
       end do
 
-      it => it%next
+      it => it%next()
     enddo
 
     vegn%n_deadtrees = 0
@@ -931,7 +898,7 @@ contains
       vegn%c_deadtrees  = vegn%c_deadtrees   + cc%c_deadtrees
       vegn%m_turnover   = vegn%m_turnover    + cc%m_turnover
 
-      it => it%next
+      it => it%next()
     enddo
 
     out_annual_tile%N_P2S           = vegn%N_P2S_yr

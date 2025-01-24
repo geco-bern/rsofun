@@ -56,7 +56,7 @@ contains
             cc%WupL(i) = cc%rootareaL(i)*sp%Kw_root*dpsiSR(i) * (myinterface%step_seconds*h2o_molmass*1e-3) ! kg H2O tree-1 step-1
             totWsup(i) = totWsup(i) + cc%WupL(i) * cc%nindivs ! water uptake per layer by all cohorts
             end associate
-            it => it%next
+            it => it%next()
          end do
          ! adjust cc%WupL(i) according to available water
          it => vegn%heap
@@ -65,7 +65,7 @@ contains
             if(totWsup(i)>0.0) &
                 fWup(i) = Min(0.25 * freewater(i) / totWsup(i),1.0)! ratio of available soil water
             cc%WupL(i) = fWup(i) * cc%WupL(i) ! kg tree-1 step-1
-            it => it%next
+            it => it%next()
          end do ! cohort for each layer
       enddo    ! all layers
 
@@ -117,7 +117,7 @@ contains
           if(wsupply > 0.0) then
               WaterBudgetL(:) = WaterBudgetL(:) - cc%WupL(:)/wsupply * cc%fast_fluxes%trsp * cc%nindivs
           endif
-          it => it%next
+          it => it%next()
       end do ! all cohorts
 
     !! Soil surface evaporation

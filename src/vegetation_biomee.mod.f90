@@ -70,7 +70,7 @@ contains
       cc%plabl%c%c12 = cc%plabl%c%c12 + cc%fast_fluxes%npp
       cc%plabl%n%n14 = cc%plabl%n%n14 + cc%fast_fluxes%fixedN
 
-      it => it%next
+      it => it%next()
     end do ! all cohorts
     
     ! update soil C and N
@@ -200,9 +200,6 @@ contains
     real :: dBL, dBR ! tendencies of leaf and root biomass, kgC/individual
     real :: dBSW ! tendency of sapwood biomass, kgC/individual
     real :: dBHW ! tendency of wood biomass, kgC/individual
-    real :: dDBH ! tendency of breast height diameter, m
-    real :: dCA ! tendency of crown area, m2/individual
-    real :: dHeight ! tendency of vegetation height
     real :: dNS    ! Nitrogen from SW to HW
     real :: BL_u, BL_c
     real :: LF_deficit, FR_deficit
@@ -383,7 +380,7 @@ contains
 
       end associate
 
-      it => it%next
+      it => it%next()
     end do
 
   end subroutine vegn_growth_EW
@@ -475,7 +472,7 @@ contains
       endif
       end associate
 
-      it => it%next
+      it => it%next()
     end do
 
     if (do_relayer) call relayer_cohorts(vegn)
@@ -501,7 +498,7 @@ contains
       ! leaf fall
       call Seasonal_fall(cc,vegn)
 
-      it => it%next
+      it => it%next()
     end do
 
   end subroutine vegn_phenology
@@ -576,7 +573,6 @@ contains
     ! real, parameter :: min_nindivs = 1e-5 ! 2e-15 ! 1/m. If nindivs is less than this number, 
     ! then the entire cohort is killed; 2e-15 is approximately 1 individual per Earth
     real :: cCAI ! Cumulative CAI
-    real :: dn ! number of trees that died due to CAI_partial>CAI_max
     real :: param_dbh_under 
     real :: param_nsc_under
     real :: param_dbh 
@@ -598,7 +594,7 @@ contains
         if (cc%layer > 1) deathrate = 0.2 !sp%mortrate_d_u
         call vegn%kill_fraction(it, deathrate)
 
-        it => it%next
+        it => it%next()
       end do
 
       ! set calibratable mortality parameter
@@ -622,7 +618,7 @@ contains
           call vegn%kill_fraction(it, deathrate)
         end if
 
-        it => it%next
+        it => it%next()
       enddo
  
     else
@@ -692,7 +688,7 @@ contains
 
         end associate
 
-        it => it%next
+        it => it%next()
       end do
 
     endif
@@ -728,7 +724,7 @@ contains
 
       endif
 
-      it => it%next
+      it => it%next()
     end do
 
   end subroutine vegn_annual_starvation
@@ -792,7 +788,7 @@ contains
           cc%pseed%n%n14 = 0.0
       endif ! cohort_can_reproduce
 
-      it => it%next
+      it => it%next()
     end do
 
     ! We build new cohorts for seedlings
@@ -887,9 +883,7 @@ contains
     real    :: frac     ! fraction of the layer covered so far by the canopies
     real    :: fraction ! fraction to split off
 
-    type(cohort_item), pointer :: new ! Pointer for new cohort
     type(cohort_item), pointer :: it  ! iterator
-    real :: density_a, density_b
 
     ! We sort the cohorts be decreasing height (important to do it here!)
     call vegn%sort_cohorts_by_height(.false.)
@@ -924,7 +918,7 @@ contains
       else
         ! Otherwise, we have used-up the whole cohort, we update the current layer fraction and insert the current cohort
         frac = frac + it%cohort%layerfrac()
-        it => it%next
+        it => it%next()
       end if
 
     end do
@@ -1049,7 +1043,7 @@ contains
 
       end associate
 
-      it => it%next
+      it => it%next()
     end do
 
   end subroutine vegn_tissue_turnover
@@ -1093,7 +1087,7 @@ contains
 
         end associate
 
-        it => it%next
+        it => it%next()
       end do
 
       ! M-M equation for Nitrogen absoption, McMurtrie et al. 2012, Ecology & Evolution
@@ -1121,7 +1115,7 @@ contains
             vegn%ninorg%n14 = vegn%ninorg%n14 - cc%fast_fluxes%Nup * cc%nindivs
           endif
 
-          it => it%next
+          it => it%next()
         end do
 
       endif ! N_roots>0
@@ -1317,16 +1311,16 @@ contains
 
     it1 => vegn%heap
     do while (associated(it1))
-      it2 => it1%next
+      it2 => it1%next()
       do while (associated(it2))
         if (cohorts_can_be_merged(it1%cohort, it2%cohort)) then
-          it2 => vegn%merge(it1, it2)
+          it2 => vegn%merge_cohorts(it1, it2)
           call init_bl_br(it1%cohort)
         else
-          it2 => it2%next
+          it2 => it2%next()
         end if
       end do
-      it1 => it1%next
+      it1 => it1%next()
     end do
 
   end subroutine vegn_mergecohorts
@@ -1352,7 +1346,7 @@ contains
         at_least_one_survivor = .TRUE.
         exit
       end if
-      it => it%next
+      it => it%next()
     enddo
 
     ! If at least one cohort survives, we kill the low density ones
@@ -1361,7 +1355,7 @@ contains
       it => vegn%heap
       do while (associated(it))
           if (it%cohort%nindivs > mindensity) then
-            it => it%next
+            it => it%next()
           else
             ! if the density is below the threshold, we kill it.
             it => vegn%kill_cohort(it)
@@ -1394,7 +1388,7 @@ contains
           exit
         end if
       end associate
-      it => it%next
+      it => it%next()
     end do
 
     if (at_least_one_survivor) then
@@ -1405,7 +1399,7 @@ contains
           if (OldGrass) then
             it => vegn%kill_cohort(it)
           else
-            it => it%next
+            it => it%next()
           end if
         end associate
       end do

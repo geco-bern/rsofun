@@ -12,19 +12,24 @@ module md_cohort_linked_list
   public :: cohort_item
 
   !=============== Public procedures ===========================================================
-  public :: create_cohort, reset_uid, destroy_all, destroy_cohort, sort_cohorts, remove_cohort
+  public :: create_cohort, reset_uid, destroy_all, destroy_cohort, sort_cohorts, detach_cohort, insert_head
 
   integer, private :: CurrentCohortUid = 0
 
-  type :: cohort_item
-    integer :: uid ! Unique id. To be filled with 'new_uid()'
-    type(cohort_type) :: cohort ! This value should NEVER be used within this file
-    type(cohort_item), pointer :: next => null() ! Pointer to next cohort_item. Important to nullify here!
+  type :: abstract_linked_list
+
+    type(cohort_item), pointer :: next_ptr => null() ! Pointer to next cohort_item. Important to nullify here!
 
     contains
 
     procedure has_next
+    procedure next
 
+  end type abstract_linked_list
+
+  type, extends(abstract_linked_list) :: cohort_item
+    integer :: uid ! Unique id. To be filled with 'new_uid()'
+    type(cohort_type) :: cohort ! This value should NEVER be used within this file
   end type cohort_item
 
 contains
@@ -34,12 +39,20 @@ contains
   ! Be sure to know what you are doing before doing any change, and be sure to
   ! thoroughly test each function which you modify!
 
-  function has_next(self) result(res)
+  function next(self) result(next_item)
     ! Returns true if this element is followed by another item
-    logical :: res
-    class(cohort_item) :: self
+    class(abstract_linked_list), intent(in) :: self
+    type(cohort_item), pointer :: next_item
 
-    res = associated(self%next)
+    next_item => self%next_ptr
+  end function next
+
+  pure function has_next(self) result(res)
+    ! Returns true if this element is followed by another item
+    class(abstract_linked_list), intent(in) :: self
+    logical :: res
+
+    res = associated(self%next_ptr)
   end function has_next
 
   function next_uid() result(res)
@@ -79,7 +92,7 @@ contains
 
     do while (associated(chain))
       ptr => chain
-      chain => ptr%next
+      chain => ptr%next_ptr
       deallocate(ptr)
       ptr => null()
     end do
@@ -128,7 +141,7 @@ contains
         current_value = func(it)
         if (ieee_is_nan(current_value)) then
           ! If the cohort has NA we skip it
-          it => remove_cohort(it%uid, old_cohorts)
+          it => destroy_cohort(it, old_cohorts)
           cycle
         end if
         ! The use of new_winner below is meant at implementing the following offending line:
@@ -143,26 +156,28 @@ contains
           selected_value = current_value
         end if
         prev => it
-        it => it%next
+        it => it%next_ptr
       end do
 
       ! We remove it from the old list
       if (associated(selected_prev)) then
-        selected_prev%next => selected_item%next
+        selected_prev%next_ptr => selected_item%next_ptr
       else
-        old_cohorts => selected_item%next
+        old_cohorts => selected_item%next_ptr
       end if
 
       ! We insert it in the head
-      selected_item%next => linked_list
+      selected_item%next_ptr => linked_list
       linked_list => selected_item
 
     end do
   end subroutine sort_cohorts
 
-  function remove_cohort(uid, linked_list) result(next_item)
-    ! Remove item with uid and return next item in the list
-    ! or NULL if no item was removed (or no item follows in the list)
+  function detach_cohort(uid, linked_list) result(next_item)
+    ! Remove given item and return next item in the list
+    ! or NULL if it was not found (or no item follows in the list)
+    ! Attention, the item is not deleted from memory. Use destroy_cohort for this.
+    ! ATTENTION: The provided item's next element is set to NULL, even if it was not found.
     integer, intent(in) :: uid
     type(cohort_item), pointer, intent(inout) :: linked_list
     type(cohort_item), pointer :: next_item
@@ -177,10 +192,10 @@ contains
 
     do while (associated(it))
       if (it%uid == uid) then
-        next_item => it%next
+        next_item => it%next_ptr
         if (associated(prev_it)) then
           ! We plug the previous item on the next
-          prev_it%next => next_item
+          prev_it%next_ptr => next_item
         else
           ! Or we plug the head if it was the first element
           linked_list => next_item
@@ -189,10 +204,10 @@ contains
         exit
       else
         prev_it  => it
-        it => it%next
+        it => it%next_ptr
       end if
     end do
-  end function remove_cohort
+  end function detach_cohort
 
   function destroy_cohort(item, linked_list) result(next_item)
     ! Destroy item and return next item in the list
@@ -204,14 +219,23 @@ contains
     ! Local variable
     type(cohort_item), pointer :: ptr
 
-    ptr => remove_cohort(item%uid, linked_list)
+    ptr => detach_cohort(item%uid, linked_list)
     if (associated(ptr)) then
-      next_item => ptr%next
+      next_item => ptr%next_ptr
       deallocate(ptr)
       ptr => null()
     else
       next_item => null()
     end if
   end function destroy_cohort
+
+  subroutine insert_head(new_item, linked_list)
+    ! Prepend a new cohort to the list and return its pointer
+    type(cohort_item), pointer, intent(in) :: new_item
+    type(cohort_item), pointer, intent(inout) :: linked_list
+
+    new_item%next_ptr => linked_list
+    linked_list => new_item
+  end subroutine insert_head
 
 end module md_cohort_linked_list

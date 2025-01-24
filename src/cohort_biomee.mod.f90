@@ -121,9 +121,9 @@ module md_cohort
 
 contains
 
-  function sp(self) result(res)
+  pure function sp(self) result(res)
     type(spec_data_type) :: res
-    class(cohort_type) :: self
+    class(cohort_type), intent(in) :: self
 
     res = myinterface%params_species(self%species)
   end function sp
@@ -203,9 +203,9 @@ contains
     self%deathrate     = 0.0
   end subroutine reset_cohort
 
-  function NSNmax(self) result(res)
+  pure function NSNmax(self) result(res)
     real :: res
-    class(cohort_type) :: self
+    class(cohort_type), intent(in) :: self
 
     ! Local variable
     type(spec_data_type) :: sp
@@ -216,10 +216,10 @@ contains
             (self%bl_max / (sp%CNleaf0 * sp%leafLS) + self%br_max / sp%CNroot0)
   end function NSNmax
 
-  function dbh(self) result(res)
+  pure function dbh(self) result(res)
   ! diameter at breast height, m
     real :: res
-    class(cohort_type) :: self
+    class(cohort_type), intent(in) :: self
 
     ! Local variable
     type(spec_data_type) :: sp
@@ -231,10 +231,10 @@ contains
     res = (btot / sp%alphaBM) ** ( 1.0/sp%thetaBM )
   end function dbh
 
-  function crownarea(self) result(res)
+  pure function crownarea(self) result(res)
   ! crown area, m2 tree-1
     real :: res
-    class(cohort_type) :: self
+    class(cohort_type), intent(in) :: self
 
     ! Local variable
     type(spec_data_type) :: sp
@@ -244,10 +244,10 @@ contains
     res = sp%alphaCA * self%dbh() ** sp%thetaCA
   end function crownarea
 
-  function leafarea(self) result(res)
+  pure function leafarea(self) result(res)
   ! total area of leaves, m2 tree-1
     real :: res
-    class(cohort_type) :: self
+    class(cohort_type), intent(in) :: self
 
     ! Local variable
     type(spec_data_type) :: sp
@@ -257,10 +257,10 @@ contains
     res = self%pleaf%c%c12 / sp%LMA
   end function leafarea
 
-  function height(self) result(res)
+  pure function height(self) result(res)
     ! vegetation height, m
     real :: res
-    class(cohort_type) :: self
+    class(cohort_type), intent(in) :: self
 
     ! Local variable
     type(spec_data_type) :: sp
@@ -270,19 +270,19 @@ contains
     res = sp%alphaHT * self%dbh() ** sp%thetaHT
   end function height
 
-  function W_supply(self) result(res)
+  pure function W_supply(self) result(res)
     ! potential water uptake rate per unit time per tree
     real :: res
-    class(cohort_type) :: self
+    class(cohort_type), intent(in) :: self
 
     res = sum(self%WupL(:))
   end function W_supply
 
-  function rootareaL(self, level) result(res)
+  pure function rootareaL(self, level) result(res)
     ! Root length per layer, m of root/m
     real :: res
-    integer :: level
-    class(cohort_type) :: self
+    integer, intent(in) :: level
+    class(cohort_type), intent(in) :: self
 
     ! Local variable
     type(spec_data_type) :: sp
@@ -292,10 +292,10 @@ contains
     res = rootarea(self) * sp%root_frac(level)
   end function rootareaL
 
-  function rootarea(self) result(res)
+  pure function rootarea(self) result(res)
     ! total fine root area per tree
     real :: res
-    class(cohort_type) :: self
+    class(cohort_type), intent(in) :: self
 
     ! Local variable
     type(spec_data_type) :: sp
@@ -305,26 +305,26 @@ contains
     res  = self%proot%c%c12 * sp%SRA
   end function rootarea
 
-  function lai(self) result(res)
+  pure function lai(self) result(res)
     ! Leaf area index: surface of leaves per m2 of crown
     real :: res
-    class(cohort_type) :: self
+    class(cohort_type), intent(in) :: self
 
     res = self%leafarea() / self%crownarea() !(cohort%crownarea() *(1.0-sp%internal_gap_frac))
   end function lai
 
-  function basal_area(self) result(res)
+  pure function basal_area(self) result(res)
     ! Tree basal area, m2 tree-1
     real :: res
-    class(cohort_type) :: self
+    class(cohort_type), intent(in) :: self
 
     res = pi/4 * self%dbh() * self%dbh()
   end function basal_area
 
-  function volume(self) result(res)
+  pure function volume(self) result(res)
     ! Tree basal volume, m3 tree-1
     real :: res
-    class(cohort_type) :: self
+    class(cohort_type), intent(in) :: self
     ! Local variable
     type(spec_data_type) :: sp
 
@@ -333,10 +333,10 @@ contains
     res = (self%psapw%c%c12 + self%pwood%c%c12) / sp%rho_wood
   end function volume
 
-  function layerfrac(self) result(res)
+  pure function layerfrac(self) result(res)
     ! Fraction of layer area occupied by this cohort
     real :: res
-    class(cohort_type) :: self
+    class(cohort_type), intent(in) :: self
 
     res = self%nindivs * self%crownarea()
   end function layerfrac
