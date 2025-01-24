@@ -68,7 +68,7 @@ contains
     !---------------------------------------------
     simu_steps = 0 ! fast loop
     doy = 0
-    call Zero_diagnostics( vegn )
+    call vegn%zero_diagnostics()
 
     ! Compute averaged daily temperatures
     call aggregate(daily_temp, myinterface%climate(:)%Tair, myinterface%steps_per_day)
@@ -113,7 +113,7 @@ contains
           !----------------------------------------------------------------
           call vegn_CNW_budget( vegn, myinterface%climate(simu_steps), tsoil )
          
-          call hourly_diagnostics( vegn, myinterface%climate(simu_steps) )
+          call vegn%hourly_diagnostics(myinterface%climate(simu_steps))
          
         enddo fastloop ! hourly or half-hourly
 
@@ -149,7 +149,7 @@ contains
     ! output to be consistent with cohort identities.
     ! Note: Relayering happens in phenology leading to a reshuffling of the cohorts and affecting cohort identities.
     !---------------------------------------------
-    call annual_diagnostics( vegn, state%year, out_biosphere_annual_cohorts, out_biosphere_annual_tile )
+    call vegn%annual_diagnostics(state%year, out_biosphere_annual_cohorts, out_biosphere_annual_tile )
 
     !---------------------------------------------
     ! Reproduction and mortality
@@ -177,7 +177,7 @@ contains
     !---------------------------------------------
     ! Update post-mortality metrics
     !---------------------------------------------
-    call annual_diagnostics_post_mortality( vegn, out_biosphere_annual_cohorts, out_biosphere_annual_tile )
+    call vegn%annual_diagnostics_post_mortality(out_biosphere_annual_cohorts, out_biosphere_annual_tile )
 
   end subroutine biosphere_annual
 

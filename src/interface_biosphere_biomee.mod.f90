@@ -295,9 +295,10 @@ module md_interface_biomee
     real :: Rauto        = dummy
     real :: Nupt         = dummy
     real :: Nfix         = dummy
-    real :: n_deadtrees  = dummy
-    real :: c_deadtrees  = dummy
-    real :: deathrate    = dummy
+    ! Important to initialise these to 0
+    real :: n_deadtrees  = 0.0
+    real :: c_deadtrees  = 0.0
+    real :: deathrate    = 0.0
   end type outtype_annual_cohorts
 
 contains

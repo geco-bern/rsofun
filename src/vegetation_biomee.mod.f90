@@ -926,7 +926,7 @@ contains
     real, intent(in) :: dNL, dNR, dNStem  ! leaf and fine root nitrogen tendencies
 
     ! local variables
-    real :: loss_coarse, loss_fine, lossN_coarse, lossN_fine
+    real :: lossC_coarse, lossC_fine, lossN_coarse, lossN_fine
     real :: dAleaf ! leaf area decrease due to dBL
 
     associate ( sp => cc%sp() )
@@ -952,29 +952,14 @@ contains
       cc%NPPwood = cc%NPPwood - myinterface%params_tile%l_fract * dBStem
 
       ! put C and N into soil pools
-      loss_coarse  = (1.0 - myinterface%params_tile%l_fract) * &
+      lossC_coarse  = (1.0 - myinterface%params_tile%l_fract) * &
               cc%nindivs * (dBL - dAleaf * myinterface%params_tile%LMAmin + dBStem)
-      loss_fine    = (1.0 - myinterface%params_tile%l_fract) * &
+      lossC_fine    = (1.0 - myinterface%params_tile%l_fract) * &
               cc%nindivs * (dBR + dAleaf * myinterface%params_tile%LMAmin)
       lossN_coarse = (1.0 - myinterface%params_tile%retransN)* cc%nindivs * (dNL - dAleaf * sp%LNbase + dNStem)
       lossN_fine   = (1.0 - myinterface%params_tile%retransN)* cc%nindivs * (dNR + dAleaf * sp%LNbase)
 
-      ! add to soil
-      vegn%psoil_fs%c%c12 = vegn%psoil_fs%c%c12 +  &
-              myinterface%params_tile%fsc_fine * loss_fine + myinterface%params_tile%fsc_wood * loss_coarse
-
-      vegn%psoil_sl%c%c12 = vegn%psoil_sl%c%c12 +  &
-              ((1.0 - myinterface%params_tile%fsc_fine)*loss_fine + (1.0 - myinterface%params_tile%fsc_wood) * loss_coarse)
-
-      ! Nitrogen to soil SOMs
-      vegn%psoil_fs%n%n14  = vegn%psoil_fs%n%n14 +    &
-              myinterface%params_tile%fsc_fine * lossN_fine + myinterface%params_tile%fsc_wood * lossN_coarse
-
-      vegn%psoil_sl%n%n14 = vegn%psoil_sl%n%n14 + &
-              (1.0 - myinterface%params_tile%fsc_fine) * lossN_fine + (1.0 - myinterface%params_tile%fsc_wood) * lossN_coarse
-
-      ! annual N from plants to soil
-      vegn%N_P2S_yr = vegn%N_P2S_yr + lossN_fine + lossN_coarse
+      call vegn%plant2soil(lossC_coarse, lossC_fine, lossN_coarse, lossN_fine)
 
     end associate
 
@@ -1030,7 +1015,7 @@ contains
 
       ! record continuous biomass turnover (not linked to mortality)
       ! cc%m_turnover = cc%m_turnover + loss_coarse + loss_fine
-      cc%m_turnover = cc%m_turnover + (1.0 - myinterface%params_tile%l_fract) * cc%nindivs * dBStem
+      cc%m_turnover = cc%m_turnover + (1.0 - myinterface%params_tile%l_fract) * dBStem
 
       end associate
 

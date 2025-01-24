@@ -33,6 +33,7 @@ module md_cohort
 
     !===== Population structure
     real :: nindivs       = 0.0          ! density of vegetation, tree/m2
+    real :: deathrate     = 0.0          ! Deathrate (0 to 1) of the original cohort. Only set for cohorts in the killed list.
     real :: age           = 0.0          ! age of cohort, years
     real :: topyear       = 0.0          ! number of years the cohort is in top layer
 
@@ -69,12 +70,7 @@ module md_cohort
     real    :: NPPleaf            = 0.0           ! C allocated to leaf, kg C yr-1 tree-1
     real    :: NPProot            = 0.0           ! C allocated to root, kg C yr-1 tree-1
     real    :: NPPwood            = 0.0           ! C allocated to wood, kg C yr-1 tree-1
-
-    !===== Annual fluxes due to tree death, kg m-2 yr-1
-    real    :: n_deadtrees        = 0.0           ! plant to soil N flux due to mortality (kg N m-2 yr-1)
-    real    :: c_deadtrees        = 0.0           ! plant to soil C flux due to mortality (kg C m-2 yr-1)
-    real    :: m_turnover         = 0.0           ! C turnover due to mortality and tissue turnover (kg C m-2 yr-1)
-    real    :: deathrate          = 0.0           ! Deathrate (0 to 1). Only set for cohorts in the killed list
+    real    :: m_turnover         = 0.0           ! C turnover due to tissue turnover (kg C yr-1 tree-1)
 
     !===== Water uptake-related variables
     real    :: WupL(MAX_LEVELS)   = 0.0           ! normalized vertical distribution of uptake
@@ -197,8 +193,6 @@ contains
     self%NPProot       = 0.0
     self%NPPwood       = 0.0
 
-    self%n_deadtrees   = 0.0
-    self%c_deadtrees   = 0.0
     self%m_turnover    = 0.0
     self%deathrate     = 0.0
   end subroutine reset_cohort
