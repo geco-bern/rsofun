@@ -74,11 +74,12 @@ module datatypes_biomee
   !=============== Tile level data type ============================================================
   type :: vegn_tile_type
 
-    ! Linked list of cohorts
+    ! Linked list of cohorts.
     ! Cohorts should not assumed to be ranked in any specific order.
     ! Use sort_cohorts_by_height() or implement a method following the same principle if needed.
     type(cohort_stack), private :: cohort_list
     ! Linked list of killed cohort for diagnostics purpose. It is empied at the end of each year.
+    ! Contrary to cohort_list, this list may have duplicated uid (and it is fine)
     type(cohort_stack), private :: killed_cohort_list
 
     !===== Tile-level forest inventory information
@@ -313,10 +314,9 @@ contains
     else
       killed => item%clone(.true.)
       killed%cohort%nindivs = item%cohort%nindivs * frac
-      killed%cohort%deathrate = frac ! fraction having spawned this killed_cohort
+      killed%cohort%deathrate = frac
       call self%killed_cohort_list%insert_item(killed)
       item%cohort%nindivs = item%cohort%nindivs - killed%cohort%nindivs
-      item%cohort%deathrate = frac ! fraction having affected this cohort
       next_item => item%next()
     end if
   end function thin_cohort

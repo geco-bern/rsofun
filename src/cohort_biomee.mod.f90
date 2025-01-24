@@ -74,7 +74,7 @@ module md_cohort
     real    :: n_deadtrees        = 0.0           ! plant to soil N flux due to mortality (kg N m-2 yr-1)
     real    :: c_deadtrees        = 0.0           ! plant to soil C flux due to mortality (kg C m-2 yr-1)
     real    :: m_turnover         = 0.0           ! C turnover due to mortality and tissue turnover (kg C m-2 yr-1)
-    real    :: deathrate          = 0.0           ! Deathrate (0 to 1)
+    real    :: deathrate          = 0.0           ! Deathrate (0 to 1). Only set for cohorts in the killed list
 
     !===== Water uptake-related variables
     real    :: WupL(MAX_LEVELS)   = 0.0           ! normalized vertical distribution of uptake
