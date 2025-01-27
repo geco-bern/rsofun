@@ -165,9 +165,9 @@
 #'     \item{N_fix}{Nitrogen fixation (kg N tree\eqn{^{-1}} yr\eqn{^{-1}}).}
 #'     \item{maxLAI}{Maximum leaf area index for a tree (m\eqn{^2} m\eqn{^{-2}}).}
 #'     \item{Volume}{Tree volume (m\eqn{^3}).}
-#'     \item{n_deadtrees}{Plant to soil N flux due to mortality (kg N yr\eqn{^{-1}} m\eqn{^{-2}}).}
-#'     \item{c_deadtrees}{Plant to soil C flux due to mortality (kg C yr\eqn{^{-1}} m\eqn{^{-2}}).}
-#'     \item{deathrate}{Mortality rate of this cohort (yr\eqn{^{-1}}).}
+#'     \item{n_deadtrees}{Plant to soil N flux due to mortality, including natural mortality, starvation and any other rprocesse causing a loss of individuals in general  (kg N yr\eqn{^{-1}} m\eqn{^{-2}}).}
+#'     \item{c_deadtrees}{Plant to soil C flux due to mortality, including natural mortality, starvation and any other rprocesse causing a loss of individuals in general  (kg C yr\eqn{^{-1}} m\eqn{^{-2}}).}
+#'     \item{deathrate}{Mortality rate of this cohort, including natural mortality, starvation and any other rprocesse causing a loss of individuals in general (yr\eqn{^{-1}}).}
 #'   }}
 #' }
 #'
@@ -696,72 +696,6 @@ annual_tile_output <- function(raw_data){
   return(df)
 }
 
-annual_tile_output <- function(raw_data){
-  df <- as.data.frame(raw_data)
-  colnames(df) <- c(
-    "year",
-    "CAI",
-    "LAI",
-    "Density",
-    "DBH",
-    "Density12",
-    "DBH12",
-    "QMD12",
-    "NPP",
-    "GPP",
-    "Rauto",
-    "Rh",
-    "rain",
-    "SoilWater",
-    "Transp",
-    "Evap",
-    "Runoff",
-    "plantC",
-    "soilC",
-    "plantN",
-    "soilN",
-    "totN",
-    "NSC",
-    "SeedC",
-    "leafC",
-    "rootC",
-    "SapwoodC",
-    "WoodC",
-    "NSN",
-    "SeedN",
-    "leafN",
-    "rootN",
-    "SapwoodN",
-    "WoodN",
-    "McrbC",
-    "fastSOM",
-    "SlowSOM",
-    "McrbN",
-    "fastSoilN",
-    "slowSoilN",
-    "mineralN",
-    "N_fxed",
-    "N_uptk",
-    "N_yrMin",
-    "N_P2S",
-    "N_loss",
-    "totseedC",
-    "totseedN",
-    "Seedling_C",
-    "Seedling_N",
-    "MaxAge",
-    "MaxVolume",
-    "MaxDBH",
-    "NPPL",
-    "NPPW",
-    "n_deadtrees",
-    "c_deadtrees",
-    "m_turnover",
-    "c_turnover_time"
-  )
-  return(df)
-}
-
 land_use_annual_tile_output <- function(raw_data){
   df <- as.data.frame(raw_data)
   colnames(df) <- c(
@@ -805,9 +739,9 @@ annual_cohort_output <- function(raw_data){
     "Rauto",
     "Nupt",
     "Nfix",
+    "deathrate",
     "n_deadtrees",
-    "c_deadtrees",
-    "deathrate"
+    "c_deadtrees"
   )
 
   dimensions <- dim(raw_data)

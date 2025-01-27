@@ -859,7 +859,8 @@ contains
     real :: lossC_fine,lossC_coarse, lossC_total
     real :: lossN_fine,lossN_coarse, lossN_total
 
-    ! We go through each killed fraction of cohort
+    ! We go through each killed fraction of cohort and we map the fraction to the cohort
+    ! it originated from (they have the same uid).
     it => self%killed_cohort_fractions()
     do while (associated(it))
       cc => it%cohort
@@ -888,7 +889,7 @@ contains
 
           out_annual_cohorts(i)%n_deadtrees = out_annual_cohorts(i)%n_deadtrees + lossN_total
           out_annual_cohorts(i)%c_deadtrees = out_annual_cohorts(i)%c_deadtrees + lossC_total
-          out_annual_cohorts(i)%deathrate   = out_annual_cohorts(i)%deathrate + lossC_total
+          out_annual_cohorts(i)%deathrate   = out_annual_cohorts(i)%deathrate + cc%deathrate
           exit
         end if
       end do
