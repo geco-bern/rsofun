@@ -1,9 +1,9 @@
-module md_vegetation_biomee
+module md_vegetation_processes_biomee
   !////////////////////////////////////////////////////////////////
   ! Contains all vegetation-related subroutines for BiomeE.
   ! Code is adopted from BiomeE https://doi.org/10.5281/zenodo.7125963.
   !---------------------------------------------------------------  
-  use datatypes_biomee
+  use vegetation_tile_biomee
   use md_soil_biomee
   use md_interface_biomee, only: myinterface
 
@@ -11,15 +11,9 @@ module md_vegetation_biomee
   private
 
   ! public subroutines
-  public :: initialize_cohort_from_biomass, initialize_vegn_tile
   public :: vegn_CNW_budget, vegn_phenology, vegn_growth_EW
-  public :: vegn_reproduction
-  public :: vegn_nat_mortality
-  public :: relayer_cohorts, vegn_mergecohorts, kill_lowdensity_cohorts
+  public :: vegn_reproduction, vegn_nat_mortality, vegn_annual_starvation
   public :: kill_old_grass
-  public :: vegn_annual_starvation, Zero_diagnostics
-
-  real, public, parameter :: mindensity = 0.25E-4 ! Minimum cohort density
 
 contains
 
@@ -467,7 +461,7 @@ contains
         cc%plabl%n%n14 = ccNSN/cc%nindivs - &
           (cc%pleaf%n%n14 + cc%psapw%n%n14 + cc%pwood%n%n14 + cc%proot%n%n14 + cc%pseed%n%n14)
 
-        call init_bl_br(cc)
+        call cc%init_bl_br()
 
       endif
       end associate
@@ -475,7 +469,7 @@ contains
       it => it%next()
     end do
 
-    if (do_relayer) call relayer_cohorts(vegn)
+    if (do_relayer) call vegn%relayer()
 
     ! OFF of a growing season
     it => vegn%cohorts()
@@ -796,7 +790,7 @@ contains
 
       cc%species    = reproPFTs(k)
 
-      call init_bl_br(cc)
+      call cc%init_bl_br()
 
       ! Carbon pools
       cc%pleaf%c%c12 = 0.0 * sp%seedlingsize
@@ -855,66 +849,6 @@ contains
     end associate
 
   end function
-
-
-  subroutine relayer_cohorts( vegn )
-    !////////////////////////////////////////////////////////////////
-    ! Arrange crowns into canopy layers according to their height and 
-    ! crown areas.
-    ! We fill each layer until the maximum density is reached (layer_vegn_cover),
-    ! before starting a new layer.
-    !---------------------------------------------------------------
-    type(vegn_tile_type), intent(inout) :: vegn ! input cohorts
-
-    ! ---- local constants
-    real, parameter :: layer_vegn_cover = 1.0   ! i.e. max 1m2 vegetation per m2 ground
-
-    ! local variables
-    integer :: L        ! layer index (top-down)
-    real    :: frac     ! fraction of the layer covered so far by the canopies
-    real    :: fraction ! fraction to split off
-
-    type(cohort_item), pointer :: it  ! iterator
-
-    ! We sort the cohorts be decreasing height (important to do it here!)
-    call vegn%sort_cohorts_by_height(.false.)
-
-    L = 1
-    frac = 0.0
-
-    ! For each cohort present in the old list
-    it => vegn%cohorts()
-    do while (associated(it))
-
-      ! We set the layer
-      it%cohort%layer = L
-      if (L == 1) then
-        it%cohort%firstlayer = 1
-      endif
-
-      if ( &
-        L < NLAYERS_MAX .and. &! We check if L < NLAYERS_MAX as we do not want to create more layers than the max specified amount.
-        it%cohort%layerfrac() > layer_vegn_cover - frac &
-      ) then
-        ! If the current cohort does not fit in the remaining fraction on the layer,
-        ! we add a copy of the cohort to the new cohort list
-
-        fraction = (layer_vegn_cover - frac) / it%cohort%layerfrac()
-        call vegn%split_cohort(it, fraction)
-
-        ! We keep it as we want to continue processing it at the next iteration
-        ! Since the current layer is filled-up, we open-up a new fraction
-        L = L + 1
-        frac = 0.0
-      else
-        ! Otherwise, we have used-up the whole cohort, we update the current layer fraction and insert the current cohort
-        frac = frac + it%cohort%layerfrac()
-        it => it%next()
-      end if
-
-    end do
-
-  end subroutine relayer_cohorts
 
   subroutine update_plant_pools( cc, vegn, dBL, dBR, dBStem, dNL, dNR, dNStem)
     !////////////////////////////////////////////////////////////////
@@ -1271,75 +1205,6 @@ contains
   !=================== Cohort management =================================
   !=======================================================================
 
-  subroutine vegn_mergecohorts( vegn )
-    !////////////////////////////////////////////////////////////////
-    ! Merge similar cohorts in a tile
-    ! Code from BiomeE-Allocation
-    !---------------------------------------------------------------
-    type(vegn_tile_type), intent(inout) :: vegn
-
-    ! local variables
-    type(cohort_item), pointer :: it1
-    type(cohort_item), pointer :: it2
-
-    ! This sort is not technically necessary, but is helpful for debugging
-    !call vegn%sort_cohorts_by_uid(.true.)
-
-    it1 => vegn%cohorts()
-    do while (associated(it1))
-      it2 => it1%next()
-      do while (associated(it2))
-        if (cohorts_can_be_merged(it1%cohort, it2%cohort)) then
-          it2 => vegn%merge_cohorts(it1, it2)
-          call init_bl_br(it1%cohort)
-        else
-          it2 => it2%next()
-        end if
-      end do
-      it1 => it1%next()
-    end do
-
-  end subroutine vegn_mergecohorts
-
-
-  subroutine kill_lowdensity_cohorts( vegn )
-    !////////////////////////////////////////////////////////////////
-    ! Remove cohorts that have (almost) fully died and update tile
-    ! Code from BiomeE-Allocation
-    !---------------------------------------------------------------
-    type(vegn_tile_type), intent(inout) :: vegn
-    ! local variables
-    logical :: at_least_one_survivor
-
-    type(cohort_item), pointer :: it
-
-    at_least_one_survivor = .FALSE.
-
-    ! We first check that we won't kill all the cohorts
-    it => vegn%cohorts()
-    do while (associated(it))
-      if (it%cohort%nindivs > mindensity) then
-        at_least_one_survivor = .TRUE.
-        exit
-      end if
-      it => it%next()
-    enddo
-
-    ! If at least one cohort survives, we kill the low density ones
-    ! Otherwise er do not kill anyone.
-    if (at_least_one_survivor) then
-      it => vegn%cohorts()
-      do while (associated(it))
-          if (it%cohort%nindivs > mindensity) then
-            it => it%next()
-          else
-            ! if the density is below the threshold, we kill it.
-            it => vegn%thin_cohort(it)
-          end if
-      end do
-    end if
-  end subroutine kill_lowdensity_cohorts
-
   subroutine kill_old_grass(vegn)
     !////////////////////////////////////////////////////////////////
     ! Kill old grass cohorts
@@ -1382,98 +1247,6 @@ contains
     end if
 
   end subroutine kill_old_grass
-
-
-  function cohorts_can_be_merged(c1, c2) result(res)
-    !////////////////////////////////////////////////////////////////
-    ! Code from BiomeE-Allocation
-    !---------------------------------------------------------------
-    logical :: res
-    type(cohort_type) :: c1,c2
-
-    ! Local variables
-    logical :: sameSpecies, sameLayer, sameSize, sameSizeTree, sameSizeGrass
-    real :: c1_dbh, c2_dbh, dbh_diff
-
-    c1_dbh = c1%dbh()
-    c2_dbh = c2%dbh()
-    dbh_diff = abs(c1_dbh - c2_dbh)
-
-    associate (spdata => myinterface%params_species)
-
-      sameSpecies  = c1%species == c2%species
-
-      sameLayer    = (c1%layer == c2%layer) .or. &
-        ((spdata(c1%species)%lifeform == 0) .and. &
-         (spdata(c2%species)%lifeform == 0) .and. &
-         (c1%layer > 1 .and. c2%layer > 1))
-
-      sameSizeTree = (spdata(c1%species)%lifeform > 0).and.  &
-        (spdata(c2%species)%lifeform > 0).and.  &
-        ((dbh_diff/(c1_dbh + c2_dbh) < 0.1 ) .or.  &
-        (dbh_diff < 0.001))  ! it'll be always true for grasses
-
-      sameSizeGrass= (spdata(c1%species)%lifeform == 0) .and. &
-        (spdata(c2%species)%lifeform == 0) .and. &
-        (dbh_diff < eps .and. c1%age > 2. .and. c2%age > 2.)  ! it'll be always true for grasses
-
-      sameSize = sameSizeTree .or. sameSizeGrass
-
-      res = sameSpecies .and. sameLayer .and. sameSize
-
-    end associate
-
-  end function
-
-
-  subroutine initialize_cohort_from_biomass(cc)
-    !////////////////////////////////////////////////////////////////
-    ! calculate tree height, DBH, height, and crown area by initial biomass
-    ! The allometry equations are from Ray Dybzinski et al. 2011 and Forrior et al. in review
-    !         HT = alphaHT * DBH ** (gamma-1)   ! DBH --> Height
-    !         CA = alphaCA * DBH ** gamma       ! DBH --> Crown Area
-    !         BM = alphaBM * DBH ** (gamma + 1) ! DBH --> tree biomass
-    ! Code from BiomeE-Allocation
-    !---------------------------------------------------------------
-    type(cohort_type), intent(inout) :: cc
-    associate(sp=>cc%sp())
-
-    call init_bl_br(cc)
-
-    cc%plabl%c%c12        = 2.0 * (cc%bl_max + cc%br_max)
-
-    ! N pools
-    cc%plabl%n%n14    = 5.0 * (cc%bl_max / sp%CNleaf0 + cc%br_max / sp%CNroot0)
-    cc%pleaf%n%n14  = cc%pleaf%c%c12 / sp%CNleaf0
-    cc%proot%n%n14  = cc%proot%c%c12 / sp%CNroot0
-    cc%psapw%n%n14  = cc%psapw%c%c12 / sp%CNsw0
-    cc%pwood%n%n14  = cc%pwood%c%c12 / sp%CNwood0
-    cc%pseed%n%n14  = cc%pseed%c%c12 / sp%CNseed0
-    end associate
-  
-  end subroutine initialize_cohort_from_biomass
-
-  subroutine init_bl_br( cc )
-    !////////////////////////////////////////////////////////////////
-    ! Code from BiomeE-Allocation
-    !---------------------------------------------------------------
-    type(cohort_type), intent(inout) :: cc
-
-    ! Local varibale
-    real :: crownarea ! Cache variable
-
-    crownarea = cc%crownarea()
-
-    associate(sp=>cc%sp())
-      ! calculations of bl_max and br_max are here only for the sake of the
-      ! diagnostics, because otherwise those fields are inherited from the
-      ! parent cohort and produce spike in the output, even though these spurious
-      ! values are not used by the model
-      cc%bl_max = sp%LMA   * sp%LAImax        * crownarea / cc%layer
-      cc%br_max = sp%phiRL * sp%LAImax/sp%SRA * crownarea / cc%layer
-    end associate
-
-  end subroutine init_bl_br
   
 
   function leaf_area_from_biomass(bl,species) result (area)
@@ -1488,71 +1261,4 @@ contains
 
   end function
 
-  !=======================================================================
-  !==================== Vegetation initializations =======================
-  !=======================================================================
-
-  subroutine initialize_vegn_tile( vegn )
-    !////////////////////////////////////////////////////////////////
-    ! Code from BiomeE-Allocation
-    !---------------------------------------------------------------
-    type(vegn_tile_type), intent(inout) :: vegn
-
-    ! Local variables
-    integer :: i, init_n_cohorts
-    type(cohort_type), pointer :: cc
-    type(cohort_item), pointer :: new
-
-    ! Initialize plant cohorts
-    init_n_cohorts = size(myinterface%init_cohort)
-
-    do i = 1, init_n_cohorts
-
-      new => vegn%new_cohort()
-      cc => new%cohort
-      cc%species     = INT(myinterface%init_cohort(i)%init_cohort_species)
-      cc%nindivs     = myinterface%init_cohort(i)%init_cohort_nindivs ! trees/m2
-      cc%plabl%c%c12 = myinterface%init_cohort(i)%init_cohort_nsc
-      cc%psapw%c%c12 = myinterface%init_cohort(i)%init_cohort_bsw
-      cc%pwood%c%c12 = myinterface%init_cohort(i)%init_cohort_bHW
-      cc%pleaf%c%c12 = myinterface%init_cohort(i)%init_cohort_bl
-      cc%proot%c%c12 = myinterface%init_cohort(i)%init_cohort_br
-      cc%pseed%c%c12 = myinterface%init_cohort(i)%init_cohort_seedC
-      call initialize_cohort_from_biomass(cc)
-
-    enddo
-
-    ! Split initial layer in smaller layers (if it is full)
-    call relayer_cohorts( vegn )
-
-    ! Initial Soil pools and environmental conditions
-    vegn%psoil_fs%c%c12 = myinterface%init_soil%init_fast_soil_C ! kgC m-2
-    vegn%psoil_sl%c%c12 = myinterface%init_soil%init_slow_soil_C ! slow soil carbon pool, (kg C/m2)
-    vegn%psoil_fs%n%n14 = vegn%psoil_fs%c%c12 / CN0metabolicL  ! fast soil nitrogen pool, (kg N/m2)
-    vegn%psoil_sl%n%n14 = vegn%psoil_sl%c%c12 / CN0structuralL  ! slow soil nitrogen pool, (kg N/m2)
-    vegn%N_input        = myinterface%init_soil%N_input        ! kgN m-2 yr-1, N input to soil
-    vegn%ninorg%n14     = myinterface%init_soil%init_Nmineral  ! Mineral nitrogen pool, (kg N/m2)
-    vegn%previousN      = vegn%ninorg%n14
-
-    ! debug: adding microbial biomass initialisation
-    vegn%pmicr%c%c12 = 0.0 ! to do: add to: myinterface%init_soil%xxxxx
-    vegn%pmicr%n%n14 = 0.0 ! to do: add to: myinterface%init_soil%xxxxx
-
-    ! Initialize soil volumetric water conent with field capacity (maximum soil moisture to start with)
-    vegn%wcl = myinterface%params_tile%FLDCAP
-
-    ! Update soil water
-    vegn%SoilWater = SUM(vegn%wcl(:)*thksl(:)*1000.0)
-    vegn%thetaS = 1.0
-    
-    ! tile
-    call summarize_tile( vegn )
-    vegn%initialN0 =  vegn%plabl%n%n14 + vegn%pseed%n%n14 + vegn%pleaf%n%n14 +      &
-                      vegn%proot%n%n14 + vegn%psapw%n%n14 + vegn%pwood%n%n14 + &
-                      vegn%pmicr%n%n14 + vegn%psoil_fs%n%n14 +       &
-                      vegn%psoil_sl%n%n14 + vegn%ninorg%n14
-    vegn%totN =  vegn%initialN0
-
-  end subroutine initialize_vegn_tile
-
-end module md_vegetation_biomee
+end module md_vegetation_processes_biomee

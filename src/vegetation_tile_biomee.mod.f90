@@ -1,4 +1,4 @@
-module datatypes_biomee
+module vegetation_tile_biomee
   !////////////////////////////////////////////////////////////////
   ! Module containing BiomeE state variable and parameter 
   ! definitions.
@@ -60,6 +60,9 @@ module datatypes_biomee
 
   !===== Leaf life span
   real, parameter  :: c_LLS   = 28.57143    ! yr/ (kg C m-2), c_LLS=1/LMAs, where LMAs = 0.035
+
+  !===== Minimum cohort density
+  real, public, parameter :: mindensity = 0.25E-4 ! Minimum cohort density
 
   type :: dampended_forcing_type
     logical :: initialized = .true.
@@ -191,25 +194,29 @@ module datatypes_biomee
 
     contains
 
-    procedure n_cohorts
-    procedure cohorts
-    procedure killed_cohort_fractions
-    procedure new_cohort
-    procedure sort_cohorts_by_height
-    procedure sort_cohorts_by_uid
-    procedure shut_down
-    procedure thin_cohort
-    procedure merge_cohorts
-    procedure split_cohort
-    procedure annual_diagnostics
-    procedure annual_diagnostics_post_mortality
-    procedure daily_diagnostics
-    procedure hourly_diagnostics
-    procedure summarize_tile
-    procedure :: plant2soil
-    procedure zero_diagnostics
-    procedure, private :: zero_daily_diagnostics
-    procedure, private :: kill_cohort
+      procedure n_cohorts
+      procedure cohorts
+      procedure killed_cohort_fractions
+      procedure new_cohort
+      procedure sort_cohorts_by_height
+      procedure sort_cohorts_by_uid
+      procedure shut_down
+      procedure thin_cohort
+      procedure reduce
+      procedure, private :: recover_N_balance
+      procedure, private :: merge_cohorts
+      procedure, private :: split_cohort
+      procedure annual_diagnostics
+      procedure annual_diagnostics_post_mortality
+      procedure daily_diagnostics
+      procedure hourly_diagnostics
+      procedure zero_diagnostics
+      procedure plant2soil
+      procedure initialize_vegn_tile
+      procedure :: relayer
+      procedure, private :: summarize_tile
+      procedure, private :: zero_daily_diagnostics
+      procedure, private :: kill_cohort
 
   end type vegn_tile_type
 
@@ -810,7 +817,7 @@ contains
     out_annual_tile%c_turnover_time = self%pwood%c%c12 / self%NPPW
 
     ! Rebalance N (to compensate for the adjunction in vegn_N_uptake)
-    if (myinterface%params_siml%do_closedN_run) call Recover_N_balance(self)
+    if (myinterface%params_siml%do_closedN_run) call self%recover_N_balance()
 
   end subroutine annual_diagnostics
 
@@ -896,31 +903,31 @@ contains
 
   end subroutine annual_diagnostics_post_mortality
 
-  subroutine Recover_N_balance(vegn)
+  subroutine recover_N_balance(self)
     !////////////////////////////////////////////////////////////////////////
     ! We scale the N pools to contrain the yearly N (soil + plant) to be constant.
     !------------------------------------------------------------------------
-    type(vegn_tile_type), intent(inout) :: vegn
+    class(vegn_tile_type), intent(inout) :: self
     real :: delta, scaling_factor
 
-    delta = vegn%totN - vegn%initialN0
+    delta = self%totN - self%initialN0
 
     if (abs(delta) > 1e-6) then
-      scaling_factor = 1 - delta / vegn%totN
+      scaling_factor = 1 - delta / self%totN
 
-      vegn%psoil_sl%n%n14 = vegn%psoil_sl%n%n14 * scaling_factor
-      vegn%psoil_fs%n%n14 = vegn%psoil_fs%n%n14 * scaling_factor
-      vegn%pmicr%n%n14    = vegn%pmicr%n%n14    * scaling_factor
-      vegn%ninorg%n14     = vegn%ninorg%n14     * scaling_factor
-      vegn%plabl%n%n14    = vegn%plabl%n%n14    * scaling_factor
-      vegn%pseed%n%n14    = vegn%pseed%n%n14    * scaling_factor
-      vegn%pleaf%n%n14    = vegn%pleaf%n%n14    * scaling_factor
-      vegn%proot%n%n14    = vegn%proot%n%n14    * scaling_factor
-      vegn%psapw%n%n14    = vegn%psapw%n%n14    * scaling_factor
-      vegn%pwood%n%n14    = vegn%pwood%n%n14    * scaling_factor
-      vegn%totN = vegn%initialN0
+      self%psoil_sl%n%n14 = self%psoil_sl%n%n14 * scaling_factor
+      self%psoil_fs%n%n14 = self%psoil_fs%n%n14 * scaling_factor
+      self%pmicr%n%n14    = self%pmicr%n%n14    * scaling_factor
+      self%ninorg%n14     = self%ninorg%n14     * scaling_factor
+      self%plabl%n%n14    = self%plabl%n%n14    * scaling_factor
+      self%pseed%n%n14    = self%pseed%n%n14    * scaling_factor
+      self%pleaf%n%n14    = self%pleaf%n%n14    * scaling_factor
+      self%proot%n%n14    = self%proot%n%n14    * scaling_factor
+      self%psapw%n%n14    = self%psapw%n%n14    * scaling_factor
+      self%pwood%n%n14    = self%pwood%n%n14    * scaling_factor
+      self%totN = self%initialN0
     endif
-  end subroutine Recover_N_balance
+  end subroutine recover_N_balance
 
   subroutine initialize_PFT_data()
 
@@ -991,4 +998,195 @@ contains
 
   end subroutine init_derived_species_data
 
-end module datatypes_biomee
+  subroutine initialize_vegn_tile( self )
+    !////////////////////////////////////////////////////////////////
+    ! Code from BiomeE-Allocation
+    !---------------------------------------------------------------
+    class(vegn_tile_type), intent(inout) :: self
+
+    ! Local variables
+    integer :: i, init_n_cohorts
+    type(cohort_type), pointer :: cc
+    type(cohort_item), pointer :: new
+
+    ! Initialize plant cohorts
+    init_n_cohorts = size(myinterface%init_cohort)
+
+    do i = 1, init_n_cohorts
+
+      new => self%new_cohort()
+      cc => new%cohort
+      cc%species     = INT(myinterface%init_cohort(i)%init_cohort_species)
+      cc%nindivs     = myinterface%init_cohort(i)%init_cohort_nindivs ! trees/m2
+      cc%plabl%c%c12 = myinterface%init_cohort(i)%init_cohort_nsc
+      cc%psapw%c%c12 = myinterface%init_cohort(i)%init_cohort_bsw
+      cc%pwood%c%c12 = myinterface%init_cohort(i)%init_cohort_bHW
+      cc%pleaf%c%c12 = myinterface%init_cohort(i)%init_cohort_bl
+      cc%proot%c%c12 = myinterface%init_cohort(i)%init_cohort_br
+      cc%pseed%c%c12 = myinterface%init_cohort(i)%init_cohort_seedC
+      call cc%initialize_cohort_from_biomass()
+
+    enddo
+
+    ! Split initial layer in smaller layers (if it is full)
+    call self%relayer()
+
+    ! Initial Soil pools and environmental conditions
+    self%psoil_fs%c%c12 = myinterface%init_soil%init_fast_soil_C ! kgC m-2
+    self%psoil_sl%c%c12 = myinterface%init_soil%init_slow_soil_C ! slow soil carbon pool, (kg C/m2)
+    self%psoil_fs%n%n14 = self%psoil_fs%c%c12 / CN0metabolicL  ! fast soil nitrogen pool, (kg N/m2)
+    self%psoil_sl%n%n14 = self%psoil_sl%c%c12 / CN0structuralL  ! slow soil nitrogen pool, (kg N/m2)
+    self%N_input        = myinterface%init_soil%N_input        ! kgN m-2 yr-1, N input to soil
+    self%ninorg%n14     = myinterface%init_soil%init_Nmineral  ! Mineral nitrogen pool, (kg N/m2)
+    self%previousN      = self%ninorg%n14
+
+    ! debug: adding microbial biomass initialisation
+    self%pmicr%c%c12 = 0.0 ! to do: add to: myinterface%init_soil%xxxxx
+    self%pmicr%n%n14 = 0.0 ! to do: add to: myinterface%init_soil%xxxxx
+
+    ! Initialize soil volumetric water conent with field capacity (maximum soil moisture to start with)
+    self%wcl = myinterface%params_tile%FLDCAP
+
+    ! Update soil water
+    self%SoilWater = SUM(self%wcl(:)*thksl(:)*1000.0)
+    self%thetaS = 1.0
+
+    ! tile
+    call summarize_tile( self )
+    self%initialN0 =  self%plabl%n%n14 + self%pseed%n%n14 + self%pleaf%n%n14 +      &
+            self%proot%n%n14 + self%psapw%n%n14 + self%pwood%n%n14 + &
+            self%pmicr%n%n14 + self%psoil_fs%n%n14 +       &
+            self%psoil_sl%n%n14 + self%ninorg%n14
+    self%totN =  self%initialN0
+
+  end subroutine initialize_vegn_tile
+
+  subroutine relayer( self )
+    !////////////////////////////////////////////////////////////////
+    ! Arrange crowns into canopy layers according to their height and
+    ! crown areas.
+    ! We fill each layer until the maximum density is reached (layer_vegn_cover),
+    ! before starting a new layer.
+    !---------------------------------------------------------------
+    class(vegn_tile_type), intent(inout) :: self ! input cohorts
+
+    ! ---- local constants
+    real, parameter :: layer_vegn_cover = 1.0   ! i.e. max 1m2 vegetation per m2 ground
+
+    ! local variables
+    integer :: L        ! layer index (top-down)
+    real    :: frac     ! fraction of the layer covered so far by the canopies
+    real    :: fraction ! fraction to split off
+
+    type(cohort_item), pointer :: it  ! iterator
+
+    ! We sort the cohorts be decreasing height (important to do it here!)
+    call self%sort_cohorts_by_height(.false.)
+
+    L = 1
+    frac = 0.0
+
+    ! For each cohort present in the old list
+    it => self%cohorts()
+    do while (associated(it))
+
+      ! We set the layer
+      it%cohort%layer = L
+      if (L == 1) then
+        it%cohort%firstlayer = 1
+      endif
+
+      if ( &
+              L < NLAYERS_MAX .and. &! We check if L < NLAYERS_MAX as we do not want to create more layers than the max specified amount.
+                      it%cohort%layerfrac() > layer_vegn_cover - frac &
+              ) then
+        ! If the current cohort does not fit in the remaining fraction on the layer,
+        ! we add a copy of the cohort to the new cohort list
+
+        fraction = (layer_vegn_cover - frac) / it%cohort%layerfrac()
+        call self%split_cohort(it, fraction)
+
+        ! We keep it as we want to continue processing it at the next iteration
+        ! Since the current layer is filled-up, we open-up a new fraction
+        L = L + 1
+        frac = 0.0
+      else
+        ! Otherwise, we have used-up the whole cohort, we update the current layer fraction and insert the current cohort
+        frac = frac + it%cohort%layerfrac()
+        it => it%next()
+      end if
+
+    end do
+
+  end subroutine relayer
+
+  subroutine reduce( self )
+    !////////////////////////////////////////////////////////////////
+    ! Merge similar cohorts in a tile
+    ! Code from BiomeE-Allocation
+    !---------------------------------------------------------------
+    class(vegn_tile_type), intent(inout) :: self
+
+    ! local variables
+    type(cohort_item), pointer :: it1
+    type(cohort_item), pointer :: it2
+
+    ! This sort is not technically necessary, but is helpful for debugging
+    !call self%sort_cohorts_by_uid(.true.)
+
+    it1 => self%cohorts()
+    do while (associated(it1))
+      it2 => it1%next()
+      do while (associated(it2))
+        if (it1%cohort%can_be_merged_with(it2%cohort)) then
+          it2 => self%merge_cohorts(it1, it2)
+          call it1%cohort%init_bl_br()
+        else
+          it2 => it2%next()
+        end if
+      end do
+      it1 => it1%next()
+    end do
+
+  end subroutine reduce
+
+
+  subroutine kill_lowdensity_cohorts( self )
+    !////////////////////////////////////////////////////////////////
+    ! Remove cohorts that have (almost) fully died and update tile
+    ! Code from BiomeE-Allocation
+    !---------------------------------------------------------------
+    class(vegn_tile_type), intent(inout) :: self
+    ! local variables
+    logical :: at_least_one_survivor
+
+    type(cohort_item), pointer :: it
+
+    at_least_one_survivor = .FALSE.
+
+    ! We first check that we won't kill all the cohorts
+    it => self%cohorts()
+    do while (associated(it))
+      if (it%cohort%nindivs > mindensity) then
+        at_least_one_survivor = .TRUE.
+        exit
+      end if
+      it => it%next()
+    enddo
+
+    ! If at least one cohort survives, we kill the low density ones
+    ! Otherwise er do not kill anyone.
+    if (at_least_one_survivor) then
+      it => self%cohorts()
+      do while (associated(it))
+        if (it%cohort%nindivs > mindensity) then
+          it => it%next()
+        else
+          ! if the density is below the threshold, we kill it.
+          it => self%thin_cohort(it)
+        end if
+      end do
+    end if
+  end subroutine kill_lowdensity_cohorts
+
+end module vegetation_tile_biomee

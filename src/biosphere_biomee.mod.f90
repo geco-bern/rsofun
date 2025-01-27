@@ -5,8 +5,8 @@ module md_biosphere_biomee
   ! Does not contain any input/output; this is done in SR sofun.
   ! Code adopted from BiomeE https://doi.org/10.5281/zenodo.7125963.
   !----------------------------------------------------------------
-  use datatypes_biomee
-  use md_vegetation_biomee
+  use vegetation_tile_biomee
+  use md_vegetation_processes_biomee
   use md_soil_biomee
   use md_soiltemp, only: air_to_soil_temp
   
@@ -30,7 +30,6 @@ contains
       outtype_daily_tile, &
       outtype_annual_tile, &
       outtype_annual_cohorts
-    use md_gpp_biomee, only: getpar_modl_gpp
     use md_sofunutils, only: aggregate
 
     ! Input vairables
@@ -56,10 +55,7 @@ contains
     !----------------------------------------------------------------
     if (state%init) then ! is true for the first year
 
-      call initialize_vegn_tile( vegn )
-
-      ! module-specific parameter specification
-      call getpar_modl_gpp()
+      call vegn%initialize_vegn_tile()
 
     endif
 
@@ -170,9 +166,9 @@ contains
     !---------------------------------------------
     ! Re-organize cohorts
     !---------------------------------------------
-    call relayer_cohorts( vegn )
+    call vegn%relayer()
 
-    call vegn_mergecohorts( vegn )
+    call vegn%reduce()
 
     !---------------------------------------------
     ! Update post-mortality metrics

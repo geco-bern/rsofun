@@ -3,7 +3,7 @@ module md_cohort
   ! Module containing BiomeE cohort definitions
   !----------------------------------------------------------------
   use md_interface_biomee, only: myinterface, spec_data_type, MAX_LEVELS
-  use md_params_core, only: pi
+  use md_params_core, only: pi, eps
   use md_classdefs
 
   ! define data types and constants
@@ -112,6 +112,9 @@ module md_cohort
       !========== Other member procedures
 
       procedure reset_cohort
+      procedure initialize_cohort_from_biomass
+      procedure init_bl_br
+      procedure can_be_merged_with
 
   end type cohort_type
 
@@ -334,5 +337,100 @@ contains
 
     res = self%nindivs * self%crownarea()
   end function layerfrac
+
+  subroutine initialize_cohort_from_biomass(self)
+    !////////////////////////////////////////////////////////////////
+    ! calculate tree height, DBH, height, and crown area by initial biomass
+    ! The allometry equations are from Ray Dybzinski et al. 2011 and Forrior et al. in review
+    !         HT = alphaHT * DBH ** (gamma-1)   ! DBH --> Height
+    !         CA = alphaCA * DBH ** gamma       ! DBH --> Crown Area
+    !         BM = alphaBM * DBH ** (gamma + 1) ! DBH --> tree biomass
+    ! Code from BiomeE-Allocation
+    !---------------------------------------------------------------
+    class(cohort_type), intent(inout) :: self
+
+    ! Local variable
+    type(spec_data_type) :: sp
+
+    sp = self%sp()
+
+    call self%init_bl_br()
+
+    self%plabl%c%c12  = 2.0 * (self%bl_max + self%br_max)
+
+    ! N pools
+    self%plabl%n%n14  = 5.0 * (self%bl_max / sp%CNleaf0 + self%br_max / sp%CNroot0)
+    self%pleaf%n%n14  = self%pleaf%c%c12 / sp%CNleaf0
+    self%proot%n%n14  = self%proot%c%c12 / sp%CNroot0
+    self%psapw%n%n14  = self%psapw%c%c12 / sp%CNsw0
+    self%pwood%n%n14  = self%pwood%c%c12 / sp%CNwood0
+    self%pseed%n%n14  = self%pseed%c%c12 / sp%CNseed0
+
+  end subroutine initialize_cohort_from_biomass
+
+  subroutine init_bl_br( self )
+    !////////////////////////////////////////////////////////////////
+    ! Code from BiomeE-Allocation
+    !---------------------------------------------------------------
+    class(cohort_type), intent(inout) :: self
+
+    ! Local variable
+    type(spec_data_type) :: sp
+    real :: crownarea ! Cache variable
+
+    sp = self%sp()
+
+    crownarea = self%crownarea()
+
+    ! calculations of bl_max and br_max are here only for the sake of the
+    ! diagnostics, because otherwise those fields are inherited from the
+    ! parent cohort and produce spike in the output, even though these spurious
+    ! values are not used by the model
+    self%bl_max = sp%LMA   * sp%LAImax        * crownarea / self%layer
+    self%br_max = sp%phiRL * sp%LAImax/sp%SRA * crownarea / self%layer
+
+  end subroutine init_bl_br
+
+  function can_be_merged_with(self, other) result(res)
+    !////////////////////////////////////////////////////////////////
+    ! Code from BiomeE-Allocation
+    !---------------------------------------------------------------
+    class(cohort_type), intent(inout) :: self
+    logical :: res
+    type(cohort_type) :: other
+
+    ! Local variables
+    logical :: sameSpecies, sameLayer, sameSize, sameSizeTree, sameSizeGrass
+    real :: self_dbh, other_dbh, dbh_diff
+
+    self_dbh = self%dbh()
+    other_dbh = other%dbh()
+    dbh_diff = abs(self_dbh - other_dbh)
+
+    associate (spdata => myinterface%params_species)
+
+      sameSpecies  = self%species == other%species
+
+      sameLayer    = (self%layer == other%layer) .or. &
+              ((spdata(self%species)%lifeform == 0) .and. &
+                      (spdata(other%species)%lifeform == 0) .and. &
+                      (self%layer > 1 .and. other%layer > 1))
+
+      sameSizeTree = (spdata(self%species)%lifeform > 0).and.  &
+              (spdata(other%species)%lifeform > 0).and.  &
+              ((dbh_diff/(self_dbh + other_dbh) < 0.1 ) .or.  &
+                      (dbh_diff < 0.001))  ! it'll be always true for grasses
+
+      sameSizeGrass= (spdata(self%species)%lifeform == 0) .and. &
+              (spdata(other%species)%lifeform == 0) .and. &
+              (dbh_diff < eps .and. self%age > 2. .and. other%age > 2.)  ! it'll be always true for grasses
+
+      sameSize = sameSizeTree .or. sameSizeGrass
+
+      res = sameSpecies .and. sameLayer .and. sameSize
+
+    end associate
+
+  end function
 
 end module md_cohort

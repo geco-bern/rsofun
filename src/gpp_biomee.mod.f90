@@ -5,7 +5,7 @@ module md_gpp_biomee
   ! Code for gs_leuning photosynthesis option is adopted from BiomeE https://doi.org/10.5281/zenodo.7125963.
   ! Code for pmodel photosynthesis option is for P-model (Stocker et al., 2020 GMD)
   !----------------------------------------------------------------
-  use datatypes_biomee
+  use vegetation_tile_biomee
   use md_interface_biomee, only: myinterface
   use md_soil_biomee, only: water_supply_layer
   use md_sofunutils, only: calc_esat
@@ -13,23 +13,26 @@ module md_gpp_biomee
   implicit none
 
   private
-  public gpp, getpar_modl_gpp
+  public gpp
 
   !-----------------------------------------------------------------------
   ! P-model parameters created here for pmodel option. takes no effect in gs_leuning option
   !-----------------------------------------------------------------------
   type paramstype_gpp
-    real :: beta         ! Unit cost of carboxylation (dimensionless)
-    real :: soilm_thetastar
-    real :: soilm_betao
-    real :: rd_to_vcmax  ! Ratio of Rdark to Vcmax25, number from Atkin et al., 2015 for C3 herbaceous
-    real :: tau_acclim   ! acclimation time scale of photosynthesis (d)
-    real :: kc_jmax
+    real :: beta = 146.0        ! Unit cost of carboxylation (dimensionless)
+
+    ! Apply identical temperature ramp parameter for all PFTs
+    real :: tau_acclim = 30.0   ! acclimation time scale of photosynthesis (d)
+    real :: soilm_thetastar = 0.6 * 250
+    real :: soilm_betao = 0.0
+
+    real :: rd_to_vcmax = 0.014 ! Ratio of Rdark to Vcmax25, number from Atkin et al., 2015 for C3 herbaceous
+    real :: kc_jmax = 0.41      ! Jmax cost ratio
 
     ! these should be species-specific, temporary solution to put them here
-    real :: kphio        ! quantum yield efficiency at optimal temperature, phi_0 (Stocker et al., 2020 GMD Eq. 10)
-    real :: kphio_par_a  ! shape parameter of temperature-dependency of quantum yield efficiency
-    real :: kphio_par_b  ! optimal temperature of quantum yield efficiency (deg C)
+    real :: kphio = 0.05        ! quantum yield efficiency at optimal temperature, phi_0 (Stocker et al., 2020 GMD Eq. 10)
+    real :: kphio_par_a = 0.0   ! shape parameter of temperature-dependency of quantum yield efficiency
+    real :: kphio_par_b = 25.0  ! optimal temperature of quantum yield efficiency (deg C)
 
   end type paramstype_gpp
 
@@ -535,36 +538,6 @@ contains
   !   solarzen = 90.0 - solarelev ! pi/2.d0 - solarelev
 
   ! end subroutine calc_solarzen
-
-
-  subroutine getpar_modl_gpp()
-    !////////////////////////////////////////////////////////////////
-    ! Subroutine reads module-specific parameters from input file.
-    !----------------------------------------------------------------
-    ! unit cost of carboxylation
-    params_gpp%beta  = 146.000000
-
-    ! Ratio of Rdark to Vcmax25, number from Atkin et al., 2015 for C3 herbaceous
-    params_gpp%rd_to_vcmax  = 0.01400000
-
-    ! Apply identical temperature ramp parameter for all PFTs
-    params_gpp%tau_acclim     = 30.0
-    params_gpp%soilm_thetastar= 0.6 * 250
-    params_gpp%soilm_betao    = 0.0
-
-    ! Jmax cost ratio
-    params_gpp%kc_jmax  = 0.41
-
-    ! quantum yield efficiency at optimal temperature, phi_0 (Stocker et al., 2020 GMD Eq. 10)
-    params_gpp%kphio = 0.05
-
-    ! shape parameter of temperature-dependency of quantum yield efficiency
-    params_gpp%kphio_par_a = 0.0
-
-    ! optimal temperature of quantum yield efficiency
-    params_gpp%kphio_par_b = 25.0
-
-  end subroutine getpar_modl_gpp
 
   function qscomp(T, p) result(qsat)
     !--------Output

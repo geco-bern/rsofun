@@ -45,7 +45,7 @@ contains
     use md_forcing_biomee, only: getclimate, &
       climate_type
     use md_interface_biomee
-    use datatypes_biomee
+    use vegetation_tile_biomee
     use md_biosphere_biomee, only: biosphere_annual
     use md_luluc, only: update_lu_state, populate_outarray_annual_land_use
 
@@ -353,7 +353,7 @@ contains
 
     use, intrinsic :: iso_fortran_env, dp=>real64, sp=>real32, in=>int32
     use md_interface_biomee, only: outtype_daily_tile
-    use datatypes_biomee
+    use vegetation_tile_biomee
 
     ! arguments
     type(outtype_daily_tile), dimension(ndayyear), intent(in) :: daily_tile
@@ -405,7 +405,7 @@ contains
 
     use, intrinsic :: iso_fortran_env, dp=>real64, sp=>real32, in=>int32
     use md_interface_biomee, only: outtype_annual_tile
-    use datatypes_biomee
+    use vegetation_tile_biomee
 
     ! arguments
     type(outtype_annual_tile), intent(in) :: annual_tile
@@ -478,7 +478,7 @@ contains
 
     use, intrinsic :: iso_fortran_env, dp=>real64, sp=>real32, in=>int32
     use md_interface_biomee, only: outtype_annual_cohorts
-    use datatypes_biomee
+    use vegetation_tile_biomee
 
     ! arguments
     type(outtype_annual_cohorts), dimension(out_max_cohorts), intent(in) :: annual_cohorts
