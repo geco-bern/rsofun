@@ -172,14 +172,6 @@ contains
           cc%resl = -resp * c_molmass * 1e-3 * cc%leafarea() * myinterface%step_seconds ! kgC tree-1 step-1
           cc%fast_fluxes%gpp = (psyn - resp) * c_molmass * 1e-3 * cc%leafarea() * myinterface%step_seconds ! kgC step-1 tree-1
 
-          else
-
-          ! no leaves means no photosynthesis and no stomatal conductance either
-            cc%An_op   = 0.0
-            cc%An_cl   = 0.0
-            cc%fast_fluxes%gpp   = 0.0
-            cc%fast_fluxes%trsp  = 0.0
-
           endif
         end associate
 
@@ -255,24 +247,10 @@ contains
                                 method_jmaxlim = "wang17" &
                                 )
 
-          ! irrelevant variables for this setup  
-          cc%An_op   = 0.0
-          cc%An_cl   = 0.0
-          cc%fast_fluxes%trsp  = 0.0
-
           ! quantities per tree and cumulated over seconds in time step (kgC step-1 tree-1 )
           cc%fast_fluxes%gpp = par * fapar_tree(i) * out_pmodel%lue * cc%crownarea() * myinterface%step_seconds * 1.0e-3
           cc%resl = fapar_tree(i) * out_pmodel%vcmax25 * params_gpp%rd_to_vcmax * calc_ftemp_inst_rd( forcing%Tair - kTkelvin ) &
             * cc%crownarea() * myinterface%step_seconds * c_molmass * 1.0e-3
-
-        else
-
-          ! no leaves means no photosynthesis and no stomatal conductance either
-          cc%An_op   = 0.0
-          cc%An_cl   = 0.0
-          cc%resl    = 0.0
-          cc%fast_fluxes%gpp   = 0.0
-          cc%fast_fluxes%trsp  = 0.0
 
         endif
 
