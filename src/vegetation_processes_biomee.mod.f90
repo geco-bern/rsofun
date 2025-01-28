@@ -1069,7 +1069,7 @@ contains
     CNslow = vegn%psoil_sl%c%c12 / vegn%psoil_sl%n%n14
 
     ! C decomposition
-    A = A_function(tsoil, vegn%thetaS)
+    A = A_function(tsoil, vegn%thetaS())
     micr_C_loss = vegn%pmicr%c%c12    * (1.0 - exp(-A*phoMicrobial* myinterface%dt_fast_yr))
     fast_L_loss = vegn%psoil_fs%c%c12 * (1.0 - exp(-A*myinterface%params_tile%K1 * myinterface%dt_fast_yr))
     slow_L_loss = vegn%psoil_sl%c%c12 * (1.0 - exp(-A*myinterface%params_tile%K2 * myinterface%dt_fast_yr))

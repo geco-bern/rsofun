@@ -171,7 +171,6 @@ contains
 
       ! Total soil water
       vegn%wcl(:) = vegn%wcl(:) +  WaterBudgetL(:)/(thksl(:)*1000.0)
-      vegn%SoilWater = SUM(vegn%wcl(:)*thksl(:)*1000.0)
 
     end subroutine SoilWaterDynamicsLayer
 

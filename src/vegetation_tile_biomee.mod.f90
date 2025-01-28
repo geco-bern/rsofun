@@ -86,7 +86,6 @@ module vegetation_tile_biomee
     type(cohort_stack), private :: killed_fraction_list
 
     !===== Tile-level forest inventory information
-    real    :: area                               ! m2
     real    :: age                = 0.0           ! tile age
     real    :: nindivs
     real    :: DBH
@@ -148,9 +147,7 @@ module vegetation_tile_biomee
     real    :: evap                               ! kg H2O m-2 timestep-1
     real    :: transp                             ! kg H2O m-2 timestep-1
     real    :: runoff                             ! Water runoff of the veg tile, unit?
-    real    :: thetaS                             ! moisture index (ws - wiltpt)/(fldcap - wiltpt)
     real    :: wcl(MAX_LEVELS)                    ! volumetric soil water content for each layer
-    real    :: soilWater                          ! kg m-2 in root zone
 
     !=====  Fast loop carbon fluxes, kg timestep-1 m-2
     real    :: gpp                = 0.0           ! gross primary production, kg C m-2 timestep-1
@@ -218,9 +215,35 @@ module vegetation_tile_biomee
       procedure, private :: zero_daily_diagnostics
       procedure, private :: kill_cohort
 
+    !========= Derived variables
+    ! Variables which are function of any state or temporary variable defined above.
+    ! They can be used like any normal variable except that they are followed by parenthesis
+    ! (indicating that they are being evaluated every time).
+    ! The advantage is that they cannot be out-of-sync with the underlying data, at the cost of a negligeable
+    ! increase in the number of operations.
+    procedure thetaS
+    procedure soilwater
+
   end type vegn_tile_type
 
 contains
+
+  pure real function soilwater(self)
+    ! kg m-2 in root zone
+    class(vegn_tile_type), intent(in) :: self
+
+    soilwater  = SUM(self%wcl(:)*thksl(:)*1000.0)
+
+  end function soilwater
+
+  pure real function thetaS(self)
+    ! moisture index (ws - wiltpt)/(fldcap - wiltpt)
+    class(vegn_tile_type), intent(in) :: self
+
+    thetaS  = (self%wcl(2) - myinterface%params_tile%WILTPT) &
+            / (myinterface%params_tile%FLDCAP - myinterface%params_tile%WILTPT)
+
+  end function thetaS
 
   subroutine split_cohort(self, item, fraction)
     ! Split a cohort into two. The initial cohort gets scaled by (1 - fraction),
@@ -606,7 +629,7 @@ contains
       out_daily_tile%doy       = idoy
       out_daily_tile%Tc        = self%tc_daily
       out_daily_tile%Prcp      = self%dailyPrcp
-      out_daily_tile%totWs     = self%soilwater
+      out_daily_tile%totWs     = self%soilwater()
       out_daily_tile%Trsp      = self%dailyTrsp
       out_daily_tile%Evap      = self%dailyEvap
       out_daily_tile%Runoff    = self%dailyRoff
@@ -769,7 +792,7 @@ contains
     out_annual_tile%Rauto           = self%annualResp
     out_annual_tile%Rh              = self%annualRh
     out_annual_tile%rain            = self%annualPrcp
-    out_annual_tile%SoilWater       = self%SoilWater
+    out_annual_tile%SoilWater       = self%SoilWater()
     out_annual_tile%Transp          = self%annualTrsp
     out_annual_tile%Evap            = self%annualEvap
     out_annual_tile%Runoff          = self%annualRoff
@@ -1047,10 +1070,6 @@ contains
 
     ! Initialize soil volumetric water conent with field capacity (maximum soil moisture to start with)
     self%wcl = myinterface%params_tile%FLDCAP
-
-    ! Update soil water
-    self%SoilWater = SUM(self%wcl(:)*thksl(:)*1000.0)
-    self%thetaS = 1.0
 
     ! tile
     call summarize_tile( self )

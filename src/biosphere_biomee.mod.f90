@@ -81,12 +81,7 @@ contains
 
         doy = doy + 1
 
-        ! The algorithm for computing soil temp from air temp works with a daily period.
-        ! vegn%wcl(2) is updated in the fast loop, but not much so it is ok to use
-        ! the last value of the previous day for computing the daily soil temperature.
-        vegn%thetaS  = (vegn%wcl(2) - myinterface%params_tile%WILTPT) &
-                / (myinterface%params_tile%FLDCAP - myinterface%params_tile%WILTPT)
-        tsoil = air_to_soil_temp(vegn%thetaS, &
+        tsoil = air_to_soil_temp(vegn%thetaS(), &
                 daily_temp - kTkelvin, &
                 doy, &
                 state%init, &
@@ -100,9 +95,6 @@ contains
         fastloop: do fastloop_idx = 1,myinterface%steps_per_day
 
           simu_steps   = simu_steps + 1
-
-          vegn%thetaS  = (vegn%wcl(2) - myinterface%params_tile%WILTPT) &
-                  / (myinterface%params_tile%FLDCAP - myinterface%params_tile%WILTPT)
 
           !----------------------------------------------------------------
           ! Sub-daily time step at resolution given by forcing (can be 1 = daily)

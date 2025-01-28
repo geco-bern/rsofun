@@ -166,8 +166,6 @@ contains
             psyn, resp, w_scale2, transp )
 
           ! store the calculated photosynthesis, photorespiration, and transpiration for future use in growth
-          cc%An_op   = psyn   ! molC s-1 m-2 of leaves ! net photosynthesis, mol C/(m2 of leaves s)
-          cc%An_cl   = -resp  ! molC s-1 m-2 of leaves
           cc%fast_fluxes%trsp = transp * h2o_molmass * 1e-3 * cc%leafarea() * myinterface%step_seconds      ! Transpiration (kgH2O/(tree step), Weng, 2017-10-16
           cc%resl = -resp * c_molmass * 1e-3 * cc%leafarea() * myinterface%step_seconds ! kgC tree-1 step-1
           cc%fast_fluxes%gpp = (psyn - resp) * c_molmass * 1e-3 * cc%leafarea() * myinterface%step_seconds ! kgC step-1 tree-1

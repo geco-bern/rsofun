@@ -64,6 +64,9 @@ module md_cohort
 
     !===== Daily fluxes, kg day-1 tree-1
     type(common_fluxes) :: daily_fluxes
+    real    :: C_growth           = 0.0           ! Carbon gain since last growth, kg C day-1 tree-1
+    real    :: N_growth           = 0.0           ! Nitrogen used for plant tissue growth, kg N day-1 tree-1
+    real    :: resg               = 0.0           ! growth respiration, kg C day-1 tree-1
 
     !===== Annual fluxes, kg yr-1 tree-1
     type(common_fluxes) :: annual_fluxes
@@ -74,13 +77,6 @@ module md_cohort
 
     !===== Water uptake-related variables
     real    :: WupL(MAX_LEVELS)   = 0.0           ! normalized vertical distribution of uptake
-
-    !===== Photosynthesis variables
-    real    :: An_op              = 0.0           ! mol C/(m2 of leaf per year)
-    real    :: An_cl              = 0.0           ! mol C/(m2 of leaf per year)
-    real    :: C_growth           = 0.0           ! Carbon gain since last growth, kg C day-1 tree-1
-    real    :: N_growth           = 0.0           ! Nitrogen used for plant tissue growth, kg N day-1 tree-1
-    real    :: resg               = 0.0           ! growth respiration, kg C day-1 tree-1
 
     !===== Memory variables used for computing deltas
     real    :: DBH_ys            = 0.0            ! DBH at the begining of a year (growing season)
@@ -176,8 +172,6 @@ contains
 
     self%WupL(:)       = 0.0
 
-    self%An_op         = 0.0
-    self%An_cl         = 0.0
     self%N_growth      = 0.0
     self%N_growth      = 0.0
 
