@@ -100,10 +100,12 @@ contains
       real    :: rsoil  ! s m-1
       real    :: raero
       real    :: wsupply
+      real    :: LAI
       real    :: WaterBudgetL(MAX_LEVELS)
       integer :: i
       type(cohort_item), pointer :: it
 
+      LAI = 0.0
       ! Water uptaken by roots, per timestep
       WaterBudgetL = 0.0
       it => vegn%cohorts()
@@ -117,6 +119,10 @@ contains
           if(wsupply > 0.0) then
               WaterBudgetL(:) = WaterBudgetL(:) - cc%WupL(:)/wsupply * cc%fast_fluxes%trsp * cc%nindivs
           endif
+
+          ! the surface of leaves per m2 of ground/tile
+          LAI = LAI + cc%leafarea() * cc%nindivs
+
           it => it%next()
       end do ! all cohorts
 
@@ -125,7 +131,7 @@ contains
          kappa = 0.75
     !    thermodynamic parameters for air
 
-          Rsoilabs = forcing%radiation * exp(-kappa*vegn%LAI)
+          Rsoilabs = forcing%radiation * exp(-kappa*LAI)
 
           Hgrownd = 0.0
           TairK = forcing%Tair
@@ -156,6 +162,7 @@ contains
 
     !! soil water refill by precipitation
       rainwater =  forcing%rain * myinterface%step_seconds
+      vegn%precp = rainwater
       if(rainwater > 0.0)then
          do i=1, MAX_LEVELS
             W_deficit(i) = (myinterface%params_tile%FLDCAP - vegn%wcl(i)) * thksl(i)*1000.0

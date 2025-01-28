@@ -37,7 +37,8 @@ module md_classdefs
   end type orgpool
 
   type :: common_fluxes
-    ! Note: the unit depends on the context
+    ! Fluxes common between cohorts and vegetation tiles
+    ! Note: the unit depends on the context (timestep, daily, annual)
     real    :: Trsp          = 0.0
     real    :: GPP           = 0.0
     real    :: NPP           = 0.0
@@ -49,17 +50,28 @@ module md_classdefs
 contains
 !=========================LOW-LEVEL================================
 
-  subroutine update_fluxes(fluxes, delta)
+  subroutine update_fluxes(fluxes, delta, scale)
     ! Add delta quantities to partial fluxes (accounting)
+    ! Optional scaling of the delta. By default: 1.0
     type(common_fluxes), intent(inout) :: fluxes
     type(common_fluxes), intent(in) :: delta
+    real, optional, intent(in) :: scale
 
-    fluxes%Trsp   = fluxes%Trsp   + delta%Trsp
-    fluxes%GPP    = fluxes%GPP    + delta%GPP
-    fluxes%NPP    = fluxes%NPP    + delta%NPP
-    fluxes%Resp   = fluxes%Resp   + delta%Resp
-    fluxes%Nup    = fluxes%Nup    + delta%Nup
-    fluxes%fixedN = fluxes%fixedN + delta%fixedN
+    ! Local variable
+    real :: scale_opt
+
+    if (present(scale)) then
+      scale_opt = scale
+    else
+      scale_opt = 1.0
+    end if
+
+    fluxes%Trsp   = fluxes%Trsp   + delta%Trsp   * scale_opt
+    fluxes%GPP    = fluxes%GPP    + delta%GPP    * scale_opt
+    fluxes%NPP    = fluxes%NPP    + delta%NPP    * scale_opt
+    fluxes%Resp   = fluxes%Resp   + delta%Resp   * scale_opt
+    fluxes%Nup    = fluxes%Nup    + delta%Nup    * scale_opt
+    fluxes%fixedN = fluxes%fixedN + delta%fixedN * scale_opt
 
   end subroutine update_fluxes
 

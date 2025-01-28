@@ -204,7 +204,6 @@ contains
     call vegn_tissue_turnover( vegn )
 
     ! Allocate C_gain to tissues
-    vegn%LAI = 0.0
     it => vegn%cohorts()
     do while (associated(it))
       cc => it%cohort
@@ -316,9 +315,6 @@ contains
         cc%NPPleaf = cc%NPPleaf + dBL
         cc%NPProot = cc%NPProot + dBR
         cc%NPPwood = cc%NPPwood + dBSW
-
-        ! vegn%LAI is the surface of leaves per m2 of ground/tile
-        vegn%LAI     = vegn%LAI + cc%leafarea() * cc%nindivs
 
         ! convert sapwood to heartwood for woody plants ! Nitrogen from sapwood to heart wood
         if (sp%lifeform > 0) then

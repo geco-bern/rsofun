@@ -42,38 +42,38 @@ module md_cohort
     integer :: status     = LEAF_OFF     ! growth status of plant
     real    :: leaf_age   = 0.0          ! leaf age (years)
 
-    !===== Organic pools
-    type(orgpool) :: pleaf               ! leaf biomass, kg tree-1
-    type(orgpool) :: proot               ! root biomass, kg tree-1
-    type(orgpool) :: psapw               ! sapwood biomass, kg tree-1
-    type(orgpool) :: pwood               ! heartwood (non-living) biomass, kg tree-1
-    type(orgpool) :: pseed               ! biomass put aside for future progeny, kg tree-1
-    type(orgpool) :: plabl               ! labile pool, temporary storage of N and C, kg tree-1
+    !===== Organic pools, kg tree-1
+    type(orgpool) :: pleaf               ! leaf biomass
+    type(orgpool) :: proot               ! root biomass
+    type(orgpool) :: psapw               ! sapwood biomass
+    type(orgpool) :: pwood               ! heartwood (non-living) biomass
+    type(orgpool) :: pseed               ! biomass put aside for future progeny
+    type(orgpool) :: plabl               ! labile pool, temporary storage of N and C
 
-    !===== Nitrogen model related variables (persistent from year to year)
-    real    :: bl_max     = 0.0          ! Max. leaf biomass, kg C tree-1
-    real    :: br_max     = 0.0          ! Max. fine root biomass, kg C tree-1
+    !===== Nitrogen model related variables (persistent from year to year), kg C tree-1
+    real    :: bl_max     = 0.0          ! Max. leaf biomass
+    real    :: br_max     = 0.0          ! Max. fine root biomass
 
     !=================== Temporary variables
     ! Contrary to the state vairbales, temporary variables are reset every step, day, or year (as appropriate).
 
     !===== Fast step fluxes, kg timestep-1 tree-1
     type(common_fluxes) :: fast_fluxes
-    real    :: resl               = 0.0           ! leaf respiration, kg C timestep-1 tree-1
-    real    :: resr               = 0.0           ! root respiration, kg C timestep-1 tree-1
+    real    :: resl               = 0.0           ! leaf respiration
+    real    :: resr               = 0.0           ! root respiration
 
     !===== Daily fluxes, kg day-1 tree-1
     type(common_fluxes) :: daily_fluxes
-    real    :: C_growth           = 0.0           ! Carbon gain since last growth, kg C day-1 tree-1
-    real    :: N_growth           = 0.0           ! Nitrogen used for plant tissue growth, kg N day-1 tree-1
-    real    :: resg               = 0.0           ! growth respiration, kg C day-1 tree-1
+    real    :: C_growth           = 0.0           ! Carbon gain since last growth
+    real    :: N_growth           = 0.0           ! Nitrogen used for plant tissue growth
+    real    :: resg               = 0.0           ! growth respiration
 
     !===== Annual fluxes, kg yr-1 tree-1
     type(common_fluxes) :: annual_fluxes
-    real    :: NPPleaf            = 0.0           ! C allocated to leaf, kg C yr-1 tree-1
-    real    :: NPProot            = 0.0           ! C allocated to root, kg C yr-1 tree-1
-    real    :: NPPwood            = 0.0           ! C allocated to wood, kg C yr-1 tree-1
-    real    :: m_turnover         = 0.0           ! C turnover due to tissue turnover (kg C yr-1 tree-1)
+    real    :: NPPleaf            = 0.0           ! C allocated to leaf
+    real    :: NPProot            = 0.0           ! C allocated to root
+    real    :: NPPwood            = 0.0           ! C allocated to wood
+    real    :: m_turnover         = 0.0           ! C turnover due to tissue turnover
 
     !===== Water uptake-related variables
     real    :: WupL(MAX_LEVELS)   = 0.0           ! normalized vertical distribution of uptake
