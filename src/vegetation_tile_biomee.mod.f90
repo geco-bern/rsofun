@@ -6,7 +6,8 @@ module vegetation_tile_biomee
   !----------------------------------------------------------------
   use md_interface_biomee, only: myinterface, spec_data_type, MAX_LEVELS
   use md_params_core
-  use md_classdefs
+  use md_orgpool
+  use md_common_fluxes
   use md_cohort
   use md_cohort_linked_list
 
@@ -131,8 +132,8 @@ module vegetation_tile_biomee
     type(orgpool) :: psoil_sl        ! soil organic matter, slow turnover
     type(orgpool) :: pmicr           ! microbial biomass
 
-    !===== Inorganic N pools, kg m-2
-    type(nitrogen) :: ninorg                      ! Mineral nitrogen pool
+    !===== Inorganic pools, kg m-2
+    type(orgpool) :: inorg                      ! Mineral N/C pool
 
     !=====  Averaged quantities for PPA phenology
     ! Note, these fields do not follow the usual annual cycle (january-january)
@@ -142,10 +143,8 @@ module vegetation_tile_biomee
     real    :: tc_pheno           = 0.0           ! smoothed canopy air temperature for phenology
 
     !===== Annual C/N allocation to seed and non-seed, kg yr-1 m-2
-    real    :: totSeedC           ! Total seed C
-    real    :: totSeedN           ! Total seed N
-    real    :: totNewCC           ! New cohort C (all compartments but seed)
-    real    :: totNewCN           ! New cohort N (all compartments but seed)
+    type(orgpool)    :: totSeed           ! Total seed
+    type(orgpool)    :: totNewC           ! New cohort (all compartments but seed)
 
     !=====  N-related fluxes
     real    :: totN
@@ -406,10 +405,8 @@ contains
     self%n_deadtrees  = 0.0
     self%c_deadtrees  = 0.0
     self%m_turnover   = 0.0
-    self%totseedC     = 0.0
-    self%totseedN     = 0.0
-    self%totNewCC     = 0.0
-    self%totNewCN     = 0.0
+    self%totseed      = orgpool()
+    self%totNewC      = orgpool()
 
 
     ! We reset the cohorts internal state
@@ -450,24 +447,24 @@ contains
     real :: dbh ! cache variable
 
     ! State variables
-    call orginit(self%plabl)
-    call orginit(self%pleaf)
-    call orginit(self%proot)
-    call orginit(self%psapw)
-    call orginit(self%pwood)
-    call orginit(self%pseed)
+    self%plabl = orgpool()
+    self%pleaf = orgpool()
+    self%proot = orgpool()
+    self%psapw = orgpool()
+    self%pwood = orgpool()
+    self%pseed = orgpool()
 
     it => self%cohorts()
     do while (associated(it))
       cc => it%cohort
 
       ! organic pools
-      call orgcp(cc%plabl, self%plabl, cc%nindivs)
-      call orgcp(cc%pleaf, self%pleaf, cc%nindivs)
-      call orgcp(cc%proot, self%proot, cc%nindivs)
-      call orgcp(cc%psapw, self%psapw, cc%nindivs)
-      call orgcp(cc%pwood, self%pwood, cc%nindivs)
-      call orgcp(cc%pseed, self%pseed, cc%nindivs)
+      self%plabl = self%plabl + cc%plabl * cc%nindivs
+      self%pleaf = self%pleaf + cc%pleaf * cc%nindivs
+      self%proot = self%proot + cc%proot * cc%nindivs
+      self%psapw = self%psapw + cc%psapw * cc%nindivs
+      self%pwood = self%pwood + cc%pwood * cc%nindivs
+      self%pseed = self%pseed + cc%pseed * cc%nindivs
 
       it => it%next()
 
@@ -560,7 +557,7 @@ contains
       cc => it%cohort
 
       ! cohort daily
-      call update_fluxes(cc%daily_fluxes, cc%fast_fluxes)
+      call cc%daily_fluxes%add(cc%fast_fluxes)
 
       ! Reset fast fluxes
       cc%fast_fluxes = common_fluxes()
@@ -597,8 +594,8 @@ contains
       cc => it%cohort
 
       ! running annual sum
-      call update_fluxes(cc%annual_fluxes, cc%daily_fluxes)
-      call update_fluxes(self%daily_fluxes, cc%daily_fluxes, cc%nindivs)
+      call cc%annual_fluxes%add(cc%daily_fluxes)
+      call self%daily_fluxes%add(cc%daily_fluxes, cc%nindivs)
 
       ! Reset daily variables
       cc%daily_fluxes = common_fluxes()
@@ -624,25 +621,25 @@ contains
       out_daily_tile%GPP       = self%daily_fluxes%GPP
       out_daily_tile%Rauto     = self%daily_fluxes%Resp
       out_daily_tile%Rh        = self%dailyRh
-      out_daily_tile%NSC       = self%plabl%c%c12
-      out_daily_tile%seedC     = self%pseed%c%c12
-      out_daily_tile%leafC     = self%pleaf%c%c12
-      out_daily_tile%rootC     = self%proot%c%c12
-      out_daily_tile%SW_C      = self%psapw%c%c12
-      out_daily_tile%HW_C      = self%pwood%c%c12
-      out_daily_tile%NSN       = self%plabl%n%n14
-      out_daily_tile%seedN     = self%pseed%n%n14
-      out_daily_tile%leafN     = self%pleaf%n%n14
-      out_daily_tile%rootN     = self%proot%n%n14
-      out_daily_tile%SW_N      = self%psapw%n%n14
-      out_daily_tile%HW_N      = self%pwood%n%n14
-      out_daily_tile%McrbC     = self%pmicr%c%c12
-      out_daily_tile%fastSOM   = self%psoil_fs%c%c12
-      out_daily_tile%slowSOM   = self%psoil_sl%c%c12
-      out_daily_tile%McrbN     = self%pmicr%n%n14
-      out_daily_tile%fastSoilN = self%psoil_fs%n%n14
-      out_daily_tile%slowSoilN = self%psoil_sl%n%n14
-      out_daily_tile%mineralN  = self%ninorg%n14
+      out_daily_tile%NSC       = self%plabl%c12
+      out_daily_tile%seedC     = self%pseed%c12
+      out_daily_tile%leafC     = self%pleaf%c12
+      out_daily_tile%rootC     = self%proot%c12
+      out_daily_tile%SW_C      = self%psapw%c12
+      out_daily_tile%HW_C      = self%pwood%c12
+      out_daily_tile%NSN       = self%plabl%n14
+      out_daily_tile%seedN     = self%pseed%n14
+      out_daily_tile%leafN     = self%pleaf%n14
+      out_daily_tile%rootN     = self%proot%n14
+      out_daily_tile%SW_N      = self%psapw%n14
+      out_daily_tile%HW_N      = self%pwood%n14
+      out_daily_tile%McrbC     = self%pmicr%c12
+      out_daily_tile%fastSOM   = self%psoil_fs%c12
+      out_daily_tile%slowSOM   = self%psoil_sl%c12
+      out_daily_tile%McrbN     = self%pmicr%n14
+      out_daily_tile%fastSoilN = self%psoil_fs%n14
+      out_daily_tile%slowSoilN = self%psoil_sl%n14
+      out_daily_tile%mineralN  = self%inorg%n14
       out_daily_tile%N_uptk    = self%daily_fluxes%Nup
     endif
 
@@ -685,8 +682,8 @@ contains
 
       i = i + 1
 
-      treeG     = cc%pseed%c%c12 + cc%NPPleaf + cc%NPProot + cc%NPPwood
-      fseed     = cc%pseed%c%c12 / treeG
+      treeG     = cc%pseed%c12 + cc%NPPleaf + cc%NPProot + cc%NPPwood
+      fseed     = cc%pseed%c12 / treeG
       fleaf     = cc%NPPleaf / treeG
       froot     = cc%NPProot / treeG
       fwood     = cc%NPPwood / treeG
@@ -710,13 +707,13 @@ contains
         out_annual_cohorts(i)%dBA         = dBA
         out_annual_cohorts(i)%Acrown      = cc%crownarea()
         out_annual_cohorts(i)%Aleaf       = cc%leafarea()
-        out_annual_cohorts(i)%nsc         = cc%plabl%c%c12
-        out_annual_cohorts(i)%nsn         = cc%plabl%n%n14
-        out_annual_cohorts(i)%seedC       = cc%pseed%c%c12
-        out_annual_cohorts(i)%leafC       = cc%pleaf%c%c12
-        out_annual_cohorts(i)%rootC       = cc%proot%c%c12
-        out_annual_cohorts(i)%sapwC       = cc%psapw%c%c12
-        out_annual_cohorts(i)%woodC       = cc%pwood%c%c12
+        out_annual_cohorts(i)%nsc         = cc%plabl%c12
+        out_annual_cohorts(i)%nsn         = cc%plabl%n14
+        out_annual_cohorts(i)%seedC       = cc%pseed%c12
+        out_annual_cohorts(i)%leafC       = cc%pleaf%c12
+        out_annual_cohorts(i)%rootC       = cc%proot%c12
+        out_annual_cohorts(i)%sapwC       = cc%psapw%c12
+        out_annual_cohorts(i)%woodC       = cc%pwood%c12
         out_annual_cohorts(i)%treeG       = treeG
         out_annual_cohorts(i)%fseed       = fseed
         out_annual_cohorts(i)%fleaf       = fleaf
@@ -730,7 +727,7 @@ contains
 
       end if
 
-      call update_fluxes(self%annual_fluxes, cc%annual_fluxes, cc%nindivs)
+      call self%annual_fluxes%add(cc%annual_fluxes, cc%nindivs)
 
       it => it%next()
 
@@ -738,11 +735,11 @@ contains
 
     call self%aggregate_cohorts()
 
-    plantC    = self%plabl%c%c12 + self%pseed%c%c12 + self%pleaf%c%c12 + self%proot%c%c12 + self%psapw%c%c12 + self%pwood%c%c12
-    plantN    = self%plabl%n%n14 + self%pseed%n%n14 + self%pleaf%n%n14 + self%proot%n%n14 + self%psapw%n%n14 + self%pwood%n%n14
+    plantC    = self%plabl%c12 + self%pseed%c12 + self%pleaf%c12 + self%proot%c12 + self%psapw%c12 + self%pwood%c12
+    plantN    = self%plabl%n14 + self%pseed%n14 + self%pleaf%n14 + self%proot%n14 + self%psapw%n14 + self%pwood%n14
 
-    soilC     = self%pmicr%c%c12 + self%psoil_fs%c%c12 + self%psoil_sl%c%c12
-    soilN     = self%pmicr%n%n14 + self%psoil_fs%n%n14 + self%psoil_sl%n%n14 + self%ninorg%n14
+    soilC     = self%pmicr%c12 + self%psoil_fs%c12 + self%psoil_sl%c12
+    soilN     = self%pmicr%n14 + self%psoil_fs%n14 + self%psoil_sl%n14 + self%inorg%n14
     self%totN = plantN + soilN
 
     out_annual_tile%year            = iyears
@@ -767,25 +764,25 @@ contains
     out_annual_tile%plantN          = plantN
     out_annual_tile%soilN           = soilN
     out_annual_tile%totN            = self%totN
-    out_annual_tile%NSC             = self%plabl%c%c12
-    out_annual_tile%SeedC           = self%pseed%c%c12
-    out_annual_tile%leafC           = self%pleaf%c%c12
-    out_annual_tile%rootC           = self%proot%c%c12
-    out_annual_tile%SapwoodC        = self%psapw%c%c12
-    out_annual_tile%WoodC           = self%pwood%c%c12
-    out_annual_tile%NSN             = self%plabl%n%n14
-    out_annual_tile%SeedN           = self%pseed%n%n14
-    out_annual_tile%leafN           = self%pleaf%n%n14
-    out_annual_tile%rootN           = self%proot%n%n14
-    out_annual_tile%SapwoodN        = self%psapw%n%n14
-    out_annual_tile%WoodN           = self%pwood%n%n14
-    out_annual_tile%McrbC           = self%pmicr%c%c12
-    out_annual_tile%fastSOM         = self%psoil_fs%c%c12
-    out_annual_tile%SlowSOM         = self%psoil_sl%c%c12
-    out_annual_tile%McrbN           = self%pmicr%n%n14
-    out_annual_tile%fastSoilN       = self%psoil_fs%n%n14
-    out_annual_tile%slowSoilN       = self%psoil_sl%n%n14
-    out_annual_tile%mineralN        = self%ninorg%n14
+    out_annual_tile%NSC             = self%plabl%c12
+    out_annual_tile%SeedC           = self%pseed%c12
+    out_annual_tile%leafC           = self%pleaf%c12
+    out_annual_tile%rootC           = self%proot%c12
+    out_annual_tile%SapwoodC        = self%psapw%c12
+    out_annual_tile%WoodC           = self%pwood%c12
+    out_annual_tile%NSN             = self%plabl%n14
+    out_annual_tile%SeedN           = self%pseed%n14
+    out_annual_tile%leafN           = self%pleaf%n14
+    out_annual_tile%rootN           = self%proot%n14
+    out_annual_tile%SapwoodN        = self%psapw%n14
+    out_annual_tile%WoodN           = self%pwood%n14
+    out_annual_tile%McrbC           = self%pmicr%c12
+    out_annual_tile%fastSOM         = self%psoil_fs%c12
+    out_annual_tile%SlowSOM         = self%psoil_sl%c12
+    out_annual_tile%McrbN           = self%pmicr%n14
+    out_annual_tile%fastSoilN       = self%psoil_fs%n14
+    out_annual_tile%slowSoilN       = self%psoil_sl%n14
+    out_annual_tile%mineralN        = self%inorg%n14
     out_annual_tile%N_fxed          = self%annual_fluxes%fixedN
     out_annual_tile%N_uptk          = self%annual_fluxes%Nup
     out_annual_tile%N_yrMin         = self%annualN
@@ -799,31 +796,25 @@ contains
     out_annual_tile%n_deadtrees     = self%n_deadtrees
     out_annual_tile%c_deadtrees     = self%c_deadtrees
     out_annual_tile%m_turnover      = self%m_turnover
-    out_annual_tile%c_turnover_time = self%pwood%c%c12 / self%NPPW
+    out_annual_tile%c_turnover_time = self%pwood%c12 / self%NPPW
 
     ! Rebalance N (to compensate for the adjunction in vegn_N_uptake)
     if (myinterface%params_siml%do_closedN_run) call self%recover_N_balance()
 
   end subroutine annual_diagnostics
 
-  subroutine plant2soil(self, lossC_coarse, lossC_fine, lossN_coarse, lossN_fine)
+  subroutine plant2soil(self, loss_coarse, loss_fine)
     ! Redistribute C and N from dead plants to vegetation soil pools
     class(vegn_tile_type), intent(inout) :: self
-    real, intent(in) :: lossC_coarse, lossC_fine, lossN_coarse, lossN_fine
+    type(orgpool), intent(in) :: loss_coarse, loss_fine
 
-      self%psoil_fs%c%c12 = self%psoil_fs%c%c12 + myinterface%params_tile%fsc_fine * lossC_fine + &
-              myinterface%params_tile%fsc_wood * lossC_coarse
-      self%psoil_sl%c%c12 = self%psoil_sl%c%c12 + (1.0 - myinterface%params_tile%fsc_fine) * lossC_fine + &
-              (1.0-myinterface%params_tile%fsc_wood) * lossC_coarse
-
-      self%psoil_fs%n%n14 = self%psoil_fs%n%n14 + myinterface%params_tile%fsc_fine * lossN_fine + &
-              myinterface%params_tile%fsc_wood * lossN_coarse
-      self%psoil_sl%n%n14 = self%psoil_sl%n%n14 + (1.0 - myinterface%params_tile%fsc_fine) * lossN_fine + &
-              (1.0-myinterface%params_tile%fsc_wood) * lossN_coarse
+    self%psoil_fs = self%psoil_fs + loss_fine * myinterface%params_tile%fsc_fine + &
+            loss_coarse * myinterface%params_tile%fsc_wood
+    self%psoil_sl = self%psoil_sl + loss_fine * (1.0 - myinterface%params_tile%fsc_fine) + &
+            loss_coarse * (1.0 - myinterface%params_tile%fsc_wood)
 
       ! annual N from plants to soil and C turnover
-
-      self%N_P2S_yr = self%N_P2S_yr + lossN_coarse + lossN_fine
+      self%N_P2S_yr = self%N_P2S_yr + loss_coarse%n14 + loss_fine%n14
 
   end subroutine
 
@@ -841,8 +832,7 @@ contains
     type(cohort_type), pointer :: cc
     type(cohort_item), pointer :: it
     integer :: i
-    real :: lossC_fine,lossC_coarse, lossC_total
-    real :: lossN_fine,lossN_coarse, lossN_total
+    type(orgpool) :: loss_fine,loss_coarse, loss_total
 
     ! We go through each killed fraction of cohort and we map the fraction to the cohort
     ! it originated from (they have the same uid).
@@ -854,26 +844,24 @@ contains
           associate (sp => cc%sp())
 
             ! Carbon and Nitrogen from plants to soil pools
-            lossC_coarse = cc%nindivs * &
-              (cc%pwood%c%c12 + cc%psapw%c%c12 + cc%pleaf%c%c12 - cc%leafarea() * myinterface%params_tile%LMAmin)
-            lossC_fine   = cc%nindivs * &
-              (cc%plabl%c%c12 + cc%pseed%c%c12 + cc%proot%c%c12 + cc%leafarea() * myinterface%params_tile%LMAmin)
+            loss_coarse = (orgpool(- cc%leafarea(), cc%leafarea()) * myinterface%params_tile%LMAmin &
+              + cc%pwood + cc%psapw + cc%pleaf) * cc%nindivs
 
-            lossN_coarse = cc%nindivs * (cc%pwood%n%n14 + cc%psapw%n%n14 + cc%pleaf%n%n14 - cc%leafarea()*sp%LNbase)
-            lossN_fine   = cc%nindivs * (cc%plabl%n%n14 + cc%pseed%n%n14 + cc%proot%n%n14 + cc%leafarea()*sp%LNbase)
+            loss_fine = (orgpool(- cc%leafarea(), cc%leafarea()) * sp%LNbase &
+              + cc%plabl + cc%pseed + cc%proot) * cc%nindivs
+
           end associate
 
-          call self%plant2soil(lossC_coarse, lossC_fine, lossN_coarse, lossN_fine)
+          call self%plant2soil(loss_coarse, loss_fine)
 
-          lossC_total = lossC_coarse + lossC_fine
-          lossN_total = lossN_coarse + lossN_fine
+          loss_total = loss_coarse + loss_fine
 
-          self%m_turnover   = self%m_turnover    + lossC_total ! We add C from dead trees to get the total turnover
-          self%c_deadtrees  = self%c_deadtrees   + lossC_total
-          self%n_deadtrees  = self%n_deadtrees   + lossN_total
+          self%m_turnover   = self%m_turnover    + loss_total%c12 ! We add C from dead trees to get the total turnover
+          self%c_deadtrees  = self%c_deadtrees   + loss_total%c12
+          self%n_deadtrees  = self%n_deadtrees   + loss_total%n14
 
-          out_annual_cohorts(i)%n_deadtrees = out_annual_cohorts(i)%n_deadtrees + lossN_total
-          out_annual_cohorts(i)%c_deadtrees = out_annual_cohorts(i)%c_deadtrees + lossC_total
+          out_annual_cohorts(i)%n_deadtrees = out_annual_cohorts(i)%n_deadtrees + loss_total%n14
+          out_annual_cohorts(i)%c_deadtrees = out_annual_cohorts(i)%c_deadtrees + loss_total%c12
           out_annual_cohorts(i)%deathrate   = out_annual_cohorts(i)%deathrate + cc%deathrate
           exit
         end if
@@ -886,10 +874,10 @@ contains
     out_annual_tile%n_deadtrees     = self%n_deadtrees
     out_annual_tile%c_deadtrees     = self%c_deadtrees
     out_annual_tile%m_turnover      = self%m_turnover
-    out_annual_tile%totseedC        = self%totseedC
-    out_annual_tile%totseedN        = self%totseedN
-    out_annual_tile%Seedling_C      = self%totNewCC
-    out_annual_tile%Seedling_N      = self%totNewCN
+    out_annual_tile%totseedC        = self%totseed%c12
+    out_annual_tile%totseedN        = self%totseed%n14
+    out_annual_tile%Seedling_C      = self%totNewC%c12
+    out_annual_tile%Seedling_N      = self%totNewC%n14
 
   end subroutine annual_diagnostics_post_mortality
 
@@ -905,16 +893,16 @@ contains
     if (abs(delta) > 1e-6) then
       scaling_factor = 1 - delta / self%totN
 
-      self%psoil_sl%n%n14 = self%psoil_sl%n%n14 * scaling_factor
-      self%psoil_fs%n%n14 = self%psoil_fs%n%n14 * scaling_factor
-      self%pmicr%n%n14    = self%pmicr%n%n14    * scaling_factor
-      self%ninorg%n14     = self%ninorg%n14     * scaling_factor
-      self%plabl%n%n14    = self%plabl%n%n14    * scaling_factor
-      self%pseed%n%n14    = self%pseed%n%n14    * scaling_factor
-      self%pleaf%n%n14    = self%pleaf%n%n14    * scaling_factor
-      self%proot%n%n14    = self%proot%n%n14    * scaling_factor
-      self%psapw%n%n14    = self%psapw%n%n14    * scaling_factor
-      self%pwood%n%n14    = self%pwood%n%n14    * scaling_factor
+      self%psoil_sl%n14 = self%psoil_sl%n14 * scaling_factor
+      self%psoil_fs%n14 = self%psoil_fs%n14 * scaling_factor
+      self%pmicr%n14 = self%pmicr%n14       * scaling_factor
+      self%inorg%n14 = self%inorg%n14       * scaling_factor
+      self%plabl%n14 = self%plabl%n14       * scaling_factor
+      self%pseed%n14 = self%pseed%n14       * scaling_factor
+      self%pleaf%n14 = self%pleaf%n14       * scaling_factor
+      self%proot%n14 = self%proot%n14       * scaling_factor
+      self%psapw%n14 = self%psapw%n14       * scaling_factor
+      self%pwood%n14 = self%pwood%n14       * scaling_factor
       self%totN = self%initialN0
     endif
   end subroutine recover_N_balance
@@ -1008,12 +996,12 @@ contains
       cc => new%cohort
       cc%species     = INT(myinterface%init_cohort(i)%init_cohort_species)
       cc%nindivs     = myinterface%init_cohort(i)%init_cohort_nindivs ! trees/m2
-      cc%plabl%c%c12 = myinterface%init_cohort(i)%init_cohort_nsc
-      cc%psapw%c%c12 = myinterface%init_cohort(i)%init_cohort_bsw
-      cc%pwood%c%c12 = myinterface%init_cohort(i)%init_cohort_bHW
-      cc%pleaf%c%c12 = myinterface%init_cohort(i)%init_cohort_bl
-      cc%proot%c%c12 = myinterface%init_cohort(i)%init_cohort_br
-      cc%pseed%c%c12 = myinterface%init_cohort(i)%init_cohort_seedC
+      cc%plabl%c12 = myinterface%init_cohort(i)%init_cohort_nsc
+      cc%psapw%c12 = myinterface%init_cohort(i)%init_cohort_bsw
+      cc%pwood%c12 = myinterface%init_cohort(i)%init_cohort_bHW
+      cc%pleaf%c12 = myinterface%init_cohort(i)%init_cohort_bl
+      cc%proot%c12 = myinterface%init_cohort(i)%init_cohort_br
+      cc%pseed%c12 = myinterface%init_cohort(i)%init_cohort_seedC
       call cc%initialize_cohort_from_biomass()
 
     enddo
@@ -1022,17 +1010,16 @@ contains
     call self%relayer()
 
     ! Initial Soil pools and environmental conditions
-    self%psoil_fs%c%c12 = myinterface%init_soil%init_fast_soil_C ! kgC m-2
-    self%psoil_sl%c%c12 = myinterface%init_soil%init_slow_soil_C ! slow soil carbon pool, (kg C/m2)
-    self%psoil_fs%n%n14 = self%psoil_fs%c%c12 / CN0metabolicL  ! fast soil nitrogen pool, (kg N/m2)
-    self%psoil_sl%n%n14 = self%psoil_sl%c%c12 / CN0structuralL  ! slow soil nitrogen pool, (kg N/m2)
-    self%N_input        = myinterface%init_soil%N_input        ! kgN m-2 yr-1, N input to soil
-    self%ninorg%n14     = myinterface%init_soil%init_Nmineral  ! Mineral nitrogen pool, (kg N/m2)
-    self%previousN      = self%ninorg%n14
+    self%psoil_fs%c12 = myinterface%init_soil%init_fast_soil_C  ! kgC m-2
+    self%psoil_sl%c12 = myinterface%init_soil%init_slow_soil_C ! slow soil carbon pool, (kg C/m2)
+    self%psoil_fs%n14 = self%psoil_fs%c12 / CN0metabolicL  ! fast soil nitrogen pool, (kg N/m2)
+    self%psoil_sl%n14 = self%psoil_sl%c12 / CN0structuralL ! slow soil nitrogen pool, (kg N/m2)
+    self%N_input      = myinterface%init_soil%N_input        ! kgN m-2 yr-1, N input to soil
+    self%inorg%n14    = myinterface%init_soil%init_Nmineral  ! Mineral nitrogen pool, (kg N/m2)
+    self%previousN    = self%inorg%n14
 
     ! debug: adding microbial biomass initialisation
-    self%pmicr%c%c12 = 0.0 ! to do: add to: myinterface%init_soil%xxxxx
-    self%pmicr%n%n14 = 0.0 ! to do: add to: myinterface%init_soil%xxxxx
+    self%pmicr = orgpool() ! to do: add to: myinterface%init_soil%xxxxx
 
     ! Initialize soil volumetric water conent with field capacity (maximum soil moisture to start with)
     self%wcl = myinterface%params_tile%FLDCAP
@@ -1040,10 +1027,10 @@ contains
     ! tile
     call aggregate_pools( self )
 
-    self%initialN0 =  self%plabl%n%n14 + self%pseed%n%n14 + self%pleaf%n%n14 +      &
-            self%proot%n%n14 + self%psapw%n%n14 + self%pwood%n%n14 + &
-            self%pmicr%n%n14 + self%psoil_fs%n%n14 +       &
-            self%psoil_sl%n%n14 + self%ninorg%n14
+    self%initialN0 =  self%plabl%n14 + self%pseed%n14 + self%pleaf%n14 +      &
+            self%proot%n14 + self%psapw%n14 + self%pwood%n14 + &
+            self%pmicr%n14 + self%psoil_fs%n14 +       &
+            self%psoil_sl%n14 + self%inorg%n14
     self%totN =  self%initialN0
 
   end subroutine initialize_vegn_tile

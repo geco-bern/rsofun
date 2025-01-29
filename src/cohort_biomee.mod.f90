@@ -4,7 +4,8 @@ module md_cohort
   !----------------------------------------------------------------
   use md_interface_biomee, only: myinterface, spec_data_type, MAX_LEVELS
   use md_params_core, only: pi, eps
-  use md_classdefs
+  use md_orgpool
+  use md_common_fluxes
 
   ! define data types and constants
   implicit none
@@ -139,21 +140,13 @@ contains
       ! update number of individuals in merged cohort
       self%nindivs = other%nindivs + self%nindivs
 
-      ! Carbon
-      self%pleaf%c%c12 = x1*other%pleaf%c%c12 + x2*self%pleaf%c%c12
-      self%proot%c%c12 = x1*other%proot%c%c12 + x2*self%proot%c%c12
-      self%psapw%c%c12 = x1*other%psapw%c%c12 + x2*self%psapw%c%c12
-      self%pwood%c%c12 = x1*other%pwood%c%c12 + x2*self%pwood%c%c12
-      self%pseed%c%c12 = x1*other%pseed%c%c12 + x2*self%pseed%c%c12
-      self%plabl%c%c12 = x1*other%plabl%c%c12 + x2*self%plabl%c%c12
-
-      ! Nitrogen
-      self%pleaf%n%n14 = x1*other%pleaf%n%n14 + x2*self%pleaf%n%n14
-      self%proot%n%n14 = x1*other%proot%n%n14 + x2*self%proot%n%n14
-      self%psapw%n%n14 = x1*other%psapw%n%n14 + x2*self%psapw%n%n14
-      self%pwood%n%n14 = x1*other%pwood%n%n14 + x2*self%pwood%n%n14
-      self%pseed%n%n14 = x1*other%pseed%n%n14 + x2*self%pseed%n%n14
-      self%plabl%n%n14 = x1*other%plabl%n%n14 + x2*self%plabl%n%n14
+      ! Average pools
+      self%pleaf = other%pleaf * x1 + self%pleaf * x2
+      self%proot = other%proot * x1 + self%proot * x2
+      self%psapw = other%psapw * x1 + self%psapw * x2
+      self%pwood = other%pwood * x1 + self%pwood * x2
+      self%pseed = other%pseed * x1 + self%pseed * x2
+      self%plabl = other%plabl * x1 + self%plabl * x2
 
       ! Cohort age
       self%age = x1*other%age + x2*self%age
@@ -216,7 +209,7 @@ contains
     type(spec_data_type) :: sp
     real :: btot
 
-    btot = max(0.0001, self%pwood%c%c12 + self%psapw%c%c12)
+    btot = max(0.0001, self%pwood%c12 + self%psapw%c12)
     sp = self%sp()
 
     res = (btot / sp%alphaBM) ** ( 1.0/sp%thetaBM )
@@ -245,7 +238,7 @@ contains
 
     sp = self%sp()
 
-    res = self%pleaf%c%c12 / sp%LMA
+    res = self%pleaf%c12 / sp%LMA
   end function leafarea
 
   pure function height(self) result(res)
@@ -293,7 +286,7 @@ contains
 
     sp = self%sp()
 
-    res  = self%proot%c%c12 * sp%SRA
+    res  = self%proot%c12 * sp%SRA
   end function rootarea
 
   pure function lai(self) result(res)
@@ -321,7 +314,7 @@ contains
 
     sp = self%sp()
 
-    res = (self%psapw%c%c12 + self%pwood%c%c12) / sp%rho_wood
+    res = (self%psapw%c12 + self%pwood%c12) / sp%rho_wood
   end function volume
 
   pure function layerfrac(self) result(res)
@@ -350,15 +343,15 @@ contains
 
     call self%init_bl_br()
 
-    self%plabl%c%c12  = 2.0 * (self%bl_max + self%br_max)
+    self%plabl%c12 = 2.0 * (self%bl_max + self%br_max)
 
     ! N pools
-    self%plabl%n%n14  = 5.0 * (self%bl_max / sp%CNleaf0 + self%br_max / sp%CNroot0)
-    self%pleaf%n%n14  = self%pleaf%c%c12 / sp%CNleaf0
-    self%proot%n%n14  = self%proot%c%c12 / sp%CNroot0
-    self%psapw%n%n14  = self%psapw%c%c12 / sp%CNsw0
-    self%pwood%n%n14  = self%pwood%c%c12 / sp%CNwood0
-    self%pseed%n%n14  = self%pseed%c%c12 / sp%CNseed0
+    self%plabl%n14 = 5.0 * (self%bl_max / sp%CNleaf0 + self%br_max / sp%CNroot0)
+    self%pleaf%n14 = self%pleaf%c12 / sp%CNleaf0
+    self%proot%n14 = self%proot%c12 / sp%CNroot0
+    self%psapw%n14 = self%psapw%c12 / sp%CNsw0
+    self%pwood%n14 = self%pwood%c12 / sp%CNwood0
+    self%pseed%n14 = self%pseed%c12 / sp%CNseed0
 
   end subroutine initialize_cohort_from_biomass
 

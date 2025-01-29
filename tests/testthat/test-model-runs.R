@@ -1,6 +1,64 @@
 context("test models and their parameters")
 set.seed(10)
 
+test_that("biomee output check (p-model)", {
+  skip_on_cran()
+
+  out <- runread_biomee_f(
+    biomee_p_model_drivers,
+    makecheck = TRUE,
+    parallel = FALSE)
+
+  expect_true(all.equal(colMeans(out$data[[1]]$output_daily_tile), colMeans(biomee_p_model_output$data[[1]]$output_daily_tile), tolerance = 1e-4))
+  expect_true(all.equal(colMeans(out$data[[1]]$output_annual_tile), colMeans(biomee_p_model_output$data[[1]]$output_annual_tile), tolerance = 1e-4))
+  expect_true(all.equal(colMeans(out$data[[1]]$output_annual_cohorts), colMeans(biomee_p_model_output$data[[1]]$output_annual_cohorts), tolerance = 1e-4))
+  expect_true(all.equal(colMeans(out$data[[1]]$output_annual_land_use), colMeans(biomee_p_model_output$data[[1]]$output_annual_land_use), tolerance = 1e-4))
+
+  # If this test fails it means that the output of the model is out of sync with the data in the data directory.
+  # It could either mean that:
+  # - the model was accidentally altered and should be fixed to deliver the expected output
+  # - the model, drivers, or parameters was changed and the output data needs to be re-generetaed using the scripts in
+  #   raw-data directory.
+  #
+  # Note: Biomee is quite sensitive with regards to which order cohorts are processed (ex: reduce stage when cohorts are merged together).
+  # As a consequence, a slight change in the code may cause the final number of cohorts to be differents and therefore a large difference in the mean of the colunms of output_annual_land_use.
+  # These changes do not imply any meaningful alteration of the code functions and are simply artefacts.
+})
+
+test_that("biomeE output check (gs leuning)", {
+  skip_on_cran()
+
+  out <- runread_biomee_f(
+    biomee_gs_leuning_drivers,
+    makecheck = TRUE,
+    parallel = FALSE)
+
+  expect_true(all.equal(colMeans(out$data[[1]]$output_daily_tile), colMeans(biomee_gs_leuning_output$data[[1]]$output_daily_tile), tolerance = 1e-4))
+  expect_true(all.equal(colMeans(out$data[[1]]$output_annual_tile), colMeans(biomee_gs_leuning_output$data[[1]]$output_annual_tile), tolerance = 1e-4))
+  expect_true(all.equal(colMeans(out$data[[1]]$output_annual_cohorts), colMeans(biomee_gs_leuning_output$data[[1]]$output_annual_cohorts), tolerance = 1e-4))
+  expect_true(all.equal(colMeans(out$data[[1]]$output_annual_land_use), colMeans(biomee_gs_leuning_output$data[[1]]$output_annual_land_use), tolerance = 1e-4))
+
+  # Cf comment above
+})
+
+test_that("biomee parallel run check (gs leuning)", {
+  skip_on_cran()
+
+  df_drivers <- biomee_p_model_drivers
+  df_drivers$params_siml[[1]]$spinup <- FALSE
+
+  df_output <- runread_biomee_f(
+    df_drivers,
+    makecheck = FALSE,
+    parallel = TRUE,
+    ncores = 2
+  )
+
+  # test for correctly returned values
+  expect_type(df_output, "list")
+
+})
+
 test_that("p-model run check GPP", {
   skip_on_cran()
 
@@ -112,63 +170,4 @@ test_that("p-model run check Vcmax25", {
 
   # test for correctly returned values
   expect_type(df_output_p, "list")
-})
-
-test_that("biomeE output check (gs leuning)", {
-  skip_on_cran()
-
-  out <- runread_biomee_f(
-    biomee_gs_leuning_drivers,
-    makecheck = TRUE,
-    parallel = FALSE)
-
-  expect_true(all.equal(colMeans(out$data[[1]]$output_daily_tile), colMeans(biomee_gs_leuning_output$data[[1]]$output_daily_tile), tolerance = 1e-4))
-  expect_true(all.equal(colMeans(out$data[[1]]$output_annual_tile), colMeans(biomee_gs_leuning_output$data[[1]]$output_annual_tile), tolerance = 1e-4))
-  expect_true(all.equal(colMeans(out$data[[1]]$output_annual_cohorts), colMeans(biomee_gs_leuning_output$data[[1]]$output_annual_cohorts), tolerance = 1e-4))
-  expect_true(all.equal(colMeans(out$data[[1]]$output_annual_land_use), colMeans(biomee_gs_leuning_output$data[[1]]$output_annual_land_use), tolerance = 1e-4))
-
-  # If this test fails it means that the output of the model is out of sync with the data in the data directory.
-  # It could either mean that:
-  # - the model was accidentally altered and should be fixed to deliver the expected output
-  # - the model, drivers, or parameters was changed and the output data needs to be re-generetaed using the scripts in
-  #   raw-data directory.
-  #
-  # Note: Biomee is quite sensitive with regards to which order cohorts are processed (ex: reduce stage when cohorts are merged together).
-  # As a consequence, a slight change in the code may cause the final number of cohorts to be differents and therefore a large difference in the mean of the colunms of output_annual_land_use.
-  # These changes do not imply any meaningful alteration of the code functions and are simply artefacts.
-})
-
-
-test_that("biomee output check (p-model)", {
-  skip_on_cran()
-
-  out <- runread_biomee_f(
-    biomee_p_model_drivers,
-    makecheck = TRUE,
-    parallel = FALSE)
-
-  expect_true(all.equal(colMeans(out$data[[1]]$output_daily_tile), colMeans(biomee_p_model_output$data[[1]]$output_daily_tile), tolerance = 1e-4))
-  expect_true(all.equal(colMeans(out$data[[1]]$output_annual_tile), colMeans(biomee_p_model_output$data[[1]]$output_annual_tile), tolerance = 1e-4))
-  expect_true(all.equal(colMeans(out$data[[1]]$output_annual_cohorts), colMeans(biomee_p_model_output$data[[1]]$output_annual_cohorts), tolerance = 1e-4))
-  expect_true(all.equal(colMeans(out$data[[1]]$output_annual_land_use), colMeans(biomee_p_model_output$data[[1]]$output_annual_land_use), tolerance = 1e-4))
-
-  # Cf comment above.
-})
-
-test_that("biomee parallel run check (gs leuning)", {
-  skip_on_cran()
-  
-  df_drivers <- biomee_gs_leuning_drivers
-  df_drivers$params_siml[[1]]$spinup <- FALSE
-  
-  df_output <- runread_biomee_f(
-    df_drivers,
-    makecheck = FALSE,
-    parallel = TRUE,
-    ncores = 2
-  )
-  
-  # test for correctly returned values
-  expect_type(df_output, "list")
-  
 })
