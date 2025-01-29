@@ -60,8 +60,7 @@ contains
       cc%fast_fluxes%resp = cc%fast_fluxes%resp * myinterface%params_tile%tf_base          ! scaling for calibration
 
       ! detach photosynthesis model from plant growth
-      cc%plabl%c12 = cc%plabl%c12 + cc%fast_fluxes%npp()
-      cc%plabl%n14 = cc%plabl%n14 + cc%fast_fluxes%fixedN
+      cc%plabl = cc%plabl + orgpool(cc%fast_fluxes%npp(), cc%fast_fluxes%fixedN)
 
       it => it%next()
     end do ! all cohorts
@@ -198,6 +197,7 @@ contains
     real :: LF_deficit, FR_deficit
     real :: N_demand,Nsupplyratio,extraN
     real :: r_N_SD
+    type(orgpool) :: dHW_pool
 
     ! Turnover of leaves and fine roots
     call vegn_tissue_turnover( vegn )
@@ -290,24 +290,24 @@ contains
         endif
 
         ! update carbon pools
-        cc%pleaf%c12    = cc%pleaf%c12 + dBL
-        cc%proot%c12    = cc%proot%c12 + dBR
-        cc%psapw%c12    = cc%psapw%c12 + dBSW
-        cc%pseed%c12    = cc%pseed%c12 + dSeed
-        cc%plabl%c12    = cc%plabl%c12 - dBR - dBL - dSeed - dBSW
+        call cc%pleaf%add_c12(dBL)
+        call cc%proot%add_c12(dBR)
+        call cc%psapw%add_c12(dBSW)
+        call cc%pseed%add_c12(dSeed)
+        call cc%plabl%add_c12(- dBR - dBL - dSeed - dBSW)
         cc%leaf_age = (1.0 - dBL/cc%pleaf%c12) * cc%leaf_age !NEW
         cc%resg = 0.5 * (dBR + dBL + dSeed + dBSW) !  daily
 
         ! update nitrogen pools, Nitrogen allocation
-        cc%pleaf%n14 = cc%pleaf%n14 + dBL   /sp%CNleaf0
-        cc%proot%n14 = cc%proot%n14 + dBR   /sp%CNroot0
-        cc%pseed%n14 = cc%pseed%n14 + dSeed /sp%CNseed0
-        cc%psapw%n14 = cc%psapw%n14 + myinterface%params_tile%f_N_add * cc%plabl%n14 + &
-          (cc%N_growth - dBL/sp%CNleaf0 - dBR/sp%CNroot0 - dSeed/sp%CNseed0)
+        call cc%pleaf%add_n14(dBL / sp%CNleaf0)
+        call cc%proot%add_n14(dBR / sp%CNroot0)
+        call cc%pseed%add_n14(dSeed / sp%CNseed0)
+        call cc%psapw%add_n14(myinterface%params_tile%f_N_add * cc%plabl%n14 + &
+        (cc%N_growth - dBL/sp%CNleaf0 - dBR/sp%CNroot0 - dSeed/sp%CNseed0))
         !extraN = max(0.0,cc%psapw%n14+cc%pwood%n14 - (cc%psapw%c12+cc%pwood%c12)/sp%CNsw0)
         extraN   = max(0.0,cc%psapw%n14 - cc%psapw%c12/sp%CNsw0)
-        cc%psapw%n14 = cc%psapw%n14 - extraN
-        cc%plabl%n14 = cc%plabl%n14 + extraN - myinterface%params_tile%f_N_add * cc%plabl%n14 - cc%N_growth !! update NSN
+        call cc%psapw%add_n14(- extraN)
+        call cc%plabl%add_n14(extraN - myinterface%params_tile%f_N_add * cc%plabl%n14 - cc%N_growth) !! update NSN
         cc%N_growth = 0.0
 
         ! accumulated C allocated to leaf, root, and wood
@@ -325,10 +325,10 @@ contains
           dNS    = dBHW / cc%psapw%c12 * cc%psapw%n14
 
           ! update C and N of sapwood and wood
-          cc%pwood%c12 = cc%pwood%c12 + dBHW
-          cc%psapw%c12 = cc%psapw%c12 - dBHW
-          cc%psapw%n14 = cc%psapw%n14 - dNS
-          cc%pwood%n14 = cc%pwood%n14 + dNS
+          dHW_pool = orgpool(dBHW, dNS)
+          cc%pwood = cc%pwood + dHW_pool
+          cc%psapw = cc%psapw - dHW_pool
+
         endif
 
         ! update bl_max and br_max daily
@@ -360,7 +360,7 @@ contains
         endif ! for grasses
 
       elseif (cc%status == LEAF_OFF .and. cc%C_growth > 0.0) then
-        cc%plabl%c12 = cc%plabl%c12 + cc%C_growth
+        call cc%plabl%add_c12(cc%C_growth)
         cc%resg = 0.0
       endif
 
@@ -434,27 +434,19 @@ contains
         
         ! reset
         cc%nindivs = MIN(ccNSC /sp%seedlingsize, ccNSN/(sp%seedlingsize/sp%CNroot0))
-        cc%psapw%c12 = myinterface%params_tile%f_initialBSW * sp%seedlingsize  ! for setting up a initial size
-        cc%proot%c12 = 0.25 * cc%psapw%c12
-        cc%pleaf%c12 = 0.0
-        cc%pwood%c12 = 0.0
-        cc%pseed%c12 = 0.0
-        cc%plabl%c12 = ccNSC / cc%nindivs - &
-          (cc%pleaf%c12 + cc%psapw%c12 + cc%pwood%c12 + cc%proot%c12 + cc%pseed%c12)
+        cc%psapw = orgpool(myinterface%params_tile%f_initialBSW * sp%seedlingsize, cc%psapw%c12 / sp%CNsw0)  ! for setting up a initial size
+        cc%proot = orgpool(0.25 * cc%psapw%c12, cc%proot%c12 / sp%CNroot0)
+        cc%pleaf = orgpool()
+        cc%pwood = orgpool()
+        cc%pseed = orgpool()
+        cc%plabl = orgpool(ccNSC, ccNSN) / cc%nindivs - &
+          (cc%pleaf + cc%psapw + cc%pwood + cc%proot + cc%pseed)
 
         ! beni: added NPP accounting (for output)
         cc%NPPleaf = cc%NPPleaf + cc%pleaf%c12
         cc%NPProot = cc%NPProot + cc%proot%c12
         cc%NPPwood = cc%NPPwood + cc%psapw%c12 + cc%pwood%c12
 
-        ! nitrogen pools
-        cc%psapw%n14 = cc%psapw%c12  /sp%CNsw0
-        cc%proot%n14 = cc%proot%c12   /sp%CNroot0
-        cc%pleaf%n14 = 0.0
-        cc%pwood%n14 = 0.0
-        cc%pseed%n14 = 0.0
-        cc%plabl%n14 = ccNSN/cc%nindivs - &
-          (cc%pleaf%n14 + cc%psapw%n14 + cc%pwood%n14 + cc%proot%n14 + cc%pseed%n14)
 
         call cc%init_bl_br()
 
@@ -536,7 +528,7 @@ contains
         dNR = 0.0
       endif
 
-      call update_plant_pools(cc, vegn, dBL, dBR, dBStem, dNL, dNR, dNStem)
+      call update_plant_pools(cc, vegn, orgpool(dBL, dNL), orgpool(dBR, dNR), orgpool(dBStem, dNStem))
 
     endif
     end associate
@@ -723,15 +715,13 @@ contains
     type(cohort_item), pointer :: new ! new cohort
     type(cohort_item), pointer :: it
     integer, dimension(NCohortMax) :: reproPFTs
-    real,    dimension(NCohortMax) :: seedC, seedN ! seed pool of productible PFTs
+    type(orgpool), dimension(NCohortMax) :: seed ! seed pool of productible PFTs
     integer :: nPFTs ! number of new cohorts to be created
     integer :: pft_idx ! PFT index
     integer :: k ! new cohort indices
 
     ! Looping through all reproductable cohorts and check if reproduction happens
     reproPFTs = -999 ! the code of reproductive PFT
-    seedC = 0.0
-    seedN = 0.0
     nPFTs = 0
 
     ! We loop through each cohort and add C and N to species-specific seed pools
@@ -754,13 +744,11 @@ contains
           reproPFTs(nPFTs) = cc%species ! PFT number
           pft_idx = nPFTs
         endif
-          seedC(pft_idx) = seedC(pft_idx) + cc%pseed%c12 * cc%nindivs ! seed carbon
-          seedN(pft_idx) = seedN(pft_idx) + cc%pseed%n14 * cc%nindivs ! seed nitrogen
+          seed(pft_idx) = seed(pft_idx) + cc%pseed * cc%nindivs
           vegn%totSeed = vegn%totSeed + cc%pseed  * cc%nindivs
 
           ! reset parent's seed C and N
-          cc%pseed%c12 = 0.0
-          cc%pseed%n14 = 0.0
+          cc%pseed = orgpool()
       endif ! cohort_can_reproduce
 
       it => it%next()
@@ -776,7 +764,7 @@ contains
       associate (sp => myinterface%params_species(reproPFTs(k)))
 
       ! density
-      cc%nindivs = seedC(k)/sp%seedlingsize
+      cc%nindivs = seed(k)%c12 / sp%seedlingsize
 
       cc%species    = reproPFTs(k)
 
@@ -803,7 +791,7 @@ contains
       cc%pseed%n14  = 0.0
 
       if (cc%nindivs > 0.0) then
-        cc%plabl%n14 = sp%seedlingsize * seedN(k) / seedC(k) -  &
+        cc%plabl%n14 = sp%seedlingsize * seed(k)%n14 / seed(k)%c12 -  &
           (cc%pleaf%n14 + cc%proot%n14 + cc%psapw%n14 + cc%pwood%n14)
       end if
 
@@ -838,50 +826,49 @@ contains
 
   end function
 
-  subroutine update_plant_pools( cc, vegn, dBL, dBR, dBStem, dNL, dNR, dNStem)
+  subroutine update_plant_pools( cc, vegn, dL, dR, dStem)
     !////////////////////////////////////////////////////////////////
     ! Update plant carbon and nitrogen
     !---------------------------------------------------------------
     type(vegn_tile_type), intent(inout) :: vegn
     type(cohort_type), intent(inout) :: cc
-    real, intent(in) :: dBL, dBR, dBStem  ! leaf and fine root carbon tendencies
-    real, intent(in) :: dNL, dNR, dNStem  ! leaf and fine root nitrogen tendencies
+    type(orgpool), intent(in) :: dL, dR, dStem  ! leaf and fine root pool tendencies
 
     ! local variables
-    real :: lossC_coarse, lossC_fine, lossN_coarse, lossN_fine
+    type(orgpool) :: loss_coarse, loss_fine, dtot, dAleaf_pool
     real :: dAleaf ! leaf area decrease due to dBL
 
     associate ( sp => cc%sp() )
 
-      dAleaf = leaf_area_from_biomass(dBL, cc%species)
+      dAleaf = leaf_area_from_biomass(dL%c12, cc%species)
 
       ! Retranslocation to NSC and NSN
-      cc%plabl%c12 = cc%plabl%c12 + myinterface%params_tile%l_fract  * (dBL + dBR + dBStem)
-      cc%plabl%n14 = cc%plabl%n14 + myinterface%params_tile%retransN * (dNL + dNR + dNStem)
+      dtot = dL + dR + dStem
+      cc%plabl = cc%plabl + orgpool(dtot%c12 * myinterface%params_tile%l_fract, dtot%n14 * myinterface%params_tile%retransN)
 
       ! update plant pools
-      cc%pleaf%c12 = cc%pleaf%c12 - dBL
-      cc%psapw%c12 = cc%psapw%c12 - dBStem
-      cc%proot%c12 = cc%proot%c12 - dBR
-
-      cc%pleaf%n14 = cc%pleaf%n14 - dNL
-      cc%psapw%n14 = cc%psapw%n14 - dNStem
-      cc%proot%n14 = cc%proot%n14 - dNR
+      cc%pleaf = cc%pleaf - dL
+      cc%proot = cc%proot - dR
+      cc%psapw = cc%psapw - dStem
 
       ! update NPP for leaves, fine roots, and wood
-      cc%NPPleaf = cc%NPPleaf - myinterface%params_tile%l_fract * dBL
-      cc%NPProot = cc%NPProot - myinterface%params_tile%l_fract * dBR
-      cc%NPPwood = cc%NPPwood - myinterface%params_tile%l_fract * dBStem
+      cc%NPPleaf = cc%NPPleaf - myinterface%params_tile%l_fract * dL%n14
+      cc%NPProot = cc%NPProot - myinterface%params_tile%l_fract * dR%n14
+      cc%NPPwood = cc%NPPwood - myinterface%params_tile%l_fract * dStem%n14
 
       ! put C and N into soil pools
-      lossC_coarse  = (1.0 - myinterface%params_tile%l_fract) * &
-              cc%nindivs * (dBL - dAleaf * myinterface%params_tile%LMAmin + dBStem)
-      lossC_fine    = (1.0 - myinterface%params_tile%l_fract) * &
-              cc%nindivs * (dBR + dAleaf * myinterface%params_tile%LMAmin)
-      lossN_coarse = (1.0 - myinterface%params_tile%retransN)* cc%nindivs * (dNL - dAleaf * sp%LNbase + dNStem)
-      lossN_fine   = (1.0 - myinterface%params_tile%retransN)* cc%nindivs * (dNR + dAleaf * sp%LNbase)
+      dAleaf_pool = orgpool(dAleaf * myinterface%params_tile%LMAmin, &
+            dAleaf * sp%LNbase)
+      loss_coarse  = (dL - dAleaf_pool + dStem) * cc%nindivs
+      loss_fine    = (dR + dAleaf_pool) * cc%nindivs
 
-      call vegn%plant2soil(orgpool(lossC_coarse, lossN_coarse), orgpool(lossC_fine, lossN_fine))
+      loss_coarse = orgpool(loss_coarse%c12 * (1.0 - myinterface%params_tile%l_fract), &
+              loss_coarse%n14 * (1.0 - myinterface%params_tile%retransN))
+
+      loss_fine = orgpool(loss_fine%c12 * (1.0 - myinterface%params_tile%l_fract), &
+              loss_fine%n14 * (1.0 - myinterface%params_tile%retransN))
+
+      call vegn%plant2soil(loss_coarse, loss_fine)
 
     end associate
 
@@ -933,7 +920,7 @@ contains
       dBR    = cc%proot%c12 * sp%alpha_FR / ndayyear
       dNR    = cc%proot%n14 * sp%alpha_FR / ndayyear
 
-      call update_plant_pools(cc, vegn, dBL, dBR, dBStem, dNL, dNR, dNStem)
+      call update_plant_pools(cc, vegn, orgpool(dBL, dNL), orgpool(dBR, dNR), orgpool(dBStem, dNStem))
 
       ! record continuous biomass turnover (not linked to mortality)
       ! cc%m_turnover = cc%m_turnover + loss_coarse + loss_fine
