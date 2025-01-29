@@ -58,10 +58,9 @@ contains
       ! We add the growth respiration scaled from daily to timestap
       cc%fast_fluxes%resp = cc%fast_fluxes%resp + (cc%resg * myinterface%step_seconds) / secs_per_day
       cc%fast_fluxes%resp = cc%fast_fluxes%resp * myinterface%params_tile%tf_base          ! scaling for calibration
-      cc%fast_fluxes%npp  = cc%fast_fluxes%gpp - cc%fast_fluxes%resp       ! kgC tree-1 step-1
 
       ! detach photosynthesis model from plant growth
-      cc%plabl%c%c12 = cc%plabl%c%c12 + cc%fast_fluxes%npp
+      cc%plabl%c%c12 = cc%plabl%c%c12 + cc%fast_fluxes%npp()
       cc%plabl%n%n14 = cc%plabl%n%n14 + cc%fast_fluxes%fixedN
 
       it => it%next()
@@ -731,10 +730,6 @@ contains
 
     ! Looping through all reproductable cohorts and check if reproduction happens
     reproPFTs = -999 ! the code of reproductive PFT
-    vegn%totseedC = 0.0
-    vegn%totseedN = 0.0
-    vegn%totNewCC = 0.0
-    vegn%totNewCN = 0.0
     seedC = 0.0
     seedN = 0.0
     nPFTs = 0

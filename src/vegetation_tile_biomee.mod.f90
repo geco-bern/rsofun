@@ -110,13 +110,13 @@ module vegetation_tile_biomee
     type(orgpool), private :: plabl                       ! labile pool, temporary storage of N and C
 
     !===== C fluxes (cohort aggregation), kg yr-1 m-2
-    real, private    :: NPPL               = 0.0           ! NPP leaf
-    real, private    :: NPPW               = 0.0           ! NPP wood
+    real, private    :: NPPL                  ! NPP leaf
+    real, private    :: NPPW                  ! NPP wood
 
     !=====  Soil carbon fluxes due to death (cohort aggregation), kg yr-1 m-2
-    real, private    :: c_deadtrees        = 0.0           ! plant to soil C flux due to mortality
-    real, private    :: n_deadtrees        = 0.0           ! plant to soil N flux due to mortality (kg N m-2 yr-1)
-    real, private    :: m_turnover         = 0.0           ! C turnover due to mortality and tissue turnover
+    real, private    :: c_deadtrees           ! plant to soil C flux due to mortality
+    real, private    :: n_deadtrees           ! plant to soil N flux due to mortality (kg N m-2 yr-1)
+    real, private    :: m_turnover            ! C turnover due to mortality and tissue turnover
 
     !=====  Daily fluxes (cohort aggregation), kg day-1 m-2
     type(common_fluxes), private :: daily_fluxes
@@ -135,46 +135,48 @@ module vegetation_tile_biomee
     type(nitrogen) :: ninorg                      ! Mineral nitrogen pool
 
     !=====  Averaged quantities for PPA phenology
+    ! Note, these fields do not follow the usual annual cycle (january-january)
+    ! so they are not reset in zero_diagnostics
     real    :: tc_daily           = 0.0           ! 24h average temperature (deg C)
     real    :: gdd                = 0.0           ! growing degree-days
     real    :: tc_pheno           = 0.0           ! smoothed canopy air temperature for phenology
 
     !===== Annual C/N allocation to seed and non-seed, kg yr-1 m-2
-    real    :: totSeedC           = 0.0           ! Total seed C, kg C yr-1 m-2
-    real    :: totSeedN           = 0.0           ! Total seed N, kg N yr-1 m-2
-    real    :: totNewCC           = 0.0           ! New cohort C (all compartments but seed), kg C yr-1 m-2
-    real    :: totNewCN           = 0.0           ! New cohort N (all compartments but seed), kg N yr-1 m-2
+    real    :: totSeedC           ! Total seed C
+    real    :: totSeedN           ! Total seed N
+    real    :: totNewCC           ! New cohort C (all compartments but seed)
+    real    :: totNewCN           ! New cohort N (all compartments but seed)
 
     !=====  N-related fluxes
-    real    :: totN               = 0.0
-    real    :: N_input            = 0.0           ! annual N input (kg N m-2 yr-1)
-    real    :: annualN            = 0.0           ! annual available N in a year
-    real    :: Nloss_yr           = 0.0           ! annual N loss
-    real    :: N_P2S_yr           = 0.0           ! N turnover (plant to soil) (kg N m-2 yr-1)
+    real    :: totN
+    real    :: N_input            ! annual N input (kg N m-2 yr-1)
+    real    :: annualN            ! annual available N in a year
+    real    :: Nloss_yr           ! annual N loss
+    real    :: N_P2S_yr           ! N turnover (plant to soil) (kg N m-2 yr-1)
 
     !=====  Memory
-    real    :: previousN          = 0.0           ! weighted annual available N
-    real    :: initialN0          = 0.0           ! initial available N (kg N m-2)
+    real    :: previousN          ! weighted annual available N
+    real    :: initialN0          ! initial available N (kg N m-2)
 
     !=====  Fast fluxes, kg m-2 timestep-1
-    real    :: rh                 = 0.0           ! soil carbon lost to the atmosphere, kg C m-2 timestep-1
+    real    :: rh                                 ! soil carbon lost to the atmosphere
     !=====  Soil water, kg H2O m-2 timestep-1
     real    :: evap                               ! Evaporation
     real    :: runoff                             ! Water runoff of the tile
-    real    :: precp                               ! Precipitation
+    real    :: precp                              ! Precipitation
     real    :: wcl(MAX_LEVELS)                    ! volumetric soil water content for each layer
 
     !=====  Daily fluxes, kg day-1 m-2
-    real, private    :: dailyRh            = 0.0
-    real, private    :: dailyPrcp          = 0.0
-    real, private    :: dailyEvap          = 0.0
-    real, private    :: dailyRoff          = 0.0
+    real, private    :: dailyRh
+    real, private    :: dailyPrcp
+    real, private    :: dailyEvap
+    real, private    :: dailyRoff
 
     !=====  Annual fluxes, kg yr-1 m-2
-    real, private    :: annualRh           = 0.0
-    real, private    :: annualPrcp         = 0.0
-    real, private    :: annualEvap         = 0.0
-    real, private    :: annualRoff         = 0.0
+    real, private    :: annualRh
+    real, private    :: annualPrcp
+    real, private    :: annualEvap
+    real, private    :: annualRoff
 
     ! Scrap variable used by gpp()
     type(dampended_forcing_type) :: dampended_forcing
@@ -201,6 +203,7 @@ module vegetation_tile_biomee
       procedure plant2soil
       procedure initialize_vegn_tile
       procedure :: relayer
+      procedure, private :: aggregate_pools
       procedure, private :: aggregate_cohorts
       procedure, private :: zero_daily_diagnostics
       procedure, private :: kill_cohort
@@ -400,11 +403,14 @@ contains
     self%N_P2S_yr     = 0.0
     self%annualN      = 0.0
     self%Nloss_yr     = 0.0
-    self%NPPL         = 0.0
-    self%NPPW         = 0.0
     self%n_deadtrees  = 0.0
     self%c_deadtrees  = 0.0
     self%m_turnover   = 0.0
+    self%totseedC     = 0.0
+    self%totseedN     = 0.0
+    self%totNewCC     = 0.0
+    self%totNewCN     = 0.0
+
 
     ! We reset the cohorts internal state
     it => self%cohorts()
@@ -415,7 +421,7 @@ contains
 
     ! We clear the list of killed cohort fractions
     call self%killed_fraction_list%destroy_all()
-  
+
   end subroutine zero_diagnostics
 
   subroutine zero_daily_diagnostics(self)
@@ -432,7 +438,7 @@ contains
 
   end subroutine zero_daily_diagnostics
 
-  subroutine aggregate_cohorts( self )
+  subroutine aggregate_pools( self )
     !////////////////////////////////////////////////////////////////////////
     ! for annual update
     !------------------------------------------------------------------------
@@ -451,6 +457,35 @@ contains
     call orginit(self%pwood)
     call orginit(self%pseed)
 
+    it => self%cohorts()
+    do while (associated(it))
+      cc => it%cohort
+
+      ! organic pools
+      call orgcp(cc%plabl, self%plabl, cc%nindivs)
+      call orgcp(cc%pleaf, self%pleaf, cc%nindivs)
+      call orgcp(cc%proot, self%proot, cc%nindivs)
+      call orgcp(cc%psapw, self%psapw, cc%nindivs)
+      call orgcp(cc%pwood, self%pwood, cc%nindivs)
+      call orgcp(cc%pseed, self%pseed, cc%nindivs)
+
+      it => it%next()
+
+    enddo
+
+  end subroutine aggregate_pools
+
+  subroutine aggregate_cohorts( self )
+    !////////////////////////////////////////////////////////////////////////
+    ! for annual update
+    !------------------------------------------------------------------------
+    class(vegn_tile_type), intent(inout) :: self
+
+    ! local variables
+    type(cohort_type), pointer :: cc
+    type(cohort_item), pointer :: it !iterator
+    real :: dbh ! cache variable
+
     self%LAI          = 0.0
     self%CAI          = 0.0
     self%nindivs      = 0.0
@@ -465,17 +500,11 @@ contains
     self%NPPW         = 0.0
     self%m_turnover   = 0.0
 
+    call self%aggregate_pools()
+
     it => self%cohorts()
     do while (associated(it))
       cc => it%cohort
-
-      ! organic pools
-      call orgcp(cc%plabl, self%plabl, cc%nindivs)
-      call orgcp(cc%pleaf, self%pleaf, cc%nindivs)
-      call orgcp(cc%proot, self%proot, cc%nindivs)
-      call orgcp(cc%psapw, self%psapw, cc%nindivs)
-      call orgcp(cc%pwood, self%pwood, cc%nindivs)
-      call orgcp(cc%pseed, self%pseed, cc%nindivs)
 
       self%NPPL         = self%NPPL          + cc%NPPleaf    * cc%nindivs
       self%NPPW         = self%NPPW          + cc%NPPwood    * cc%nindivs
@@ -483,7 +512,7 @@ contains
 
       self%CAI          = self%CAI      + cc%crownarea() * cc%nindivs
       self%LAI          = self%LAI      + cc%leafarea()  * cc%nindivs
-      
+
       ! New tile outputs
       dbh = cc%dbh()
       self%DBH          = self%DBH      + dbh * cc%nindivs
@@ -578,7 +607,6 @@ contains
     enddo
 
     if (.not. state%spinup) then
-      ! Necessary to update the pools
       call self%aggregate_cohorts()
 
       out_daily_tile%year      = iyears
@@ -695,7 +723,7 @@ contains
         out_annual_cohorts(i)%froot       = froot
         out_annual_cohorts(i)%fwood       = fwood
         out_annual_cohorts(i)%GPP         = cc%annual_fluxes%GPP
-        out_annual_cohorts(i)%NPP         = cc%annual_fluxes%NPP
+        out_annual_cohorts(i)%NPP         = cc%annual_fluxes%NPP()
         out_annual_cohorts(i)%Rauto       = cc%annual_fluxes%Resp
         out_annual_cohorts(i)%Nupt        = cc%annual_fluxes%Nup
         out_annual_cohorts(i)%Nfix        = cc%annual_fluxes%fixedN
@@ -708,7 +736,6 @@ contains
 
     enddo
 
-    ! tile pools output
     call self%aggregate_cohorts()
 
     plantC    = self%plabl%c%c12 + self%pseed%c%c12 + self%pleaf%c%c12 + self%proot%c%c12 + self%psapw%c%c12 + self%pwood%c%c12
@@ -726,7 +753,7 @@ contains
     out_annual_tile%density12       = self%nindivs12 * 10000 ! * 10000 to convert in indivs/ha
     out_annual_tile%DBH12           = self%DBH12 * 100       ! * 100 to convert in cm
     out_annual_tile%QMD12           = self%QMD12 * 100       ! * 100 to convert in cm
-    out_annual_tile%NPP             = self%annual_fluxes%NPP
+    out_annual_tile%NPP             = self%annual_fluxes%NPP()
     out_annual_tile%GPP             = self%annual_fluxes%GPP
     out_annual_tile%Rauto           = self%annual_fluxes%Resp
     out_annual_tile%Rh              = self%annualRh
@@ -764,10 +791,6 @@ contains
     out_annual_tile%N_yrMin         = self%annualN
     out_annual_tile%N_P2S           = self%N_P2S_yr
     out_annual_tile%N_loss          = self%Nloss_yr
-    out_annual_tile%totseedC        = self%totseedC
-    out_annual_tile%totseedN        = self%totseedN
-    out_annual_tile%Seedling_C      = self%totNewCC
-    out_annual_tile%Seedling_N      = self%totNewCN
     out_annual_tile%MaxAge          = self%MaxAge
     out_annual_tile%MaxVolume       = self%MaxVolume
     out_annual_tile%MaxDBH          = self%MaxDBH
@@ -863,6 +886,10 @@ contains
     out_annual_tile%n_deadtrees     = self%n_deadtrees
     out_annual_tile%c_deadtrees     = self%c_deadtrees
     out_annual_tile%m_turnover      = self%m_turnover
+    out_annual_tile%totseedC        = self%totseedC
+    out_annual_tile%totseedN        = self%totseedN
+    out_annual_tile%Seedling_C      = self%totNewCC
+    out_annual_tile%Seedling_N      = self%totNewCN
 
   end subroutine annual_diagnostics_post_mortality
 
@@ -1011,7 +1038,7 @@ contains
     self%wcl = myinterface%params_tile%FLDCAP
 
     ! tile
-    call aggregate_cohorts( self )
+    call aggregate_pools( self )
 
     self%initialN0 =  self%plabl%n%n14 + self%pseed%n%n14 + self%pleaf%n%n14 +      &
             self%proot%n%n14 + self%psapw%n%n14 + self%pwood%n%n14 + &

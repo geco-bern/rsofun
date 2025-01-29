@@ -41,14 +41,23 @@ module md_classdefs
     ! Note: the unit depends on the context (timestep, daily, annual)
     real    :: Trsp          = 0.0
     real    :: GPP           = 0.0
-    real    :: NPP           = 0.0
     real    :: Resp          = 0.0
     real    :: Nup           = 0.0
     real    :: fixedN        = 0.0
+
+    contains
+
+    procedure npp
   end type common_fluxes
 
 contains
 !=========================LOW-LEVEL================================
+
+  pure real function npp(self)
+    class(common_fluxes), intent(in) :: self
+
+    npp = self%gpp - self%resp
+  end function npp
 
   subroutine update_fluxes(fluxes, delta, scale)
     ! Add delta quantities to partial fluxes (accounting)
@@ -68,7 +77,6 @@ contains
 
     fluxes%Trsp   = fluxes%Trsp   + delta%Trsp   * scale_opt
     fluxes%GPP    = fluxes%GPP    + delta%GPP    * scale_opt
-    fluxes%NPP    = fluxes%NPP    + delta%NPP    * scale_opt
     fluxes%Resp   = fluxes%Resp   + delta%Resp   * scale_opt
     fluxes%Nup    = fluxes%Nup    + delta%Nup    * scale_opt
     fluxes%fixedN = fluxes%fixedN + delta%fixedN * scale_opt
