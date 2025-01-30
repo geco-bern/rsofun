@@ -35,7 +35,7 @@ contains
     npp = self%gpp - self%resp
   end function npp
 
-  subroutine add(self, delta, scale)
+  pure subroutine add(self, delta, scale)
     ! Add delta quantities to partial fluxes (accounting)
     ! Optional scaling of the delta. By default: 1.0
     class(common_fluxes), intent(inout) :: self

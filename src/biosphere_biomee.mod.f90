@@ -81,12 +81,13 @@ contains
 
         doy = doy + 1
 
-        tsoil = air_to_soil_temp(vegn%thetaS(), &
+        vegn%tc_daily = daily_temp(doy)
+        vegn%tc_soil  = air_to_soil_temp(vegn%thetaS(), &
                 daily_temp - kTkelvin, &
                 doy, &
                 state%init, &
                 state%finalize &
-                ) + kTkelvin
+                )
 
         !----------------------------------------------------------------
         ! FAST TIME STEP
@@ -99,7 +100,7 @@ contains
           !----------------------------------------------------------------
           ! Sub-daily time step at resolution given by forcing (can be 1 = daily)
           !----------------------------------------------------------------
-          call vegn_CNW_budget( vegn, myinterface%climate(simu_steps), tsoil )
+          call vegn_CNW_budget( vegn, myinterface%climate(simu_steps))
          
           call vegn%hourly_diagnostics(myinterface%climate(simu_steps))
          
@@ -110,7 +111,6 @@ contains
         !-------------------------------------------------
         ! Daily calls after fast loop
         !-------------------------------------------------
-        vegn%Tc_daily = daily_temp(doy)
 
         ! sum over fast time steps and cohorts
         call daily_diagnostics( vegn, state%year, doy, state, out_biosphere_daily_tile(doy)  )

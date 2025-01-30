@@ -60,7 +60,7 @@ contains
   ! Be sure to know what you are doing before doing any change, and be sure to
   ! thoroughly test each function which you modify!
 
-  function uid(self) result(res)
+  pure function uid(self) result(res)
     ! Returns the uid
     class(cohort_item), intent(in) :: self
     integer :: res
@@ -68,7 +68,7 @@ contains
     res = self%uid_internal
   end function uid
 
-  function clone(self, keep_uid) result(ptr)
+  pure function clone(self, keep_uid) result(ptr)
     ! Clone this item.
     ! If keep_uid is true, the uid is also copied (default: false)
     ! Note: to create a new cohort from scratch, use new_cohort() instead.
@@ -120,7 +120,7 @@ contains
     it => self%head_internal
     do while (associated(it))
       res = res + 1
-      it => it%next()
+      it => it%next_ptr
     end do
   end function length
 
@@ -147,7 +147,7 @@ contains
     res = self%current_uid
   end function next_uid
 
-  function create_cohort() result(new_cohort)
+  pure function create_cohort() result(new_cohort)
     ! Create a new cohort
     type(cohort_item), pointer :: new_cohort
 
@@ -156,7 +156,7 @@ contains
 
   end function create_cohort
 
-  subroutine destroy_all(self)
+  pure subroutine destroy_all(self)
     ! Destroy all items in this linked list.
     ! Follow all the element of a chain, freeing the memory for each.
     ! After the subroutine has returned, the parameter takes the value null().
@@ -173,14 +173,14 @@ contains
     end do
   end subroutine
 
-  subroutine sort(self, increasing, func)
+  pure subroutine sort(self, increasing, func)
     ! Sort items given a function 'func' mapping an item to a real value.
     ! 'increasing' defines if the values should be ranked by increasing order.
 
     interface
-      function func_sort(item) result(res)
+      pure function func_sort(item) result(res)
         import :: cohort_item
-        type(cohort_item) :: item
+        type(cohort_item), intent(in) :: item
         real :: res
       end function func_sort
     end interface

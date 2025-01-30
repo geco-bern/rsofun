@@ -8,7 +8,7 @@ module md_sofunutils
 
 contains
 
-  function dampen_variability( var, tau, var_memory ) result( out_memory )
+  pure function dampen_variability( var, tau, var_memory ) result( out_memory )
     !/////////////////////////////////////////////////////////////////////////
     ! Calculates the updated variable accounting for a memory time scale tau.
     ! Following Eq. 5 in Makela et al. (2004) Tree Physiology 24, 369–376
@@ -33,7 +33,7 @@ contains
   end function dampen_variability
 
 
-  function running( presval, inow, window_length, method, prevval ) result( runningval )
+  pure function running( presval, inow, window_length, method, prevval ) result( runningval )
     !/////////////////////////////////////////////////////////////////////////
     ! Returns running sum/average of a window of length 'window_length'
     ! and whose last element is the 'inow' item of 'presval'.
@@ -80,7 +80,7 @@ contains
 
   end function running
 
-  subroutine aggregate(out, in, ratio)
+  pure subroutine aggregate(out, in, ratio)
     !////////////////////////////////////////////////////////////////
     ! Aggregate array 'in' with ratio 'ratio' using average scheme.
     !----------------------------------------------------------------
@@ -104,7 +104,7 @@ contains
 
   end subroutine aggregate
 
-  function area( lat, dx, dy ) result( out_area )
+  pure function area( lat, dx, dy ) result( out_area )
     !////////////////////////////////////////////////////////////////
     ! Calculates grid cell area in m2 on a spherical Earth
     !----------------------------------------------------------------
@@ -124,7 +124,7 @@ contains
   end function area
 
 
-  function calc_patm( elv ) result( patm )
+  pure function calc_patm( elv ) result( patm )
     !----------------------------------------------------------------   
     ! Calculates atmospheric pressure for a given elevation, assuming
     ! standard atmosphere at sea level (kPo)
@@ -141,7 +141,7 @@ contains
 
   end function calc_patm
 
-  function calc_esat(T) result( out_esat ) ! pressure, Pa
+  pure function calc_esat(T) result( out_esat ) ! pressure, Pa
     implicit none
     real :: out_esat
     real, intent(in) :: T ! degC
@@ -150,7 +150,7 @@ contains
 
   end function calc_esat
 
-  function median( vec, len ) result( out )
+  pure function median( vec, len ) result( out )
     !--------------------------------------------------------------------
     ! This function receives an array vec of N entries, copies its value
     ! to a local array Temp(), sorts Temp() and computes the median.
@@ -179,7 +179,7 @@ contains
   end function median
 
 
-  subroutine sort( vec, len )
+  pure subroutine sort( vec, len )
     !--------------------------------------------------------------------
     ! This subroutine receives an array vec() and sorts it into ascending
     ! order.
@@ -198,7 +198,7 @@ contains
   end subroutine sort
 
 
-  subroutine swap( a, b )
+  pure subroutine swap( a, b )
     !--------------------------------------------------------------------
     ! This subroutine swaps the values of its two formal arguments.
     ! Copied from https://pages.mtu.edu/~shene/COURSES/cs201/NOTES/chap08/sort.f90
@@ -213,7 +213,7 @@ contains
   end subroutine  swap
 
 
-  function find_minimum( vec, start, end ) result( out )
+  pure function find_minimum( vec, start, end ) result( out )
     !--------------------------------------------------------------------
     ! This function returns the location of the minimum in the section
     ! between start and end.
@@ -239,7 +239,7 @@ contains
   end function find_minimum
 
 
-  function findroot_quadratic( a, b, c ) result( root )
+  pure function findroot_quadratic( a, b, c ) result( root )
     !-----------------------------------------------------------------------
     ! Returns the solution for a quadratic function:
     ! a + bx + cx**2 = 0
@@ -266,7 +266,7 @@ contains
   end function findroot_quadratic
 
 
-  function dgcos( x ) result( dgcos_out )
+  pure function dgcos( x ) result( dgcos_out )
     !----------------------------------------------------------------   
     ! Calculates the cosine of an angle given in degrees. Equal to 
     ! 'dsin' in Python version.
@@ -283,7 +283,7 @@ contains
   end function dgcos
 
 
-  function dgsin( x ) result( dgsin_out )
+  pure function dgsin( x ) result( dgsin_out )
     !----------------------------------------------------------------   
     ! Calculates the sinus of an angle given in degrees. Equal to 
     ! 'dsin' in Python version.
@@ -300,7 +300,7 @@ contains
   end function dgsin
 
 
-  function degrees( x ) result( degrees_out )
+  pure function degrees( x ) result( degrees_out )
     !----------------------------------------------------------------   
     ! Returns corresponding degrees if x is given in radians
     !----------------------------------------------------------------   
@@ -315,7 +315,7 @@ contains
   end function degrees
 
 
-  function radians( x ) result( radians_out )
+  pure function radians( x ) result( radians_out )
     !----------------------------------------------------------------   
     ! Returns corresponding radians if x is given in degrees
     !----------------------------------------------------------------   

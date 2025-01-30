@@ -15,6 +15,12 @@ module md_interface_biomee
 
   integer, public, parameter :: MAX_LEVELS = 3  ! Soil layers, for soil water dynamics
 
+  !===== Soil water hydrualics
+  real, public, parameter ::  thksl(MAX_LEVELS)             = (/0.05, 0.45, 1.5/)  ! m, thickness of soil layers
+
+  !===== Leaf life span
+  real, parameter  :: c_LLS   = 28.57143    ! yr/ (kg C m-2), c_LLS=1/LMAs, where LMAs = 0.035
+
   type paramstype_tile
     integer:: soiltype
     real   :: FLDCAP
@@ -105,7 +111,8 @@ module md_interface_biomee
     real    :: maturalage                         ! the age that can reproduce
     real    :: v_seed                             ! fracton of G_SF to G_F
     real    :: seedlingsize                       ! size of the seedlings, kgC/indiv
-    real    :: prob_g,prob_e                      ! germination and establishment probabilities
+    real    :: prob_g         = 1.0               ! germination probability
+    real    :: prob_e         = 1.0               ! establishment probability
     real    :: mortrate_d_c                       ! yearly mortality rate in canopy
     real    :: mortrate_d_u                       ! yearly mortality rate in understory
 
@@ -116,7 +123,12 @@ module md_interface_biomee
 
     ! "internal" gaps are the gaps that are created within the canopy by the branch fall processes.
 
-  end type
+    contains
+
+      procedure init_pft_data
+      procedure init_derived_species_data
+
+  end type spec_data_type
 
   type inittype_cohort
     integer :: init_cohort_species
@@ -302,5 +314,66 @@ module md_interface_biomee
   end type outtype_annual_cohorts
 
 contains
+
+  subroutine init_pft_data(self)
+    class(spec_data_type), intent(inout) :: self
+    
+    ! ---- local vars ------
+    integer :: i
+
+    self%LAImax = MAX(0.5, self%LAI_light)
+    self%underLAImax = MIN(self%LAImax, 1.2)
+
+    ! specific root area
+    self%SRA           = 2.0/(self%root_r*self%rho_FR)
+
+    ! calculate alphaBM parameter of allometry. note that rho_wood was re-introduced for this calculation
+    self%alphaBM = self%rho_wood * self%taperfactor * PI/4. * self%alphaHT ! 5200
+
+    ! Vmax as a function of LNbase
+    self%Vmax = 0.02 * self%LNbase ! 0.03125 * sp%LNbase ! Vmax/LNbase= 25E-6/0.8E-3 = 0.03125 !
+
+    ! CN0 of leaves
+    self%LNA = self%LNbase +  self%LMA/self%CNleafsupport
+    self%CNleaf0 = self%LMA/self%LNA
+    ! Leaf life span as a function of LMA
+    self%leafLS = c_LLS * self%LMA
+    
+    call self%init_derived_species_data()
+
+  end subroutine init_pft_data
+
+
+  subroutine init_derived_species_data(self)
+
+    class(spec_data_type), intent(inout) :: self
+
+    ! ---- local vars ------
+    integer :: j
+    real :: rdepth(0:MAX_LEVELS)
+    real :: residual
+
+    ! root vertical profile
+    rdepth=0.0
+    do j=1,MAX_LEVELS
+      rdepth(j) = rdepth(j-1)+thksl(j)
+      self%root_frac(j) = exp(-rdepth(j-1)/self%root_zeta)- &
+              exp(-rdepth(j)  /self%root_zeta)
+    enddo
+    residual = exp(-rdepth(MAX_LEVELS)/self%root_zeta)
+    do j=1,MAX_LEVELS
+      self%root_frac(j) = self%root_frac(j) + residual*thksl(j)/rdepth(MAX_LEVELS)
+    enddo
+
+    if(self%leafLS>1.0)then
+      self%phenotype = 1
+    else
+      self%phenotype = 0
+    endif
+
+    ! Leaf turnover rate, (leaf longevity as a function of LMA)
+    self%alpha_L = 1.0/self%leafLS * self%phenotype
+
+  end subroutine init_derived_species_data
 
 end module md_interface_biomee

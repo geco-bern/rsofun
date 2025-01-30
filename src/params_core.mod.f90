@@ -84,7 +84,7 @@ module md_params_core
 
 contains
 
-  function get_steering( year, steering ) result( out_steering )
+  pure function get_steering( year, steering ) result( out_steering )
     !////////////////////////////////////////////////////////////////
     ! Gets variables used for steering simulation for each
     ! simulation year (setting booleans for opening files, doing
@@ -147,7 +147,7 @@ contains
 
   end function get_steering
 
-  function get_cycleyear( year, spinupyears, recycle ) result( cycleyear )
+  pure function get_cycleyear( year, spinupyears, recycle ) result( cycleyear )
   !////////////////////////////////////////////////////////////////
   ! Returns cycle year for climate recycling, given number of spinup
   ! years and recycle period length, so that in the last year of

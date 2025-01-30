@@ -124,7 +124,7 @@ contains
     res = myinterface%params_species(self%species)
   end function sp
 
-  subroutine merge_in(self, other)
+  pure subroutine merge_in(self, other)
     !////////////////////////////////////////////////////////////////
     ! Merge other cohort into self
     !---------------------------------------------------------------
@@ -155,7 +155,7 @@ contains
 
   end subroutine merge_in
 
-  subroutine reset_cohort(self)
+  pure subroutine reset_cohort(self)
     ! Reset cohort temporary data (used yearly)
     class(cohort_type), intent(inout) :: self
 
@@ -325,7 +325,7 @@ contains
     res = self%nindivs * self%crownarea()
   end function layerfrac
 
-  subroutine initialize_cohort_from_biomass(self)
+  pure subroutine initialize_cohort_from_biomass(self)
     !////////////////////////////////////////////////////////////////
     ! calculate tree height, DBH, height, and crown area by initial biomass
     ! The allometry equations are from Ray Dybzinski et al. 2011 and Forrior et al. in review
@@ -355,7 +355,7 @@ contains
 
   end subroutine initialize_cohort_from_biomass
 
-  subroutine init_bl_br( self )
+  pure subroutine init_bl_br( self )
     !////////////////////////////////////////////////////////////////
     ! Code from BiomeE-Allocation
     !---------------------------------------------------------------
@@ -378,13 +378,13 @@ contains
 
   end subroutine init_bl_br
 
-  function can_be_merged_with(self, other) result(res)
+  pure function can_be_merged_with(self, other) result(res)
     !////////////////////////////////////////////////////////////////
     ! Code from BiomeE-Allocation
     !---------------------------------------------------------------
-    class(cohort_type), intent(inout) :: self
+    class(cohort_type), intent(in) :: self
+    type(cohort_type), intent(in) :: other
     logical :: res
-    type(cohort_type) :: other
 
     ! Local variables
     logical :: sameSpecies, sameLayer, sameSize, sameSizeTree, sameSizeGrass

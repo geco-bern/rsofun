@@ -4,7 +4,7 @@ module vegetation_tile_biomee
   ! definitions.
   ! Code adopted from BiomeE https://doi.org/10.5281/zenodo.7125963.
   !----------------------------------------------------------------
-  use md_interface_biomee, only: myinterface, spec_data_type, MAX_LEVELS
+  use md_interface_biomee, only: myinterface, spec_data_type, MAX_LEVELS, thksl
   use md_params_core
   use md_orgpool
   use md_common_fluxes
@@ -45,9 +45,6 @@ module vegetation_tile_biomee
   !===== Photosynthesis
   real, public, parameter  :: extinct = 0.75        ! light extinction coefficient in the canopy for photosynthesis
 
-  !===== Soil water hydrualics
-  real, public, parameter ::  thksl(MAX_LEVELS)             = (/0.05, 0.45, 1.5/)  ! m, thickness of soil layers
-
   !===== Soil SOM reference C/N ratios
   real, parameter :: CN0metabolicL                       = 15.0
   real, parameter :: CN0structuralL                      = 40.0
@@ -58,9 +55,6 @@ module vegetation_tile_biomee
 
   !===== Ensheng's growth parameters
   real, parameter  :: f_LFR_max  = 0.85    ! max allocation to leaves and fine roots
-
-  !===== Leaf life span
-  real, parameter  :: c_LLS   = 28.57143    ! yr/ (kg C m-2), c_LLS=1/LMAs, where LMAs = 0.035
 
   !===== Minimum cohort density
   real, public, parameter :: mindensity = 0.25E-4 ! Minimum cohort density
@@ -141,6 +135,7 @@ module vegetation_tile_biomee
     real    :: tc_daily           = 0.0           ! 24h average temperature (deg C)
     real    :: gdd                = 0.0           ! growing degree-days
     real    :: tc_pheno           = 0.0           ! smoothed canopy air temperature for phenology
+    real    :: tc_soil            = 0.0           ! Daily soil temperature in (deg C)
 
     !===== Annual C/N allocation to seed and non-seed, kg yr-1 m-2
     type(orgpool)    :: totSeed           ! Total seed
@@ -240,9 +235,12 @@ contains
   subroutine split_cohort(self, item, fraction)
     ! Split a cohort into two. The initial cohort gets scaled by (1 - fraction),
     ! while a newly created cohort, inserted in the cohort list, gets the complement (fraction).
-    class(vegn_tile_type) :: self
-    type(cohort_item), pointer :: item, new
-    real :: fraction
+    class(vegn_tile_type), intent(inout) :: self
+    type(cohort_item), pointer, intent(in) :: item
+    real, intent(in) :: fraction
+
+    ! Local variable
+    type(cohort_item), pointer :: new
 
     new => item%clone()
     new%cohort%nindivs = item%cohort%nindivs * fraction
@@ -252,8 +250,8 @@ contains
 
   function merge_cohorts(self, c1, c2) result(next_item)
     ! Merge cohort c2 into c1 and return item following c2
-    class(vegn_tile_type) :: self
-    type(cohort_item), pointer :: c1, c2
+    class(vegn_tile_type), intent(inout) :: self
+    type(cohort_item), pointer, intent(inout) :: c1, c2
     type(cohort_item), pointer :: next_item
 
 
@@ -263,7 +261,7 @@ contains
 
   function cohorts(self) result(head_cohort)
     ! Return the head of the cohort list for iteration purpose.
-    class(vegn_tile_type), intent(inout) :: self
+    class(vegn_tile_type), intent(in) :: self
     type(cohort_item), pointer :: head_cohort
 
     head_cohort => self%cohort_list%head()
@@ -271,7 +269,7 @@ contains
 
   function killed_cohort_fractions(self) result(head_cohort)
     ! Return the head of the killed cohort list for iteration purpose.
-    class(vegn_tile_type), intent(inout) :: self
+    class(vegn_tile_type), intent(in) :: self
     type(cohort_item), pointer :: head_cohort
 
     head_cohort => self%killed_fraction_list%head()
@@ -314,14 +312,14 @@ contains
 
   subroutine shut_down(self)
     ! Free all allocated memory
-    class(vegn_tile_type) :: self
+    class(vegn_tile_type), intent(inout) :: self
 
     call self%cohort_list%destroy_all()
     call self%killed_fraction_list%destroy_all()
   end subroutine shut_down
 
-  function get_height(item) result(res)
-    type(cohort_item) :: item
+  pure function get_height(item) result(res)
+    type(cohort_item), intent(in) :: item
     real :: res
 
     res = item%cohort%height()
@@ -329,15 +327,15 @@ contains
 
   subroutine sort_cohorts_by_height(self, increasing)
     ! Sort cohorts by height
-    class(vegn_tile_type) :: self
-    logical :: increasing
+    class(vegn_tile_type), intent(inout) :: self
+    logical, intent(in) :: increasing
 
     call self%cohort_list%sort(increasing, get_height)
 
   end subroutine sort_cohorts_by_height
 
-  function get_uid(item) result(res)
-    type(cohort_item) :: item
+  pure function get_uid(item) result(res)
+    type(cohort_item), intent(in) :: item
     real :: res
 
     res = real(item%uid())
@@ -345,8 +343,8 @@ contains
 
   subroutine sort_cohorts_by_uid(self, increasing)
     ! Sort cohorts by uid
-    class(vegn_tile_type) :: self
-    logical :: increasing
+    class(vegn_tile_type), intent(inout) :: self
+    logical, intent(in) :: increasing
 
     call self%cohort_list%sort(increasing, get_uid)
 
@@ -354,16 +352,16 @@ contains
 
   function n_cohorts(self) result(res)
     ! Returns the current number of cohorts
+    class(vegn_tile_type), intent(in) :: self
     integer :: res
-    class(vegn_tile_type) :: self
 
     res = self%cohort_list%length()
   end function n_cohorts
 
   function new_cohort(self) result(new_item)
     ! Insert a new cohort at the head of the list and return its pointer.
+    class(vegn_tile_type), intent(inout) :: self
     type(cohort_item), pointer :: new_item
-    class(vegn_tile_type) :: self
 
     new_item => create_cohort()
     call self%cohort_list%insert_item(new_item)
@@ -912,69 +910,12 @@ contains
     ! ---- local vars ------
     integer :: i
 
-    associate(spdata => myinterface%params_species)
-
-      spdata%prob_g        = 1.0
-      spdata%prob_e        = 1.0
-
-      spdata%LAImax = MAX(0.5, spdata%LAI_light)
-      spdata%underLAImax = MIN(spdata%LAImax, 1.2)
-
-      ! specific root area
-      spdata%SRA           = 2.0/(spdata%root_r*spdata%rho_FR)
-
-      ! calculate alphaBM parameter of allometry. note that rho_wood was re-introduced for this calculation
-      spdata%alphaBM = spdata%rho_wood * spdata%taperfactor * PI/4. * spdata%alphaHT ! 5200
-
-      ! Vmax as a function of LNbase
-      spdata%Vmax = 0.02 * spdata%LNbase ! 0.03125 * sp%LNbase ! Vmax/LNbase= 25E-6/0.8E-3 = 0.03125 !
-
-      ! CN0 of leaves
-      spdata%LNA     = spdata%LNbase +  spdata%LMA/spdata%CNleafsupport
-      spdata%CNleaf0 = spdata%LMA/spdata%LNA
-      ! Leaf life span as a function of LMA
-      spdata%leafLS = c_LLS * spdata%LMA
-
-      do i = 1, size(spdata)
-        call init_derived_species_data(spdata(i))
-      enddo
-
-    end associate
+    do i = 1, size(myinterface%params_species)
+      call myinterface%params_species(i)%init_pft_data()
+    enddo
 
   end subroutine initialize_pft_data
 
-
-  subroutine init_derived_species_data(sp)
-
-    type(spec_data_type), intent(inout) :: sp
-
-    ! ---- local vars ------
-    integer :: j
-    real :: rdepth(0:MAX_LEVELS)
-    real :: residual
-
-    ! root vertical profile
-    rdepth=0.0
-    do j=1,MAX_LEVELS
-      rdepth(j) = rdepth(j-1)+thksl(j)
-      sp%root_frac(j) = exp(-rdepth(j-1)/sp%root_zeta)- &
-              exp(-rdepth(j)  /sp%root_zeta)
-    enddo
-    residual = exp(-rdepth(MAX_LEVELS)/sp%root_zeta)
-    do j=1,MAX_LEVELS
-      sp%root_frac(j) = sp%root_frac(j) + residual*thksl(j)/rdepth(MAX_LEVELS)
-    enddo
-
-    if(sp%leafLS>1.0)then
-      sp%phenotype = 1
-    else
-      sp%phenotype = 0
-    endif
-
-    ! Leaf turnover rate, (leaf longevity as a function of LMA)
-    sp%alpha_L = 1.0/sp%leafLS * sp%phenotype
-
-  end subroutine init_derived_species_data
 
   subroutine initialize_vegn_tile( self )
     !////////////////////////////////////////////////////////////////
