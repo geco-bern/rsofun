@@ -85,9 +85,6 @@ contains
     real(kind=c_double), dimension(nt_annual,nvars_lu_out, n_lu), intent(out) :: output_annual_luluc_tile
 
     ! Local variables
-    type(outtype_daily_tile),     dimension(ndayyear)           :: out_biosphere_daily_tile
-    type(outtype_annual_tile)                                   :: out_biosphere_annual_tile
-    type(outtype_annual_cohorts), dimension(out_max_cohorts)    :: out_biosphere_annual_cohorts
     type(vegn_tile_type), dimension(n_lu)                       :: vegn_tiles ! One tile per LU
     real :: lu_state(n_lu) ! Current LU fractions
     real(kind=c_double) :: nan
@@ -276,6 +273,9 @@ contains
          state%climateyear_idx &
       )
 
+      idx_daily_start = (state%year - myinterface%params_siml%steering%spinupyears - 1) * ndayyear + 1
+      idx_daily_end   = idx_daily_start + ndayyear - 1
+
       ! For each LU (land unit) whose fraction is > 0
       do lu_idx = 1, n_lu
         if (lu_state(lu_idx) > 0) then
@@ -283,40 +283,21 @@ contains
           !----------------------------------------------------------------
           ! Call biosphere (wrapper for all modules, contains time loops)
           !----------------------------------------------------------------
-          call biosphere_annual( &
-            state, &
-            vegn_tiles(lu_idx), &
-            out_biosphere_daily_tile, &
-            out_biosphere_annual_tile, &
-            out_biosphere_annual_cohorts &
+          if (state%spinup) then
+            call biosphere_annual( &
+              state, &
+              vegn_tiles(lu_idx), &
+              output_annual_tile(state%year, :, lu_idx) &
             )
-
-          !----------------------------------------------------------------
-          ! Output out_daily_tile (calling subroutine)
-          !----------------------------------------------------------------
-          ! Output only for transient years
-          if (.not. state%spinup) then
-
-            idx_daily_start = (state%year - myinterface%params_siml%steering%spinupyears - 1) * ndayyear + 1
-            idx_daily_end   = idx_daily_start + ndayyear - 1
-            call populate_outarray_daily_tile( out_biosphere_daily_tile(:), &
-                    output_daily_tile(idx_daily_start:idx_daily_end, :, lu_idx))
-
-          end if
-
-          !----------------------------------------------------------------
-          ! Output out_annual_tile (calling subroutine)
-          !----------------------------------------------------------------
-          call populate_outarray_annual_tile( out_biosphere_annual_tile, output_annual_tile(state%year, :, lu_idx) )
-
-          !----------------------------------------------------------------
-          ! Output output_annual_cohorts (without subroutine)
-          !----------------------------------------------------------------
-          if (.not.state%spinup) then
-
+          else
             idx =  state%year - myinterface%params_siml%steering%spinupyears
-            call populate_outarray_annual_cohort(out_biosphere_annual_cohorts, output_annual_cohorts(:, idx,:, lu_idx))
-
+            call biosphere_annual( &
+                    state, &
+                    vegn_tiles(lu_idx), &
+                    output_annual_tile(state%year, :, lu_idx), &
+                    output_daily_tile(idx_daily_start:idx_daily_end, :, lu_idx), &
+                    output_annual_cohorts(:, idx,:, lu_idx) &
+                    )
           end if
 
         end if
@@ -345,182 +326,5 @@ contains
 
 
   end subroutine biomee_f
-
-  !////////////////////////////////////////////////////////////////
-  ! Populates daily tile-level output array passed back to C and R.
-  !----------------------------------------------------------------
-  subroutine populate_outarray_daily_tile( daily_tile, out_daily_tile )
-
-    use, intrinsic :: iso_fortran_env, dp=>real64, sp=>real32, in=>int32
-    use md_interface_biomee, only: outtype_daily_tile
-    use vegetation_tile_biomee
-
-    ! arguments
-    type(outtype_daily_tile), dimension(ndayyear), intent(in) :: daily_tile
-    real(kind=dp), dimension(ndayyear, nvars_daily_tile), intent(inout) :: out_daily_tile
-
-    out_daily_tile(:, 1)  = dble(daily_tile(:)%year)
-    out_daily_tile(:, 2)  = dble(daily_tile(:)%doy)
-    out_daily_tile(:, 3)  = dble(daily_tile(:)%Tc)
-    out_daily_tile(:, 4)  = dble(daily_tile(:)%Prcp)
-    out_daily_tile(:, 5)  = dble(daily_tile(:)%totWs)
-    out_daily_tile(:, 6)  = dble(daily_tile(:)%Trsp)
-    out_daily_tile(:, 7)  = dble(daily_tile(:)%Evap)
-    out_daily_tile(:, 8)  = dble(daily_tile(:)%Runoff)
-    out_daily_tile(:, 9)  = dble(daily_tile(:)%ws1)
-    out_daily_tile(:, 10) = dble(daily_tile(:)%ws2)
-    out_daily_tile(:, 11) = dble(daily_tile(:)%ws3)
-    out_daily_tile(:, 12) = dble(daily_tile(:)%LAI)
-    out_daily_tile(:, 13) = dble(daily_tile(:)%GPP)
-    out_daily_tile(:, 14) = dble(daily_tile(:)%Rauto)
-    out_daily_tile(:, 15) = dble(daily_tile(:)%Rh)
-    out_daily_tile(:, 16) = dble(daily_tile(:)%NSC)
-    out_daily_tile(:, 17) = dble(daily_tile(:)%seedC)
-    out_daily_tile(:, 18) = dble(daily_tile(:)%leafC)
-    out_daily_tile(:, 19) = dble(daily_tile(:)%rootC)
-    out_daily_tile(:, 20) = dble(daily_tile(:)%SW_C)
-    out_daily_tile(:, 21) = dble(daily_tile(:)%HW_C)
-    out_daily_tile(:, 22) = dble(daily_tile(:)%NSN)
-    out_daily_tile(:, 23) = dble(daily_tile(:)%seedN)
-    out_daily_tile(:, 24) = dble(daily_tile(:)%leafN)
-    out_daily_tile(:, 25) = dble(daily_tile(:)%rootN)
-    out_daily_tile(:, 26) = dble(daily_tile(:)%SW_N)
-    out_daily_tile(:, 27) = dble(daily_tile(:)%HW_N)
-    out_daily_tile(:, 28) = dble(daily_tile(:)%McrbC)
-    out_daily_tile(:, 29) = dble(daily_tile(:)%fastSOM)
-    out_daily_tile(:, 30) = dble(daily_tile(:)%slowSOM)
-    out_daily_tile(:, 31) = dble(daily_tile(:)%McrbN)
-    out_daily_tile(:, 32) = dble(daily_tile(:)%fastSoilN)
-    out_daily_tile(:, 33) = dble(daily_tile(:)%slowSoilN)
-    out_daily_tile(:, 34) = dble(daily_tile(:)%mineralN)
-    out_daily_tile(:, 35) = dble(daily_tile(:)%N_uptk)
-
-  end subroutine populate_outarray_daily_tile
-
-
-  !////////////////////////////////////////////////////////////////
-  ! Populates annual output tile-level array passed back to C and R.
-  !----------------------------------------------------------------
-  subroutine populate_outarray_annual_tile( annual_tile, out_annual_tile )
-
-    use, intrinsic :: iso_fortran_env, dp=>real64, sp=>real32, in=>int32
-    use md_interface_biomee, only: outtype_annual_tile
-    use vegetation_tile_biomee
-
-    ! arguments
-    type(outtype_annual_tile), intent(in) :: annual_tile
-    real(kind=dp), dimension(nvars_annual_tile), intent(inout) :: out_annual_tile(:)
-
-    out_annual_tile(1)  = dble(annual_tile%year)
-    out_annual_tile(2)  = dble(annual_tile%CAI)
-    out_annual_tile(3)  = dble(annual_tile%LAI)
-    out_annual_tile(4)  = dble(annual_tile%density)
-    out_annual_tile(5)  = dble(annual_tile%DBH)
-    out_annual_tile(6)  = dble(annual_tile%Density12)
-    out_annual_tile(7)  = dble(annual_tile%DBH12)
-    out_annual_tile(8)  = dble(annual_tile%QMD12)
-    out_annual_tile(9)  = dble(annual_tile%NPP)
-    out_annual_tile(10) = dble(annual_tile%GPP)
-    out_annual_tile(11) = dble(annual_tile%Rauto)
-    out_annual_tile(12) = dble(annual_tile%Rh)
-    out_annual_tile(13) = dble(annual_tile%rain)
-    out_annual_tile(14) = dble(annual_tile%SoilWater)
-    out_annual_tile(15) = dble(annual_tile%Transp)
-    out_annual_tile(16) = dble(annual_tile%Evap)
-    out_annual_tile(17) = dble(annual_tile%Runoff)
-    out_annual_tile(18) = dble(annual_tile%plantC)
-    out_annual_tile(19) = dble(annual_tile%soilC)
-    out_annual_tile(20) = dble(annual_tile%plantN)
-    out_annual_tile(21) = dble(annual_tile%soilN)
-    out_annual_tile(22) = dble(annual_tile%totN)
-    out_annual_tile(23) = dble(annual_tile%NSC)
-    out_annual_tile(24) = dble(annual_tile%SeedC)
-    out_annual_tile(25) = dble(annual_tile%leafC)
-    out_annual_tile(26) = dble(annual_tile%rootC)
-    out_annual_tile(27) = dble(annual_tile%SapwoodC)
-    out_annual_tile(28) = dble(annual_tile%WoodC)
-    out_annual_tile(29) = dble(annual_tile%NSN)
-    out_annual_tile(30) = dble(annual_tile%SeedN)
-    out_annual_tile(31) = dble(annual_tile%leafN)
-    out_annual_tile(32) = dble(annual_tile%rootN)
-    out_annual_tile(33) = dble(annual_tile%SapwoodN)
-    out_annual_tile(34) = dble(annual_tile%WoodN)
-    out_annual_tile(35) = dble(annual_tile%McrbC)
-    out_annual_tile(36) = dble(annual_tile%fastSOM)
-    out_annual_tile(37) = dble(annual_tile%SlowSOM)
-    out_annual_tile(38) = dble(annual_tile%McrbN)
-    out_annual_tile(39) = dble(annual_tile%fastSoilN)
-    out_annual_tile(40) = dble(annual_tile%slowSoilN)
-    out_annual_tile(41) = dble(annual_tile%mineralN)
-    out_annual_tile(42) = dble(annual_tile%N_fxed)
-    out_annual_tile(43) = dble(annual_tile%N_uptk)
-    out_annual_tile(44) = dble(annual_tile%N_yrMin)
-    out_annual_tile(45) = dble(annual_tile%N_P2S)
-    out_annual_tile(46) = dble(annual_tile%N_loss)
-    out_annual_tile(47) = dble(annual_tile%totseedC)
-    out_annual_tile(48) = dble(annual_tile%totseedN)
-    out_annual_tile(49) = dble(annual_tile%Seedling_C)
-    out_annual_tile(50) = dble(annual_tile%Seedling_N)
-    out_annual_tile(51) = dble(annual_tile%MaxAge)
-    out_annual_tile(52) = dble(annual_tile%MaxVolume)
-    out_annual_tile(53) = dble(annual_tile%MaxDBH)
-    out_annual_tile(54) = dble(annual_tile%NPPL)
-    out_annual_tile(55) = dble(annual_tile%NPPW)
-    out_annual_tile(56) = dble(annual_tile%n_deadtrees)
-    out_annual_tile(57) = dble(annual_tile%c_deadtrees)
-    out_annual_tile(58) = dble(annual_tile%m_turnover)
-    out_annual_tile(59) = dble(annual_tile%c_turnover_time)
-
-  end subroutine populate_outarray_annual_tile
-
-
-  subroutine populate_outarray_annual_cohort( annual_cohorts, output_annual_cohorts )
-
-    use, intrinsic :: iso_fortran_env, dp=>real64, sp=>real32, in=>int32
-    use md_interface_biomee, only: outtype_annual_cohorts
-    use vegetation_tile_biomee
-
-    ! arguments
-    type(outtype_annual_cohorts), dimension(out_max_cohorts), intent(in) :: annual_cohorts
-    real(kind=dp), dimension(out_max_cohorts, nvars_annual_cohorts), intent(inout) :: output_annual_cohorts
-    integer :: i
-
-    output_annual_cohorts(:, 1)  = dble((/ (i, i = 1, out_max_cohorts) /))
-    output_annual_cohorts(:, 2)  = dble(annual_cohorts(:)%year)
-    output_annual_cohorts(:, 3)  = dble(annual_cohorts(:)%cID)
-    output_annual_cohorts(:, 4)  = dble(annual_cohorts(:)%PFT)
-    output_annual_cohorts(:, 5)  = dble(annual_cohorts(:)%layer)
-    output_annual_cohorts(:, 6)  = dble(annual_cohorts(:)%density)
-    output_annual_cohorts(:, 7)  = dble(annual_cohorts(:)%flayer)
-    output_annual_cohorts(:, 8)  = dble(annual_cohorts(:)%DBH)
-    output_annual_cohorts(:, 9)  = dble(annual_cohorts(:)%dDBH)
-    output_annual_cohorts(:, 10) = dble(annual_cohorts(:)%height)
-    output_annual_cohorts(:, 11) = dble(annual_cohorts(:)%age)
-    output_annual_cohorts(:, 12) = dble(annual_cohorts(:)%BA)
-    output_annual_cohorts(:, 13) = dble(annual_cohorts(:)%dBA)
-    output_annual_cohorts(:, 14) = dble(annual_cohorts(:)%Acrown)
-    output_annual_cohorts(:, 15) = dble(annual_cohorts(:)%Aleaf)
-    output_annual_cohorts(:, 16) = dble(annual_cohorts(:)%nsc)
-    output_annual_cohorts(:, 17) = dble(annual_cohorts(:)%nsn)
-    output_annual_cohorts(:, 18) = dble(annual_cohorts(:)%seedC)
-    output_annual_cohorts(:, 19) = dble(annual_cohorts(:)%leafC)
-    output_annual_cohorts(:, 20) = dble(annual_cohorts(:)%rootC)
-    output_annual_cohorts(:, 21) = dble(annual_cohorts(:)%sapwC)
-    output_annual_cohorts(:, 22) = dble(annual_cohorts(:)%woodC)
-    output_annual_cohorts(:, 23) = dble(annual_cohorts(:)%treeG)
-    output_annual_cohorts(:, 24) = dble(annual_cohorts(:)%fseed)
-    output_annual_cohorts(:, 25) = dble(annual_cohorts(:)%fleaf)
-    output_annual_cohorts(:, 26) = dble(annual_cohorts(:)%froot)
-    output_annual_cohorts(:, 27) = dble(annual_cohorts(:)%fwood)
-    output_annual_cohorts(:, 28) = dble(annual_cohorts(:)%GPP)
-    output_annual_cohorts(:, 29) = dble(annual_cohorts(:)%NPP)
-    output_annual_cohorts(:, 30) = dble(annual_cohorts(:)%Rauto)
-    output_annual_cohorts(:, 31) = dble(annual_cohorts(:)%Nupt)
-    output_annual_cohorts(:, 32) = dble(annual_cohorts(:)%Nfix)
-    output_annual_cohorts(:, 33) = dble(annual_cohorts(:)%deathrate)
-    output_annual_cohorts(:, 34) = dble(annual_cohorts(:)%n_deadtrees)
-    output_annual_cohorts(:, 35) = dble(annual_cohorts(:)%c_deadtrees)
-
-  end subroutine populate_outarray_annual_cohort
 
 end module biomee_mod

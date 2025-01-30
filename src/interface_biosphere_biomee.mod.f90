@@ -10,8 +10,7 @@ module md_interface_biomee
   implicit none
 
   private
-  public  myinterface, interfacetype_biosphere, &
-    outtype_annual_cohorts, outtype_daily_tile, outtype_annual_tile, spec_data_type
+  public  myinterface, interfacetype_biosphere, spec_data_type
 
   integer, public, parameter :: MAX_LEVELS = 3  ! Soil layers, for soil water dynamics
 
@@ -171,155 +170,15 @@ module md_interface_biomee
   ! Should not be mutated (it is the case now for historical reasons)
   type(interfacetype_biosphere) :: myinterface
 
-  !----------------------------------------------------------------
-  ! Return variable of biosphere()
-  !----------------------------------------------------------------
-
-  type outtype_daily_tile   !fno4
-    real :: year 
-    real :: doy
-    real :: Tc
-    real :: Prcp
-    real :: totWs
-    real :: Trsp
-    real :: Evap
-    real :: Runoff
-    real :: ws1
-    real :: ws2
-    real :: ws3
-    real :: LAI
-    real :: GPP
-    real :: Rauto
-    real :: Rh
-    real :: NSC
-    real :: seedC
-    real :: leafC
-    real :: rootC
-    real :: SW_C
-    real :: HW_C
-    real :: NSN
-    real :: seedN
-    real :: leafN
-    real :: rootN
-    real :: SW_N
-    real :: HW_N
-    real :: McrbC
-    real :: fastSOM
-    real :: slowSOM
-    real :: McrbN
-    real :: fastSoilN
-    real :: slowSoilN
-    real :: mineralN
-    real :: N_uptk
-  end type outtype_daily_tile
-
-  type outtype_annual_tile  !fno5
-    real :: year
-    real :: CAI
-    real :: LAI
-    real :: density
-    real :: DBH
-    real :: Density12
-    real :: DBH12
-    real :: QMD12
-    real :: NPP
-    real :: GPP
-    real :: Rauto
-    real :: Rh
-    real :: rain
-    real :: SoilWater
-    real :: Transp
-    real :: Evap
-    real :: Runoff
-    real :: plantC
-    real :: soilC
-    real :: plantN
-    real :: soilN
-    real :: totN
-    real :: NSC
-    real :: SeedC
-    real :: leafC
-    real :: rootC
-    real :: SapwoodC
-    real :: WoodC
-    real :: NSN
-    real :: SeedN
-    real :: leafN
-    real :: rootN
-    real :: SapwoodN
-    real :: WoodN
-    real :: McrbC
-    real :: fastSOM
-    real :: SlowSOM
-    real :: McrbN
-    real :: fastSoilN
-    real :: slowSoilN
-    real :: mineralN
-    real :: N_fxed
-    real :: N_uptk
-    real :: N_yrMin
-    real :: N_P2S
-    real :: N_loss
-    real :: totseedC
-    real :: totseedN
-    real :: Seedling_C
-    real :: Seedling_N
-    real :: MaxAge
-    real :: MaxVolume
-    real :: MaxDBH
-    real :: NPPL
-    real :: NPPW
-    real :: n_deadtrees
-    real :: c_deadtrees
-    real :: m_turnover
-    real :: c_turnover_time
-  end type outtype_annual_tile
-
-  type outtype_annual_cohorts
-    real :: year         = dummy
-    real :: cID          = dummy
-    real :: PFT          = dummy
-    real :: layer        = dummy
-    real :: density      = dummy
-    real :: flayer       = dummy
-    real :: DBH          = dummy
-    real :: dDBH         = dummy
-    real :: height       = dummy
-    real :: age          = dummy
-    real :: BA           = dummy
-    real :: dBA          = dummy
-    real :: Acrown       = dummy
-    real :: Aleaf        = dummy
-    real :: nsc          = dummy
-    real :: nsn          = dummy
-    real :: seedC        = dummy
-    real :: leafC        = dummy
-    real :: rootC        = dummy
-    real :: sapwC        = dummy
-    real :: woodC        = dummy
-    real :: treeG        = dummy
-    real :: fseed        = dummy
-    real :: fleaf        = dummy
-    real :: froot        = dummy
-    real :: fwood        = dummy
-    real :: GPP          = dummy
-    real :: NPP          = dummy
-    real :: Rauto        = dummy
-    real :: Nupt         = dummy
-    real :: Nfix         = dummy
-    ! Important to initialise these to 0
-    real :: n_deadtrees  = 0.0
-    real :: c_deadtrees  = 0.0
-    real :: deathrate    = 0.0
-  end type outtype_annual_cohorts
+  integer, public, parameter :: ANNUAL_COHORTS_CCID = 3
+  integer, public, parameter :: ANNUAL_COHORTS_DEATHRATE = 33
+  integer, public, parameter :: ANNUAL_COHORTS_C_LOSS = 34
+  integer, public, parameter :: ANNUAL_COHORTS_N_LOSS = 34
 
 contains
 
   subroutine init_pft_data(self)
     class(spec_data_type), intent(inout) :: self
-    
-    ! ---- local vars ------
-    integer :: i
 
     self%LAImax = MAX(0.5, self%LAI_light)
     self%underLAImax = MIN(self%LAImax, 1.2)

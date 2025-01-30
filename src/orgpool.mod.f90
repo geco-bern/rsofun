@@ -34,7 +34,7 @@ module md_orgpool
   end interface
 
   interface operator (*)
-    module procedure scale
+    module procedure scale_mul
   end interface
 
   interface operator (/)
@@ -61,7 +61,7 @@ contains
 
   end function sub
 
-  pure function scale(p, k) result(res)
+  pure function scale_mul(p, k) result(res)
     type(orgpool), intent(in) :: p
     real, intent(in) :: k
     type(orgpool) :: res
@@ -69,7 +69,7 @@ contains
     res = orgpool(p%c12 * k, &
             p%n14 * k)
 
-  end function scale
+  end function scale_mul
 
   pure function scale_div(p, k) result(res)
     type(orgpool), intent(in) :: p

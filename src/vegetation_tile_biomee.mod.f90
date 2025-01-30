@@ -4,7 +4,7 @@ module vegetation_tile_biomee
   ! definitions.
   ! Code adopted from BiomeE https://doi.org/10.5281/zenodo.7125963.
   !----------------------------------------------------------------
-  use md_interface_biomee, only: myinterface, spec_data_type, MAX_LEVELS, thksl
+  use md_interface_biomee
   use md_params_core
   use md_orgpool
   use md_common_fluxes
@@ -442,7 +442,6 @@ contains
     ! local variables
     type(cohort_type), pointer :: cc
     type(cohort_item), pointer :: it !iterator
-    real :: dbh ! cache variable
 
     ! State variables
     self%plabl = orgpool()
@@ -534,7 +533,7 @@ contains
   end subroutine aggregate_cohorts
 
 
-  subroutine hourly_diagnostics(self, forcing)
+  subroutine hourly_diagnostics(self)
     !////////////////////////////////////////////////////////////////////////
     ! Updates sub-daily tile-level variables and takes running daily sums
     !------------------------------------------------------------------------
@@ -542,7 +541,6 @@ contains
     use md_interface_biomee, only: myinterface
 
     class(vegn_tile_type), intent(inout) :: self
-    type(climate_type), intent(in):: forcing
 
     ! local variables
     type(cohort_type), pointer :: cc
@@ -571,17 +569,16 @@ contains
   end subroutine hourly_diagnostics
 
 
-  subroutine daily_diagnostics(self, iyears, idoy, state, out_daily_tile )
+  subroutine daily_diagnostics(self, iyears, idoy, out_daily_tile )
     !////////////////////////////////////////////////////////////////////////
     ! Updates daily tile-level variables and takes running annual sums
     !------------------------------------------------------------------------
     use md_forcing_biomee, only: climate_type
-    use md_interface_biomee, only: outtype_daily_tile
+    use, intrinsic :: iso_c_binding, only: c_double
 
     class(vegn_tile_type), intent(inout) :: self
     integer, intent(in) :: iyears, idoy
-    type(outtype_steering), intent(in) :: state
-    type(outtype_daily_tile), intent(out) :: out_daily_tile
+    real(kind=c_double), dimension(nvars_daily_tile), optional, intent(out) :: out_daily_tile
 
     ! local variables
     type(cohort_type), pointer :: cc
@@ -601,44 +598,44 @@ contains
       it => it%next()
     enddo
 
-    if (.not. state%spinup) then
+    if (present(out_daily_tile)) then
       call self%aggregate_cohorts()
 
-      out_daily_tile%year      = iyears
-      out_daily_tile%doy       = idoy
-      out_daily_tile%Tc        = self%tc_daily
-      out_daily_tile%Prcp      = self%dailyPrcp
-      out_daily_tile%totWs     = self%soilwater()
-      out_daily_tile%Trsp      = self%daily_fluxes%trsp
-      out_daily_tile%Evap      = self%dailyEvap
-      out_daily_tile%Runoff    = self%dailyRoff
-      out_daily_tile%ws1       = self%wcl(1)*thksl(1) * 1000
-      out_daily_tile%ws2       = self%wcl(2)*thksl(2) * 1000
-      out_daily_tile%ws3       = self%wcl(3)*thksl(3) * 1000
-      out_daily_tile%LAI       = self%LAI
-      out_daily_tile%GPP       = self%daily_fluxes%GPP
-      out_daily_tile%Rauto     = self%daily_fluxes%Resp
-      out_daily_tile%Rh        = self%dailyRh
-      out_daily_tile%NSC       = self%plabl%c12
-      out_daily_tile%seedC     = self%pseed%c12
-      out_daily_tile%leafC     = self%pleaf%c12
-      out_daily_tile%rootC     = self%proot%c12
-      out_daily_tile%SW_C      = self%psapw%c12
-      out_daily_tile%HW_C      = self%pwood%c12
-      out_daily_tile%NSN       = self%plabl%n14
-      out_daily_tile%seedN     = self%pseed%n14
-      out_daily_tile%leafN     = self%pleaf%n14
-      out_daily_tile%rootN     = self%proot%n14
-      out_daily_tile%SW_N      = self%psapw%n14
-      out_daily_tile%HW_N      = self%pwood%n14
-      out_daily_tile%McrbC     = self%pmicr%c12
-      out_daily_tile%fastSOM   = self%psoil_fs%c12
-      out_daily_tile%slowSOM   = self%psoil_sl%c12
-      out_daily_tile%McrbN     = self%pmicr%n14
-      out_daily_tile%fastSoilN = self%psoil_fs%n14
-      out_daily_tile%slowSoilN = self%psoil_sl%n14
-      out_daily_tile%mineralN  = self%inorg%n14
-      out_daily_tile%N_uptk    = self%daily_fluxes%Nup
+      out_daily_tile(1)  = dble(iyears)
+      out_daily_tile(2)  = dble(idoy)
+      out_daily_tile(3)  = dble(self%tc_daily)
+      out_daily_tile(4)  = dble(self%dailyPrcp)
+      out_daily_tile(5)  = dble(self%soilwater())
+      out_daily_tile(6)  = dble(self%daily_fluxes%trsp)
+      out_daily_tile(7)  = dble(self%dailyEvap)
+      out_daily_tile(8)  = dble(self%dailyRoff)
+      out_daily_tile(9)  = dble(self%wcl(1)*thksl(1) * 1000)
+      out_daily_tile(10) = dble(self%wcl(2)*thksl(2) * 1000)
+      out_daily_tile(11) = dble(self%wcl(3)*thksl(3) * 1000)
+      out_daily_tile(12) = dble(self%LAI)
+      out_daily_tile(13) = dble(self%daily_fluxes%GPP)
+      out_daily_tile(14) = dble(self%daily_fluxes%Resp)
+      out_daily_tile(15) = dble(self%dailyRh)
+      out_daily_tile(16) = dble(self%plabl%c12)
+      out_daily_tile(17) = dble(self%pseed%c12)
+      out_daily_tile(18) = dble(self%pleaf%c12)
+      out_daily_tile(19) = dble(self%proot%c12)
+      out_daily_tile(20) = dble(self%psapw%c12)
+      out_daily_tile(21) = dble(self%pwood%c12)
+      out_daily_tile(22) = dble(self%plabl%n14)
+      out_daily_tile(23) = dble(self%pseed%n14)
+      out_daily_tile(24) = dble(self%pleaf%n14)
+      out_daily_tile(25) = dble(self%proot%n14)
+      out_daily_tile(26) = dble(self%psapw%n14)
+      out_daily_tile(27) = dble(self%pwood%n14)
+      out_daily_tile(28) = dble(self%pmicr%c12)
+      out_daily_tile(29) = dble(self%psoil_fs%c12)
+      out_daily_tile(30) = dble(self%psoil_sl%c12)
+      out_daily_tile(31) = dble(self%pmicr%n14)
+      out_daily_tile(32) = dble(self%psoil_fs%n14)
+      out_daily_tile(33) = dble(self%psoil_sl%n14)
+      out_daily_tile(34) = dble(self%inorg%n14)
+      out_daily_tile(35) = dble(self%daily_fluxes%Nup)
     endif
 
     ! running annual sums
@@ -653,16 +650,17 @@ contains
   end subroutine daily_diagnostics
 
 
-  subroutine annual_diagnostics(self, iyears, out_annual_cohorts, out_annual_tile)
+  subroutine annual_diagnostics(self, iyears, out_annual_tile, out_annual_cohorts)
     !////////////////////////////////////////////////////////////////////////
     ! Updates tile-level variables and populates annual output in once
     !------------------------------------------------------------------------
-    use md_interface_biomee, only: outtype_annual_cohorts, outtype_annual_tile, myinterface
+    use md_interface_biomee, only: myinterface
+    use, intrinsic :: iso_c_binding, only: c_double
 
     class(vegn_tile_type), intent(inout) :: self
     integer, intent(in) :: iyears
-    type(outtype_annual_cohorts), dimension(out_max_cohorts) :: out_annual_cohorts
-    type(outtype_annual_tile) :: out_annual_tile
+    real(kind=c_double), dimension(nvars_annual_tile), intent(out) :: out_annual_tile
+    real(kind=c_double), dimension(out_max_cohorts, nvars_annual_cohorts), optional, intent(out) :: out_annual_cohorts
 
     ! local variables
     real :: treeG, fseed, fleaf, froot, fwood, dDBH, BA, dBA
@@ -673,63 +671,71 @@ contains
 
     i = 0
 
-    ! Cohorts ouput
-    it => self%cohorts()
-    do while (associated(it))
-      cc => it%cohort
+      ! Cohorts ouput
+      it => self%cohorts()
+      do while (associated(it))
+        cc => it%cohort
 
-      i = i + 1
+        i = i + 1
 
-      treeG     = cc%pseed%c12 + cc%NPPleaf + cc%NPProot + cc%NPPwood
-      fseed     = cc%pseed%c12 / treeG
-      fleaf     = cc%NPPleaf / treeG
-      froot     = cc%NPProot / treeG
-      fwood     = cc%NPPwood / treeG
-      dDBH      = cc%dbh() - cc%DBH_ys !in m
-      BA        = cc%basal_area()
-      dBA       = BA - cc%BA_ys
+        if (present(out_annual_cohorts)) then
 
-      if (i <= NCohortMax) then
+        treeG     = cc%pseed%c12 + cc%NPPleaf + cc%NPProot + cc%NPPwood
+        fseed     = cc%pseed%c12 / treeG
+        fleaf     = cc%NPPleaf / treeG
+        froot     = cc%NPProot / treeG
+        fwood     = cc%NPPwood / treeG
+        dDBH      = cc%dbh() - cc%DBH_ys !in m
+        BA        = cc%basal_area()
+        dBA       = BA - cc%BA_ys
 
-        out_annual_cohorts(i)%year        = iyears
-        out_annual_cohorts(i)%cID         = it%uid()
-        out_annual_cohorts(i)%PFT         = cc%species
-        out_annual_cohorts(i)%layer       = cc%layer
-        out_annual_cohorts(i)%density     = cc%nindivs * 10000
-        out_annual_cohorts(i)%flayer      = cc%layerfrac()
-        out_annual_cohorts(i)%dbh         = cc%dbh() * 100   ! *100 to convert m in cm
-        out_annual_cohorts(i)%dDBH        = dDBH * 100     ! *100 to convert m in cm
-        out_annual_cohorts(i)%height      = cc%height()
-        out_annual_cohorts(i)%age         = cc%age
-        out_annual_cohorts(i)%BA          = BA
-        out_annual_cohorts(i)%dBA         = dBA
-        out_annual_cohorts(i)%Acrown      = cc%crownarea()
-        out_annual_cohorts(i)%Aleaf       = cc%leafarea()
-        out_annual_cohorts(i)%nsc         = cc%plabl%c12
-        out_annual_cohorts(i)%nsn         = cc%plabl%n14
-        out_annual_cohorts(i)%seedC       = cc%pseed%c12
-        out_annual_cohorts(i)%leafC       = cc%pleaf%c12
-        out_annual_cohorts(i)%rootC       = cc%proot%c12
-        out_annual_cohorts(i)%sapwC       = cc%psapw%c12
-        out_annual_cohorts(i)%woodC       = cc%pwood%c12
-        out_annual_cohorts(i)%treeG       = treeG
-        out_annual_cohorts(i)%fseed       = fseed
-        out_annual_cohorts(i)%fleaf       = fleaf
-        out_annual_cohorts(i)%froot       = froot
-        out_annual_cohorts(i)%fwood       = fwood
-        out_annual_cohorts(i)%GPP         = cc%annual_fluxes%GPP
-        out_annual_cohorts(i)%NPP         = cc%annual_fluxes%NPP()
-        out_annual_cohorts(i)%Rauto       = cc%annual_fluxes%Resp
-        out_annual_cohorts(i)%Nupt        = cc%annual_fluxes%Nup
-        out_annual_cohorts(i)%Nfix        = cc%annual_fluxes%fixedN
+        if (i <= NCohortMax) then
 
-      end if
+          out_annual_cohorts(i, 1)  = dble(i)
+          out_annual_cohorts(i, 2)  = dble(iyears)
+          out_annual_cohorts(i, 3)  = dble(it%uid())
+          out_annual_cohorts(i, 4)  = dble(cc%species)
+          out_annual_cohorts(i, 5)  = dble(cc%layer)
+          out_annual_cohorts(i, 6)  = dble(cc%nindivs * 10000)
+          out_annual_cohorts(i, 7)  = dble(cc%layerfrac())
+          out_annual_cohorts(i, 8)  = dble(cc%dbh() * 100)   ! *100 to convert m in cm
+          out_annual_cohorts(i, 9)  = dble(dDBH * 100)     ! *100 to convert m in cm
+          out_annual_cohorts(i, 10) = dble(cc%height())
+          out_annual_cohorts(i, 11) = dble(cc%age)
+          out_annual_cohorts(i, 12) = dble(BA)
+          out_annual_cohorts(i, 13) = dble(dBA)
+          out_annual_cohorts(i, 14) = dble(cc%crownarea())
+          out_annual_cohorts(i, 15) = dble(cc%leafarea())
+          out_annual_cohorts(i, 16) = dble(cc%plabl%c12)
+          out_annual_cohorts(i, 17) = dble(cc%plabl%n14)
+          out_annual_cohorts(i, 18) = dble(cc%pseed%c12)
+          out_annual_cohorts(i, 19) = dble(cc%pleaf%c12)
+          out_annual_cohorts(i, 20) = dble(cc%proot%c12)
+          out_annual_cohorts(i, 21) = dble(cc%psapw%c12)
+          out_annual_cohorts(i, 22) = dble(cc%pwood%c12)
+          out_annual_cohorts(i, 23) = dble(treeG)
+          out_annual_cohorts(i, 24) = dble(fseed)
+          out_annual_cohorts(i, 25) = dble(fleaf)
+          out_annual_cohorts(i, 26) = dble(froot)
+          out_annual_cohorts(i, 27) = dble(fwood)
+          out_annual_cohorts(i, 28) = dble(cc%annual_fluxes%GPP)
+          out_annual_cohorts(i, 29) = dble(cc%annual_fluxes%NPP())
+          out_annual_cohorts(i, 30) = dble(cc%annual_fluxes%Resp)
+          out_annual_cohorts(i, 31) = dble(cc%annual_fluxes%Nup)
+          out_annual_cohorts(i, 32) = dble(cc%annual_fluxes%fixedN)
+          out_annual_cohorts(i, 33) = dble(0)
+          out_annual_cohorts(i, 34) = dble(0)
+          out_annual_cohorts(i, 35) = dble(0)
 
-      call self%annual_fluxes%add(cc%annual_fluxes, cc%nindivs)
+        end if
 
-      it => it%next()
+        end if
 
-    enddo
+        call self%annual_fluxes%add(cc%annual_fluxes, cc%nindivs)
+
+        it => it%next()
+
+      enddo
 
     call self%aggregate_cohorts()
 
@@ -740,61 +746,65 @@ contains
     soilN     = self%pmicr%n14 + self%psoil_fs%n14 + self%psoil_sl%n14 + self%inorg%n14
     self%totN = plantN + soilN
 
-    out_annual_tile%year            = iyears
-    out_annual_tile%CAI             = self%CAI
-    out_annual_tile%LAI             = self%LAI
-    out_annual_tile%density         = self%nindivs * 10000   ! * 10000 to convert in indivs/ha
-    out_annual_tile%DBH             = self%DBH * 100         ! * 100 to convert in cm
-    out_annual_tile%density12       = self%nindivs12 * 10000 ! * 10000 to convert in indivs/ha
-    out_annual_tile%DBH12           = self%DBH12 * 100       ! * 100 to convert in cm
-    out_annual_tile%QMD12           = self%QMD12 * 100       ! * 100 to convert in cm
-    out_annual_tile%NPP             = self%annual_fluxes%NPP()
-    out_annual_tile%GPP             = self%annual_fluxes%GPP
-    out_annual_tile%Rauto           = self%annual_fluxes%Resp
-    out_annual_tile%Rh              = self%annualRh
-    out_annual_tile%rain            = self%annualPrcp
-    out_annual_tile%SoilWater       = self%SoilWater()
-    out_annual_tile%Transp          = self%annual_fluxes%Trsp
-    out_annual_tile%Evap            = self%annualEvap
-    out_annual_tile%Runoff          = self%annualRoff
-    out_annual_tile%plantC          = plantC ! kg C/m2/yr
-    out_annual_tile%soilC           = soilC
-    out_annual_tile%plantN          = plantN
-    out_annual_tile%soilN           = soilN
-    out_annual_tile%totN            = self%totN
-    out_annual_tile%NSC             = self%plabl%c12
-    out_annual_tile%SeedC           = self%pseed%c12
-    out_annual_tile%leafC           = self%pleaf%c12
-    out_annual_tile%rootC           = self%proot%c12
-    out_annual_tile%SapwoodC        = self%psapw%c12
-    out_annual_tile%WoodC           = self%pwood%c12
-    out_annual_tile%NSN             = self%plabl%n14
-    out_annual_tile%SeedN           = self%pseed%n14
-    out_annual_tile%leafN           = self%pleaf%n14
-    out_annual_tile%rootN           = self%proot%n14
-    out_annual_tile%SapwoodN        = self%psapw%n14
-    out_annual_tile%WoodN           = self%pwood%n14
-    out_annual_tile%McrbC           = self%pmicr%c12
-    out_annual_tile%fastSOM         = self%psoil_fs%c12
-    out_annual_tile%SlowSOM         = self%psoil_sl%c12
-    out_annual_tile%McrbN           = self%pmicr%n14
-    out_annual_tile%fastSoilN       = self%psoil_fs%n14
-    out_annual_tile%slowSoilN       = self%psoil_sl%n14
-    out_annual_tile%mineralN        = self%inorg%n14
-    out_annual_tile%N_fxed          = self%annual_fluxes%fixedN
-    out_annual_tile%N_uptk          = self%annual_fluxes%Nup
-    out_annual_tile%N_yrMin         = self%annualN
-    out_annual_tile%N_P2S           = self%N_P2S_yr
-    out_annual_tile%N_loss          = self%Nloss_yr
-    out_annual_tile%MaxAge          = self%MaxAge
-    out_annual_tile%MaxVolume       = self%MaxVolume
-    out_annual_tile%MaxDBH          = self%MaxDBH
-    out_annual_tile%NPPL            = self%NPPL
-    out_annual_tile%NPPW            = self%NPPW
-    out_annual_tile%n_deadtrees     = self%n_deadtrees
-    out_annual_tile%c_deadtrees     = self%c_deadtrees
-    out_annual_tile%m_turnover      = self%m_turnover
-    out_annual_tile%c_turnover_time = self%pwood%c12 / self%NPPW
+    out_annual_tile(1)  = dble(iyears)
+    out_annual_tile(2)  = dble(self%CAI)
+    out_annual_tile(3)  = dble(self%LAI)
+    out_annual_tile(4)  = dble(self%nindivs * 10000)   ! * 10000 to convert in indivs/ha
+    out_annual_tile(5)  = dble(self%DBH * 100)         ! * 100 to convert in cm
+    out_annual_tile(6)  = dble(self%nindivs12 * 10000) ! * 10000 to convert in indivs/ha
+    out_annual_tile(7)  = dble(self%DBH12 * 100)       ! * 100 to convert in cm
+    out_annual_tile(8)  = dble(self%QMD12 * 100)       ! * 100 to convert in cm
+    out_annual_tile(9)  = dble(self%annual_fluxes%NPP())
+    out_annual_tile(10) = dble(self%annual_fluxes%GPP)
+    out_annual_tile(11) = dble(self%annual_fluxes%Resp)
+    out_annual_tile(12) = dble(self%annualRh)
+    out_annual_tile(13) = dble(self%annualPrcp)
+    out_annual_tile(14) = dble(self%SoilWater())
+    out_annual_tile(15) = dble(self%annual_fluxes%Trsp)
+    out_annual_tile(16) = dble(self%annualEvap)
+    out_annual_tile(17) = dble(self%annualRoff)
+    out_annual_tile(18) = dble(plantC) ! kg C/m2/yr)
+    out_annual_tile(19) = dble(soilC)
+    out_annual_tile(20) = dble(plantN)
+    out_annual_tile(21) = dble(soilN)
+    out_annual_tile(22) = dble(self%totN)
+    out_annual_tile(23) = dble(self%plabl%c12)
+    out_annual_tile(24) = dble(self%pseed%c12)
+    out_annual_tile(25) = dble(self%pleaf%c12)
+    out_annual_tile(26) = dble(self%proot%c12)
+    out_annual_tile(27) = dble(self%psapw%c12)
+    out_annual_tile(28) = dble(self%pwood%c12)
+    out_annual_tile(29) = dble(self%plabl%n14)
+    out_annual_tile(30) = dble(self%pseed%n14)
+    out_annual_tile(31) = dble(self%pleaf%n14)
+    out_annual_tile(32) = dble(self%proot%n14)
+    out_annual_tile(33) = dble(self%psapw%n14)
+    out_annual_tile(34) = dble(self%pwood%n14)
+    out_annual_tile(35) = dble(self%pmicr%c12)
+    out_annual_tile(36) = dble(self%psoil_fs%c12)
+    out_annual_tile(37) = dble(self%psoil_sl%c12)
+    out_annual_tile(38) = dble(self%pmicr%n14)
+    out_annual_tile(39) = dble(self%psoil_fs%n14)
+    out_annual_tile(40) = dble(self%psoil_sl%n14)
+    out_annual_tile(41) = dble(self%inorg%n14)
+    out_annual_tile(42) = dble(self%annual_fluxes%fixedN)
+    out_annual_tile(43) = dble(self%annual_fluxes%Nup)
+    out_annual_tile(44) = dble(self%annualN)
+    out_annual_tile(45) = dble(0)
+    out_annual_tile(46) = dble(self%Nloss_yr)
+    out_annual_tile(47) = dble(0)
+    out_annual_tile(48) = dble(0)
+    out_annual_tile(49) = dble(0)
+    out_annual_tile(50) = dble(0)
+    out_annual_tile(51) = dble(self%MaxAge)
+    out_annual_tile(52) = dble(self%MaxVolume)
+    out_annual_tile(53) = dble(self%MaxDBH)
+    out_annual_tile(54) = dble(self%NPPL)
+    out_annual_tile(55) = dble(self%NPPW)
+    out_annual_tile(56) = dble(0)
+    out_annual_tile(57) = dble(0)
+    out_annual_tile(58) = dble(0)
+    out_annual_tile(59) = dble(self%pwood%c12 / self%NPPW)
 
     ! Rebalance N (to compensate for the adjunction in vegn_N_uptake)
     if (myinterface%params_siml%do_closedN_run) call self%recover_N_balance()
@@ -816,15 +826,15 @@ contains
 
   end subroutine
 
-  subroutine annual_diagnostics_post_mortality(self, out_annual_cohorts, out_annual_tile)
+  subroutine annual_diagnostics_post_mortality(self, out_annual_tile, out_annual_cohorts)
     !////////////////////////////////////////////////////////////////////////
     ! Updates tile-level variables and populates annual output in once
     !------------------------------------------------------------------------
-    use md_interface_biomee, only: outtype_annual_cohorts, outtype_annual_tile
+    use, intrinsic :: iso_c_binding, only: c_double
 
     class(vegn_tile_type), intent(inout) :: self
-    type(outtype_annual_cohorts), dimension(out_max_cohorts) :: out_annual_cohorts
-    type(outtype_annual_tile) :: out_annual_tile
+    real(kind=c_double), dimension(nvars_annual_tile), intent(out) :: out_annual_tile
+    real(kind=c_double), dimension(out_max_cohorts, nvars_annual_cohorts), optional, intent(out) :: out_annual_cohorts
 
     ! local variables
     type(cohort_type), pointer :: cc
@@ -837,45 +847,50 @@ contains
     it => self%killed_cohort_fractions()
     do while (associated(it))
       cc => it%cohort
-      do i = 1, NCohortMax
-        if (int(out_annual_cohorts(i)%cID) == it%uid()) then
-          associate (sp => cc%sp())
 
-            ! Carbon and Nitrogen from plants to soil pools
-            loss_coarse = (orgpool(- cc%leafarea(), cc%leafarea()) * myinterface%params_tile%LMAmin &
-              + cc%pwood + cc%psapw + cc%pleaf) * cc%nindivs
+      associate (sp => cc%sp())
 
-            loss_fine = (orgpool(- cc%leafarea(), cc%leafarea()) * sp%LNbase &
-              + cc%plabl + cc%pseed + cc%proot) * cc%nindivs
+        ! Carbon and Nitrogen from plants to soil pools
+        loss_coarse = (orgpool(- cc%leafarea(), cc%leafarea()) * myinterface%params_tile%LMAmin &
+                + cc%pwood + cc%psapw + cc%pleaf) * cc%nindivs
 
-          end associate
+        loss_fine = (orgpool(- cc%leafarea(), cc%leafarea()) * sp%LNbase &
+                + cc%plabl + cc%pseed + cc%proot) * cc%nindivs
 
-          call self%plant2soil(loss_coarse, loss_fine)
+      end associate
 
-          loss_total = loss_coarse + loss_fine
+      call self%plant2soil(loss_coarse, loss_fine)
 
-          self%m_turnover   = self%m_turnover    + loss_total%c12 ! We add C from dead trees to get the total turnover
-          self%c_deadtrees  = self%c_deadtrees   + loss_total%c12
-          self%n_deadtrees  = self%n_deadtrees   + loss_total%n14
+      loss_total = loss_coarse + loss_fine
 
-          out_annual_cohorts(i)%n_deadtrees = out_annual_cohorts(i)%n_deadtrees + loss_total%n14
-          out_annual_cohorts(i)%c_deadtrees = out_annual_cohorts(i)%c_deadtrees + loss_total%c12
-          out_annual_cohorts(i)%deathrate   = out_annual_cohorts(i)%deathrate + cc%deathrate
-          exit
-        end if
-      end do
+      self%m_turnover   = self%m_turnover    + loss_total%c12 ! We add C from dead trees to get the total turnover
+      self%c_deadtrees  = self%c_deadtrees   + loss_total%c12
+      self%n_deadtrees  = self%n_deadtrees   + loss_total%n14
+
+      if (present(out_annual_cohorts)) then
+        do i = 1, NCohortMax
+          if (int(out_annual_cohorts(i, ANNUAL_COHORTS_CCID)) == it%uid()) then
+
+            out_annual_cohorts(i, ANNUAL_COHORTS_DEATHRATE) = out_annual_cohorts(i, ANNUAL_COHORTS_DEATHRATE) + cc%deathrate
+            out_annual_cohorts(i, ANNUAL_COHORTS_C_LOSS) = out_annual_cohorts(i, ANNUAL_COHORTS_C_LOSS) + loss_total%n14
+            out_annual_cohorts(i, ANNUAL_COHORTS_N_LOSS) = out_annual_cohorts(i, ANNUAL_COHORTS_N_LOSS) + loss_total%c12
+
+            exit
+          end if
+        end do
+      end if
 
       it => it%next()
     enddo
 
-    out_annual_tile%N_P2S           = self%N_P2S_yr
-    out_annual_tile%n_deadtrees     = self%n_deadtrees
-    out_annual_tile%c_deadtrees     = self%c_deadtrees
-    out_annual_tile%m_turnover      = self%m_turnover
-    out_annual_tile%totseedC        = self%totseed%c12
-    out_annual_tile%totseedN        = self%totseed%n14
-    out_annual_tile%Seedling_C      = self%totNewC%c12
-    out_annual_tile%Seedling_N      = self%totNewC%n14
+    out_annual_tile(45) = dble(self%N_P2S_yr)
+    out_annual_tile(56) = dble(self%n_deadtrees)
+    out_annual_tile(57) = dble(self%c_deadtrees)
+    out_annual_tile(58) = dble(self%m_turnover)
+    out_annual_tile(47) = dble(self%totseed%c12)
+    out_annual_tile(48) = dble(self%totseed%n14)
+    out_annual_tile(49) = dble(self%totNewC%c12)
+    out_annual_tile(50) = dble(self%totNewC%n14)
 
   end subroutine annual_diagnostics_post_mortality
 

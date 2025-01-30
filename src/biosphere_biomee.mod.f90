@@ -19,18 +19,16 @@ contains
   subroutine biosphere_annual( &
     state, &
     vegn, &
-    out_biosphere_daily_tile, &
-    out_biosphere_annual_tile, &
-    out_biosphere_annual_cohorts &
-    )
+    output_annual_tile, &
+    output_daily_tile, &
+    output_annual_cohorts &
+  )
     !////////////////////////////////////////////////////////////////
     ! Calculates one year of vegetation dynamics. 
     !----------------------------------------------------------------
-    use md_interface_biomee, only: myinterface, &
-      outtype_daily_tile, &
-      outtype_annual_tile, &
-      outtype_annual_cohorts
+    use md_interface_biomee, only: myinterface
     use md_sofunutils, only: aggregate
+    use, intrinsic :: iso_c_binding, only: c_double
 
     ! Input vairables
     type(outtype_steering), intent(in)  :: state
@@ -39,16 +37,15 @@ contains
     type(vegn_tile_type), intent(inout) :: vegn
 
     ! Return variables
-    type(outtype_daily_tile),     dimension(ndayyear)                , intent(out) :: out_biosphere_daily_tile
-    type(outtype_annual_tile)                                        , intent(out) :: out_biosphere_annual_tile
-    type(outtype_annual_cohorts), dimension(out_max_cohorts)         , intent(out) :: out_biosphere_annual_cohorts
+    real(kind=c_double), dimension(nvars_annual_tile), optional, intent(out) :: output_annual_tile
+    real(kind=c_double), dimension(ndayyear, nvars_daily_tile), optional, intent(out) :: output_daily_tile
+    real(kind=c_double), dimension(out_max_cohorts, nvars_annual_cohorts), optional, intent(out) :: output_annual_cohorts
 
     ! Local variables
     integer :: moy         ! Month of year
     integer :: doy         ! Day of year
     integer :: dayloop_idx, fastloop_idx, simu_steps
     real, dimension(ndayyear) :: daily_temp  ! Daily temperatures (average)
-    real    :: tsoil
 
     !----------------------------------------------------------------
     ! INITIALISATIONS
@@ -102,7 +99,7 @@ contains
           !----------------------------------------------------------------
           call vegn_CNW_budget( vegn, myinterface%climate(simu_steps))
          
-          call vegn%hourly_diagnostics(myinterface%climate(simu_steps))
+          call vegn%hourly_diagnostics()
          
         enddo fastloop ! hourly or half-hourly
 
@@ -113,8 +110,12 @@ contains
         !-------------------------------------------------
 
         ! sum over fast time steps and cohorts
-        call daily_diagnostics( vegn, state%year, doy, state, out_biosphere_daily_tile(doy)  )
-        
+        if (present(output_daily_tile)) then
+          call daily_diagnostics( vegn, state%year, doy, output_daily_tile(doy,:)  )
+        else
+          call daily_diagnostics( vegn, state%year, doy  )
+        end if
+
         ! Determine start and end of season and maximum leaf (root) mass
         call vegn_phenology( vegn )
         
@@ -137,7 +138,7 @@ contains
     ! output to be consistent with cohort identities.
     ! Note: Relayering happens in phenology leading to a reshuffling of the cohorts and affecting cohort identities.
     !---------------------------------------------
-    call vegn%annual_diagnostics(state%year, out_biosphere_annual_cohorts, out_biosphere_annual_tile )
+    call vegn%annual_diagnostics(state%year, output_annual_tile, output_annual_cohorts )
 
     !---------------------------------------------
     ! Reproduction and mortality
@@ -165,7 +166,7 @@ contains
     !---------------------------------------------
     ! Update post-mortality metrics
     !---------------------------------------------
-    call vegn%annual_diagnostics_post_mortality(out_biosphere_annual_cohorts, out_biosphere_annual_tile )
+    call vegn%annual_diagnostics_post_mortality(output_annual_tile, output_annual_cohorts )
 
   end subroutine biosphere_annual
 
