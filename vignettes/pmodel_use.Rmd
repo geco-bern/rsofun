@@ -434,7 +434,6 @@ df_plot <- output |>
   )
 
 plot_eval(df_plot, is_gpp = FALSE)
-# ggsave("~/rsofun/fig/et_fr-pue.pdf", height = 4, width = 6)
 ```
 
 <!-- ## P-hydro run with diffusion -->
