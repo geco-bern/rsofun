@@ -8,7 +8,9 @@ module md_biosphere_biomee
   use vegetation_tile_biomee
   use md_vegetation_processes_biomee
   use md_soil_biomee
+  use md_forcing_biomee
   use md_soiltemp, only: air_to_soil_temp
+  use, intrinsic :: iso_c_binding, only: c_double
   
   implicit none
   private
@@ -18,6 +20,7 @@ contains
 
   subroutine biosphere_annual( &
     state, &
+    climate, &
     vegn, &
     output_annual_tile, &
     output_daily_tile, &
@@ -26,14 +29,13 @@ contains
     !////////////////////////////////////////////////////////////////
     ! Calculates one year of vegetation dynamics. 
     !----------------------------------------------------------------
-    use md_interface_biomee, only: myinterface
+    use md_interface_in_biomee, only: inputs
     use md_sofunutils, only: aggregate
     use, intrinsic :: iso_c_binding, only: c_double
 
     ! Input vairables
     type(outtype_steering), intent(in)  :: state
-
-    ! Inout variable
+    type(climate_type), dimension(:), allocatable :: climate
     type(vegn_tile_type), intent(inout) :: vegn
 
     ! Return variables
@@ -64,7 +66,7 @@ contains
     call vegn%zero_diagnostics()
 
     ! Compute averaged daily temperatures
-    call aggregate(daily_temp, myinterface%climate(:)%Tair, myinterface%steps_per_day)
+    call aggregate(daily_temp, climate(:)%Tair, inputs%steps_per_day)
 
     !----------------------------------------------------------------
     ! LOOP THROUGH MONTHS
@@ -90,14 +92,14 @@ contains
         ! FAST TIME STEP
         !----------------------------------------------------------------
         ! get daily mean temperature from hourly/half-hourly data
-        fastloop: do fastloop_idx = 1,myinterface%steps_per_day
+        fastloop: do fastloop_idx = 1,inputs%steps_per_day
 
           simu_steps   = simu_steps + 1
 
           !----------------------------------------------------------------
           ! Sub-daily time step at resolution given by forcing (can be 1 = daily)
           !----------------------------------------------------------------
-          call vegn_CNW_budget( vegn, myinterface%climate(simu_steps))
+          call vegn_CNW_budget( vegn, climate(simu_steps))
          
           call vegn%hourly_diagnostics()
          

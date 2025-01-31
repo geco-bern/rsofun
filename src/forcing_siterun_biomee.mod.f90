@@ -3,12 +3,15 @@ module md_forcing_biomee
   ! Module containing treatment of forcing for BiomeE, linking
   ! what's obtained from R through SR biomee_f and what's needed by BiomeE.
   !----------------------------------------------------------------
-  use, intrinsic :: iso_fortran_env, dp=>real64, sp=>real32, in=>int32
+  use, intrinsic :: iso_fortran_env, dp=>real64
   use md_params_core, only: ntstepsyear, ndayyear, kTkelvin, kfFEC
   implicit none
 
   private
   public climate_type, getclimate
+
+  ! Number of parameters
+  integer, public, parameter :: nvars_forcing = 7
 
   type :: climate_type
     real    :: ppfd          ! mol m-2 s-1

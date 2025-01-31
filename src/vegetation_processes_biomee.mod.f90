@@ -5,7 +5,7 @@ module md_vegetation_processes_biomee
   !---------------------------------------------------------------  
   use vegetation_tile_biomee
   use md_soil_biomee
-  use md_interface_biomee, only: myinterface
+  use md_interface_in_biomee, only: inputs
 
   implicit none
   private
@@ -51,14 +51,14 @@ contains
     do while (associated(it))
       cc => it%cohort
       ! increment the cohort age
-      cc%age = cc%age + myinterface%dt_fast_yr
+      cc%age = cc%age + inputs%dt_fast_yr
 
       ! Maintenance respiration
       call plant_respiration( cc, forcing%tair ) ! get resp per tree per time step
 
       ! We add the growth respiration scaled from daily to timestap
-      cc%fast_fluxes%resp = cc%fast_fluxes%resp + (cc%resg * myinterface%step_seconds) / secs_per_day
-      cc%fast_fluxes%resp = cc%fast_fluxes%resp * myinterface%params_tile%tf_base          ! scaling for calibration
+      cc%fast_fluxes%resp = cc%fast_fluxes%resp + (cc%resg * inputs%step_seconds) / secs_per_day
+      cc%fast_fluxes%resp = cc%fast_fluxes%resp * inputs%params_tile%tf_base          ! scaling for calibration
 
       ! detach photosynthesis model from plant growth
       cc%plabl = cc%plabl + orgpool(cc%fast_fluxes%npp(), cc%fast_fluxes%fixedN)
@@ -92,7 +92,7 @@ contains
     real :: r_Nfix    ! respiration due to N fixation
     integer :: sp ! shorthand for cohort species
 
-    associate (spdata => myinterface%params_species)
+    associate (spdata => inputs%params_species)
 
       sp = cc%species
 
@@ -111,18 +111,18 @@ contains
 
       ! Facultive Nitrogen fixation
       !if (cc%plabl%n14 < cc%NSNmax() .and. cc%plabl%c12 > 0.5 * NSCtarget) then
-      !   cc%fixedN = spdata(sp)%NfixRate0 * cc%proot%c12 * tf * myinterface%dt_fast_yr ! kgN tree-1 step-1
+      !   cc%fixedN = spdata(sp)%NfixRate0 * cc%proot%c12 * tf * inputs%dt_fast_yr ! kgN tree-1 step-1
       !else
-      !   cc%fixedN = 0.0 ! spdata(sp)%NfixRate0 * cc%proot%c12 * tf * myinterface%dt_fast_yr ! kgN tree-1 step-1
+      !   cc%fixedN = 0.0 ! spdata(sp)%NfixRate0 * cc%proot%c12 * tf * inputs%dt_fast_yr ! kgN tree-1 step-1
       !endif
 
       ! Obligate Nitrogen Fixation
-      cc%fast_fluxes%fixedN = fnsc*spdata(sp)%NfixRate0 * cc%proot%c12 * tf * myinterface%dt_fast_yr ! kgN tree-1 step-1
+      cc%fast_fluxes%fixedN = fnsc*spdata(sp)%NfixRate0 * cc%proot%c12 * tf * inputs%dt_fast_yr ! kgN tree-1 step-1
       r_Nfix    = spdata(sp)%NfixCost0 * cc%fast_fluxes%fixedN ! + 0.25*spdata(sp)%NfixCost0 * cc%N_uptake    ! tree-1 step-1
 
       ! LeafN    = spdata(sp)%LNA * cc%leafarea()  ! gamma_SW is sapwood respiration rate (kgC m-2 Acambium yr-1)
-      r_stem   = fnsc*spdata(sp)%gamma_SW  * Acambium * tf * myinterface%dt_fast_yr ! kgC tree-1 step-1
-      r_root   = fnsc*spdata(sp)%gamma_FR  * cc%proot%n14 * tf * myinterface%dt_fast_yr ! root respiration ~ root N
+      r_stem   = fnsc*spdata(sp)%gamma_SW  * Acambium * tf * inputs%dt_fast_yr ! kgC tree-1 step-1
+      r_root   = fnsc*spdata(sp)%gamma_FR  * cc%proot%n14 * tf * inputs%dt_fast_yr ! root respiration ~ root N
       cc%resr = r_root + r_Nfix ! tree-1 step-1
       cc%fast_fluxes%resp = cc%resl + r_stem + cc%resr   !kgC tree-1 step-1
 
@@ -303,12 +303,12 @@ contains
         call cc%pleaf%add_n14(dBL / sp%CNleaf0)
         call cc%proot%add_n14(dBR / sp%CNroot0)
         call cc%pseed%add_n14(dSeed / sp%CNseed0)
-        call cc%psapw%add_n14(myinterface%params_tile%f_N_add * cc%plabl%n14 + &
+        call cc%psapw%add_n14(inputs%params_tile%f_N_add * cc%plabl%n14 + &
         (cc%N_growth - dBL/sp%CNleaf0 - dBR/sp%CNroot0 - dSeed/sp%CNseed0))
         !extraN = max(0.0,cc%psapw%n14+cc%pwood%n14 - (cc%psapw%c12+cc%pwood%c12)/sp%CNsw0)
         extraN   = max(0.0,cc%psapw%n14 - cc%psapw%c12/sp%CNsw0)
         call cc%psapw%add_n14(- extraN)
-        call cc%plabl%add_n14(extraN - myinterface%params_tile%f_N_add * cc%plabl%n14 - cc%N_growth) !! update NSN
+        call cc%plabl%add_n14(extraN - inputs%params_tile%f_N_add * cc%plabl%n14 - cc%N_growth) !! update NSN
         cc%N_growth = 0.0
 
         ! accumulated C allocated to leaf, root, and wood
@@ -435,7 +435,7 @@ contains
         
         ! reset
         cc%nindivs = MIN(ccNSC /sp%seedlingsize, ccNSN/(sp%seedlingsize/sp%CNroot0))
-        cc%psapw = orgpool(myinterface%params_tile%f_initialBSW * sp%seedlingsize, cc%psapw%c12 / sp%CNsw0)  ! for setting up a initial size
+        cc%psapw = orgpool(inputs%params_tile%f_initialBSW * sp%seedlingsize, cc%psapw%c12 / sp%CNsw0)  ! for setting up a initial size
         cc%proot = orgpool(0.25 * cc%psapw%c12, cc%proot%c12 / sp%CNroot0)
         cc%pleaf = orgpool()
         cc%pwood = orgpool()
@@ -541,7 +541,7 @@ contains
     !////////////////////////////////////////////////////////////////
     ! Determines mortality and updates tile
     !---------------------------------------------------------------
-    use md_interface_biomee, only: myinterface
+    use md_interface_in_biomee, only: inputs
     
     !   TODO: update background mortality rate as a function of wood density (Weng, Jan. 07 2017)
     type(vegn_tile_type), intent(inout) :: vegn
@@ -565,7 +565,7 @@ contains
     cCAI = 0.0
     deathrate = 0.0
 
-    if ((trim(myinterface%params_siml%method_mortality) == "const_selfthin")) then
+    if ((trim(inputs%params_siml%method_mortality) == "const_selfthin")) then
       ! Work in progress.
 
       ! Remove a big amount of very small trees first
@@ -578,7 +578,7 @@ contains
       end do
 
       ! set calibratable mortality parameter
-      CAI_max = myinterface%params_tile%par_mort
+      CAI_max = inputs%params_tile%par_mort
 
       ! This thinning method depends on the order of the cohorts (oldest cohorts tends to die first)
       ! We sort the cohorts by increasing height
@@ -610,11 +610,11 @@ contains
 
           dbh = cc%dbh()
 
-        if ((trim(myinterface%params_siml%method_mortality) == "cstarvation")) then
+        if ((trim(inputs%params_siml%method_mortality) == "cstarvation")) then
 
           ! set calibratable parameter
-          param_nsc_under = myinterface%params_tile%par_mort_under
-          param_nsc       = myinterface%params_tile%par_mort
+          param_nsc_under = inputs%params_tile%par_mort_under
+          param_nsc       = inputs%params_tile%par_mort
 
           ! Understory mortality
           if (cc%layer > 1) then !
@@ -629,11 +629,11 @@ contains
             endif
           endif
 
-        else if ((trim(myinterface%params_siml%method_mortality) == "dbh")) then 
+        else if ((trim(inputs%params_siml%method_mortality) == "dbh")) then
 
           ! set calibratable parameter
-          param_dbh_under = myinterface%params_tile%par_mort_under
-          param_dbh       = myinterface%params_tile%par_mort
+          param_dbh_under = inputs%params_tile%par_mort_under
+          param_dbh       = inputs%params_tile%par_mort
 
           if (sp%lifeform == 0) then  ! for grasses
             if (cc%layer > 1) then
@@ -648,7 +648,7 @@ contains
                      (1.0 +        exp(B_mort*dbh))
 
             else  ! First layer mortality Weng 2015: deathrate = 0.01*(1+5*exp(4*(cc%dbh()-2)))/(1+exp(4*(cc%dbh()-2)))
-              if (myinterface%params_siml%do_U_shaped_mortality) then
+              if (inputs%params_siml%do_U_shaped_mortality) then
                 ! deathrate = param_dbh * 0.1 *    &
                 !            (1.*exp(2.*(cc%dbh()-1))/  &
                 !            (1. + exp(2.*(cc%dbh()-1))))
@@ -762,7 +762,7 @@ contains
       cc => new%cohort
 
       ! update child cohort parameters
-      associate (sp => myinterface%params_species(reproPFTs(k)))
+      associate (sp => inputs%params_species(reproPFTs(k)))
 
       ! density
       cc%nindivs = seed(k)%c12 / sp%seedlingsize
@@ -774,7 +774,7 @@ contains
       ! Carbon pools
       cc%pleaf%c12 = 0.0 * sp%seedlingsize
       cc%proot%c12 = 0.1 * sp%seedlingsize
-      cc%psapw%c12 = myinterface%params_tile%f_initialBSW * sp%seedlingsize
+      cc%psapw%c12 = inputs%params_tile%f_initialBSW * sp%seedlingsize
       cc%pwood%c12 = 0.0 * sp%seedlingsize
       cc%pseed%c12 = 0.0
       cc%plabl%c12 = sp%seedlingsize - cc%psapw%c12 - cc%proot%c12
@@ -845,7 +845,7 @@ contains
 
       ! Retranslocation to NSC and NSN
       dtot = dL + dR + dStem
-      cc%plabl = cc%plabl + orgpool(dtot%c12 * myinterface%params_tile%l_fract, dtot%n14 * myinterface%params_tile%retransN)
+      cc%plabl = cc%plabl + orgpool(dtot%c12 * inputs%params_tile%l_fract, dtot%n14 * inputs%params_tile%retransN)
 
       ! update plant pools
       cc%pleaf = cc%pleaf - dL
@@ -853,21 +853,21 @@ contains
       cc%psapw = cc%psapw - dStem
 
       ! update NPP for leaves, fine roots, and wood
-      cc%NPPleaf = cc%NPPleaf - myinterface%params_tile%l_fract * dL%n14
-      cc%NPProot = cc%NPProot - myinterface%params_tile%l_fract * dR%n14
-      cc%NPPwood = cc%NPPwood - myinterface%params_tile%l_fract * dStem%n14
+      cc%NPPleaf = cc%NPPleaf - inputs%params_tile%l_fract * dL%n14
+      cc%NPProot = cc%NPProot - inputs%params_tile%l_fract * dR%n14
+      cc%NPPwood = cc%NPPwood - inputs%params_tile%l_fract * dStem%n14
 
       ! put C and N into soil pools
-      dAleaf_pool = orgpool(dAleaf * myinterface%params_tile%LMAmin, &
+      dAleaf_pool = orgpool(dAleaf * inputs%params_tile%LMAmin, &
             dAleaf * sp%LNbase)
       loss_coarse  = (dL - dAleaf_pool + dStem) * cc%nindivs
       loss_fine    = (dR + dAleaf_pool) * cc%nindivs
 
-      loss_coarse = orgpool(loss_coarse%c12 * (1.0 - myinterface%params_tile%l_fract), &
-              loss_coarse%n14 * (1.0 - myinterface%params_tile%retransN))
+      loss_coarse = orgpool(loss_coarse%c12 * (1.0 - inputs%params_tile%l_fract), &
+              loss_coarse%n14 * (1.0 - inputs%params_tile%retransN))
 
-      loss_fine = orgpool(loss_fine%c12 * (1.0 - myinterface%params_tile%l_fract), &
-              loss_fine%n14 * (1.0 - myinterface%params_tile%retransN))
+      loss_fine = orgpool(loss_fine%c12 * (1.0 - inputs%params_tile%l_fract), &
+              loss_fine%n14 * (1.0 - inputs%params_tile%retransN))
 
       call vegn%plant2soil(loss_coarse, loss_fine)
 
@@ -925,7 +925,7 @@ contains
 
       ! record continuous biomass turnover (not linked to mortality)
       ! cc%m_turnover = cc%m_turnover + loss_coarse + loss_fine
-      cc%m_turnover = cc%m_turnover + (1.0 - myinterface%params_tile%l_fract) * dBStem
+      cc%m_turnover = cc%m_turnover + (1.0 - inputs%params_tile%l_fract) * dBStem
 
       end associate
 
@@ -955,7 +955,7 @@ contains
     real    :: rho_N_up, N_roots   ! actual N uptake rate
 
     ! We artificially refill N inorg
-    if (myinterface%params_siml%do_closedN_run) vegn%inorg%n14 = 0.2
+    if (inputs%params_siml%do_closedN_run) vegn%inorg%n14 = 0.2
 
     ! Nitrogen uptake parameter
     ! It considers competition here. How much N one can absorp depends on 
@@ -981,7 +981,7 @@ contains
       if (N_roots>0.0) then
 
         ! Add a temperature response equation herefor rho_N_up0 (Zhu Qing 2016)
-        rho_N_up = rho_N_up0 * N_roots / (N_roots0 + N_roots) * hours_per_year * myinterface%dt_fast_yr        
+        rho_N_up = rho_N_up0 * N_roots / (N_roots0 + N_roots) * hours_per_year * inputs%dt_fast_yr
 
         totNup = rho_N_up * vegn%inorg%n14 * exp(9000.0 * (1./298.16 - 1./tsoil)) ! kgN m-2 time step-1
 
@@ -1046,9 +1046,9 @@ contains
 
     ! C decomposition
     A = A_function(tsoil, vegn%thetaS())
-    micr_C_loss = vegn%pmicr%c12    * (1.0 - exp(-A*phoMicrobial* myinterface%dt_fast_yr))
-    fast_L_loss = vegn%psoil_fs%c12 * (1.0 - exp(-A*myinterface%params_tile%K1 * myinterface%dt_fast_yr))
-    slow_L_loss = vegn%psoil_sl%c12 * (1.0 - exp(-A*myinterface%params_tile%K2 * myinterface%dt_fast_yr))
+    micr_C_loss = vegn%pmicr%c12    * (1.0 - exp(-A*phoMicrobial* inputs%dt_fast_yr))
+    fast_L_loss = vegn%psoil_fs%c12 * (1.0 - exp(-A*inputs%params_tile%K1 * inputs%dt_fast_yr))
+    slow_L_loss = vegn%psoil_sl%c12 * (1.0 - exp(-A*inputs%params_tile%K2 * inputs%dt_fast_yr))
 
     ! Carbon use efficiencies of microbes
     NforM = fNM * vegn%inorg%n14
@@ -1075,8 +1075,8 @@ contains
     
     ! Assume it is proportional to decomposition rates
     ! Find some papers!!
-    DON_fast    = fDON * fast_L_loss/CNfast * (myinterface%params_tile%etaN*runoff)
-    DON_slow    = fDON * slow_L_loss/CNslow * (myinterface%params_tile%etaN*runoff)
+    DON_fast    = fDON * fast_L_loss/CNfast * (inputs%params_tile%etaN*runoff)
+    DON_slow    = fDON * slow_L_loss/CNslow * (inputs%params_tile%etaN*runoff)
     DON_loss    = DON_fast + DON_slow
 
     ! Update Nitrogen pools
@@ -1085,11 +1085,11 @@ contains
     vegn%psoil_sl%n14 = vegn%psoil_sl%n14 - slow_L_loss/CNslow - DON_slow
     
     ! Mixing of microbes to litters
-    vegn%psoil_fs%c12 = vegn%psoil_fs%c12 + myinterface%params_tile%MLmixRatio*fast_L_loss * CUEfast
-    vegn%psoil_fs%n14 = vegn%psoil_fs%n14 + myinterface%params_tile%MLmixRatio*fast_L_loss * CUEfast/CNm
-    vegn%psoil_sl%c12 = vegn%psoil_sl%c12 + myinterface%params_tile%MLmixRatio*slow_L_loss * CUEslow
-    vegn%psoil_sl%n14 = vegn%psoil_sl%n14 + myinterface%params_tile%MLmixRatio*slow_L_loss * CUEslow/CNm
-    vegn%pmicr%c12 = vegn%pmicr%c12  - myinterface%params_tile%MLmixRatio*(fast_L_loss*CUEfast+slow_L_loss*CUEslow)
+    vegn%psoil_fs%c12 = vegn%psoil_fs%c12 + inputs%params_tile%MLmixRatio*fast_L_loss * CUEfast
+    vegn%psoil_fs%n14 = vegn%psoil_fs%n14 + inputs%params_tile%MLmixRatio*fast_L_loss * CUEfast/CNm
+    vegn%psoil_sl%c12 = vegn%psoil_sl%c12 + inputs%params_tile%MLmixRatio*slow_L_loss * CUEslow
+    vegn%psoil_sl%n14 = vegn%psoil_sl%n14 + inputs%params_tile%MLmixRatio*slow_L_loss * CUEslow/CNm
+    vegn%pmicr%c12 = vegn%pmicr%c12  - inputs%params_tile%MLmixRatio*(fast_L_loss*CUEfast+slow_L_loss*CUEslow)
     vegn%pmicr%n14  = vegn%pmicr%c12/CNm
       
     ! update mineral N pool (mineralN)
@@ -1099,17 +1099,17 @@ contains
 
     N_loss = vegn%inorg%n14 * &
             MIN(0.25, &
-                (A * myinterface%params_tile%K_nitrogen * myinterface%dt_fast_yr + myinterface%params_tile%etaN*runoff))
+                (A * inputs%params_tile%K_nitrogen * inputs%dt_fast_yr + inputs%params_tile%etaN*runoff))
 
     vegn%Nloss_yr = vegn%Nloss_yr + N_loss + DON_loss
 
     vegn%inorg%n14 = vegn%inorg%n14 - N_loss     &
-                    + vegn%N_input * myinterface%dt_fast_yr  &
+                    + vegn%N_input * inputs%dt_fast_yr  &
                     + fast_N_free + slow_N_free  &
                     + micr_C_loss/CNm
 
     vegn%annualN   = vegn%annualN - N_loss     &
-                    + vegn%N_input * myinterface%dt_fast_yr  &
+                    + vegn%N_input * inputs%dt_fast_yr  &
                     + fast_N_free + slow_N_free  &
                     + micr_C_loss/CNm
 
@@ -1233,7 +1233,7 @@ contains
     real,    intent(in) :: bl      ! biomass of leaves, kg C/individual
     integer, intent(in) :: species ! species
 
-    area = bl/myinterface%params_species(species)%LMA
+    area = bl/inputs%params_species(species)%LMA
 
   end function
 

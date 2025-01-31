@@ -6,7 +6,7 @@ module md_gpp_biomee
   ! Code for pmodel photosynthesis option is for P-model (Stocker et al., 2020 GMD)
   !----------------------------------------------------------------
   use vegetation_tile_biomee
-  use md_interface_biomee, only: myinterface
+  use md_interface_in_biomee, only: inputs
   use md_soil_biomee, only: water_supply_layer
   use md_sofunutils, only: calc_esat
 
@@ -122,7 +122,7 @@ contains
     enddo
 
 
-    if (trim(myinterface%params_siml%method_photosynth) == "gs_leuning") then
+    if (trim(inputs%params_siml%method_photosynth) == "gs_leuning") then
       !===========================================================
       ! Original BiomeE-Allocation
       !-----------------------------------------------------------
@@ -154,7 +154,7 @@ contains
           cana_co2 = forcing%CO2 ! co2 concentration in canopy air space, mol CO2/mol dry air
 
           ! recalculate the water supply to mol H20 per m2 of leaf per second
-          water_supply = cc%W_supply() / (cc%leafarea() * myinterface%step_seconds * h2o_molmass * 1e-3) ! mol m-2 leafarea s-1
+          water_supply = cc%W_supply() / (cc%leafarea() * inputs%step_seconds * h2o_molmass * 1e-3) ! mol m-2 leafarea s-1
 
           !call get_vegn_wet_frac (cohort, fw=fw, fs=fs)
           fw = 0.0
@@ -166,9 +166,9 @@ contains
             psyn, resp, w_scale2, transp )
 
           ! store the calculated photosynthesis, photorespiration, and transpiration for future use in growth
-          cc%fast_fluxes%trsp = transp * h2o_molmass * 1e-3 * cc%leafarea() * myinterface%step_seconds      ! Transpiration (kgH2O/(tree step), Weng, 2017-10-16
-          cc%resl = -resp * c_molmass * 1e-3 * cc%leafarea() * myinterface%step_seconds ! kgC tree-1 step-1
-          cc%fast_fluxes%gpp = (psyn - resp) * c_molmass * 1e-3 * cc%leafarea() * myinterface%step_seconds ! kgC step-1 tree-1
+          cc%fast_fluxes%trsp = transp * h2o_molmass * 1e-3 * cc%leafarea() * inputs%step_seconds      ! Transpiration (kgH2O/(tree step), Weng, 2017-10-16
+          cc%resl = -resp * c_molmass * 1e-3 * cc%leafarea() * inputs%step_seconds ! kgC tree-1 step-1
+          cc%fast_fluxes%gpp = (psyn - resp) * c_molmass * 1e-3 * cc%leafarea() * inputs%step_seconds ! kgC step-1 tree-1
 
           endif
         end associate
@@ -176,7 +176,7 @@ contains
         it => it%next()
       end do
 
-    else if (trim(myinterface%params_siml%method_photosynth) == "pmodel") then
+    else if (trim(inputs%params_siml%method_photosynth) == "pmodel") then
       !===========================================================
       ! P-model
       !-----------------------------------------------------------
@@ -246,9 +246,9 @@ contains
                                 )
 
           ! quantities per tree and cumulated over seconds in time step (kgC step-1 tree-1 )
-          cc%fast_fluxes%gpp = par * fapar_tree(i) * out_pmodel%lue * cc%crownarea() * myinterface%step_seconds * 1.0e-3
+          cc%fast_fluxes%gpp = par * fapar_tree(i) * out_pmodel%lue * cc%crownarea() * inputs%step_seconds * 1.0e-3
           cc%resl = fapar_tree(i) * out_pmodel%vcmax25 * params_gpp%rd_to_vcmax * calc_ftemp_inst_rd( forcing%Tair - kTkelvin ) &
-            * cc%crownarea() * myinterface%step_seconds * c_molmass * 1.0e-3
+            * cc%crownarea() * inputs%step_seconds * c_molmass * 1.0e-3
 
         endif
 
@@ -329,7 +329,7 @@ contains
     real :: Ed, an_w, gs_w
 
 
-    associate (spdata => myinterface%params_species)
+    associate (spdata => inputs%params_species)
 
     b = 0.01
     do1 = 0.15 ! kg/kg

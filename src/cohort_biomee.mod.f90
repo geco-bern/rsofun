@@ -2,7 +2,7 @@ module md_cohort
   !////////////////////////////////////////////////////////////////
   ! Module containing BiomeE cohort definitions
   !----------------------------------------------------------------
-  use md_interface_biomee, only: myinterface, spec_data_type, MAX_LEVELS
+  use md_interface_in_biomee, only: inputs, params_species_biomee, MAX_LEVELS
   use md_params_core, only: pi, eps
   use md_orgpool
   use md_common_fluxes
@@ -118,10 +118,10 @@ module md_cohort
 contains
 
   pure function sp(self) result(res)
-    type(spec_data_type) :: res
+    type(params_species_biomee) :: res
     class(cohort_type), intent(in) :: self
 
-    res = myinterface%params_species(self%species)
+    res = inputs%params_species(self%species)
   end function sp
 
   pure subroutine merge_in(self, other)
@@ -192,7 +192,7 @@ contains
     class(cohort_type), intent(in) :: self
 
     ! Local variable
-    type(spec_data_type) :: sp
+    type(params_species_biomee) :: sp
 
     sp = self%sp()
 
@@ -206,7 +206,7 @@ contains
     class(cohort_type), intent(in) :: self
 
     ! Local variable
-    type(spec_data_type) :: sp
+    type(params_species_biomee) :: sp
     real :: btot
 
     btot = max(0.0001, self%pwood%c12 + self%psapw%c12)
@@ -221,7 +221,7 @@ contains
     class(cohort_type), intent(in) :: self
 
     ! Local variable
-    type(spec_data_type) :: sp
+    type(params_species_biomee) :: sp
 
     sp = self%sp()
 
@@ -234,7 +234,7 @@ contains
     class(cohort_type), intent(in) :: self
 
     ! Local variable
-    type(spec_data_type) :: sp
+    type(params_species_biomee) :: sp
 
     sp = self%sp()
 
@@ -247,7 +247,7 @@ contains
     class(cohort_type), intent(in) :: self
 
     ! Local variable
-    type(spec_data_type) :: sp
+    type(params_species_biomee) :: sp
 
     sp = self%sp()
 
@@ -269,7 +269,7 @@ contains
     class(cohort_type), intent(in) :: self
 
     ! Local variable
-    type(spec_data_type) :: sp
+    type(params_species_biomee) :: sp
 
     sp = self%sp()
 
@@ -282,7 +282,7 @@ contains
     class(cohort_type), intent(in) :: self
 
     ! Local variable
-    type(spec_data_type) :: sp
+    type(params_species_biomee) :: sp
 
     sp = self%sp()
 
@@ -310,7 +310,7 @@ contains
     real :: res
     class(cohort_type), intent(in) :: self
     ! Local variable
-    type(spec_data_type) :: sp
+    type(params_species_biomee) :: sp
 
     sp = self%sp()
 
@@ -337,7 +337,7 @@ contains
     class(cohort_type), intent(inout) :: self
 
     ! Local variable
-    type(spec_data_type) :: sp
+    type(params_species_biomee) :: sp
 
     sp = self%sp()
 
@@ -362,7 +362,7 @@ contains
     class(cohort_type), intent(inout) :: self
 
     ! Local variable
-    type(spec_data_type) :: sp
+    type(params_species_biomee) :: sp
     real :: crownarea ! Cache variable
 
     sp = self%sp()
@@ -394,7 +394,7 @@ contains
     other_dbh = other%dbh()
     dbh_diff = abs(self_dbh - other_dbh)
 
-    associate (spdata => myinterface%params_species)
+    associate (spdata => inputs%params_species)
 
       sameSpecies  = self%species == other%species
 

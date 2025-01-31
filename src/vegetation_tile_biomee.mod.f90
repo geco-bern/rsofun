@@ -4,20 +4,19 @@ module vegetation_tile_biomee
   ! definitions.
   ! Code adopted from BiomeE https://doi.org/10.5281/zenodo.7125963.
   !----------------------------------------------------------------
-  use md_interface_biomee
+  use md_interface_in_biomee
+  use md_interface_out_biomee
   use md_params_core
   use md_orgpool
   use md_common_fluxes
   use md_cohort
   use md_cohort_linked_list
+  use, intrinsic :: iso_c_binding, only: c_double
 
   ! define data types and constants
   implicit none
   !=============== Public types ===========================================================
-  public :: spec_data_type, cohort_type, vegn_tile_type, dampended_forcing_type
-
-  !=============== Public subroutines =====================================================
-  public :: initialize_PFT_data
+  public :: params_species_biomee, cohort_type, vegn_tile_type, dampended_forcing_type
 
   !=============== Parameters ======================================================
   integer, public, parameter :: NCohortMax = 50 ! maximum number of cohorts
@@ -28,16 +27,6 @@ module vegetation_tile_biomee
   integer, public, parameter :: nvars_annual_cohorts = 35
   integer, public, parameter :: nvars_lu_out         = 2
   integer, public, parameter :: out_max_cohorts      = NCohortMax
-
-  !=============== Number of parameters (out) ==============================================
-  integer, public, parameter :: nvars_forcing        = 7
-  integer, public, parameter :: nvars_site_info      = 3
-  integer, public, parameter :: nvars_params_siml    = 10
-  integer, public, parameter :: nvars_params_tile    = 19
-  integer, public, parameter :: nvars_init_soil      = 4
-  integer, public, parameter :: nvars_init_cohorts   = 9
-  integer, public, parameter :: nvars_params_species = 55
-  integer, public, parameter :: nvars_init_lu        = 1
 
   !===== Model
   integer, public, parameter :: NLAYERS_MAX = 9     ! maximum number of canopy layers to be considered
@@ -227,8 +216,8 @@ contains
     ! moisture index (ws - wiltpt)/(fldcap - wiltpt)
     class(vegn_tile_type), intent(in) :: self
 
-    thetaS  = (self%wcl(2) - myinterface%params_tile%WILTPT) &
-            / (myinterface%params_tile%FLDCAP - myinterface%params_tile%WILTPT)
+    thetaS  = (self%wcl(2) - inputs%params_tile%WILTPT) &
+            / (inputs%params_tile%FLDCAP - inputs%params_tile%WILTPT)
 
   end function thetaS
 
@@ -537,8 +526,7 @@ contains
     !////////////////////////////////////////////////////////////////////////
     ! Updates sub-daily tile-level variables and takes running daily sums
     !------------------------------------------------------------------------
-    use md_forcing_biomee, only: climate_type
-    use md_interface_biomee, only: myinterface
+    use md_interface_in_biomee, only: inputs
 
     class(vegn_tile_type), intent(inout) :: self
 
@@ -546,7 +534,7 @@ contains
     type(cohort_type), pointer :: cc
     type(cohort_item), pointer :: it
 
-    self%age = self%age + myinterface%dt_fast_yr
+    self%age = self%age + inputs%dt_fast_yr
 
     it => self%cohorts()
     do while (associated(it))
@@ -573,9 +561,6 @@ contains
     !////////////////////////////////////////////////////////////////////////
     ! Updates daily tile-level variables and takes running annual sums
     !------------------------------------------------------------------------
-    use md_forcing_biomee, only: climate_type
-    use, intrinsic :: iso_c_binding, only: c_double
-
     class(vegn_tile_type), intent(inout) :: self
     integer, intent(in) :: iyears, idoy
     real(kind=c_double), dimension(nvars_daily_tile), optional, intent(out) :: out_daily_tile
@@ -654,8 +639,7 @@ contains
     !////////////////////////////////////////////////////////////////////////
     ! Updates tile-level variables and populates annual output in once
     !------------------------------------------------------------------------
-    use md_interface_biomee, only: myinterface
-    use, intrinsic :: iso_c_binding, only: c_double
+    use md_interface_in_biomee, only: inputs
 
     class(vegn_tile_type), intent(inout) :: self
     integer, intent(in) :: iyears
@@ -807,7 +791,7 @@ contains
     out_annual_tile(ANNUAL_TILE_C_TURNOVER_TIME ) = dble(self%pwood%c12 / self%NPPW)
 
     ! Rebalance N (to compensate for the adjunction in vegn_N_uptake)
-    if (myinterface%params_siml%do_closedN_run) call self%recover_N_balance()
+    if (inputs%params_siml%do_closedN_run) call self%recover_N_balance()
 
   end subroutine annual_diagnostics
 
@@ -816,10 +800,10 @@ contains
     class(vegn_tile_type), intent(inout) :: self
     type(orgpool), intent(in) :: loss_coarse, loss_fine
 
-    self%psoil_fs = self%psoil_fs + loss_fine * myinterface%params_tile%fsc_fine + &
-            loss_coarse * myinterface%params_tile%fsc_wood
-    self%psoil_sl = self%psoil_sl + loss_fine * (1.0 - myinterface%params_tile%fsc_fine) + &
-            loss_coarse * (1.0 - myinterface%params_tile%fsc_wood)
+    self%psoil_fs = self%psoil_fs + loss_fine * inputs%params_tile%fsc_fine + &
+            loss_coarse * inputs%params_tile%fsc_wood
+    self%psoil_sl = self%psoil_sl + loss_fine * (1.0 - inputs%params_tile%fsc_fine) + &
+            loss_coarse * (1.0 - inputs%params_tile%fsc_wood)
 
       ! annual N from plants to soil and C turnover
       self%N_P2S_yr = self%N_P2S_yr + loss_coarse%n14 + loss_fine%n14
@@ -830,8 +814,6 @@ contains
     !////////////////////////////////////////////////////////////////////////
     ! Updates tile-level variables and populates annual output in once
     !------------------------------------------------------------------------
-    use, intrinsic :: iso_c_binding, only: c_double
-
     class(vegn_tile_type), intent(inout) :: self
     real(kind=c_double), dimension(nvars_annual_tile), intent(out) :: out_annual_tile
     real(kind=c_double), dimension(out_max_cohorts, nvars_annual_cohorts), optional, intent(out) :: out_annual_cohorts
@@ -851,7 +833,7 @@ contains
       associate (sp => cc%sp())
 
         ! Carbon and Nitrogen from plants to soil pools
-        loss_coarse = (orgpool(- cc%leafarea(), cc%leafarea()) * myinterface%params_tile%LMAmin &
+        loss_coarse = (orgpool(- cc%leafarea(), cc%leafarea()) * inputs%params_tile%LMAmin &
                 + cc%pwood + cc%psapw + cc%pleaf) * cc%nindivs
 
         loss_fine = (orgpool(- cc%leafarea(), cc%leafarea()) * sp%LNbase &
@@ -920,17 +902,6 @@ contains
     endif
   end subroutine recover_N_balance
 
-  subroutine initialize_PFT_data()
-
-    ! ---- local vars ------
-    integer :: i
-
-    do i = 1, size(myinterface%params_species)
-      call myinterface%params_species(i)%init_pft_data()
-    enddo
-
-  end subroutine initialize_pft_data
-
 
   subroutine initialize_vegn_tile( self )
     !////////////////////////////////////////////////////////////////
@@ -944,20 +915,20 @@ contains
     type(cohort_item), pointer :: new
 
     ! Initialize plant cohorts
-    init_n_cohorts = size(myinterface%init_cohort)
+    init_n_cohorts = size(inputs%init_cohort)
 
     do i = 1, init_n_cohorts
 
       new => self%new_cohort()
       cc => new%cohort
-      cc%species     = INT(myinterface%init_cohort(i)%init_cohort_species)
-      cc%nindivs     = myinterface%init_cohort(i)%init_cohort_nindivs ! trees/m2
-      cc%plabl%c12 = myinterface%init_cohort(i)%init_cohort_nsc
-      cc%psapw%c12 = myinterface%init_cohort(i)%init_cohort_bsw
-      cc%pwood%c12 = myinterface%init_cohort(i)%init_cohort_bHW
-      cc%pleaf%c12 = myinterface%init_cohort(i)%init_cohort_bl
-      cc%proot%c12 = myinterface%init_cohort(i)%init_cohort_br
-      cc%pseed%c12 = myinterface%init_cohort(i)%init_cohort_seedC
+      cc%species     = INT(inputs%init_cohort(i)%init_cohort_species)
+      cc%nindivs     = inputs%init_cohort(i)%init_cohort_nindivs ! trees/m2
+      cc%plabl%c12 = inputs%init_cohort(i)%init_cohort_nsc
+      cc%psapw%c12 = inputs%init_cohort(i)%init_cohort_bsw
+      cc%pwood%c12 = inputs%init_cohort(i)%init_cohort_bHW
+      cc%pleaf%c12 = inputs%init_cohort(i)%init_cohort_bl
+      cc%proot%c12 = inputs%init_cohort(i)%init_cohort_br
+      cc%pseed%c12 = inputs%init_cohort(i)%init_cohort_seedC
       call cc%initialize_cohort_from_biomass()
 
     enddo
@@ -966,19 +937,19 @@ contains
     call self%relayer()
 
     ! Initial Soil pools and environmental conditions
-    self%psoil_fs%c12 = myinterface%init_soil%init_fast_soil_C  ! kgC m-2
-    self%psoil_sl%c12 = myinterface%init_soil%init_slow_soil_C ! slow soil carbon pool, (kg C/m2)
+    self%psoil_fs%c12 = inputs%init_soil%init_fast_soil_C  ! kgC m-2
+    self%psoil_sl%c12 = inputs%init_soil%init_slow_soil_C ! slow soil carbon pool, (kg C/m2)
     self%psoil_fs%n14 = self%psoil_fs%c12 / CN0metabolicL  ! fast soil nitrogen pool, (kg N/m2)
     self%psoil_sl%n14 = self%psoil_sl%c12 / CN0structuralL ! slow soil nitrogen pool, (kg N/m2)
-    self%N_input      = myinterface%init_soil%N_input        ! kgN m-2 yr-1, N input to soil
-    self%inorg%n14    = myinterface%init_soil%init_Nmineral  ! Mineral nitrogen pool, (kg N/m2)
+    self%N_input      = inputs%init_soil%N_input        ! kgN m-2 yr-1, N input to soil
+    self%inorg%n14    = inputs%init_soil%init_Nmineral  ! Mineral nitrogen pool, (kg N/m2)
     self%previousN    = self%inorg%n14
 
     ! debug: adding microbial biomass initialisation
-    self%pmicr = orgpool() ! to do: add to: myinterface%init_soil%xxxxx
+    self%pmicr = orgpool() ! to do: add to: inputs%init_soil%xxxxx
 
     ! Initialize soil volumetric water conent with field capacity (maximum soil moisture to start with)
-    self%wcl = myinterface%params_tile%FLDCAP
+    self%wcl = inputs%params_tile%FLDCAP
 
     ! tile
     call aggregate_pools( self )
