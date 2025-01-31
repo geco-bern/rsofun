@@ -3,7 +3,6 @@ module md_interface_in_biomee
   ! Module for handling I/O (forcing, parameters, output) from 
   ! biome_f to the biosphere() with the BiomeE implementation
   !----------------------------------------------------------------
-  use md_params_siml_biomee
   use md_params_core
   use, intrinsic :: iso_c_binding, only: c_double
 
@@ -21,12 +20,27 @@ module md_interface_in_biomee
   real, parameter  :: c_LLS = 28.57143    ! yr/ (kg C m-2), c_LLS=1/LMAs, where LMAs = 0.035
 
   !===== Number of parameters
+  integer, public, parameter :: nvars_params_siml    = 10
   integer, public, parameter :: nvars_site_info      = 3
   integer, public, parameter :: nvars_params_tile    = 19
   integer, public, parameter :: nvars_init_soil      = 4
   integer, public, parameter :: nvars_init_cohorts   = 9
   integer, public, parameter :: nvars_params_species = 55
   integer, public, parameter :: nvars_init_lu        = 1
+
+  type params_siml_biomee
+
+    type(steering_parameters) :: steering
+    logical :: do_U_shaped_mortality
+    logical :: do_closedN_run
+    character(len=30) :: method_photosynth
+    character(len=30) :: method_mortality
+
+  contains
+
+    procedure populate_params_siml
+
+  end type params_siml_biomee
 
   type params_tile_biomee
     integer:: soiltype
@@ -205,6 +219,50 @@ module md_interface_in_biomee
 
 contains
 
+  subroutine populate_params_siml(self, params_siml)
+    class(params_siml_biomee), intent(inout) :: self
+    real(kind=c_double), dimension(:), intent(in) :: params_siml
+
+    self%steering%do_spinup        = int(params_siml(1)) /= 0
+    self%steering%spinupyears      = int(params_siml(2))
+    self%steering%recycle          = int(params_siml(3))
+    self%steering%firstyeartrend   = int(params_siml(4))
+    self%steering%nyeartrend       = int(params_siml(5))
+
+    if (self%steering%do_spinup) then
+      self%steering%runyears = self%steering%nyeartrend &
+              + self%steering%spinupyears
+    else
+      self%steering%runyears    = self%steering%nyeartrend
+      self%steering%spinupyears = 0
+    endif
+
+    ! Simulation parameters
+    self%do_U_shaped_mortality = int(params_siml(7)) /= 0
+    self%do_closedN_run        = int(params_siml(8)) /= 0
+
+    ! this needs to be consistent with translation to code in run_biomee_f_bysite.R
+    if (int(params_siml(9)) == 1) then
+      self%method_photosynth = "gs_leuning"
+    else
+      self%method_photosynth = "pmodel"
+    end if
+
+    select case( int(params_siml(10)) )
+    case (1)
+      self%method_mortality = "cstarvation"
+    case (2)
+      self%method_mortality = "growthrate"
+    case (3)
+      self%method_mortality = "dbh"
+    case (4)
+      self%method_mortality = "const_selfthin"
+    case (5)
+      self%method_mortality = "bal"
+    end select
+
+  end subroutine populate_params_siml
+
   subroutine shut_down(self)
     class(interface_in_biosphere_biomee), intent(inout) :: self
 
@@ -235,7 +293,7 @@ contains
     call self%init_soil%populate_init_soil(init_soil)
     call self%site_info%populate_site_info(site_info)
     call self%params_tile%populate_params_tile(params_tile)
-    call self%params_siml%populate(params_siml)
+    call self%params_siml%populate_params_siml(params_siml)
 
     ! Initial cohort sizes
     n_init_cohort = size(init_cohort(:, 1))

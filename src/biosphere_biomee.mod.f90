@@ -44,7 +44,6 @@ contains
     real(kind=c_double), dimension(out_max_cohorts, nvars_annual_cohorts), optional, intent(out) :: output_annual_cohorts
 
     ! Local variables
-    integer :: moy         ! Month of year
     integer :: doy         ! Day of year
     integer :: dayloop_idx, fastloop_idx, simu_steps
     real, dimension(ndayyear) :: daily_temp  ! Daily temperatures (average)
@@ -58,9 +57,7 @@ contains
 
     endif
 
-    !---------------------------------------------
-    ! Reset diagnostics and counters
-    !---------------------------------------------
+    !===== Reset diagnostics and counters
     simu_steps = 0 ! fast loop
     doy = 0
     call vegn%zero_diagnostics()
@@ -69,105 +66,78 @@ contains
     call aggregate(daily_temp, climate(:)%Tair, inputs%steps_per_day)
 
     !----------------------------------------------------------------
-    ! LOOP THROUGH MONTHS
+    ! LOOP THROUGH DAYS
     !----------------------------------------------------------------
-    monthloop: do moy=1,nmonth
+    dayloop: do dayloop_idx=1,ndayyear
+
+      doy = doy + 1
+
+      ! Compute daily air and soil temperature
+      vegn%tc_daily = daily_temp(doy)
+      vegn%tc_soil  = air_to_soil_temp(vegn%thetaS(), &
+              daily_temp - kTkelvin, &
+              doy, &
+              state%init, &
+              state%finalize &
+              )
 
       !----------------------------------------------------------------
-      ! LOOP THROUGH DAYS
+      ! FAST TIME STEP
       !----------------------------------------------------------------
-      dayloop: do dayloop_idx=1,ndaymonth(moy)
+      ! get daily mean temperature from hourly/half-hourly data
+      fastloop: do fastloop_idx = 1,inputs%steps_per_day
 
-        doy = doy + 1
+        simu_steps   = simu_steps + 1
 
-        vegn%tc_daily = daily_temp(doy)
-        vegn%tc_soil  = air_to_soil_temp(vegn%thetaS(), &
-                daily_temp - kTkelvin, &
-                doy, &
-                state%init, &
-                state%finalize &
-                )
+        call vegn_CNW_budget( vegn, climate(simu_steps))
 
-        !----------------------------------------------------------------
-        ! FAST TIME STEP
-        !----------------------------------------------------------------
-        ! get daily mean temperature from hourly/half-hourly data
-        fastloop: do fastloop_idx = 1,inputs%steps_per_day
+        call vegn%hourly_diagnostics()
 
-          simu_steps   = simu_steps + 1
+      enddo fastloop ! hourly or half-hourly
 
-          !----------------------------------------------------------------
-          ! Sub-daily time step at resolution given by forcing (can be 1 = daily)
-          !----------------------------------------------------------------
-          call vegn_CNW_budget( vegn, climate(simu_steps))
-         
-          call vegn%hourly_diagnostics()
-         
-        enddo fastloop ! hourly or half-hourly
+      !-------------------------------------------------
+      ! Daily calls after fast loop
+      !-------------------------------------------------
 
-        ! print*,'-----------day-------------'
-        
-        !-------------------------------------------------
-        ! Daily calls after fast loop
-        !-------------------------------------------------
+      ! sum over fast time steps and cohorts
+      if (present(output_daily_tile)) then
+        call daily_diagnostics( vegn, state%year, doy, output_daily_tile(doy,:)  )
+      else
+        call daily_diagnostics( vegn, state%year, doy  )
+      end if
 
-        ! sum over fast time steps and cohorts
-        if (present(output_daily_tile)) then
-          call daily_diagnostics( vegn, state%year, doy, output_daily_tile(doy,:)  )
-        else
-          call daily_diagnostics( vegn, state%year, doy  )
-        end if
+      ! Determine start and end of season and maximum leaf (root) mass
+      call vegn_phenology( vegn )
 
-        ! Determine start and end of season and maximum leaf (root) mass
-        call vegn_phenology( vegn )
-        
-        ! Produce new biomass from 'carbon_gain' (is zero afterwards) and continous biomass turnover
-        call vegn_growth_EW( vegn )
+      ! Produce new biomass from 'carbon_gain' (is zero afterwards) and continous biomass turnover
+      call vegn_growth_EW( vegn )
 
-      end do dayloop
-
-    end do monthloop
+    end do dayloop
 
     !----------------------------------------------------------------
     ! Annual calls
     !----------------------------------------------------------------
 
-    !---------------------------------------------
-    ! Get annual diagnostics and outputs in once. 
-    ! Needs to be called here 
-    ! because mortality and reproduction re-organize
-    ! cohorts again and we want annual output and daily
-    ! output to be consistent with cohort identities.
-    ! Note: Relayering happens in phenology leading to a reshuffling of the cohorts and affecting cohort identities.
-    !---------------------------------------------
+    !===== Get annual diagnostics
     call vegn%annual_diagnostics(state%year, output_annual_tile, output_annual_cohorts )
 
-    !---------------------------------------------
-    ! Reproduction and mortality
-    !---------------------------------------------        
+    !===== Reproduction and mortality
     ! Kill all individuals in a cohort if NSC falls below critical point
     call vegn_annual_starvation( vegn )
     
     ! Natural mortality (reducing number of individuals 'nindivs')
     ! (~Eq. 2 in Weng et al., 2015 BG)
-
     call vegn_nat_mortality( vegn )
-
     call kill_old_grass( vegn )
     
     ! seed C and germination probability (~Eq. 1 in Weng et al., 2015 BG)
     call vegn_reproduction( vegn )
-    
-    !---------------------------------------------
-    ! Re-organize cohorts
-    !---------------------------------------------
-    call vegn%relayer()
 
+    !===== Re-organize cohorts
+    call vegn%relayer()
     call vegn%reduce()
 
-    !---------------------------------------------
-    ! Update post-mortality metrics
-    !---------------------------------------------
+    !===== Update post-mortality metrics
     call vegn%annual_diagnostics_post_mortality(output_annual_tile, output_annual_cohorts )
 
   end subroutine biosphere_annual

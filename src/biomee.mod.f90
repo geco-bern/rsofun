@@ -1,6 +1,6 @@
 module biomee_mod
   !////////////////////////////////////////////////////////////////
-  ! Contains main subroutine handling I/O with C and R.
+  ! Module containing the entrypoint subroutine in Fortran for Biomee simulation
   !----------------------------------------------------------------
   use, intrinsic :: iso_c_binding, only: c_double, c_int, c_char, c_bool
   use, intrinsic :: ieee_arithmetic
@@ -37,13 +37,11 @@ contains
   ) bind(C, name = "biomee_f_")
      
     !////////////////////////////////////////////////////////////////
-    ! Main subroutine to handle I/O with C and R. 
-    ! Receives simulation parameters, site parameters, and the full 
-    ! simulation's forcing as time series
-    ! test xxx
+    ! Entrypoint in Fortran for Biomee simulation
+    ! Receives simulation parameters and forcing, run the simulation year by year (biosphere_annual()).
+    ! The C output arrays are being written on as a side effect in biosphere_annual()
     !----------------------------------------------------------------
     use md_forcing_biomee
-    use md_params_siml_biomee, only: nvars_params_siml
     use md_interface_in_biomee
     use vegetation_tile_biomee
     use md_biosphere_biomee, only: biosphere_annual
@@ -136,6 +134,8 @@ contains
          state%climateyear_idx &
       )
 
+      ! Indices for daily output
+      ! Spinup years are not stored, which is why we offset by -spinupyears
       idx_daily_start = (state%year - inputs%params_siml%steering%spinupyears - 1) * ndayyear + 1
       idx_daily_end   = idx_daily_start + ndayyear - 1
 
@@ -147,6 +147,7 @@ contains
           ! Call biosphere (wrapper for all modules, contains time loops)
           !----------------------------------------------------------------
           if (state%spinup) then
+            ! If spinup, we do not pass the dailay and cohort output arrays
             call biosphere_annual( &
               state, &
               climate, &
