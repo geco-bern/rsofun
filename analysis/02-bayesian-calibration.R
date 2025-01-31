@@ -87,8 +87,14 @@ settings_calib <- list(
     )),
   par = list(
     kphio = list(lower = 0.02, upper = 0.15, init = 0.05),
+    kphio_par_a =list(lower = -0.004, upper = -0.001, init = -0.0025),
     kphio_par_b = list(lower = 10, upper = 30, init = 20),
-    kc_jmax = list(lower = 0.1, upper = 0.8, init = 0.40),
+    soilm_thetastar = list(
+      lower = 0.01 * rsofun::p_model_drivers$site_info[[1]]$whc,
+      upper = 1.0  * rsofun::p_model_drivers$site_info[[1]]$whc,
+      init  = 0.6  * rsofun::p_model_drivers$site_info[[1]]$whc
+    ),
+    soilm_betao = list(lower = 0.0, upper = 1.0, init = 0.0),
     err_gpp = list(lower = 0.1, upper = 3, init = 0.8)
   )
 )
@@ -101,12 +107,11 @@ par_calib <- calib_sofun(
   obs = rsofun::p_model_validation,
   settings = settings_calib,
   par_fixed = list(
-    kphio_par_a = -0.0025,            # define model parameter values from Stocker et al. 2020
-    soilm_thetastar    = 0.6*240,
-    soilm_betao = 0.2,
     beta_unitcostratio = 146.0,
-    rd_to_vcmax        = 0.014,
-    tau_acclim         = 30.0),
+    kc_jmax = 0.41,
+    rd_to_vcmax = 0.014,
+    tau_acclim  = 20.0
+    ),
   targets = "gpp"
 )
 
@@ -160,6 +165,10 @@ get_settings_str <- function(par_calib) {# function(settings_calib){
 settings_string <- get_settings_str(par_calib)
 
 saveRDS(par_calib, file = paste0("./analysis/paper_results_files/",settings_string,"_prior_posterior.RDS"))
-ggsave(paste0("./analysis/paper_results_files/",settings_string,"_prior_posterior.pdf"), plot = gg, width = 6, height = 5)
-ggsave(paste0("./analysis/paper_results_files/",settings_string,"_prior_posterior.png"), plot = gg, width = 6, height = 5)
+
+# ggsave(paste0("./analysis/paper_results_files/",settings_string,"_prior_posterior.pdf"), plot = gg, width = 6, height = 5)
+# ggsave(paste0("./analysis/paper_results_files/",settings_string,"_prior_posterior.png"), plot = gg, width = 6, height = 5)
+
+ggsave("./analysis/paper_results_files/prior_posterior.pdf", plot = gg, width = 6, height = 5)
+ggsave("./analysis/paper_results_files/prior_posterior.png", plot = gg, width = 6, height = 5)
 
