@@ -1135,27 +1135,15 @@ contains
   subroutine recover_N_balance(self)
     !////////////////////////////////////////////////////////////////////////
     ! We scale the N pools to constrain the yearly N (soil + plant) to be constant.
-    ! ATTENTION: this is a hack and the N in underlying cohorts is NOT updated.
-    ! This causes tile-level and underlying cohorts N pools to drift away!
+    ! ATTENTION: this is a hack which leads to negative N pools...
     !------------------------------------------------------------------------
     class(vegn_tile_type), intent(inout) :: self
-    real :: delta, scaling_factor
+    real :: delta
 
     delta = self%totN - self%initialN0
 
     if (abs(delta) > 1e-6) then
-      scaling_factor = 1 - delta / self%totN
-
-      self%psoil_sl%n14 = self%psoil_sl%n14 * scaling_factor
-      self%psoil_fs%n14 = self%psoil_fs%n14 * scaling_factor
-      self%pmicr%n14 = self%pmicr%n14       * scaling_factor
-      self%inorg%n14 = self%inorg%n14       * scaling_factor
-      self%plabl%n14 = self%plabl%n14       * scaling_factor
-      self%pseed%n14 = self%pseed%n14       * scaling_factor
-      self%pleaf%n14 = self%pleaf%n14       * scaling_factor
-      self%proot%n14 = self%proot%n14       * scaling_factor
-      self%psapw%n14 = self%psapw%n14       * scaling_factor
-      self%pwood%n14 = self%pwood%n14       * scaling_factor
+      self%psoil_sl%n14 = self%psoil_sl%n14 - delta
       self%totN = self%initialN0
     endif
   end subroutine recover_N_balance

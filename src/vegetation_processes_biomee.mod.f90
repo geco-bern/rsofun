@@ -955,7 +955,7 @@ contains
     real    :: rho_N_up, N_roots   ! actual N uptake rate
 
     ! We artificially refill N inorg
-    if (inputs%params_siml%do_closedN_run) vegn%inorg%n14 = 0.2
+    if (inputs%params_siml%do_closedN_run) vegn%inorg%n14 = inputs%init_soil%init_Nmineral
 
     ! Nitrogen uptake parameter
     ! It considers competition here. How much N one can absorp depends on 
