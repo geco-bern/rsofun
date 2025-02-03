@@ -1,7 +1,6 @@
 module vegetation_tile_biomee
   !////////////////////////////////////////////////////////////////
-  ! Module containing BiomeE state variable and parameter 
-  ! definitions.
+  ! Definition of 'vegn_tile_type', the highest level type containing tile level variables and cohort list.
   ! Code adopted from BiomeE https://doi.org/10.5281/zenodo.7125963.
   !----------------------------------------------------------------
   use md_interface_in_biomee
@@ -57,9 +56,7 @@ module vegetation_tile_biomee
     real :: par  = 0.0
   end type dampended_forcing_type
 
-  !=============== Tile level data type ============================================================
   type :: vegn_tile_type
-
     ! Linked list of cohorts.
     ! Cohorts should not assumed to be ranked in any specific order.
     ! Use sort_cohorts_by_height() or implement a method following the same principle if needed.
@@ -164,48 +161,72 @@ module vegetation_tile_biomee
     ! Scrap variable used by gpp()
     type(dampended_forcing_type) :: dampended_forcing
 
-    contains
-
-      procedure n_cohorts
-      procedure cohorts
-      procedure killed_cohort_fractions
-      procedure new_cohort
-      procedure sort_cohorts_by_height
-      procedure sort_cohorts_by_uid
-      procedure shut_down
-      procedure thin_cohort
-      procedure reduce
-      procedure, private :: recover_N_balance
-      procedure, private :: merge_cohorts
-      procedure, private :: split_cohort
-      procedure annual_diagnostics
-      procedure annual_diagnostics_post_mortality
-      procedure daily_diagnostics
-      procedure hourly_diagnostics
-      procedure zero_diagnostics
-      procedure plant2soil
-      procedure initialize_vegn_tile
-      procedure :: relayer
-      procedure, private :: aggregate_pools
-      procedure, private :: aggregate_cohorts
-      procedure, private :: zero_daily_diagnostics
-      procedure, private :: kill_cohort
+  contains
 
     !========= Derived variables
     ! Variables which are function of any state or temporary variable defined above.
     ! They can be used like any normal variable except that they are followed by parenthesis
     ! (indicating that they are being evaluated every time).
-    ! The advantage is that they cannot be out-of-sync with the underlying data, at the cost of a negligeable
-    ! increase in the number of operations.
+    ! The advantage is that they cannot be out-of-sync with the underlying data.
+    ! One might think that this will increase the number of operations, but it is impossible to tell
+    ! as the compiler may or may not optimize the compiled code in such a way that function calls are avoided.
+    ! On the opposite, more structure and constrains in the code give the compiler more opportunities for optimizations and
+    ! so far, the use of functions has actually sped up the execution time quite a lot.
     procedure thetaS
     procedure soilwater
+
+    !========= Cohort management
+
+    procedure n_cohorts
+    procedure new_cohort
+    procedure sort_cohorts_by_height
+    procedure sort_cohorts_by_uid
+    procedure shut_down
+    procedure thin_cohort
+    procedure reduce
+    procedure relayer
+    procedure kill_lowdensity_cohorts
+
+    !========= Diagnostic methods
+
+    procedure annual_diagnostics
+    procedure annual_diagnostics_post_mortality
+    procedure daily_diagnostics
+    procedure hourly_diagnostics
+    procedure zero_diagnostics
+
+    !========= Cohort list accessors
+
+    procedure cohorts
+    procedure, private :: killed_cohort_fractions
+
+    !========= Public helper methods
+
+    procedure plant2soil
+    procedure initialize_vegn_tile
+
+    !========= Private helper methods
+
+    procedure, private :: recover_N_balance
+    procedure, private :: merge_cohorts
+    procedure, private :: split_cohort
+    procedure, private :: aggregate_pools
+    procedure, private :: aggregate_cohorts
+    procedure, private :: zero_daily_diagnostics
+    procedure, private :: kill_cohort
 
   end type vegn_tile_type
 
 contains
 
+  !----------------------------------------------------------------
+  ! Derived variables
+  !----------------------------------------------------------------
+
   pure real function soilwater(self)
-    ! kg m-2 in root zone
+    !////////////////////////////////////////////////////////////////
+    ! Soil water, kg m-2 in root zone
+    !---------------------------------------------------------------
     class(vegn_tile_type), intent(in) :: self
 
     soilwater  = SUM(self%wcl(:)*thksl(:)*1000.0)
@@ -213,7 +234,10 @@ contains
   end function soilwater
 
   pure real function thetaS(self)
-    ! moisture index (ws - wiltpt)/(fldcap - wiltpt)
+    !////////////////////////////////////////////////////////////////
+    ! Moisture index
+    ! (ws - wiltpt)/(fldcap - wiltpt)
+    !---------------------------------------------------------------
     class(vegn_tile_type), intent(in) :: self
 
     thetaS  = (self%wcl(2) - inputs%params_tile%WILTPT) &
@@ -221,9 +245,25 @@ contains
 
   end function thetaS
 
+  !----------------------------------------------------------------
+  ! Cohort management
+  !----------------------------------------------------------------
+
+  function n_cohorts(self) result(res)
+    !////////////////////////////////////////////////////////////////
+    ! Returns the current number of cohorts
+    !---------------------------------------------------------------
+    class(vegn_tile_type), intent(in) :: self
+    integer :: res
+
+    res = self%cohort_list%length()
+  end function n_cohorts
+
   subroutine split_cohort(self, item, fraction)
+    !////////////////////////////////////////////////////////////////
     ! Split a cohort into two. The initial cohort gets scaled by (1 - fraction),
     ! while a newly created cohort, inserted in the cohort list, gets the complement (fraction).
+    !---------------------------------------------------------------
     class(vegn_tile_type), intent(inout) :: self
     type(cohort_item), pointer, intent(in) :: item
     real, intent(in) :: fraction
@@ -238,7 +278,9 @@ contains
   end subroutine split_cohort
 
   function merge_cohorts(self, c1, c2) result(next_item)
+    !////////////////////////////////////////////////////////////////
     ! Merge cohort c2 into c1 and return item following c2
+    !---------------------------------------------------------------
     class(vegn_tile_type), intent(inout) :: self
     type(cohort_item), pointer, intent(inout) :: c1, c2
     type(cohort_item), pointer :: next_item
@@ -249,7 +291,9 @@ contains
   end function merge_cohorts
 
   function cohorts(self) result(head_cohort)
+    !////////////////////////////////////////////////////////////////
     ! Return the head of the cohort list for iteration purpose.
+    !---------------------------------------------------------------
     class(vegn_tile_type), intent(in) :: self
     type(cohort_item), pointer :: head_cohort
 
@@ -257,7 +301,9 @@ contains
   end function cohorts
 
   function killed_cohort_fractions(self) result(head_cohort)
+    !////////////////////////////////////////////////////////////////
     ! Return the head of the killed cohort list for iteration purpose.
+    !---------------------------------------------------------------
     class(vegn_tile_type), intent(in) :: self
     type(cohort_item), pointer :: head_cohort
 
@@ -265,6 +311,7 @@ contains
   end function killed_cohort_fractions
 
   function thin_cohort(self, item, fraction) result(next_item)
+    !////////////////////////////////////////////////////////////////
     ! Thin the provided cohort by applying a deathrate = 'fraction'.
     ! By default fraction = 1.0, which means that the whole cohort disappears.
     !
@@ -273,6 +320,7 @@ contains
     ! And the original cohort is the complement: nindivis = cohort%nindivis * (1-fraction)
     ! If fraction is 0, nothing happens.
     ! If fraction is 1, the cohort is moved from cohorts to killed_cohort_fractions.
+    !---------------------------------------------------------------
     class(vegn_tile_type), intent(inout) :: self
     type(cohort_item), pointer, intent(inout) :: item
     real, optional, intent(in) :: fraction
@@ -300,7 +348,9 @@ contains
   end function thin_cohort
 
   subroutine shut_down(self)
+    !////////////////////////////////////////////////////////////////
     ! Free all allocated memory
+    !---------------------------------------------------------------
     class(vegn_tile_type), intent(inout) :: self
 
     call self%cohort_list%destroy_all()
@@ -308,6 +358,9 @@ contains
   end subroutine shut_down
 
   pure function get_height(item) result(res)
+    !////////////////////////////////////////////////////////////////
+    ! Get height
+    !---------------------------------------------------------------
     type(cohort_item), intent(in) :: item
     real :: res
 
@@ -315,7 +368,9 @@ contains
   end function get_height
 
   subroutine sort_cohorts_by_height(self, increasing)
+    !////////////////////////////////////////////////////////////////
     ! Sort cohorts by height
+    !---------------------------------------------------------------
     class(vegn_tile_type), intent(inout) :: self
     logical, intent(in) :: increasing
 
@@ -324,6 +379,9 @@ contains
   end subroutine sort_cohorts_by_height
 
   pure function get_uid(item) result(res)
+    !////////////////////////////////////////////////////////////////
+    ! Get uid
+    !---------------------------------------------------------------
     type(cohort_item), intent(in) :: item
     real :: res
 
@@ -331,7 +389,9 @@ contains
   end function get_uid
 
   subroutine sort_cohorts_by_uid(self, increasing)
-    ! Sort cohorts by uid
+    !////////////////////////////////////////////////////////////////
+    ! Sorts cohorts by uid
+    !---------------------------------------------------------------
     class(vegn_tile_type), intent(inout) :: self
     logical, intent(in) :: increasing
 
@@ -339,16 +399,10 @@ contains
 
   end subroutine sort_cohorts_by_uid
 
-  function n_cohorts(self) result(res)
-    ! Returns the current number of cohorts
-    class(vegn_tile_type), intent(in) :: self
-    integer :: res
-
-    res = self%cohort_list%length()
-  end function n_cohorts
-
   function new_cohort(self) result(new_item)
-    ! Insert a new cohort at the head of the list and return its pointer.
+    !////////////////////////////////////////////////////////////////
+    ! Create and insert a new cohort at the head of the list and return its pointer.
+    !---------------------------------------------------------------
     class(vegn_tile_type), intent(inout) :: self
     type(cohort_item), pointer :: new_item
 
@@ -358,7 +412,9 @@ contains
   end function new_cohort
 
   function kill_cohort(self, item) result(next_item)
+    !////////////////////////////////////////////////////////////////
     ! Move item to killed_cohort_fractions and return pointer to next
+    !---------------------------------------------------------------
     class(vegn_tile_type), intent(inout) :: self
     type(cohort_item), pointer, intent(inout) :: item
     type(cohort_item), pointer :: next_item
@@ -368,8 +424,142 @@ contains
     call self%killed_fraction_list%insert_item(item)
   end function kill_cohort
 
-  !==============for diagnostics============================================
+  subroutine relayer( self )
+    !////////////////////////////////////////////////////////////////
+    ! Arrange crowns into canopy layers according to their height and
+    ! crown areas.
+    ! We fill each layer until the maximum density is reached (layer_vegn_cover),
+    ! before starting a new layer.
+    !---------------------------------------------------------------
+    class(vegn_tile_type), intent(inout) :: self ! input cohorts
+
+    ! ---- local constants
+    real, parameter :: layer_vegn_cover = 1.0   ! i.e. max 1m2 vegetation per m2 ground
+
+    ! local variables
+    integer :: L        ! layer index (top-down)
+    real    :: frac     ! fraction of the layer covered so far by the canopies
+    real    :: fraction ! fraction to split off
+
+    type(cohort_item), pointer :: it  ! iterator
+
+    ! We sort the cohorts be decreasing height (important to do it here!)
+    call self%sort_cohorts_by_height(.false.)
+
+    L = 1
+    frac = 0.0
+
+    ! For each cohort present in the old list
+    it => self%cohorts()
+    do while (associated(it))
+
+      ! We set the layer
+      it%cohort%layer = L
+      if (L == 1) then
+        it%cohort%firstlayer = 1
+      endif
+
+      if ( &
+              L < NLAYERS_MAX .and. &! We check if L < NLAYERS_MAX as we do not want to create more layers than the max specified amount.
+                      it%cohort%layerfrac() > layer_vegn_cover - frac &
+              ) then
+        ! If the current cohort does not fit in the remaining fraction on the layer,
+        ! we add a copy of the cohort to the new cohort list
+
+        fraction = (layer_vegn_cover - frac) / it%cohort%layerfrac()
+        call self%split_cohort(it, fraction)
+
+        ! We keep it as we want to continue processing it at the next iteration
+        ! Since the current layer is filled-up, we open-up a new fraction
+        L = L + 1
+        frac = 0.0
+      else
+        ! Otherwise, we have used-up the whole cohort, we update the current layer fraction and insert the current cohort
+        frac = frac + it%cohort%layerfrac()
+        it => it%next()
+      end if
+
+    end do
+
+  end subroutine relayer
+
+  subroutine reduce( self )
+    !////////////////////////////////////////////////////////////////
+    ! Merge similar cohorts in a tile
+    ! Code from BiomeE-Allocation
+    !---------------------------------------------------------------
+    class(vegn_tile_type), intent(inout) :: self
+
+    ! local variables
+    type(cohort_item), pointer :: it1
+    type(cohort_item), pointer :: it2
+
+    ! This sort is not technically necessary, but is helpful for debugging
+    !call self%sort_cohorts_by_uid(.true.)
+
+    it1 => self%cohorts()
+    do while (associated(it1))
+      it2 => it1%next()
+      do while (associated(it2))
+        if (it1%cohort%can_be_merged_with(it2%cohort)) then
+          it2 => self%merge_cohorts(it1, it2)
+          call it1%cohort%init_bl_br()
+        else
+          it2 => it2%next()
+        end if
+      end do
+      it1 => it1%next()
+    end do
+
+  end subroutine reduce
+
+
+  subroutine kill_lowdensity_cohorts( self )
+    !////////////////////////////////////////////////////////////////
+    ! Remove cohorts that have (almost) fully died and update tile
+    ! Code from BiomeE-Allocation
+    !---------------------------------------------------------------
+    class(vegn_tile_type), intent(inout) :: self
+    ! local variables
+    logical :: at_least_one_survivor
+
+    type(cohort_item), pointer :: it
+
+    at_least_one_survivor = .FALSE.
+
+    ! We first check that we won't kill all the cohorts
+    it => self%cohorts()
+    do while (associated(it))
+      if (it%cohort%nindivs > mindensity) then
+        at_least_one_survivor = .TRUE.
+        exit
+      end if
+      it => it%next()
+    enddo
+
+    ! If at least one cohort survives, we kill the low density ones
+    ! Otherwise er do not kill anyone.
+    if (at_least_one_survivor) then
+      it => self%cohorts()
+      do while (associated(it))
+        if (it%cohort%nindivs > mindensity) then
+          it => it%next()
+        else
+          ! if the density is below the threshold, we kill it.
+          it => self%thin_cohort(it)
+        end if
+      end do
+    end if
+  end subroutine kill_lowdensity_cohorts
+
+  !----------------------------------------------------------------
+  ! Diagnostic methods
+  !----------------------------------------------------------------
+
   subroutine zero_diagnostics(self)
+    !////////////////////////////////////////////////////////////////
+    ! Reset annual all diagnostic variables
+    !---------------------------------------------------------------
 
     ! for annual update
     class(vegn_tile_type), intent(inout) :: self
@@ -409,9 +599,7 @@ contains
   end subroutine zero_diagnostics
 
   subroutine zero_daily_diagnostics(self)
-    !////////////////////////////////////////////////////////////////////////
-    ! Zero daily diagnostics
-    !------------------------------------------------------------------------
+    ! Reset dauly diagnostic variables
     class(vegn_tile_type), intent(inout) :: self
 
     self%daily_fluxes = common_fluxes()
@@ -422,110 +610,10 @@ contains
 
   end subroutine zero_daily_diagnostics
 
-  subroutine aggregate_pools( self )
-    !////////////////////////////////////////////////////////////////////////
-    ! for annual update
-    !------------------------------------------------------------------------
-    class(vegn_tile_type), intent(inout) :: self
-
-    ! local variables
-    type(cohort_type), pointer :: cc
-    type(cohort_item), pointer :: it !iterator
-
-    ! State variables
-    self%plabl = orgpool()
-    self%pleaf = orgpool()
-    self%proot = orgpool()
-    self%psapw = orgpool()
-    self%pwood = orgpool()
-    self%pseed = orgpool()
-
-    it => self%cohorts()
-    do while (associated(it))
-      cc => it%cohort
-
-      ! organic pools
-      self%plabl = self%plabl + cc%plabl * cc%nindivs
-      self%pleaf = self%pleaf + cc%pleaf * cc%nindivs
-      self%proot = self%proot + cc%proot * cc%nindivs
-      self%psapw = self%psapw + cc%psapw * cc%nindivs
-      self%pwood = self%pwood + cc%pwood * cc%nindivs
-      self%pseed = self%pseed + cc%pseed * cc%nindivs
-
-      it => it%next()
-
-    enddo
-
-  end subroutine aggregate_pools
-
-  subroutine aggregate_cohorts( self )
-    !////////////////////////////////////////////////////////////////////////
-    ! for annual update
-    !------------------------------------------------------------------------
-    class(vegn_tile_type), intent(inout) :: self
-
-    ! local variables
-    type(cohort_type), pointer :: cc
-    type(cohort_item), pointer :: it !iterator
-    real :: dbh ! cache variable
-
-    self%LAI          = 0.0
-    self%CAI          = 0.0
-    self%nindivs      = 0.0
-    self%DBH          = 0.0
-    self%nindivs12    = 0.0
-    self%DBH12        = 0.0
-    self%QMD12        = 0.0
-    self%MaxAge       = 0.0
-    self%MaxVolume    = 0.0
-    self%MaxDBH       = 0.0
-    self%NPPL         = 0.0
-    self%NPPW         = 0.0
-    self%m_turnover   = 0.0
-
-    call self%aggregate_pools()
-
-    it => self%cohorts()
-    do while (associated(it))
-      cc => it%cohort
-
-      self%NPPL         = self%NPPL          + cc%NPPleaf    * cc%nindivs
-      self%NPPW         = self%NPPW          + cc%NPPwood    * cc%nindivs
-      self%m_turnover   = self%m_turnover    + cc%m_turnover * cc%nindivs
-
-      self%CAI          = self%CAI      + cc%crownarea() * cc%nindivs
-      self%LAI          = self%LAI      + cc%leafarea()  * cc%nindivs
-
-      ! New tile outputs
-      dbh = cc%dbh()
-      self%DBH          = self%DBH      + dbh * cc%nindivs
-      self%nindivs      = self%nindivs  + cc%nindivs
-
-      if (dbh > 0.12) then
-        self%DBH12      = self%DBH12     + dbh * cc%nindivs
-        self%nindivs12  = self%nindivs12 + cc%nindivs
-        self%QMD12  = self%QMD12 + dbh ** 2 * cc%nindivs
-      endif
-
-      self%MaxAge    = MAX(cc%age, self%MaxAge)
-      self%MaxVolume = MAX(cc%volume(), self%MaxVolume)
-      self%MaxDBH    = MAX(dbh, self%MaxDBH)
-
-      it => it%next()
-
-    enddo
-
-    if (self%nindivs > 0.0) self%DBH   = self%DBH / self%nindivs
-    if (self%nindivs12 > 0.0) self%DBH12 = self%DBH12 / self%nindivs12
-    if (self%nindivs12 > 0.0) self%QMD12   = sqrt(self%QMD12 / self%nindivs12)
-
-  end subroutine aggregate_cohorts
-
-
   subroutine hourly_diagnostics(self)
-    !////////////////////////////////////////////////////////////////////////
-    ! Updates sub-daily tile-level variables and takes running daily sums
-    !------------------------------------------------------------------------
+    !////////////////////////////////////////////////////////////////
+    ! Updates sub-daily cohort and tile-level variables and takes running daily sums
+    !---------------------------------------------------------------
     use md_interface_in_biomee, only: inputs
 
     class(vegn_tile_type), intent(inout) :: self
@@ -558,9 +646,9 @@ contains
 
 
   subroutine daily_diagnostics(self, iyears, idoy, out_daily_tile )
-    !////////////////////////////////////////////////////////////////////////
+    !////////////////////////////////////////////////////////////////
     ! Updates daily tile-level variables and takes running annual sums
-    !------------------------------------------------------------------------
+    !---------------------------------------------------------------
     class(vegn_tile_type), intent(inout) :: self
     integer, intent(in) :: iyears, idoy
     real(kind=c_double), dimension(nvars_daily_tile), optional, intent(out) :: out_daily_tile
@@ -636,9 +724,9 @@ contains
 
 
   subroutine annual_diagnostics(self, iyears, out_annual_tile, out_annual_cohorts)
-    !////////////////////////////////////////////////////////////////////////
-    ! Updates tile-level variables and populates annual output in once
-    !------------------------------------------------------------------------
+    !////////////////////////////////////////////////////////////////
+    ! Updates tile-level variables and populates annual output
+    !---------------------------------------------------------------
     use md_interface_in_biomee, only: inputs
 
     class(vegn_tile_type), intent(inout) :: self
@@ -795,25 +883,10 @@ contains
 
   end subroutine annual_diagnostics
 
-  subroutine plant2soil(self, loss_coarse, loss_fine)
-    ! Redistribute C and N from dead plants to vegetation soil pools
-    class(vegn_tile_type), intent(inout) :: self
-    type(orgpool), intent(in) :: loss_coarse, loss_fine
-
-    self%psoil_fs = self%psoil_fs + loss_fine * inputs%params_tile%fsc_fine + &
-            loss_coarse * inputs%params_tile%fsc_wood
-    self%psoil_sl = self%psoil_sl + loss_fine * (1.0 - inputs%params_tile%fsc_fine) + &
-            loss_coarse * (1.0 - inputs%params_tile%fsc_wood)
-
-      ! annual N from plants to soil and C turnover
-      self%N_P2S_yr = self%N_P2S_yr + loss_coarse%n14 + loss_fine%n14
-
-  end subroutine
-
   subroutine annual_diagnostics_post_mortality(self, out_annual_tile, out_annual_cohorts)
-    !////////////////////////////////////////////////////////////////////////
-    ! Updates tile-level variables and populates annual output in once
-    !------------------------------------------------------------------------
+    !////////////////////////////////////////////////////////////////
+    ! Updates tile-level variables and populates annual output after reproduction and mortality processes
+    !---------------------------------------------------------------
     class(vegn_tile_type), intent(inout) :: self
     real(kind=c_double), dimension(nvars_annual_tile), intent(out) :: out_annual_tile
     real(kind=c_double), dimension(out_max_cohorts, nvars_annual_cohorts), optional, intent(out) :: out_annual_cohorts
@@ -876,36 +949,30 @@ contains
 
   end subroutine annual_diagnostics_post_mortality
 
-  subroutine recover_N_balance(self)
-    !////////////////////////////////////////////////////////////////////////
-    ! We scale the N pools to contrain the yearly N (soil + plant) to be constant.
-    !------------------------------------------------------------------------
+  !----------------------------------------------------------------
+  ! Public helper methods
+  !----------------------------------------------------------------
+
+  subroutine plant2soil(self, loss_coarse, loss_fine)
+    !////////////////////////////////////////////////////////////////
+    ! Redistribute C and N from dead plants to vegetation soil pools
+    !---------------------------------------------------------------
     class(vegn_tile_type), intent(inout) :: self
-    real :: delta, scaling_factor
+    type(orgpool), intent(in) :: loss_coarse, loss_fine
 
-    delta = self%totN - self%initialN0
+    self%psoil_fs = self%psoil_fs + loss_fine * inputs%params_tile%fsc_fine + &
+            loss_coarse * inputs%params_tile%fsc_wood
+    self%psoil_sl = self%psoil_sl + loss_fine * (1.0 - inputs%params_tile%fsc_fine) + &
+            loss_coarse * (1.0 - inputs%params_tile%fsc_wood)
 
-    if (abs(delta) > 1e-6) then
-      scaling_factor = 1 - delta / self%totN
+    ! annual N from plants to soil and C turnover
+    self%N_P2S_yr = self%N_P2S_yr + loss_coarse%n14 + loss_fine%n14
 
-      self%psoil_sl%n14 = self%psoil_sl%n14 * scaling_factor
-      self%psoil_fs%n14 = self%psoil_fs%n14 * scaling_factor
-      self%pmicr%n14 = self%pmicr%n14       * scaling_factor
-      self%inorg%n14 = self%inorg%n14       * scaling_factor
-      self%plabl%n14 = self%plabl%n14       * scaling_factor
-      self%pseed%n14 = self%pseed%n14       * scaling_factor
-      self%pleaf%n14 = self%pleaf%n14       * scaling_factor
-      self%proot%n14 = self%proot%n14       * scaling_factor
-      self%psapw%n14 = self%psapw%n14       * scaling_factor
-      self%pwood%n14 = self%pwood%n14       * scaling_factor
-      self%totN = self%initialN0
-    endif
-  end subroutine recover_N_balance
-
+  end subroutine
 
   subroutine initialize_vegn_tile( self )
-    !////////////////////////////////////////////////////////////////
-    ! Code from BiomeE-Allocation
+    !////////////////////////////////////////////////////////////////////////
+    ! Initialize vgetation tile and cohorts pools
     !---------------------------------------------------------------
     class(vegn_tile_type), intent(inout) :: self
 
@@ -921,8 +988,8 @@ contains
 
       new => self%new_cohort()
       cc => new%cohort
-      cc%species     = INT(inputs%init_cohort(i)%init_cohort_species)
-      cc%nindivs     = inputs%init_cohort(i)%init_cohort_nindivs ! trees/m2
+      cc%species   = INT(inputs%init_cohort(i)%init_cohort_species)
+      cc%nindivs   = inputs%init_cohort(i)%init_cohort_nindivs ! trees/m2
       cc%plabl%c12 = inputs%init_cohort(i)%init_cohort_nsc
       cc%psapw%c12 = inputs%init_cohort(i)%init_cohort_bsw
       cc%pwood%c12 = inputs%init_cohort(i)%init_cohort_bHW
@@ -962,132 +1029,135 @@ contains
 
   end subroutine initialize_vegn_tile
 
-  subroutine relayer( self )
-    !////////////////////////////////////////////////////////////////
-    ! Arrange crowns into canopy layers according to their height and
-    ! crown areas.
-    ! We fill each layer until the maximum density is reached (layer_vegn_cover),
-    ! before starting a new layer.
-    !---------------------------------------------------------------
-    class(vegn_tile_type), intent(inout) :: self ! input cohorts
+  !----------------------------------------------------------------
+  ! Private helper methods
+  !----------------------------------------------------------------
 
-    ! ---- local constants
-    real, parameter :: layer_vegn_cover = 1.0   ! i.e. max 1m2 vegetation per m2 ground
-
-    ! local variables
-    integer :: L        ! layer index (top-down)
-    real    :: frac     ! fraction of the layer covered so far by the canopies
-    real    :: fraction ! fraction to split off
-
-    type(cohort_item), pointer :: it  ! iterator
-
-    ! We sort the cohorts be decreasing height (important to do it here!)
-    call self%sort_cohorts_by_height(.false.)
-
-    L = 1
-    frac = 0.0
-
-    ! For each cohort present in the old list
-    it => self%cohorts()
-    do while (associated(it))
-
-      ! We set the layer
-      it%cohort%layer = L
-      if (L == 1) then
-        it%cohort%firstlayer = 1
-      endif
-
-      if ( &
-              L < NLAYERS_MAX .and. &! We check if L < NLAYERS_MAX as we do not want to create more layers than the max specified amount.
-                      it%cohort%layerfrac() > layer_vegn_cover - frac &
-              ) then
-        ! If the current cohort does not fit in the remaining fraction on the layer,
-        ! we add a copy of the cohort to the new cohort list
-
-        fraction = (layer_vegn_cover - frac) / it%cohort%layerfrac()
-        call self%split_cohort(it, fraction)
-
-        ! We keep it as we want to continue processing it at the next iteration
-        ! Since the current layer is filled-up, we open-up a new fraction
-        L = L + 1
-        frac = 0.0
-      else
-        ! Otherwise, we have used-up the whole cohort, we update the current layer fraction and insert the current cohort
-        frac = frac + it%cohort%layerfrac()
-        it => it%next()
-      end if
-
-    end do
-
-  end subroutine relayer
-
-  subroutine reduce( self )
-    !////////////////////////////////////////////////////////////////
-    ! Merge similar cohorts in a tile
-    ! Code from BiomeE-Allocation
-    !---------------------------------------------------------------
+  subroutine aggregate_pools( self )
+    !////////////////////////////////////////////////////////////////////////
+    ! Compute tile-level pools from aggregation of pools from all living cohorts.
+    !------------------------------------------------------------------------
     class(vegn_tile_type), intent(inout) :: self
 
     ! local variables
-    type(cohort_item), pointer :: it1
-    type(cohort_item), pointer :: it2
+    type(cohort_type), pointer :: cc
+    type(cohort_item), pointer :: it !iterator
 
-    ! This sort is not technically necessary, but is helpful for debugging
-    !call self%sort_cohorts_by_uid(.true.)
+    ! State variables
+    self%plabl = orgpool()
+    self%pleaf = orgpool()
+    self%proot = orgpool()
+    self%psapw = orgpool()
+    self%pwood = orgpool()
+    self%pseed = orgpool()
 
-    it1 => self%cohorts()
-    do while (associated(it1))
-      it2 => it1%next()
-      do while (associated(it2))
-        if (it1%cohort%can_be_merged_with(it2%cohort)) then
-          it2 => self%merge_cohorts(it1, it2)
-          call it1%cohort%init_bl_br()
-        else
-          it2 => it2%next()
-        end if
-      end do
-      it1 => it1%next()
-    end do
-
-  end subroutine reduce
-
-
-  subroutine kill_lowdensity_cohorts( self )
-    !////////////////////////////////////////////////////////////////
-    ! Remove cohorts that have (almost) fully died and update tile
-    ! Code from BiomeE-Allocation
-    !---------------------------------------------------------------
-    class(vegn_tile_type), intent(inout) :: self
-    ! local variables
-    logical :: at_least_one_survivor
-
-    type(cohort_item), pointer :: it
-
-    at_least_one_survivor = .FALSE.
-
-    ! We first check that we won't kill all the cohorts
     it => self%cohorts()
     do while (associated(it))
-      if (it%cohort%nindivs > mindensity) then
-        at_least_one_survivor = .TRUE.
-        exit
-      end if
+      cc => it%cohort
+
+      ! organic pools
+      self%plabl = self%plabl + cc%plabl * cc%nindivs
+      self%pleaf = self%pleaf + cc%pleaf * cc%nindivs
+      self%proot = self%proot + cc%proot * cc%nindivs
+      self%psapw = self%psapw + cc%psapw * cc%nindivs
+      self%pwood = self%pwood + cc%pwood * cc%nindivs
+      self%pseed = self%pseed + cc%pseed * cc%nindivs
+
       it => it%next()
+
     enddo
 
-    ! If at least one cohort survives, we kill the low density ones
-    ! Otherwise er do not kill anyone.
-    if (at_least_one_survivor) then
-      it => self%cohorts()
-      do while (associated(it))
-        if (it%cohort%nindivs > mindensity) then
-          it => it%next()
-        else
-          ! if the density is below the threshold, we kill it.
-          it => self%thin_cohort(it)
-        end if
-      end do
-    end if
-  end subroutine kill_lowdensity_cohorts
+  end subroutine aggregate_pools
+
+  subroutine aggregate_cohorts( self )
+    !////////////////////////////////////////////////////////////////////////
+    ! Update tile-level variables from aggration of living cohorts.
+    !------------------------------------------------------------------------
+    class(vegn_tile_type), intent(inout) :: self
+
+    ! local variables
+    type(cohort_type), pointer :: cc
+    type(cohort_item), pointer :: it !iterator
+    real :: dbh ! cache variable
+
+    self%LAI          = 0.0
+    self%CAI          = 0.0
+    self%nindivs      = 0.0
+    self%DBH          = 0.0
+    self%nindivs12    = 0.0
+    self%DBH12        = 0.0
+    self%QMD12        = 0.0
+    self%MaxAge       = 0.0
+    self%MaxVolume    = 0.0
+    self%MaxDBH       = 0.0
+    self%NPPL         = 0.0
+    self%NPPW         = 0.0
+    self%m_turnover   = 0.0
+
+    call self%aggregate_pools()
+
+    it => self%cohorts()
+    do while (associated(it))
+      cc => it%cohort
+
+      self%NPPL         = self%NPPL          + cc%NPPleaf    * cc%nindivs
+      self%NPPW         = self%NPPW          + cc%NPPwood    * cc%nindivs
+      self%m_turnover   = self%m_turnover    + cc%m_turnover * cc%nindivs
+
+      self%CAI          = self%CAI      + cc%crownarea() * cc%nindivs
+      self%LAI          = self%LAI      + cc%leafarea()  * cc%nindivs
+
+      ! New tile outputs
+      dbh = cc%dbh()
+      self%DBH          = self%DBH      + dbh * cc%nindivs
+      self%nindivs      = self%nindivs  + cc%nindivs
+
+      if (dbh > 0.12) then
+        self%DBH12      = self%DBH12     + dbh * cc%nindivs
+        self%nindivs12  = self%nindivs12 + cc%nindivs
+        self%QMD12  = self%QMD12 + dbh ** 2 * cc%nindivs
+      endif
+
+      self%MaxAge    = MAX(cc%age, self%MaxAge)
+      self%MaxVolume = MAX(cc%volume(), self%MaxVolume)
+      self%MaxDBH    = MAX(dbh, self%MaxDBH)
+
+      it => it%next()
+
+    enddo
+
+    if (self%nindivs > 0.0) self%DBH   = self%DBH / self%nindivs
+    if (self%nindivs12 > 0.0) self%DBH12 = self%DBH12 / self%nindivs12
+    if (self%nindivs12 > 0.0) self%QMD12   = sqrt(self%QMD12 / self%nindivs12)
+
+  end subroutine aggregate_cohorts
+
+  subroutine recover_N_balance(self)
+    !////////////////////////////////////////////////////////////////////////
+    ! We scale the N pools to constrain the yearly N (soil + plant) to be constant.
+    ! ATTENTION: this is a hack and the N in underlying cohorts is NOT updated.
+    ! This causes tile-level and underlying cohorts N pools to drift away!
+    !------------------------------------------------------------------------
+    class(vegn_tile_type), intent(inout) :: self
+    real :: delta, scaling_factor
+
+    delta = self%totN - self%initialN0
+
+    if (abs(delta) > 1e-6) then
+      scaling_factor = 1 - delta / self%totN
+
+      self%psoil_sl%n14 = self%psoil_sl%n14 * scaling_factor
+      self%psoil_fs%n14 = self%psoil_fs%n14 * scaling_factor
+      self%pmicr%n14 = self%pmicr%n14       * scaling_factor
+      self%inorg%n14 = self%inorg%n14       * scaling_factor
+      self%plabl%n14 = self%plabl%n14       * scaling_factor
+      self%pseed%n14 = self%pseed%n14       * scaling_factor
+      self%pleaf%n14 = self%pleaf%n14       * scaling_factor
+      self%proot%n14 = self%proot%n14       * scaling_factor
+      self%psapw%n14 = self%psapw%n14       * scaling_factor
+      self%pwood%n14 = self%pwood%n14       * scaling_factor
+      self%totN = self%initialN0
+    endif
+  end subroutine recover_N_balance
 
 end module vegetation_tile_biomee

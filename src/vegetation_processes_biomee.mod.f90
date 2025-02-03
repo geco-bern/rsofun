@@ -1,6 +1,6 @@
 module md_vegetation_processes_biomee
   !////////////////////////////////////////////////////////////////
-  ! Contains all vegetation-related subroutines for BiomeE.
+  ! Implementation of vegetation processes for BiomeE.
   ! Code is adopted from BiomeE https://doi.org/10.5281/zenodo.7125963.
   !---------------------------------------------------------------  
   use vegetation_tile_biomee
@@ -672,7 +672,7 @@ contains
     endif
 
     ! Remove the cohorts with very few individuals
-    call kill_lowdensity_cohorts( vegn )
+    call vegn%kill_lowdensity_cohorts()
 
   end subroutine vegn_nat_mortality
 

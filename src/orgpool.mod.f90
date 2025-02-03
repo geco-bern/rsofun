@@ -1,7 +1,6 @@
 module md_orgpool
   !////////////////////////////////////////////////////////////////
-  ! Module contains Fortran 90 derived-type declarations to define
-  ! material pools in SOFUN and functions applicable to pool types.
+  ! Derived type describing material pools (C and N).
   !----------------------------------------------------------------
 
   implicit none
@@ -25,6 +24,9 @@ module md_orgpool
 
   end type orgpool
 
+  !===== Operators
+  ! Operators are syntactical suggar for calling a function.
+  ! For example, 'add(pool1, pool2)' can be written> 'pool1 + pool2'
   interface operator (+)
     module procedure add
   end interface
@@ -33,6 +35,9 @@ module md_orgpool
     module procedure sub
   end interface
 
+  ! Note: * operator is NOT commutative.
+  ! Right: 'pool * 2.0'pool * (the scalar must come in second position)
+  ! Wrong: '2.0 * pool' (will not compile)
   interface operator (*)
     module procedure scale_mul
   end interface
@@ -44,6 +49,8 @@ module md_orgpool
 contains
 
   pure function add(p1, p2) result(res)
+    ! Returns a pool containing the sum of two pools.
+    ! Use operator +: 'p1 + p2'
     type(orgpool), intent(in) :: p1, p2
     type(orgpool) :: res
 
@@ -53,6 +60,8 @@ contains
   end function add
 
   pure function sub(p1, p2) result(res)
+    ! Returns a pool containing the difference of two pools.
+    ! Use operator -: 'p1 - p2'
     type(orgpool), intent(in) :: p1, p2
     type(orgpool) :: res
 
@@ -62,6 +71,9 @@ contains
   end function sub
 
   pure function scale_mul(p, k) result(res)
+    ! Returns a pool containing a scaled pool.
+    ! Use operator *: 'p * k'
+    ! Attention, '*' is non-comutative. The scalar must appear in second position.
     type(orgpool), intent(in) :: p
     real, intent(in) :: k
     type(orgpool) :: res
@@ -72,6 +84,8 @@ contains
   end function scale_mul
 
   pure function scale_div(p, k) result(res)
+    ! Returns a pool containing a scaled pool (by a factor 1/k).
+    ! Use operator /: 'p / k'
     type(orgpool), intent(in) :: p
     real, intent(in) :: k
     type(orgpool) :: res
@@ -82,13 +96,15 @@ contains
   end function scale_div
 
   subroutine add_c12(self, delta)
+    ! Add c12 amount to this pool
     class(orgpool), intent(inout) :: self
     real, intent(in) :: delta
 
-    self%c12 = self%c12+ delta
+    self%c12 = self%c12 + delta
   end subroutine add_c12
 
   subroutine add_n14(self, delta)
+    ! Add n14 amount to this pool
     class(orgpool), intent(inout) :: self
     real, intent(in) :: delta
 

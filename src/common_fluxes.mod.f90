@@ -1,7 +1,7 @@
 module md_common_fluxes
   !////////////////////////////////////////////////////////////////
-  ! Module contains Fortran 90 derived-type declarations to define
-  ! material pools in SOFUN and functions applicable to pool types.
+  ! Definition of common_fluxes dereived type.
+  ! Common fluxes are a set of fluxes present at every time resolution and present at both cohort and tile levels.
   !----------------------------------------------------------------
 
   implicit none
@@ -30,6 +30,7 @@ module md_common_fluxes
 contains
 
   pure real function npp(self)
+    ! Computes NPP as GPP - Resp
     class(common_fluxes), intent(in) :: self
 
     npp = self%gpp - self%resp

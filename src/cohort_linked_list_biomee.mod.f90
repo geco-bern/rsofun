@@ -1,7 +1,10 @@
 module md_cohort_linked_list
   !////////////////////////////////////////////////////////////////
-  ! Module containing cohort linked list
+  ! Module defining types implementing a cohort linked list
+  ! 'cohort_stack' is the cohort list itself, containing instances of 'cohort_item'.
+  ! 'cohort_item' is simply a wrapper around `cohort_type`, adding a unique ID (uid) and a helper method for cloning cohorts.
   !----------------------------------------------------------------
+
   ! Do NOT import anything else!
   use md_cohort, only: cohort_type
 
@@ -14,8 +17,9 @@ module md_cohort_linked_list
   !=============== Public procedures ===========================================================
   public :: create_cohort
 
-  type :: cohort_stack_item
-
+  type, abstract :: cohort_stack_item
+    ! Abstract type at the heart of the linked list.
+    ! It contains a pointer to the next item and helper methods for iteration the linked list.
     type(cohort_item), private, pointer :: next_ptr => null() ! Pointer to next cohort_item. Important to nullify here!
 
     contains
@@ -26,6 +30,7 @@ module md_cohort_linked_list
   end type cohort_stack_item
 
   type, extends(cohort_stack_item) :: cohort_item
+    ! Wrapper around `cohort_type`, adding a unique ID (uid) and a helper method for cloning cohorts.
     integer, private :: uid_internal = 0 ! Unique id. It is automatically set when inserted in a linked_list if 0.
     type(cohort_type) :: cohort
 
@@ -37,6 +42,8 @@ module md_cohort_linked_list
   end type cohort_item
 
   type :: cohort_stack
+    ! The cohort list itself, containing instances of 'cohort_item'.
+    ! It defines a number of important methods for modifying the list (adding and removing items, sorting, ...)
     integer, private :: current_uid = 0
     type(cohort_item), private, pointer :: head_internal => null() ! Pointer to head of linked list. Important to nullify here!
 
@@ -55,13 +62,14 @@ module md_cohort_linked_list
 
 contains
 
-  !!!!========= ATTENTION ============!!!
-  ! The functions below are notoriously difficult to implement properly.
-  ! Be sure to know what you are doing before doing any change, and be sure to
-  ! thoroughly test each function which you modify!
+  !----------------------------------------------------------------
+  ! cohort_item
+  !----------------------------------------------------------------
 
   pure function uid(self) result(res)
+    !////////////////////////////////////////////////////////////////
     ! Returns the uid
+    !---------------------------------------------------------------
     class(cohort_item), intent(in) :: self
     integer :: res
 
@@ -69,9 +77,11 @@ contains
   end function uid
 
   pure function clone(self, keep_uid) result(ptr)
+    !////////////////////////////////////////////////////////////////
     ! Clone this item.
     ! If keep_uid is true, the uid is also copied (default: false)
     ! Note: to create a new cohort from scratch, use new_cohort() instead.
+    !---------------------------------------------------------------
     class(cohort_item), intent(in) :: self
     logical, optional, intent(in) :: keep_uid
     logical :: keep_uid_opt
@@ -91,24 +101,23 @@ contains
 
   end function clone
 
-  function next(self) result(next_item)
-    ! Returns the next item, or NULL if none.
-    class(cohort_stack_item), intent(in) :: self
-    type(cohort_item), pointer :: next_item
+  !----------------------------------------------------------------
+  ! cohort_stack
+  !----------------------------------------------------------------
 
-    next_item => self%next_ptr
-  end function next
-
-  pure function has_next(self) result(res)
-    ! Returns true if this element is followed by another item
-    class(cohort_stack_item), intent(in) :: self
-    logical :: res
-
-    res = associated(self%next_ptr)
-  end function has_next
+  !!!!===================== ATTENTION ============================!!!!
+  ! The functions below are notoriously difficult to implement properly.
+  ! Be sure to know what you are doing before doing any change, and be sure to
+  ! thoroughly test each function that you modify!
+  !
+  ! The advantage is that all the trickiness is now encapsulated into a low
+  ! level type, rather than spread throughout the code.
+  !---------------------------------------------------------------
 
   function length(self) result(res)
+    !////////////////////////////////////////////////////////////////
     ! Returns the current number of items in this linked list
+    !---------------------------------------------------------------
     integer :: res
     class(cohort_stack), intent(in) :: self
 
@@ -125,9 +134,11 @@ contains
   end function length
 
   function head(self) result(ptr)
+    !////////////////////////////////////////////////////////////////
     ! Destroy all items in this linked list.
     ! Follow all the element of a chain, freeing the memory for each.
     ! After the subroutine has returned, the parameter takes the value null().
+    !---------------------------------------------------------------
     class(cohort_stack), intent(in) :: self
 
     ! Local variable
@@ -136,16 +147,6 @@ contains
     ptr => self%head_internal
 
   end function
-
-  function next_uid(self) result(res)
-    ! Get the next unique ID
-    ! Private
-    class(cohort_stack), intent(inout) :: self
-    integer :: res
-
-    self%current_uid = self%current_uid + 1
-    res = self%current_uid
-  end function next_uid
 
   pure function create_cohort() result(new_cohort)
     ! Create a new cohort
@@ -157,9 +158,11 @@ contains
   end function create_cohort
 
   pure subroutine destroy_all(self)
+    !////////////////////////////////////////////////////////////////
     ! Destroy all items in this linked list.
     ! Follow all the element of a chain, freeing the memory for each.
     ! After the subroutine has returned, the parameter takes the value null().
+    !---------------------------------------------------------------
     class(cohort_stack), intent(inout) :: self
 
     ! Local variable
@@ -174,8 +177,10 @@ contains
   end subroutine
 
   pure subroutine sort(self, increasing, func)
+    !////////////////////////////////////////////////////////////////
     ! Sort items given a function 'func' mapping an item to a real value.
-    ! 'increasing' defines if the values should be ranked by increasing order.
+    ! 'increasing' tells if the values should be ranked by increasing order or not.
+    !---------------------------------------------------------------
 
     interface
       pure function func_sort(item) result(res)
@@ -242,10 +247,12 @@ contains
   end subroutine sort
 
   function detach_item(self, item) result(next_item)
+    !////////////////////////////////////////////////////////////////
     ! Remove given item and return next item in the list
     ! or NULL if it was not found (or no item follows in the list)
     ! Attention, the item is not deleted from memory. Use destroy_item for this.
     ! ATTENTION: The provided item's next element is set to NULL, even if it was not found.
+    !---------------------------------------------------------------
     class(cohort_stack), intent(inout) :: self
     type(cohort_item), pointer, intent(in) :: item
     type(cohort_item), pointer :: next_item
@@ -290,8 +297,10 @@ contains
   end function detach_item
 
   function destroy_item(self, item) result(next_item)
+    !////////////////////////////////////////////////////////////////
     ! Destroy item and return next item in the list
     ! or NULL if no item was removed (or no item follows in the list)
+    !---------------------------------------------------------------
     class(cohort_stack), intent(inout) :: self
     type(cohort_item), pointer :: next_item
     type(cohort_item), pointer, intent(inout) :: item
@@ -304,13 +313,52 @@ contains
   end function destroy_item
 
   subroutine insert_item(self, new_item)
+    !////////////////////////////////////////////////////////////////
     ! Prepend a new item to the head of the list and return its pointer
+    !---------------------------------------------------------------
     class(cohort_stack), intent(inout) :: self
     type(cohort_item), pointer, intent(in) :: new_item
 
+    ! If the uid is not set, we set it using next_uid() (which gives us a brand new, UID)
     if (new_item%uid_internal == 0) new_item%uid_internal = self%next_uid()
     new_item%next_ptr => self%head_internal
     self%head_internal => new_item
   end subroutine insert_item
+
+  function next_uid(self) result(res)
+    !////////////////////////////////////////////////////////////////
+    ! Get the next unique ID
+    ! Private
+    !---------------------------------------------------------------
+    class(cohort_stack), intent(inout) :: self
+    integer :: res
+
+    self%current_uid = self%current_uid + 1
+    res = self%current_uid
+  end function next_uid
+
+  !----------------------------------------------------------------
+  ! cohort_stack_item
+  !----------------------------------------------------------------
+
+  function next(self) result(next_item)
+    !////////////////////////////////////////////////////////////////
+    ! Returns the next item, or NULL if none.
+    !---------------------------------------------------------------
+    class(cohort_stack_item), intent(in) :: self
+    type(cohort_item), pointer :: next_item
+
+    next_item => self%next_ptr
+  end function next
+
+  pure function has_next(self) result(res)
+    !////////////////////////////////////////////////////////////////
+    ! Returns true if this element is followed by another item
+    !---------------------------------------------------------------
+    class(cohort_stack_item), intent(in) :: self
+    logical :: res
+
+    res = associated(self%next_ptr)
+  end function has_next
 
 end module md_cohort_linked_list
