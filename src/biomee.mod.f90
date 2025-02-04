@@ -44,8 +44,8 @@ contains
     use md_forcing_biomee
     use md_interface_in_biomee
     use vegetation_tile_biomee
-    use md_biosphere_biomee, only: biosphere_annual
-    use md_luluc, only: update_lu_state, populate_outarray_annual_land_use
+    use md_biosphere_biomee
+    use md_luluc
 
     implicit none
 
@@ -175,7 +175,7 @@ contains
       !----------------------------------------------------------------
       if ((.not.state%spinup) .and. (state%forcingyear_idx <= n_lu_tr_years)) then
 
-        call update_lu_state(lu_state, real(luc_forcing(:,:,state%forcingyear_idx)), n_lu)
+        call update_lu_state(lu_state, real(luc_forcing(:,:,state%forcingyear_idx)))
 
       end if
       call populate_outarray_annual_land_use(state%year, lu_state, output_annual_luluc_tile(state%year,:,:))

@@ -429,18 +429,18 @@ contains
         
         ! reset grass density and size for perenials
         ccNSC   = (cc%plabl%c12 + cc%pleaf%c12 + cc%psapw%c12 + &
-          cc%pwood%c12 + cc%proot%c12 + cc%pseed%c12) * cc%nindivs
+          cc%pwood%c12 + cc%proot%c12 + cc%pseed%c12) * cc%density
         ccNSN   = (cc%plabl%n14 + cc%pleaf%n14 + cc%psapw%n14 + &
-          cc%pwood%n14 + cc%proot%n14 + cc%pseed%n14) * cc%nindivs
+          cc%pwood%n14 + cc%proot%n14 + cc%pseed%n14) * cc%density
         
         ! reset
-        cc%nindivs = MIN(ccNSC /sp%seedlingsize, ccNSN/(sp%seedlingsize/sp%CNroot0))
+        cc%density = MIN(ccNSC /sp%seedlingsize, ccNSN/(sp%seedlingsize/sp%CNroot0))
         cc%psapw = orgpool(inputs%params_tile%f_initialBSW * sp%seedlingsize, cc%psapw%c12 / sp%CNsw0)  ! for setting up a initial size
         cc%proot = orgpool(0.25 * cc%psapw%c12, cc%proot%c12 / sp%CNroot0)
         cc%pleaf = orgpool()
         cc%pwood = orgpool()
         cc%pseed = orgpool()
-        cc%plabl = orgpool(ccNSC, ccNSN) / cc%nindivs - &
+        cc%plabl = orgpool(ccNSC, ccNSN) / cc%density - &
           (cc%pleaf + cc%psapw + cc%pwood + cc%proot + cc%pseed)
 
         ! beni: added NPP accounting (for output)
@@ -552,7 +552,7 @@ contains
 
     real :: deathrate ! mortality rate, 1/year
 
-    ! real, parameter :: min_nindivs = 1e-5 ! 2e-15 ! 1/m. If nindivs is less than this number, 
+    ! real, parameter :: min_density = 1e-5 ! 2e-15 ! 1/m. If density is less than this number,
     ! then the entire cohort is killed; 2e-15 is approximately 1 individual per Earth
     real :: cCAI ! Cumulative CAI
     real :: param_dbh_under 
@@ -745,8 +745,8 @@ contains
           reproPFTs(nPFTs) = cc%species ! PFT number
           pft_idx = nPFTs
         endif
-          seed(pft_idx) = seed(pft_idx) + cc%pseed * cc%nindivs
-          vegn%totSeed = vegn%totSeed + cc%pseed  * cc%nindivs
+          seed(pft_idx) = seed(pft_idx) + cc%pseed * cc%density
+          vegn%totSeed = vegn%totSeed + cc%pseed  * cc%density
 
           ! reset parent's seed C and N
           cc%pseed = orgpool()
@@ -765,7 +765,7 @@ contains
       associate (sp => inputs%params_species(reproPFTs(k)))
 
       ! density
-      cc%nindivs = seed(k)%c12 / sp%seedlingsize
+      cc%density = seed(k)%c12 / sp%seedlingsize
 
       cc%species    = reproPFTs(k)
 
@@ -791,13 +791,13 @@ contains
       cc%pwood%n14  = cc%pwood%c12/sp%CNwood0
       cc%pseed%n14  = 0.0
 
-      if (cc%nindivs > 0.0) then
+      if (cc%density > 0.0) then
         cc%plabl%n14 = sp%seedlingsize * seed(k)%n14 / seed(k)%c12 -  &
           (cc%pleaf%n14 + cc%proot%n14 + cc%psapw%n14 + cc%pwood%n14)
       end if
 
       vegn%totNewC = vegn%totNewC + (cc%pleaf + cc%proot + &
-              cc%psapw + cc%pwood + cc%plabl) * cc%nindivs
+              cc%psapw + cc%pwood + cc%plabl) * cc%density
 
       end associate
     enddo
@@ -819,7 +819,7 @@ contains
 
     associate (sp => cc%sp() )
       can_reproduce = (cc%layer == 1 .and. &
-        cc%nindivs > 0.0 .and. &
+        cc%density > 0.0 .and. &
         cc%age > sp%maturalage.and. &
         cc%pseed%c12 > sp%seedlingsize .and. &
         cc%pseed%n14 > sp%seedlingsize/sp%CNseed0)
@@ -860,8 +860,8 @@ contains
       ! put C and N into soil pools
       dAleaf_pool = orgpool(dAleaf * inputs%params_tile%LMAmin, &
             dAleaf * sp%LNbase)
-      loss_coarse  = (dL - dAleaf_pool + dStem) * cc%nindivs
-      loss_fine    = (dR + dAleaf_pool) * cc%nindivs
+      loss_coarse  = (dL - dAleaf_pool + dStem) * cc%density
+      loss_fine    = (dR + dAleaf_pool) * cc%density
 
       loss_coarse = orgpool(loss_coarse%c12 * (1.0 - inputs%params_tile%l_fract), &
               loss_coarse%n14 * (1.0 - inputs%params_tile%retransN))
@@ -969,7 +969,7 @@ contains
         cc => it%cohort
         associate (sp => cc%sp())
 
-          if (cc%plabl%n14 < cc%NSNmax()) N_Roots = N_Roots + cc%proot%c12 * cc%nindivs
+          if (cc%plabl%n14 < cc%NSNmax()) N_Roots = N_Roots + cc%proot%c12 * cc%density
 
         end associate
 
@@ -998,7 +998,7 @@ contains
             cc%plabl%n14 = cc%plabl%n14 + cc%fast_fluxes%Nup
 
             ! subtract N from mineral N
-            vegn%inorg%n14 = vegn%inorg%n14 - cc%fast_fluxes%Nup * cc%nindivs
+            vegn%inorg%n14 = vegn%inorg%n14 - cc%fast_fluxes%Nup * cc%density
           endif
 
           it => it%next()

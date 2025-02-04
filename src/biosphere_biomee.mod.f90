@@ -125,7 +125,7 @@ contains
     ! Kill all individuals in a cohort if NSC falls below critical point
     call vegn_annual_starvation( vegn )
     
-    ! Natural mortality (reducing number of individuals 'nindivs')
+    ! Natural mortality (reducing number of individuals 'density')
     ! (~Eq. 2 in Weng et al., 2015 BG)
     call vegn_nat_mortality( vegn )
     call kill_old_grass( vegn )

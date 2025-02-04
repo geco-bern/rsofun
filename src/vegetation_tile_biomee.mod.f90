@@ -24,7 +24,6 @@ module vegetation_tile_biomee
   integer, public, parameter :: nvars_daily_tile     = 35
   integer, public, parameter :: nvars_annual_tile    = 59
   integer, public, parameter :: nvars_annual_cohorts = 35
-  integer, public, parameter :: nvars_lu_out         = 2
   integer, public, parameter :: out_max_cohorts      = NCohortMax
 
   !===== Model
@@ -71,11 +70,11 @@ module vegetation_tile_biomee
 
     !========================= Cohort aggreation ===========================!
     ! Attention: variables aggregated from cohorts are only usable after having run aggregate_cohorts()
-    real, private    :: nindivs                            ! density (tree/m2)
+    real, private    :: density                            ! density (tree/m2)
     real, private    :: LAI                                ! leaf area index (surface of leaves per m2 of ground/tile)
     real, private    :: CAI                                ! crown area index (surface of the projected crown mer m2 of ground/tile)
     real, private    :: DBH
-    real, private    :: nindivs12
+    real, private    :: density12
     real, private    :: DBH12
     real, private    :: QMD12
     real, private    :: MaxAge
@@ -272,9 +271,9 @@ contains
     type(cohort_item), pointer :: new
 
     new => item%clone()
-    new%cohort%nindivs = item%cohort%nindivs * fraction
+    new%cohort%density = item%cohort%density * fraction
     call self%cohort_list%insert_item(new)
-    item%cohort%nindivs = item%cohort%nindivs - new%cohort%nindivs
+    item%cohort%density = item%cohort%density - new%cohort%density
   end subroutine split_cohort
 
   function merge_cohorts(self, c1, c2) result(next_item)
@@ -339,10 +338,10 @@ contains
       next_item => self%kill_cohort(item)
     else
       killed => item%clone(.true.)
-      killed%cohort%nindivs = item%cohort%nindivs * frac
+      killed%cohort%density = item%cohort%density * frac
       killed%cohort%deathrate = frac
       call self%killed_fraction_list%insert_item(killed)
-      item%cohort%nindivs = item%cohort%nindivs - killed%cohort%nindivs
+      item%cohort%density = item%cohort%density - killed%cohort%density
       next_item => item%next()
     end if
   end function thin_cohort
@@ -530,7 +529,7 @@ contains
     ! We first check that we won't kill all the cohorts
     it => self%cohorts()
     do while (associated(it))
-      if (it%cohort%nindivs > mindensity) then
+      if (it%cohort%density > mindensity) then
         at_least_one_survivor = .TRUE.
         exit
       end if
@@ -542,7 +541,7 @@ contains
     if (at_least_one_survivor) then
       it => self%cohorts()
       do while (associated(it))
-        if (it%cohort%nindivs > mindensity) then
+        if (it%cohort%density > mindensity) then
           it => it%next()
         else
           ! if the density is below the threshold, we kill it.
@@ -663,7 +662,7 @@ contains
 
       ! running annual sum
       call cc%annual_fluxes%add(cc%daily_fluxes)
-      call self%daily_fluxes%add(cc%daily_fluxes, cc%nindivs)
+      call self%daily_fluxes%add(cc%daily_fluxes, cc%density)
 
       ! Reset daily variables
       cc%daily_fluxes = common_fluxes()
@@ -768,7 +767,7 @@ contains
           out_annual_cohorts(i, ANNUAL_COHORTS_CID        ) = dble(it%uid())
           out_annual_cohorts(i, ANNUAL_COHORTS_PFT        ) = dble(cc%species)
           out_annual_cohorts(i, ANNUAL_COHORTS_LAYER      ) = dble(cc%layer)
-          out_annual_cohorts(i, ANNUAL_COHORTS_DENSITY    ) = dble(cc%nindivs * 10000)   ! *10000 to convert in tree per ha
+          out_annual_cohorts(i, ANNUAL_COHORTS_DENSITY    ) = dble(cc%density * 10000)   ! *10000 to convert in tree per ha
           out_annual_cohorts(i, ANNUAL_COHORTS_FLAYER     ) = dble(cc%layerfrac())
           out_annual_cohorts(i, ANNUAL_COHORTS_DBH        ) = dble(cc%dbh() * 100)       ! *100 to convert m in cm
           out_annual_cohorts(i, ANNUAL_COHORTS_DDBH       ) = dble(dDBH * 100)           ! *100 to convert m in cm
@@ -803,7 +802,7 @@ contains
 
         end if
 
-        call self%annual_fluxes%add(cc%annual_fluxes, cc%nindivs)
+        call self%annual_fluxes%add(cc%annual_fluxes, cc%density)
 
         it => it%next()
 
@@ -821,9 +820,9 @@ contains
     out_annual_tile(ANNUAL_TILE_YEAR            )  = dble(iyears)
     out_annual_tile(ANNUAL_TILE_CAI             )  = dble(self%CAI)
     out_annual_tile(ANNUAL_TILE_LAI             )  = dble(self%LAI)
-    out_annual_tile(ANNUAL_TILE_DENSITY         )  = dble(self%nindivs * 10000)   ! * 10000 to convert in indivs/ha
+    out_annual_tile(ANNUAL_TILE_DENSITY         )  = dble(self%density * 10000)   ! * 10000 to convert in indivs/ha
     out_annual_tile(ANNUAL_TILE_DBH             )  = dble(self%DBH * 100)         ! * 100 to convert in cm
-    out_annual_tile(ANNUAL_TILE_DENSITY12       )  = dble(self%nindivs12 * 10000) ! * 10000 to convert in indivs/ha
+    out_annual_tile(ANNUAL_TILE_DENSITY12       )  = dble(self%density12 * 10000) ! * 10000 to convert in indivs/ha
     out_annual_tile(ANNUAL_TILE_DBH12           )  = dble(self%DBH12 * 100)       ! * 100 to convert in cm
     out_annual_tile(ANNUAL_TILE_QMD12           )  = dble(self%QMD12 * 100)       ! * 100 to convert in cm
     out_annual_tile(ANNUAL_TILE_NPP             )  = dble(self%annual_fluxes%NPP())
@@ -907,10 +906,10 @@ contains
 
         ! Carbon and Nitrogen from plants to soil pools
         loss_coarse = (orgpool(- cc%leafarea(), cc%leafarea()) * inputs%params_tile%LMAmin &
-                + cc%pwood + cc%psapw + cc%pleaf) * cc%nindivs
+                + cc%pwood + cc%psapw + cc%pleaf) * cc%density
 
         loss_fine = (orgpool(- cc%leafarea(), cc%leafarea()) * sp%LNbase &
-                + cc%plabl + cc%pseed + cc%proot) * cc%nindivs
+                + cc%plabl + cc%pseed + cc%proot) * cc%density
 
       end associate
 
@@ -989,7 +988,7 @@ contains
       new => self%new_cohort()
       cc => new%cohort
       cc%species   = INT(inputs%init_cohort(i)%init_cohort_species)
-      cc%nindivs   = inputs%init_cohort(i)%init_cohort_nindivs ! trees/m2
+      cc%density   = inputs%init_cohort(i)%init_cohort_density ! trees/m2
       cc%plabl%c12 = inputs%init_cohort(i)%init_cohort_nsc
       cc%psapw%c12 = inputs%init_cohort(i)%init_cohort_bsw
       cc%pwood%c12 = inputs%init_cohort(i)%init_cohort_bHW
@@ -1056,12 +1055,12 @@ contains
       cc => it%cohort
 
       ! organic pools
-      self%plabl = self%plabl + cc%plabl * cc%nindivs
-      self%pleaf = self%pleaf + cc%pleaf * cc%nindivs
-      self%proot = self%proot + cc%proot * cc%nindivs
-      self%psapw = self%psapw + cc%psapw * cc%nindivs
-      self%pwood = self%pwood + cc%pwood * cc%nindivs
-      self%pseed = self%pseed + cc%pseed * cc%nindivs
+      self%plabl = self%plabl + cc%plabl * cc%density
+      self%pleaf = self%pleaf + cc%pleaf * cc%density
+      self%proot = self%proot + cc%proot * cc%density
+      self%psapw = self%psapw + cc%psapw * cc%density
+      self%pwood = self%pwood + cc%pwood * cc%density
+      self%pseed = self%pseed + cc%pseed * cc%density
 
       it => it%next()
 
@@ -1082,9 +1081,9 @@ contains
 
     self%LAI          = 0.0
     self%CAI          = 0.0
-    self%nindivs      = 0.0
+    self%density      = 0.0
     self%DBH          = 0.0
-    self%nindivs12    = 0.0
+    self%density12    = 0.0
     self%DBH12        = 0.0
     self%QMD12        = 0.0
     self%MaxAge       = 0.0
@@ -1100,22 +1099,22 @@ contains
     do while (associated(it))
       cc => it%cohort
 
-      self%NPPL         = self%NPPL          + cc%NPPleaf    * cc%nindivs
-      self%NPPW         = self%NPPW          + cc%NPPwood    * cc%nindivs
-      self%m_turnover   = self%m_turnover    + cc%m_turnover * cc%nindivs
+      self%NPPL         = self%NPPL          + cc%NPPleaf    * cc%density
+      self%NPPW         = self%NPPW          + cc%NPPwood    * cc%density
+      self%m_turnover   = self%m_turnover    + cc%m_turnover * cc%density
 
-      self%CAI          = self%CAI      + cc%crownarea() * cc%nindivs
-      self%LAI          = self%LAI      + cc%leafarea()  * cc%nindivs
+      self%CAI          = self%CAI      + cc%crownarea() * cc%density
+      self%LAI          = self%LAI      + cc%leafarea()  * cc%density
 
       ! New tile outputs
       dbh = cc%dbh()
-      self%DBH          = self%DBH      + dbh * cc%nindivs
-      self%nindivs      = self%nindivs  + cc%nindivs
+      self%DBH          = self%DBH      + dbh * cc%density
+      self%density      = self%density  + cc%density
 
       if (dbh > 0.12) then
-        self%DBH12      = self%DBH12     + dbh * cc%nindivs
-        self%nindivs12  = self%nindivs12 + cc%nindivs
-        self%QMD12  = self%QMD12 + dbh ** 2 * cc%nindivs
+        self%DBH12      = self%DBH12     + dbh * cc%density
+        self%density12  = self%density12 + cc%density
+        self%QMD12  = self%QMD12 + dbh ** 2 * cc%density
       endif
 
       self%MaxAge    = MAX(cc%age, self%MaxAge)
@@ -1126,9 +1125,9 @@ contains
 
     enddo
 
-    if (self%nindivs > 0.0) self%DBH   = self%DBH / self%nindivs
-    if (self%nindivs12 > 0.0) self%DBH12 = self%DBH12 / self%nindivs12
-    if (self%nindivs12 > 0.0) self%QMD12   = sqrt(self%QMD12 / self%nindivs12)
+    if (self%density > 0.0) self%DBH   = self%DBH / self%density
+    if (self%density12 > 0.0) self%DBH12 = self%DBH12 / self%density12
+    if (self%density12 > 0.0) self%QMD12   = sqrt(self%QMD12 / self%density12)
 
   end subroutine aggregate_cohorts
 

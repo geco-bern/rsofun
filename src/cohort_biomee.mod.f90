@@ -33,7 +33,7 @@ module md_cohort
     integer :: species    = 1            ! vegetation species
 
     !===== Population structure
-    real :: nindivs       = 0.0          ! density of vegetation, tree/m2
+    real :: density       = 0.0          ! density of vegetation, tree/m2
     real :: deathrate     = 0.0          ! Deathrate (0 to 1) of the original cohort. Only set for cohorts in the killed list.
     real :: age           = 0.0          ! age of cohort, years
     real :: topyear       = 0.0          ! number of years the cohort is in top layer
@@ -271,7 +271,7 @@ contains
     real :: res
     class(cohort_type), intent(in) :: self
 
-    res = self%nindivs * self%crownarea()
+    res = self%density * self%crownarea()
   end function layerfrac
 
   !----------------------------------------------------------------
@@ -288,13 +288,13 @@ contains
     type(cohort_type), intent(in) :: other
     real :: x1, x2 ! normalized relative weights
 
-    if (other%nindivs > 0.0 .or. self%nindivs > 0.0) then
+    if (other%density > 0.0 .or. self%density > 0.0) then
 
-      x1 = other%nindivs / (other%nindivs + self%nindivs)
-      x2 = self%nindivs / (other%nindivs + self%nindivs)
+      x1 = other%density / (other%density + self%density)
+      x2 = self%density / (other%density + self%density)
 
       ! update number of individuals in merged cohort
-      self%nindivs = other%nindivs + self%nindivs
+      self%density = other%density + self%density
 
       ! Average pools
       self%pleaf = other%pleaf * x1 + self%pleaf * x2

@@ -106,9 +106,9 @@ contains
     do while (associated(it))
       cc => it%cohort
       i = i + 1
-      LAIlayer(cc%layer) = LAIlayer(cc%layer) + cc%leafarea() * cc%nindivs / (1.0 - f_gap)
+      LAIlayer(cc%layer) = LAIlayer(cc%layer) + cc%leafarea() * cc%density / (1.0 - f_gap)
       fapar_tree(i) = 1.0 - exp(-kappa * cc%leafarea() / cc%crownarea())   ! at individual-level: cc%leafarea() represents leaf area index within the crown
-      fapar_layer(cc%layer) = fapar_layer(cc%layer) + fapar_tree(i) * cc%crownarea() * cc%nindivs
+      fapar_layer(cc%layer) = fapar_layer(cc%layer) + fapar_tree(i) * cc%crownarea() * cc%density
       it => it%next()
     end do
 

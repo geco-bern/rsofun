@@ -55,7 +55,7 @@ contains
              cc => it%cohort
             associate ( sp => cc%sp() )
             cc%WupL(i) = cc%rootareaL(i)*sp%Kw_root*dpsiSR(i) * (inputs%step_seconds*h2o_molmass*1e-3) ! kg H2O tree-1 step-1
-            totWsup(i) = totWsup(i) + cc%WupL(i) * cc%nindivs ! water uptake per layer by all cohorts
+            totWsup(i) = totWsup(i) + cc%WupL(i) * cc%density ! water uptake per layer by all cohorts
             end associate
             it => it%next()
          end do
@@ -117,11 +117,11 @@ contains
           ! deduct from soil water pool
           wsupply = cc%W_supply()
           if(wsupply > 0.0) then
-              WaterBudgetL(:) = WaterBudgetL(:) - cc%WupL(:)/wsupply * cc%fast_fluxes%trsp * cc%nindivs
+              WaterBudgetL(:) = WaterBudgetL(:) - cc%WupL(:)/wsupply * cc%fast_fluxes%trsp * cc%density
           endif
 
           ! the surface of leaves per m2 of ground/tile
-          LAI = LAI + cc%leafarea() * cc%nindivs
+          LAI = LAI + cc%leafarea() * cc%density
 
           it => it%next()
       end do ! all cohorts

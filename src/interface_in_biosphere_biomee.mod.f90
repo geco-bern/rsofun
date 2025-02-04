@@ -26,7 +26,6 @@ module md_interface_in_biomee
   integer, public, parameter :: nvars_init_soil      = 4
   integer, public, parameter :: nvars_init_cohorts   = 9
   integer, public, parameter :: nvars_params_species = 55
-  integer, public, parameter :: nvars_init_lu        = 1
 
   type params_siml_biomee
 
@@ -159,7 +158,7 @@ module md_interface_in_biomee
 
   type init_cohort_biomee
     integer :: init_cohort_species
-    real :: init_cohort_nindivs
+    real :: init_cohort_density
     real :: init_cohort_bl
     real :: init_cohort_br
     real :: init_cohort_bsw
@@ -318,7 +317,7 @@ contains
     real(kind=c_double), dimension(nvars_init_cohorts), intent(in) :: init_cohort
 
     self%init_cohort_species = int( init_cohort(1))
-    self%init_cohort_nindivs = real(init_cohort(2))
+    self%init_cohort_density = real(init_cohort(2))
     self%init_cohort_bl      = real(init_cohort(3))
     self%init_cohort_br      = real(init_cohort(4))
     self%init_cohort_bsw     = real(init_cohort(5))

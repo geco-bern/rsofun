@@ -7,29 +7,31 @@ module md_luluc
     private
     public :: update_lu_state, populate_outarray_annual_land_use
 
+    integer, public, parameter :: nvars_init_lu        = 1
+    integer, public, parameter :: nvars_lu_out         = 2
+
     !type luluc_state
     !    real :: fraction
     !end type luluc_state
 
     contains
 
-    subroutine update_lu_state(lu_state, forcing, n_lu)
+    subroutine update_lu_state(lu_state, forcing)
     !////////////////////////////////////////////////////////////////
     ! Update the LU fractions 'lu_state' by applying the LU transitions
     ! defined in the square matrix 'forcing'.
     !----------------------------------------------------------------
 
         ! Arguments
-        integer, intent(in) :: n_lu
-        real, intent(in), dimension(n_lu, n_lu) :: forcing
-        real, intent(inout), dimension(n_lu) :: lu_state
+        real, intent(in), dimension(:, :) :: forcing ! a n_lu * n_lu matrix
+        real, intent(inout), dimension(:) :: lu_state
 
         ! Local variables
         integer :: i, j
         real :: delta
 
-        do i = 1, n_lu
-            do j = 1, n_lu
+        do i = 1, size(lu_state)
+            do j = 1, size(lu_state)
                 delta = forcing(i, j)
                 lu_state(i) = lu_state(i) - delta
                 lu_state(j) = lu_state(j) + delta
