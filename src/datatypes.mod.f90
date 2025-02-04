@@ -879,7 +879,7 @@ contains
     out_annual_tile%c_turnover_time = vegn%pwood%c%c12 / vegn%NPPW
 
     ! Rebalance N (to compensate for the adjunction in vegn_N_uptake)
-    if (myinterface%params_siml%do_closedN_run) call Recover_N_balance(vegn)
+    if (myinterface%params_siml%do_closedN_run) vegn%totN = vegn%initialN0
 
   end subroutine annual_diagnostics
 
@@ -929,21 +929,5 @@ contains
     out_annual_tile%m_turnover      = vegn%m_turnover
 
   end subroutine annual_diagnostics_post_mortality
-
-  subroutine Recover_N_balance(vegn)
-    !////////////////////////////////////////////////////////////////////////
-    ! Update psoil_sl in order to keep the total N constant
-    ! Note: this leads to negative N pools...
-    !------------------------------------------------------------------------
-    type(vegn_tile_type), intent(inout) :: vegn
-    real :: delta, scaling_factor
-
-    delta = vegn%totN - vegn%initialN0
-
-    if (abs(delta) > 1e-6) then
-      vegn%psoil_sl%n%n14 = vegn%psoil_sl%n%n14 - delta
-      vegn%totN = vegn%initialN0
-    endif
-  end subroutine Recover_N_balance
 
 end module datatypes
