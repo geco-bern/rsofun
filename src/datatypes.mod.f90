@@ -932,7 +932,8 @@ contains
 
   subroutine Recover_N_balance(vegn)
     !////////////////////////////////////////////////////////////////////////
-    ! We scale the N pools to contrain the yearly N (soil + plant) to be constant.
+    ! Update psoil_sl in order to keep the total N constant
+    ! Note: this leads to negative N pools...
     !------------------------------------------------------------------------
     type(vegn_tile_type), intent(inout) :: vegn
     real :: delta, scaling_factor
@@ -940,18 +941,7 @@ contains
     delta = vegn%totN - vegn%initialN0
 
     if (abs(delta) > 1e-6) then
-      scaling_factor = 1 - delta / vegn%totN
-
-      vegn%psoil_sl%n%n14 = vegn%psoil_sl%n%n14 * scaling_factor
-      vegn%psoil_fs%n%n14 = vegn%psoil_fs%n%n14 * scaling_factor
-      vegn%pmicr%n%n14    = vegn%pmicr%n%n14    * scaling_factor
-      vegn%ninorg%n14     = vegn%ninorg%n14     * scaling_factor
-      vegn%plabl%n%n14    = vegn%plabl%n%n14    * scaling_factor
-      vegn%pseed%n%n14    = vegn%pseed%n%n14    * scaling_factor
-      vegn%pleaf%n%n14    = vegn%pleaf%n%n14    * scaling_factor
-      vegn%proot%n%n14    = vegn%proot%n%n14    * scaling_factor
-      vegn%psapw%n%n14    = vegn%psapw%n%n14    * scaling_factor
-      vegn%pwood%n%n14    = vegn%pwood%n%n14    * scaling_factor
+      vegn%psoil_sl%n%n14 = vegn%psoil_sl%n%n14 - delta
       vegn%totN = vegn%initialN0
     endif
   end subroutine Recover_N_balance
