@@ -85,6 +85,7 @@ contains
 
     ! Local variables
     type(vegn_tile_type), dimension(n_lu) :: vegn_tiles ! One tile per LU
+    type(tracking_type),  dimension(n_lu) :: tracking   ! One per LU
     real :: lu_state(n_lu) ! Current LU fractions
     real(kind=c_double) :: nan
 
@@ -152,6 +153,7 @@ contains
               state, &
               climate, &
               vegn_tiles(lu_idx), &
+              tracking(lu_idx), &
               output_annual_tile(state%year, :, lu_idx) &
             )
           else
@@ -160,6 +162,7 @@ contains
                     state, &
                     climate, &
                     vegn_tiles(lu_idx), &
+                    tracking(lu_idx), &
                     output_annual_tile(state%year, :, lu_idx), &
                     output_daily_tile(idx_daily_start:idx_daily_end, :, lu_idx), &
                     output_annual_cohorts(:, idx,:, lu_idx) &

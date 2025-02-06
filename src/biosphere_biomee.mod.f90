@@ -22,6 +22,7 @@ contains
     state, &
     climate, &
     vegn, &
+    tracking, &
     output_annual_tile, &
     output_daily_tile, &
     output_annual_cohorts &
@@ -31,12 +32,14 @@ contains
     !----------------------------------------------------------------
     use md_interface_in_biomee, only: inputs
     use md_sofunutils, only: aggregate
+    use md_forcing_biomee, only: tracking_type
     use, intrinsic :: iso_c_binding, only: c_double
 
     ! Input vairables
     type(outtype_steering), intent(in)  :: state
-    type(climate_type), dimension(:), allocatable :: climate
+    type(climate_type), intent(in), dimension(ndayyear) :: climate
     type(vegn_tile_type), intent(inout) :: vegn
+    type(tracking_type), intent(inout) :: tracking
 
     ! Return variables
     real(kind=c_double), dimension(nvars_annual_tile), optional, intent(out) :: output_annual_tile
@@ -74,13 +77,15 @@ contains
 
       ! Compute daily air and soil temperature
       vegn%tc_daily = daily_temp(doy)
-      !vegn%tc_soil  = air_to_soil_temp(vegn%thetaS(), &
-      !        daily_temp - kTkelvin, &
-      !        doy, &
-      !        state%init, &
-      !        state%finalize &
-      !        )
-      vegn%tc_soil = 10
+      vegn%tc_soil  = air_to_soil_temp( &
+              vegn%thetaS(), &
+              daily_temp - kTkelvin, &
+              doy, &
+              state%init, &
+              tracking%dtemp_pvy, &
+              tracking%wscal_pvy, &
+              tracking%wscal_alldays &
+      )
 
       !----------------------------------------------------------------
       ! FAST TIME STEP
