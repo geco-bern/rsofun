@@ -50,6 +50,9 @@ contains
 
     wscal_alldays(:,doy) = soil(:)%phy%wscal
 
+    PRINT *, wscal_alldays(1,:)
+    STOP
+
     avetemp = running( dtemp, doy, ndayyear, "mean", dtemp_pvy(:) )
 
     ! get average temperature of the preceeding N days in month (30 days)
@@ -122,7 +125,7 @@ contains
 
   end subroutine soiltemp
 
-  real function air_to_soil_temp( thetaS, dtemp, doy, init, dtemp_pvy, wscal_pvy, wscal_alldays)
+  real function air_to_soil_temp( thetaS, dtemp, doy, dtemp_pvy, wscal_pvy, wscal_alldays)
     !/////////////////////////////////////////////////////////////////////////
     ! Calculates soil temperature (deg C) based on air temperature (deg C).
     ! Same as soiltemp but simlified to not use global variables
@@ -135,9 +138,8 @@ contains
     real, intent(in) :: thetaS
     real, dimension(ndayyear), intent(in)      :: dtemp              ! daily temperature (deg C)
     integer, intent(in)                        :: doy                ! current day of year
-    logical, intent(in)                        :: init               ! First year
-    real, dimension(ndayyear), intent(inout)   :: dtemp_pvy          ! daily temperature of previous year (deg C)
-    real, dimension(ndayyear), intent(inout)   :: wscal_pvy          ! daily Cramer-Prentice-Alpha of previous year (unitless)
+    real, dimension(:), allocatable, intent(inout)   :: dtemp_pvy    ! daily temperature of previous year (deg C)
+    real, dimension(:), allocatable, intent(inout)   :: wscal_pvy    ! daily Cramer-Prentice-Alpha of previous year (unitless)
     real, dimension(ndayyear), intent(inout)   :: wscal_alldays
 
     integer :: window_length
@@ -153,9 +155,10 @@ contains
     call initglobal_soil_params( soil_params )
 
     ! If first year, use this years air temperature (available for all days in this year)
-    if ( init .and. doy == 1 ) then
+    if (.not. allocated(dtemp_pvy)) then
       ! Note: in the first year, we use this year as previous year,
       ! meaning that the end of this year is used is if it was the end of last year.
+      allocate(dtemp_pvy(ndayyear))
       dtemp_pvy(:) = dtemp(:)
     end if
 
@@ -175,7 +178,7 @@ contains
     !-------------------------------------------------------------------------
 
     ! On the first year, we do not have wscal_pvy since it is not a forcing, but an output.
-    if (init) then
+    if (.not. allocated(wscal_pvy)) then
       meanw1  = running( wscal_alldays(:), doy, ndayyear, "mean")
     else
       meanw1  = running( wscal_alldays(:), doy, ndayyear, "mean", wscal_pvy(:))
@@ -216,10 +219,12 @@ contains
 
     end if
 
-    ! save temperature for next year
+    ! save temperature and wscal for next year
     if (doy == ndayyear) then
       dtemp_pvy(:) = dtemp(:)
-
+      if (.not. allocated(wscal_pvy)) then
+        allocate(wscal_pvy(ndayyear))
+      end if
       wscal_pvy(:) = wscal_alldays(:)
     end if
 

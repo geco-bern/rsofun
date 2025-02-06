@@ -80,6 +80,7 @@ module md_luluc
             if (lu_state(j) < eps) then
                 ! If the fraction is almost zero (or negative), we kill the tile
                 lu_state(j) = 0.0
+                call vegn%shut_down()
                 cycle
             end if
 

@@ -85,7 +85,6 @@ contains
 
     ! Local variables
     type(vegn_tile_type), dimension(n_lu) :: vegn_tiles ! One tile per LU
-    type(tracking_type),  dimension(n_lu) :: tracking   ! One per LU
     real :: lu_state(n_lu) ! Current LU fractions
     real(kind=c_double) :: nan
 
@@ -113,6 +112,11 @@ contains
     !----------------------------------------------------------------
 
     call inputs%populate(params_species, init_cohort, init_soil, params_tile, params_siml, site_info)
+
+    ! Initialize tiles
+    do lu_idx = 1, n_lu
+      if (lu_state(lu_idx) > 0.0) call vegn_tiles(lu_idx)%initialize_vegn_tile()
+    end do
 
     !----------------------------------------------------------------
     ! Run simulation
@@ -142,18 +146,17 @@ contains
 
       ! For each LU (land unit) whose fraction is > 0
       do lu_idx = 1, n_lu
-        if (lu_state(lu_idx) > 0) then
+        if (lu_state(lu_idx) > 0.0) then
 
           !----------------------------------------------------------------
           ! Call biosphere (wrapper for all modules, contains time loops)
           !----------------------------------------------------------------
           if (state%spinup) then
-            ! If spinup, we do not pass the dailay and cohort output arrays
+            ! If spinup, we do not pass the daily and cohort output arrays
             call biosphere_annual( &
               state, &
               climate, &
               vegn_tiles(lu_idx), &
-              tracking(lu_idx), &
               output_annual_tile(state%year, :, lu_idx) &
             )
           else
@@ -162,7 +165,6 @@ contains
                     state, &
                     climate, &
                     vegn_tiles(lu_idx), &
-                    tracking(lu_idx), &
                     output_annual_tile(state%year, :, lu_idx), &
                     output_daily_tile(idx_daily_start:idx_daily_end, :, lu_idx), &
                     output_annual_cohorts(:, idx,:, lu_idx) &

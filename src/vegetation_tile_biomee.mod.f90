@@ -159,6 +159,10 @@ module vegetation_tile_biomee
 
     ! Scrap variable used by gpp()
     type(dampended_forcing_type) :: dampended_forcing
+    ! Scrap variables used to compute tsoil
+    real, dimension(:), allocatable   :: dtemp_pvy          ! daily temperature of previous year (deg C)
+    real, dimension(:), allocatable   :: wscal_pvy          ! daily Cramer-Prentice-Alpha of previous year (unitless)
+    real, dimension(ndayyear)         :: wscal_alldays
 
   contains
 
@@ -354,6 +358,8 @@ contains
 
     call self%cohort_list%destroy_all()
     call self%killed_fraction_list%destroy_all()
+    if (allocated(self%dtemp_pvy)) deallocate(self%dtemp_pvy)
+    if (allocated(self%wscal_pvy)) deallocate(self%wscal_pvy)
   end subroutine shut_down
 
   pure function get_height(item) result(res)

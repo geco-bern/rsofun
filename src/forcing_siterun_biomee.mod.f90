@@ -8,7 +8,7 @@ module md_forcing_biomee
   implicit none
 
   private
-  public climate_type, tracking_type
+  public climate_type
 
   public getclimate
 
@@ -26,15 +26,6 @@ module md_forcing_biomee
     real    :: CO2           ! mol CO2/mol dry air
     real    :: RH            ! relative humidity (fraction < 1, computed from vpd and Tair)
   end type climate_type
-
-  type :: tracking_type
-    !////////////////////////////////////////////////////////////////
-    ! Type used for keeping track of averaged quantities (air temp and wscal)
-    !----------------------------------------------------------------
-    real, dimension(ndayyear)   :: dtemp_pvy          ! daily temperature of previous year (deg C)
-    real, dimension(ndayyear)   :: wscal_pvy          ! daily Cramer-Prentice-Alpha of previous year (unitless)
-    real, dimension(ndayyear)   :: wscal_alldays
-  end type tracking_type
 
 contains
 

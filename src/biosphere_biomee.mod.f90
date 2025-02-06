@@ -22,7 +22,6 @@ contains
     state, &
     climate, &
     vegn, &
-    tracking, &
     output_annual_tile, &
     output_daily_tile, &
     output_annual_cohorts &
@@ -32,14 +31,12 @@ contains
     !----------------------------------------------------------------
     use md_interface_in_biomee, only: inputs
     use md_sofunutils, only: aggregate
-    use md_forcing_biomee, only: tracking_type
     use, intrinsic :: iso_c_binding, only: c_double
 
     ! Input vairables
     type(outtype_steering), intent(in)  :: state
     type(climate_type), intent(in), dimension(ndayyear) :: climate
     type(vegn_tile_type), intent(inout) :: vegn
-    type(tracking_type), intent(inout) :: tracking
 
     ! Return variables
     real(kind=c_double), dimension(nvars_annual_tile), optional, intent(out) :: output_annual_tile
@@ -54,19 +51,13 @@ contains
     !----------------------------------------------------------------
     ! INITIALISATIONS
     !----------------------------------------------------------------
-    if (state%init) then ! is true for the first year
-
-      call vegn%initialize_vegn_tile()
-
-    endif
+    ! Compute averaged daily temperatures
+    call aggregate(daily_temp, climate(:)%Tair, inputs%steps_per_day)
 
     !===== Reset diagnostics and counters
     simu_steps = 0 ! fast loop
     doy = 0
     call vegn%zero_diagnostics()
-
-    ! Compute averaged daily temperatures
-    call aggregate(daily_temp, climate(:)%Tair, inputs%steps_per_day)
 
     !----------------------------------------------------------------
     ! LOOP THROUGH DAYS
@@ -81,10 +72,9 @@ contains
               vegn%thetaS(), &
               daily_temp - kTkelvin, &
               doy, &
-              state%init, &
-              tracking%dtemp_pvy, &
-              tracking%wscal_pvy, &
-              tracking%wscal_alldays &
+              vegn%dtemp_pvy, &
+              vegn%wscal_pvy, &
+              vegn%wscal_alldays &
       )
 
       !----------------------------------------------------------------
