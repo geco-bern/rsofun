@@ -70,7 +70,7 @@ module vegetation_tile_biomee
 
     !========================= Cohort aggreation ===========================!
     ! Attention: variables aggregated from cohorts are only usable after having run aggregate_cohorts()
-    real, private    :: density                            ! density (tree/m2)
+    real             :: density                            ! density (tree/m2)
     real, private    :: LAI                                ! leaf area index (surface of leaves per m2 of ground/tile)
     real, private    :: CAI                                ! crown area index (surface of the projected crown mer m2 of ground/tile)
     real, private    :: DBH
@@ -82,12 +82,12 @@ module vegetation_tile_biomee
     real, private    :: MaxDBH
 
     !===== Organic pools (cohort aggregation), kg m-2
-    type(orgpool), private :: pleaf                       ! leaf biomass
-    type(orgpool), private :: proot                       ! root biomass
-    type(orgpool), private :: psapw                       ! sapwood biomass
-    type(orgpool), private :: pwood                       ! heartwood (non-living) biomass
-    type(orgpool), private :: pseed                       ! biomass put aside for future progeny
-    type(orgpool), private :: plabl                       ! labile pool, temporary storage of N and C
+    type(orgpool) :: pleaf                    ! leaf biomass
+    type(orgpool) :: proot                    ! root biomass
+    type(orgpool) :: psapw                    ! sapwood biomass
+    type(orgpool) :: pwood                    ! heartwood (non-living) biomass
+    type(orgpool) :: pseed                    ! biomass put aside for future progeny
+    type(orgpool) :: plabl                    ! labile pool, temporary storage of N and C
 
     !===== C fluxes (cohort aggregation), kg yr-1 m-2
     real, private    :: NPPL                  ! NPP leaf
@@ -203,6 +203,7 @@ module vegetation_tile_biomee
 
     procedure plant2soil
     procedure initialize_vegn_tile
+    procedure :: aggregate_cohorts
 
     !========= Private helper methods
 
@@ -210,7 +211,6 @@ module vegetation_tile_biomee
     procedure, private :: merge_cohorts
     procedure, private :: split_cohort
     procedure, private :: aggregate_pools
-    procedure, private :: aggregate_cohorts
     procedure, private :: zero_daily_diagnostics
     procedure, private :: kill_cohort
 

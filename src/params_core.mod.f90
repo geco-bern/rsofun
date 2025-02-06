@@ -25,7 +25,7 @@ module md_params_core
   integer, parameter :: maxgrid = 1              ! number of spatial gridcells (dummy dimension for later code extension)
   integer, parameter :: nbucket = 2              ! number of buckets for soil water model
   integer, parameter :: npft = 1                 ! number of PFTs !3
-  integer, parameter :: nlu = 1                  ! number of land units (tiles)
+  integer, parameter :: nlu = 1                  ! number of land units (tiles) !! ATTENTION: only for pmodel
   integer, parameter :: lunat = 1                ! ID of natural land unit
   integer, parameter :: lucrop = 2               ! ID of crop land unit
 

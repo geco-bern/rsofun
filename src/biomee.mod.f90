@@ -171,11 +171,11 @@ contains
       end do
 
       !----------------------------------------------------------------
-      ! Update LULUC state and fill output
+      ! Update LULUC state and tiles, and fill output
       !----------------------------------------------------------------
       if ((.not.state%spinup) .and. (state%forcingyear_idx <= n_lu_tr_years)) then
 
-        call update_lu_state(lu_state, real(luc_forcing(:,:,state%forcingyear_idx)))
+        call update_lu_state(lu_state, real(luc_forcing(:,:,state%forcingyear_idx)), vegn_tiles)
 
       end if
       call populate_outarray_annual_land_use(state%year, lu_state, output_annual_luluc_tile(state%year,:,:))

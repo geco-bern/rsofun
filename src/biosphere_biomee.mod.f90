@@ -74,12 +74,13 @@ contains
 
       ! Compute daily air and soil temperature
       vegn%tc_daily = daily_temp(doy)
-      vegn%tc_soil  = air_to_soil_temp(vegn%thetaS(), &
-              daily_temp - kTkelvin, &
-              doy, &
-              state%init, &
-              state%finalize &
-              )
+      !vegn%tc_soil  = air_to_soil_temp(vegn%thetaS(), &
+      !        daily_temp - kTkelvin, &
+      !        doy, &
+      !        state%init, &
+      !        state%finalize &
+      !        )
+      vegn%tc_soil = 10
 
       !----------------------------------------------------------------
       ! FAST TIME STEP
