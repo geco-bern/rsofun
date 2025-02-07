@@ -85,7 +85,8 @@ morrisOut <- sensitivity::morris(
   design = list(type = "oat", levels = 20, grid.jump = 3),
   binf = par_cal_min,
   bsup = par_cal_max,
-  scale = TRUE)
+  scale = TRUE
+  )
 
 # Summarise the morris output into statistics
 morrisOut.df <- data.frame(

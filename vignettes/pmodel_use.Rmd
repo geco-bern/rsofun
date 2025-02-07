@@ -1,6 +1,6 @@
 ---
 title: "P-model usage"
-author: "Koen Hufkens, Josefa Arán"
+author: "Koen Hufkens, Josefa Arán, Benjamin Stocker"
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{P-model usage}
@@ -58,21 +58,22 @@ To get your raw data into the structure used within `rsofun`, please see R packa
 With all data prepared we can run the P-model using `runread_pmodel_f()`. This function takes the nested data structure and runs the model site by site, returning nested model output results matching the input drivers.
 
 ```{r}
-# define model parameter values from previous
-# work
+# Define model parameter values.
+# Correspond to maximum a posteriori estimates from Bayesian calibration in
+# analysis/02-bayesian-calibration.R.
 params_modl <- list(
-    kphio              = 0.04998,    # setup ORG in Stocker et al. 2020 GMD
-    kphio_par_a        = 0.0,        # set to zero to disable temperature-dependence of kphio
-    kphio_par_b        = 1.0,
-    soilm_thetastar    = 0.6 * 240,  # to recover old setup with soil moisture stress
-    soilm_betao        = 0.0,
-    beta_unitcostratio = 146.0,
-    rd_to_vcmax        = 0.014,      # value from Atkin et al. 2015 for C3 herbaceous
-    tau_acclim         = 30.0,
-    kc_jmax            = 0.41
+  kphio              = 5.000000e-02, # chosen to be too high for demonstration
+  kphio_par_a        =-2.289344e-03,
+  kphio_par_b        = 1.525094e+01,
+  soilm_thetastar    = 1.577507e+02,
+  soilm_betao        = 1.169702e-04,
+  beta_unitcostratio = 146.0,
+  rd_to_vcmax        = 0.014,
+  tau_acclim         = 20.0,
+  kc_jmax            = 0.41
   )
 
-# run the model for these parameters
+# Run the model for these parameters.
 output <- rsofun::runread_pmodel_f(
   p_model_drivers,
   par = params_modl
@@ -90,40 +91,49 @@ library(tidyr)
 library(ggplot2)
 
 # Create data.frame for plotting
-df_gpp_plot <- rbind(
-  output |>
-    filter(sitename == "FR-Pue") |>
-    unnest(data) |>
-    select(date, gpp) |>
-    mutate(type = "P-model output"),
-  p_model_validation |>
-    filter(sitename == "FR-Pue") |>
-    unnest(data) |>
-    select(date, gpp) |>
-    mutate(type = "Observed")
-)
-df_gpp_plot$type <- factor(df_gpp_plot$type,
-                           levels = c('P-model output',
-                                      'Observed'))
+df_gpp_plot <- output |>
+  tidyr::unnest(data) |>
+  dplyr::select(date, gpp_mod = gpp) |>
+  dplyr::left_join(
+    p_model_validation |>
+      tidyr::unnest(data) |>
+      dplyr::select(date, gpp_obs = gpp),
+    by = "date"
+    ) |> 
+
+  # Plot only first year
+  dplyr::slice(1:365)
 
 # Plot GPP
 ggplot(data = df_gpp_plot) +
-  geom_line(
-    aes(x = date,
-        y = gpp,
-        color = type),
-    alpha = 0.7
+  geom_point(
+    aes(
+      x = date,
+      y = gpp_obs,
+      color = "Observations"
+    ),
   ) +
-  scale_color_manual(values = c(
-    'P-model output'='grey70',
-    'Observed'='black')) +
+  geom_line(
+    aes(
+      x = date,
+      y = gpp_mod,
+      color = "P-model"
+    )
+  ) +
   theme_classic() +
-  theme(panel.grid.major.y = element_line()) +
+  theme(
+    panel.grid.major.y = element_line(),
+    legend.position = "bottom"
+    ) +
   labs(
     x = 'Date',
-    y = expression(paste("GPP (g C m"^-2, "s"^-1, ")")),
-    colour = ""
-  )
+    y = expression(paste("GPP (g C m"^-2, "s"^-1, ")"))
+  ) +
+  scale_color_manual(
+    NULL,
+    breaks = c("Observations",
+               "P-model"),
+    values = c("black", "tomato"))
 ```
 
 ## Calibrating model parameters
@@ -132,10 +142,9 @@ To optimize new parameters based upon driver data and a validation dataset we mu
 
 ```{r}
 settings <- list(
-  method              = "GenSA",
-  metric              = cost_rmse_pmodel,
-  control = list(
-    maxit = 100),
+  method = "GenSA",
+  metric = cost_rmse_pmodel,
+  control = list(maxit = 100),
   par = list(
     kphio = list(lower=0.02, upper=0.2, init = 0.05)
     )
@@ -151,20 +160,20 @@ With all settings defined the optimization function `calib_sofun()` can be calle
 ```{r eval=FALSE}
 # calibrate the model and optimize free parameters
 pars <- calib_sofun(
-    drivers = p_model_drivers,  
-    obs = p_model_validation,
-    settings = settings,
-    # extra arguments passed to the cost function:
-    targets = "gpp",             # define target variable GPP
-    par_fixed = params_modl[-1]  # fix non-calibrated parameters to previous 
-                                 # values, removing kphio
+  drivers = p_model_drivers,  
+  obs = p_model_validation,
+  settings = settings,
+  # extra arguments passed to the cost function:
+  targets = "gpp",             # define target variable GPP
+  par_fixed = params_modl[-1]  # fix non-calibrated parameters to previous 
+                               # values, removing kphio
   )
 ```
 
 ```{r simulate_calibration_run, include = FALSE}
 # fake variable as optimization isn't run
 pars <- list()
-pars$par["kphio"] <- 0.03580962
+pars$par["kphio"] <- 0.04095957
 ```
 When successful the optimized parameters can be used to run subsequent modelling efforts, in this case slightly improving the model fit over a more global parameter set.
 
@@ -179,38 +188,52 @@ output_new <- rsofun::runread_pmodel_f(
   )
 
 # Update data.frame for plotting
-df_gpp_plot <- rbind(
-  df_gpp_plot,
-  output_new |>
-    filter(sitename == "FR-Pue") |>
-    unnest(data) |>
-    select(date, gpp) |>
-    mutate(type = "P-model output (calibrated)")
-)
-df_gpp_plot$type <- factor(df_gpp_plot$type,
-                           levels = c('P-model output',
-                                      'P-model output (calibrated)',
-                                      'Observed'))
+df_gpp_plot <- df_gpp_plot |> 
+  left_join(
+    output_new |>
+      unnest(data) |>
+      select(date, gpp_calib = gpp),
+    by = "date"
+  )
 
 # Plot GPP
 ggplot(data = df_gpp_plot) +
-  geom_line(
-    aes(x = date,
-        y = gpp,
-        color = type),
-    alpha = 0.7
+  geom_point(
+    aes(
+      x = date,
+      y = gpp_obs,
+      color = "Observations"
+    ),
   ) +
-  scale_color_manual(values = c(
-    'P-model output'='grey70',
-    'P-model output (calibrated)'='grey40',
-    'Observed'='black')) +
+  geom_line(
+    aes(
+      x = date,
+      y = gpp_mod,
+      color = "P-model (uncalibrated)"
+    )
+  ) +
+  geom_line(
+    aes(
+      x = date,
+      y = gpp_calib,
+      color = "P-model (calibrated)"
+    )
+  ) +
   theme_classic() +
-  theme(panel.grid.major.y = element_line()) +
+  theme(
+    panel.grid.major.y = element_line(),
+    legend.position = "bottom"
+    ) +
   labs(
     x = 'Date',
-    y = expression(paste("GPP (g C m"^-2, "s"^-1, ")")),
-    colour = ""
-  )
+    y = expression(paste("GPP (g C m"^-2, "s"^-1, ")"))
+  ) +
+  scale_color_manual(
+    NULL,
+    breaks = c("Observations",
+               "P-model (uncalibrated)",
+               "P-model (calibrated)"),
+    values = c("black", "grey", "tomato"))
 ```
 
 For details on the optimization settings we refer to the manuals of [GenSA](https://cran.r-project.org/package=GenSA) and [BayesianTools](https://github.com/florianhartig/BayesianTools).
