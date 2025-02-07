@@ -36,9 +36,6 @@ contains
     ! local variables
     type(cohort_type), pointer :: cc
     type(cohort_item), pointer :: it
-    real :: tsoil_K
-
-    tsoil_k = vegn%tc_soil + kTkelvin
 
     ! Photosynsthesis
     call gpp( forcing, vegn )
@@ -67,10 +64,10 @@ contains
     end do ! all cohorts
     
     ! update soil C and N
-    call SOMdecomposition( vegn, tsoil_k )
+    call SOMdecomposition(vegn)
     
     ! Nitrogen uptake
-    call vegn_N_uptake( vegn, tsoil_k )
+    call vegn_N_uptake(vegn)
     
   end subroutine vegn_CNW_budget
 
@@ -935,13 +932,12 @@ contains
   end subroutine vegn_tissue_turnover
 
   
-  subroutine vegn_N_uptake(vegn, tsoil)
+  subroutine vegn_N_uptake(vegn)
     !//////////////////////////////////////////////////////////////////////
     ! Mineral N uptake from the soil
     ! Code from BiomeE-Allocation
     !----------------------------------------------------------------------
     type(vegn_tile_type), intent(inout) :: vegn
-    real, intent(in) :: tsoil ! average temperature of soil, deg K
 
     ! local variables
     type(cohort_type), pointer :: cc
@@ -953,6 +949,9 @@ contains
     real    :: totNup    ! kgN m-2
     real    :: avgNup
     real    :: rho_N_up, N_roots   ! actual N uptake rate
+    real :: tsoil ! Soil temp in K
+
+    tsoil = vegn%tc_soil + kTkelvin
 
     ! We artificially refill N inorg
     if (inputs%params_siml%do_closedN_run) vegn%inorg%n14 = inputs%init_soil%init_Nmineral
@@ -1010,7 +1009,7 @@ contains
   end subroutine vegn_N_uptake
 
 
-  subroutine SOMdecomposition(vegn, tsoil)
+  subroutine SOMdecomposition(vegn)
     !//////////////////////////////////////////////////////////////////////
     ! Soil organic matter decomposition and N mineralization
     !
@@ -1021,7 +1020,7 @@ contains
     ! carbon use efficiency 
     !----------------------------------------------------------------------
     type(vegn_tile_type), intent(inout) :: vegn
-    real                , intent(in)    :: tsoil ! soil temperature, deg K
+
     real, parameter :: CUE0=0.4  ! default microbial CUE
     real, parameter :: phoMicrobial = 2.5 ! turnover rate of microbes (yr-1)
     real, parameter :: CNm = 10.0  ! Microbial C/N ratio
@@ -1036,7 +1035,10 @@ contains
     real :: fast_N_free 
     real :: slow_N_free 
     real :: CNfast, CNslow
-    real :: A  ! decomp rate reduction due to moisture and temperature    
+    real :: A  ! decomp rate reduction due to moisture and temperature
+    real :: tsoil ! Soil temp in K
+
+    tsoil = vegn%tc_soil + kTkelvin
 
     ! runoff = vegn%runoff
   

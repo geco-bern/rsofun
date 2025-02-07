@@ -50,9 +50,6 @@ contains
 
     wscal_alldays(:,doy) = soil(:)%phy%wscal
 
-    PRINT *, wscal_alldays(1,:)
-    STOP
-
     avetemp = running( dtemp, doy, ndayyear, "mean", dtemp_pvy(:) )
 
     ! get average temperature of the preceeding N days in month (30 days)

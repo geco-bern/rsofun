@@ -35,7 +35,7 @@ contains
 
     ! Input vairables
     type(outtype_steering), intent(in)  :: state
-    type(climate_type), intent(in), dimension(ndayyear) :: climate
+    type(climate_type), intent(in), dimension(:) :: climate ! Dimension is ndayyear * steps_per_day
     type(vegn_tile_type), intent(inout) :: vegn
 
     ! Return variables
