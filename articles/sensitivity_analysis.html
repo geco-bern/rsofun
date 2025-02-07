@@ -136,65 +136,65 @@ the parameter values.</p>
 <span></span>
 <span><span class="co"># Compute log-likelihood for a given set of parameters</span></span>
 <span><span class="fu">ll_pmodel</span><span class="op">(</span> par_v <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
-<span>  kphio              <span class="op">=</span> <span class="fl">0.09423773</span>, <span class="co"># setup ORG in Stocker et al. 2020 GMD</span></span>
-<span>  kphio_par_a        <span class="op">=</span> <span class="fl">0.0</span>,        <span class="co"># set to zero to disable temperature-dependence of kphio</span></span>
-<span>  kphio_par_b        <span class="op">=</span> <span class="fl">1.0</span>,</span>
-<span>  soilm_thetastar    <span class="op">=</span> <span class="fl">0.6</span> <span class="op">*</span> <span class="fl">240</span>,  <span class="co"># to recover old setup with soil moisture stress</span></span>
-<span>  soilm_betao        <span class="op">=</span> <span class="fl">0.0</span>,</span>
+<span>  kphio              <span class="op">=</span> <span class="fl">4.102119e-02</span>,</span>
+<span>  kphio_par_a        <span class="op">=</span><span class="op">-</span><span class="fl">2.289344e-03</span>,</span>
+<span>  kphio_par_b        <span class="op">=</span> <span class="fl">1.525094e+01</span>,</span>
+<span>  soilm_thetastar    <span class="op">=</span> <span class="fl">1.577507e+02</span>,</span>
+<span>  soilm_betao        <span class="op">=</span> <span class="fl">1.169702e-04</span>,</span>
 <span>  beta_unitcostratio <span class="op">=</span> <span class="fl">146.0</span>,</span>
-<span>  rd_to_vcmax        <span class="op">=</span> <span class="fl">0.014</span>,      <span class="co"># value from Atkin et al. 2015 for C3 herbaceous</span></span>
-<span>  tau_acclim         <span class="op">=</span> <span class="fl">30.0</span>,</span>
+<span>  rd_to_vcmax        <span class="op">=</span> <span class="fl">0.014</span>,</span>
+<span>  tau_acclim         <span class="op">=</span> <span class="fl">20.0</span>,</span>
 <span>  kc_jmax            <span class="op">=</span> <span class="fl">0.41</span>,</span>
 <span>  error_gpp          <span class="op">=</span> <span class="fl">0.9</span>         <span class="co"># value from previous simulations</span></span>
 <span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] -45306.56</span></span></code></pre></div>
+<span><span class="co">#&gt; [1] -2758.147</span></span></code></pre></div>
 <p>Some parameters are constrained by their physical interpretation
 (e.g. <code>kphio &gt; 0</code>) and it’s also necessary to provide a
 bounded parameter space for Morris’ method to sample the parameter
 space. We define the parameter space by their lower and upper
 bounds.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># best parameter values (from previous literature)</span></span>
+<code class="sourceCode R"><span><span class="co"># best parameter values (initial values, taken from Stocker et al., 2020 GMD)</span></span>
 <span><span class="va">par_cal_best</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
-<span>    kphio              <span class="op">=</span> <span class="fl">0.09423773</span>,</span>
-<span>    kphio_par_a        <span class="op">=</span> <span class="op">-</span><span class="fl">0.0025</span>,</span>
-<span>    kphio_par_b        <span class="op">=</span> <span class="fl">20</span>,</span>
-<span>    soilm_thetastar    <span class="op">=</span> <span class="fl">0.6</span><span class="op">*</span><span class="fl">240</span>,</span>
-<span>    soilm_betao        <span class="op">=</span> <span class="fl">0.2</span>,</span>
-<span>    beta_unitcostratio <span class="op">=</span> <span class="fl">146.0</span>,</span>
-<span>    rd_to_vcmax        <span class="op">=</span> <span class="fl">0.014</span>,</span>
-<span>    tau_acclim         <span class="op">=</span> <span class="fl">30.0</span>,</span>
-<span>    kc_jmax            <span class="op">=</span> <span class="fl">0.41</span>,</span>
-<span>    error_gpp          <span class="op">=</span> <span class="fl">1</span></span>
-<span>  <span class="op">)</span></span>
+<span>  kphio              <span class="op">=</span> <span class="fl">0.09423773</span>,</span>
+<span>  kphio_par_a        <span class="op">=</span> <span class="op">-</span><span class="fl">0.0025</span>,</span>
+<span>  kphio_par_b        <span class="op">=</span> <span class="fl">20</span>,</span>
+<span>  soilm_thetastar    <span class="op">=</span> <span class="fl">0.6</span><span class="op">*</span><span class="fl">240</span>,</span>
+<span>  soilm_betao        <span class="op">=</span> <span class="fl">0.2</span>,</span>
+<span>  beta_unitcostratio <span class="op">=</span> <span class="fl">146.0</span>,</span>
+<span>  rd_to_vcmax        <span class="op">=</span> <span class="fl">0.014</span>,</span>
+<span>  tau_acclim         <span class="op">=</span> <span class="fl">30.0</span>,</span>
+<span>  kc_jmax            <span class="op">=</span> <span class="fl">0.41</span>,</span>
+<span>  error_gpp          <span class="op">=</span> <span class="fl">1</span></span>
+<span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># lower bound</span></span>
 <span><span class="va">par_cal_min</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
-<span>    kphio              <span class="op">=</span> <span class="fl">0.03</span>,</span>
-<span>    kphio_par_a        <span class="op">=</span> <span class="op">-</span><span class="fl">0.004</span>,</span>
-<span>    kphio_par_b        <span class="op">=</span> <span class="fl">10</span>,</span>
-<span>    soilm_thetastar    <span class="op">=</span> <span class="fl">0</span>,</span>
-<span>    soilm_betao        <span class="op">=</span> <span class="fl">0</span>,</span>
-<span>    beta_unitcostratio <span class="op">=</span> <span class="fl">50.0</span>,</span>
-<span>    rd_to_vcmax        <span class="op">=</span> <span class="fl">0.01</span>,</span>
-<span>    tau_acclim         <span class="op">=</span> <span class="fl">7.0</span>,</span>
-<span>    kc_jmax            <span class="op">=</span> <span class="fl">0.2</span>,</span>
-<span>    error_gpp          <span class="op">=</span> <span class="fl">0.01</span></span>
-<span>  <span class="op">)</span></span>
+<span>  kphio              <span class="op">=</span> <span class="fl">0.03</span>,</span>
+<span>  kphio_par_a        <span class="op">=</span> <span class="op">-</span><span class="fl">0.004</span>,</span>
+<span>  kphio_par_b        <span class="op">=</span> <span class="fl">10</span>,</span>
+<span>  soilm_thetastar    <span class="op">=</span> <span class="fl">0</span>,</span>
+<span>  soilm_betao        <span class="op">=</span> <span class="fl">0</span>,</span>
+<span>  beta_unitcostratio <span class="op">=</span> <span class="fl">50.0</span>,</span>
+<span>  rd_to_vcmax        <span class="op">=</span> <span class="fl">0.01</span>,</span>
+<span>  tau_acclim         <span class="op">=</span> <span class="fl">7.0</span>,</span>
+<span>  kc_jmax            <span class="op">=</span> <span class="fl">0.2</span>,</span>
+<span>  error_gpp          <span class="op">=</span> <span class="fl">0.01</span></span>
+<span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># upper bound</span></span>
 <span><span class="va">par_cal_max</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
-<span>    kphio              <span class="op">=</span> <span class="fl">0.15</span>,</span>
-<span>    kphio_par_a        <span class="op">=</span> <span class="op">-</span><span class="fl">0.001</span>,</span>
-<span>    kphio_par_b        <span class="op">=</span> <span class="fl">30</span>,</span>
-<span>    soilm_thetastar    <span class="op">=</span> <span class="fl">240</span>,</span>
-<span>    soilm_betao        <span class="op">=</span> <span class="fl">1</span>,</span>
-<span>    beta_unitcostratio <span class="op">=</span> <span class="fl">200.0</span>,</span>
-<span>    rd_to_vcmax        <span class="op">=</span> <span class="fl">0.1</span>,</span>
-<span>    tau_acclim         <span class="op">=</span> <span class="fl">60.0</span>,</span>
-<span>    kc_jmax            <span class="op">=</span> <span class="fl">0.8</span>,</span>
-<span>    error_gpp          <span class="op">=</span> <span class="fl">4</span></span>
-<span>  <span class="op">)</span></span></code></pre></div>
+<span>  kphio              <span class="op">=</span> <span class="fl">0.15</span>,</span>
+<span>  kphio_par_a        <span class="op">=</span> <span class="op">-</span><span class="fl">0.001</span>,</span>
+<span>  kphio_par_b        <span class="op">=</span> <span class="fl">30</span>,</span>
+<span>  soilm_thetastar    <span class="op">=</span> <span class="fl">240</span>,</span>
+<span>  soilm_betao        <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>  beta_unitcostratio <span class="op">=</span> <span class="fl">200.0</span>,</span>
+<span>  rd_to_vcmax        <span class="op">=</span> <span class="fl">0.1</span>,</span>
+<span>  tau_acclim         <span class="op">=</span> <span class="fl">60.0</span>,</span>
+<span>  kc_jmax            <span class="op">=</span> <span class="fl">0.8</span>,</span>
+<span>  error_gpp          <span class="op">=</span> <span class="fl">4</span></span>
+<span><span class="op">)</span></span></code></pre></div>
 <p>We use the <code>morris()</code> function from the
 <code>{sensitivity}</code> package to perform the sensitivity analysis.
 As a target function, we will use the posterior density (log-likelihood)
@@ -223,7 +223,8 @@ computationally cheaper than running the parameter calibration.</p>
 <span>  design <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>type <span class="op">=</span> <span class="st">"oat"</span>, levels <span class="op">=</span> <span class="fl">20</span>, grid.jump <span class="op">=</span> <span class="fl">3</span><span class="op">)</span>, </span>
 <span>  binf <span class="op">=</span> <span class="va">par_cal_min</span>, </span>
 <span>  bsup <span class="op">=</span> <span class="va">par_cal_max</span>, </span>
-<span>  scale <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
+<span>  scale <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span>  <span class="op">)</span></span></code></pre></div>
 <p>The analysis evaluates the variability of the target function,
 i.e. the log-likelihood, for several points across the parameter space.
 It is an approximation of the derivatives of the log-likelihood with
@@ -241,7 +242,7 @@ is.</p>
 <span>  parameter <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">par_cal_best</span><span class="op">)</span>,</span>
 <span>  mu.star <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/apply.html" class="external-link">apply</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">abs</a></span><span class="op">(</span><span class="va">morrisOut</span><span class="op">$</span><span class="va">ee</span><span class="op">)</span>, <span class="fl">2</span>, <span class="va">mean</span>, na.rm <span class="op">=</span> <span class="cn">T</span><span class="op">)</span>,</span>
 <span>  sigma <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/apply.html" class="external-link">apply</a></span><span class="op">(</span><span class="va">morrisOut</span><span class="op">$</span><span class="va">ee</span>, <span class="fl">2</span>, <span class="va">sd</span>, na.rm <span class="op">=</span> <span class="cn">T</span><span class="op">)</span></span>
-<span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span><span class="op">)</span> <span class="op">|&gt;</span> </span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/arrange.html" class="external-link">arrange</a></span><span class="op">(</span> <span class="va">mu.star</span> <span class="op">)</span></span>
 <span></span>
 <span><span class="va">morrisOut.df</span> <span class="op">|&gt;</span></span>
@@ -252,15 +253,18 @@ is.</p>
 <span>    fill <span class="op">=</span> <span class="va">variable</span><span class="op">)</span>,</span>
 <span>    color <span class="op">=</span> <span class="cn">NA</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_bar.html" class="external-link">geom_bar</a></span><span class="op">(</span>position <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/position_dodge.html" class="external-link">position_dodge</a></span><span class="op">(</span><span class="op">)</span>, stat <span class="op">=</span> <span class="st">'identity'</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_brewer.html" class="external-link">scale_fill_brewer</a></span><span class="op">(</span><span class="st">""</span>, labels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">'mu.star'</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/expression.html" class="external-link">expression</a></span><span class="op">(</span><span class="va">mu</span> <span class="op">*</span> <span class="st">"*"</span><span class="op">)</span>,</span>
-<span>                                   <span class="st">'sigma'</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/expression.html" class="external-link">expression</a></span><span class="op">(</span><span class="va">sigma</span><span class="op">)</span><span class="op">)</span>,</span>
-<span>                    palette <span class="op">=</span> <span class="st">"Greys"</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_manual.html" class="external-link">scale_fill_manual</a></span><span class="op">(</span><span class="st">""</span>, </span>
+<span>                    labels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">'mu.star'</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/expression.html" class="external-link">expression</a></span><span class="op">(</span><span class="va">mu</span> <span class="op">*</span> <span class="st">"*"</span><span class="op">)</span>,</span>
+<span>                               <span class="st">'sigma'</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/expression.html" class="external-link">expression</a></span><span class="op">(</span><span class="va">sigma</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>                    values <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">'mu.star'</span> <span class="op">=</span> <span class="st">"#29a274ff"</span>, </span>
+<span>                               <span class="st">'sigma'</span> <span class="op">=</span> <span class="st">"#777055ff"</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_classic</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme.html" class="external-link">theme</a></span><span class="op">(</span></span>
 <span>    axis.text <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">element_text</a></span><span class="op">(</span>size <span class="op">=</span> <span class="fl">6</span><span class="op">)</span>,</span>
 <span>    axis.title <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">element_blank</a></span><span class="op">(</span><span class="op">)</span>,</span>
-<span>    legend.position <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.05</span>, <span class="fl">0.95</span><span class="op">)</span>, legend.justification <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.05</span>, <span class="fl">0.95</span><span class="op">)</span></span>
-<span>  <span class="op">)</span></span>
+<span>    legend.position <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.9</span>, <span class="fl">0.1</span><span class="op">)</span>, legend.justification <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.95</span>, <span class="fl">0.05</span><span class="op">)</span></span>
+<span>  <span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/coord_flip.html" class="external-link">coord_flip</a></span><span class="op">(</span><span class="op">)</span>    <span class="co"># make horizontal</span></span>
 <span><span class="co">#&gt; Warning: A numeric `legend.position` argument in `theme()` was deprecated in ggplot2</span></span>
 <span><span class="co">#&gt; 3.5.0.</span></span>
 <span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Please use the `legend.position.inside` argument of `theme()` instead.</span></span>
@@ -313,7 +317,7 @@ parameter for GPP and the quantum yield efficiency parameters will have
 a high impact on the model fit. Let’s run the calibration:</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Calibrates kphio, kphio_par_b, kc_jmax - top 3 model params</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">2023</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">2025</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Define calibration settings</span></span>
 <span><span class="va">settings_calib</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
@@ -322,26 +326,31 @@ a high impact on the model fit. Let’s run the calibration:</p>
 <span>  control <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
 <span>    sampler <span class="op">=</span> <span class="st">"DEzs"</span>,</span>
 <span>    settings <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
-<span>      burnin <span class="op">=</span> <span class="fl">3000</span>,</span>
-<span>      iterations <span class="op">=</span> <span class="fl">9000</span>,</span>
-<span>      nrChains <span class="op">=</span> <span class="fl">3</span>,        <span class="co"># number of independent chains</span></span>
-<span>      startValue <span class="op">=</span> <span class="fl">3</span>       <span class="co"># number of internal chains to be sampled</span></span>
+<span>      burnin <span class="op">=</span> <span class="fl">12000</span>,</span>
+<span>      iterations <span class="op">=</span> <span class="fl">24000</span>,</span>
+<span>      nrChains <span class="op">=</span> <span class="fl">3</span>,       <span class="co"># number of independent chains</span></span>
+<span>      startValue <span class="op">=</span> <span class="fl">3</span>      <span class="co"># number of internal chains to be sampled</span></span>
 <span>    <span class="op">)</span><span class="op">)</span>,</span>
 <span>  par <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
-<span>    kphio <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>lower <span class="op">=</span> <span class="fl">0.03</span>, upper <span class="op">=</span> <span class="fl">0.15</span>, init <span class="op">=</span> <span class="fl">0.05</span><span class="op">)</span>,</span>
-<span>    <span class="co">#kphio_par_a = list(lower = -0.004, upper = -0.001, init = -0.0025),</span></span>
-<span>    kphio_par_b <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>lower <span class="op">=</span> <span class="fl">10</span>, upper <span class="op">=</span> <span class="fl">30</span>, init <span class="op">=</span><span class="fl">25</span><span class="op">)</span>,</span>
-<span>    kc_jmax <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>lower <span class="op">=</span> <span class="fl">0.2</span>, upper <span class="op">=</span> <span class="fl">0.8</span>, init <span class="op">=</span> <span class="fl">0.41</span><span class="op">)</span>,</span>
+<span>    kphio <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>lower <span class="op">=</span> <span class="fl">0.02</span>, upper <span class="op">=</span> <span class="fl">0.15</span>, init <span class="op">=</span> <span class="fl">0.05</span><span class="op">)</span>,</span>
+<span>    kphio_par_a <span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>lower <span class="op">=</span> <span class="op">-</span><span class="fl">0.004</span>, upper <span class="op">=</span> <span class="op">-</span><span class="fl">0.001</span>, init <span class="op">=</span> <span class="op">-</span><span class="fl">0.0025</span><span class="op">)</span>,</span>
+<span>    kphio_par_b <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>lower <span class="op">=</span> <span class="fl">10</span>, upper <span class="op">=</span> <span class="fl">30</span>, init <span class="op">=</span> <span class="fl">20</span><span class="op">)</span>,</span>
+<span>    soilm_thetastar <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
+<span>      lower <span class="op">=</span> <span class="fl">0.01</span> <span class="op">*</span> <span class="fu">rsofun</span><span class="fu">::</span><span class="va"><a href="../reference/p_model_drivers.html">p_model_drivers</a></span><span class="op">$</span><span class="va">site_info</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span><span class="op">$</span><span class="va">whc</span>,</span>
+<span>      upper <span class="op">=</span> <span class="fl">1.0</span>  <span class="op">*</span> <span class="fu">rsofun</span><span class="fu">::</span><span class="va"><a href="../reference/p_model_drivers.html">p_model_drivers</a></span><span class="op">$</span><span class="va">site_info</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span><span class="op">$</span><span class="va">whc</span>,</span>
+<span>      init  <span class="op">=</span> <span class="fl">0.6</span>  <span class="op">*</span> <span class="fu">rsofun</span><span class="fu">::</span><span class="va"><a href="../reference/p_model_drivers.html">p_model_drivers</a></span><span class="op">$</span><span class="va">site_info</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span><span class="op">$</span><span class="va">whc</span></span>
+<span>    <span class="op">)</span>,</span>
+<span>    soilm_betao <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>lower <span class="op">=</span> <span class="fl">0.0</span>, upper <span class="op">=</span> <span class="fl">1.0</span>, init <span class="op">=</span> <span class="fl">0.0</span><span class="op">)</span>,</span>
 <span>    err_gpp <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>lower <span class="op">=</span> <span class="fl">0.1</span>, upper <span class="op">=</span> <span class="fl">3</span>, init <span class="op">=</span> <span class="fl">0.8</span><span class="op">)</span></span>
 <span>  <span class="op">)</span></span>
 <span><span class="op">)</span></span>
+<span></span>
 <span><span class="va">par_fixed</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
-<span>    soilm_thetastar    <span class="op">=</span> <span class="fl">0.6</span><span class="op">*</span><span class="fl">240</span>,</span>
-<span>    soilm_betao        <span class="op">=</span> <span class="fl">0.2</span>,</span>
-<span>    beta_unitcostratio <span class="op">=</span> <span class="fl">146.0</span>,</span>
-<span>    rd_to_vcmax        <span class="op">=</span> <span class="fl">0.014</span>,</span>
-<span>    kphio_par_a        <span class="op">=</span> <span class="op">-</span><span class="fl">0.0025</span>,</span>
-<span>    tau_acclim         <span class="op">=</span> <span class="fl">30.0</span><span class="op">)</span></span>
+<span>  beta_unitcostratio <span class="op">=</span> <span class="fl">146.0</span>,</span>
+<span>  kc_jmax            <span class="op">=</span> <span class="fl">0.41</span>,</span>
+<span>  rd_to_vcmax        <span class="op">=</span> <span class="fl">0.014</span>,</span>
+<span>  tau_acclim         <span class="op">=</span> <span class="fl">20.0</span></span>
+<span>  <span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Calibrate kphio-related parameters and err_gpp</span></span>
 <span><span class="va">par_calib</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/calib_sofun.html">calib_sofun</a></span><span class="op">(</span></span>
@@ -351,6 +360,7 @@ a high impact on the model fit. Let’s run the calibration:</p>
 <span>  par_fixed <span class="op">=</span> <span class="va">par_fixed</span>,</span>
 <span>  targets <span class="op">=</span> <span class="st">"gpp"</span></span>
 <span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">saveRDS</a></span><span class="op">(</span><span class="va">par_calib</span>, <span class="st">"files/sensitivity_analysis.Rmd__par_calib.RDS"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># This code takes 15 minutes to run</span></span></code></pre></div>
 <p><code>BayesianTools</code> makes it easy to produce the trace plot of
@@ -363,7 +373,7 @@ and those iterations are not shown by the following trace plot. The
 samples after the burnin period should be used for inference.</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">par_calib</span><span class="op">$</span><span class="va">mod</span><span class="op">)</span></span></code></pre></div>
-<p><img src="sensitivity_analysis_files/figure-html/unnamed-chunk-7-1.png" width="672" style="display: block; margin: auto;"></p>
+<p><img src="sensitivity_analysis_files/figure-html/unnamed-chunk-7-1.png" width="672" style="display: block; margin: auto;"><img src="sensitivity_analysis_files/figure-html/unnamed-chunk-7-2.png" width="672" style="display: block; margin: auto;"></p>
 <!-- Internal recommendation: When you run the MCMC simulations with the DEzs sampler, there are two parameters that control the number of chains used: nrChains (documented for runMCMC) and startValue (documented for DEzs). The first dictates the number of independent chains to be run by the algorithm, while the second determines the number of internal chains to be run from a starting population (i.e. a population of initial parameter seeds). As Florian points out in this issue (https://github.com/florianhartig/BayesianTools/issues/224#issuecomment-877416919) the chains from within a population tend to be more correlated than those from independent "chains", and therefore internal chains should not be regarded as independent chains. This supports why for r3PG, they use nrChains=3 and startValue=3 (used by default), leading to 3*3=9 chains being plotted. For the example above, it doesn't make a big difference because the convergence is quite fast. -->
 <p>The posterior density plots may be lumpy. In this case it’s advisable
 to run the MCMC algorithm for more iterations, in order to get a better
@@ -403,11 +413,13 @@ D.B.: Bayesian Data Analysis, 2nd edn. Chapman &amp; Hall, London
 <code class="sourceCode R"><span><span class="fu">gelmanDiagnostics</span><span class="op">(</span><span class="va">par_calib</span><span class="op">$</span><span class="va">mod</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Potential scale reduction factors:</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;             Point est. Upper C.I.</span></span>
-<span><span class="co">#&gt; kphio             1.03       1.05</span></span>
-<span><span class="co">#&gt; kphio_par_b       1.02       1.05</span></span>
-<span><span class="co">#&gt; kc_jmax           1.02       1.04</span></span>
-<span><span class="co">#&gt; err_gpp           1.01       1.01</span></span>
+<span><span class="co">#&gt;                 Point est. Upper C.I.</span></span>
+<span><span class="co">#&gt; kphio                 1.01       1.02</span></span>
+<span><span class="co">#&gt; kphio_par_a           1.01       1.01</span></span>
+<span><span class="co">#&gt; kphio_par_b           1.00       1.01</span></span>
+<span><span class="co">#&gt; soilm_thetastar       1.02       1.04</span></span>
+<span><span class="co">#&gt; soilm_betao           1.02       1.04</span></span>
+<span><span class="co">#&gt; err_gpp               1.02       1.03</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Multivariate psrf</span></span>
 <span><span class="co">#&gt; </span></span>
@@ -424,28 +436,39 @@ the <code>BayesianTools</code> library.</p>
 <span><span class="co">#&gt;  </span></span>
 <span><span class="co">#&gt; # MCMC sampler:  DEzs </span></span>
 <span><span class="co">#&gt; # Nr. Chains:  9 </span></span>
-<span><span class="co">#&gt; # Iterations per chain:  2001 </span></span>
-<span><span class="co">#&gt; # Rejection rate:  0.899 </span></span>
-<span><span class="co">#&gt; # Effective sample size:  651 </span></span>
-<span><span class="co">#&gt; # Runtime:  428.914  sec. </span></span>
+<span><span class="co">#&gt; # Iterations per chain:  4001 </span></span>
+<span><span class="co">#&gt; # Rejection rate:  0.849 </span></span>
+<span><span class="co">#&gt; # Effective sample size:  3377 </span></span>
+<span><span class="co">#&gt; # Runtime:  1301.851  sec. </span></span>
 <span><span class="co">#&gt;  </span></span>
 <span><span class="co">#&gt; # Parameters</span></span>
-<span><span class="co">#&gt;               psf    MAP   2.5% median  97.5%</span></span>
-<span><span class="co">#&gt; kphio       1.025  0.033  0.031  0.034  0.040</span></span>
-<span><span class="co">#&gt; kphio_par_b 1.023 14.129 13.783 14.199 14.723</span></span>
-<span><span class="co">#&gt; kc_jmax     1.020  0.271  0.207  0.282  0.401</span></span>
-<span><span class="co">#&gt; err_gpp     1.007  1.097  1.061  1.099  1.133</span></span>
+<span><span class="co">#&gt;                   psf     MAP    2.5%  median   97.5%</span></span>
+<span><span class="co">#&gt; kphio           1.010   0.041   0.040   0.041   0.042</span></span>
+<span><span class="co">#&gt; kphio_par_a     1.006  -0.002  -0.003  -0.002  -0.002</span></span>
+<span><span class="co">#&gt; kphio_par_b     1.004  15.251  14.888  15.350  15.803</span></span>
+<span><span class="co">#&gt; soilm_thetastar 1.021 157.751 151.926 160.060 168.101</span></span>
+<span><span class="co">#&gt; soilm_betao     1.021   0.000   0.000   0.008   0.038</span></span>
+<span><span class="co">#&gt; err_gpp         1.016   1.074   1.040   1.074   1.111</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; ## DIC:  5503.675 </span></span>
+<span><span class="co">#&gt; ## DIC:  5561.961 </span></span>
 <span><span class="co">#&gt; ## Convergence </span></span>
-<span><span class="co">#&gt;  Gelman Rubin multivariate psrf:  1.032 </span></span>
+<span><span class="co">#&gt;  Gelman Rubin multivariate psrf:  1.034 </span></span>
 <span><span class="co">#&gt;  </span></span>
 <span><span class="co">#&gt; ## Correlations </span></span>
-<span><span class="co">#&gt;             kphio kphio_par_b kc_jmax err_gpp</span></span>
-<span><span class="co">#&gt; kphio       1.000       0.566   0.926   0.099</span></span>
-<span><span class="co">#&gt; kphio_par_b 0.566       1.000   0.522   0.126</span></span>
-<span><span class="co">#&gt; kc_jmax     0.926       0.522   1.000   0.032</span></span>
-<span><span class="co">#&gt; err_gpp     0.099       0.126   0.032   1.000</span></span></code></pre></div>
+<span><span class="co">#&gt;                  kphio kphio_par_a kphio_par_b soilm_thetastar soilm_betao</span></span>
+<span><span class="co">#&gt; kphio            1.000      -0.097       0.287           0.236       0.236</span></span>
+<span><span class="co">#&gt; kphio_par_a     -0.097       1.000      -0.201           0.116       0.000</span></span>
+<span><span class="co">#&gt; kphio_par_b      0.287      -0.201       1.000           0.301       0.189</span></span>
+<span><span class="co">#&gt; soilm_thetastar  0.236       0.116       0.301           1.000       0.128</span></span>
+<span><span class="co">#&gt; soilm_betao      0.236       0.000       0.189           0.128       1.000</span></span>
+<span><span class="co">#&gt; err_gpp          0.229      -0.002       0.098           0.042       0.147</span></span>
+<span><span class="co">#&gt;                 err_gpp</span></span>
+<span><span class="co">#&gt; kphio             0.229</span></span>
+<span><span class="co">#&gt; kphio_par_a      -0.002</span></span>
+<span><span class="co">#&gt; kphio_par_b       0.098</span></span>
+<span><span class="co">#&gt; soilm_thetastar   0.042</span></span>
+<span><span class="co">#&gt; soilm_betao       0.147</span></span>
+<span><span class="co">#&gt; err_gpp           1.000</span></span></code></pre></div>
 <p>More details on diagnosing MCMC convergence can be found in <a href="https://florianhartig.github.io/BayesianTools/articles/BayesianTools.html#running-mcmc-and-smc-functions" class="external-link">this
 vignette from BayesianTools</a> and <a href="https://theoreticalecology.wordpress.com/2011/12/09/mcmc-chain-analysis-and-convergence-diagnostics-with-coda-in-r/" class="external-link">this
 blogpost</a>.</p>
@@ -463,28 +486,48 @@ predicted GPP, which incorporates the Gaussian model error.</p>
 <code class="sourceCode R"><span><span class="co"># Evaluation of the uncertainty coming from the model parameters' uncertainty</span></span>
 <span></span>
 <span><span class="co"># Sample parameter values from the posterior distribution</span></span>
-<span><span class="va">samples_par</span> <span class="op">&lt;-</span> <span class="fu">getSample</span><span class="op">(</span><span class="va">par_calib</span><span class="op">$</span><span class="va">mod</span>, numSamples <span class="op">=</span> <span class="fl">600</span><span class="op">)</span> <span class="op">|&gt;</span>  </span>
+<span><span class="va">samples_par</span> <span class="op">&lt;-</span> <span class="fu">getSample</span><span class="op">(</span></span>
+<span>  <span class="va">par_calib</span><span class="op">$</span><span class="va">mod</span>,</span>
+<span>  thin <span class="op">=</span> <span class="fl">60</span></span>
+<span>  <span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>mcmc_id <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/context.html" class="external-link">n</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu">tidyr</span><span class="fu">::</span><span class="fu"><a href="https://tidyr.tidyverse.org/reference/nest.html" class="external-link">nest</a></span><span class="op">(</span>.by <span class="op">=</span> <span class="va">mcmc_id</span>, .key <span class="op">=</span> <span class="st">"pars"</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">run_pmodel</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">sample_par</span><span class="op">)</span><span class="op">{</span></span>
+<span><span class="va">run_pmodel</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">par</span><span class="op">)</span><span class="op">{</span></span>
 <span>  <span class="co"># Function that runs the P-model for a sample of parameters</span></span>
 <span>  <span class="co"># and also adds the new observation error</span></span>
+<span>  </span>
 <span>  <span class="va">out</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/runread_pmodel_f.html">runread_pmodel_f</a></span><span class="op">(</span></span>
 <span>    drivers <span class="op">=</span> <span class="va">p_model_drivers</span>,</span>
-<span>    par <span class="op">=</span>  <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">par_fixed</span>, <span class="va">sample_par</span><span class="op">)</span> <span class="co"># err_gpp is also here, but simply ignored</span></span>
+<span>    par <span class="op">=</span>  <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
+<span>      kphio              <span class="op">=</span> <span class="va">par</span><span class="op">$</span><span class="va">kphio</span>,</span>
+<span>      kphio_par_a        <span class="op">=</span> <span class="va">par</span><span class="op">$</span><span class="va">kphio_par_a</span>,</span>
+<span>      kphio_par_b        <span class="op">=</span> <span class="va">par</span><span class="op">$</span><span class="va">kphio_par_b</span>,</span>
+<span>      soilm_thetastar    <span class="op">=</span> <span class="va">par</span><span class="op">$</span><span class="va">soilm_thetastar</span>,</span>
+<span>      soilm_betao        <span class="op">=</span> <span class="va">par</span><span class="op">$</span><span class="va">soilm_betao</span>,</span>
+<span>      beta_unitcostratio <span class="op">=</span> <span class="fl">146.0</span>,</span>
+<span>      rd_to_vcmax        <span class="op">=</span> <span class="fl">0.014</span>,</span>
+<span>      tau_acclim         <span class="op">=</span> <span class="fl">20.0</span>,</span>
+<span>      kc_jmax            <span class="op">=</span> <span class="fl">0.41</span></span>
+<span>      <span class="op">)</span></span>
 <span>  <span class="op">)</span></span>
 <span>  </span>
 <span>  <span class="co"># return modelled GPP and prediction for a new GPP observation</span></span>
 <span>  <span class="va">gpp</span> <span class="op">&lt;-</span> <span class="va">out</span><span class="op">$</span><span class="va">data</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span><span class="op">[</span>, <span class="st">"gpp"</span><span class="op">]</span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>gpp <span class="op">=</span> <span class="va">gpp</span>, </span>
-<span>             gpp_pred <span class="op">=</span> <span class="va">gpp</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span>n <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">gpp</span><span class="op">)</span>, mean <span class="op">=</span> <span class="fl">0</span>, </span>
-<span>                                   sd <span class="op">=</span> <span class="va">sample_par</span><span class="op">$</span><span class="va">err_gpp</span><span class="op">)</span>,</span>
-<span>             date <span class="op">=</span> <span class="va">out</span><span class="op">$</span><span class="va">data</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span><span class="op">[</span>, <span class="st">"date"</span><span class="op">]</span><span class="op">)</span></span>
+<span>  <span class="va">out</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
+<span>    gpp <span class="op">=</span> <span class="va">gpp</span>, </span>
+<span>    gpp_pred <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span></span>
+<span>      n <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">gpp</span><span class="op">)</span>, </span>
+<span>      mean <span class="op">=</span> <span class="va">gpp</span>,</span>
+<span>      sd <span class="op">=</span> <span class="va">par</span><span class="op">$</span><span class="va">err_gpp</span></span>
+<span>      <span class="op">)</span>,</span>
+<span>    date <span class="op">=</span> <span class="va">out</span><span class="op">$</span><span class="va">data</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span><span class="op">[</span>, <span class="st">"date"</span><span class="op">]</span><span class="op">)</span></span>
+<span>  <span class="kw"><a href="https://rdrr.io/r/base/function.html" class="external-link">return</a></span><span class="op">(</span><span class="va">out</span><span class="op">)</span></span>
 <span><span class="op">}</span></span>
 <span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">2023</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">2025</span><span class="op">)</span></span>
+<span></span>
 <span><span class="co"># Run the P-model for each set of parameters</span></span>
 <span><span class="va">pmodel_runs</span> <span class="op">&lt;-</span> <span class="va">samples_par</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>sim <span class="op">=</span> <span class="fu">purrr</span><span class="fu">::</span><span class="fu"><a href="https://purrr.tidyverse.org/reference/map.html" class="external-link">map</a></span><span class="op">(</span><span class="va">pars</span>, <span class="op">~</span><span class="fu">run_pmodel</span><span class="op">(</span><span class="va">.x</span><span class="op">)</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span>
@@ -499,7 +542,14 @@ predicted GPP, which incorporates the Gaussian model error.</p>
 <span>    gpp_q95 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/quantile.html" class="external-link">quantile</a></span><span class="op">(</span><span class="va">gpp</span>, <span class="fl">0.95</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,</span>
 <span>    gpp_pred_q05 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/quantile.html" class="external-link">quantile</a></span><span class="op">(</span><span class="va">gpp_pred</span>, <span class="fl">0.05</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,</span>
 <span>    gpp_pred_q95 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/quantile.html" class="external-link">quantile</a></span><span class="op">(</span><span class="va">gpp_pred</span>, <span class="fl">0.95</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
-<span>  <span class="op">)</span></span></code></pre></div>
+<span>  <span class="op">)</span></span>
+<span></span>
+<span><span class="co"># run model with maximum a posteriori parameter estimates</span></span>
+<span><span class="va">pmodel_run_map</span> <span class="op">&lt;-</span> <span class="fu">run_pmodel</span><span class="op">(</span></span>
+<span>  <span class="fu">MAP</span><span class="op">(</span><span class="va">par_calib</span><span class="op">$</span><span class="va">mod</span><span class="op">)</span><span class="op">$</span><span class="va">parametersMAP</span> <span class="op">|&gt;</span> </span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/base/t.html" class="external-link">t</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span> </span>
+<span>    <span class="fu"><a href="https://tibble.tidyverse.org/reference/as_tibble.html" class="external-link">as_tibble</a></span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="op">)</span></span></code></pre></div>
 <p>Below we plot the first year of observed GPP (in black) against the
 predicted GPP (in grey), computed as the median of the posterior
 distribution of modeled GPP. This information is accompanied by the 90%
@@ -509,7 +559,15 @@ parameter uncertainty captured in the credible interval is quite small,
 in comparison to the model uncertainty captured by the predictive
 interval.</p>
 <div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Plot the credible intervals computed above</span></span>
+<code class="sourceCode R"><span><span class="co">## add transparency to color given as a name</span></span>
+<span><span class="va">add_alpha</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span> <span class="va">col</span>, <span class="va">alpha</span> <span class="op">)</span><span class="op">{</span></span>
+<span>  <span class="va">col</span>    <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/grDevices/col2rgb.html" class="external-link">col2rgb</a></span><span class="op">(</span> <span class="va">col</span>, alpha <span class="op">=</span> <span class="cn">TRUE</span> <span class="op">)</span><span class="op">/</span><span class="fl">255</span></span>
+<span>  <span class="va">col</span><span class="op">[</span><span class="fl">4</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="va">alpha</span></span>
+<span>  <span class="va">col</span>    <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/grDevices/rgb.html" class="external-link">rgb</a></span><span class="op">(</span><span class="va">col</span><span class="op">[</span><span class="fl">1</span>,<span class="op">]</span>,<span class="va">col</span><span class="op">[</span><span class="fl">2</span>,<span class="op">]</span>,<span class="va">col</span><span class="op">[</span><span class="fl">3</span>,<span class="op">]</span>,<span class="va">col</span><span class="op">[</span><span class="fl">4</span>,<span class="op">]</span><span class="op">)</span></span>
+<span>  <span class="kw"><a href="https://rdrr.io/r/base/function.html" class="external-link">return</a></span><span class="op">(</span> <span class="va">col</span> <span class="op">)</span></span>
+<span><span class="op">}</span></span>
+<span></span>
+<span><span class="co"># Plot the credible intervals computed above</span></span>
 <span><span class="co"># for the first year only</span></span>
 <span><span class="va">data_to_plot</span> <span class="op">&lt;-</span> <span class="va">pmodel_runs</span> <span class="op">|&gt;</span></span>
 <span>  <span class="co"># Plot only first year</span></span>
@@ -519,107 +577,57 @@ interval.</p>
 <span>    <span class="va">p_model_validation</span><span class="op">$</span><span class="va">data</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">365</span>, <span class="op">]</span> <span class="op">|&gt;</span></span>
 <span>      <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/rename.html" class="external-link">rename</a></span><span class="op">(</span>gpp_obs <span class="op">=</span> <span class="va">gpp</span><span class="op">)</span>,</span>
 <span>    by <span class="op">=</span> <span class="st">"date"</span><span class="op">)</span></span>
-<span><span class="co"># TODO: clean below</span></span>
-<span><span class="co"># plot_gpp_error &lt;- ggplot(data = data_to_plot) +</span></span>
-<span><span class="co">#   # geom_ribbon(</span></span>
-<span><span class="co">#   #   aes(ymin = gpp_pred_q05, </span></span>
-<span><span class="co">#   #       ymax = gpp_pred_q95,</span></span>
-<span><span class="co">#   #       x = date),</span></span>
-<span><span class="co">#   #   fill = 'grey40', alpha = 0.2) +</span></span>
-<span><span class="co">#   geom_ribbon(</span></span>
-<span><span class="co">#     aes(ymin = gpp_q05, </span></span>
-<span><span class="co">#         ymax = gpp_q95,</span></span>
-<span><span class="co">#         x = date),</span></span>
-<span><span class="co">#     fill = 'blue', alpha = 0.5) +</span></span>
-<span><span class="co">#   geom_ribbon(</span></span>
-<span><span class="co">#     aes(ymin = gpp_pred_q05, </span></span>
-<span><span class="co">#         ymax = gpp_pred_q95,</span></span>
-<span><span class="co">#         x = date),</span></span>
-<span><span class="co">#     fill = 'grey40', alpha = 0.2) +</span></span>
-<span><span class="co">#   geom_line(</span></span>
-<span><span class="co">#     aes(x = date,</span></span>
-<span><span class="co">#         y = gpp_q50),</span></span>
-<span><span class="co">#     colour = "grey40",</span></span>
-<span><span class="co">#     alpha = 0.8) +</span></span>
-<span><span class="co">#   # # Include observations in the plot</span></span>
-<span><span class="co">#   geom_point(shape = 3,</span></span>
-<span><span class="co">#     aes(x = date,</span></span>
-<span><span class="co">#         y = gpp_obs),# color = "Observations"),</span></span>
-<span><span class="co">#     alpha = 0.8) +</span></span>
-<span><span class="co">#   theme_classic() +</span></span>
-<span><span class="co">#   theme(panel.grid.major.y = element_line(),</span></span>
-<span><span class="co">#         legend.position = "bottom") +</span></span>
-<span><span class="co">#   labs(</span></span>
-<span><span class="co">#     x = 'Date',</span></span>
-<span><span class="co">#     y = expression(paste("GPP (g C m"^-2, "s"^-1, ")"))</span></span>
-<span><span class="co">#   )</span></span>
-<span><span class="co"># plot_gpp_error</span></span>
 <span></span>
 <span><span class="va">plot_gpp_error</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span>data <span class="op">=</span> <span class="va">data_to_plot</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_ribbon.html" class="external-link">geom_ribbon</a></span><span class="op">(</span></span>
-<span>    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>ymin <span class="op">=</span> <span class="va">gpp_pred_q05</span>,</span>
-<span>        ymax <span class="op">=</span> <span class="va">gpp_pred_q95</span>,</span>
-<span>        x <span class="op">=</span> <span class="va">date</span>,</span>
-<span>        fill <span class="op">=</span> <span class="st">"Model uncertainty"</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span></span>
+<span>      ymin <span class="op">=</span> <span class="va">gpp_pred_q05</span>,</span>
+<span>      ymax <span class="op">=</span> <span class="va">gpp_pred_q95</span>,</span>
+<span>      x <span class="op">=</span> <span class="va">date</span>,</span>
+<span>      fill <span class="op">=</span> <span class="st">"Model uncertainty"</span></span>
+<span>    <span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_ribbon.html" class="external-link">geom_ribbon</a></span><span class="op">(</span></span>
-<span>    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>ymin <span class="op">=</span> <span class="va">gpp_q05</span>, </span>
-<span>        ymax <span class="op">=</span> <span class="va">gpp_q95</span>,</span>
-<span>        x <span class="op">=</span> <span class="va">date</span>,</span>
-<span>        fill <span class="op">=</span> <span class="st">"Parameter uncertainty"</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_path.html" class="external-link">geom_line</a></span><span class="op">(</span></span>
-<span>    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">date</span>,</span>
-<span>        y <span class="op">=</span> <span class="va">gpp_q50</span>,</span>
-<span>        color <span class="op">=</span> <span class="st">"Predictions"</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span></span>
+<span>      ymin <span class="op">=</span> <span class="va">gpp_q05</span>, </span>
+<span>      ymax <span class="op">=</span> <span class="va">gpp_q95</span>,</span>
+<span>      x <span class="op">=</span> <span class="va">date</span>,</span>
+<span>      fill <span class="op">=</span> <span class="st">"Parameter uncertainty"</span></span>
+<span>    <span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="co"># Include observations in the plot</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_point.html" class="external-link">geom_point</a></span><span class="op">(</span>shape <span class="op">=</span> <span class="fl">3</span>, </span>
-<span>    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">date</span>,</span>
-<span>        y <span class="op">=</span> <span class="va">gpp_obs</span>,</span>
-<span>        color <span class="op">=</span> <span class="st">"Observations"</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_point.html" class="external-link">geom_point</a></span><span class="op">(</span></span>
+<span>    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span></span>
+<span>      x <span class="op">=</span> <span class="va">date</span>,</span>
+<span>     y <span class="op">=</span> <span class="va">gpp_obs</span>,</span>
+<span>     color <span class="op">=</span> <span class="st">"Observations"</span></span>
+<span>    <span class="op">)</span>,</span>
+<span>  <span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_path.html" class="external-link">geom_line</a></span><span class="op">(</span></span>
+<span>    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span></span>
+<span>      x <span class="op">=</span> <span class="va">date</span>,</span>
+<span>      y <span class="op">=</span> <span class="va">gpp_q50</span>,</span>
+<span>      color <span class="op">=</span> <span class="st">"Predictions"</span></span>
+<span>    <span class="op">)</span></span>
+<span>  <span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_classic</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme.html" class="external-link">theme</a></span><span class="op">(</span>panel.grid.major.y <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">element_line</a></span><span class="op">(</span><span class="op">)</span>,</span>
 <span>        legend.position <span class="op">=</span> <span class="st">"bottom"</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span></span>
 <span>    x <span class="op">=</span> <span class="st">'Date'</span>,</span>
 <span>    y <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/expression.html" class="external-link">expression</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste</a></span><span class="op">(</span><span class="st">"GPP (g C m"</span><span class="op">^</span><span class="op">-</span><span class="fl">2</span>, <span class="st">"s"</span><span class="op">^</span><span class="op">-</span><span class="fl">1</span>, <span class="st">")"</span><span class="op">)</span><span class="op">)</span></span>
-<span>  <span class="op">)</span></span>
-<span></span>
-<span><span class="va">t_col</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">color</span>, <span class="va">percent</span> <span class="op">=</span> <span class="fl">50</span>, <span class="va">name</span> <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span> <span class="op">{</span></span>
-<span>  <span class="co">#      color = color name</span></span>
-<span>  <span class="co">#    percent = % transparency</span></span>
-<span>  <span class="co">#       name = an optional name for the color</span></span>
-<span>  </span>
-<span>  <span class="co">## Get RGB values for named color</span></span>
-<span>  <span class="va">rgb.val</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/grDevices/col2rgb.html" class="external-link">col2rgb</a></span><span class="op">(</span><span class="va">color</span><span class="op">)</span></span>
-<span>  </span>
-<span>  <span class="co">## Make new color using input color as base and alpha set by transparency</span></span>
-<span>  <span class="va">t.col</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/grDevices/rgb.html" class="external-link">rgb</a></span><span class="op">(</span><span class="va">rgb.val</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span>, <span class="va">rgb.val</span><span class="op">[</span><span class="fl">2</span><span class="op">]</span>, <span class="va">rgb.val</span><span class="op">[</span><span class="fl">3</span><span class="op">]</span>,</span>
-<span>               max <span class="op">=</span> <span class="fl">255</span>,</span>
-<span>               alpha <span class="op">=</span> <span class="op">(</span><span class="fl">100</span> <span class="op">-</span> <span class="va">percent</span><span class="op">)</span> <span class="op">*</span> <span class="fl">255</span> <span class="op">/</span> <span class="fl">100</span>,</span>
-<span>               names <span class="op">=</span> <span class="va">name</span><span class="op">)</span></span>
-<span>  </span>
-<span>  <span class="co">## Save the color</span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/base/invisible.html" class="external-link">invisible</a></span><span class="op">(</span><span class="va">t.col</span><span class="op">)</span></span>
-<span><span class="op">}</span></span>
-<span></span>
-<span><span class="va">plot_gpp_error</span> <span class="op">&lt;-</span> <span class="va">plot_gpp_error</span> <span class="op">+</span>  </span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_manual.html" class="external-link">scale_color_manual</a></span><span class="op">(</span>name <span class="op">=</span> <span class="st">""</span>,</span>
+<span>  <span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_manual.html" class="external-link">scale_color_manual</a></span><span class="op">(</span><span class="cn">NULL</span>,</span>
 <span>                     breaks <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Observations"</span>,</span>
-<span>                                <span class="st">"Predictions"</span>,</span>
-<span>                                <span class="st">"Non-calibrated predictions"</span><span class="op">)</span>,</span>
-<span>                     values <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fu">t_col</span><span class="op">(</span><span class="st">"black"</span>, <span class="fl">10</span><span class="op">)</span>,</span>
-<span>                                <span class="fu">t_col</span><span class="op">(</span><span class="st">"#E69F00"</span>, <span class="fl">10</span><span class="op">)</span>,</span>
-<span>                                <span class="fu">t_col</span><span class="op">(</span><span class="st">"#56B4E9"</span>, <span class="fl">10</span><span class="op">)</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_manual.html" class="external-link">scale_fill_manual</a></span><span class="op">(</span>name <span class="op">=</span> <span class="st">""</span>,</span>
+<span>                                <span class="st">"Predictions"</span><span class="op">)</span>,</span>
+<span>                     values <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"black"</span>, <span class="st">"tomato"</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_manual.html" class="external-link">scale_fill_manual</a></span><span class="op">(</span><span class="cn">NULL</span>,</span>
 <span>                    breaks <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Model uncertainty"</span>,</span>
 <span>                               <span class="st">"Parameter uncertainty"</span><span class="op">)</span>,</span>
-<span>                    values <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fu">t_col</span><span class="op">(</span><span class="st">"#E69F00"</span>, <span class="fl">60</span><span class="op">)</span>,</span>
-<span>                               <span class="fu">t_col</span><span class="op">(</span><span class="st">"#009E73"</span>, <span class="fl">40</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
+<span>                    values <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fu">add_alpha</span><span class="op">(</span><span class="st">"tomato"</span>, <span class="fl">0.5</span><span class="op">)</span>,</span>
+<span>                               <span class="st">"#1b9e77"</span>, <span class="fl">0</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">plot_gpp_error</span></span>
 <span><span class="co">#&gt; Warning: Removed 42 rows containing missing values or values outside the scale range</span></span>
 <span><span class="co">#&gt; (`geom_point()`).</span></span></code></pre></div>
 <p><img src="sensitivity_analysis_files/figure-html/unnamed-chunk-13-1.png" width="672" style="display: block; margin: auto;"></p>
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co">#dir.create("./analysis/paper_results_files2")</span></span></code></pre></div>
 <!-- Below we plot the first year of predicted GPP (in grey) against GPP observations (in black). -->
 <!-- We ran the P-model using the MAP estimates for all calibrated parameters and  -->
 <!-- computed a 90% predictive interval for GPP (grey shade), based on the normality assumption -->
