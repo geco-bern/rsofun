@@ -218,6 +218,9 @@ run_biomee_f_bysite <- function(
   n_lu <- nrow(init_lu) # Number of LU states
   luc_forcing <- build_luc_forcing(luc_forcing, n_lu)
 
+  if (length(luc_forcing[1,1,]) > params_siml$nyeartrend)
+    warning(paste("Warning: 'luc_forcing' contains more data points than nyeartrend (", length(luc_forcing[1,1,]), ' vs ', params_siml$nyeartrend, '). Extra data points will be ignored.'))
+
   # Set up variables used by C wrapper to build output arrays
   n_daily  <- params_siml$nyeartrend * ndayyear
   n_annual <- ifelse(
@@ -444,6 +447,11 @@ build_luc_forcing <- function(luc_forcing, n_lu){
   # If luc is null, we create  dummy LU transition matrix containing one all-zero transition
   if (is.null(luc_forcing))
     luc_forcing <- array(rep(0, n_lu ^ 2), c(n_lu, n_lu, 1))
+  else if (length(luc_forcing[,1,1]) != n_lu | length(luc_forcing[1,,1]) != n_lu)
+    stop(
+      paste("run_biomee_f_bysite: the first two dimensions of 'luc_forcing' must be equal to the dimension of 'init_lu'. Got ",
+            length(luc_forcing[,1,1]), ' x ', length(luc_forcing[1,,1]), " instead of ", n_lu, ' x ', n_lu, '.')
+    )
 
   return(luc_forcing)
 }
