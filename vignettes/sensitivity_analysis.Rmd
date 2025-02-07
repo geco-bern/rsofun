@@ -282,15 +282,14 @@ par_calib <- calib_sofun(
   par_fixed = par_fixed,
   targets = "gpp"
 )
+saveRDS(par_calib, "files/sensitivity_analysis.Rmd__par_calib.RDS")
 
 # This code takes 15 minutes to run
 ```
 
 ```{r simulate_par_calib, include = FALSE}
-# TODO: get rid of this and always fully run the vignettes
 # fake output since calibration isn't run
-# saveRDS(par_calib, here::here("analysis/paper_results_files/par_calib.rds"))
-par_calib <- readRDS(here::here("analysis/paper_results_files/par_calib.rds"))
+par_calib <- readRDS("files/sensitivity_analysis.Rmd__par_calib.RDS")
 ```
 
 `BayesianTools` makes it easy to produce the trace plot of the MCMC chains and the posterior density plot for the parameters. Trace plots show the time series of the sampled chains, which should reach a stationary state. One can also choose a burnin visually, to discard the early iterations and keep only the samples from the stationary distribution to which they converge. We set \code{burnin = 3000} above from previous runs, and those iterations are not shown by the following trace plot. The samples after the burnin period should be used for inference.
@@ -439,8 +438,8 @@ pmodel_run_map <- run_pmodel(
 ```{r simulate_pmodel_runs, include = FALSE}
 # TODO: get rid of this and always fully run the vignettes
 # fake output since calibration isn't run
-# saveRDS(pmodel_runs, file = here::here("analysis/paper_results_files/pmodel_runs.rds"))
-pmodel_runs <- readRDS(here::here("analysis/paper_results_files/pmodel_runs.rds"))
+# saveRDS(pmodel_runs, file = "files/pmodel_runs.rds")
+pmodel_runs <- readRDS("files/pmodel_runs.rds")
 ```
 
 Below we plot the first year of observed GPP (in black) against the predicted 

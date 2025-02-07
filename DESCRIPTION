@@ -81,7 +81,6 @@ Suggests:
     rmarkdown,
     ggplot2,
     knitr,
-    sensitivity,
-    here
+    sensitivity
 VignetteBuilder: knitr
 Encoding: UTF-8
