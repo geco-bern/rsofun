@@ -66,7 +66,7 @@ module vegetation_tile_biomee
     type(cohort_stack), private :: killed_fraction_list
 
     !===== Metadata
-    real, private    :: age                = 0.0           ! tile age
+    real    :: age                = 0.0           ! tile age
 
     !========================= Cohort aggreation ===========================!
     ! Attention: variables aggregated from cohorts are only usable after having run aggregate_cohorts()
@@ -177,6 +177,8 @@ module vegetation_tile_biomee
     ! so far, the use of functions has actually sped up the execution time quite a lot.
     procedure thetaS
     procedure soilwater
+    procedure pplant
+    procedure psoil
 
     !========= Cohort management
 
@@ -247,6 +249,28 @@ contains
             / (inputs%params_tile%FLDCAP - inputs%params_tile%WILTPT)
 
   end function thetaS
+
+  pure function pplant(self) result(res)
+    !////////////////////////////////////////////////////////////////
+    ! Plant pools
+    !---------------------------------------------------------------
+    class(vegn_tile_type), intent(in) :: self
+    type(orgpool) :: res
+
+    res = self%plabl + self%pseed + self%pleaf + self%proot + self%psapw + self%pwood
+
+  end function pplant
+
+  pure function psoil(self) result(res)
+    !////////////////////////////////////////////////////////////////
+    ! Soil pools
+    !---------------------------------------------------------------
+    class(vegn_tile_type), intent(in) :: self
+    type(orgpool) :: res
+
+    res = self%pmicr + self%psoil_fs + self%psoil_sl + self%inorg
+
+  end function psoil
 
   !----------------------------------------------------------------
   ! Cohort management
@@ -745,6 +769,7 @@ contains
     type(cohort_type), pointer :: cc
     type(cohort_item), pointer :: it
     integer :: i
+    type(orgpool) :: pool
 
     i = 0
 
@@ -816,22 +841,22 @@ contains
 
     call self%aggregate_cohorts()
 
-    plantC    = self%plabl%c12 + self%pseed%c12 + self%pleaf%c12 + self%proot%c12 + self%psapw%c12 + self%pwood%c12
-    plantN    = self%plabl%n14 + self%pseed%n14 + self%pleaf%n14 + self%proot%n14 + self%psapw%n14 + self%pwood%n14
+    pool = self%pplant()
+    plantC = pool%c12
+    plantN = pool%n14
+    pool = self%psoil()
+    soilC = pool%c12
+    soilN = pool%n14
 
-    soilC     = self%pmicr%c12 + self%psoil_fs%c12 + self%psoil_sl%c12
-    soilN     = self%pmicr%n14 + self%psoil_fs%n14 + self%psoil_sl%n14 + self%inorg%n14
-    self%totN = plantN + soilN
-
-    out_annual_tile(ANNUAL_TILE_YEAR            )  = dble(iyears)
-    out_annual_tile(ANNUAL_TILE_CAI             )  = dble(self%CAI)
-    out_annual_tile(ANNUAL_TILE_LAI             )  = dble(self%LAI)
-    out_annual_tile(ANNUAL_TILE_DENSITY         )  = dble(self%density * 10000)   ! * 10000 to convert in indivs/ha
-    out_annual_tile(ANNUAL_TILE_DBH             )  = dble(self%DBH * 100)         ! * 100 to convert in cm
-    out_annual_tile(ANNUAL_TILE_DENSITY12       )  = dble(self%density12 * 10000) ! * 10000 to convert in indivs/ha
-    out_annual_tile(ANNUAL_TILE_DBH12           )  = dble(self%DBH12 * 100)       ! * 100 to convert in cm
-    out_annual_tile(ANNUAL_TILE_QMD12           )  = dble(self%QMD12 * 100)       ! * 100 to convert in cm
-    out_annual_tile(ANNUAL_TILE_NPP             )  = dble(self%annual_fluxes%NPP())
+    out_annual_tile(ANNUAL_TILE_YEAR            ) = dble(iyears)
+    out_annual_tile(ANNUAL_TILE_CAI             ) = dble(self%CAI)
+    out_annual_tile(ANNUAL_TILE_LAI             ) = dble(self%LAI)
+    out_annual_tile(ANNUAL_TILE_DENSITY         ) = dble(self%density * 10000)   ! * 10000 to convert in indivs/ha
+    out_annual_tile(ANNUAL_TILE_DBH             ) = dble(self%DBH * 100)         ! * 100 to convert in cm
+    out_annual_tile(ANNUAL_TILE_DENSITY12       ) = dble(self%density12 * 10000) ! * 10000 to convert in indivs/ha
+    out_annual_tile(ANNUAL_TILE_DBH12           ) = dble(self%DBH12 * 100)       ! * 100 to convert in cm
+    out_annual_tile(ANNUAL_TILE_QMD12           ) = dble(self%QMD12 * 100)       ! * 100 to convert in cm
+    out_annual_tile(ANNUAL_TILE_NPP             ) = dble(self%annual_fluxes%NPP())
     out_annual_tile(ANNUAL_TILE_GPP             ) = dble(self%annual_fluxes%GPP)
     out_annual_tile(ANNUAL_TILE_RESP            ) = dble(self%annual_fluxes%Resp)
     out_annual_tile(ANNUAL_TILE_RH              ) = dble(self%annualRh)
@@ -841,9 +866,9 @@ contains
     out_annual_tile(ANNUAL_TILE_EVAP            ) = dble(self%annualEvap)
     out_annual_tile(ANNUAL_TILE_RUNOFF          ) = dble(self%annualRoff)
     out_annual_tile(ANNUAL_TILE_PLANT_C         ) = dble(plantC)
-    out_annual_tile(ANNUAL_TILE_SOIL_C          ) = dble(soilC)
+    out_annual_tile(ANNUAL_TILE_SOIL_C          ) = dble(SoilC)
     out_annual_tile(ANNUAL_TILE_PLANT_N         ) = dble(plantN)
-    out_annual_tile(ANNUAL_TILE_SOIL_N          ) = dble(soilN)
+    out_annual_tile(ANNUAL_TILE_SOIL_N          ) = dble(SoilN)
     out_annual_tile(ANNUAL_TILE_TOT_N           ) = dble(self%totN)
     out_annual_tile(ANNUAL_TILE_NSC             ) = dble(self%plabl%c12)
     out_annual_tile(ANNUAL_TILE_SEED_C          ) = dble(self%pseed%c12)
@@ -1023,14 +1048,9 @@ contains
     ! Initialize soil volumetric water conent with field capacity (maximum soil moisture to start with)
     self%wcl = inputs%params_tile%FLDCAP
 
-    ! tile
-    call aggregate_pools( self )
+    call self%aggregate_cohorts()
 
-    self%initialN0 =  self%plabl%n14 + self%pseed%n14 + self%pleaf%n14 +      &
-            self%proot%n14 + self%psapw%n14 + self%pwood%n14 + &
-            self%pmicr%n14 + self%psoil_fs%n14 +       &
-            self%psoil_sl%n14 + self%inorg%n14
-    self%totN =  self%initialN0
+    self%initialN0 =  self%totN
 
   end subroutine initialize_vegn_tile
 
@@ -1084,6 +1104,7 @@ contains
     type(cohort_type), pointer :: cc
     type(cohort_item), pointer :: it !iterator
     real :: dbh ! cache variable
+    type(orgpool) :: total_pool
 
     self%LAI          = 0.0
     self%CAI          = 0.0
@@ -1100,6 +1121,9 @@ contains
     self%m_turnover   = 0.0
 
     call self%aggregate_pools()
+
+    total_pool = self%pplant() + self%psoil()
+    self%totN = total_pool%n14
 
     it => self%cohorts()
     do while (associated(it))

@@ -85,7 +85,7 @@ contains
 
     ! Local variables
     type(vegn_tile_type), dimension(n_lu) :: vegn_tiles ! One tile per LU
-    real :: lu_state(n_lu) ! Current LU fractions
+    type(lu_state) :: lu_states(n_lu) ! Current LU fractions
     real(kind=c_double) :: nan
 
     integer :: yr, idx, idx_daily_start, idx_daily_end, lu_idx
@@ -101,7 +101,13 @@ contains
     output_annual_cohorts = nan
 
     ! LULUC initializations
-    lu_state = real(init_lu(:, 1))
+    do lu_idx = 1, n_lu
+      lu_states(lu_idx) = lu_state( &
+            real(init_lu(lu_idx, 1)), &
+            int(init_lu(lu_idx, 2)) &
+            )
+
+    end do
     output_annual_luluc_tile = 0
 
     ! Allocate climate array
@@ -115,7 +121,7 @@ contains
 
     ! Initialize tiles
     do lu_idx = 1, n_lu
-      if (lu_state(lu_idx) > 0.0) call vegn_tiles(lu_idx)%initialize_vegn_tile()
+      if (lu_states(lu_idx)%non_empty()) call vegn_tiles(lu_idx)%initialize_vegn_tile()
     end do
 
     !----------------------------------------------------------------
@@ -144,31 +150,42 @@ contains
       idx_daily_start = (state%year - inputs%params_siml%steering%spinupyears - 1) * ndayyear + 1
       idx_daily_end   = idx_daily_start + ndayyear - 1
 
-      ! For each LU (land unit) whose fraction is > 0
+      ! For each non-empty LU (land unit)
       do lu_idx = 1, n_lu
-        if (lu_state(lu_idx) > 0.0) then
+        if (lu_states(lu_idx)%non_empty()) then
 
-          !----------------------------------------------------------------
-          ! Call biosphere (wrapper for all modules, contains time loops)
-          !----------------------------------------------------------------
-          if (state%spinup) then
-            ! If spinup, we do not pass the daily and cohort output arrays
-            call biosphere_annual( &
-              state, &
-              climate, &
-              vegn_tiles(lu_idx), &
-              output_annual_tile(state%year, :, lu_idx) &
-            )
+          ! If it is not of type urban
+          if (lu_states(lu_idx)%type /= LU_TYPE_URBAN) then
+
+            !----------------------------------------------------------------
+            ! Call biosphere (wrapper for all modules, contains time loops)
+            !----------------------------------------------------------------
+            if (state%spinup) then
+              ! If spinup, we do not pass the daily and cohort output arrays
+              call biosphere_annual( &
+                state, &
+                climate, &
+                vegn_tiles(lu_idx), &
+                output_annual_tile(state%year, :, lu_idx) &
+              )
+            else
+              idx =  state%year - inputs%params_siml%steering%spinupyears
+              call biosphere_annual( &
+                      state, &
+                      climate, &
+                      vegn_tiles(lu_idx), &
+                      output_annual_tile(state%year, :, lu_idx), &
+                      output_daily_tile(idx_daily_start:idx_daily_end, :, lu_idx), &
+                      output_annual_cohorts(:, idx,:, lu_idx) &
+                      )
+            end if
+
           else
-            idx =  state%year - inputs%params_siml%steering%spinupyears
-            call biosphere_annual( &
-                    state, &
-                    climate, &
-                    vegn_tiles(lu_idx), &
-                    output_annual_tile(state%year, :, lu_idx), &
-                    output_daily_tile(idx_daily_start:idx_daily_end, :, lu_idx), &
-                    output_annual_cohorts(:, idx,:, lu_idx) &
-                    )
+            ! If it is a urban LU, we fill the annual diagnostics manually
+            ! Even if it does not have cohorts, we do not want to run processes which act at the tile level (example psoil_sl respiration)
+            vegn_tiles(lu_idx)%age = vegn_tiles(lu_idx)%age + 1
+            call vegn_tiles(lu_idx)%annual_diagnostics(state%year, &
+                    output_annual_tile(state%year, :, lu_idx))
           end if
 
         end if
@@ -180,10 +197,10 @@ contains
       !----------------------------------------------------------------
       if ((.not.state%spinup) .and. (state%forcingyear_idx <= n_lu_tr_years)) then
 
-        call update_lu_state(lu_state, real(luc_forcing(:,:,state%forcingyear_idx)), vegn_tiles)
+        call update_lu_fractions(lu_states(:)%fraction, real(luc_forcing(:,:,state%forcingyear_idx)), vegn_tiles)
 
       end if
-      call populate_outarray_annual_land_use(state%year, lu_state, output_annual_luluc_tile(state%year,:,:))
+      call populate_outarray_annual_land_use(state%year, lu_states(:)%fraction, output_annual_luluc_tile(state%year,:,:))
 
     end do yearloop
 

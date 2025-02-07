@@ -379,17 +379,14 @@ build_params_siml <- function(params_siml, forcing_years, makecheck){
   }
 
   # Types of mortality formulations
-  if (params_siml$method_mortality == "cstarvation"){
-    params_siml$code_method_mortality <- 1
-  } else if (params_siml$method_mortality == "growthrate"){
-    params_siml$code_method_mortality <- 2
-  } else if (params_siml$method_mortality == "dbh"){
-    params_siml$code_method_mortality <- 3
-  } else if (params_siml$method_mortality == "const_selfthin"){
-    params_siml$code_method_mortality <- 4
-  } else if (params_siml$method_mortality == "bal"){
-    params_siml$code_method_mortality <- 5
-  } else {
+  params_siml$code_method_mortality <- switch(params_siml$method_mortality,
+                                              "cstarvation"    = 1,
+                                              "growthrate"     = 2,
+                                              "dbh"            = 3,
+                                              "const_selfthin" = 4,
+                                              "bal"            = 5
+  )
+  if (is.null(params_siml$code_method_mortality)) {
     stop(
       paste("run_biomee_f_bysite: params_siml$method_mortality not recognised:",
             params_siml$method_mortality))
@@ -431,15 +428,27 @@ prepare_params_siml <- function(params_siml){
 build_init_lu <- function(init_lu){
   # If init_lu is null, we create a dummy LU initial state containing only one state (with a fraction of 1)
   if (is.null(init_lu))
-    init_lu <- data.frame(name=c('primary'), fraction=c(1.0))
+    init_lu <- data.frame(name=c('primary'), fraction=c(1.0), type=c('unmanaged'))
 
   return(init_lu)
 }
 
 prepare_init_lu <- function(init_lu){
-  init_lu <- init_lu %>% select(
-    'fraction'
+  if(!'type' %in% names(init_lu)) {
+    init_lu <- init_lu %>% add_column('type' = 'unmanaged')
+  }
+  init_lu <- init_lu %>% mutate(
+    'type' = case_match(
+      type,
+      "urban" ~ 1,
+      .default = 0
+    )
   )
+  init_lu <- init_lu %>% select(
+    'fraction',
+    'type'
+  )
+
   return(init_lu)
 }
 
