@@ -29,23 +29,25 @@ module md_luluc
         
       end function non_empty
         
-      subroutine update_lu_fractions(lu_fractions, forcing, tiles)
+      function update_lu_fractions(lu_fractions, luc_forcing, tiles) result(export)
       !////////////////////////////////////////////////////////////////
       ! Update the LU fractions 'lu_fractions' by applying the LU transitions
-      ! defined in the square matrix 'forcing'.
+      ! defined in the square matrix 'luc_forcing'.
+      ! Returns the exported organic material
       !----------------------------------------------------------------
   
           use vegetation_tile_biomee
           ! Arguments
-          real, intent(in), dimension(:, :) :: forcing ! n_lu * n_lu matrix
+          real, intent(in), dimension(:, :) :: luc_forcing ! n_lu * n_lu matrix
           real, intent(inout), dimension(:) :: lu_fractions
           type(vegn_tile_type), intent(inout), dimension(:), target :: tiles
+          type(orgpool) :: export
+
   
           ! Local variables
           integer :: i, j
           real :: delta
           type(orgpool), dimension(size(lu_fractions), 4) :: transfer ! n_lu * 4 matrix of orgppols
-          type(orgpool) :: export
           real, dimension(size(lu_fractions)) :: old_lu_fractions, received, lost
           type(cohort_type), pointer :: cc
           type(cohort_item), pointer :: it
@@ -66,7 +68,7 @@ module md_luluc
           ! j is the receiving tile
           do i = 1, size(lu_fractions)
               do j = 1, size(lu_fractions)
-                  delta = forcing(i, j)
+                  delta = luc_forcing(i, j)
                   if (delta <= 0) cycle
                   ! If there is a transition from i to j, we save the trasnfered amounts in 'transfer'
                   transfer(j, PMICR) = transfer(j, PMICR) + tiles(i)%pmicr * delta
@@ -118,8 +120,8 @@ module md_luluc
               vegn%psoil_fs = (vegn%psoil_fs * (old_lu_fractions(j) - lost(j)) + transfer(j, PSOIL_FS)) / lu_fractions(j)
               vegn%psoil_sl = (vegn%psoil_sl * (old_lu_fractions(j) - lost(j)) + transfer(j, PSOIL_SL)) / lu_fractions(j)
           end do
-  
-      end subroutine update_lu_fractions
+
+      end function update_lu_fractions
   
       subroutine populate_outarray_annual_land_use(year, lu_fractions, output_annual_luluc_tile)
           use, intrinsic :: iso_fortran_env, dp=>real64
@@ -127,7 +129,7 @@ module md_luluc
           ! Arguments
           integer, intent(in)                          :: year
           real, intent(in), dimension(:)               :: lu_fractions
-          real(kind=dp), intent(inout), dimension(:,:) :: output_annual_luluc_tile
+          real(kind=dp), intent(out), dimension(:,:)   :: output_annual_luluc_tile
   
           output_annual_luluc_tile(1,:) = dble(year)
           output_annual_luluc_tile(2,:) = dble(lu_fractions)

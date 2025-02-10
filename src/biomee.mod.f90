@@ -46,6 +46,7 @@ contains
     use vegetation_tile_biomee
     use md_biosphere_biomee
     use md_luluc
+    use md_product_pools
 
     implicit none
 
@@ -83,22 +84,26 @@ contains
             intent(out) :: output_annual_cohorts
     real(kind=c_double), dimension(nt_annual,nvars_lu_out, n_lu), intent(out) :: output_annual_luluc_tile
 
-    ! Local variables
+    ! Local state
     type(vegn_tile_type), dimension(n_lu) :: vegn_tiles ! One tile per LU
+    type(product_pools) :: prod_pools
     type(lu_state) :: lu_states(n_lu) ! Current LU fractions
-    real(kind=c_double) :: nan
 
+    ! Local variables
+    real(kind=c_double) :: nan
+    type(orgpool) :: export
     integer :: yr, idx, idx_daily_start, idx_daily_end, lu_idx
 
     !----------------------------------------------------------------
     ! Initialize outputs to NaN / 0
     !----------------------------------------------------------------
 
-    ! Initialize outputs to NaN
+    ! Initialize outputs to NaN or 0
     nan = ieee_value(nan, ieee_quiet_nan)
     output_daily_tile = nan
     output_annual_tile = nan
     output_annual_cohorts = nan
+    output_annual_luluc_tile = 0
 
     ! Allocate climate array
     allocate(climate(inputs%ntstepsyear))
@@ -109,9 +114,8 @@ contains
 
     call inputs%populate(params_species, init_cohort, init_soil, params_tile, params_siml, site_info, init_lu)
 
-    ! LULUC init
+    ! LU states init
     lu_states(:)%fraction = inputs%init_lu(:)%fraction
-    output_annual_luluc_tile = 0
 
     ! Initialize tiles
     do lu_idx = 1, n_lu
@@ -191,7 +195,8 @@ contains
       !----------------------------------------------------------------
       if ((.not.state%spinup) .and. (state%forcingyear_idx <= n_lu_tr_years)) then
 
-        call update_lu_fractions(lu_states(:)%fraction, real(luc_forcing(:,:,state%forcingyear_idx)), vegn_tiles)
+        export = update_lu_fractions(lu_states(:)%fraction, real(luc_forcing(:,:,state%forcingyear_idx)), vegn_tiles)
+        call prod_pools%update(export)
 
       end if
       call populate_outarray_annual_land_use(state%year, lu_states(:)%fraction, output_annual_luluc_tile(state%year,:,:))

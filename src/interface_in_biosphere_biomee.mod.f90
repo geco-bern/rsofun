@@ -301,10 +301,10 @@ contains
     class(interface_in_biosphere_biomee), intent(inout) :: self
     real(kind=c_double), dimension(:,:), intent(in) :: params_species
     real(kind=c_double), dimension(:,:), intent(in) :: init_cohort
-    real(kind=c_double), dimension(nvars_init_soil),   intent(in)  :: init_soil
+    real(kind=c_double), dimension(nvars_init_soil),   intent(in) :: init_soil
     real(kind=c_double), dimension(nvars_params_tile), intent(in) :: params_tile
     real(kind=c_double), dimension(nvars_params_siml), intent(in) :: params_siml
-    real(kind=c_double), dimension(nvars_site_info),   intent(in)  :: site_info
+    real(kind=c_double), dimension(nvars_site_info),   intent(in) :: site_info
     real(kind=c_double), dimension(:,:), intent(in) :: init_lu
 
     ! ---- local vars ------
