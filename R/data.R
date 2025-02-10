@@ -313,6 +313,8 @@
 #'       \item{init_cohort_bHW}{Initial biomass of heartwood, in kg C per individual.}
 #'       \item{init_cohort_seedC}{Initial biomass of seed, in kg C per individual.}
 #'       \item{init_cohort_nsc}{Initial non-structural biomass, in kg C per individual.}
+#'       \item{lu_index}{Land use type this cohorts belongs to (given as index in init_lu aray).
+#'        Use 0 to attach to all LU types except urban.}
 #'     }}
 #'   \item{init_soil}{A data.frame of initial soil pools, including
 #'   the following data:
@@ -323,6 +325,18 @@
 #'       \item{N_input}{Annual nitrogen input to soil N pool, in kg N m\eqn{^{-2}}
 #'         year\eqn{^{-1}}.}
 #'     }}
+#'   \item{init_lu}{A data.frame of initial land unit (LU) specifications, including
+#'   the following data:
+#'     \describe{
+#'       \item{fraction}{Initial cell fraction occupied by this LU.}
+#'       \item{type}{Land use type. On of: unmanaged, urban}
+#'     }}
+#'   \item{luc_forcing}{Array of land use change (LUC) used during transient phase.
+#' During spinup, the initial land unit fractions are used (i.e. no transition).
+#' If there are more transient years than provided LUC data, the last state is maintained until the end of the transient phase (i.e. no transition).
+#' The array is a nxn square matrix, where n is the number of LU (i.e. dimension of init_lu).
+#' Each cell f(i, j) expresses the fraction of LU i (row) being transfered to LU j (column).
+#' Self transitions are allowed, meaning that a fraction of the land unit is clear cut, but the area remains in the same land use.
 #' }
 "biomee_gs_leuning_drivers"
 

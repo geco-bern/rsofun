@@ -100,16 +100,6 @@ contains
     output_annual_tile = nan
     output_annual_cohorts = nan
 
-    ! LULUC initializations
-    do lu_idx = 1, n_lu
-      lu_states(lu_idx) = lu_state( &
-            real(init_lu(lu_idx, 1)), &
-            int(init_lu(lu_idx, 2)) &
-            )
-
-    end do
-    output_annual_luluc_tile = 0
-
     ! Allocate climate array
     allocate(climate(inputs%ntstepsyear))
 
@@ -117,11 +107,15 @@ contains
     ! Populate interface with arguments from R
     !----------------------------------------------------------------
 
-    call inputs%populate(params_species, init_cohort, init_soil, params_tile, params_siml, site_info)
+    call inputs%populate(params_species, init_cohort, init_soil, params_tile, params_siml, site_info, init_lu)
+
+    ! LULUC init
+    lu_states(:)%fraction = inputs%init_lu(:)%fraction
+    output_annual_luluc_tile = 0
 
     ! Initialize tiles
     do lu_idx = 1, n_lu
-      if (lu_states(lu_idx)%non_empty()) call vegn_tiles(lu_idx)%initialize_vegn_tile()
+      if (lu_states(lu_idx)%non_empty()) call vegn_tiles(lu_idx)%initialize_vegn_tile(lu_idx)
     end do
 
     !----------------------------------------------------------------
@@ -155,7 +149,7 @@ contains
         if (lu_states(lu_idx)%non_empty()) then
 
           ! If it is not of type urban
-          if (lu_states(lu_idx)%type /= LU_TYPE_URBAN) then
+          if (inputs%init_lu(lu_idx)%type /= LU_TYPE_URBAN) then
 
             !----------------------------------------------------------------
             ! Call biosphere (wrapper for all modules, contains time loops)

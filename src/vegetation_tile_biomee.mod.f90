@@ -66,7 +66,8 @@ module vegetation_tile_biomee
     type(cohort_stack), private :: killed_fraction_list
 
     !===== Metadata
-    real    :: age                = 0.0           ! tile age
+    real    :: age = 0.0           ! tile age
+    integer, private :: lu_index   ! Which land use (LU) this tile represents. Given as the index in 'init_lu' array.
 
     !========================= Cohort aggreation ===========================!
     ! Attention: variables aggregated from cohorts are only usable after having run aggregate_cohorts()
@@ -1000,38 +1001,52 @@ contains
 
   end subroutine
 
-  subroutine initialize_vegn_tile( self )
+  subroutine initialize_vegn_tile( self, lu_index )
     !////////////////////////////////////////////////////////////////////////
-    ! Initialize vgetation tile and cohorts pools
+    ! Initialize vegetation tile and cohorts pools
+    ! 'lu_index' parameter sets the eponym variable.
     !---------------------------------------------------------------
     class(vegn_tile_type), intent(inout) :: self
+    integer, intent(in) :: lu_index
 
     ! Local variables
     integer :: i, init_n_cohorts
     type(cohort_type), pointer :: cc
     type(cohort_item), pointer :: new
 
-    ! Initialize plant cohorts
-    init_n_cohorts = size(inputs%init_cohort)
+    ! Initialize lu_index
+    self%lu_index = lu_index
 
-    do i = 1, init_n_cohorts
+    ! If it is of type urban, we do not add any cohort
+    if (inputs%init_lu(lu_index)%type /= LU_TYPE_URBAN) then
 
-      new => self%new_cohort()
-      cc => new%cohort
-      cc%species   = INT(inputs%init_cohort(i)%init_cohort_species)
-      cc%density   = inputs%init_cohort(i)%init_cohort_density ! trees/m2
-      cc%plabl%c12 = inputs%init_cohort(i)%init_cohort_nsc
-      cc%psapw%c12 = inputs%init_cohort(i)%init_cohort_bsw
-      cc%pwood%c12 = inputs%init_cohort(i)%init_cohort_bHW
-      cc%pleaf%c12 = inputs%init_cohort(i)%init_cohort_bl
-      cc%proot%c12 = inputs%init_cohort(i)%init_cohort_br
-      cc%pseed%c12 = inputs%init_cohort(i)%init_cohort_seedC
-      call cc%initialize_cohort_from_biomass()
+      ! Initialize plant cohorts
+      init_n_cohorts = size(inputs%init_cohort)
 
-    enddo
+      do i = 1, init_n_cohorts
 
-    ! Split initial layer in smaller layers (if it is full)
-    call self%relayer()
+        ! If this cohorts init does not belong to the land use type of this vegetation tile, we move on to the next item.
+        ! If the cohort's registered lu_index is negative, it belongs to all LU types (except urban)
+        if (inputs%init_cohort(i)%lu_index > 0 .and. self%lu_index /= i) cycle
+
+        new => self%new_cohort()
+        cc => new%cohort
+        cc%species   = inputs%init_cohort(i)%init_cohort_species
+        cc%density   = inputs%init_cohort(i)%init_cohort_density ! trees/m2
+        cc%plabl%c12 = inputs%init_cohort(i)%init_cohort_nsc
+        cc%psapw%c12 = inputs%init_cohort(i)%init_cohort_bsw
+        cc%pwood%c12 = inputs%init_cohort(i)%init_cohort_bHW
+        cc%pleaf%c12 = inputs%init_cohort(i)%init_cohort_bl
+        cc%proot%c12 = inputs%init_cohort(i)%init_cohort_br
+        cc%pseed%c12 = inputs%init_cohort(i)%init_cohort_seedC
+        call cc%initialize_cohort_from_biomass()
+
+      enddo
+
+      ! Split initial layer in smaller layers (if it is full)
+      call self%relayer()
+
+    end if
 
     ! Initial Soil pools and environmental conditions
     self%psoil_fs%c12 = inputs%init_soil%init_fast_soil_C  ! kgC m-2

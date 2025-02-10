@@ -26,6 +26,22 @@ module md_interface_in_biomee
   integer, public, parameter :: nvars_init_soil      = 4
   integer, public, parameter :: nvars_init_cohorts   = 9
   integer, public, parameter :: nvars_params_species = 55
+  integer, public, parameter :: nvars_init_lu        = 2
+
+  !===== LU types
+  integer, public, parameter :: LU_TYPE_UNMANAGED    = 0
+  integer, public, parameter :: LU_TYPE_URBAN        = 1
+
+  type init_lu_biomee
+
+    real :: fraction
+    integer :: type ! LU type. See LU_TYPE variables above
+
+    contains
+
+    procedure populate_init_lu
+
+  end type init_lu_biomee
 
   type params_siml_biomee
 
@@ -158,14 +174,15 @@ module md_interface_in_biomee
 
   type init_cohort_biomee
     integer :: init_cohort_species
-    real :: init_cohort_density
-    real :: init_cohort_bl
-    real :: init_cohort_br
-    real :: init_cohort_bsw
-    real :: init_cohort_bHW
-    real :: init_cohort_seedC
-    real :: init_cohort_nsc
-    
+    real    :: init_cohort_density
+    real    :: init_cohort_bl
+    real    :: init_cohort_br
+    real    :: init_cohort_bsw
+    real    :: init_cohort_bHW
+    real    :: init_cohort_seedC
+    real    :: init_cohort_nsc
+    integer :: lu_index ! Which land use (LU) should this cohort be used for. Given as the index in 'init_lu' array.
+
   contains
     
     procedure populate_init_cohort
@@ -201,6 +218,7 @@ module md_interface_in_biomee
     type(init_cohort_biomee), dimension(:), allocatable    :: init_cohort
     type(init_soil_biomee)                                 :: init_soil
     type(site_info_biomee)                                 :: site_info
+    type(init_lu_biomee), dimension(:), allocatable        :: init_lu
     integer                                                :: steps_per_day ! Number of steps in 24h
     integer                                                :: ntstepsyear   ! Number of steps in 1 year
     real                                                   :: dt_fast_yr    ! Duration of one step in yr
@@ -218,9 +236,18 @@ module md_interface_in_biomee
 
 contains
 
+  subroutine populate_init_lu(self, init_lu)
+    class(init_lu_biomee), intent(inout) :: self
+    real(kind=c_double), dimension(nvars_init_lu), intent(in) :: init_lu
+
+    self%fraction = real(init_lu(1))
+    self%type     = int(init_lu(2))
+
+  end subroutine populate_init_lu
+
   subroutine populate_params_siml(self, params_siml)
     class(params_siml_biomee), intent(inout) :: self
-    real(kind=c_double), dimension(:), intent(in) :: params_siml
+    real(kind=c_double), dimension(nvars_params_siml), intent(in) :: params_siml
 
     self%steering%do_spinup        = int(params_siml(1)) /= 0
     self%steering%spinupyears      = int(params_siml(2))
@@ -267,16 +294,18 @@ contains
 
     deallocate(self%params_species)
     deallocate(self%init_cohort)
+    deallocate(self%init_lu)
   end subroutine shut_down
 
-  subroutine populate(self, params_species, init_cohort, init_soil, params_tile, params_siml, site_info)
+  subroutine populate(self, params_species, init_cohort, init_soil, params_tile, params_siml, site_info, init_lu)
     class(interface_in_biosphere_biomee), intent(inout) :: self
     real(kind=c_double), dimension(:,:), intent(in) :: params_species
-    real(kind=c_double), dimension(:,:), intent(in)  :: init_cohort
+    real(kind=c_double), dimension(:,:), intent(in) :: init_cohort
     real(kind=c_double), dimension(nvars_init_soil),   intent(in)  :: init_soil
     real(kind=c_double), dimension(nvars_params_tile), intent(in) :: params_tile
     real(kind=c_double), dimension(nvars_params_siml), intent(in) :: params_siml
     real(kind=c_double), dimension(nvars_site_info),   intent(in)  :: site_info
+    real(kind=c_double), dimension(:,:), intent(in) :: init_lu
 
     ! ---- local vars ------
     integer :: i, n_init_cohort, n_params_species
@@ -310,6 +339,12 @@ contains
       call self%params_species(i)%populate_spec_data(params_species(i,:))
     enddo
 
+    ! LULUC initializations
+    allocate(self%init_lu(size(init_lu(:, 1))))
+    do i = 1, size(self%init_lu)
+      call self%init_lu(i)%populate_init_lu(init_lu(i, :))
+    end do
+
   end subroutine populate
 
   subroutine populate_init_cohort(self, init_cohort)
@@ -324,6 +359,7 @@ contains
     self%init_cohort_bHW     = real(init_cohort(6))
     self%init_cohort_seedC   = real(init_cohort(7))
     self%init_cohort_nsc     = real(init_cohort(8))
+    self%lu_index            = int( init_cohort(9))
   end subroutine populate_init_cohort
   
   subroutine populate_init_soil(self, init_soil)

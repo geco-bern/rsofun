@@ -13,9 +13,7 @@
 #' @param init_soil A data.frame of initial soil pools.
 #' @param makecheck A logical specifying whether checks are performed to verify forcings and model parameters. \code{TRUE} by default.
 #' @param init_lu A data.frame of initial land unit (LU) specifications.
-#' @param luc_forcing A data.frame of land use change (LUC) used during transient phase.
-#' During spinup, the initial land unit fractions are used (i.e. no transition).
-#' If applicable, the last state is maintained until the end of the transient phase (i.e. no transition).
+#' @param luc_forcing An array of land use change (LUC) used during transient phase.
 #'
 #' For further specifications of above inputs and examples see \code{\link{biomee_gs_leuning_drivers}} or \code{\link{biomee_p_model_drivers}}.
 #' 
@@ -435,7 +433,7 @@ build_init_lu <- function(init_lu){
 
 prepare_init_lu <- function(init_lu){
   if(!'type' %in% names(init_lu)) {
-    init_lu <- init_lu %>% add_column('type' = 'unmanaged')
+    init_lu <- init_lu %>% tibble::add_column('type' = 'unmanaged')
   }
   init_lu <- init_lu %>% mutate(
     'type' = case_match(
@@ -495,17 +493,23 @@ prepare_site_info <- function(site_info){
 prepare_init_cohorts <- function(init_cohort){
   if ('init_n_cohorts' %in% names(init_cohort)) {
     warning("Warning: Ignoring column 'init_n_cohorts' under 'init_cohort' in drivers. It has been phased out and should be removed from drivers.")
-    init_cohort <- init_cohort %>% select(
-      "init_cohort_species",
-      "init_cohort_nindivs",
-      "init_cohort_bl",
-      "init_cohort_br",
-      "init_cohort_bsw",
-      "init_cohort_bHW",
-      "init_cohort_seedC",
-      "init_cohort_nsc"
-    )
   }
+
+  if(!'lu_index' %in% names(init_cohort)) {
+    init_cohort <- init_cohort %>% tibble::add_column('lu_index' = 0)
+  }
+
+  init_cohort <- init_cohort %>% select(
+    "init_cohort_species",
+    "init_cohort_nindivs",
+    "init_cohort_bl",
+    "init_cohort_br",
+    "init_cohort_bsw",
+    "init_cohort_bHW",
+    "init_cohort_seedC",
+    "init_cohort_nsc",
+    "lu_index"
+  )
 
   return(init_cohort)
 }

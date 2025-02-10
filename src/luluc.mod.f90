@@ -8,15 +8,11 @@ module md_luluc
     public :: lu_state
     public :: update_lu_fractions, populate_outarray_annual_land_use
 
-    integer, public, parameter :: nvars_init_lu        = 2
     integer, public, parameter :: nvars_lu_out         = 2
-    integer, public, parameter :: LU_TYPE_UNMANAGED    = 0
-    integer, public, parameter :: LU_TYPE_URBAN        = 1
 
     type lu_state
 
         real :: fraction
-        integer :: type
     
     contains
         
@@ -49,7 +45,7 @@ module md_luluc
           integer :: i, j
           real :: delta
           type(orgpool), dimension(size(lu_fractions), 4) :: transfer ! n_lu * 4 matrix of orgppols
-          type(orgpool) :: trash
+          type(orgpool) :: export
           real, dimension(size(lu_fractions)) :: old_lu_fractions, received, lost
           type(cohort_type), pointer :: cc
           type(cohort_item), pointer :: it
@@ -60,7 +56,7 @@ module md_luluc
           integer, parameter :: PSOIL_SL = 4
   
           transfer(:, :) = orgpool()
-          trash = orgpool()
+          export = orgpool()
           old_lu_fractions = lu_fractions
           received = 0
           lost = 0
@@ -79,8 +75,8 @@ module md_luluc
                   transfer(j, PSOIL_SL) = &
                           transfer(j, PSOIL_SL) + (tiles(i)%psoil_sl + tiles(i)%proot + tiles(i)%pseed + tiles(i)%plabl) &
                           * delta
-                  ! We add to the trash what is taken away (above ground)
-                  trash = trash + (tiles(i)%plabl + tiles(i)%pleaf + tiles(i)%pseed) * delta
+                  ! We export above ground pools
+                  export = export + (tiles(i)%plabl + tiles(i)%pleaf + tiles(i)%pseed) * delta
                   ! We keep track of the deltas
                   received(j) = received(j) + delta
                   lost(i) = lost(i) + delta
@@ -103,7 +99,7 @@ module md_luluc
   
               if (old_lu_fractions(j) <= 0 .and. lu_fractions(j) > 0) then
                   ! If a tile had null fraction and has now non-null, we initialize it.
-                  call vegn%initialize_vegn_tile()
+                  call vegn%initialize_vegn_tile(j)
               else
                   it => vegn%cohorts()
                   do while (associated(it))
