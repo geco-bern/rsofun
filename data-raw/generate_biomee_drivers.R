@@ -40,7 +40,7 @@ params_siml_gs_leuning <- tibble(
   nyeartrend = 1,
   steps_per_day = 24,
   do_U_shaped_mortality = TRUE,
-  do_closedN_run = TRUE,
+  do_closedN_run = FALSE,
   method_photosynth = "gs_leuning",
   method_mortality = "dbh"
 )
@@ -152,7 +152,7 @@ init_soil <- tibble( #list
   init_fast_soil_C    = 0.01,
   init_slow_soil_C    = 0.001,
   init_Nmineral       = 0.015,
-  N_input             = 0.0008
+  N_input             = 0.01
 )
 
 rh_to_vpd <- function(temp, # Air temperature (deg C)

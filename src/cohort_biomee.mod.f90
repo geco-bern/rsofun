@@ -41,11 +41,11 @@ module md_cohort
     !===== Biological prognostic variables
     real    :: gdd        = 0.0          ! growing degree-day (phenology)
     integer :: status     = LEAF_OFF     ! growth status of plant
-    real    :: leaf_age   = 0.0          ! leaf age (years)
+    real :: leaf_age   = 0.0          ! leaf age (years)
 
     !===== Organic pools, kg tree-1
     type(orgpool) :: pleaf               ! leaf biomass
-    type(orgpool) :: proot               ! root biomass
+    type(orgpool) :: proot               ! fine root biomass
     type(orgpool) :: psapw               ! sapwood biomass
     type(orgpool) :: pwood               ! heartwood (non-living) biomass
     type(orgpool) :: pseed               ! biomass put aside for future progeny
