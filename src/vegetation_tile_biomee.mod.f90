@@ -108,12 +108,15 @@ module vegetation_tile_biomee
     !========================= Tile level variables ===========================!
     !===== Soil organic pools, kg m-2
     ! renamed: metabolicL, metabolicN -> psoil_fs; structuralL, structuralN -> psoil_sl; MicrobialC, MicrobialN -> pmicr
-    type(orgpool) :: psoil_fs        ! soil organic matter, fast turnover
+    type(orgpool) :: psoil_fs        ! soil organic matter, fast turnover (= litter)
     type(orgpool) :: psoil_sl        ! soil organic matter, slow turnover
     type(orgpool) :: pmicr           ! microbial biomass
 
     !===== Inorganic pools, kg m-2
-    type(orgpool) :: inorg                      ! Mineral N/C pool
+    type(orgpool) :: inorg                        ! Mineral N/C pool
+
+    !===== Soil water pool, kg H2O m-2
+    real          :: wcl(MAX_LEVELS)              ! volumetric soil water content for each layer
 
     !=====  Averaged quantities for PPA phenology
     ! Note, these fields do not follow the usual annual cycle (january-january)
@@ -123,7 +126,7 @@ module vegetation_tile_biomee
     real    :: tc_pheno           = 0.0           ! smoothed canopy air temperature for phenology
     real    :: tc_soil            = 0.0           ! Daily soil temperature in (deg C)
 
-    !===== Annual C/N allocation to seed and non-seed, kg yr-1 m-2
+    !===== Annual C/N allocation to seed and non-seed, kg m-2 yr-1
     type(orgpool)    :: totSeed           ! Total seed
     type(orgpool)    :: totNewC           ! New cohort (all compartments but seed)
 
@@ -140,11 +143,10 @@ module vegetation_tile_biomee
 
     !=====  Fast fluxes, kg m-2 timestep-1
     real    :: rh                                 ! soil carbon lost to the atmosphere
-    !=====  Soil water, kg H2O m-2 timestep-1
+    !=====  Soil water fluxes, kg H2O m-2 timestep-1
     real    :: evap                               ! Evaporation
     real    :: runoff                             ! Water runoff of the tile
     real    :: precp                              ! Precipitation
-    real    :: wcl(MAX_LEVELS)                    ! volumetric soil water content for each layer
 
     !=====  Daily fluxes, kg day-1 m-2
     real, private    :: dailyRh

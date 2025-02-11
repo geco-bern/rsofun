@@ -47,7 +47,8 @@ module md_luluc
           ! Local variables
           integer :: i, j
           real :: delta
-          type(orgpool), dimension(size(lu_fractions), 4) :: transfer ! n_lu * 4 matrix of orgppols
+          type(orgpool), dimension(size(lu_fractions), 4) :: transfer ! n_lu * 4 matrix of orgpools
+          real, dimension(size(lu_fractions), MAX_LEVELS) :: transfer_water
           real, dimension(size(lu_fractions)) :: old_lu_fractions, received, lost
           type(cohort_type), pointer :: cc
           type(cohort_item), pointer :: it
@@ -70,15 +71,19 @@ module md_luluc
               do j = 1, size(lu_fractions)
                   delta = luc_forcing(i, j)
                   if (delta <= 0) cycle
-                  ! If there is a transition from i to j, we save the trasnfered amounts in 'transfer'
-                  transfer(j, PMICR) = transfer(j, PMICR) + tiles(i)%pmicr * delta
-                  transfer(j, INORG) = transfer(j, INORG) + tiles(i)%inorg * delta
-                  transfer(j, PSOIL_FS) = transfer(j, PSOIL_FS) + tiles(i)%psoil_fs * delta
-                  transfer(j, PSOIL_SL) = &
-                          transfer(j, PSOIL_SL) + (tiles(i)%psoil_sl + tiles(i)%proot + tiles(i)%pseed + tiles(i)%plabl) &
+                  vegn => tiles(i)
+                  ! If there is a transition from i to j, we save the transfered pools in 'transfer'
+                  transfer(j, PMICR) = transfer(j, PMICR) + vegn%pmicr * delta
+                  transfer(j, INORG) = transfer(j, INORG) + vegn%inorg * delta
+                  transfer(j, PSOIL_SL) = transfer(j, PSOIL_SL) + vegn%psoil_sl * delta
+                  ! Transfer to litter pool
+                  transfer(j, PSOIL_FS) = &
+                          transfer(j, PSOIL_FS) + (vegn%psoil_fs + vegn%proot + vegn%pseed + vegn%plabl + vegn%pleaf) &
                           * delta
-                  ! We export above ground pools
-                  export = export + (tiles(i)%plabl + tiles(i)%pleaf + tiles(i)%pseed) * delta
+                  ! We export above ground pools (= products)
+                  export = export + (vegn%pwood + vegn%psapw) * delta
+                  ! Water transfer
+                  transfer_water(j, :) = transfer_water(j, :) + vegn%wcl(:) * delta
                   ! We keep track of the deltas
                   received(j) = received(j) + delta
                   lost(i) = lost(i) + delta
@@ -119,6 +124,7 @@ module md_luluc
               vegn%inorg    = (vegn%inorg    * (old_lu_fractions(j) - lost(j)) + transfer(j, INORG))    / lu_fractions(j)
               vegn%psoil_fs = (vegn%psoil_fs * (old_lu_fractions(j) - lost(j)) + transfer(j, PSOIL_FS)) / lu_fractions(j)
               vegn%psoil_sl = (vegn%psoil_sl * (old_lu_fractions(j) - lost(j)) + transfer(j, PSOIL_SL)) / lu_fractions(j)
+              vegn%wcl(:)   = (vegn%wcl(:)   * (old_lu_fractions(j) - lost(j)) + transfer_water(j, :))  / lu_fractions(j)
           end do
 
       end function update_lu_fractions

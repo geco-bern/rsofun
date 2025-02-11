@@ -11,9 +11,8 @@ module md_interface_in_biomee
   private
   public  inputs, interface_in_biosphere_biomee, params_species_biomee
 
-  integer, public, parameter :: MAX_LEVELS = 3  ! Soil layers, for soil water dynamics
-
   !===== Soil water hydrualics
+  integer, public, parameter :: MAX_LEVELS = 3  ! Soil layers, for soil water dynamics
   real, public, parameter ::  thksl(MAX_LEVELS) = (/0.05, 0.45, 1.5/)  ! m, thickness of soil layers
 
   !===== Leaf life span

@@ -437,7 +437,7 @@ prepare_init_lu <- function(init_lu){
   }
   init_lu <- init_lu %>% mutate(
     'type' = case_match(
-      'type',
+      type,
       "urban" ~ 1,
       .default = 0
     )

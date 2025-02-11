@@ -152,38 +152,27 @@ contains
       do lu_idx = 1, n_lu
         if (lu_states(lu_idx)%non_empty()) then
 
-          ! If it is not of type urban
-          if (inputs%init_lu(lu_idx)%type /= LU_TYPE_URBAN) then
-
-            !----------------------------------------------------------------
-            ! Call biosphere (wrapper for all modules, contains time loops)
-            !----------------------------------------------------------------
-            if (state%spinup) then
-              ! If spinup, we do not pass the daily and cohort output arrays
-              call biosphere_annual( &
-                state, &
-                climate, &
-                vegn_tiles(lu_idx), &
-                output_annual_tile(state%year, :, lu_idx) &
-              )
-            else
-              idx =  state%year - inputs%params_siml%steering%spinupyears
-              call biosphere_annual( &
-                      state, &
-                      climate, &
-                      vegn_tiles(lu_idx), &
-                      output_annual_tile(state%year, :, lu_idx), &
-                      output_daily_tile(idx_daily_start:idx_daily_end, :, lu_idx), &
-                      output_annual_cohorts(:, idx,:, lu_idx) &
-                      )
-            end if
-
+          !----------------------------------------------------------------
+          ! Call biosphere (wrapper for all modules, contains time loops)
+          !----------------------------------------------------------------
+          if (state%spinup) then
+            ! If spinup, we do not pass the daily and cohort output arrays
+            call biosphere_annual( &
+              state, &
+              climate, &
+              vegn_tiles(lu_idx), &
+              output_annual_tile(state%year, :, lu_idx) &
+            )
           else
-            ! If it is a urban LU, we fill the annual diagnostics manually
-            ! Even if it does not have cohorts, we do not want to run processes which act at the tile level (example psoil_sl respiration)
-            vegn_tiles(lu_idx)%age = vegn_tiles(lu_idx)%age + 1
-            call vegn_tiles(lu_idx)%annual_diagnostics(state%year, &
-                    output_annual_tile(state%year, :, lu_idx))
+            idx =  state%year - inputs%params_siml%steering%spinupyears
+            call biosphere_annual( &
+                    state, &
+                    climate, &
+                    vegn_tiles(lu_idx), &
+                    output_annual_tile(state%year, :, lu_idx), &
+                    output_daily_tile(idx_daily_start:idx_daily_end, :, lu_idx), &
+                    output_annual_cohorts(:, idx,:, lu_idx) &
+                    )
           end if
 
         end if
