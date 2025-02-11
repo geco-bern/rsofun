@@ -433,11 +433,11 @@ build_init_lu <- function(init_lu){
 
 prepare_init_lu <- function(init_lu){
   if(!'type' %in% names(init_lu)) {
-    init_lu <- init_lu %>% tibble::add_column('type' = 'unmanaged')
+    init_lu <- init_lu %>% mutate('type' = 'unmanaged')
   }
   init_lu <- init_lu %>% mutate(
     'type' = case_match(
-      type,
+      'type',
       "urban" ~ 1,
       .default = 0
     )
@@ -496,7 +496,7 @@ prepare_init_cohorts <- function(init_cohort){
   }
 
   if(!'lu_index' %in% names(init_cohort)) {
-    init_cohort <- init_cohort %>% tibble::add_column('lu_index' = 0)
+    init_cohort <- init_cohort %>% mutate('lu_index' = 0)
   }
 
   init_cohort <- init_cohort %>% select(
