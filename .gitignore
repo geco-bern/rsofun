@@ -1,9 +1,21 @@
+# hidden settings files
 .Rproj.user
 .Rhistory
 .RData
 .Ruserdata
+.DS_Store
+.idea
+
+# source files
 src/*.o
 src/*.so
 src/*.dll
+src/*.mod
+
+# vignette builds
 vignettes/*.html
-.DS_Store
+
+# documentation dir
+docs/
+
+CRAN-SUBMISSION

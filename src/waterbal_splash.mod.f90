@@ -1,28 +1,11 @@
 module md_waterbal
   !////////////////////////////////////////////////////////////////
-  ! SPLASH WATERBALANCE MODULE
-  ! Contains the "main" subroutine 'waterbal' and all necessary 
-  ! subroutines for handling input/output. 
-  ! Every module that implements 'waterbal' must contain this list 
-  ! of subroutines (names that way).
-  !   - getpar_modl_waterbal
-  !   - initio_waterbal
-  !   - initoutput_waterbal
-  !   - getout_daily_waterbal
-  !   - getout_monthly_waterbal
-  !   - writeout_ascii_waterbal
-  !   - waterbal
-  ! Required module-independent model state variables (necessarily 
-  ! updated by 'waterbal') are:
-  !   - daytime net radiation ('rn')
-  !   - soil water conent ('psoilphys%wcont')
-  !   - runoff ('soilphys%dro')
-  ! Copyright (C) 2015, see LICENSE, Benjamin David Stocker
-  ! contact: b.stocker@imperial.ac.uk
-  ! ...
+  ! Ecosystem water balance using SPLASH.
+  ! Code adopted from https://doi.org/10.5281/zenodo.376293
+  ! Written by Benjamin Stocker, partly based on Python code by
+  ! Tyler Davis (under GPL2.1).
   !----------------------------------------------------------------
-  use md_params_core, only: ndayyear, nmonth, nlu, maxgrid, kTo, kR, &
-    kMv, kMa, kfFEC, secs_per_day, pi, dummy, kGsc, ndaymonth, kTkelvin
+  use md_params_core
   use md_tile_pmodel, only: tile_type, tile_fluxes_type
   use md_forcing_pmodel, only: climate_type
   use md_grid, only: gridtype
@@ -32,8 +15,7 @@ module md_waterbal
   implicit none
 
   private
-  public waterbal, solar, &
-    getpar_modl_waterbal
+  public waterbal, solar, getpar_modl_waterbal
 
   !-----------------------------------------------------------------------
   ! Uncertain (unknown) parameters. Runtime read-in
@@ -48,7 +30,6 @@ module md_waterbal
   real :: kd                ! angular coefficient of transmittivity (Linacre, 1968)
   real :: ke                ! eccentricity for 2000 CE (Berger, 1978)
   real :: keps              ! obliquity for 2000 CE, degrees (Berger, 1978)
-  ! real :: kGsc              ! solar constant, W/m^2 (Kopp & Lean, 2011)
   real :: kw                ! entrainment factor (Lhomme, 1997; Priestley & Taylor, 1972)
   real :: komega            ! longitude of perihelion for 2000 CE, degrees (Berger, 1978)
 
@@ -56,7 +37,6 @@ module md_waterbal
   ! MODULE-SPECIFIC, PRIVATE VARIABLES
   !----------------------------------------------------------------
   real :: dr                           ! distance factor
-  real :: delta                        ! declination angle 
   real :: hs                           ! sunset hour angle
   real :: hn                           ! net radiation cross-over hour angle
   real :: tau                          ! transmittivity (unitless)
@@ -70,30 +50,11 @@ module md_waterbal
     real :: liquid_to_soil   ! water 
   end type outtype_snow_rain
 
-
-  !----------------------------------------------------------------
-  ! MODULE-SPECIFIC, KNOWN PARAMETERS
-  !----------------------------------------------------------------
-  ! logical :: outenergy = .true.
-
-  ! !----------------------------------------------------------------
-  ! ! Module-specific rolling mean variables
-  ! !----------------------------------------------------------------
-  ! ! real, allocatable, dimension(:,:), save :: rlmalpha       ! rolling mean of annual mean alpha (AET/PET)
-  ! integer, parameter :: nyrs_rlmalpha = 5                   ! number of years for rolling mean (=width of sliding window)
-
-  ! !----------------------------------------------------------------
-  ! ! Module-specific variables for rolling annual mean calculations
-  ! !----------------------------------------------------------------
-  ! real, dimension(nlu) :: rlmalpha
-
-  ! character(len=7) :: in_ppfd       ! information whether PPFD is prescribed from meteo file for global attribute in NetCDF file
-
   logical, parameter :: splashtest = .false.
 
 contains
 
-  subroutine waterbal( tile, tile_fluxes, grid, climate ) !, lai, fapar, h_canopy, g_stomata )
+  subroutine waterbal( tile, tile_fluxes, grid, climate )
     !/////////////////////////////////////////////////////////////////////////
     ! Calculates soil water balance
     !-------------------------------------------------------------------------
@@ -102,7 +63,6 @@ contains
     type(tile_fluxes_type), dimension(nlu), intent(inout) :: tile_fluxes
     type(gridtype), intent(in)                            :: grid
     type(climate_type), intent(in)                        :: climate
-    ! integer, intent(in) :: doy          ! day of year
 
     ! local variables
     type(outtype_snow_rain) :: out_snow_rain
@@ -166,6 +126,8 @@ contains
       end if
 
       ! water scalar (fraction of plant-available water holding capacity; water storage at wilting point is already accounted for in tile(lu)%soil%params%whc)
+      ! WHC = FC - PWP
+      ! WSCAL = (WCONT - PWP) / (FC - PWP)
       tile(lu)%soil%phy%wscal = tile(lu)%soil%phy%wcont / tile(lu)%soil%params%whc
 
     end do
@@ -173,7 +135,7 @@ contains
   end subroutine waterbal
 
 
-  subroutine solar( tile_fluxes, grid, climate, doy )
+  subroutine solar( tile_fluxes, grid, climate, doy ) 
     !/////////////////////////////////////////////////////////////////////////
     ! This subroutine calculates daily PPFD. Code is an extract of the subroutine
     ! 'evap', adopted from the evap() function in GePiSaT (Python version). 
@@ -187,6 +149,7 @@ contains
     type(gridtype), intent(inout)                         :: grid
     type(climate_type), intent(in)                        :: climate
     integer, intent(in)                                   :: doy        ! day of year
+    ! logical, intent(in)                                   :: in_netrad
 
     !---------------------------------------------------------
     ! 2. Calculate heliocentric longitudes (nu and lambda), degrees
@@ -207,7 +170,7 @@ contains
     dr = calc_dr( grid%nu )
 
     !---------------------------------------------------------
-    ! 4. Calculate declination angle (delta), degrees
+    ! 4. Calculate declination angle, degrees
     !---------------------------------------------------------
     grid%decl_angle = calc_decl_angle( grid%lambda )
 
@@ -272,6 +235,11 @@ contains
     ! 13. Calculate daytime total net radiation (tile_fluxes%canopy%drn), J m-2 d-1
     !---------------------------------------------------------
     ! Eq. 53, SPLASH 2.0 Documentation
+    ! if (in_netrad) then
+    !   tile_fluxes(:)%canopy%drn = climate%dnetrad * myinterface%params_siml%secs_per_tstep
+    ! else
+    !   tile_fluxes(:)%canopy%drn = (secs_per_day/pi) * (hn*(pi/180.0)*(rw*ru - tile_fluxes(:)%canopy%rnl) + rw*rv*dgsin(hn))
+    ! end if
     tile_fluxes(:)%canopy%drn = (secs_per_day/pi) * (hn*(pi/180.0)*(rw*ru - tile_fluxes(:)%canopy%rnl) + rw*rv*dgsin(hn))
 
     !---------------------------------------------------------
@@ -279,9 +247,14 @@ contains
     !---------------------------------------------------------
     ! Eq. 56, SPLASH 2.0 Documentation
     ! adopted bugfix from Python version (iss#13)
+    ! if (in_netrad) then
+    !   tile_fluxes(:)%canopy%drnn = 0.0
+    ! else  
+    !   tile_fluxes(:)%canopy%drnn = (86400.0/pi)*(radians(rw*ru*(hs-hn)) + rw*rv*(dgsin(hs)-dgsin(hn)) - &
+    !     tile_fluxes(:)%canopy%rnl * (pi - radians(hn)))
+    ! end if
     tile_fluxes(:)%canopy%drnn = (86400.0/pi)*(radians(rw*ru*(hs-hn)) + rw*rv*(dgsin(hs)-dgsin(hn)) - &
       tile_fluxes(:)%canopy%rnl * (pi - radians(hn)))
-
 
     ! if (splashtest) then
     !   print*,'transmittivity, tau: ', tau
@@ -303,11 +276,9 @@ contains
     !/////////////////////////////////////////////////////////////////////////
     !
     !-------------------------------------------------------------------------  
-    use md_params_core, only: ndayyear, pi, dummy
     use md_sofunutils, only: calc_patm
 
     ! arguments
-    ! type(tile_type), intent(inout)        :: tile
     type(tile_fluxes_type), intent(inout) :: tile_fluxes
     type(gridtype), intent(in)            :: grid
     type(climate_type), intent(in)        :: climate
@@ -339,7 +310,7 @@ contains
     
     ! Eq. 51, SPLASH 2.0 Documentation
     ! out_evap%econ = 1.0 / ( lv * rho_water ) ! this is to convert energy into mass (water)
-    tile_fluxes%canopy%econ = sat_slope / (lv * rho_water * (sat_slope + gamma)) ! MORE PRECISELY - this is to convert energy into mass (water)
+    tile_fluxes%canopy%econ = sat_slope / (lv * rho_water * (sat_slope + gamma))  ! MORE PRECISELY - this is to convert energy into mass (water)
 
     !---------------------------------------------------------
     ! Daily condensation, mm d-1
@@ -386,8 +357,6 @@ contains
     tile_fluxes%canopy%daet = (24.0/pi) * (radians(sw * hi) + rx * rw * rv * (dgsin(hn) - dgsin(hi)) + &
       radians((rx * rw * ru - rx * tile_fluxes%canopy%rnl) * (hn - hi)))
     tile_fluxes%canopy%daet_e = tile_fluxes%canopy%daet / (tile_fluxes%canopy%econ * 1000)
-
-    ! print*,'in waterbal: sw, hi, rx, rw, rv, hn, hi, ru ', sw, hi, rx, rw, rv, hn, hi, ru
     
     ! xxx debug
     ! if (splashtest) then
@@ -441,7 +410,7 @@ contains
       melt = 0.0
     end if 
 
-    if (sn==dummy) then
+    if (abs(sn - dummy) < eps) then
       fsnow = max( min( 1.0,  1.0 - ( 1.0 / 2.0 ) * tc ), 0.0 )
       out_snow_rain%snow_updated   = snow + fsnow * pr - melt
       out_snow_rain%liquid_to_soil = pr * ( 1.0 - fsnow ) + melt
@@ -557,15 +526,13 @@ contains
     ! Subroutine reads waterbalance module-specific parameters 
     ! from input file
     !----------------------------------------------------------------
-    use md_interface_pmodel, only: myinterface
-
     ! constant for dRnl (Monteith & Unsworth, 1990)
     kA       = 107.0
     
     ! shortwave albedo (Federer, 1968)
     kalb_sw  = 0.17
     
-    ! visible light albedo (Sellers, 1985) xxx planetary albedo? xxx
+    ! visible light albedo (Sellers, 1985)
     kalb_vis = 0.03
     
     ! constant for dRnl (Linacre, 1968)
@@ -808,64 +775,5 @@ contains
     psychro = cp * kMa * press / (kMv * lv)
 
   end function psychro
-
-
-  ! subroutine init_rlm_waterbal()
-  !   !////////////////////////////////////////////////////////////////
-  !   ! Initialises waterbalance-specific output variables
-  !   ! The same subroutine is used here for initialising rolling mean variables
-  !   !----------------------------------------------------------------
-
-  !   ! Rolling mean variables
-  !   rlmalpha(:) = 0.0
-
-  ! end subroutine init_rlm_waterbal
-
-
-  ! subroutine getrlm_daily_waterbal( doy )
-  !   !////////////////////////////////////////////////////////////////
-  !   ! Collect daily output variables
-  !   ! so far not implemented for isotopes
-  !   !----------------------------------------------------------------
-
-  !   ! argument
-  !   integer, intent(in) :: doy    
-
-  !   if (evap(1)%pet > 0.0) then
-  !     rlmalpha(:)  = rlmalpha(:) + (evap(:)%aet / evap(1)%pet) / ndayyear
-  !   else
-  !     rlmalpha(:)  = rlmalpha(:) + 1.0 / ndayyear
-  !   end if
-
-  ! end subroutine getrlm_daily_waterbal
-
-
-  ! subroutine get_rlm_waterbal( phy, init )
-  !   !/////////////////////////////////////////////////////////////////////////
-  !   ! Calculates the rolling mean of relevant variables
-  !   ! This requires the full arrays (all gridcells) to be stored.
-  !   !-------------------------------------------------------------------------
-  !   use md_params_core, only: nlu
-  !   use md_tile_pmodel, only: psoilphystype
-
-  !   ! arguments
-  !   type( psoilphystype ), dimension(:), intent(inout) :: phy
-  !   logical :: init
-
-  !   ! local variables
-  !   integer, save :: ncalls
-  !   integer :: nyrs_uptonow
-  !   integer :: lu
-
-  !   if (init) ncalls = 0
-  !   ncalls = ncalls + 1
-  !   nyrs_uptonow = min( ncalls, nyrs_rlmalpha )
-
-  !   do lu=1,nlu
-  !     phy(lu)%rlmalpha = ( phy(lu)%rlmalpha * (nyrs_uptonow - 1) + rlmalpha(lu) ) / nyrs_uptonow
-  !   end do
-
-  ! end subroutine get_rlm_waterbal
-
 
 end module md_waterbal

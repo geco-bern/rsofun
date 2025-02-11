@@ -1,11 +1,14 @@
 module md_interface_pmodel
-
+  !////////////////////////////////////////////////////////////////
+  ! Module for handling I/O (forcing, parameters, output) from 
+  ! pmodel_f to the biosphere() with the P-model implementation
+  !----------------------------------------------------------------
   use, intrinsic :: iso_fortran_env, dp=>real64
 
   use md_forcing_pmodel, only: climate_type, landuse_type, ninput_type, vegcover_type  
   ! use md_params_soil_pmodel, only: paramtype_soil
-  use md_params_siml_pmodel, only: paramstype_siml, outtype_steering
-  use md_params_core, only: nlayers_soil, ndayyear, npft
+  use md_params_siml_pmodel, only: paramstype_siml_pmodel
+  use md_params_core, only: nlayers_soil, ndayyear, npft, outtype_steering
   use md_grid, only: gridtype !, domaininfo_type
 
   implicit none
@@ -14,8 +17,8 @@ module md_interface_pmodel
   public interfacetype_biosphere, outtype_biosphere, myinterface  
 
   type paramstype_calib
-    ! real :: k_decay_tissue
     real :: kphio
+<<<<<<< HEAD
     real :: soilm_par_a
     real :: soilm_par_b
     real :: kphio_par_a
@@ -23,6 +26,16 @@ module md_interface_pmodel
     real :: kphio_par_c
     real :: kphio_par_d
     real :: kphio_par_e
+=======
+    real :: kphio_par_a
+    real :: kphio_par_b
+    real :: soilm_thetastar
+    real :: soilm_betao
+    real :: beta_unitcostratio
+    real :: rd_to_vcmax
+    real :: tau_acclim
+    real :: kc_jmax
+>>>>>>> master
   end type paramstype_calib  
 
 
@@ -30,13 +43,12 @@ module md_interface_pmodel
     integer                                 :: year
     real                                    :: pco2
     type(gridtype)                          :: grid
-    real, dimension(4,nlayers_soil)         :: soiltexture   ! soil texture (rows: sand, clay, organic, gravel; columns: layers from top)
     real                                    :: whc_prescr
     type(climate_type), dimension(ndayyear) :: climate
     type(vegcover_type), dimension(ndayyear):: vegcover
     ! type(domaininfo_type)                 :: domaininfo
     type(outtype_steering)                  :: steering
-    type(paramstype_siml)                   :: params_siml
+    type(paramstype_siml_pmodel)            :: params_siml
     real, dimension(npft)                   :: fpc_grid        ! allocatable because we don't know number of PFTs a priori
     type(paramstype_calib)                  :: params_calib    ! calibratable parameters
   end type interfacetype_biosphere
@@ -64,6 +76,11 @@ module md_interface_pmodel
     real, dimension(ndayyear) :: iwue
     real, dimension(ndayyear) :: snow
     real, dimension(ndayyear) :: rd
+    real, dimension(ndayyear) :: tsoil         ! soil temperature, deg C
+    real, dimension(ndayyear) :: netrad
+    real, dimension(ndayyear) :: wcont
+    real, dimension(ndayyear) :: snow
+    real, dimension(ndayyear) :: cond
   end type outtype_biosphere
 
 end module md_interface_pmodel

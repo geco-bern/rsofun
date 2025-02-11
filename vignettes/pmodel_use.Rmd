@@ -1,6 +1,6 @@
 ---
 title: "P-model usage"
-author: "Koen Hufkens"
+author: "Koen Hufkens, Josefa Arán"
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{P-model usage}
@@ -11,11 +11,15 @@ vignette: >
 ```{r setup, include = FALSE}
 knitr::opts_chunk$set(
   collapse = TRUE,
-  comment = "#>"
+  comment = "#>",
+  fig.align = "center",
+  fig.width = 7,
+  fig.height = 5
 )
 library(rsofun)
 library(dplyr)
 library(ggplot2)
+<<<<<<< HEAD
 pars <- list(par = c(
     kphio           = 0.04607080,
     soilm_par_a     = 2.75687824,
@@ -23,35 +27,64 @@ pars <- list(par = c(
     tau_acclim_tempstress = 7.35259044,
     par_shape_tempstress  = 0.09863961
   ))
+=======
+>>>>>>> master
 ```
 
-The `rsofun` package and framework includes two main models. The `pmodel` and `lm3-ppa` (which in part relies on pmodel compents). Here we give a short example on how to run the `pmodel` on the included demo datasets to familiarize yourself with both the data structure and the outputs.
+The `rsofun` package and framework includes two distinct simulation models. 
+The `p-model` and `biomee` (which in part relies on p-model component). 
+Here we give a short example on how to run the `p-model` on the included demo datasets to familiarize yourself with both the data structure and the outputs.
 
 ## Demo data
 
-The package includes two demo datasets to run and validate pmodel output. These files can be directly loaded into your workspace by typing:
+The package includes two demo datasets to run and validate p-model output using GPP observations. These files can be directly loaded into your workspace by typing:
 
 ```{r}
 library(rsofun)
+<<<<<<< HEAD
+=======
+
+# this is to deal with an error p_model_drivers.rds not being found 
+>>>>>>> master
 p_model_drivers
 p_model_validation
 ```
 
-These are real data from the French FR-Pue fluxnet site. We can use these data to run the model, together with observations of GPP we can also parameterize `pmodel` parameters.
+These are real data from the French FR-Pue fluxnet site. Information about data structure, variable names, and their meaning and units can be found in the reference pages of `p_model_drivers` and `p_model_validation`. We can use these data to run the model, together with observations of GPP we can also calibrate `p-model` parameters.
 
-## Running the model
-
-With all data prepared we can run the model using `runread_pmodel_f()`. This function takes the nested data structure and runs the model site by site, returning nested model output results matching the input drivers.
+Another two datasets are provided as an example to validate the model against leaf traits data, rather than fluxes. Measurements of Vcmax25 (aggregated over species) for a subset of 4 sites from the GlobResp database (Atkin et al., 2015) are given in `p_model_validation_vcmax25` and the corresponding forcing for the P-model is given in `p_model_drivers_vcmax25`. Since leaf traits are only measured once per site, the forcing used is a single year of average climate (the average measurements between 2001 and 2015 on each day of the year).
 
 ```{r}
+<<<<<<< HEAD
 # optimized parameters from previous
+=======
+p_model_drivers_vcmax25
+
+p_model_validation_vcmax25
+```
+
+For the remainder of this vignette, we will use the GPP flux datasets. The workflow is exactly the same for leaf traits data.
+
+To get your raw data into the structure used within `rsofun`, please see R packages [ingestr](https://github.com/geco-bern/ingestr) and [FluxDataKit](https://github.com/geco-bern/FluxDataKit).
+
+## Running model
+
+With all data prepared we can run the P-model using `runread_pmodel_f()`. This function takes the nested data structure and runs the model site by site, returning nested model output results matching the input drivers.
+
+```{r}
+# define model parameter values from previous
+>>>>>>> master
 # work
 params_modl <- list(
-    kphio           = 0.09423773,
-    soilm_par_a     = 0.33349283,
-    soilm_par_b     = 1.45602286,
-    tau_acclim_tempstress = 10,
-    par_shape_tempstress  = 0.0
+    kphio              = 0.04998,    # setup ORG in Stocker et al. 2020 GMD
+    kphio_par_a        = 0.0,        # set to zero to disable temperature-dependence of kphio
+    kphio_par_b        = 1.0,
+    soilm_thetastar    = 0.6 * 240,  # to recover old setup with soil moisture stress
+    soilm_betao        = 0.0,
+    beta_unitcostratio = 146.0,
+    rd_to_vcmax        = 0.014,      # value from Atkin et al. 2015 for C3 herbaceous
+    tau_acclim         = 30.0,
+    kc_jmax            = 0.41
   )
 # run the model for these parameters
 output <- rsofun::runread_pmodel_f(
@@ -60,14 +93,16 @@ output <- rsofun::runread_pmodel_f(
   )
 ```
 
-### plotting output
+### Plotting output
 
 We can now visualize both the model output and the measured values together.
 
 ```{r}
+# Load libraries for plotting
 library(dplyr)
 library(tidyr)
 library(ggplot2)
+<<<<<<< HEAD
 # we only have one site so we'll unnest
 # the main model output
 model_data <- output %>%
@@ -84,71 +119,106 @@ ggplot() +
     ),
     colour = "red"
   ) +
+=======
+
+# Create data.frame for plotting
+df_gpp_plot <- rbind(
+  output |>
+    filter(sitename == "FR-Pue") |>
+    unnest(data) |>
+    select(date, gpp) |>
+    mutate(type = "P-model output"),
+  p_model_validation |>
+    filter(sitename == "FR-Pue") |>
+    unnest(data) |>
+    select(date, gpp) |>
+    mutate(type = "Observed")
+)
+df_gpp_plot$type <- factor(df_gpp_plot$type,
+                           levels = c('P-model output',
+                                      'Observed'))
+
+# Plot GPP
+ggplot(data = df_gpp_plot) +
+>>>>>>> master
   geom_line(
-    data = validation_data,
-    aes(
-      date,
-      gpp
-    )
+    aes(x = date,
+        y = gpp,
+        color = type),
+    alpha = 0.7
   ) +
+  scale_color_manual(values = c(
+    'P-model output'='grey70',
+    'Observed'='black')) +
+  theme_classic() +
+  theme(panel.grid.major.y = element_line()) +
   labs(
-    x = "Date",
-    y = "GPP"
+    x = 'Date',
+    y = expression(paste("GPP (g C m"^-2, "s"^-1, ")")),
+    colour = ""
   )
 ```
 
 ## Calibrating model parameters
 
-To optimize new parameters based upon driver data and a validation dataset we must first specify an optimization strategy and settings, as well as parameter ranges.
+To optimize new parameters based upon driver data and a validation dataset we must first specify an optimization strategy and settings, as well as a cost function and parameter ranges.
 
 ```{r}
 settings <- list(
-  method              = "bayesiantools",
-  targetvars          = c("gpp"),
-  timescale           = list(targets_obs = "y"),
-  metric              = cost_rmse_kphio,
-  dir_results         = "./",
-  name                = "ORG",
+  method              = "GenSA",
+  metric              = cost_rmse_pmodel,
   control = list(
-    sampler = "DEzs",
-    settings = list(
-      burnin = 500,
-      iterations = 1500
-    )),
+    maxit = 100),
   par = list(
-    kphio = list(lower=0.04, upper=0.2, init = 0.05)
+    kphio = list(lower=0.02, upper=0.2, init = 0.05)
     )
 )
 ```
 
-By default `rsofun` supports both optimization using the `GenSA` and `BayesianTools` packages. The above statement provides settings for a `BayesianTools` approach using the DEza sampler. For this example the burnin and iterations are kept artificially low. In a real scenario you will have to increase these values orders of magnitude. Keep in mind that optimization routines rely on a cost function, which, depending on its structure influences parameter selection. A limited set of cost functions is provided all starting with `cost_*` but the model structure is transparent and custom cost functions can be easily written.
+`rsofun` supports both optimization using the `GenSA` and `BayesianTools` packages. The above statement provides settings for a `GenSA` optimization approach. For this example the maximum number of iterations is kept artificially low. In a real scenario you will have to increase this value orders of magnitude. Keep in mind that optimization routines rely on a cost function, which, depending on its structure influences parameter selection. A limited set of cost functions is provided but the model structure is transparent and custom cost functions can be easily written. More details can be found in the "Parameter calibration and cost functions" vignette.
 
-In addition starting values and ranges are provided for the free parameters in the model. Free parameters include, kphio, a, b, tau and shape. Be mindful that with newer version of rsofun additional parameters might be introduced, so re-check vignettes and model descriptions when updating existing code.
+In addition starting values and ranges are provided for the free parameters in the model. Free parameters include: parameters for the quantum yield efficiency `kphio`, `kphio_par_a` and `kphio_par_b`, soil moisture stress parameters `soilm_thetastar` and `soilm_betao`, and also `beta_unitcostratio`, `rd_to_vcmax`, `tau_acclim` and `kc_jmax` (see `?runread_pmodel_f`). Be mindful that with newer versions of `rsofun` additional parameters might be introduced, so re-check vignettes and function documentation when updating existing code.
 
-With all settings defined the optimization function `calib_sofun()` can be called with driver data and observations specified.
+With all settings defined the optimization function `calib_sofun()` can be called with driver data and observations specified. Extra arguments for the cost function (like what variable should be used as target to compute the root mean squared error (RMSE) and previous values for the parameters that aren't calibrated, which are needed to run the P-model).
 
 ```{r eval=FALSE}
-# calibrate the model and
-# optimize free parameters
+# calibrate the model and optimize free parameters
 pars <- calib_sofun(
     drivers = p_model_drivers,  
     obs = p_model_validation,
-    settings = settings
+    settings = settings,
+    # extra arguments passed to the cost function:
+    targets = "gpp",             # define target variable GPP
+    par_fixed = params_modl[-1]  # fix non-calibrated parameters to previous 
+                                 # values, removing kphio
   )
 ```
 
+```{r simulate_calibration_run, include = FALSE}
+# fake variable as optimization isn't run
+pars <- list()
+pars$par["kphio"] <- 0.03580962
+```
 When successful the optimized parameters can be used to run subsequent modelling efforts, in this case slightly improving the model fit over a more global parameter set.
 
 ```{r}
+<<<<<<< HEAD
 # reformatting the parameter list
 params_modl <- list(
     kphio = pars$par["kphio"]
     )
 # run the model for these parameters
+=======
+# Update the parameter list with calibrated value
+params_modl$kphio <- pars$par["kphio"]
+
+# Run the model for these parameters
+>>>>>>> master
 output_new <- rsofun::runread_pmodel_f(
   p_model_drivers,
   par = params_modl
   )
+<<<<<<< HEAD
 # we only have one site so we'll unnest
 # the main model output
 model_data_new <- output_new %>%
@@ -164,25 +234,43 @@ model_data_new <- output_new %>%
     colour = "blue",
     alpha = 0.3
   ) +
+=======
+
+# Update data.frame for plotting
+df_gpp_plot <- rbind(
+  df_gpp_plot,
+  output_new |>
+    filter(sitename == "FR-Pue") |>
+    unnest(data) |>
+    select(date, gpp) |>
+    mutate(type = "P-model output (calibrated)")
+)
+df_gpp_plot$type <- factor(df_gpp_plot$type,
+                           levels = c('P-model output',
+                                      'P-model output (calibrated)',
+                                      'Observed'))
+
+# Plot GPP
+ggplot(data = df_gpp_plot) +
+>>>>>>> master
   geom_line(
-    data = validation_data,
-    aes(
-      date,
-      gpp
-    )
+    aes(x = date,
+        y = gpp,
+        color = type),
+    alpha = 0.7
   ) +
-    geom_line(
-    data = model_data_new,
-    aes(
-      date,
-      gpp
-    ),
-    colour = "red"
-  ) +
+  scale_color_manual(values = c(
+    'P-model output'='grey70',
+    'P-model output (calibrated)'='grey40',
+    'Observed'='black')) +
+  theme_classic() +
+  theme(panel.grid.major.y = element_line()) +
   labs(
-    x = "Date",
-    y = "GPP"
+    x = 'Date',
+    y = expression(paste("GPP (g C m"^-2, "s"^-1, ")")),
+    colour = ""
   )
+<<<<<<< HEAD
 # validation_data %>% 
 #   rename(obs = gpp) %>% 
 #   left_join(
@@ -191,6 +279,8 @@ model_data_new <- output_new %>%
 #     by = c("sitename", "date")
 #   ) %>% 
 #   rbeni::analyse_modobs2("mod", "obs", type = "hex")
+=======
+>>>>>>> master
 ```
 
 For details on the optimization settings we refer to the manuals of [GenSA](https://cran.r-project.org/package=GenSA) and [BayesianTools](https://github.com/florianhartig/BayesianTools).

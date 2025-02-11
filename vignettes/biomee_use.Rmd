@@ -1,0 +1,256 @@
+---
+title: "BiomeE usage"
+author: "Koen Hufkens, Josefa Arán"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{BiomeE usage}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\usepackage[utf8]{inputenc}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+
+library(rsofun)
+library(dplyr)
+library(ggplot2)
+```
+
+The `rsofun` package and framework includes two distinct simulation models. 
+The `p-model` and `biomee` (which in part relies on p-model component). 
+Below we give a short example on how to run the `biomee` model on the included demo datasets to familiarize yourself with both the data structure and the outputs.
+
+## Demo data
+
+The package includes two demo datasets to run simulations at the site CH-LAE with either the P-model or Leuning photosynthesis models.
+See below under 'Two model approaches' for a brief description of the differences.
+These demo files can be directly loaded into your workspace by typing:
+
+```{r eval = FALSE}
+library(rsofun)
+
+biomee_gs_leuning_drivers
+biomee_p_model_drivers
+biomee_validation
+```
+
+These are real data from the Swiss CH-LAE fluxnet site. We can use these data to run the model, together with observations of GPP we can also parameterize `biomee` parameters.
+
+# Two model approaches
+
+BiomeE is a cohort-based vegetation model which simulates vegetation dynamics and biogeochemical processes (Weng et al., 2015). The model is able to link photosynthesis standard models (Farquhar et al., 1980) with tree allometry. In our formulation we retain the original model structure with the standard photosynthesis formulation (i.e. "gs_leuning") as well as an alternative "p-model" approach. Both model structures operate at different time scales, where the original input has an hourly time step our alternative p-model approach uses a daily time step. Hence, we have two different datasets as driver data (with the BiomeE p-model input being an aggregate of the high resolution hourly data).
+
+## Running the BiomeE model with standard photosynthesis
+
+With all data prepared we can run the model using `runread_biomee_f()`. This function takes the nested data structure and runs the model site by site, returning nested model output results matching the input drivers. In our case only one site will be evaluated.
+
+```{r}
+# print parameter settings
+biomee_gs_leuning_drivers$params_siml
+
+# print forcing
+head(biomee_gs_leuning_drivers$forcing)
+```
+
+```{r eval = FALSE}
+set.seed(2023)
+
+# run the model
+out <- runread_biomee_f(
+     biomee_gs_leuning_drivers,
+     makecheck = TRUE,
+     parallel = FALSE
+     )
+
+# split out the annual data
+biomee_gs_leuning_output_annual_tile <- out$data[[1]]$output_annual_tile
+biomee_gs_leuning_output_annual_cohorts <- out$data[[1]]$output_annual_cohorts
+```
+
+```{r simulate_biomee_gs_leuning_run, include = FALSE}
+# TODO: get rid of this and always fully run the vignettes
+# fake output since model isn't run
+# saveRDS(out, "files/biomee_use.Rmd__biomee_gs_leuning_output___out.RDS")
+out <- readRDS("files/biomee_use.Rmd__biomee_gs_leuning_output___out.RDS")
+biomee_gs_leuning_output_annual_tile <- out$data[[1]]$output_annual_tile
+biomee_gs_leuning_output_annual_cohorts <- out$data[[1]]$output_annual_cohorts
+```
+
+### Plotting output
+
+We can now visualize the model output.
+
+```{r fig.width=7}
+# we only have one site so we'll unnest
+# the main model output
+biomee_gs_leuning_output_annual_tile |>
+  ggplot() +
+  geom_line(aes(x = year, y = GPP)) +
+  theme_classic()+labs(x = "Year", y = "GPP")
+
+biomee_gs_leuning_output_annual_tile |>
+  ggplot() +
+  geom_line(aes(x = year, y = plantC)) +
+  theme_classic()+labs(x = "Year", y = "plantC")
+
+biomee_gs_leuning_output_annual_cohorts %>% group_by(cohort,year) %>%
+  summarise(npp=sum(NPP*density/10000)) %>% mutate(cohort=as.factor(cohort)) %>%
+  ggplot(aes(x=cohort,y=npp,fill=year)) +
+  geom_bar(stat="identity") +
+  theme_classic()+labs(x = "Cohort", y = "NPP")
+
+```
+
+## Running the BiomeEP model
+
+Running BiomeE with P-model photosynthesis.
+
+```{r}
+# print parameter settings
+biomee_p_model_drivers$params_siml
+
+# print forcing for P-model
+head(biomee_p_model_drivers$forcing)
+```
+
+```{r eval = FALSE}
+# run the model
+out <- runread_biomee_f(
+     biomee_p_model_drivers,
+     makecheck = TRUE,
+     parallel = FALSE
+     )
+
+# split out the annual data for visuals
+biomee_p_model_output_annual_tile <- out$data[[1]]$output_annual_tile
+biomee_p_model_output_annual_cohorts <- out$data[[1]]$output_annual_cohorts
+```
+
+```{r simulate_biomee_p_model_run, include = FALSE}
+# TODO: get rid of this and always fully run the vignettes
+# fake output since model isn't run
+# saveRDS(out, "files/biomee_use.Rmd__biomee_p_model_output___out.RDS")
+out <- readRDS("files/biomee_use.Rmd__biomee_p_model_output___out.RDS")
+biomee_p_model_output_annual_tile <- out$data[[1]]$output_annual_tile
+biomee_p_model_output_annual_cohorts <- out$data[[1]]$output_annual_cohorts
+```
+
+### Plotting output
+
+We can now visualize the model output.
+
+```{r fig.width=7}
+# we only have one site so we'll unnest
+# the main model output
+biomee_p_model_output_annual_tile %>%
+  ggplot() +
+  geom_line(aes(x = year, y = GPP)) +
+  theme_classic() +
+  labs(x = "Year", y = "GPP")
+
+biomee_p_model_output_annual_tile %>%
+  ggplot() +
+  geom_line(aes(x = year, y = plantC)) +
+  theme_classic() +
+  labs(x = "Year", y = "plantC")
+
+biomee_p_model_output_annual_cohorts %>% group_by(cohort,year) %>%
+  summarise(npp=sum(NPP*density/10000)) %>% mutate(cohort=as.factor(cohort)) %>%
+  ggplot(aes(x=cohort,y=npp,fill=year)) +
+  geom_bar(stat="identity") +
+  theme_classic()+labs(x = "Cohort", y = "NPP")
+
+```
+
+## Calibrating model parameters
+
+To optimize new parameters based upon driver data and a validation dataset we must first specify an optimization strategy and settings, as well as parameter ranges. In this example, we use as cost the root mean squared error (RMSE) between simulated and observed targets (GPP, LAI, Density and Biomass) and we minimize it using the `GenSA` optimizer. 
+
+```{r eval = FALSE}
+# Mortality as DBH
+settings <- list(
+  method = "GenSA",
+  metric = cost_rmse_biomee,
+  control = list(
+    maxit = 10
+  ),
+  par = list(
+      phiRL = list(lower=0.5, upper=5, init=3.5),
+      LAI_light = list(lower=2, upper=5, init=3.5),
+      tf_base = list(lower=0.5, upper=1.5, init=1),
+      par_mort = list(lower=0.1, upper=2, init=1))
+)
+
+# Using BiomeEP (with P-model for photosynthesis)
+pars <- calib_sofun(
+  drivers = biomee_p_model_drivers,
+  obs = biomee_validation,
+  settings = settings
+)
+```
+
+```{r include = FALSE}
+# TODO: get rid of this and always fully run the vignettes
+# fake output since calibration isn't run
+# saveRDS(pars, "files/biomee_use.Rmd__biomee_p_model_output___pars.RDS")
+# pars <- readRDS("files/biomee_use.Rmd__biomee_p_model_output___pars.RDS")
+pars <- list(
+  par = c(phiRL = 1.5597893,    #2.0492210,
+          LAI_light = 4.9657286,#4.5462360,
+          tf_base = 0.9885088,  #0.5006033,
+          par_mort = 0.1665635  #1.9317278)
+))
+```
+
+Using the calibrated parameter values, we can run again the BiomeE simulations.
+```{r eval = FALSE}
+# replace parameter values by calibration output
+drivers <- biomee_p_model_drivers
+drivers$params_species[[1]]$phiRL[]  <- pars$par[1]
+drivers$params_species[[1]]$LAI_light[]  <- pars$par[2]
+drivers$params_tile[[1]]$tf_base <- pars$par[3]
+drivers$params_tile[[1]]$par_mort <- pars$par[4]
+
+# run the model with new parameter values
+calibrated_out <- runread_biomee_f(
+     drivers,
+     makecheck = TRUE,
+     parallel = FALSE
+     )
+
+# split out the annual data
+biomee_p_model_calibratedOutput_annual_tile <- calibrated_out$data[[1]]$output_annual_tile
+```
+
+```{r simulate_biomee_p_model_calibration, include = FALSE}
+# TODO: get rid of this and always fully run the vignettes
+# fake output since calibrated simulation isn't run
+# saveRDS(calibrated_out, "files/biomee_use.Rmd__biomee_p_model_output___calibrated_out.RDS")
+calibrated_out <- readRDS("files/biomee_use.Rmd__biomee_p_model_output___calibrated_out.RDS")
+biomee_p_model_calibratedOutput_annual_tile <- calibrated_out$data[[1]]$output_annual_tile
+```
+
+Finally, we can visually compare the two model runs. We plot the original model run in black and the run using the calibrated parameters in grey. The dashed line represents the validation data, i.e. the observed GPP and Biomass.
+```{r fig.width=7}
+# unnest model output for our single site
+ggplot() +
+  geom_line(data = biomee_p_model_output_annual_tile,
+            aes(x = year, y = GPP)) +
+  geom_line(data = biomee_p_model_calibratedOutput_annual_tile,
+            aes(x = year, y = GPP),
+            color = "grey50") +
+  theme_classic() + 
+  labs(x = "Year", y = "GPP")
+
+ggplot() +
+  geom_line(data = biomee_p_model_output_annual_tile,
+            aes(x = year, y = plantC)) +
+  geom_line(data = biomee_p_model_calibratedOutput_annual_tile,
+            aes(x = year, y = plantC),
+            color = "grey50") +
+  theme_classic() + 
+  labs(x = "Year", y = "plantC")
+```

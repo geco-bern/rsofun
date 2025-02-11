@@ -1,4 +1,12 @@
 template:
-  package: cestemplate
+  package: gecotemplate
   params:
    mathjax: true
+articles:
+  - title: All vignettes
+    contents:
+      - pmodel_use
+      - biomee_use
+      - data_format
+      - new_cost_function
+      - sensitivity_analysis

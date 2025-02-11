@@ -1,14 +1,19 @@
 module md_biosphere_pmodel
-
+  !////////////////////////////////////////////////////////////////
+  ! Module containing loop through time steps within a year and 
+  ! calls to SRs for individual processes.
+  ! Does not contain any input/output; this is done in SR sofun.
+  !----------------------------------------------------------------
   use md_params_core
   use md_classdefs
   use md_waterbal, only: waterbal, solar, getpar_modl_waterbal
   use md_gpp_pmodel, only: getpar_modl_gpp, gpp
   use md_vegdynamics_pmodel, only: vegdynamics
   use md_tile_pmodel, only: tile_type, tile_fluxes_type, initglobal_tile, initdaily_tile_fluxes, &
-    getpar_modl_tile, diag_daily, diag_annual, init_annual
+    getpar_modl_tile, diag_daily
   use md_plant_pmodel, only: getpar_modl_plant
   use md_sofunutils, only: calc_patm
+  use md_soiltemp, only: soiltemp
 
   implicit none
 
@@ -26,12 +31,7 @@ contains
 
   function biosphere_annual() result( out_biosphere )
     !////////////////////////////////////////////////////////////////
-    ! function BIOSPHERE_annual calculates net ecosystem exchange (nee)
-    ! in response to environmental boundary conditions (atmospheric 
-    ! CO2, temperature, Nitrogen deposition. This SR "replaces" 
-    ! LPJ, also formulated as subroutine.
-    ! Copyright (C) 2015, see LICENSE, Benjamin David Stocker
-    ! contact: b.stocker@imperial.ac.uk
+    ! Calculates one year of photosynthesis C and water fluxes. 
     !----------------------------------------------------------------
     use md_interface_pmodel, only: myinterface, outtype_biosphere
   
@@ -41,7 +41,7 @@ contains
     ! local variables
     integer :: dm, moy, doy
     logical, save           :: init_daily            ! is true only on the first day of the simulation 
-    logical, parameter      :: verbose = .false.     ! change by hand for debugging etc.
+    ! logical, parameter      :: verbose = .false.     ! change by hand for debugging etc.
 
     !----------------------------------------------------------------
     ! INITIALISATIONS
@@ -71,10 +71,10 @@ contains
 
     endif 
 
-    !----------------------------------------------------------------
-    ! Set annual sums to zero
-    !----------------------------------------------------------------
-    call init_annual( tile_fluxes(:) )
+    ! !----------------------------------------------------------------
+    ! ! Set annual sums to zero
+    ! !----------------------------------------------------------------
+    ! call init_annual( tile_fluxes(:) )
 
     !----------------------------------------------------------------
     ! LOOP THROUGH MONTHS
@@ -112,6 +112,7 @@ contains
                     myinterface%grid, & 
                     myinterface%climate(doy),  &
                     doy &
+                    ! myinterface%params_siml%in_netrad &
                     )
         ! if (verbose) print*,'... done'
 
@@ -134,13 +135,10 @@ contains
                   tile_fluxes(:), &
                   myinterface%pco2, &
                   myinterface%climate(doy), &
-                  myinterface%vegcover(doy), &
                   myinterface%grid, &
-                  myinterface%params_siml%soilmstress, &
-                  myinterface%params_siml%tempstress, &
-                  init_daily &
+                  init_daily, &
+                  myinterface%params_siml%in_ppfd &
                   )
-
         ! if (verbose) print*,'... done'
 
         !----------------------------------------------------------------
@@ -154,19 +152,17 @@ contains
                         )
         ! if (verbose) print*,'... done'
 
-        ! !----------------------------------------------------------------
-        ! ! calculate soil temperature
-        ! !----------------------------------------------------------------
+        !----------------------------------------------------------------
+        ! calculate soil temperature
+        !----------------------------------------------------------------
         ! if (verbose) print*, 'calling soiltemp() ... '
-        ! call soiltemp(&
-        !               tile(:)%soil, &
-        !               myinterface%climate%dtemp(:), &
-        !               size(myinterface%grid), &
-        !               myinterface%steering%init, &
-        !               jpngr, & 
-        !               moy, & 
-        !               doy & 
-        !               )
+        call soiltemp(&
+                      tile(:)%soil, &
+                      myinterface%climate(:)%dtemp, &
+                      doy, &
+                      myinterface%steering%init, &
+                      myinterface%steering%finalize &
+                      )
         ! if (verbose) print*, '... done'
 
         !----------------------------------------------------------------
@@ -193,6 +189,12 @@ contains
         out_biosphere%iwue(doy)    = tile_fluxes(1)%canopy%iwue
         out_biosphere%snow(doy)    = tile(1)%soil%phy%snow
         out_biosphere%rd(doy)      = tile_fluxes(1)%canopy%drd
+        out_biosphere%tsoil(doy)   = tile(1)%soil%phy%temp    
+        out_biosphere%netrad(doy)  = (tile_fluxes(1)%canopy%drn + tile_fluxes(1)%canopy%drnn) &
+                                     / myinterface%params_siml%secs_per_tstep                 ! output in W m-2 
+        out_biosphere%wcont(doy)   = tile(1)%soil%phy%wcont
+        out_biosphere%snow(doy)    = tile(1)%soil%phy%snow
+        out_biosphere%cond(doy)    = tile_fluxes(1)%canopy%dcn
 
         init_daily = .false.
 
@@ -200,12 +202,11 @@ contains
 
     end do monthloop
 
-    !----------------------------------------------------------------
-    ! annual diagnostics
-    !----------------------------------------------------------------
-    call diag_annual( tile(:), tile_fluxes(:) )
+    ! !----------------------------------------------------------------
+    ! ! annual diagnostics
+    ! !----------------------------------------------------------------
+    ! call diag_annual( tile(:), tile_fluxes(:) )
     
-
     ! if (verbose) print*,'Done with biosphere for this year. Guete Rutsch!'
 
   end function biosphere_annual

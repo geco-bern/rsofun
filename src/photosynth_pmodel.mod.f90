@@ -2,16 +2,20 @@ module md_photosynth
   !//////////////////////////////////////////////////////////////////////
   ! P-MODEL PHOTOSYNTHESIS MODULE
   ! Is in a separate module here because two different md_gpp modules 
-  ! (gpp_lm3ppa_pmodel, and gpp_pmodel) use it and interact with different 
+  ! (gpp_biomee_pmodel, and gpp_pmodel) use it and interact with different 
   ! model structures.
   !------------------------------------------------------------------------
-  use md_params_core, only: kPo, c_molmass, dummy
+  use md_params_core
 
   implicit none
 
   private
   public pmodel, zero_pmodel, outtype_pmodel, calc_ftemp_inst_jmax, calc_ftemp_inst_vcmax, &
+<<<<<<< HEAD
     calc_ftemp_inst_rd, calc_ftemp_kphio_coldhard, calc_ftemp_kphio, calc_soilmstress
+=======
+    calc_ftemp_inst_rd, calc_kphio_temp, calc_soilmstress
+>>>>>>> master
 
   !----------------------------------------------------------------
   ! MODULE-SPECIFIC, PRIVATE VARIABLES
@@ -47,7 +51,6 @@ module md_photosynth
     ! real :: transp              ! Canopy-level total transpiration rate (g H2O (mol photons)-1)
   end type outtype_pmodel
 
-
   type outtype_chi
     real :: chi                 ! = ci/ca, leaf-internal to ambient CO2 partial pressure, ci/ca (unitless)
     real :: ci                  ! leaf-internal CO2 partial pressure (Pa)
@@ -71,7 +74,7 @@ module md_photosynth
 
 contains
 
-  function pmodel( kphio, beta, ppfd, co2, tc, vpd, patm, c4, method_optci, method_jmaxlim ) result( out_pmodel )
+  function pmodel( kphio, beta, kc_jmax, ppfd, co2, tc, vpd, patm, c4, method_optci, method_jmaxlim ) result( out_pmodel )
     !//////////////////////////////////////////////////////////////////
     ! Implements the P-model, providing predictions for ci, Vcmax, and 
     ! light use efficiency, etc. 
@@ -81,6 +84,7 @@ contains
     ! arguments
     real, intent(in) :: kphio        ! apparent quantum yield efficiency       
     real, intent(in) :: beta         ! parameter for the unit cost ratio (corresponding to beta in Prentice et al., 2014)    
+    real, intent(in) :: kc_jmax      ! parameter Jmax cost ratio (corresponding to c in Prentice et al., 2014)    
     ! real, intent(in) :: fapar        ! fraction of absorbed photosynthetically active radiation (unitless) 
     real, intent(in) :: ppfd         ! photosynthetic photon flux density (mol m-2 s-1), relevant for acclimated response
     real, intent(in) :: co2          ! atmospheric CO2 concentration (ppm), relevant for acclimated response
@@ -104,14 +108,13 @@ contains
     ! real :: gs_unitiabs         ! stomatal conductance to CO2 (mol CO2 Pa-1 m-2 s-1)
     real :: ci                  ! leaf-internal partial pressure, (Pa)
     real :: chi                 ! = ci/ca, leaf-internal to ambient CO2 partial pressure, ci/ca (unitless)
-    real :: xi = 0              ! relative cost parameter, Eq. 9 in Stocker et al., 2019
     real :: ns                  ! viscosity of H2O at ambient temperatures (Pa s)
     real :: ns25                ! viscosity of H2O at 25 deg C (Pa s)
     real :: ns_star             ! viscosity correction factor (unitless)
     real :: mprime              ! factor in light use model with Jmax limitation
     real :: iwue                ! intrinsic water use efficiency = A / gs = ca - ci = ca ( 1 - chi ) , unitless
     real :: lue                 ! light use efficiency (mol CO2 / mol photon)
-    real :: gpp                 ! gross primary productivity (g CO2 m-2 d-1)
+    ! real :: gpp                 ! gross primary productivity (g CO2 m-2 d-1)
     real :: jmax                ! canopy-level maximum rate of electron transport (XXX)
     real :: jmax25              ! canopy-level maximum rate of electron transport (XXX)
     real :: vcmax               ! canopy-level maximum carboxylation capacity per unit ground area (mol CO2 m-2 s-1)
@@ -133,10 +136,10 @@ contains
     real :: fact_jmaxlim        ! Jmax limitation factor (unitless)
 
     ! local variables for Jmax limitation following Nick Smith's method
-    real :: omega, omega_star, vcmax_unitiabs_star, tcref, jmax_over_vcmax, jmax_prime
+    real :: omega, omega_star, tcref, jmax_over_vcmax, jmax_prime
 
-    real, parameter :: theta = 0.85
-    real, parameter :: c_cost = 0.05336251
+    real, parameter :: theta = 0.85          ! used only for smith19 setup
+    real, parameter :: c_cost = 0.05336251   ! used only for smith19 setup
 
     type(outtype_chi) :: out_optchi
 
@@ -222,7 +225,7 @@ contains
 
       ! Include effect of Jmax limitation.
       ! In this case, out_optchi%mj = 1, and mprime = 0.669
-      mprime = calc_mprime( out_optchi%mj )
+      mprime = calc_mprime( out_optchi%mj, kc_jmax )
 
       ! Light use efficiency (gpp per unit absorbed light)
       lue = kphio * mprime * c_molmass  ! in g CO2 m-2 s-1 / (mol light m-2 s-1)
@@ -231,10 +234,10 @@ contains
       vcmax = kphio  * ppfd * out_optchi%mjoc * mprime / out_optchi%mj
 
 
-    else if (method_jmaxlim=="wang17") then
+    else if (method_jmaxlim == "wang17") then
 
       ! Include effect of Jmax limitation
-      mprime = calc_mprime( out_optchi%mj )
+      mprime = calc_mprime( out_optchi%mj, kc_jmax )
 
       ! Light use efficiency (gpp per unit absorbed light)
       lue = kphio * mprime * c_molmass  ! in g CO2 m-2 s-1 / (mol light m-2 s-1)
@@ -290,25 +293,18 @@ contains
       vcmax = kphio * ppfd * out_optchi%mjoc
 
     else
+      ! Per default, use method_jmaxlim == "wang17"
+      
+      ! Include effect of Jmax limitation
+      mprime = calc_mprime( out_optchi%mj, kc_jmax )
 
-      ! stop 'PMODEL: select valid method'
+      ! Light use efficiency (gpp per unit absorbed light)
+      lue = kphio * mprime * c_molmass  ! in g CO2 m-2 s-1 / (mol light m-2 s-1)
+      
+      ! Vcmax after accounting for Jmax limitation
+      vcmax = kphio * ppfd * out_optchi%mjoc * mprime / out_optchi%mj
 
     end if
-
-    ! XXX PMODEL_TEST: ok
-    ! print*,'mj ', out_optchi%mj
-
-    ! XXX PMODEL_TEST: ok
-    ! print*,'chi ', chi
-
-    ! XXX PMODEL_TEST: ok
-    ! print*,'mprime ', mprime
-
-    ! XXX PMODEL_TEST: ok
-    ! print*,'lue ', lue
-
-    ! XXX PMODEL_TEST: ok
-    ! print*,'kphio ', kphio
 
     !-----------------------------------------------------------------------
     ! Corrolary preditions (This is prelimirary!)
@@ -325,7 +321,7 @@ contains
     actnv  = vcmax25 * n_v
 
     ! Derive Jmax using again A_J = A_C
-    if (ppfd==0.0) then
+    if (ppfd < eps) then
       fact_jmaxlim = 1.0
       jmax = 0.0
       jmax25 = 0.0
@@ -552,7 +548,7 @@ contains
     real :: vdcg, vacg, vbkg, vsr
 
     ! leaf-internal-to-ambient CO2 partial pressure (ci/ca) ratio
-    xi  = sqrt( ( beta * ( kmm + gammastar ) ) / ( 1.6 * ns_star ) )     ! Eq. 9 in Stocker et al., 2019
+    xi  = sqrt( ( beta * ( kmm + gammastar ) ) / ( 1.6 * ns_star ) )                ! Eq. 9 in Stocker et al., 2019
     chi = gammastar / ca + ( 1.0 - gammastar / ca ) * xi / ( xi + sqrt(vpd) )       ! Eq. 8 in Stocker et al., 2019
     ci  = chi * ca
 
@@ -607,7 +603,7 @@ contains
   end function calc_chi_c4
 
 
-  function calc_mprime( m ) result( mprime )
+  function calc_mprime( m, kc_jmax ) result( mprime )
     !-----------------------------------------------------------------------
     ! Input:  m   (unitless): factor determining LUE
     ! Output: mpi (unitless): modiefied m accounting for the co-limitation
@@ -615,15 +611,13 @@ contains
     !-----------------------------------------------------------------------
     ! argument
     real, intent(in) :: m
-
-    ! local variables
-    real, parameter :: kc = 0.41          ! Jmax cost coefficient
+    real, intent(in) :: kc_jmax
 
     ! function return variable
     real :: mprime
 
     ! square of m-prime (mpi)
-    mprime = m**2 - kc**(2.0/3.0) * (m**(4.0/3.0))
+    mprime = m**2 - kc_jmax**(2.0/3.0) * (m**(4.0/3.0))
 
     ! Check for negatives and take root of square
     if (mprime > 0) then
@@ -804,7 +798,7 @@ contains
   end function calc_gammastar
 
 
-  function calc_soilmstress( soilm, meanalpha, isgrass, soilm_par_a, soilm_par_b ) result( outstress )
+  function calc_soilmstress( wcont, thetastar, betao ) result( outstress )
     !//////////////////////////////////////////////////////////////////
     ! Calculates empirically-derived stress (fractional reduction in light 
     ! use efficiency) as a function of soil moisture
@@ -813,45 +807,33 @@ contains
     !         in strongly water-stressed months
     !-----------------------------------------------------------------------
     ! argument
-    real, intent(in) :: soilm                 ! soil water content (fraction)
-    real, intent(in) :: meanalpha             ! mean annual AET/PET, average over multiple years (fraction)
-    real, intent(in) :: soilm_par_a           ! function parameter
-    real, intent(in) :: soilm_par_b           ! 
-    logical, intent(in), optional :: isgrass  ! vegetation cover information to distinguish sensitivity to low soil moisture
+    real, intent(in) :: wcont                 ! soil water content (mm)
+    real, intent(in) :: thetastar             ! threshold of water limitation (mm), previously 0.6 * whc_rootzone
+    real, intent(in) :: betao                 ! soil water stress at zero water rootzone water content
 
-    real, parameter :: x0 = 0.0
-    real, parameter :: x1 = 0.6
-
-    real :: y0, beta
+    ! local variables
+    real :: shape_parameter
 
     ! function return variable
     real :: outstress
 
-    if (soilm > x1) then
+    if (wcont > thetastar) then
       outstress = 1.0
     else
 
-      y0 = (soilm_par_a + soilm_par_b * meanalpha)
-
-      ! if (present(isgrass)) then
-      !   if (isgrass) then
-      !     y0 = apar_grass + bpar_grass * meanalpha
-      !   else
-      !     y0 = apar + bpar * meanalpha
-      !   end if
-      ! else
-      !   y0 = apar + bpar * meanalpha
-      ! end if
-
-      beta = (1.0 - y0) / (x0 - x1)**2
-      outstress = 1.0 - beta * ( soilm - x1 )**2
-      outstress = max( 0.0, min( 1.0, outstress ) )
+      if (thetastar < eps) then
+        outstress = 1.0
+      else
+        shape_parameter = (betao - 1.0) / thetastar**2
+        outstress = shape_parameter * (wcont - thetastar)**2 + 1.0
+        outstress = max( 0.0, min( 1.0, outstress ) )
+      end if
     end if
 
   end function calc_soilmstress
 
 
-  function calc_ftemp_kphio( dtemp, c4 ) result( ftemp )
+  function calc_kphio_temp( dtemp, c4, kphio, kphio_par_a, kphio_par_b ) result( kphio_temp )
     !////////////////////////////////////////////////////////////////
     ! Calculates the instantaneous temperature response of the quantum
     ! yield efficiency based on Bernacchi et al., 2003 PCE (Equation
@@ -860,21 +842,30 @@ contains
     ! arguments
     real, intent(in) :: dtemp    ! (leaf) temperature in degrees celsius
     logical, intent(in) :: c4
+    real, intent(in) :: kphio
+    real, intent(in) :: kphio_par_a
+    real, intent(in) :: kphio_par_b
 
     ! function return variable
-    real :: ftemp
+    real :: kphio_temp
 
     if (c4) then
-      ftemp = (-0.008 + 0.00375 * dtemp - 0.58e-4 * dtemp**2) * 8.0 ! Based on calibrated values by Shirley
-      if (ftemp < 0.0) then
-        ftemp = 0.0
+      kphio_temp = kphio * (-0.008 + 0.00375 * dtemp - 0.58e-4 * dtemp**2) * 8.0 ! Based on calibrated values by Shirley
+      if (kphio_temp < 0.0) then
+        kphio_temp = 0.0
       else
-        ftemp = ftemp
+        kphio_temp = kphio_temp
       end if    
     else
-      ftemp = 0.352 + 0.022 * dtemp - 3.4e-4 * dtemp**2  ! Based on Bernacchi et al., 2003
+
+      
+      kphio_temp = kphio * max(0.0, min(1.0, (1.0 + kphio_par_a * (dtemp - kphio_par_b)**2)))
+
+      ! old:
+      ! kphio_temp = kphio * (0.352 + 0.022 * dtemp - 3.4e-4 * dtemp**2)  ! Based on Bernacchi et al., 2003
     end if
     
+<<<<<<< HEAD
   end function calc_ftemp_kphio
 
 
@@ -968,6 +959,9 @@ contains
     ftemp = 1.0 / (1.0 + exp(xx))
 
   end function f_dehardening
+=======
+  end function calc_kphio_temp
+>>>>>>> master
 
 
   function calc_ftemp_inst_rd( tc ) result( fr )
@@ -988,7 +982,6 @@ contains
     ! loal parameters
     real, parameter :: apar = 0.1012
     real, parameter :: bpar = 0.0005
-    real, parameter :: tk25 = 298.15 ! 25 deg C in Kelvin
 
     ! local variables
     real :: tk                  ! temperature (Kelvin)
@@ -1017,8 +1010,6 @@ contains
     !
     ! Ref:      Wang Han et al. (in prep.)
     !-----------------------------------------------------------------------
-    use md_params_core, only: kR           ! Universal gas constant, J/mol/K
-
     ! arguments
     real, intent(in) :: tcleaf
     real, intent(in) :: tcgrowth
@@ -1069,8 +1060,6 @@ contains
     ! photosynthesis: a reanalysis of data from 36 species, Plant, Cell and Environment, 
     ! 30,1176â1190, 2007.
     !-----------------------------------------------------------------------
-    use md_params_core, only: kR           ! Universal gas constant, J/mol/K
-
     ! arguments
     real, intent(in) :: tcleaf
     real, intent(in) :: tcgrowth
@@ -1117,8 +1106,6 @@ contains
     !
     ! T_ref is 25 deg C (=298.13 K) per default.
     !-----------------------------------------------------------------------
-    use md_params_core, only: kR           ! Universal gas constant, J/mol/K
-
     ! arguments
     real, intent(in) :: tk                 ! temperature (Kelvin)
     real, intent(in) :: dha                ! activation energy (J/mol)

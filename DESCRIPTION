@@ -1,36 +1,70 @@
 Package: rsofun
-Title: SOFUN in R
-Version: 4.3
+Title: The P-Model and BiomeE Modelling Framework
+Version: 5.0.0.9000
 Authors@R: c(
             person(
-              family = "Benjamin",
-              given = "Stocker",
+              family = "Stocker",
+              given = "Benjamin",
               email = "benjamin.stocker@gmail.com",
-              comment = c(ORCID = "0000-0002-5070-8109"),
+              comment = c(ORCID = "0000-0003-2697-9096"),
               role = c("aut", "cre")),
             person(
                family = "Hufkens",
                given = "Koen",
                email = "koen.hufkens@gmail.com",
-               role = c("ctb"),
-               comment = c(ORCID = "0000-0002-5070-8109"))
+               comment = c(ORCID = "0000-0002-5070-8109"),
+               role = c("aut")),
+            person(
+               family = "Arán Paredes",
+               given = "Josefa",
+               email = "pepa.aran@gmail.com",
+               comment = c(ORCID = "0009-0006-7176-2311"),
+               role = c("aut")),
+            person(
+               family = "Marqués",
+               given = "Laura",
+               email = "lauramarqueslopez@gmail.com",
+               comment = c(ORCID = "0000-0002-3593-5557"),
+               role = c("ctb")),
+            person(
+               family = "Marcadella",
+               given = "Mayeul",
+               email = "mayeul.marcadella@gmail.com",
+               comment = c(ORCID = "0000-0001-8555-3808"),
+               role = c("ctb")),
+            person(
+               family = "Weng",
+               given = "Ensheng",
+               email = "wengensheng@gmail.com",
+               comment = c(ORCID = "0000-0002-1858-4847"),
+               role = c("ctb")),
+            person(
+              family = "Bernhard",
+              given = "Fabian",
+              email = "fabian.bernhard@alumni.epfl.ch",
+              role = c("aut"),
+              comment = c(ORCID = "0000-0003-0338-0961")),
+            person(given = "Geocomputation and Earth Observation, University of Bern",
+                role = c("cph", "fnd"))
            )
-Description: Implements the SOFUN modelling framework for simulating terrestrial
-              processes, including model calibration and benchmarking.
-URL: https://github.com/computationales/rsofun
-BugReports: https://github.com/computationales/rsofun/issues
+Description: Implements the Simulating Optimal FUNctioning framework for 
+              site-scale simulations of ecosystem processes, including model 
+              calibration. It contains 'Fortran 90' modules for the P-model (Stocker
+              et al. (2020) <doi:10.5194/gmd-13-1545-2020>), SPLASH
+              (Davis et al. (2017) <doi:10.5194/gmd-10-689-2017>)
+              and BiomeE (Weng et al. (2015)
+              <doi:10.5194/bg-12-2655-2015>).
+URL: https://github.com/geco-bern/rsofun
+BugReports: https://github.com/geco-bern/rsofun/issues
 License: GPL-3
 Depends:
-    R (>= 3.6)
+    R (>= 4.1.0)
 Imports:
     dplyr,
     purrr,
     tidyr,
-    tidyselect,
     magrittr,
-    lubridate,
     GenSA,
-    graphics,
     BayesianTools,
     multidplyr,
     stats,
@@ -39,13 +73,14 @@ LazyData: true
 LazyDataCompression: xz
 ByteCompile: true
 NeedsCompilation: yes
-RoxygenNote: 7.2.1
+RoxygenNote: 7.3.2
 Suggests:
-    rpmodel,
     covr,
+    rcmdcheck,
     testthat,
     rmarkdown,
     ggplot2,
-    knitr
+    knitr,
+    sensitivity
 VignetteBuilder: knitr
 Encoding: UTF-8

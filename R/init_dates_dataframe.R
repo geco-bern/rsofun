@@ -1,45 +1,42 @@
 #' Initialises a tibble with dates
 #'
-#' Creates a tibble with rows for each date (ymd object from 
-#' library lubridate) from 'yrstart' to 'yrend'. Intervals of dates is 
-#' specified by argument 'freq'. 
+#' Creates a tibble with rows for each date from \code{'yrstart'} to \code{'yrend'}
+#' in \code{'yyyy-mm-dd'} format. Intervals of dates are specified by argument 
+#'\code{'freq'}. 
+#'  ddf <- init_dates_dataframe(2000, 2003, startmoy=1, startdoy=1,
+#'                              freq="days", endmoy=12, enddom=31, noleap=FALSE)
 #'
 #' @param yrstart An integer defining the start year
-#'  of dates covered by the dataframe
+#'  of dates covered by the dataframe.
 #' @param yrend An integer defining the end year of dates
-#'  covered by the dataframe
-#' @param startmoy An integer defining the start month of dates
+#'  covered by the dataframe.
+#' @param startmoy An integer defining the start month-of-year of dates
 #'  covered by the dataframe. Defaults to 1.
 #' @param startdoy An integer defining the start day-of-year of
 #'  dates covered by the dataframe. Defaults to 1.
 #' @param freq A character string specifying the time steps of dates
-#'  (in rows). Defaults to \code{"days"}. Any of \code{"days", "months"}.
-#' @param endmoy An integer defining the end month of dates covered
+#'  (in rows). Defaults to \code{"days"}. Any of \code{"days", "months", "years"}. If
+#'  \code{freq = "months"} the 15\eqn{^{th}} day of the months is used as date,
+#'  and if \code{freq = "years"} the 1\eqn{^{st}} of January of each year is returned.
+#' @param endmoy An integer defining the end month-of-year of dates covered
 #'  by the dataframe. Defaults to 12.
 #' @param enddom An integer defining the end day-of-year of dates
 #'  covered by the dataframe. Defaults to 31.
-#' @param noleap Whether leap years are ignored. Defaults to \code{FALSE}.
-#'
-#' @import lubridate
+#' @param noleap Whether leap years are ignored, that is, whether the 29\eqn{^{th}} 
+#' of February is removed. Defaults to \code{FALSE}.
 #' 
 #' @return A tibble with dates.
-#' @export
 #'
-#' @examples
-#' \dontrun{
-#'  ddf <- init_dates_dataframe( 2000, 2003, startmoy=1, startdoy=1,
-#'   freq="days", endmoy=12, enddom=31, noleap=FALSE )
-#' }
 
 init_dates_dataframe <- function(
-  yrstart,
-  yrend,
-  startmoy=1,
-  startdoy=1,
-  freq="days",
-  endmoy=12,
-  enddom=31,
-  noleap=FALSE ){
+    yrstart,
+    yrend,
+    startmoy=1,
+    startdoy=1,
+    freq="days",
+    endmoy=12,
+    enddom=31,
+    noleap=FALSE ){
   
   if (freq=="days"){
     
@@ -50,7 +47,7 @@ init_dates_dataframe <- function(
     end_date   <- as.Date(
       sprintf("%04d-%02d-%02d",
               yrend, endmoy, enddom))
-
+    
   } else if (freq=="months"){
     
     start_date <- as.Date(
@@ -60,7 +57,7 @@ init_dates_dataframe <- function(
     end_date   <- as.Date(
       sprintf("%04d-%02d-15",
               yrend, endmoy))
-  
+    
   } else if (freq=="years"){
     
     start_date <- as.Date(
@@ -71,7 +68,7 @@ init_dates_dataframe <- function(
       sprintf("%04d-%02d-01",
               yrend, 7))    
   }
-
+  
   # define date range
   date_range <- data.frame(
     date = seq.Date(
@@ -81,15 +78,24 @@ init_dates_dataframe <- function(
     ))
   
   # convert to decimal date
-  date_range$year_dec <- lubridate::decimal_date(date_range$date)
-
+  numeric_year <- function(x){
+    y <- as.numeric(format(x, format="%Y"))
+    doy <- as.numeric(format(x, format="%j")) - 1
+    
+    ifelse(y %% 4 == 0, 
+          round(y + doy/366, 3), 
+          round(y + doy/365, 3)
+    )
+  }
+  date_range$year_dec <- numeric_year(date_range$date)
+  
   # leap year filter
   if (noleap) {
     date_range <- dplyr::filter(date_range,
-      !(lubridate::month(date) == 2 & lubridate::mday(date) == 29)
-      )
+                                !(format(date, "%m-%d") == "02-29")
+    )
     
-    }
-
+  }
+  
   return(date_range)
 }

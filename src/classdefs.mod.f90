@@ -2,16 +2,14 @@ module md_classdefs
   !////////////////////////////////////////////////////////////////
   ! Module contains Fortran 90 derived-type declarations to define
   ! material pools in SOFUN and functions applicable to pool types.
-  ! 
-  ! Pools can be 
+  ! Pools can be:
   ! - carbon, consisting of C-12
   ! - nitrogen, consisting of N-14
   ! - organic material, consisting of carbon and nitrogen (inherits
   !   their defitions).
-  !
-  ! Copyright (C) 2015, see LICENSE, Benjamin David Stocker
-  ! contact: b.stocker@imperial.ac.uk
   !----------------------------------------------------------------
+  use md_params_core
+
   implicit none
 
   private
@@ -20,19 +18,19 @@ module md_classdefs
     nmvRec, ncp, ncpRec, nsub, ninit, orgfrac, cfrac, nfrac, orgplus, &
     cplus, nplus, orgminus, cminus, nminus, cton, ntoc
 
-  ! Minimum precision
-  real, parameter :: epsilon = 1.0e-5 
+  ! ! Minimum precision
+  ! real, parameter :: epsilon = 1.0e-5 
 
   ! additional checks
   logical, parameter :: check_sanity = .false.
 
   ! Carbon, so far contains only c12 (to be extended for c13)
   type carbon
-   real :: c12
+   real :: c12 = 0.0
   end type carbon
 
   type nitrogen
-   real :: n14
+   real :: n14 = 0.0
   end type nitrogen
 
   ! Organic pools, contain carbon (c12) and nitrogen (n14)
@@ -53,7 +51,6 @@ contains
     !  Generic SR to "copy" organic mass to pool (e.g. for output).
     !  Does NOT substract amount moved ('amount') from source
     !----------------------------------------------------------------
-
     type(orgpool), intent(in) :: amount
     type(orgpool), intent(inout) :: to
     real, optional, intent(in) :: scale
@@ -731,7 +728,7 @@ contains
     real :: out_cton
 
     if (present(default)) then
-      if (pool%n%n14==0.0) then
+      if (pool%n%n14 < eps) then
         out_cton = default
       else
         out_cton = pool%c%c12 / pool%n%n14
@@ -767,7 +764,7 @@ contains
     real :: out_ntoc
 
     if (present(default)) then
-      if (pool%c%c12==0.0) then
+      if (pool%c%c12 < eps) then
         out_ntoc = default
       else
         out_ntoc = pool%n%n14 / pool%c%c12

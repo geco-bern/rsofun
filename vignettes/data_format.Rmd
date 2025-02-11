@@ -1,0 +1,100 @@
+---
+title: "Data format"
+author: "Koen Hufkens, Josefa Arán"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Data format}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\usepackage[utf8]{inputenc}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.align = "center",
+  fig.width = 7,
+  fig.height = 5
+)
+
+library(rsofun)
+library(dplyr)
+library(ggplot2)
+
+```
+
+## Philosophy
+
+Overall, the package uses the {tidyverse} data paradigm (Wickham, 2017), using nested data frames (tibbles) to store model input and output, and validation data. Where possible the package uses a consistent ontogeny in terms of variables and data structures used.
+
+## Drivers data (inputs)
+
+A drivers object is used as unique input to the models, consisting of a list of sites. Each site (i.e. row) contains the following data:
+- `sitename`: site name
+- `site_info`: location specific site information (nested tibble)
+- `params_siml`: simulation parameter settings (nested tibble)
+- `forcing`: environmental forcing data (nested tibble)
+
+Each of the provided demo drivers contain only one sample site:
+
+```{r}
+# call to the included p-model demo drivers
+rsofun::p_model_drivers
+
+# call to the included BiomeE (p-model) demo drivers
+rsofun::biomee_p_model_drivers
+
+# call to the included BiomeE (gs leuning) demo drivers
+rsofun::biomee_gs_leuning_drivers
+```
+
+Nested data structures can be accessed like this:
+
+```{r}
+# Accessing the site information for the first site
+rsofun::biomee_gs_leuning_drivers$site_info[[1]]
+```
+
+### Specific data for each model
+
+Each model has its own specificities when it comes to the set of simulation parameters and forcing data.
+Please refer to the documentation for each model for an exhaustive list of parameters and data required by the model.
+
+- P-model: `?run_pmodel_f_bysite`
+- BiomeE: `?run_biomee_f_bysite`
+
+### Forcing data
+
+The forcing data contains environmental variables commonly available at fluxnet (reference) or ICOS atmospheric gas exchange measurement locations or gathered from various gridded or re-analysis sources. Forcing data are expected to be sequences of complete years (each starting on January 1st and ending on december 31st), where leap days are excluded (February 29th should not be present).
+
+Each model has a specific forcing data resolution:
+- P-model: daily
+- BiomeE (p-model): daily
+- BiomeE (gs leuning): hourly
+
+Forcing data present in the demo drivers can be used as examples:
+```{r}
+# Detailed look at the forcing data for the P-model
+rsofun::p_model_drivers$forcing[[1]]
+```
+
+## Output data
+
+The output of the model contains one line per site found in the drivers:
+- `sitename`: site name
+- `data`: output data for the site (nested tibble)
+
+The data structure for the output `data` is specific for each model.
+
+### P-model
+
+For detailed information about the content of `data`, see `?run_pmodel_f_bysite`.
+
+### BiomeE
+
+`data` contains the following tables:
+- `output_daily_tile`: Daily output during the simulated period
+- `output_annual_cohorts`: Annual output at the cohort level during the simulated period
+- `output_annual_tile`: Yearly output during the spin-up and simulated periods.
+
+For detailed information about each table, see `?run_biomee_f_bysite`.

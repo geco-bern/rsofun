@@ -1,7 +1,7 @@
 module md_tile_pmodel
   !////////////////////////////////////////////////////////////////
-  ! Holds all tile-specific variables and procedurs
-  ! --------------------------------------------------------------
+  ! Defines how a tile looks like for P-model simulations.
+  !---------------------------------------------------------------
   use md_params_core, only: npft, nlu
   use md_plant_pmodel, only: plant_type, plant_fluxes_type, initglobal_plant
 
@@ -9,7 +9,7 @@ module md_tile_pmodel
 
   private
   public tile_type, tile_fluxes_type, initglobal_tile, psoilphystype, soil_type, &
-    initdaily_tile_fluxes, getpar_modl_tile, diag_daily, diag_annual, init_annual
+    initdaily_tile_fluxes, getpar_modl_tile, diag_daily, initglobal_soil !, init_annual, diag_annual
 
   !----------------------------------------------------------------
   ! physical soil state variables with memory from year to year (~pools)
@@ -32,7 +32,7 @@ module md_tile_pmodel
     real :: fgravel
     real :: fc
     real :: pwp
-    real :: whc_dz
+    real :: whc_dz      ! water holding capacity per unit soil depth
     real :: whc
     real :: ksat
     real :: thdiff_wp
@@ -176,8 +176,6 @@ contains
     !////////////////////////////////////////////////////////////////
     !  Initialisation of all _pools on all gridcells at the beginning
     !  of the simulation.
-    !  June 2014
-    !  b.stocker@imperial.ac.uk
     !----------------------------------------------------------------
     ! use md_interface_pmodel, only: myinterface
 
@@ -211,8 +209,6 @@ contains
   subroutine initglobal_canopy( canopy )
     !////////////////////////////////////////////////////////////////
     !  Initialisation of specified PFT on specified gridcell
-    !  June 2014
-    !  b.stocker@imperial.ac.uk
     !----------------------------------------------------------------
     ! argument
     type(canopy_type), intent(inout) :: canopy
@@ -295,7 +291,7 @@ contains
 
     ! from David's code
     real, parameter :: depth    =  30.0
-    real, parameter :: topsoil  =  1.0
+    ! real, parameter :: topsoil  =  1.0
 
     ! calibrated paramters according to David Sandoval's PhD project report 
     real, parameter :: c_wp = 0.2018 ! 0.1437904
@@ -312,10 +308,11 @@ contains
 
     ! do idx = 1, nlayers_soil
 
-      fsand   = myinterface%soiltexture(1,1)
-      fclay   = myinterface%soiltexture(2,1)
-      forg    = myinterface%soiltexture(3,1)
-      fgravel = myinterface%soiltexture(4,1)
+      ! TOP LAYER
+      fsand   = 0.4 ! myinterface%soiltexture(1,1)
+      fclay   = 0.3 ! myinterface%soiltexture(2,1)
+      forg    = 0.1 ! myinterface%soiltexture(3,1)
+      fgravel = 0.1 ! myinterface%soiltexture(4,1)
 
       fsand_forg  = fsand * forg
       fclay_forg  = fclay * forg
@@ -405,7 +402,7 @@ contains
       ! VG_m = 1-(VG_n)  
       
       ! water holding capacity
-      whc_dz = (fc-pwp)*(1-fgravel)
+      whc_dz = (fc - pwp) * (1.0 - fgravel)
 
       ! add to soil paramters type
       params%fsand        = fsand
@@ -416,10 +413,10 @@ contains
       params%pwp          = pwp
       params%whc_dz       = whc_dz
       params%ksat         = ksat
-      params%thdiff_wp    = 0.2    ! value chosen from LPX (most soil codes have 0.2)
+      params%thdiff_wp    = 0.2 ! value chosen from LPX (most soil codes have 0.2)
       params%thdiff_whc15 = 0.6 ! value chosen from LPX (most soil codes have 0.2)
       params%thdiff_fc    = 0.4
-
+      
       ! overwrite
       params%whc = myinterface%whc_prescr
 
@@ -477,8 +474,6 @@ contains
     !  It was necessary to separate this SR from module md_plant
     !  because this SR uses module md_waterbal, which also uses
     !  _plant.
-    ! Copyright (C) 2015, see LICENSE, Benjamin David Stocker
-    ! contact: b.stocker@imperial.ac.uk
     !----------------------------------------------------------------    
     call getpar_modl_canopy()
 
@@ -491,8 +486,6 @@ contains
     !  It was necessary to separate this SR from module md_plant
     !  because this SR uses module md_waterbal, which also uses
     !  _plant.
-    ! Copyright (C) 2015, see LICENSE, Benjamin David Stocker
-    ! contact: b.stocker@imperial.ac.uk
     !----------------------------------------------------------------    
 
     !----------------------------------------------------------------
@@ -504,29 +497,29 @@ contains
   end subroutine getpar_modl_canopy
 
 
-  subroutine init_annual( tile_fluxes )
-    !////////////////////////////////////////////////////////////////
-    ! Set (iterative) annual sums to zero
-    !----------------------------------------------------------------
-    ! arguments
-    type(tile_fluxes_type), dimension(nlu), intent(inout) :: tile_fluxes
+  ! subroutine init_annual( tile_fluxes )
+  !   !////////////////////////////////////////////////////////////////
+  !   ! Set (iterative) annual sums to zero
+  !   !----------------------------------------------------------------
+  !   ! arguments
+  !   type(tile_fluxes_type), dimension(nlu), intent(inout) :: tile_fluxes
 
-    ! local
-    integer :: pft
+  !   ! local
+  !   integer :: pft
 
-    ! ! canopy-level
-    ! tile_fluxes(:)%canopy%agpp          = 0.0
-    ! tile_fluxes(:)%canopy%avcmax25_mean = 0.0
-    ! tile_fluxes(:)%canopy%avcmax25_max  = 0.0
+  !   ! ! canopy-level
+  !   ! tile_fluxes(:)%canopy%agpp          = 0.0
+  !   ! tile_fluxes(:)%canopy%avcmax25_mean = 0.0
+  !   ! tile_fluxes(:)%canopy%avcmax25_max  = 0.0
     
-    ! ! pft-level
-    ! do pft = 1,npft
-    !   tile_fluxes(:)%plant(pft)%agpp          = 0.0
-    !   tile_fluxes(:)%plant(pft)%avcmax25_mean = 0.0
-    !   tile_fluxes(:)%plant(pft)%avcmax25_max  = 0.0
-    ! end do
+  !   ! ! pft-level
+  !   ! do pft = 1,npft
+  !   !   tile_fluxes(:)%plant(pft)%agpp          = 0.0
+  !   !   tile_fluxes(:)%plant(pft)%avcmax25_mean = 0.0
+  !   !   tile_fluxes(:)%plant(pft)%avcmax25_max  = 0.0
+  !   ! end do
 
-  end subroutine init_annual
+  ! end subroutine init_annual
 
 
   subroutine diag_daily( tile, tile_fluxes )
@@ -540,7 +533,7 @@ contains
     type(tile_fluxes_type), dimension(nlu), intent(inout) :: tile_fluxes
 
     ! local
-    integer :: lu, pft
+    integer :: lu
 
     !----------------------------------------------------------------
     ! Sum over PFTs to get canopy-level quantities
@@ -592,42 +585,35 @@ contains
   end subroutine diag_daily
 
 
-  subroutine diag_annual( tile, tile_fluxes )
-    !////////////////////////////////////////////////////////////////
-    ! Daily diagnostics
-    ! - sum over PFTs (plant) within LU (canopy) 
-    ! - iterative sum over days
-    !----------------------------------------------------------------
-    use md_params_core, only: eps
+  ! subroutine diag_annual( tile, tile_fluxes )
+  !   !////////////////////////////////////////////////////////////////
+  !   ! Annual diagnostics
+  !   !----------------------------------------------------------------
+  !   ! arguments
+  !   type(tile_type), dimension(nlu), intent(inout) :: tile
+  !   type(tile_fluxes_type), dimension(nlu), intent(inout) :: tile_fluxes
 
-    ! arguments
-    type(tile_type), dimension(nlu), intent(inout) :: tile
-    type(tile_fluxes_type), dimension(nlu), intent(inout) :: tile_fluxes
+  !   !----------------------------------------------------------------
+  !   ! Store plant traits required for next year's allocation
+  !   !----------------------------------------------------------------
+  !   ! pft-level
+  !   !do pft = 1,npft
+  !     !tile(:)%plant(pft)%vcmax25 = tile_fluxes(:)%plant(pft)%avcmax25
+  !   !end do
 
-    ! local
-    integer :: lu, pft
+  !   ! ! for weighted-mean vcmax25 at canopy level
+  !   !tile_fluxes(lu)%canopy%avcmax25 = tile_fluxes(lu)%canopy%avcmax25 / tile_fluxes(lu)%canopy%agpp
+  !   ! ! for weighted-mean vcmax25 at pft-level
 
-    !----------------------------------------------------------------
-    ! Store plant traits required for next year's allocation
-    !----------------------------------------------------------------
-    ! pft-level
-    !do pft = 1,npft
-      !tile(:)%plant(pft)%vcmax25 = tile_fluxes(:)%plant(pft)%avcmax25
-    !end do
+  !   ! !----------------------------------------------------------------
+  !   ! ! Divide by annual total GPP for GPP-weighted sums 
+  !   ! !----------------------------------------------------------------
+  !   ! tile_fluxes(:)%canopy%avcmax25_mean = tile_fluxes(:)%canopy%avcmax25_mean / tile_fluxes(:)%canopy%agpp
 
-    ! ! for weighted-mean vcmax25 at canopy level
-    !tile_fluxes(lu)%canopy%avcmax25 = tile_fluxes(lu)%canopy%avcmax25 / tile_fluxes(lu)%canopy%agpp
-    ! ! for weighted-mean vcmax25 at pft-level
+  !   ! do pft = 1,npft
+  !   !   tile_fluxes(:)%plant(pft)%avcmax25_mean = tile_fluxes(:)%plant(pft)%avcmax25_mean / tile_fluxes(:)%plant(pft)%agpp
+  !   ! end do
 
-    ! !----------------------------------------------------------------
-    ! ! Divide by annual total GPP for GPP-weighted sums 
-    ! !----------------------------------------------------------------
-    ! tile_fluxes(:)%canopy%avcmax25_mean = tile_fluxes(:)%canopy%avcmax25_mean / tile_fluxes(:)%canopy%agpp
-
-    ! do pft = 1,npft
-    !   tile_fluxes(:)%plant(pft)%avcmax25_mean = tile_fluxes(:)%plant(pft)%avcmax25_mean / tile_fluxes(:)%plant(pft)%agpp
-    ! end do
-
-  end subroutine diag_annual
+  ! end subroutine diag_annual
 
 end module md_tile_pmodel

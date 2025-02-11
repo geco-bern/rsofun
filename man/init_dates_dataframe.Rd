@@ -17,39 +17,38 @@ init_dates_dataframe(
 }
 \arguments{
 \item{yrstart}{An integer defining the start year
-of dates covered by the dataframe}
+of dates covered by the dataframe.}
 
 \item{yrend}{An integer defining the end year of dates
-covered by the dataframe}
+covered by the dataframe.}
 
-\item{startmoy}{An integer defining the start month of dates
+\item{startmoy}{An integer defining the start month-of-year of dates
 covered by the dataframe. Defaults to 1.}
 
 \item{startdoy}{An integer defining the start day-of-year of
 dates covered by the dataframe. Defaults to 1.}
 
 \item{freq}{A character string specifying the time steps of dates
-(in rows). Defaults to \code{"days"}. Any of \code{"days", "months"}.}
+(in rows). Defaults to \code{"days"}. Any of \code{"days", "months", "years"}. If
+\code{freq = "months"} the 15\eqn{^{th}} day of the months is used as date,
+and if \code{freq = "years"} the 1\eqn{^{st}} of January of each year is returned.}
 
-\item{endmoy}{An integer defining the end month of dates covered
+\item{endmoy}{An integer defining the end month-of-year of dates covered
 by the dataframe. Defaults to 12.}
 
 \item{enddom}{An integer defining the end day-of-year of dates
 covered by the dataframe. Defaults to 31.}
 
-\item{noleap}{Whether leap years are ignored. Defaults to \code{FALSE}.}
+\item{noleap}{Whether leap years are ignored, that is, whether the 29\eqn{^{th}} 
+of February is removed. Defaults to \code{FALSE}.}
 }
 \value{
 A tibble with dates.
 }
 \description{
-Creates a tibble with rows for each date (ymd object from 
-library lubridate) from 'yrstart' to 'yrend'. Intervals of dates is 
-specified by argument 'freq'.
-}
-\examples{
-\dontrun{
- ddf <- init_dates_dataframe( 2000, 2003, startmoy=1, startdoy=1,
-  freq="days", endmoy=12, enddom=31, noleap=FALSE )
-}
+Creates a tibble with rows for each date from \code{'yrstart'} to \code{'yrend'}
+in \code{'yyyy-mm-dd'} format. Intervals of dates are specified by argument 
+\code{'freq'}. 
+ ddf <- init_dates_dataframe(2000, 2003, startmoy=1, startdoy=1,
+                             freq="days", endmoy=12, enddom=31, noleap=FALSE)
 }
