@@ -127,7 +127,6 @@
 #'     \item{m_turnover}{Continuous biomass turnover (kg C m\eqn{^{-2}} year\eqn{^{-1}}).}
 #'     \item{c_turnover_time}{Carbon turnover rate, calculated as the ratio
 #'       between plant biomass and NPP (year\eqn{^{-1}}).}
-#'     \item{lu_fraction}{Fraction of the area covered by this land unit.}
 #'   }}
 #'   \item{\code{output_annual_cohorts}}{A data.frame of annual outputs at the
 #'     cohort level.
@@ -435,6 +434,28 @@ prepare_init_lu <- function(init_lu){
   if(!'type' %in% names(init_lu)) {
     init_lu <- init_lu %>% mutate('type' = 'unmanaged')
   }
+  if(!'extra_N_input' %in% names(init_lu)) {
+    init_lu <- init_lu %>% mutate('extra_N_input' = case_match(
+      type,
+      "cropland" ~ 0.01,
+      .default = 0.0
+    ))
+  }
+  if(!'extra_turnover_rate' %in% names(init_lu)) {
+    init_lu <- init_lu %>% mutate('extra_turnover_rate' = case_match(
+      type,
+      "cropland" ~ 0.2,
+      .default = 0.0
+    ))
+  }
+  if(!'oxidized_litter_fraction' %in% names(init_lu)) {
+    init_lu <- init_lu %>% mutate('oxidized_litter_fraction' = case_match(
+      type,
+      "cropland" ~ 0.9,
+      "pasture" ~ 0.4,
+      .default = 0.0
+    ))
+  }
   init_lu <- init_lu %>% mutate(
     'type' = case_match(
       type,
@@ -444,7 +465,10 @@ prepare_init_lu <- function(init_lu){
   )
   init_lu <- init_lu %>% select(
     'fraction',
-    'type'
+    'type',
+    'extra_N_input',
+    'extra_turnover_rate',
+    'oxidized_litter_fraction'
   )
 
   return(init_lu)

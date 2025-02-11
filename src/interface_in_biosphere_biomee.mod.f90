@@ -9,7 +9,7 @@ module md_interface_in_biomee
   implicit none
 
   private
-  public  inputs, interface_in_biosphere_biomee, params_species_biomee
+  public  inputs, interface_in_biosphere_biomee, params_species_biomee, init_lu_biomee
 
   !===== Soil water hydrualics
   integer, public, parameter :: MAX_LEVELS = 3  ! Soil layers, for soil water dynamics
@@ -25,7 +25,7 @@ module md_interface_in_biomee
   integer, public, parameter :: nvars_init_soil      = 4
   integer, public, parameter :: nvars_init_cohorts   = 9
   integer, public, parameter :: nvars_params_species = 55
-  integer, public, parameter :: nvars_init_lu        = 2
+  integer, public, parameter :: nvars_init_lu        = 5
 
   !===== LU types
   integer, public, parameter :: LU_TYPE_UNMANAGED    = 0
@@ -33,8 +33,11 @@ module md_interface_in_biomee
 
   type init_lu_biomee
 
-    real :: fraction
-    integer :: type ! LU type. See LU_TYPE variables above
+    real    :: fraction                   ! Area fraction
+    integer :: type                       ! LU type. See LU_TYPE variables above
+    real    :: extra_N_input              ! Additional inorg N supply (to account for N fertiliser application), in kg m-2 yr-1
+    real    :: extra_turnover_rate        ! Additional soil turnover rate (to account for soil management such as tillage), dimensionless
+    real    :: oxidized_litter_fraction   ! Fraction of above-ground turnover that is directly oxidized (crop and grass harvest), dimensionless
 
     contains
 
@@ -239,8 +242,11 @@ contains
     class(init_lu_biomee), intent(inout) :: self
     real(kind=c_double), dimension(nvars_init_lu), intent(in) :: init_lu
 
-    self%fraction = real(init_lu(1))
-    self%type     = int(init_lu(2))
+    self%fraction                 = real(init_lu(1))
+    self%type                     = int( init_lu(2))
+    self%extra_N_input            = real(init_lu(3))
+    self%extra_turnover_rate      = real(init_lu(4))
+    self%oxidized_litter_fraction = real(init_lu(5))
 
   end subroutine populate_init_lu
 

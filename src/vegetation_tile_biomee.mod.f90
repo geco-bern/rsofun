@@ -132,7 +132,6 @@ module vegetation_tile_biomee
 
     !=====  N-related fluxes
     real    :: totN
-    real    :: N_input            ! annual N input (kg N m-2 yr-1)
     real    :: annualN            ! annual available N in a year
     real    :: Nloss_yr           ! annual N loss
     real    :: N_P2S_yr           ! N turnover (plant to soil) (kg N m-2 yr-1)
@@ -213,6 +212,7 @@ module vegetation_tile_biomee
     procedure plant2soil
     procedure initialize_vegn_tile
     procedure :: aggregate_cohorts
+    procedure :: lu_props
 
     !========= Private helper methods
 
@@ -1052,11 +1052,10 @@ contains
 
     ! Initial Soil pools and environmental conditions
     self%psoil_fs%c12 = inputs%init_soil%init_fast_soil_C  ! kgC m-2
-    self%psoil_sl%c12 = inputs%init_soil%init_slow_soil_C ! slow soil carbon pool, (kg C/m2)
+    self%psoil_sl%c12 = inputs%init_soil%init_slow_soil_C  ! slow soil carbon pool, (kg C/m2)
     self%psoil_fs%n14 = self%psoil_fs%c12 / CN0metabolicL  ! fast soil nitrogen pool, (kg N/m2)
     self%psoil_sl%n14 = self%psoil_sl%c12 / CN0structuralL ! slow soil nitrogen pool, (kg N/m2)
-    self%N_input      = inputs%init_soil%N_input        ! kgN m-2 yr-1, N input to soil
-    self%inorg%n14    = inputs%init_soil%init_Nmineral  ! Mineral nitrogen pool, (kg N/m2)
+    self%inorg%n14    = inputs%init_soil%init_Nmineral     ! Mineral nitrogen pool, (kg N/m2)
     self%previousN    = self%inorg%n14
 
     ! debug: adding microbial biomass initialisation
@@ -1177,6 +1176,16 @@ contains
     if (self%density12 > 0.0) self%QMD12   = sqrt(self%QMD12 / self%density12)
 
   end subroutine aggregate_cohorts
+
+  function lu_props(self) result(res)
+    !////////////////////////////////////////////////////////////////////////
+    ! Return land use (LU) properties (from init_lu) for this tile
+    !------------------------------------------------------------------------
+    class(vegn_tile_type), intent(inout) :: self
+    type(init_lu_biomee) :: res
+
+    res = inputs%init_lu(self%lu_index)
+  end function lu_props
 
   subroutine recover_N_balance(self)
     !////////////////////////////////////////////////////////////////////////

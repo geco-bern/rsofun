@@ -79,7 +79,7 @@ module md_luluc
                   ! Transfer to litter pool
                   transfer(j, PSOIL_FS) = &
                           transfer(j, PSOIL_FS) + (vegn%psoil_fs + vegn%proot + vegn%pseed + vegn%plabl + vegn%pleaf) &
-                          * delta
+                          * delta * (1.0 - inputs%init_lu(i)%oxidized_litter_fraction)
                   ! We export above ground pools (= products)
                   export = export + (vegn%pwood + vegn%psapw) * delta
                   ! Water transfer

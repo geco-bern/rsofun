@@ -38,7 +38,7 @@ with one species per row. See examples \code{\link{biomee_gs_leuning_drivers}} o
 
 \item{init_lu}{A data.frame of initial land unit (LU) specifications.}
 
-\item{luc_forcing}{A data.frame of land use change (LUC).
+\item{luc_forcing}{An array of land use change (LUC) used during transient phase.
 
 For further specifications of above inputs and examples see \code{\link{biomee_gs_leuning_drivers}} or \code{\link{biomee_p_model_drivers}}.}
 
@@ -155,7 +155,6 @@ Model output is provided as a list, with elements:
     \item{m_turnover}{Continuous biomass turnover (kg C m\eqn{^{-2}} year\eqn{^{-1}}).}
     \item{c_turnover_time}{Carbon turnover rate, calculated as the ratio
       between plant biomass and NPP (year\eqn{^{-1}}).}
-    \item{lu_fraction}{Fraction of the area covered by this land unit.}
   }}
   \item{\code{output_annual_cohorts}}{A data.frame of annual outputs at the
     cohort level.
@@ -191,9 +190,9 @@ Model output is provided as a list, with elements:
     \item{N_fix}{Nitrogen fixation (kg N tree\eqn{^{-1}} yr\eqn{^{-1}}).}
     \item{maxLAI}{Maximum leaf area index for a tree (m\eqn{^2} m\eqn{^{-2}}).}
     \item{Volume}{Tree volume (m\eqn{^3}).}
-    \item{n_deadtrees}{Number of trees that died (trees yr\eqn{^{-1}}).}
-    \item{c_deadtrees}{Carbon biomass of trees that died (kg C yr\eqn{^{-1}}).}
-    \item{deathrate}{Mortality rate of this cohort (yr\eqn{^{-1}}).}
+    \item{n_deadtrees}{Plant to soil N flux due to mortality, including natural mortality, starvation and any other rprocesse causing a loss of individuals in general  (kg N yr\eqn{^{-1}} m\eqn{^{-2}}).}
+    \item{c_deadtrees}{Plant to soil C flux due to mortality, including natural mortality, starvation and any other rprocesse causing a loss of individuals in general  (kg C yr\eqn{^{-1}} m\eqn{^{-2}}).}
+    \item{deathrate}{Mortality rate of this cohort, including natural mortality, starvation and any other rprocesse causing a loss of individuals in general (yr\eqn{^{-1}}).}
   }}
 }
 }

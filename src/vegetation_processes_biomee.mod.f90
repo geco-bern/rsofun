@@ -5,7 +5,7 @@ module md_vegetation_processes_biomee
   !---------------------------------------------------------------  
   use vegetation_tile_biomee
   use md_soil_biomee
-  use md_interface_in_biomee, only: inputs
+  use md_interface_in_biomee, only: inputs, init_lu_biomee
 
   implicit none
   private
@@ -1037,8 +1037,12 @@ contains
     real :: CNfast, CNslow
     real :: A  ! decomp rate reduction due to moisture and temperature
     real :: tsoil ! Soil temp in K
+    real :: extra_turnover_rate ! Extra turnover rate due to soil management (tillage, ...)
+    real :: N_input, delta_N       ! Extra N input (N fertilization)
+    type(init_lu_biomee) :: lu_props ! Land use properties
 
     tsoil = vegn%tc_soil + kTkelvin
+    lu_props = vegn%lu_props()
 
     ! runoff = vegn%runoff
   
@@ -1048,9 +1052,10 @@ contains
 
     ! C decomposition
     A = A_function(tsoil, vegn%thetaS())
-    micr_C_loss = vegn%pmicr%c12    * (1.0 - exp(-A*phoMicrobial* inputs%dt_fast_yr))
-    fast_L_loss = vegn%psoil_fs%c12 * (1.0 - exp(-A*inputs%params_tile%K1 * inputs%dt_fast_yr))
-    slow_L_loss = vegn%psoil_sl%c12 * (1.0 - exp(-A*inputs%params_tile%K2 * inputs%dt_fast_yr))
+    extra_turnover_rate = 1.0 / (1.0 + lu_props%extra_turnover_rate)
+    micr_C_loss = vegn%pmicr%c12    * (1.0 - exp(-A * phoMicrobial * inputs%dt_fast_yr))
+    fast_L_loss = vegn%psoil_fs%c12 * (1.0 - exp(-A * inputs%params_tile%K1 * extra_turnover_rate * inputs%dt_fast_yr))
+    slow_L_loss = vegn%psoil_sl%c12 * (1.0 - exp(-A * inputs%params_tile%K2 * extra_turnover_rate * inputs%dt_fast_yr))
 
     ! Carbon use efficiencies of microbes
     NforM = fNM * vegn%inorg%n14
@@ -1105,15 +1110,15 @@ contains
 
     vegn%Nloss_yr = vegn%Nloss_yr + N_loss + DON_loss
 
-    vegn%inorg%n14 = vegn%inorg%n14 - N_loss     &
-                    + vegn%N_input * inputs%dt_fast_yr  &
-                    + fast_N_free + slow_N_free  &
-                    + micr_C_loss/CNm
+    N_input = (inputs%init_soil%N_input + lu_props%extra_N_input) * inputs%dt_fast_yr
 
-    vegn%annualN   = vegn%annualN - N_loss     &
-                    + vegn%N_input * inputs%dt_fast_yr  &
-                    + fast_N_free + slow_N_free  &
-                    + micr_C_loss/CNm
+    delta_N = N_input  &
+            + fast_N_free + slow_N_free  &
+            + micr_C_loss/CNm &
+            - N_loss
+
+    vegn%inorg%n14 = vegn%inorg%n14 + delta_N
+    vegn%annualN   = vegn%annualN   + delta_N
 
     ! Check if soil C/N is above CN0
     fast_N_free = MAX(0.0, vegn%psoil_fs%n14  - vegn%psoil_fs%c12/CN0metabolicL)
@@ -1122,7 +1127,7 @@ contains
     vegn%psoil_fs%n14 = vegn%psoil_fs%n14 - fast_N_free
     vegn%psoil_sl%n14 = vegn%psoil_sl%n14 - slow_N_free
     vegn%inorg%n14    = vegn%inorg%n14 + fast_N_free + slow_N_free
-    vegn%annualN     = vegn%annualN  + fast_N_free + slow_N_free
+    vegn%annualN      = vegn%annualN   + fast_N_free + slow_N_free
     
     ! Heterotrophic respiration: decomposition of litters and SOM, kgC m-2 step-1
     vegn%rh =  (micr_C_loss + fast_L_loss*(1.-CUEfast)+ slow_L_loss*(1.0-CUEslow))

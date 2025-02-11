@@ -329,7 +329,10 @@
 #'   the following data:
 #'     \describe{
 #'       \item{fraction}{Initial cell fraction occupied by this LU.}
-#'       \item{type}{Land use type. On of: unmanaged, urban}
+#'       \item{type}{Land use type. May take any value, but predefined values are: 'unmanaged', 'urban', 'cropland', 'pasture'. Type urban cannot receive any cohort.}
+#'       \item{extra_N_input}{Additional inorg N supply (to account for N fertiliser application), in kg m-2 yr-1. Default for type 'cropland': 0.01, default other types: 0.}
+#'       \item{extra_turnover_rate}{Additional soil turnover rate (to account for soil management such as tillage), dimensionless. Default for type 'cropland': 0.2, default for other types: 0.}
+#'       \item{oxidized_litter_fraction}{Fraction of above-ground turnover that is directly oxidized (crop and grass harvest), dimensionless. Default for type 'cropland': 0.9, default for type 'pasture': 0.4, default for other types: 0.}
 #'     }}
 #'   \item{luc_forcing}{Array of land use change (LUC) used during transient phase.
 #' During spinup, the initial land unit fractions are used (i.e. no transition).
@@ -337,6 +340,7 @@
 #' The array is a nxn square matrix, where n is the number of LU (i.e. dimension of init_lu).
 #' Each cell f(i, j) expresses the fraction of LU i (row) being transfered to LU j (column).
 #' Self transitions are allowed, meaning that a fraction of the land unit is clear cut, but the area remains in the same land use.
+#' }
 #' }
 "biomee_gs_leuning_drivers"
 
