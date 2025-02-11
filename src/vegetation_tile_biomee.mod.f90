@@ -969,14 +969,14 @@ contains
       it => it%next()
     enddo
 
-    out_annual_tile(45) = dble(self%N_P2S_yr)
-    out_annual_tile(56) = dble(self%n_deadtrees)
-    out_annual_tile(57) = dble(self%c_deadtrees)
-    out_annual_tile(58) = dble(self%m_turnover)
-    out_annual_tile(47) = dble(self%totseed%c12)
-    out_annual_tile(48) = dble(self%totseed%n14)
-    out_annual_tile(49) = dble(self%totNewC%c12)
-    out_annual_tile(50) = dble(self%totNewC%n14)
+    out_annual_tile(ANNUAL_TILE_NP2S       ) = dble(self%N_P2S_yr)
+    out_annual_tile(ANNUAL_TILE_DEADTREES_N) = dble(self%n_deadtrees)
+    out_annual_tile(ANNUAL_TILE_DEADTREES_C) = dble(self%c_deadtrees)
+    out_annual_tile(ANNUAL_TILE_M_TURNOVER ) = dble(self%m_turnover)
+    out_annual_tile(ANNUAL_TILE_TOTSEED_C  ) = dble(self%totseed%c12)
+    out_annual_tile(ANNUAL_TILE_TOTSEED_N  ) = dble(self%totseed%n14)
+    out_annual_tile(ANNUAL_TILE_SEEDLING_C ) = dble(self%totNewC%c12)
+    out_annual_tile(ANNUAL_TILE_SEEDLING_N ) = dble(self%totNewC%n14)
 
   end subroutine annual_diagnostics_post_mortality
 
