@@ -5,7 +5,7 @@ module md_gpp_biomee
   ! Code for gs_leuning photosynthesis option is adopted from BiomeE https://doi.org/10.5281/zenodo.7125963.
   ! Code for pmodel photosynthesis option is for P-model (Stocker et al., 2020 GMD)
   !----------------------------------------------------------------
-  use vegetation_tile_biomee
+  use md_vegetation_tile_biomee
   use md_interface_in_biomee, only: inputs
   use md_soil_biomee, only: water_supply_layer
   use md_sofunutils, only: calc_esat

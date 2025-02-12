@@ -43,10 +43,10 @@ contains
     !----------------------------------------------------------------
     use md_forcing_biomee
     use md_interface_in_biomee
-    use vegetation_tile_biomee
     use md_biosphere_biomee
-    use md_luluc
-    use md_product_pools
+    use md_aggregated_tile_biomee
+    use md_params_core
+    use md_vegetation_tile_biomee
 
     implicit none
 
@@ -85,15 +85,11 @@ contains
     real(kind=c_double), dimension(nt_annual,nvars_lu_out, n_lu), intent(out) :: output_annual_luluc_tile
 
     ! Local state
-    type(vegn_tile_type), dimension(n_lu), target :: vegn_tiles ! One tile per LU
-    type(product_pools) :: prod_pools
-    type(lu_state) :: lu_states(n_lu) ! Current LU fractions
+    type(aggregated_tile) :: aggregat
 
     ! Local variables
     real(kind=c_double) :: nan
-    type(orgpool) :: export
     integer :: yr, idx, idx_daily_start, idx_daily_end, lu_idx
-    type(vegn_tile_type), pointer :: vegn
 
     !----------------------------------------------------------------
     ! Initialize outputs to NaN / 0
@@ -115,13 +111,8 @@ contains
 
     call inputs%populate(params_species, init_cohort, init_soil, params_tile, params_siml, site_info, init_lu)
 
-    ! LU states init
-    lu_states(:)%fraction = inputs%init_lu(:)%fraction
-
-    ! Initialize tiles
-    do lu_idx = 1, n_lu
-      if (lu_states(lu_idx)%non_empty()) call vegn_tiles(lu_idx)%initialize_vegn_tile(lu_idx)
-    end do
+    ! Initialize tile
+    call aggregat%initialize(inputs%init_lu(:)%fraction)
 
     !----------------------------------------------------------------
     ! Run simulation
@@ -146,49 +137,49 @@ contains
 
       ! For each non-empty LU (land unit)
       do lu_idx = 1, n_lu
-        if (lu_states(lu_idx)%non_empty()) then
+        associate (lu => aggregat%tiles(lu_idx))
+          if (lu%non_empty()) then
 
-          vegn => vegn_tiles(lu_idx)
-
-          !----------------------------------------------------------------
-          ! Call biosphere (wrapper for all modules, contains time loops)
-          !----------------------------------------------------------------
-          if (state%spinup) then
-            ! If spinup, we do not pass the daily and cohort output arrays
-            call biosphere_annual( &
-              state, &
-              climate, &
-              vegn, &
-              output_annual_tile(state%year, :, lu_idx) &
-            )
-          else
-            idx =  state%year - inputs%params_siml%steering%spinupyears
-            if (nt_daily > 0) then
-              ! Indices for daily output
-              ! Spinup years are not stored, which is why we offset by -spinupyears
-              idx_daily_start = (state%year - inputs%params_siml%steering%spinupyears - 1) * ndayyear + 1
-              idx_daily_end   = idx_daily_start + ndayyear - 1
+            !----------------------------------------------------------------
+            ! Call biosphere (wrapper for all modules, contains time loops)
+            !----------------------------------------------------------------
+            if (state%spinup) then
+              ! If spinup, we do not pass the daily and cohort output arrays
               call biosphere_annual( &
-                      state, &
-                      climate, &
-                      vegn, &
-                      output_annual_tile(state%year, :, lu_idx), &
-                      output_annual_cohorts(:, idx,:, lu_idx), &
-                      output_daily_tile(idx_daily_start:idx_daily_end, :, lu_idx) &
+                state, &
+                climate, &
+                lu%vegn, &
+                output_annual_tile(state%year, :, lu_idx) &
               )
             else
-              ! Same but without daily outputs
-              call biosphere_annual( &
-                      state, &
-                      climate, &
-                      vegn, &
-                      output_annual_tile(state%year, :, lu_idx), &
-                      output_annual_cohorts(:, idx,:, lu_idx) &
-                      )
+              idx =  state%year - inputs%params_siml%steering%spinupyears
+              if (nt_daily > 0) then
+                ! Indices for daily output
+                ! Spinup years are not stored, which is why we offset by -spinupyears
+                idx_daily_start = (state%year - inputs%params_siml%steering%spinupyears - 1) * ndayyear + 1
+                idx_daily_end   = idx_daily_start + ndayyear - 1
+                call biosphere_annual( &
+                        state, &
+                        climate, &
+                        lu%vegn, &
+                        output_annual_tile(state%year, :, lu_idx), &
+                        output_annual_cohorts(:, idx,:, lu_idx), &
+                        output_daily_tile(idx_daily_start:idx_daily_end, :, lu_idx) &
+                )
+              else
+                ! Same but without daily outputs
+                call biosphere_annual( &
+                        state, &
+                        climate, &
+                        lu%vegn, &
+                        output_annual_tile(state%year, :, lu_idx), &
+                        output_annual_cohorts(:, idx,:, lu_idx) &
+                        )
+              end if
             end if
-          end if
 
-        end if
+          end if
+        end associate
 
       end do
 
@@ -197,11 +188,10 @@ contains
       !----------------------------------------------------------------
       if ((.not.state%spinup) .and. (state%forcingyear_idx <= n_lu_tr_years)) then
 
-        export = update_lu_fractions(lu_states(:)%fraction, real(luc_forcing(:,:,state%forcingyear_idx)), vegn_tiles)
-        call prod_pools%update(export)
+        call aggregat%update_lu_fractions(real(luc_forcing(:,:,state%forcingyear_idx)))
 
       end if
-      call populate_outarray_annual_land_use(state%year, lu_states(:)%fraction, output_annual_luluc_tile(state%year,:,:))
+      call aggregat%populate_outarray_annual_land_use(state%year, output_annual_luluc_tile(state%year,:,:))
 
     end do yearloop
 
@@ -210,10 +200,7 @@ contains
     !----------------------------------------------------------------
     deallocate(climate)
     call inputs%shut_down()
-    do lu_idx = 1, n_lu
-      vegn => vegn_tiles(lu_idx)
-      call vegn%shut_down()
-    end do
+    call aggregat%shut_down()
 
   end subroutine biomee_f
 

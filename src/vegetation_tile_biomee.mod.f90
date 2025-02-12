@@ -1,4 +1,4 @@
-module vegetation_tile_biomee
+module md_vegetation_tile_biomee
   !////////////////////////////////////////////////////////////////
   ! Definition of 'vegn_tile_type', the highest level type containing tile level variables and cohort list.
   ! Code adopted from BiomeE https://doi.org/10.5281/zenodo.7125963.
@@ -1203,4 +1203,4 @@ contains
     endif
   end subroutine recover_N_balance
 
-end module vegetation_tile_biomee
+end module md_vegetation_tile_biomee

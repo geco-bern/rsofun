@@ -7,7 +7,7 @@ module md_soil_biomee
   ! Code is adopted from BiomeE https://doi.org/10.5281/zenodo.7125963.
   !-------------------------------------------------------------------------
  use md_interface_in_biomee, only: inputs, MAX_LEVELS
- use vegetation_tile_biomee
+ use md_vegetation_tile_biomee
  use md_sofunutils, only: calc_esat
  use md_forcing_biomee
 

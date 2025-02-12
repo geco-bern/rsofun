@@ -3,7 +3,7 @@ module md_vegetation_processes_biomee
   ! Implementation of vegetation processes for BiomeE.
   ! Code is adopted from BiomeE https://doi.org/10.5281/zenodo.7125963.
   !---------------------------------------------------------------  
-  use vegetation_tile_biomee
+  use md_vegetation_tile_biomee
   use md_soil_biomee
   use md_interface_in_biomee, only: inputs, init_lu_biomee
 

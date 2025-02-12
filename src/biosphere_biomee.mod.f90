@@ -5,7 +5,7 @@ module md_biosphere_biomee
   ! Does not contain any input/output; this is done in SR sofun.
   ! Code adopted from BiomeE https://doi.org/10.5281/zenodo.7125963.
   !----------------------------------------------------------------
-  use vegetation_tile_biomee
+  use md_vegetation_tile_biomee
   use md_vegetation_processes_biomee
   use md_soil_biomee
   use md_forcing_biomee
