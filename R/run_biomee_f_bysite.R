@@ -425,47 +425,47 @@ prepare_params_siml <- function(params_siml){
 build_init_lu <- function(init_lu){
   # If init_lu is null, we create a dummy LU initial state containing only one state (with a fraction of 1)
   if (is.null(init_lu))
-    init_lu <- data.frame(name=c('primary'), fraction=c(1.0), type=c('unmanaged'))
+    init_lu <- data.frame(name=c('primary'), fraction=c(1.0))
 
   return(init_lu)
 }
 
 prepare_init_lu <- function(init_lu){
-  if(!'type' %in% names(init_lu)) {
-    init_lu <- init_lu %>% mutate('type' = 'unmanaged')
+  if(!'preset' %in% names(init_lu)) {
+    init_lu <- init_lu %>% mutate(preset = 'unmanaged')
   }
   if(!'extra_N_input' %in% names(init_lu)) {
     init_lu <- init_lu %>% mutate('extra_N_input' = case_match(
-      type,
+      preset,
       "cropland" ~ 0.01,
       .default = 0.0
     ))
   }
   if(!'extra_turnover_rate' %in% names(init_lu)) {
     init_lu <- init_lu %>% mutate('extra_turnover_rate' = case_match(
-      type,
+      preset,
       "cropland" ~ 0.2,
       .default = 0.0
     ))
   }
   if(!'oxidized_litter_fraction' %in% names(init_lu)) {
     init_lu <- init_lu %>% mutate('oxidized_litter_fraction' = case_match(
-      type,
+      preset,
       "cropland" ~ 0.9,
       "pasture" ~ 0.4,
       .default = 0.0
     ))
   }
   init_lu <- init_lu %>% mutate(
-    'type' = case_match(
-      type,
-      "urban" ~ 1,
-      .default = 0
+    'vegetated' = case_match(
+      preset,
+      "urban" ~ FALSE,
+      .default = TRUE
     )
   )
   init_lu <- init_lu %>% select(
     'fraction',
-    'type',
+    'vegetated',
     'extra_N_input',
     'extra_turnover_rate',
     'oxidized_litter_fraction'

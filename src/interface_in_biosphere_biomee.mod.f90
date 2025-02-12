@@ -27,17 +27,13 @@ module md_interface_in_biomee
   integer, public, parameter :: nvars_params_species = 55
   integer, public, parameter :: nvars_init_lu        = 5
 
-  !===== LU types
-  integer, public, parameter :: LU_TYPE_UNMANAGED    = 0
-  integer, public, parameter :: LU_TYPE_URBAN        = 1
-
   type init_lu_biomee
 
     real    :: fraction                   ! Area fraction
-    integer :: type                       ! LU type. See LU_TYPE variables above
     real    :: extra_N_input              ! Additional inorg N supply (to account for N fertiliser application), in kg m-2 yr-1
     real    :: extra_turnover_rate        ! Additional soil turnover rate (to account for soil management such as tillage), dimensionless
     real    :: oxidized_litter_fraction   ! Fraction of above-ground turnover that is directly oxidized (crop and grass harvest), dimensionless
+    logical :: vegetated                  ! Wehther this LU accept vegetation (i.e. cohorts)
 
     contains
 
@@ -243,7 +239,7 @@ contains
     real(kind=c_double), dimension(nvars_init_lu), intent(in) :: init_lu
 
     self%fraction                 = real(init_lu(1))
-    self%type                     = int( init_lu(2))
+    self%vegetated                = int( init_lu(2)) /= 0
     self%extra_N_input            = real(init_lu(3))
     self%extra_turnover_rate      = real(init_lu(4))
     self%oxidized_litter_fraction = real(init_lu(5))

@@ -1019,8 +1019,8 @@ contains
     ! Initialize lu_index
     self%lu_index = lu_index
 
-    ! If it is of type urban, we do not add any cohort
-    if (inputs%init_lu(lu_index)%type /= LU_TYPE_URBAN) then
+    ! If it is an LU acception vegetation (typically anything else than urban), we add the cohorts matching the lu_index
+    if (inputs%init_lu(lu_index)%vegetated) then
 
       ! Initialize plant cohorts
       init_n_cohorts = size(inputs%init_cohort)

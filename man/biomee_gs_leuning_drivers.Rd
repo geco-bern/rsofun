@@ -135,7 +135,7 @@ This data structure can be freely used for documenting the dataset, but must inc
       \item{init_cohort_seedC}{Initial biomass of seed, in kg C per individual.}
       \item{init_cohort_nsc}{Initial non-structural biomass, in kg C per individual.}
       \item{lu_index}{Land use type this cohorts belongs to (given as index in init_lu aray).
-       Use 0 to attach to all LU types except urban.}
+       Default: 0 (attach to all LU types except thoses which do not accept vegetation -- cf  init_lu.vegetated).}
     }}
   \item{init_soil}{A data.frame of initial soil pools, including
   the following data:
@@ -150,10 +150,11 @@ This data structure can be freely used for documenting the dataset, but must inc
   the following data:
     \describe{
       \item{fraction}{Initial cell fraction occupied by this LU.}
-      \item{type}{Land use type. May take any value, but predefined values are: 'unmanaged', 'urban', 'cropland', 'pasture'. Type urban cannot receive any cohort.}
-      \item{extra_N_input}{Additional inorg N supply (to account for N fertiliser application), in kg m-2 yr-1. Default for type 'cropland': 0.01, default other types: 0.}
-      \item{extra_turnover_rate}{Additional soil turnover rate (to account for soil management such as tillage), dimensionless. Default for type 'cropland': 0.2, default for other types: 0.}
-      \item{oxidized_litter_fraction}{Fraction of above-ground turnover that is directly oxidized (crop and grass harvest), dimensionless. Default for type 'cropland': 0.9, default for type 'pasture': 0.4, default for other types: 0.}
+      \item{preset}{Predefined land use type (optional). One of: 'unmanaged', 'urban', 'cropland', 'pasture'. See below for meaning of these presets. Leave empty to not use any preset.}
+      \item{vegetated}{Whether this LU accepts vegetation. Default for preset 'urban': False, default for other presets: True.}
+      \item{extra_N_input}{Additional inorg N supply (to account for N fertiliser application), in kg m-2 yr-1. Default for preset 'cropland': 0.01, default other presets: 0.}
+      \item{extra_turnover_rate}{Additional soil turnover rate (to account for soil management such as tillage), dimensionless. Default for preset 'cropland': 0.2, default for other presets: 0.}
+      \item{oxidized_litter_fraction}{Fraction of above-ground turnover that is directly oxidized (crop and grass harvest), dimensionless. Default for preset 'cropland': 0.9, default for preset 'pasture': 0.4, default for other presets: 0.}
     }}
   \item{luc_forcing}{Array of land use change (LUC) used during transient phase.
 During spinup, the initial land unit fractions are used (i.e. no transition).
