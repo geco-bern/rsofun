@@ -8,10 +8,9 @@ module md_product_pools
     private
     public :: product_pools
 
-    integer, public, parameter :: n_poduct_pools         = 2    ! Number of product pools
-    integer, public, parameter :: E_FOLD_PP_1            = 2    ! e-folding time of pool 1 (in year)
-    integer, public, parameter :: E_FOLD_PP_2            = 20   ! e-folding time of pool 2 (in year)
-    integer, public, parameter :: DIRECT_LOSS            = 0.25 ! Fraction directly lost to the athmosphere
+    integer, parameter :: n_poduct_pools = 2 ! Number of product pools
+    integer, public, parameter ::  e_fold_pp(n_poduct_pools) = (/2, 20/) ! e-folding time of product pools (in years)
+    real, public, parameter :: DIRECT_LOSS                   = 0.25 ! Fraction directly lost to the athmosphere
 
     type product_pools
 
@@ -38,8 +37,8 @@ module md_product_pools
 
       fraction = (1.0 - DIRECT_LOSS) / n_poduct_pools
 
-      self%product_pool(1) = self%product_pool(1) * exp(-1.0/E_FOLD_PP_1) + input * fraction
-      self%product_pool(2) = self%product_pool(2) * exp(-1.0/E_FOLD_PP_2) + input * fraction
+      self%product_pool(1) = self%product_pool(1) * exp(-1.0 / e_fold_pp(1)) + input * fraction
+      self%product_pool(2) = self%product_pool(2) * exp(-1.0 / e_fold_pp(2)) + input * fraction
 
     end subroutine update
 

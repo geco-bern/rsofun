@@ -1037,7 +1037,7 @@ contains
     real :: CNfast, CNslow
     real :: A  ! decomp rate reduction due to moisture and temperature
     real :: tsoil ! Soil temp in K
-    real :: extra_turnover_rate ! Extra turnover rate due to soil management (tillage, ...)
+    real :: extra_turnover ! Extra turnover rate due to soil management (tillage, ...)
     real :: N_input, delta_N       ! Extra N input (N fertilization)
     type(init_lu_biomee) :: lu_props ! Land use properties
 
@@ -1052,10 +1052,10 @@ contains
 
     ! C decomposition
     A = A_function(tsoil, vegn%thetaS())
-    extra_turnover_rate = 1.0 / (1.0 + lu_props%extra_turnover_rate)
+    extra_turnover = 1.0 / (1.0 + lu_props%extra_turnover_rate)
     micr_C_loss = vegn%pmicr%c12    * (1.0 - exp(-A * phoMicrobial * inputs%dt_fast_yr))
-    fast_L_loss = vegn%psoil_fs%c12 * (1.0 - exp(-A * inputs%params_tile%K1 * extra_turnover_rate * inputs%dt_fast_yr))
-    slow_L_loss = vegn%psoil_sl%c12 * (1.0 - exp(-A * inputs%params_tile%K2 * extra_turnover_rate * inputs%dt_fast_yr))
+    fast_L_loss = vegn%psoil_fs%c12 * (1.0 - exp(-A * inputs%params_tile%K1 * extra_turnover * inputs%dt_fast_yr))
+    slow_L_loss = vegn%psoil_sl%c12 * (1.0 - exp(-A * inputs%params_tile%K2 * extra_turnover * inputs%dt_fast_yr))
 
     ! Carbon use efficiencies of microbes
     NforM = fNM * vegn%inorg%n14

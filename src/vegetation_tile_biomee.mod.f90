@@ -116,7 +116,7 @@ module vegetation_tile_biomee
     type(orgpool) :: inorg                        ! Mineral N/C pool
 
     !===== Soil water pool, kg H2O m-2
-    real          :: wcl(MAX_LEVELS)              ! volumetric soil water content for each layer
+    real    :: wcl(MAX_LEVELS)              ! volumetric soil water content for each layer
 
     !=====  Averaged quantities for PPA phenology
     ! Note, these fields do not follow the usual annual cycle (january-january)

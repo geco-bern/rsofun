@@ -59,6 +59,7 @@ module md_luluc
           integer, parameter :: PSOIL_SL = 4
   
           transfer(:, :) = orgpool()
+          transfer_water(:, :) = 0.0
           export = orgpool()
           old_lu_fractions = lu_fractions
           received = 0
