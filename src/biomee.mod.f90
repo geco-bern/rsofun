@@ -174,6 +174,7 @@ contains
                       output_daily_tile(idx_daily_start:idx_daily_end, :, lu_idx) &
               )
             else
+              ! Same but without daily outputs
               call biosphere_annual( &
                       state, &
                       climate, &

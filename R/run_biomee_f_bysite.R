@@ -288,7 +288,7 @@ build_out <- function(biomeeout, lu_names, sitename, daily_diagnostics){
     out <- list("data"=build_lu_out(biomeeout, 1, trimmed_object))
   }
   else {
-    out <- list() #TODO: LU aggregation
+    out <- list()
     for (lu in 1:n_lu) {
       res <- build_lu_out(biomeeout, lu, trimmed_object)
       out <- append(out, list(res))

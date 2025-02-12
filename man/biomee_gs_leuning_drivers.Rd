@@ -148,21 +148,23 @@ This data structure can be freely used for documenting the dataset, but must inc
         year\eqn{^{-1}}.}
     }}
   \item{init_lu}{A data.frame of initial land unit (LU) specifications, including
-  the following data:
+    the following data:
     \describe{
-      \item{fraction}{Initial cell fraction occupied by this LU.}
+      \item{fraction}{Initial cell fraction occupied by this LU, dimensionless (0 to 1).
+        The sum of all fractions is typically equal to 1, but may be less in which case the difference is the fraction of the grid cell occupied by ice/water.}
       \item{preset}{Predefined land use type (optional). One of: 'unmanaged', 'urban', 'cropland', 'pasture'. See below for meaning of these presets. Leave empty to not use any preset.}
       \item{vegetated}{Whether this LU accepts vegetation. Default for preset 'urban': False, default for other presets: True.}
       \item{extra_N_input}{Additional inorg N supply (to account for N fertiliser application), in kg m-2 yr-1. Default for preset 'cropland': 0.01, default other presets: 0.}
       \item{extra_turnover_rate}{Additional soil turnover rate (to account for soil management such as tillage), dimensionless. Default for preset 'cropland': 0.2, default for other presets: 0.}
-      \item{oxidized_litter_fraction}{Fraction of above-ground turnover that is directly oxidized (crop and grass harvest), dimensionless. Default for preset 'cropland': 0.9, default for preset 'pasture': 0.4, default for other presets: 0.}
+      \item{oxidized_litter_fraction}{Fraction of above-ground turnover that is directly oxidized (crop and grass harvest), dimensionless.
+        Default for preset 'cropland': 0.9, default for preset 'pasture': 0.4, default for other presets: 0.}
     }}
   \item{luc_forcing}{Array of land use change (LUC) used during transient phase.
-During spinup, the initial land unit fractions are used (i.e. no transition).
-If there are more transient years than provided LUC data, the last state is maintained until the end of the transient phase (i.e. no transition).
-The array is a nxn square matrix, where n is the number of LU (i.e. dimension of init_lu).
-Each cell f(i, j) expresses the fraction of LU i (row) being transfered to LU j (column).
-Self transitions are allowed, meaning that a fraction of the land unit is clear cut, but the area remains in the same land use.
+     During spinup, the initial land unit fractions are used (i.e. no transition).
+     If there are more transient years than provided LUC data, the last state is maintained until the end of the transient phase (i.e. no transition).
+     The array is a nxn square matrix, where n is the number of LU (i.e. dimension of init_lu).
+     Each cell f(i, j) expresses the fraction of LU i (row) being transfered to LU j (column).
+     Self transitions are allowed, meaning that a fraction of the land unit is clear cut, but the area remains in the same land use.
 }
 }
 }
