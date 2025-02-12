@@ -85,7 +85,7 @@ contains
     real(kind=c_double), dimension(nt_annual,nvars_lu_out, n_lu), intent(out) :: output_annual_luluc_tile
 
     ! Local state
-    type(vegn_tile_type), dimension(n_lu) :: vegn_tiles ! One tile per LU
+    type(vegn_tile_type), dimension(n_lu), target :: vegn_tiles ! One tile per LU
     type(product_pools) :: prod_pools
     type(lu_state) :: lu_states(n_lu) ! Current LU fractions
 
@@ -93,6 +93,7 @@ contains
     real(kind=c_double) :: nan
     type(orgpool) :: export
     integer :: yr, idx, idx_daily_start, idx_daily_end, lu_idx
+    type(vegn_tile_type), pointer :: vegn
 
     !----------------------------------------------------------------
     ! Initialize outputs to NaN / 0
@@ -147,6 +148,8 @@ contains
       do lu_idx = 1, n_lu
         if (lu_states(lu_idx)%non_empty()) then
 
+          vegn => vegn_tiles(lu_idx)
+
           !----------------------------------------------------------------
           ! Call biosphere (wrapper for all modules, contains time loops)
           !----------------------------------------------------------------
@@ -155,7 +158,7 @@ contains
             call biosphere_annual( &
               state, &
               climate, &
-              vegn_tiles(lu_idx), &
+              vegn, &
               output_annual_tile(state%year, :, lu_idx) &
             )
           else
@@ -168,7 +171,7 @@ contains
               call biosphere_annual( &
                       state, &
                       climate, &
-                      vegn_tiles(lu_idx), &
+                      vegn, &
                       output_annual_tile(state%year, :, lu_idx), &
                       output_annual_cohorts(:, idx,:, lu_idx), &
                       output_daily_tile(idx_daily_start:idx_daily_end, :, lu_idx) &
@@ -178,7 +181,7 @@ contains
               call biosphere_annual( &
                       state, &
                       climate, &
-                      vegn_tiles(lu_idx), &
+                      vegn, &
                       output_annual_tile(state%year, :, lu_idx), &
                       output_annual_cohorts(:, idx,:, lu_idx) &
                       )
@@ -207,8 +210,9 @@ contains
     !----------------------------------------------------------------
     deallocate(climate)
     call inputs%shut_down()
-    do idx = 1, n_lu
-      call vegn_tiles(idx)%shut_down()
+    do lu_idx = 1, n_lu
+      vegn => vegn_tiles(lu_idx)
+      call vegn%shut_down()
     end do
 
   end subroutine biomee_f

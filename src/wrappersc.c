@@ -156,6 +156,8 @@ extern SEXP biomee_f_C(
     SEXP Rdim;
 
     // Extracting array dimensions (they need to be passed to fortran separately)
+    // To extract the 1st dimension size: x = asInteger(Rdim);
+    // To extract the nth dimension size: x = INTEGER(Rdim)[n-1]
     Rdim = getAttrib(params_species,R_DimSymbol);
     n_params_species = asInteger(Rdim);
     Rdim = getAttrib(init_cohort,R_DimSymbol);

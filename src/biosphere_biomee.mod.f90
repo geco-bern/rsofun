@@ -39,7 +39,7 @@ contains
     type(vegn_tile_type), intent(inout) :: vegn
 
     ! Return variables
-    real(kind=c_double), dimension(nvars_annual_tile), optional, intent(out) :: output_annual_tile
+    real(kind=c_double), dimension(nvars_annual_tile), intent(out) :: output_annual_tile
     real(kind=c_double), dimension(ndayyear, nvars_daily_tile), optional, intent(out) :: output_daily_tile
     real(kind=c_double), dimension(out_max_cohorts, nvars_annual_cohorts), optional, intent(out) :: output_annual_cohorts
 
