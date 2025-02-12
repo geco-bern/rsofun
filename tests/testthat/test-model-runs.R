@@ -12,7 +12,6 @@ test_that("biomee output check (p-model)", {
   expect_true(all.equal(colMeans(out$data[[1]]$output_daily_tile), colMeans(biomee_p_model_output$data[[1]]$output_daily_tile), tolerance = 1e-4))
   expect_true(all.equal(colMeans(out$data[[1]]$output_annual_tile), colMeans(biomee_p_model_output$data[[1]]$output_annual_tile), tolerance = 1e-4))
   expect_true(all.equal(colMeans(out$data[[1]]$output_annual_cohorts), colMeans(biomee_p_model_output$data[[1]]$output_annual_cohorts), tolerance = 1e-4))
-  expect_true(all.equal(colMeans(out$data[[1]]$output_annual_land_use), colMeans(biomee_p_model_output$data[[1]]$output_annual_land_use), tolerance = 1e-4))
 
   # If this test fails it means that the output of the model is out of sync with the data in the data directory.
   # It could either mean that:
@@ -21,7 +20,7 @@ test_that("biomee output check (p-model)", {
   #   raw-data directory.
   #
   # Note: Biomee is quite sensitive with regards to which order cohorts are processed (ex: reduce stage when cohorts are merged together).
-  # As a consequence, a slight change in the code may cause the final number of cohorts to be differents and therefore a large difference in the mean of the colunms of output_annual_land_use.
+  # As a consequence, a slight change in the code may cause the final number of cohorts to be differents and therefore a large difference in the mean of the colunms of output_annual_aggregated.
   # These changes do not imply any meaningful alteration of the code functions and are simply artefacts.
 })
 
@@ -36,7 +35,6 @@ test_that("biomeE output check (gs leuning)", {
   expect_true(all.equal(colMeans(out$data[[1]]$output_daily_tile), colMeans(biomee_gs_leuning_output$data[[1]]$output_daily_tile), tolerance = 1e-4))
   expect_true(all.equal(colMeans(out$data[[1]]$output_annual_tile), colMeans(biomee_gs_leuning_output$data[[1]]$output_annual_tile), tolerance = 1e-4))
   expect_true(all.equal(colMeans(out$data[[1]]$output_annual_cohorts), colMeans(biomee_gs_leuning_output$data[[1]]$output_annual_cohorts), tolerance = 1e-4))
-  expect_true(all.equal(colMeans(out$data[[1]]$output_annual_land_use), colMeans(biomee_gs_leuning_output$data[[1]]$output_annual_land_use), tolerance = 1e-4))
 
   # Cf comment above
 })

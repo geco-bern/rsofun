@@ -288,12 +288,12 @@ build_out <- function(biomeeout, lu_names, sitename, daily_diagnostics){
     out <- list("data"=build_lu_out(biomeeout, 1, trimmed_object))
   }
   else {
-    out <- list()
+    out <- list(aggregated_annual_tile_output(biomeeout[[4]]))
     for (lu in 1:n_lu) {
       res <- build_lu_out(biomeeout, lu, trimmed_object)
       out <- append(out, list(res))
     }
-    names(out) <- lu_names
+    names(out) <- c("aggregated", lu_names)
   }
 
   return(out)
@@ -315,15 +315,11 @@ build_lu_out <- function(biomeeout, lu, trimmed_object){
   # annual cohorts
   output_annual_cohorts <- annual_cohort_output(biomeeout[[3]][,,,lu,drop=FALSE])
 
-  # Annual land use
-  output_annual_land_use <- land_use_annual_tile_output(biomeeout[[4]][,,lu,drop=FALSE])
-
   # format the output in a structured list
   out_lu <- list(
     output_daily_tile = output_daily_tile,
     output_annual_tile = output_annual_tile,
-    output_annual_cohorts = output_annual_cohorts,
-    output_annual_land_use = output_annual_land_use
+    output_annual_cohorts = output_annual_cohorts
   )
 
   return(out_lu)
@@ -745,16 +741,17 @@ annual_tile_output <- function(raw_data){
     "n_deadtrees",
     "c_deadtrees",
     "m_turnover",
-    "c_turnover_time"
+    "c_turnover_time",
+    "lu_fraction"
   )
   return(df)
 }
 
-land_use_annual_tile_output <- function(raw_data){
+aggregated_annual_tile_output <- function(raw_data){
   df <- as.data.frame(raw_data)
   colnames(df) <- c(
     "year",
-    "fraction"
+    "total_fraction"
   )
   return(df)
 }

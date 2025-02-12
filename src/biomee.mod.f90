@@ -33,7 +33,7 @@ contains
     output_daily_tile,            &
     output_annual_tile,           &
     output_annual_cohorts,        &
-    output_annual_luluc_tile      &
+    output_annual_aggregated      &
   ) bind(C, name = "biomee_f_")
      
     !////////////////////////////////////////////////////////////////
@@ -82,7 +82,7 @@ contains
     real(kind=c_double), dimension(nt_annual,nvars_annual_tile, n_lu), intent(out) :: output_annual_tile
     real(kind=c_double), dimension(out_max_cohorts, nt_annual_trans, nvars_annual_cohorts, n_lu), &
             intent(out) :: output_annual_cohorts
-    real(kind=c_double), dimension(nt_annual,nvars_lu_out, n_lu), intent(out) :: output_annual_luluc_tile
+    real(kind=c_double), dimension(nt_annual,nvars_lu_out), intent(out) :: output_annual_aggregated
 
     ! Local state
     type(aggregated_tile) :: aggregat
@@ -95,12 +95,12 @@ contains
     ! Initialize outputs to NaN / 0
     !----------------------------------------------------------------
 
-    ! Initialize outputs to NaN or 0
+    ! Initialize outputs to NaN
     nan = ieee_value(nan, ieee_quiet_nan)
     output_daily_tile = nan
     output_annual_tile = nan
     output_annual_cohorts = nan
-    output_annual_luluc_tile = 0
+    output_annual_aggregated = nan
 
     ! Allocate climate array
     allocate(climate(inputs%ntstepsyear))
@@ -179,6 +179,7 @@ contains
             end if
 
           end if
+          output_annual_tile(state%year, ANNUAL_TILE_LU_FRACTION, lu_idx) = lu%fraction
         end associate
 
       end do
@@ -191,7 +192,7 @@ contains
         call aggregat%update_lu_fractions(real(luc_forcing(:,:,state%forcingyear_idx)))
 
       end if
-      call aggregat%populate_outarray_annual_land_use(state%year, output_annual_luluc_tile(state%year,:,:))
+      call aggregat%populate_outarray_annual_aggregated(state%year, output_annual_aggregated(state%year,:))
 
     end do yearloop
 

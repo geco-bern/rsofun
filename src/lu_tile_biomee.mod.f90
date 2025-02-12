@@ -10,8 +10,8 @@ module md_lu_tile_biomee
   public :: lu_tile
 
   type lu_tile
-    type(vegn_tile_type) :: vegn
-    real :: fraction = 0.0
+    type(vegn_tile_type) :: vegn   ! Vegetation tile
+    real :: fraction = 0.0         ! Fraction of the grid cell occupied by this tile
 
   contains
 

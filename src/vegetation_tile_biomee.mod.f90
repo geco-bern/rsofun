@@ -22,7 +22,7 @@ module md_vegetation_tile_biomee
 
   !=============== Number of parameters (out) ==============================================
   integer, public, parameter :: nvars_daily_tile     = 35
-  integer, public, parameter :: nvars_annual_tile    = 59
+  integer, public, parameter :: nvars_annual_tile    = 60
   integer, public, parameter :: nvars_annual_cohorts = 35
   integer, public, parameter :: out_max_cohorts      = NCohortMax
 

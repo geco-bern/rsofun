@@ -27,25 +27,33 @@ module md_aggregated_tile_biomee
       procedure initialize
       procedure shut_down
       procedure update_lu_fractions
-      procedure populate_outarray_annual_land_use
+      procedure populate_outarray_annual_aggregated
+      procedure n_lu
 
   end type aggregated_tile
 
 contains
+
+  pure integer function n_lu(self)
+    class(aggregated_tile), intent(in) :: self
+
+    n_lu = size(self%tiles)
+
+  end function n_lu
 
   subroutine initialize(self, lu_fractions)
     class(aggregated_tile), intent(inout) :: self
     real, dimension(:) :: lu_fractions
 
     ! Local variables
-    integer :: n_lu, lu_idx
+    integer :: nb_lu, lu_idx
 
-    n_lu = size(lu_fractions)
+    nb_lu = size(lu_fractions)
 
-    allocate(self%tiles(n_lu))
+    allocate(self%tiles(nb_lu))
 
     ! Initialize tiles
-    do lu_idx = 1, n_lu
+    do lu_idx = 1, nb_lu
       associate(lu => self%tiles(lu_idx))
         lu%fraction = lu_fractions(lu_idx)
         if (lu%non_empty()) call lu%vegn%initialize_vegn_tile(lu_idx)
@@ -59,7 +67,7 @@ contains
     ! Local variable
     integer :: lu_idx
 
-    do lu_idx = 1, size(self%tiles)
+    do lu_idx = 1, self%n_lu()
       call self%tiles(lu_idx)%shut_down()
     end do
     deallocate(self%tiles)
@@ -78,19 +86,17 @@ contains
 
 
     ! Local variables
-    integer :: i, j, n_lu
+    integer :: i, j
     real :: delta
-    type(orgpool), dimension(size(self%tiles), 4) :: transfer ! n_lu * 4 matrix of orgpools
-    real, dimension(size(self%tiles), MAX_LEVELS) :: transfer_water
-    real, dimension(size(self%tiles)) :: old_lu_fractions, lu_fractions, received, lost
+    type(orgpool), dimension(self%n_lu(), 4) :: transfer ! n_lu * 4 matrix of orgpools
+    real, dimension(self%n_lu(), MAX_LEVELS) :: transfer_water
+    real, dimension(self%n_lu()) :: old_lu_fractions, lu_fractions, received, lost
     type(cohort_type), pointer :: cc
     type(cohort_item), pointer :: it
     integer, parameter :: PMICR    = 1
     integer, parameter :: INORG    = 2
     integer, parameter :: PSOIL_FS = 3
     integer, parameter :: PSOIL_SL = 4
-
-    n_lu = size(self%tiles)
 
     transfer(:, :) = orgpool()
     transfer_water(:, :) = 0.0
@@ -103,8 +109,8 @@ contains
     ! For each transition
     ! i is the source tile
     ! j is the receiving tile
-    do i = 1, n_lu
-      do j = 1, n_lu
+    do i = 1, self%n_lu()
+      do j = 1, self%n_lu()
         delta = luc_forcing(i, j)
         if (delta <= 0) cycle
         associate(lu => self%tiles(i))
@@ -132,7 +138,7 @@ contains
     lu_fractions = lu_fractions + received - lost
 
     ! For each LU
-    do j = 1, n_lu
+    do j = 1, self%n_lu()
       associate(lu => self%tiles(j))
 
         if (lu_fractions(j) < eps) then
@@ -172,22 +178,32 @@ contains
 
   end subroutine update_lu_fractions
 
-  subroutine populate_outarray_annual_land_use(self, year, output_annual_luluc_tile)
+  subroutine populate_outarray_annual_aggregated(self, year, output_annual_aggregated)
     use, intrinsic :: iso_fortran_env, dp=>real64
 
     ! Arguments
     class(aggregated_tile), intent(inout) :: self
     integer, intent(in)                          :: year
-    real(kind=dp), intent(out), dimension(:,:)   :: output_annual_luluc_tile
+    real(kind=dp), intent(out), dimension(:)   :: output_annual_aggregated
 
     ! Local variable
-    real, dimension(size(self%tiles)) :: lu_fractions
+    integer :: lu_idx
+    real :: tmp
 
-    lu_fractions = self%tiles(:)%fraction
+    tmp = 0.0
 
-    output_annual_luluc_tile(1,:) = dble(year)
-    output_annual_luluc_tile(2,:) = dble(lu_fractions)
+    do lu_idx = 1, self%n_lu()
+      associate(lu => self%tiles(lu_idx))
 
-  end subroutine populate_outarray_annual_land_use
+      tmp = tmp + lu%fraction
+
+      end associate
+
+    end do
+
+    output_annual_aggregated(1) = dble(year)
+    output_annual_aggregated(2) = dble(tmp)
+
+  end subroutine populate_outarray_annual_aggregated
 
 end module md_aggregated_tile_biomee

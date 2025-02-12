@@ -140,5 +140,6 @@ module md_interface_out_biomee
   integer, public, parameter :: ANNUAL_TILE_DEADTREES_C       = 57
   integer, public, parameter :: ANNUAL_TILE_M_TURNOVER        = 58
   integer, public, parameter :: ANNUAL_TILE_C_TURNOVER_TIME   = 59
+  integer, public, parameter :: ANNUAL_TILE_LU_FRACTION       = 60
 
 end module md_interface_out_biomee
