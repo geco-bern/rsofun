@@ -42,7 +42,8 @@ params_siml_gs_leuning <- tibble(
   do_U_shaped_mortality = TRUE,
   do_closedN_run = FALSE,
   method_photosynth = "gs_leuning",
-  method_mortality = "dbh"
+  method_mortality = "dbh",
+  daily_diagnostics = TRUE # Default True
 )
 
 params_siml_pmodel <- params_siml_gs_leuning

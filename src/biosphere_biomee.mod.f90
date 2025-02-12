@@ -23,8 +23,8 @@ contains
     climate, &
     vegn, &
     output_annual_tile, &
-    output_daily_tile, &
-    output_annual_cohorts &
+    output_annual_cohorts, &
+    output_daily_tile &
   )
     !////////////////////////////////////////////////////////////////
     ! Calculates one year of vegetation dynamics. 

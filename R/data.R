@@ -206,6 +206,7 @@
 #'         model. One of the following: "dbh" is size-dependent mortality, "const_selfthin"
 #'         is constant self thinning (in development), "cstarvation" is carbon starvation, and
 #'         "growthrate" is growth rate dependent mortality.}
+#'       \item{daily_diagnostics}{Whether to output daily diagnostics ('output_daily_tile'). Default: True.}
 #'     }}
 #'   \item{site_info}{Site meta info in a data.frame.
 #' This data structure can be freely used for documenting the dataset, but must include at least the following data:

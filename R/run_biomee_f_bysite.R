@@ -219,7 +219,7 @@ run_biomee_f_bysite <- function(
     warning(paste("Warning: 'luc_forcing' contains more data points than nyeartrend (", length(luc_forcing[1,1,]), ' vs ', params_siml$nyeartrend, '). Extra data points will be ignored.'))
 
   # Set up variables used by C wrapper to build output arrays
-  n_daily  <- params_siml$nyeartrend * ndayyear
+  n_daily  <- ifelse(params_siml$daily_diagnostics, params_siml$nyeartrend * ndayyear, 0)
   n_annual <- ifelse(
     params_siml$spinup,
     (params_siml$spinupyears + params_siml$nyeartrend),
@@ -241,41 +241,45 @@ run_biomee_f_bysite <- function(
     luc_forcing      = as.array(prepare_luc_forcing(luc_forcing)),
     n_daily          = as.integer(n_daily),
     n_annual         = as.integer(n_annual),
-    n_annual_trans = as.integer(n_annual_trans)
+    n_annual_trans   = as.integer(n_annual_trans)
   )
 
-  out <- build_out(biomeeout, init_lu$name, sitename)
+  out <- build_out(biomeeout, init_lu$name, sitename, params_siml$daily_diagnostics)
 
   return(out)
 }
 
 # Build R output
-build_out <- function(biomeeout, lu_names, sitename){
-  # If simulation is very long, output gets massive.
-  # E.g., In a 3000 years-simulation 'biomeeout' is 11.5 GB.
-  # In such cases (here, more than 5 GB), ignore hourly and daily outputs at tile and cohort levels
-  size_of_object_gb <- as.numeric(
-    gsub(
-      pattern = " Gb",
-      replacement = "",
-      format(
-        utils::object.size(biomeeout),
-        units = "GB"
+build_out <- function(biomeeout, lu_names, sitename, daily_diagnostics){
+  if (daily_diagnostics) {
+    # If simulation is very long, output gets massive.
+    # E.g., In a 3000 years-simulation 'biomeeout' is 11.5 GB.
+    # In such cases (here, more than 5 GB), drop daily outputs
+    size_of_object_gb <- as.numeric(
+      gsub(
+        pattern = " Gb",
+        replacement = "",
+        format(
+          utils::object.size(biomeeout),
+          units = "GB"
+        )
       )
     )
-  )
 
-  trimmed_object <- size_of_object_gb >= 5
+    trimmed_object <- size_of_object_gb >= 5
 
-  if (trimmed_object){
-    warning(
-      sprintf("Warning: Excessive size of output object (%s) for %s.
-              Daily outputs are not returned.",
-              format(
-                utils::object.size(biomeeout),
-                units = "GB"
-              ),
-              sitename))
+    if (trimmed_object){
+      warning(
+        sprintf("Warning: Excessive size of output object (%s) for %s.
+                Daily outputs are not returned.",
+                format(
+                  utils::object.size(biomeeout),
+                  units = "GB"
+                ),
+                sitename))
+    }
+  } else {
+    trimmed_object <- TRUE
   }
 
   n_lu <- length(lu_names)
@@ -296,7 +300,7 @@ build_out <- function(biomeeout, lu_names, sitename){
 }
 
 build_lu_out <- function(biomeeout, lu, trimmed_object){
-  # Note: drop=FALSE is important to prevent R from drpping dimensions when length is 1.
+  # Note: drop=FALSE is important to prevent R from dropping dimensions when length is 1.
 
   # daily_tile
   if (!trimmed_object){
@@ -402,6 +406,10 @@ build_params_siml <- function(params_siml, forcing_years, makecheck){
     }
   }
 
+  if ('daily_diagnostics' %nin% names(params_siml)) {
+    params_siml$daily_diagnostics <- TRUE
+  }
+
   return(params_siml)
 }
 
@@ -416,7 +424,8 @@ prepare_params_siml <- function(params_siml){
     "do_U_shaped_mortality",
     "do_closedN_run",
     "code_method_photosynth",
-    "code_method_mortality"
+    "code_method_mortality",
+    "daily_diagnostics"
   )
 
   return(params_siml)

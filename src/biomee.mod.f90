@@ -56,7 +56,7 @@ contains
 
     ! Array dimensions
     integer(kind=c_int), intent(in) :: nt                ! Forcing array dimension
-    integer(kind=c_int), intent(in) :: nt_daily          ! Number of simulated days
+    integer(kind=c_int), intent(in) :: nt_daily          ! Number of simulated days (0 for no daily output)
     integer(kind=c_int), intent(in) :: nt_annual         ! Number of years (spinup + transient)
     integer(kind=c_int), intent(in) :: nt_annual_trans   ! Number of transient years
 
@@ -143,11 +143,6 @@ contains
          state%climateyear_idx &
       )
 
-      ! Indices for daily output
-      ! Spinup years are not stored, which is why we offset by -spinupyears
-      idx_daily_start = (state%year - inputs%params_siml%steering%spinupyears - 1) * ndayyear + 1
-      idx_daily_end   = idx_daily_start + ndayyear - 1
-
       ! For each non-empty LU (land unit)
       do lu_idx = 1, n_lu
         if (lu_states(lu_idx)%non_empty()) then
@@ -165,14 +160,28 @@ contains
             )
           else
             idx =  state%year - inputs%params_siml%steering%spinupyears
-            call biosphere_annual( &
-                    state, &
-                    climate, &
-                    vegn_tiles(lu_idx), &
-                    output_annual_tile(state%year, :, lu_idx), &
-                    output_daily_tile(idx_daily_start:idx_daily_end, :, lu_idx), &
-                    output_annual_cohorts(:, idx,:, lu_idx) &
-                    )
+            if (nt_daily > 0) then
+              ! Indices for daily output
+              ! Spinup years are not stored, which is why we offset by -spinupyears
+              idx_daily_start = (state%year - inputs%params_siml%steering%spinupyears - 1) * ndayyear + 1
+              idx_daily_end   = idx_daily_start + ndayyear - 1
+              call biosphere_annual( &
+                      state, &
+                      climate, &
+                      vegn_tiles(lu_idx), &
+                      output_annual_tile(state%year, :, lu_idx), &
+                      output_annual_cohorts(:, idx,:, lu_idx), &
+                      output_daily_tile(idx_daily_start:idx_daily_end, :, lu_idx) &
+              )
+            else
+              call biosphere_annual( &
+                      state, &
+                      climate, &
+                      vegn_tiles(lu_idx), &
+                      output_annual_tile(state%year, :, lu_idx), &
+                      output_annual_cohorts(:, idx,:, lu_idx) &
+                      )
+            end if
           end if
 
         end if
