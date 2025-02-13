@@ -774,15 +774,17 @@ contains
     type(orgpool) :: pool
 
     i = 0
+    ! We initialize years to 0, indicating a lack of data
+    self%out_annual_cohorts(:, ANNUAL_COHORTS_YEAR) = 0
 
-      ! Cohorts ouput
-      it => self%cohorts()
-      do while (associated(it))
-        cc => it%cohort
+    ! Cohorts ouput
+    it => self%cohorts()
+    do while (associated(it))
+      cc => it%cohort
 
-        i = i + 1
+      i = i + 1
 
-        if (cohort_reporting) then
+      if (cohort_reporting) then
 
         treeG     = cc%pseed%c12 + cc%NPPleaf + cc%NPProot + cc%NPPwood
         fseed     = cc%pseed%c12 / treeG
@@ -833,13 +835,13 @@ contains
 
         end if
 
-        end if
+      end if
 
-        call self%annual_fluxes%add(cc%annual_fluxes, cc%density)
+      call self%annual_fluxes%add(cc%annual_fluxes, cc%density)
 
-        it => it%next()
+      it => it%next()
 
-      enddo
+    enddo
 
     call self%aggregate_cohorts()
 

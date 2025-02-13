@@ -860,8 +860,7 @@ annual_cohort_output <- function(raw_data){
   colnames(df) <- annual_values
 
   ## drop rows (cohorts) with no values
-  df$year[df$year == -9999 |
-                  df$year == 0] <- NA
+  df$year[df$year <= 0] <- NA
   df <- df[!is.na(df$year),]
 
   return(df)
