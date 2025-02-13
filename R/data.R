@@ -179,7 +179,7 @@
 
 #' rsofun BiomeE driver data (Leuning photosynthesis model)
 #' 
-#' Small dataset representing the driver to run the BiomeE-model at the CH-LAE site
+#' Example driver to run the BiomeE-model at the CH-LAE site
 #' using the Leuning photosynthesis specification (and half-hourly time step)
 #' It can also be used together with leaf trait data from CH-LAE (\code{\link{biomee_validation}}) 
 #' to optimize model parameters.
@@ -350,7 +350,7 @@
 
 #' rsofun BiomeE driver data (P-model photosynthesis model)
 #' 
-#' Small dataset representing the driver to run the BiomeE-model at the CH-LAE site
+#' Example driver data to run the BiomeE-model at the CH-LAE site
 #' using the P-model photosynthesis specification (and daily time step).
 #' It can also be used together with leaf trait data from CH-LAE (\code{\link{biomee_validation}}) 
 #' to optimize model parameters.
@@ -359,6 +359,17 @@
 #'
 #' @inherit biomee_gs_leuning_drivers source
 "biomee_p_model_drivers"
+
+#' rsofun BiomeE driver data (P-model photosynthesis model) with LULUC
+#'
+#' Example driver data to run the BiomeE-model at the CH-LAE site
+#' using the P-model photosynthesis specification (and daily time step).
+#' It provides an example of land use change (LUC).
+#'
+#' @format See \code{\link{biomee_gs_leuning_drivers}}
+#'
+#' @inherit biomee_gs_leuning_drivers source
+"biomee_p_model_luluc_drivers"
 
 #' rsofun BiomeE targets validation data
 #'
@@ -379,11 +390,17 @@
 #' rsofun BiomeE (gs_leuning) output data
 #'
 #' Example output dataset from a BiomeE-model run using divers \code{\link{biomee_gs_leuning_drivers}}
-#' See \code{\link{run_biomee_f_bysite}} for a detailed description of the outputs.
+#' See \code{\link{runread_biomee_f}} and \code{\link{run_biomee_f_bysite}} for a detailed description of the outputs.
 "biomee_gs_leuning_output"
 
 #' rsofun BiomeE (P-model) output data
 #'
 #' Example output dataset from a BiomeE-model run using divers \code{\link{biomee_p_model_drivers}}
-#' See \code{\link{run_biomee_f_bysite}} for a detailed description of the outputs.
+#' See \code{\link{runread_biomee_f}} and \code{\link{run_biomee_f_bysite}} for a detailed description of the outputs.
 "biomee_p_model_output"
+
+#' rsofun BiomeE (P-model) output data
+#'
+#' Example output dataset from a BiomeE-model run using divers \code{\link{biomee_p_model_luluc_drivers}}
+#' See \code{\link{runread_biomee_f}} and \code{\link{run_biomee_f_bysite}} for a detailed description of the outputs.
+"biomee_p_model_luluc_output"

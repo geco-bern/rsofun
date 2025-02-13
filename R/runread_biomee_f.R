@@ -11,12 +11,12 @@
 #' @param ncores An integer specifying the number of cores used for parallel 
 #' computing (sites processed in parallel). Default: 1 (no parallel execution).
 #'
-#' @return A data frame (tibble) with one row for each site, site information 
-#' stored in the nested column \code{site_info} and model outputs stored in the 
-#' nested  column \code{data}. See \code{\link{run_biomee_f_bysite}} for a detailed 
-#' description of the outputs.
-#' Example outputs are provided as \code{\link{p_model_output}} and
-#' \code{\link{p_model_output_vcmax25}}.
+#' @return A data frame (tibble) with one row for each site.
+#' The columns are the site information \code{site_info} and one column per land unit (LU) in addition to an aggregated output \code{aggregated}.
+#' By default, the only LU is named \code{data} and \code{aggregated} is not present since aggregating one LU is not useful.
+#' When multiple LU are configured (using \code{init_lu}), the columns are named using the LU name provided in \code{init_lu}.
+#' See \code{\link{run_biomee_f_bysite}} for a detailed description of the outputs.
+#' Example outputs are provided as \code{\link{biomee_p_model_output}} and \code{\link{biomee_p_model_luluc_output}}.
 #' @export
 #' 
 #' @examples 

@@ -209,7 +209,7 @@ build_driver <- function(params_siml, forcing) {
   return(drivers)
 }
 
-#---- gs leuning formatting -----
+#---- gs leuning driver -----
 forcing_gs_leuning <- build_forcing(forcingLAE, TRUE)
 
 biomee_gs_leuning_drivers <- build_driver(params_siml_gs_leuning, forcing_gs_leuning)
@@ -218,11 +218,29 @@ save(biomee_gs_leuning_drivers,
      file ="data/biomee_gs_leuning_drivers.rda",
      compress = "xz")
 
-#---- p-model formatting -----
+#---- p-model driver -----
 forcing_pmodel <- build_forcing(forcingLAE, FALSE)
 
 biomee_p_model_drivers <- build_driver(params_siml_pmodel, forcing_pmodel)
 
 save(biomee_p_model_drivers,
      file ="data/biomee_p_model_drivers.rda",
+     compress = "xz")
+
+#---- p-model with LULUC driver -----
+biomee_p_model_luluc_drivers <- biomee_p_model_drivers
+lu_defs <- tibble(
+  name      = c('primary', 'secondary'),
+  fraction  = c(1.0, 0.0)
+)
+transitions <- c(0, 0, 0.4, 0)
+biomee_p_model_luluc_drivers$params_siml[[1]]$daily_diagnostics <- FALSE
+
+n_lu <- length(lu_defs$name)
+n_trans <- length(transitions) / n_lu ^ 2
+biomee_p_model_luluc_drivers$init_lu[[1]] <- lu_defs
+biomee_p_model_luluc_drivers$luc_forcing[[1]]  <- array(transitions, c(n_lu, n_lu, n_trans))
+
+save(biomee_p_model_luluc_drivers,
+     file ="data/biomee_p_model_luluc_drivers.rda",
      compress = "xz")
