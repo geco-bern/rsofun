@@ -52,7 +52,7 @@ module md_interface_out_biomee
   integer, public, parameter :: DAILY_TILE_N_UPTK             = 35
 
 
-  !=============== Annual
+  !=============== Cohorts
 
   integer, public, parameter :: nvars_annual_cohorts = 35
 
@@ -93,7 +93,7 @@ module md_interface_out_biomee
   integer, public, parameter :: ANNUAL_COHORTS_C_LOSS         = 35
 
 
-  !=============== Cohorts
+  !=============== Annual tile
 
   integer, public, parameter :: nvars_annual_tile    = 60
 
@@ -119,7 +119,7 @@ module md_interface_out_biomee
   integer, public, parameter :: ANNUAL_TILE_PLANT_N           = 20
   integer, public, parameter :: ANNUAL_TILE_SOIL_N            = 21
   integer, public, parameter :: ANNUAL_TILE_TOT_N             = 22
-  integer, public, parameter :: ANNUAL_TILE_NSC               = 23
+  integer, public, parameter :: ANNUAL_TILE_NS_C              = 23
   integer, public, parameter :: ANNUAL_TILE_SEED_C            = 24
   integer, public, parameter :: ANNUAL_TILE_LEAF_C            = 25
   integer, public, parameter :: ANNUAL_TILE_ROOT_C            = 26
@@ -148,7 +148,7 @@ module md_interface_out_biomee
   integer, public, parameter :: ANNUAL_TILE_SEEDLING_C        = 49
   integer, public, parameter :: ANNUAL_TILE_SEEDLING_N        = 50
   integer, public, parameter :: ANNUAL_TILE_MAX_AGE           = 51
-  integer, public, parameter :: ANNUAL_TILE_MAX_VOULME        = 52
+  integer, public, parameter :: ANNUAL_TILE_MAX_VOLUME        = 52
   integer, public, parameter :: ANNUAL_TILE_MAX_DBH           = 53
   integer, public, parameter :: ANNUAL_TILE_NPP_L             = 54
   integer, public, parameter :: ANNUAL_TILE_NPP_W             = 55
@@ -157,5 +157,10 @@ module md_interface_out_biomee
   integer, public, parameter :: ANNUAL_TILE_M_TURNOVER        = 58
   integer, public, parameter :: ANNUAL_TILE_C_TURNOVER_TIME   = 59
   integer, public, parameter :: ANNUAL_TILE_LU_FRACTION       = 60
+
+
+  !=============== Aggregated tile
+
+  integer, public, parameter :: nvars_aggregated_out = 60
 
 end module md_interface_out_biomee

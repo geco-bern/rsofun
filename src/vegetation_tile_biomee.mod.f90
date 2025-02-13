@@ -872,7 +872,7 @@ contains
     self%out_annual_tile(ANNUAL_TILE_PLANT_N         ) = plantN
     self%out_annual_tile(ANNUAL_TILE_SOIL_N          ) = SoilN
     self%out_annual_tile(ANNUAL_TILE_TOT_N           ) = self%totN
-    self%out_annual_tile(ANNUAL_TILE_NSC             ) = self%plabl%c12
+    self%out_annual_tile(ANNUAL_TILE_NS_C            ) = self%plabl%c12
     self%out_annual_tile(ANNUAL_TILE_SEED_C          ) = self%pseed%c12
     self%out_annual_tile(ANNUAL_TILE_LEAF_C          ) = self%pleaf%c12
     self%out_annual_tile(ANNUAL_TILE_ROOT_C          ) = self%proot%c12
@@ -901,7 +901,7 @@ contains
     self%out_annual_tile(ANNUAL_TILE_SEEDLING_C      ) = 0
     self%out_annual_tile(ANNUAL_TILE_SEEDLING_N      ) = 0
     self%out_annual_tile(ANNUAL_TILE_MAX_AGE         ) = self%MaxAge
-    self%out_annual_tile(ANNUAL_TILE_MAX_VOULME      ) = self%MaxVolume
+    self%out_annual_tile(ANNUAL_TILE_MAX_VOLUME      ) = self%MaxVolume
     self%out_annual_tile(ANNUAL_TILE_MAX_DBH         ) = self%MaxDBH
     self%out_annual_tile(ANNUAL_TILE_NPP_L           ) = self%NPPL
     self%out_annual_tile(ANNUAL_TILE_NPP_W           ) = self%NPPW

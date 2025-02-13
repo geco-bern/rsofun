@@ -16,8 +16,6 @@ module md_aggregated_tile_biomee
   private
   public :: aggregated_tile
 
-  integer, public, parameter :: nvars_lu_out = 3
-
   type aggregated_tile
 
     type(lu_tile), allocatable, dimension(:) :: tiles
@@ -191,12 +189,15 @@ contains
 
     ! Local variable
     integer :: lu_idx, year
-    real    :: fraction
-    real    :: gpp
+    real    :: tot_fraction, max_age, max_volume, max_dbh
+    real, dimension(nvars_annual_tile)    :: agg_array
 
+    agg_array(:) = 0
     year = 0
-    fraction = 0.0
-    gpp = 0.0
+    tot_fraction = 0
+    max_age = 0
+    max_volume = 0
+    max_dbh = 0
 
     do lu_idx = 1, self%n_lu()
       associate(lu => self%tiles(lu_idx))
@@ -214,16 +215,76 @@ contains
         output_annual_tiles(ANNUAL_TILE_LU_FRACTION, lu_idx) = lu%fraction
 
         !===== Fill aggregated output
-        fraction = fraction + lu%fraction
-        gpp = gpp + lu%vegn%out_annual_tile(ANNUAL_TILE_GPP) * lu%fraction
+        tot_fraction = tot_fraction + lu%fraction
+        max_age = MAX(max_age, lu%vegn%out_annual_tile(ANNUAL_TILE_MAX_AGE))
+        max_volume = MAX(max_age, lu%vegn%out_annual_tile(ANNUAL_TILE_MAX_VOLUME))
+        max_dbh = MAX(max_age, lu%vegn%out_annual_tile(ANNUAL_TILE_MAX_DBH))
+        agg_array = agg_array + lu%vegn%out_annual_tile * lu%fraction
 
       end associate
 
     end do
 
-    output_annual_aggregated(1) = dble(year)
-    output_annual_aggregated(2) = dble(fraction)
-    output_annual_aggregated(3) = dble(gpp)
+    output_annual_aggregated(ANNUAL_TILE_YEAR            ) = dble(year)
+    output_annual_aggregated(ANNUAL_TILE_CAI             ) = dble(agg_array(ANNUAL_TILE_CAI            ))
+    output_annual_aggregated(ANNUAL_TILE_LAI             ) = dble(agg_array(ANNUAL_TILE_LAI            ))
+    output_annual_aggregated(ANNUAL_TILE_DENSITY         ) = dble(agg_array(ANNUAL_TILE_DENSITY        ))
+    output_annual_aggregated(ANNUAL_TILE_DBH             ) = dble(agg_array(ANNUAL_TILE_DBH            ))
+    output_annual_aggregated(ANNUAL_TILE_DENSITY12       ) = dble(agg_array(ANNUAL_TILE_DENSITY12      ))
+    output_annual_aggregated(ANNUAL_TILE_DBH12           ) = dble(agg_array(ANNUAL_TILE_DBH12          ))
+    output_annual_aggregated(ANNUAL_TILE_QMD12           ) = dble(agg_array(ANNUAL_TILE_QMD12          ))
+    output_annual_aggregated(ANNUAL_TILE_NPP             ) = dble(agg_array(ANNUAL_TILE_NPP            ))
+    output_annual_aggregated(ANNUAL_TILE_GPP             ) = dble(agg_array(ANNUAL_TILE_GPP            ))
+    output_annual_aggregated(ANNUAL_TILE_RESP            ) = dble(agg_array(ANNUAL_TILE_RESP           ))
+    output_annual_aggregated(ANNUAL_TILE_RH              ) = dble(agg_array(ANNUAL_TILE_RH             ))
+    output_annual_aggregated(ANNUAL_TILE_PRCP            ) = dble(agg_array(ANNUAL_TILE_PRCP           ))
+    output_annual_aggregated(ANNUAL_TILE_SOIL_W          ) = dble(agg_array(ANNUAL_TILE_SOIL_W         ))
+    output_annual_aggregated(ANNUAL_TILE_TRSP            ) = dble(agg_array(ANNUAL_TILE_TRSP           ))
+    output_annual_aggregated(ANNUAL_TILE_EVAP            ) = dble(agg_array(ANNUAL_TILE_EVAP           ))
+    output_annual_aggregated(ANNUAL_TILE_RUNOFF          ) = dble(agg_array(ANNUAL_TILE_RUNOFF         ))
+    output_annual_aggregated(ANNUAL_TILE_PLANT_C         ) = dble(agg_array(ANNUAL_TILE_PLANT_C        ))
+    output_annual_aggregated(ANNUAL_TILE_SOIL_C          ) = dble(agg_array(ANNUAL_TILE_SOIL_C         ))
+    output_annual_aggregated(ANNUAL_TILE_PLANT_N         ) = dble(agg_array(ANNUAL_TILE_PLANT_N        ))
+    output_annual_aggregated(ANNUAL_TILE_SOIL_N          ) = dble(agg_array(ANNUAL_TILE_SOIL_N         ))
+    output_annual_aggregated(ANNUAL_TILE_TOT_N           ) = dble(agg_array(ANNUAL_TILE_TOT_N          ))
+    output_annual_aggregated(ANNUAL_TILE_NS_C            ) = dble(agg_array(ANNUAL_TILE_NS_C            ))
+    output_annual_aggregated(ANNUAL_TILE_SEED_C          ) = dble(agg_array(ANNUAL_TILE_SEED_C         ))
+    output_annual_aggregated(ANNUAL_TILE_LEAF_C          ) = dble(agg_array(ANNUAL_TILE_LEAF_C         ))
+    output_annual_aggregated(ANNUAL_TILE_ROOT_C          ) = dble(agg_array(ANNUAL_TILE_ROOT_C         ))
+    output_annual_aggregated(ANNUAL_TILE_SW_C            ) = dble(agg_array(ANNUAL_TILE_SW_C           ))
+    output_annual_aggregated(ANNUAL_TILE_HW_C            ) = dble(agg_array(ANNUAL_TILE_HW_C           ))
+    output_annual_aggregated(ANNUAL_TILE_NSN             ) = dble(agg_array(ANNUAL_TILE_NSN            ))
+    output_annual_aggregated(ANNUAL_TILE_SEED_N          ) = dble(agg_array(ANNUAL_TILE_SEED_N         ))
+    output_annual_aggregated(ANNUAL_TILE_LEAF_N          ) = dble(agg_array(ANNUAL_TILE_LEAF_N         ))
+    output_annual_aggregated(ANNUAL_TILE_ROOT_N          ) = dble(agg_array(ANNUAL_TILE_ROOT_N         ))
+    output_annual_aggregated(ANNUAL_TILE_SW_N            ) = dble(agg_array(ANNUAL_TILE_SW_N           ))
+    output_annual_aggregated(ANNUAL_TILE_HW_N            ) = dble(agg_array(ANNUAL_TILE_HW_N           ))
+    output_annual_aggregated(ANNUAL_TILE_MCRB_C          ) = dble(agg_array(ANNUAL_TILE_MCRB_C         ))
+    output_annual_aggregated(ANNUAL_TILE_FASTSOM         ) = dble(agg_array(ANNUAL_TILE_FASTSOM        ))
+    output_annual_aggregated(ANNUAL_TILE_SLOWSOM         ) = dble(agg_array(ANNUAL_TILE_SLOWSOM        ))
+    output_annual_aggregated(ANNUAL_TILE_MCRB_N          ) = dble(agg_array(ANNUAL_TILE_MCRB_N         ))
+    output_annual_aggregated(ANNUAL_TILE_FS_N            ) = dble(agg_array(ANNUAL_TILE_FS_N           ))
+    output_annual_aggregated(ANNUAL_TILE_SL_N            ) = dble(agg_array(ANNUAL_TILE_SL_N           ))
+    output_annual_aggregated(ANNUAL_TILE_INORG_N         ) = dble(agg_array(ANNUAL_TILE_INORG_N        ))
+    output_annual_aggregated(ANNUAL_TILE_N_FIX           ) = dble(agg_array(ANNUAL_TILE_N_FIX          ))
+    output_annual_aggregated(ANNUAL_TILE_N_UPTK          ) = dble(agg_array(ANNUAL_TILE_N_UPTK         ))
+    output_annual_aggregated(ANNUAL_TILE_NYRMIN          ) = dble(agg_array(ANNUAL_TILE_NYRMIN         ))
+    output_annual_aggregated(ANNUAL_TILE_NP2S            ) = dble(agg_array(ANNUAL_TILE_NP2S           ))
+    output_annual_aggregated(ANNUAL_TILE_NLOSS           ) = dble(agg_array(ANNUAL_TILE_NLOSS          ))
+    output_annual_aggregated(ANNUAL_TILE_TOTSEED_C       ) = dble(agg_array(ANNUAL_TILE_TOTSEED_C      ))
+    output_annual_aggregated(ANNUAL_TILE_TOTSEED_N       ) = dble(agg_array(ANNUAL_TILE_TOTSEED_N      ))
+    output_annual_aggregated(ANNUAL_TILE_SEEDLING_C      ) = dble(agg_array(ANNUAL_TILE_SEEDLING_C     ))
+    output_annual_aggregated(ANNUAL_TILE_SEEDLING_N      ) = dble(agg_array(ANNUAL_TILE_SEEDLING_N     ))
+    output_annual_aggregated(ANNUAL_TILE_MAX_AGE         ) = dble(max_age)
+    output_annual_aggregated(ANNUAL_TILE_MAX_VOLUME      ) = dble(max_volume)
+    output_annual_aggregated(ANNUAL_TILE_MAX_DBH         ) = dble(max_dbh)
+    output_annual_aggregated(ANNUAL_TILE_NPP_L           ) = dble(agg_array(ANNUAL_TILE_NPP_L          ))
+    output_annual_aggregated(ANNUAL_TILE_NPP_W           ) = dble(agg_array(ANNUAL_TILE_NPP_W          ))
+    output_annual_aggregated(ANNUAL_TILE_DEADTREES_N     ) = dble(agg_array(ANNUAL_TILE_DEADTREES_N    ))
+    output_annual_aggregated(ANNUAL_TILE_DEADTREES_C     ) = dble(agg_array(ANNUAL_TILE_DEADTREES_C    ))
+    output_annual_aggregated(ANNUAL_TILE_M_TURNOVER      ) = dble(agg_array(ANNUAL_TILE_M_TURNOVER     ))
+    output_annual_aggregated(ANNUAL_TILE_C_TURNOVER_TIME ) = dble(agg_array(ANNUAL_TILE_C_TURNOVER_TIME))
+    output_annual_aggregated(ANNUAL_TILE_LU_FRACTION     ) = dble(tot_fraction)
 
   end subroutine populate_outarrays
 

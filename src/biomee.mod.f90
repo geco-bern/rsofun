@@ -82,7 +82,7 @@ contains
     real(kind=c_double), dimension(nt_annual,nvars_annual_tile, n_lu), intent(out) :: output_annual_tile
     real(kind=c_double), dimension(out_max_cohorts, nt_annual_trans, nvars_annual_cohorts, n_lu), &
             intent(out) :: output_annual_cohorts
-    real(kind=c_double), dimension(nt_annual,nvars_lu_out), intent(out) :: output_annual_aggregated
+    real(kind=c_double), dimension(nt_annual,nvars_aggregated_out), intent(out) :: output_annual_aggregated
 
     ! Local state
     type(aggregated_tile) :: aggregat
