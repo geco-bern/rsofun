@@ -117,7 +117,6 @@ contains
     !----------------------------------------------------------------
     ! Run simulation
     !----------------------------------------------------------------
-
     yearloop: do yr=1, inputs%params_siml%steering%runyears
       !----------------------------------------------------------------
       ! Define simulations "steering" variables (forcingyear, etc.)
@@ -150,37 +149,7 @@ contains
             !----------------------------------------------------------------
             ! Call biosphere (wrapper for all modules, contains time loops)
             !----------------------------------------------------------------
-            if (state%spinup) then
-              ! If spinup, we do not pass the daily and cohort output arrays
-              call biosphere_annual( &
-                state, &
-                climate, &
-                lu%vegn &
-              )
-            else
-              idx =  state%year - inputs%params_siml%steering%spinupyears
-              if (nt_daily > 0) then
-                ! Indices for daily output
-                ! Spinup years are not stored, which is why we offset by -spinupyears
-                idx_daily_start = (state%year - inputs%params_siml%steering%spinupyears - 1) * ndayyear + 1
-                idx_daily_end   = idx_daily_start + ndayyear - 1
-                call biosphere_annual( &
-                        state, &
-                        climate, &
-                        lu%vegn, &
-                        output_annual_cohorts(:, idx,:, lu_idx), &
-                        output_daily_tile(idx_daily_start:idx_daily_end, :, lu_idx) &
-                )
-              else
-                ! Same but without daily outputs
-                call biosphere_annual( &
-                        state, &
-                        climate, &
-                        lu%vegn, &
-                        output_annual_cohorts(:, idx,:, lu_idx) &
-                        )
-              end if
-            end if
+            call biosphere_annual(state, climate, lu%vegn)
 
           end if
         end associate
@@ -189,9 +158,22 @@ contains
 
       !----------------------------------------------------------------
       ! Fill outputs
+      ! We conditionally pass daily and cohorts arrays
       !----------------------------------------------------------------
-      call aggregat%populate_outarrays(state%year, output_annual_tile(state%year, :, :), &
-              output_annual_aggregated(state%year,:))
+      call aggregat%populate_outarrays(output_annual_aggregated(state%year,:), &
+          output_annual_tile(state%year, :, :))
+
+      idx =  state%year - inputs%params_siml%steering%spinupyears
+      if (state%cohort_reporting) call aggregat%populate_outcohorts(output_annual_cohorts(:, idx,:, :))
+
+      if (state%daily_reporting) then
+        ! Indices for daily output
+        ! Spinup years are not stored, which is why we offset by -spinupyears
+        idx_daily_start = (state%year - inputs%params_siml%steering%spinupyears - 1) * ndayyear + 1
+        idx_daily_end   = idx_daily_start + ndayyear - 1
+        call aggregat%populate_outdaily(output_daily_tile(idx_daily_start:idx_daily_end, :, :))
+
+      end if
 
     end do yearloop
 

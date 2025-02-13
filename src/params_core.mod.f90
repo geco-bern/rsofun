@@ -5,7 +5,6 @@ module md_params_core
   !----------------------------------------------------------------
   implicit none
 
-  integer :: ntstepsyear                         ! 365 when daily
   integer, parameter :: ndayyear = 365           ! number of days in a year
   integer, parameter :: nhoursyear = 8760        ! number of days in a year
   integer, parameter :: nmonth = 12              ! number of months in a year
@@ -68,17 +67,20 @@ module md_params_core
     logical :: spinup             ! is true during spinup
     logical :: init     = .true.  ! is true in first simulation year
     logical :: finalize = .false. ! is true in the last simulation year
+    logical :: daily_reporting    ! Whether daily reporting should be done
+    logical :: cohort_reporting   ! Whether cohort level reporting should be done
     ! Note: climateyear_idx == forcingyear_idx during transient phase. During spinup however, climateyear cycles, while forcing year is constant (= 1).
   end type outtype_steering
 
   type steering_parameters
 
-    integer :: spinupyears     ! number of spinup years
-    integer :: nyeartrend      ! number of transient years
-    integer :: firstyeartrend  ! year AD of first transient year
-    integer :: recycle         ! length of standard recycling period
-    logical :: do_spinup       ! whether this simulation does spinup
-    integer :: runyears        ! number of years of entire simulation (spinup+transient)
+    integer :: spinupyears      ! number of spinup years
+    integer :: nyeartrend       ! number of transient years
+    integer :: firstyeartrend   ! year AD of first transient year
+    integer :: recycle          ! length of standard recycling period
+    logical :: do_spinup        ! whether this simulation does spinup
+    integer :: runyears         ! number of years of entire simulation (spinup+transient)
+    logical :: daily_reporting  ! Whether daily reporting should be done
 
   end type steering_parameters
 
@@ -93,10 +95,10 @@ contains
 
     ! arguments
     integer, intent(in) :: year ! simulation year, starts counting from 1, starting at the beginning of spinup
-    type( steering_parameters ), intent(in) :: steering
+    type(steering_parameters), intent(in) :: steering
 
     ! function return variable
-    type( outtype_steering ) :: out_steering
+    type(outtype_steering) :: out_steering
 
     ! local variables
     integer :: cycleyear
@@ -112,7 +114,7 @@ contains
         out_steering%climateyear = cycleyear + steering%firstyeartrend - 1
         out_steering%climateyear_idx = cycleyear
         out_steering%forcingyear = steering%firstyeartrend
-        out_steering%forcingyear_idx = 1
+        out_steering%forcingyear_idx  = 1
       else
         ! during transient simulation
         out_steering%spinup          = .false.
@@ -132,6 +134,14 @@ contains
       out_steering%forcingyear_idx = out_steering%climateyear_idx
 
     endif
+
+    if (out_steering%spinup)  then
+      out_steering%daily_reporting  = .false.
+      out_steering%cohort_reporting = .false.
+    else
+      out_steering%daily_reporting  = steering%daily_reporting
+      out_steering%cohort_reporting = .true.
+    end if
 
     if (year==1) then
       out_steering%init = .true.

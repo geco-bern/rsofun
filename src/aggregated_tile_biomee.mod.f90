@@ -30,6 +30,8 @@ module md_aggregated_tile_biomee
       procedure shut_down
       procedure update_lu_fractions
       procedure populate_outarrays
+      procedure populate_outcohorts
+      procedure populate_outdaily
 
   end type aggregated_tile
 
@@ -179,20 +181,20 @@ contains
 
   end subroutine update_lu_fractions
 
-  subroutine populate_outarrays(self, year, output_annual_tiles, output_annual_aggregated)
+  subroutine populate_outarrays(self, output_annual_aggregated, output_annual_tiles)
     use, intrinsic :: iso_fortran_env, dp=>real64
 
     ! Arguments
-    class(aggregated_tile), intent(in)          :: self
-    integer, intent(in)                         :: year
-    real(kind=dp), dimension(:, :), intent(out) :: output_annual_tiles
-    real(kind=dp), dimension(:), intent(out)    :: output_annual_aggregated
+    class(aggregated_tile), intent(in)             :: self
+    real(kind=dp), dimension(:), intent(out)       :: output_annual_aggregated
+    real(kind=dp), dimension(:, :), intent(out)    :: output_annual_tiles
 
     ! Local variable
-    integer :: lu_idx
+    integer :: lu_idx, year
     real    :: fraction
     real    :: gpp
 
+    year = 0
     fraction = 0.0
     gpp = 0.0
 
@@ -204,10 +206,14 @@ contains
           cycle
         end if
 
+        year = int(lu%vegn%out_annual_tile(ANNUAL_TILE_YEAR))
+
+        !===== Fill annual tiles
         output_annual_tiles(:, lu_idx) = dble(lu%vegn%out_annual_tile(:))
         ! We update the fraction manually as it is not updated in out_annual_tile
         output_annual_tiles(ANNUAL_TILE_LU_FRACTION, lu_idx) = lu%fraction
 
+        !===== Fill aggregated output
         fraction = fraction + lu%fraction
         gpp = gpp + lu%vegn%out_annual_tile(ANNUAL_TILE_GPP) * lu%fraction
 
@@ -220,5 +226,51 @@ contains
     output_annual_aggregated(3) = dble(gpp)
 
   end subroutine populate_outarrays
+
+  subroutine populate_outcohorts(self, output_annual_cohorts)
+    use, intrinsic :: iso_fortran_env, dp=>real64
+
+    ! Arguments
+    class(aggregated_tile), intent(in)             :: self
+    real(kind=dp), dimension(:, :, :), intent(out) :: output_annual_cohorts
+
+    ! Local variable
+    integer :: lu_idx
+
+    do lu_idx = 1, self%n_lu()
+      associate(lu => self%tiles(lu_idx))
+        ! If empty tile, skip
+        if (lu%non_empty()) then
+          output_annual_cohorts(:, :, lu_idx) = dble(lu%vegn%out_annual_cohorts(:, :))
+        end if
+
+      end associate
+
+    end do
+
+  end subroutine populate_outcohorts
+
+  subroutine populate_outdaily(self, output_daily_tiles)
+    use, intrinsic :: iso_fortran_env, dp=>real64
+
+    ! Arguments
+    class(aggregated_tile), intent(in)             :: self
+    real(kind=dp), dimension(:, :, :), intent(out) :: output_daily_tiles
+
+    ! Local variable
+    integer :: lu_idx
+
+    do lu_idx = 1, self%n_lu()
+      associate(lu => self%tiles(lu_idx))
+        ! If empty tile, skip
+        if (lu%non_empty()) then
+          output_daily_tiles(:, :, lu_idx) = dble(lu%vegn%out_daily_tile(:, :))
+        end if
+
+      end associate
+
+    end do
+
+  end subroutine populate_outdaily
 
 end module md_aggregated_tile_biomee

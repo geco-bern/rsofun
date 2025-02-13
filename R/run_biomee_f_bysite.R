@@ -411,7 +411,7 @@ build_params_siml <- function(params_siml, forcing_years, makecheck){
 
 prepare_params_siml <- function(params_siml){
   params_siml <- params_siml %>% select(
-    "spinup",
+    "spinup", # Dummy argument
     "spinupyears",
     "recycle",
     "firstyeartrend",

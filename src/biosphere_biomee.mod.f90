@@ -21,9 +21,7 @@ contains
   subroutine biosphere_annual( &
     state, &
     climate, &
-    vegn, &
-    output_annual_cohorts, &
-    output_daily_tile &
+    vegn &
   )
     !////////////////////////////////////////////////////////////////
     ! Calculates one year of vegetation dynamics. 
@@ -37,20 +35,19 @@ contains
     type(climate_type), intent(in), dimension(:) :: climate ! Dimension is ndayyear * steps_per_day
     type(vegn_tile_type), intent(inout) :: vegn
 
-    ! Return variables
-    real(kind=c_double), dimension(ndayyear, nvars_daily_tile), optional, intent(out) :: output_daily_tile
-    real(kind=c_double), dimension(out_max_cohorts, nvars_annual_cohorts), optional, intent(out) :: output_annual_cohorts
-
     ! Local variables
     integer :: doy         ! Day of year
     integer :: dayloop_idx, fastloop_idx, simu_steps
     real, dimension(ndayyear) :: daily_temp  ! Daily temperatures (average)
+    real, dimension(size(climate)) :: tair
+
+    tair = climate(:)%Tair
 
     !----------------------------------------------------------------
     ! INITIALISATIONS
     !----------------------------------------------------------------
     ! Compute averaged daily temperatures
-    call aggregate(daily_temp, climate(:)%Tair, inputs%steps_per_day)
+    call aggregate(daily_temp, tair, inputs%steps_per_day)
 
     !===== Reset diagnostics and counters
     simu_steps = 0 ! fast loop
@@ -94,11 +91,7 @@ contains
       !-------------------------------------------------
 
       ! sum over fast time steps and cohorts
-      if (present(output_daily_tile)) then
-        call daily_diagnostics( vegn, state%year, doy, output_daily_tile(doy,:)  )
-      else
-        call daily_diagnostics( vegn, state%year, doy  )
-      end if
+      call daily_diagnostics( vegn, state%year, doy, state%daily_reporting)
 
       ! Determine start and end of season and maximum leaf (root) mass
       call vegn_phenology( vegn )
@@ -113,7 +106,7 @@ contains
     !----------------------------------------------------------------
 
     !===== Get annual diagnostics
-    call vegn%annual_diagnostics(state%year, output_annual_cohorts )
+    call vegn%annual_diagnostics(state%year, state%cohort_reporting)
 
     !===== Reproduction and mortality
     ! Kill all individuals in a cohort if NSC falls below critical point
@@ -132,7 +125,7 @@ contains
     call vegn%reduce()
 
     !===== Update post-mortality metrics
-    call vegn%annual_diagnostics_post_mortality(output_annual_cohorts )
+    call vegn%annual_diagnostics_post_mortality(state%cohort_reporting)
 
   end subroutine biosphere_annual
 

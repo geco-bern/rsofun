@@ -4,7 +4,7 @@ module md_forcing_biomee
   ! what's obtained from R through SR biomee_f and what's needed by BiomeE.
   !----------------------------------------------------------------
   use, intrinsic :: iso_fortran_env, dp=>real64
-  use md_params_core, only: ntstepsyear, ndayyear, kTkelvin, kfFEC
+  use md_params_core, only: ndayyear, kTkelvin, kfFEC
   implicit none
 
   private

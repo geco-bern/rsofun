@@ -19,7 +19,7 @@ module md_interface_in_biomee
   real, parameter  :: c_LLS = 28.57143    ! yr/ (kg C m-2), c_LLS=1/LMAs, where LMAs = 0.035
 
   !===== Number of parameters
-  integer, public, parameter :: nvars_params_siml    = 10
+  integer, public, parameter :: nvars_params_siml    = 11
   integer, public, parameter :: nvars_site_info      = 3
   integer, public, parameter :: nvars_params_tile    = 19
   integer, public, parameter :: nvars_init_soil      = 4
@@ -287,6 +287,8 @@ contains
     case (5)
       self%method_mortality = "bal"
     end select
+
+    self%steering%daily_reporting       = int(params_siml(11)) /= 0
 
   end subroutine populate_params_siml
 
