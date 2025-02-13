@@ -22,7 +22,6 @@ contains
     state, &
     climate, &
     vegn, &
-    output_annual_tile, &
     output_annual_cohorts, &
     output_daily_tile &
   )
@@ -39,7 +38,6 @@ contains
     type(vegn_tile_type), intent(inout) :: vegn
 
     ! Return variables
-    real(kind=c_double), dimension(nvars_annual_tile), intent(out) :: output_annual_tile
     real(kind=c_double), dimension(ndayyear, nvars_daily_tile), optional, intent(out) :: output_daily_tile
     real(kind=c_double), dimension(out_max_cohorts, nvars_annual_cohorts), optional, intent(out) :: output_annual_cohorts
 
@@ -115,7 +113,7 @@ contains
     !----------------------------------------------------------------
 
     !===== Get annual diagnostics
-    call vegn%annual_diagnostics(state%year, output_annual_tile, output_annual_cohorts )
+    call vegn%annual_diagnostics(state%year, output_annual_cohorts )
 
     !===== Reproduction and mortality
     ! Kill all individuals in a cohort if NSC falls below critical point
@@ -134,7 +132,7 @@ contains
     call vegn%reduce()
 
     !===== Update post-mortality metrics
-    call vegn%annual_diagnostics_post_mortality(output_annual_tile, output_annual_cohorts )
+    call vegn%annual_diagnostics_post_mortality(output_annual_cohorts )
 
   end subroutine biosphere_annual
 

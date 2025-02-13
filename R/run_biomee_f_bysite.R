@@ -751,7 +751,8 @@ aggregated_annual_tile_output <- function(raw_data){
   df <- as.data.frame(raw_data)
   colnames(df) <- c(
     "year",
-    "total_fraction"
+    "total_fraction",
+    "total_gpp"
   )
   return(df)
 }

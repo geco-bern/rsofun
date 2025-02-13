@@ -38,7 +38,7 @@ sofunutils.mod.o: params_core.mod.o
 params_siml_pmodel.mod.o: params_core.mod.o
 product_pools_biomee.mod.o: orgpool.mod.o
 lu_tile_biomee.mod.o: vegetation_tile_biomee.mod.o
-aggregated_tile_biomee.mod.o: lu_tile_biomee.mod.o product_pools_biomee.mod.o orgpool.mod.o params_core.mod.o interface_in_biosphere_biomee.mod.o cohort_biomee.mod.o cohort_linked_list_biomee.mod.o
+aggregated_tile_biomee.mod.o: lu_tile_biomee.mod.o product_pools_biomee.mod.o orgpool.mod.o params_core.mod.o interface_in_biosphere_biomee.mod.o cohort_biomee.mod.o cohort_linked_list_biomee.mod.o interface_out_biosphere_biomee.mod.o
 
 # Dependency of the C wrapper
 wrappersc.o: pmodel.mod.o biomee.mod.o

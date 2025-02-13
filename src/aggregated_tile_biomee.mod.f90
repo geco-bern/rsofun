@@ -7,6 +7,7 @@ module md_aggregated_tile_biomee
   use md_orgpool
   use md_params_core, only: eps
   use md_interface_in_biomee, only: inputs, MAX_LEVELS
+  use md_interface_out_biomee
   use md_cohort
   use md_cohort_linked_list, only: cohort_item
 
@@ -15,7 +16,7 @@ module md_aggregated_tile_biomee
   private
   public :: aggregated_tile
 
-  integer, public, parameter :: nvars_lu_out = 2
+  integer, public, parameter :: nvars_lu_out = 3
 
   type aggregated_tile
 
@@ -24,11 +25,11 @@ module md_aggregated_tile_biomee
 
     contains
 
+      procedure n_lu
       procedure initialize
       procedure shut_down
       procedure update_lu_fractions
-      procedure populate_outarray_annual_aggregated
-      procedure n_lu
+      procedure populate_outarrays
 
   end type aggregated_tile
 
@@ -178,32 +179,46 @@ contains
 
   end subroutine update_lu_fractions
 
-  subroutine populate_outarray_annual_aggregated(self, year, output_annual_aggregated)
+  subroutine populate_outarrays(self, year, output_annual_tiles, output_annual_aggregated)
     use, intrinsic :: iso_fortran_env, dp=>real64
 
     ! Arguments
-    class(aggregated_tile), intent(inout) :: self
-    integer, intent(in)                          :: year
-    real(kind=dp), intent(out), dimension(:)   :: output_annual_aggregated
+    class(aggregated_tile), intent(in)          :: self
+    integer, intent(in)                         :: year
+    real(kind=dp), dimension(:, :), intent(out) :: output_annual_tiles
+    real(kind=dp), dimension(:), intent(out)    :: output_annual_aggregated
 
     ! Local variable
     integer :: lu_idx
-    real :: tmp
+    real    :: fraction
+    real    :: gpp
 
-    tmp = 0.0
+    fraction = 0.0
+    gpp = 0.0
 
     do lu_idx = 1, self%n_lu()
       associate(lu => self%tiles(lu_idx))
+        ! If empty tile, skip
+        if (.not. lu%non_empty()) then
+          output_annual_tiles(ANNUAL_TILE_LU_FRACTION, lu_idx) = 0.0
+          cycle
+        end if
 
-      tmp = tmp + lu%fraction
+        output_annual_tiles(:, lu_idx) = dble(lu%vegn%out_annual_tile(:))
+        ! We update the fraction manually as it is not updated in out_annual_tile
+        output_annual_tiles(ANNUAL_TILE_LU_FRACTION, lu_idx) = lu%fraction
+
+        fraction = fraction + lu%fraction
+        gpp = gpp + lu%vegn%out_annual_tile(ANNUAL_TILE_GPP) * lu%fraction
 
       end associate
 
     end do
 
     output_annual_aggregated(1) = dble(year)
-    output_annual_aggregated(2) = dble(tmp)
+    output_annual_aggregated(2) = dble(fraction)
+    output_annual_aggregated(3) = dble(gpp)
 
-  end subroutine populate_outarray_annual_aggregated
+  end subroutine populate_outarrays
 
 end module md_aggregated_tile_biomee

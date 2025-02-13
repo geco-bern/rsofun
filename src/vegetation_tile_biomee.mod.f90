@@ -19,11 +19,6 @@ module md_vegetation_tile_biomee
 
   !=============== Parameters ======================================================
   integer, public, parameter :: NCohortMax = 50 ! maximum number of cohorts
-
-  !=============== Number of parameters (out) ==============================================
-  integer, public, parameter :: nvars_daily_tile     = 35
-  integer, public, parameter :: nvars_annual_tile    = 60
-  integer, public, parameter :: nvars_annual_cohorts = 35
   integer, public, parameter :: out_max_cohorts      = NCohortMax
 
   !===== Model
@@ -165,6 +160,9 @@ module md_vegetation_tile_biomee
     real, dimension(:), allocatable   :: dtemp_pvy          ! daily temperature of previous year (deg C)
     real, dimension(:), allocatable   :: wscal_pvy          ! daily Cramer-Prentice-Alpha of previous year (unitless)
     real, dimension(ndayyear)         :: wscal_alldays
+
+    !===== Reporting
+    real, dimension(nvars_annual_tile) :: out_annual_tile
 
   contains
 
@@ -755,7 +753,7 @@ contains
   end subroutine daily_diagnostics
 
 
-  subroutine annual_diagnostics(self, iyears, out_annual_tile, out_annual_cohorts)
+  subroutine annual_diagnostics(self, iyears, out_annual_cohorts)
     !////////////////////////////////////////////////////////////////
     ! Updates tile-level variables and populates annual output
     !---------------------------------------------------------------
@@ -763,7 +761,6 @@ contains
 
     class(vegn_tile_type), intent(inout) :: self
     integer, intent(in) :: iyears
-    real(kind=c_double), dimension(nvars_annual_tile), intent(out) :: out_annual_tile
     real(kind=c_double), dimension(out_max_cohorts, nvars_annual_cohorts), optional, intent(out) :: out_annual_cohorts
 
     ! local variables
@@ -851,77 +848,76 @@ contains
     soilC = pool%c12
     soilN = pool%n14
 
-    out_annual_tile(ANNUAL_TILE_YEAR            ) = dble(iyears)
-    out_annual_tile(ANNUAL_TILE_CAI             ) = dble(self%CAI)
-    out_annual_tile(ANNUAL_TILE_LAI             ) = dble(self%LAI)
-    out_annual_tile(ANNUAL_TILE_DENSITY         ) = dble(self%density * 10000)   ! * 10000 to convert in indivs/ha
-    out_annual_tile(ANNUAL_TILE_DBH             ) = dble(self%DBH * 100)         ! * 100 to convert in cm
-    out_annual_tile(ANNUAL_TILE_DENSITY12       ) = dble(self%density12 * 10000) ! * 10000 to convert in indivs/ha
-    out_annual_tile(ANNUAL_TILE_DBH12           ) = dble(self%DBH12 * 100)       ! * 100 to convert in cm
-    out_annual_tile(ANNUAL_TILE_QMD12           ) = dble(self%QMD12 * 100)       ! * 100 to convert in cm
-    out_annual_tile(ANNUAL_TILE_NPP             ) = dble(self%annual_fluxes%NPP())
-    out_annual_tile(ANNUAL_TILE_GPP             ) = dble(self%annual_fluxes%GPP)
-    out_annual_tile(ANNUAL_TILE_RESP            ) = dble(self%annual_fluxes%Resp)
-    out_annual_tile(ANNUAL_TILE_RH              ) = dble(self%annualRh)
-    out_annual_tile(ANNUAL_TILE_PRCP            ) = dble(self%annualPrcp)
-    out_annual_tile(ANNUAL_TILE_SOIL_W          ) = dble(self%SoilWater())
-    out_annual_tile(ANNUAL_TILE_TRSP            ) = dble(self%annual_fluxes%Trsp)
-    out_annual_tile(ANNUAL_TILE_EVAP            ) = dble(self%annualEvap)
-    out_annual_tile(ANNUAL_TILE_RUNOFF          ) = dble(self%annualRoff)
-    out_annual_tile(ANNUAL_TILE_PLANT_C         ) = dble(plantC)
-    out_annual_tile(ANNUAL_TILE_SOIL_C          ) = dble(SoilC)
-    out_annual_tile(ANNUAL_TILE_PLANT_N         ) = dble(plantN)
-    out_annual_tile(ANNUAL_TILE_SOIL_N          ) = dble(SoilN)
-    out_annual_tile(ANNUAL_TILE_TOT_N           ) = dble(self%totN)
-    out_annual_tile(ANNUAL_TILE_NSC             ) = dble(self%plabl%c12)
-    out_annual_tile(ANNUAL_TILE_SEED_C          ) = dble(self%pseed%c12)
-    out_annual_tile(ANNUAL_TILE_LEAF_C          ) = dble(self%pleaf%c12)
-    out_annual_tile(ANNUAL_TILE_ROOT_C          ) = dble(self%proot%c12)
-    out_annual_tile(ANNUAL_TILE_SW_C            ) = dble(self%psapw%c12)
-    out_annual_tile(ANNUAL_TILE_HW_C            ) = dble(self%pwood%c12)
-    out_annual_tile(ANNUAL_TILE_NSN             ) = dble(self%plabl%n14)
-    out_annual_tile(ANNUAL_TILE_SEED_N          ) = dble(self%pseed%n14)
-    out_annual_tile(ANNUAL_TILE_LEAF_N          ) = dble(self%pleaf%n14)
-    out_annual_tile(ANNUAL_TILE_ROOT_N          ) = dble(self%proot%n14)
-    out_annual_tile(ANNUAL_TILE_SW_N            ) = dble(self%psapw%n14)
-    out_annual_tile(ANNUAL_TILE_HW_N            ) = dble(self%pwood%n14)
-    out_annual_tile(ANNUAL_TILE_MCRB_C          ) = dble(self%pmicr%c12)
-    out_annual_tile(ANNUAL_TILE_FASTSOM         ) = dble(self%psoil_fs%c12)
-    out_annual_tile(ANNUAL_TILE_SLOWSOM         ) = dble(self%psoil_sl%c12)
-    out_annual_tile(ANNUAL_TILE_MCRB_N          ) = dble(self%pmicr%n14)
-    out_annual_tile(ANNUAL_TILE_FS_N            ) = dble(self%psoil_fs%n14)
-    out_annual_tile(ANNUAL_TILE_SL_N            ) = dble(self%psoil_sl%n14)
-    out_annual_tile(ANNUAL_TILE_INORG_N         ) = dble(self%inorg%n14)
-    out_annual_tile(ANNUAL_TILE_N_FIX           ) = dble(self%annual_fluxes%fixedN)
-    out_annual_tile(ANNUAL_TILE_N_UPTK          ) = dble(self%annual_fluxes%Nup)
-    out_annual_tile(ANNUAL_TILE_NYRMIN          ) = dble(self%annualN)
-    out_annual_tile(ANNUAL_TILE_NP2S            ) = dble(0)
-    out_annual_tile(ANNUAL_TILE_NLOSS           ) = dble(self%Nloss_yr)
-    out_annual_tile(ANNUAL_TILE_TOTSEED_C       ) = dble(0)
-    out_annual_tile(ANNUAL_TILE_TOTSEED_N       ) = dble(0)
-    out_annual_tile(ANNUAL_TILE_SEEDLING_C      ) = dble(0)
-    out_annual_tile(ANNUAL_TILE_SEEDLING_N      ) = dble(0)
-    out_annual_tile(ANNUAL_TILE_MAX_AGE         ) = dble(self%MaxAge)
-    out_annual_tile(ANNUAL_TILE_MAX_VOULME      ) = dble(self%MaxVolume)
-    out_annual_tile(ANNUAL_TILE_MAX_DBH         ) = dble(self%MaxDBH)
-    out_annual_tile(ANNUAL_TILE_NPP_L           ) = dble(self%NPPL)
-    out_annual_tile(ANNUAL_TILE_NPP_W           ) = dble(self%NPPW)
-    out_annual_tile(ANNUAL_TILE_DEADTREES_N     ) = dble(0)
-    out_annual_tile(ANNUAL_TILE_DEADTREES_C     ) = dble(0)
-    out_annual_tile(ANNUAL_TILE_M_TURNOVER      ) = dble(0)
-    out_annual_tile(ANNUAL_TILE_C_TURNOVER_TIME ) = dble(self%pwood%c12 / self%NPPW)
+    self%out_annual_tile(ANNUAL_TILE_YEAR            ) = iyears
+    self%out_annual_tile(ANNUAL_TILE_CAI             ) = self%CAI
+    self%out_annual_tile(ANNUAL_TILE_LAI             ) = self%LAI
+    self%out_annual_tile(ANNUAL_TILE_DENSITY         ) = self%density * 10000   ! * 10000 to convert in indivs/ha
+    self%out_annual_tile(ANNUAL_TILE_DBH             ) = self%DBH * 100         ! * 100 to convert in cm
+    self%out_annual_tile(ANNUAL_TILE_DENSITY12       ) = self%density12 * 10000 ! * 10000 to convert in indivs/ha
+    self%out_annual_tile(ANNUAL_TILE_DBH12           ) = self%DBH12 * 100       ! * 100 to convert in cm
+    self%out_annual_tile(ANNUAL_TILE_QMD12           ) = self%QMD12 * 100       ! * 100 to convert in cm
+    self%out_annual_tile(ANNUAL_TILE_NPP             ) = self%annual_fluxes%NPP()
+    self%out_annual_tile(ANNUAL_TILE_GPP             ) = self%annual_fluxes%GPP
+    self%out_annual_tile(ANNUAL_TILE_RESP            ) = self%annual_fluxes%Resp
+    self%out_annual_tile(ANNUAL_TILE_RH              ) = self%annualRh
+    self%out_annual_tile(ANNUAL_TILE_PRCP            ) = self%annualPrcp
+    self%out_annual_tile(ANNUAL_TILE_SOIL_W          ) = self%SoilWater()
+    self%out_annual_tile(ANNUAL_TILE_TRSP            ) = self%annual_fluxes%Trsp
+    self%out_annual_tile(ANNUAL_TILE_EVAP            ) = self%annualEvap
+    self%out_annual_tile(ANNUAL_TILE_RUNOFF          ) = self%annualRoff
+    self%out_annual_tile(ANNUAL_TILE_PLANT_C         ) = plantC
+    self%out_annual_tile(ANNUAL_TILE_SOIL_C          ) = SoilC
+    self%out_annual_tile(ANNUAL_TILE_PLANT_N         ) = plantN
+    self%out_annual_tile(ANNUAL_TILE_SOIL_N          ) = SoilN
+    self%out_annual_tile(ANNUAL_TILE_TOT_N           ) = self%totN
+    self%out_annual_tile(ANNUAL_TILE_NSC             ) = self%plabl%c12
+    self%out_annual_tile(ANNUAL_TILE_SEED_C          ) = self%pseed%c12
+    self%out_annual_tile(ANNUAL_TILE_LEAF_C          ) = self%pleaf%c12
+    self%out_annual_tile(ANNUAL_TILE_ROOT_C          ) = self%proot%c12
+    self%out_annual_tile(ANNUAL_TILE_SW_C            ) = self%psapw%c12
+    self%out_annual_tile(ANNUAL_TILE_HW_C            ) = self%pwood%c12
+    self%out_annual_tile(ANNUAL_TILE_NSN             ) = self%plabl%n14
+    self%out_annual_tile(ANNUAL_TILE_SEED_N          ) = self%pseed%n14
+    self%out_annual_tile(ANNUAL_TILE_LEAF_N          ) = self%pleaf%n14
+    self%out_annual_tile(ANNUAL_TILE_ROOT_N          ) = self%proot%n14
+    self%out_annual_tile(ANNUAL_TILE_SW_N            ) = self%psapw%n14
+    self%out_annual_tile(ANNUAL_TILE_HW_N            ) = self%pwood%n14
+    self%out_annual_tile(ANNUAL_TILE_MCRB_C          ) = self%pmicr%c12
+    self%out_annual_tile(ANNUAL_TILE_FASTSOM         ) = self%psoil_fs%c12
+    self%out_annual_tile(ANNUAL_TILE_SLOWSOM         ) = self%psoil_sl%c12
+    self%out_annual_tile(ANNUAL_TILE_MCRB_N          ) = self%pmicr%n14
+    self%out_annual_tile(ANNUAL_TILE_FS_N            ) = self%psoil_fs%n14
+    self%out_annual_tile(ANNUAL_TILE_SL_N            ) = self%psoil_sl%n14
+    self%out_annual_tile(ANNUAL_TILE_INORG_N         ) = self%inorg%n14
+    self%out_annual_tile(ANNUAL_TILE_N_FIX           ) = self%annual_fluxes%fixedN
+    self%out_annual_tile(ANNUAL_TILE_N_UPTK          ) = self%annual_fluxes%Nup
+    self%out_annual_tile(ANNUAL_TILE_NYRMIN          ) = self%annualN
+    self%out_annual_tile(ANNUAL_TILE_NP2S            ) = 0
+    self%out_annual_tile(ANNUAL_TILE_NLOSS           ) = self%Nloss_yr
+    self%out_annual_tile(ANNUAL_TILE_TOTSEED_C       ) = 0
+    self%out_annual_tile(ANNUAL_TILE_TOTSEED_N       ) = 0
+    self%out_annual_tile(ANNUAL_TILE_SEEDLING_C      ) = 0
+    self%out_annual_tile(ANNUAL_TILE_SEEDLING_N      ) = 0
+    self%out_annual_tile(ANNUAL_TILE_MAX_AGE         ) = self%MaxAge
+    self%out_annual_tile(ANNUAL_TILE_MAX_VOULME      ) = self%MaxVolume
+    self%out_annual_tile(ANNUAL_TILE_MAX_DBH         ) = self%MaxDBH
+    self%out_annual_tile(ANNUAL_TILE_NPP_L           ) = self%NPPL
+    self%out_annual_tile(ANNUAL_TILE_NPP_W           ) = self%NPPW
+    self%out_annual_tile(ANNUAL_TILE_DEADTREES_N     ) = 0
+    self%out_annual_tile(ANNUAL_TILE_DEADTREES_C     ) = 0
+    self%out_annual_tile(ANNUAL_TILE_M_TURNOVER      ) = 0
+    self%out_annual_tile(ANNUAL_TILE_C_TURNOVER_TIME ) = self%pwood%c12 / self%NPPW
 
     ! Rebalance N (to compensate for the adjunction in vegn_N_uptake)
     if (inputs%params_siml%do_closedN_run) call self%recover_N_balance()
 
   end subroutine annual_diagnostics
 
-  subroutine annual_diagnostics_post_mortality(self, out_annual_tile, out_annual_cohorts)
+  subroutine annual_diagnostics_post_mortality(self, out_annual_cohorts)
     !////////////////////////////////////////////////////////////////
     ! Updates tile-level variables and populates annual output after reproduction and mortality processes
     !---------------------------------------------------------------
     class(vegn_tile_type), intent(inout) :: self
-    real(kind=c_double), dimension(nvars_annual_tile), intent(out) :: out_annual_tile
     real(kind=c_double), dimension(out_max_cohorts, nvars_annual_cohorts), optional, intent(out) :: out_annual_cohorts
 
     ! local variables
@@ -971,14 +967,14 @@ contains
       it => it%next()
     enddo
 
-    out_annual_tile(ANNUAL_TILE_NP2S       ) = dble(self%N_P2S_yr)
-    out_annual_tile(ANNUAL_TILE_DEADTREES_N) = dble(self%n_deadtrees)
-    out_annual_tile(ANNUAL_TILE_DEADTREES_C) = dble(self%c_deadtrees)
-    out_annual_tile(ANNUAL_TILE_M_TURNOVER ) = dble(self%m_turnover)
-    out_annual_tile(ANNUAL_TILE_TOTSEED_C  ) = dble(self%totseed%c12)
-    out_annual_tile(ANNUAL_TILE_TOTSEED_N  ) = dble(self%totseed%n14)
-    out_annual_tile(ANNUAL_TILE_SEEDLING_C ) = dble(self%totNewC%c12)
-    out_annual_tile(ANNUAL_TILE_SEEDLING_N ) = dble(self%totNewC%n14)
+    self%out_annual_tile(ANNUAL_TILE_NP2S       ) = self%N_P2S_yr
+    self%out_annual_tile(ANNUAL_TILE_DEADTREES_N) = self%n_deadtrees
+    self%out_annual_tile(ANNUAL_TILE_DEADTREES_C) = self%c_deadtrees
+    self%out_annual_tile(ANNUAL_TILE_M_TURNOVER ) = self%m_turnover
+    self%out_annual_tile(ANNUAL_TILE_TOTSEED_C  ) = self%totseed%c12
+    self%out_annual_tile(ANNUAL_TILE_TOTSEED_N  ) = self%totseed%n14
+    self%out_annual_tile(ANNUAL_TILE_SEEDLING_C ) = self%totNewC%c12
+    self%out_annual_tile(ANNUAL_TILE_SEEDLING_N ) = self%totNewC%n14
 
   end subroutine annual_diagnostics_post_mortality
 

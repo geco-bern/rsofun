@@ -9,8 +9,8 @@ module md_product_pools
     public :: product_pools
 
     integer, parameter :: n_poduct_pools = 2 ! Number of product pools
-    integer, public, parameter ::  e_fold_pp(n_poduct_pools) = (/2, 20/) ! e-folding time of product pools (in years)
-    real, public, parameter :: DIRECT_LOSS                   = 0.25 ! Fraction directly lost to the athmosphere
+    real, public, parameter ::  e_fold_pp(n_poduct_pools) = (/2, 20/)          ! e-folding rate of product pools (in years)
+    real, public, parameter ::  fraction_pp(n_poduct_pools) = (/0.375, 0.375/) ! fractions going to each product pool. The residual (1 - sum) is a direct loss going to the atmosphere
 
     type product_pools
 
@@ -25,20 +25,16 @@ module md_product_pools
 
   contains
 
-    pure subroutine update(self, input)
+    pure subroutine update(self, products)
       !////////////////////////////////////////////////////////////////
-      ! Update product pools by both decaying the current pool values and adding the new exports from LUC.
+      ! Update product pools by both decaying the current pool values and adding the new products from LUC.
       !----------------------------------------------------------------
       class(product_pools), intent(inout) :: self
-      type(orgpool), intent(in) :: input
+      type(orgpool), intent(in) :: products
 
-      ! Local variable
-      real :: fraction
-
-      fraction = (1.0 - DIRECT_LOSS) / n_poduct_pools
-
-      self%product_pool(1) = self%product_pool(1) * exp(-1.0 / e_fold_pp(1)) + input * fraction
-      self%product_pool(2) = self%product_pool(2) * exp(-1.0 / e_fold_pp(2)) + input * fraction
+      ! Decay then add new products
+      self%product_pool(1) = self%product_pool(1) * exp(-1.0 / e_fold_pp(1)) + products * fraction_pp(1)
+      self%product_pool(2) = self%product_pool(2) * exp(-1.0 / e_fold_pp(2)) + products * fraction_pp(2)
 
     end subroutine update
 

@@ -7,7 +7,13 @@ module md_interface_out_biomee
 
   private
 
+
+
   !=============== Output mappings =============================================================
+
+  !=============== Daily
+
+  integer, public, parameter :: nvars_daily_tile     = 35
 
   integer, public, parameter :: DAILY_TILE_YEAR               =  1
   integer, public, parameter :: DAILY_TILE_DOY                =  2
@@ -45,6 +51,11 @@ module md_interface_out_biomee
   integer, public, parameter :: DAILY_TILE_INORG_N            = 34
   integer, public, parameter :: DAILY_TILE_N_UPTK             = 35
 
+
+  !=============== Annual
+
+  integer, public, parameter :: nvars_annual_cohorts = 35
+
   integer, public, parameter :: ANNUAL_COHORTS_ID             =  1
   integer, public, parameter :: ANNUAL_COHORTS_YEAR           =  2
   integer, public, parameter :: ANNUAL_COHORTS_CID            =  3
@@ -80,6 +91,11 @@ module md_interface_out_biomee
   integer, public, parameter :: ANNUAL_COHORTS_DEATHRATE      = 33
   integer, public, parameter :: ANNUAL_COHORTS_N_LOSS         = 34
   integer, public, parameter :: ANNUAL_COHORTS_C_LOSS         = 35
+
+
+  !=============== Cohorts
+
+  integer, public, parameter :: nvars_annual_tile    = 60
 
   integer, public, parameter :: ANNUAL_TILE_YEAR              =  1
   integer, public, parameter :: ANNUAL_TILE_CAI               =  2

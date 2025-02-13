@@ -135,8 +135,15 @@ contains
          state%climateyear_idx &
       )
 
+      !----------------------------------------------------------------
+      ! Update LU state using LUC forcing if we are in transient state
+      !----------------------------------------------------------------
+      if ((.not.state%spinup) .and. (state%forcingyear_idx <= n_lu_tr_years)) then
+        call aggregat%update_lu_fractions(real(luc_forcing(:,:,state%forcingyear_idx)))
+      end if
+
       ! For each non-empty LU (land unit)
-      do lu_idx = 1, n_lu
+      foreach_lu: do lu_idx = 1, n_lu
         associate (lu => aggregat%tiles(lu_idx))
           if (lu%non_empty()) then
 
@@ -148,8 +155,7 @@ contains
               call biosphere_annual( &
                 state, &
                 climate, &
-                lu%vegn, &
-                output_annual_tile(state%year, :, lu_idx) &
+                lu%vegn &
               )
             else
               idx =  state%year - inputs%params_siml%steering%spinupyears
@@ -162,7 +168,6 @@ contains
                         state, &
                         climate, &
                         lu%vegn, &
-                        output_annual_tile(state%year, :, lu_idx), &
                         output_annual_cohorts(:, idx,:, lu_idx), &
                         output_daily_tile(idx_daily_start:idx_daily_end, :, lu_idx) &
                 )
@@ -172,27 +177,21 @@ contains
                         state, &
                         climate, &
                         lu%vegn, &
-                        output_annual_tile(state%year, :, lu_idx), &
                         output_annual_cohorts(:, idx,:, lu_idx) &
                         )
               end if
             end if
 
           end if
-          output_annual_tile(state%year, ANNUAL_TILE_LU_FRACTION, lu_idx) = lu%fraction
         end associate
 
-      end do
+      end do foreach_lu
 
       !----------------------------------------------------------------
-      ! Update LULUC state and tiles, and fill output
+      ! Fill outputs
       !----------------------------------------------------------------
-      if ((.not.state%spinup) .and. (state%forcingyear_idx <= n_lu_tr_years)) then
-
-        call aggregat%update_lu_fractions(real(luc_forcing(:,:,state%forcingyear_idx)))
-
-      end if
-      call aggregat%populate_outarray_annual_aggregated(state%year, output_annual_aggregated(state%year,:))
+      call aggregat%populate_outarrays(state%year, output_annual_tile(state%year, :, :), &
+              output_annual_aggregated(state%year,:))
 
     end do yearloop
 
