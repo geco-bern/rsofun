@@ -68,7 +68,8 @@ Imports:
     BayesianTools,
     multidplyr,
     stats,
-    utils
+    utils,
+    gridExtra
 LazyData: true
 LazyDataCompression: xz
 ByteCompile: true

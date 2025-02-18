@@ -22,7 +22,7 @@ library(ggplot2)
 ## Overview
 
 BiomeE is a dynamic vegetation demography simulation engine capable of predicting the evolution of a *vegetation tile* characterized by static parameters (species, soil parameters, initial conditions, etc)
-when subject to environmental forcing. To learn more, please refer to biomee_use.Rmd. Starting from v5.1, BiomeE is capable of simulating land use and land-use change (LULUC) by evolving multiple vegetation tiles, each with different vegetation types and/or different land-use practices. This section presents an overview of the concepts and methods.
+when subject to environmental forcing. To learn more, please refer to `vignette("BiomeE usage")`. Starting from v5.1, BiomeE is capable of simulating land use and land-use change (LULUC) by evolving multiple vegetation tiles, each with different vegetation types and/or different land-use practices. This section presents an overview of the concepts and methods.
 
 ### Fractional tiles
 
@@ -112,9 +112,11 @@ In this case we have only one year, meaning that there is only one LU change at 
 
 We can now run the simulation:
 
-```{r eval = TRUE, results = 'hide'}
+```{r eval = TRUE, results = 'hide', warning = FALSE}
 out_sim_p <- runread_biomee_f(df_drivers)
 ```
+
+Next, we define some convenience functions for displaying plots:
 
 ```{r eval = TRUE, results = 'hide'}
 library(gridExtra)
@@ -148,6 +150,8 @@ plot_variables <- function(variables) {
   grid.arrange(grobs=plots, nrow = length(variables))
 }
 ```
+
+We finally plot, for each LU and the aggregated tile, GPP, the litter carbon (`fastSOM`), and the LU fraction:
 
 ```{r eval = TRUE, results = 'hide', warning = FALSE, fig.width=7, fig.height=7}
 plot_variables(c('GPP', 'fastSOM', 'lu_fraction'))
