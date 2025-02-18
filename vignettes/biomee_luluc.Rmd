@@ -113,7 +113,7 @@ In this case we have only one year, meaning that there is only one LU change at 
 We can now run the simulation:
 
 ```{r eval = TRUE, results = 'hide', warning = FALSE}
-out_sim_p <- runread_biomee_f(df_drivers)
+out_sim_1 <- runread_biomee_f(df_drivers)
 ```
 
 Next, we define some convenience functions for displaying plots:
@@ -122,31 +122,45 @@ Next, we define some convenience functions for displaying plots:
 library(gridExtra)
 library(purrr)
 
-plot1 <- function(lu_name, variable, y_limit=NA) {
-  tile <- out_sim_p[[lu_name]][[1]]
+plot1 <- function(lu_name, variable, out, y_limit=NA) {
+  tile <- out[[lu_name]][[1]]
   if(lu_name != 'aggregated')
           tile <- tile$output_annual_tile
-  tile %>%
+  if (variable != 'lu_fraction') {
+    res <- tile %>%
           ggplot() +
-          geom_line(aes(x = year, y = get(variable) * lu_fraction)) +
+          geom_line(aes(x = year,
+                        y = get(variable) * lu_fraction)) +
           xlim(0, NA) +
           ylim(0, y_limit) +
           theme_classic() +
           labs(x = "Year", y = paste(variable, "(", lu_name, ")"))
+  } else {
+    res <- tile %>%
+            ggplot() +
+            geom_line(aes(x = year,
+                          y = get(variable))) +
+            xlim(0, NA) +
+            ylim(0, y_limit) +
+            theme_classic() +
+            labs(x = "Year", y = paste(variable, "(", lu_name, ")"))
+  }
+
+  return(res)
 }
 
-plot_variable <- function(variable) {
-  agg <- out_sim_p[['aggregated']][[1]]
+plot_variable <- function(variable, out) {
+  agg <- out[['aggregated']][[1]]
   y_limit <- max(agg[variable] * agg$lu_fraction) * 1.01
 
   names <- c(df_drivers$init_lu[[1]]$name, 'aggregated')
 
-  names |> lmap(\(x) plot1(x, variable, y_limit))
+  names |> lmap(\(x) plot1(x, variable, out, y_limit))
 }
 
-plot_variables <- function(variables) {
+plot_variables <- function(variables, out) {
 
-  plots <- variables |> lmap(plot_variable)
+  plots <- variables |> lmap(\(x) plot_variable(x, out))
   grid.arrange(grobs=plots, nrow = length(variables))
 }
 ```
@@ -154,7 +168,7 @@ plot_variables <- function(variables) {
 We finally plot, for each LU and the aggregated tile, GPP, the litter carbon (`fastSOM`), and the LU fraction:
 
 ```{r eval = TRUE, results = 'hide', warning = FALSE, fig.width=7, fig.height=7}
-plot_variables(c('GPP', 'fastSOM', 'lu_fraction'))
+plot_variables(c('GPP', 'fastSOM', 'lu_fraction'), out_sim_1)
 ```
 
 Looking at GPP (first row), the primary forest (left column) spins-up to steady state until year 250 which marks the end of the spin-up period and start of the transient period. A sharp drop corresponds to the loss of 40% of the area (see third row). The pattern corresponding to the steady-state continues but scaled down. We observe a similar behavior for the litter (second row).
@@ -170,13 +184,13 @@ Finally, the fraction, remains constant throughout the simulation.
 To conclude this demonstration, we can plot the product pools:
 
 ```{r eval = TRUE, results = 'hide', fig.width=7, fig.height=3}
-p1 <- out_sim_p$aggregated[[1]] %>%
+p1 <- out_sim_1$aggregated[[1]] %>%
         ggplot() +
         geom_line(aes(x = year, y = prod_pool_1_C)) +
         theme_classic() +
         labs(x = "Year", y = paste("Prod. pools C (2 years)"))
 
-p2 <- out_sim_p$aggregated[[1]] %>%
+p2 <- out_sim_1$aggregated[[1]] %>%
         ggplot() +
         geom_line(aes(x = year, y = prod_pool_2_C)) +
         theme_classic() +
@@ -186,3 +200,99 @@ grid.arrange(p1, p2, nrow = 1)
 ```
 
 As expected, the product pools get filled with the wood harvested and decay with their respective e-folding time.
+
+## Wood harvest and urbanism
+
+We will now implement a more complex scenario.
+In addition to the one time transition from a primary to a secondary forest:
+- each year, one thousand of the primary forest will transition to an urban tile
+- every 40 years, one quarter of the secondary forest will be clear-cut (but remain in the same tile).
+Furthermore, the species planted in the secondary forest is another one than that of the primary forest.
+
+Let us configure these requirements:
+
+```{r eval = TRUE}
+df_drivers <- biomee_p_model_luluc_drivers
+
+# We extend the transient period to 300 years
+n_trans <- 300
+df_drivers$params_siml[[1]]$nyeartrend <- n_trans
+
+# We configure two cohorts with two different species (see 'init_cohort_species'): one for tile 1 and one for tile 2 (see 'lu_index').
+# Tile 3 is a urban tile: it does not accept any cohort.
+df_drivers$init_cohort[[1]] <- tibble(
+        init_cohort_species = c(2, 3),      # species
+        init_cohort_nindivs = rep(0.05, 2), # initial individual density, individual/m2 ! 1 indiv/m2 = 10.000 indiv/ha
+        init_cohort_bl      = rep(0.0,  2), # initial biomass of leaves, kg C/individual
+        init_cohort_br      = rep(0.0,  2), # initial biomass of fine roots, kg C/individual
+        init_cohort_bsw     = rep(0.05, 2), # initial biomass of sapwood, kg C/individual
+        init_cohort_bHW     = rep(0.0,  2), # initial biomass of heartwood, kg C/tree
+        init_cohort_seedC   = rep(0.0,  2), # initial biomass of seeds, kg C/individual
+        init_cohort_nsc     = rep(0.05, 2), # initial non-structural biomass
+        lu_index            = c(1, 2)       # index land use (LU) containing this cohort. 0 (default) means all non-urban tiles will contain a copy.
+)
+
+lu_defs <- tibble(
+        name      = c('primary', 'secondary', 'urban'),
+        fraction  = c(1.0, 0.0, 0.0)
+)
+n_lu <- length(lu_defs$name)
+
+# Convenience method to prep the transitions
+prep <- function(l) {
+  length(l) <- n_trans * n_lu ^ 2
+  l[is.na(l)] <- 0
+  return(l)
+}
+
+# Initial transition
+# 3 LUs, so each year land-use change is represented by 3x3 transitions.
+# The first 3 numbers are the transitions from each LU to the first LU,
+# the following three numbers are the transitions from each LU to the second LU, and so on.
+initial_transition <- c(0, 0, 0, 0.4, 0, 0, 0, 0, 0)
+
+# Harvest pattern: clear-cut one fourth (0.4/4 = 0.1) of the tile every 40 years.
+# Clear-cuts are represented by self-transitions of LU 2.
+harvest_pattern <- c(
+        rep(rep(0, 9), 39),
+        c(0, 0, 0, 0, 0.1, 0, 0, 0, 0)
+)
+harvest_transitions <- rep(harvest_pattern, 10) # We repeat the harvest pattern enough times
+
+urban_transition <- rep(c(0, 0, 0, 0, 0, 0, 0.0006, 0, 0), n_trans)
+
+# We add all the transition patterns
+transitions <- prep(initial_transition) + prep(harvest_transitions) + prep(urban_transition)
+
+# We set the LU definitions and transition forcing in the driver:
+df_drivers$init_lu[[1]] <- lu_defs
+df_drivers$luc_forcing[[1]]  <- array(transitions, c(n_lu, n_lu, n_trans))
+```
+
+We can now run the simulation and display some of the outputs:
+
+```{r eval = TRUE, results = 'hide', warning = FALSE, fig.width=7, fig.height=7}
+out_sim_2 <- runread_biomee_f(df_drivers)
+plot_variables(c('GPP', 'fastSOM', 'lu_fraction'), out_sim_2)
+```
+
+As before, we can also look at the product pools:
+
+```{r eval = TRUE, results = 'hide', fig.width=7, fig.height=3}
+p1 <- out_sim_2$aggregated[[1]] %>%
+        ggplot() +
+        geom_line(aes(x = year, y = prod_pool_1_C)) +
+        theme_classic() +
+        labs(x = "Year", y = paste("Prod. pools C (2 years)"))
+
+p2 <- out_sim_2$aggregated[[1]] %>%
+        ggplot() +
+        geom_line(aes(x = year, y = prod_pool_2_C)) +
+        theme_classic() +
+        labs(x = "Year", y = paste("Prod. pools C (20 years)"))
+
+grid.arrange(p1, p2, nrow = 1)
+```
+
+## Land rotation and land management
+
