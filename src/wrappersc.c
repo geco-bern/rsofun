@@ -185,7 +185,7 @@ extern SEXP biomee_f_C(
     // Allocate 4D array
     SEXP output_annual_cohort_tile = PROTECT(allocArray(REALSXP, dims));
 
-    SEXP output_annual_aggregated  = PROTECT( allocMatrix(REALSXP, nt_annual, 60) );
+    SEXP output_annual_aggregated  = PROTECT( allocMatrix(REALSXP, nt_annual, 64) );
     /****************/
 
     // Fortran subroutine call

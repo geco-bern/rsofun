@@ -90,6 +90,7 @@ contains
     ! Local variables
     real(kind=c_double) :: nan
     integer :: yr, idx, idx_daily_start, idx_daily_end, lu_idx
+    type(orgpool) :: export
 
     !----------------------------------------------------------------
     ! Initialize outputs to NaN / 0
@@ -138,8 +139,12 @@ contains
       ! Update LU state using LUC forcing if we are in transient state
       !----------------------------------------------------------------
       if ((.not.state%spinup) .and. (state%forcingyear_idx <= n_lu_tr_years)) then
-        call aggregat%update_lu_fractions(real(luc_forcing(:,:,state%forcingyear_idx)))
+        export = aggregat%update_lu_fractions(real(luc_forcing(:,:,state%forcingyear_idx)))
+      else
+        export = orgpool()
       end if
+      ! Update product pools
+      call aggregat%prod_pools%update(export)
 
       ! For each non-empty LU (land unit)
       foreach_lu: do lu_idx = 1, n_lu
