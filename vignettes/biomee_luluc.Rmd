@@ -1,0 +1,184 @@
+---
+title: "BiomeE Land use, land-use change (LULUC)"
+author: "Mayeul Marcadella"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{BiomeE Land use, land-use change (LULUC)}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\usepackage[utf8]{inputenc}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+
+library(rsofun)
+library(dplyr)
+library(ggplot2)
+```
+
+## Overview
+
+BiomeE is a dynamic vegetation demography simulation engine capable of predicting the evolution of a *vegetation tile* characterized by static parameters (species, soil parameters, initial conditions, etc)
+when subject to environmental forcing. To learn more, please refer to biomee_use.Rmd. Starting from v5.1, BiomeE is capable of simulating land use and land-use change (LULUC) by evolving multiple vegetation tiles, each with different vegetation types and/or different land-use practices. This section presents an overview of the concepts and methods.
+
+### Fractional tiles
+
+Conceptually, BiomeE simulates a grid cell of area 1 (arbitrary unit) divided in several *land units* (LU). The *fraction* of the cell occupied by each LU varies with time driven by *land-use change* forcing.
+Each LU is implemented as a fractional tile, that is a vegetation tile associated with a scalar (`fraction`) keeping track of the area occupied by the LU.
+
+### LU transitions
+
+A square transition matrix `T` encodes the exogenous yearly land-use change: `T_{i,j}` is the fraction of LU `i` transitioning to LU `j` on January 1st (start of the year).
+Such a LUC transition is modelled as a clear-cut of the fraction `T_{i,j}` in LU `i` and transfer of the corresponding area to LU `j`, along with the soil organic pools, water, and belowground biomass converted to litter.
+The aboveground biomass is sent to 3 product pools with e-folding times of 0, 2 and 20 years respectively.
+
+Each transition found in the matrix is evaluated in turn and the transfer of matter to each destination LU is kept track of throughout the update process and finally added to the LUs.
+This gross transition heuristic provides better accuracy compared to a strategy where net transitions are considered (thereby transitions from `i` to and from `j` cancels each others out).
+
+### Clear-cut and harvest
+
+The diagonal of the transition matrix contains self transitions `T_{i,i}`, where a fraction of LU `i` is clear-cut, but without any transfer of area, water or soil organic matter.
+The aboveground biomass as exported to the product pools, while the belowground biomass is converted to litter and remains in place.
+In effect, this models the forestry practice of clear-cutting as well as crop harvest.
+
+### Other land management practices
+
+LUs can furthermore be tailored to model broad categories of land management:
+- which species grow in the LU (or none in the case of an urban area),
+- fixed addition of nitrogen (N fertilization)
+- extra soil turnover rate (ex: tillage)
+- direct oxidation of litter (crop and grass harvest)
+
+### Output
+
+The output contains the cohort and tile annual diagnostics for each LU, as well as for a virtual tile aggregating each LU.
+
+An example of output is available in the package:
+```{r eval = FALSE}
+library(rsofun)
+
+# Output obtained from simulating biomee_p_model_luluc_drivers
+biomee_p_model_luluc_output
+```
+
+
+## Getting started
+
+This section demonstrates how to simulate LULUC with BiomeE.
+
+### Setup
+
+The package contains an example of drivers from the Swiss CH-LAE fluxnet site to which we clear-cut 40% of a primary forest and convert this free patch into a secondary (yet unmanaged), forest.
+
+```{r eval = FALSE}
+library(rsofun)
+
+biomee_p_model_luluc_drivers
+```
+
+The default setting is to simulate 1 year of transient data after 250 years of spin-up.
+Let us increase the transient period to 300 years:
+
+```{r eval = TRUE}
+df_drivers <- biomee_p_model_luluc_drivers
+df_drivers$params_siml[[1]]$nyeartrend <- 300
+```
+
+Let us have a glance at the LU settings:
+```{r eval = TRUE}
+df_drivers$init_lu[[1]]
+```
+
+There are two LU defined:
+- `primary`: with an initial fraction of 1
+- `secondary`: with an initial fraction of 0
+
+The spin-up will use these initial fractions without applying any land-use change.
+Note that the names of the LUs are arbitrary: BiomeE do not infer anything from these names.
+
+Let us now turn our attention to the transition matrix:
+
+```{r eval = TRUE}
+df_drivers$luc_forcing[[1]]
+```
+
+It is a 3-dimensional matrix. The first two dimensions represent a square matrix of size 2x2 (we have defined 2 LUs), and the third dimension represents the years, starting from the first transient year.
+In this case we have only one year, meaning that there is only one LU change at the beginning of year 1, then the simulation proceeds without further LU change for the remaining of the simulation.
+
+### Simulation
+
+We can now run the simulation:
+
+```{r eval = TRUE, results = 'hide'}
+out_sim_p <- runread_biomee_f(df_drivers)
+```
+
+```{r eval = TRUE, results = 'hide'}
+library(gridExtra)
+library(purrr)
+
+plot1 <- function(lu_name, variable, y_limit=NA) {
+  tile <- out_sim_p[[lu_name]][[1]]
+  if(lu_name != 'aggregated')
+          tile <- tile$output_annual_tile
+  tile %>%
+          ggplot() +
+          geom_line(aes(x = year, y = get(variable) * lu_fraction)) +
+          xlim(0, NA) +
+          ylim(0, y_limit) +
+          theme_classic() +
+          labs(x = "Year", y = paste(variable, "(", lu_name, ")"))
+}
+
+plot_variable <- function(variable) {
+  agg <- out_sim_p[['aggregated']][[1]]
+  y_limit <- max(agg[variable] * agg$lu_fraction) * 1.01
+
+  names <- c(df_drivers$init_lu[[1]]$name, 'aggregated')
+
+  names |> lmap(\(x) plot1(x, variable, y_limit))
+}
+
+plot_variables <- function(variables) {
+
+  plots <- variables |> lmap(plot_variable)
+  grid.arrange(grobs=plots, nrow = length(variables))
+}
+```
+
+```{r eval = TRUE, results = 'hide', warning = FALSE, fig.width=7, fig.height=7}
+plot_variables(c('GPP', 'fastSOM', 'lu_fraction'))
+```
+
+Looking at GPP (first row), the primary forest (left column) spins-up to steady state until year 250 which marks the end of the spin-up period and start of the transient period. A sharp drop corresponds to the loss of 40% of the area (see third row). The pattern corresponding to the steady-state continues but scaled down. We observe a similar behavior for the litter (second row).
+
+The secondary forest (second column) has no data until year 250 as the initial fraction was 0.
+GPP increases until reaching steady-state as expected. Since the same species is used in both LU, the GPP stabilizes at the same level (proportionally to the LU fraction).
+The litter follows a different pattern: at year 250, it inherits a lot of litter from the primary LU. The amount of litter drops sharply due to natural processes and not replenishment because of the low initial productivity of the tile. As productivity increases (see GPP), the amount of litter finally increases again and stabilizes at a level proportional to its fraction.
+
+The third column displays the aggregated tile, summing each tile relative to its fraction.
+GPP shows a sharp drop then recovery. Litter shows a sharp increase (due to below ground biomass being converted to litter) followed by a drop (mineralization) then recovery.
+Finally, the fraction, remains constant throughout the simulation.
+
+To conclude this demonstration, we can plot the product pools:
+
+```{r eval = TRUE, results = 'hide', fig.width=7, fig.height=3}
+p1 <- out_sim_p$aggregated[[1]] %>%
+        ggplot() +
+        geom_line(aes(x = year, y = prod_pool_1_C)) +
+        theme_classic() +
+        labs(x = "Year", y = paste("Prod. pools C (2 years)"))
+
+p2 <- out_sim_p$aggregated[[1]] %>%
+        ggplot() +
+        geom_line(aes(x = year, y = prod_pool_2_C)) +
+        theme_classic() +
+        labs(x = "Year", y = paste("Prod. pools C (20 years)"))
+
+grid.arrange(p1, p2, nrow = 1)
+```
+
+As expected, the product pools get filled with the wood harvested and decay with their respective e-folding time.
