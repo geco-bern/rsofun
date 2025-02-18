@@ -1,9 +1,9 @@
 ---
-title: "BiomeE Land use, land-use change (LULUC)"
+title: "BiomeE LULUC"
 author: "Mayeul Marcadella"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{BiomeE Land use, land-use change (LULUC)}
+  %\VignetteIndexEntry{BiomeE LULUC}
   %\VignetteEngine{knitr::rmarkdown}
   %\usepackage[utf8]{inputenc}
 ---
