@@ -253,10 +253,12 @@ run_pmodel_f_bysite <- function(
     }
     
     # model parameters to check
-    if( sum( names(params_modl) %in% c('kphio', 'kphio_par_a', 'kphio_par_b',
+    if ( sum( names(params_modl) %in% c('kphio', 'kphio_par_a', 'kphio_par_b',
                                        'soilm_thetastar', 'soilm_betao',
                                        'beta_unitcostratio', 'rd_to_vcmax', 
-                                       'tau_acclim', 'kc_jmax')
+                                       'tau_acclim', 'kc_jmax', 'coldacclim_par_a',
+                                       'coldacclim_par_b', 'coldacclim_par_c',
+                                       'coldacclim_par_d')
     ) != 9){
       warning(" Returning a dummy data frame. Incorrect model parameters.")
       continue <- FALSE
@@ -273,39 +275,14 @@ run_pmodel_f_bysite <- function(
     in_netrad <- FALSE  # net radiation is currently ignored as a model forcing, but is internally simulated by SPLASH.
     
     # Check if fsun is available
-    if(! (in_ppfd & in_netrad)){
+    if (! (in_ppfd & in_netrad)){
       # fsun must be available when one of ppfd or netrad is missing
-      if(any(is.na(forcing$fsun))) continue <- FALSE
+      if (any(is.na(forcing$fsun))) continue <- FALSE
     }
   }
   
-  if(continue){
-    
-    
-<<<<<<< HEAD
-    # number of rows in matrix (pre-allocation of memory)
-    n <- as.integer(nrow(forcing))
-
-    # Model parameters as vector
-    par = c(
-      as.numeric(params_modl$kphio),
-      as.numeric(params_modl$soilm_par_a),
-      as.numeric(params_modl$soilm_par_b),
-      as.numeric(params_modl$kphio_par_a),
-      as.numeric(params_modl$kphio_par_b),
-      as.numeric(params_modl$kphio_par_c),
-      as.numeric(params_modl$kphio_par_d),
-      as.numeric(params_modl$kphio_par_e)
-      )
-
-    # Soil texture as matrix (layer x texture parameter)
-    soiltexture <- params_soil %>% 
-      dplyr::select(fsand, fclay, forg, fgravel) %>% 
-      as.matrix() %>% 
-      t()
-
-=======
->>>>>>> master
+  if (continue){
+      
     ## C wrapper call
     out <- .Call(
       
@@ -341,7 +318,11 @@ run_pmodel_f_bysite <- function(
                                     as.numeric(params_modl$beta_unitcostratio),
                                     as.numeric(params_modl$rd_to_vcmax),
                                     as.numeric(params_modl$tau_acclim),
-                                    as.numeric(params_modl$kc_jmax)),
+                                    as.numeric(params_modl$kc_jmax),
+                                    as.numeric(params_modl$coldacclim_par_a),
+                                    as.numeric(params_modl$coldacclim_par_b),
+                                    as.numeric(params_modl$coldacclim_par_c),
+                                    as.numeric(params_modl$coldacclim_par_d)),
       forcing                   = as.matrix(forcing)
     )
     
@@ -355,22 +336,6 @@ run_pmodel_f_bysite <- function(
       as.matrix() %>% 
       as.data.frame() %>% 
       stats::setNames(
-<<<<<<< HEAD
-        c("fapar", "gpp", "transp", "latenth", "pet", "vcmax",
-          "jmax", "vcmax25", "jmax25", "gs_accl", "wscal", "chi", 
-          "iwue", "rd", "snow")
-        ) %>%
-      as_tibble(.name_repair = "check_unique") %>%
-      dplyr::bind_cols(ddf,.)
-
-  } else {
-    out <- tibble(date = lubridate::ymd("2000-01-01"),
-                  fapar = NA, gpp = NA, transp = NA, latenth = NA, 
-                  pet = NA, vcmax = NA, jmax = NA, vcmax25 = NA, 
-                  jmax25 = NA, gs_accl = NA, wscal = NA, chi = NA, 
-                  iwue = NA, rd = NA, snow = NA)
-  }
-=======
         c("fapar", 
           "gpp", 
           "aet", 
@@ -393,7 +358,6 @@ run_pmodel_f_bysite <- function(
       ) %>%
       as_tibble(.name_repair = "check_unique") %>%
       dplyr::bind_cols(ddf,.)
->>>>>>> master
     
   } else {
     out <- tibble(date = as.Date("2000-01-01"),

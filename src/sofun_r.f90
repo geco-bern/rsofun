@@ -72,15 +72,9 @@ contains
     real(kind=c_double),  intent(in) :: altitude
     real(kind=c_double),  intent(in) :: whc
     integer(kind=c_int),  intent(in) :: nt ! number of time steps
-<<<<<<< HEAD
     real(kind=c_double),  dimension(8), intent(in) :: par  ! free (calibratable) model parameters
     real(kind=c_double),  dimension(nt,13), intent(in) :: forcing  ! array containing all temporally varying forcing data (rows: time steps; columns: 1=air temperature, 2=rainfall, 3=vpd, 4=ppfd, 5=net radiation, 6=sunshine fraction, 7=snowfall, 8=co2, 9=N-deposition, 10=fapar) 
     real(kind=c_double),  dimension(nt,15), intent(out) :: output
-=======
-    real(kind=c_double),  dimension(9), intent(in) :: par  ! free (calibratable) model parameters
-    real(kind=c_double),  dimension(nt,12), intent(in) :: forcing  ! array containing all temporally varying forcing data (rows: time steps; columns: 1=air temperature, 2=rainfall, 3=vpd, 4=ppfd, 5=net radiation, 6=sunshine fraction, 7=snowfall, 8=co2, 9=fapar, 10=patm, 11=tmin, 12=tmax) 
-    real(kind=c_double),  dimension(nt,19), intent(out) :: output
->>>>>>> master
 
     ! local variables
     type(outtype_biosphere) :: out_biosphere  ! holds all the output used for calculating the cost or maximum likelihood function 
@@ -130,16 +124,6 @@ contains
     !----------------------------------------------------------------
     ! GET CALIBRATABLE MODEL PARAMETERS (so far a small list)
     !----------------------------------------------------------------
-<<<<<<< HEAD
-    myinterface%params_calib%kphio       = real(par(1))
-    myinterface%params_calib%soilm_par_a = real(par(2))
-    myinterface%params_calib%soilm_par_b = real(par(3))
-    myinterface%params_calib%kphio_par_a = real(par(4))
-    myinterface%params_calib%kphio_par_b = real(par(5))
-    myinterface%params_calib%kphio_par_c = real(par(6))
-    myinterface%params_calib%kphio_par_d = real(par(7))
-    myinterface%params_calib%kphio_par_e = real(par(8))
-=======
     myinterface%params_calib%kphio              = real(par(1))
     myinterface%params_calib%kphio_par_a        = real(par(2))
     myinterface%params_calib%kphio_par_b        = real(par(3))
@@ -149,7 +133,10 @@ contains
     myinterface%params_calib%rd_to_vcmax        = real(par(7))
     myinterface%params_calib%tau_acclim         = real(par(8))
     myinterface%params_calib%kc_jmax            = real(par(9))
->>>>>>> master
+    myinterface%params_calib%coldacclim_par_a   = real(par(10))
+    myinterface%params_calib%coldacclim_par_b   = real(par(11))
+    myinterface%params_calib%coldacclim_par_c   = real(par(12))
+    myinterface%params_calib%coldacclim_par_d   = real(par(13))
 
     !----------------------------------------------------------------
     ! GET VEGETATION COVER (fractional projective cover by PFT)
@@ -218,15 +205,11 @@ contains
         output(idx_start:idx_end,12) = dble(out_biosphere%chi(:))
         output(idx_start:idx_end,13) = dble(out_biosphere%iwue(:))
         output(idx_start:idx_end,14) = dble(out_biosphere%rd(:))
-<<<<<<< HEAD
-        output(idx_start:idx_end,15) = dble(out_biosphere%snow(:))
-=======
         output(idx_start:idx_end,15) = dble(out_biosphere%tsoil(:))
         output(idx_start:idx_end,16) = dble(out_biosphere%netrad(:))
         output(idx_start:idx_end,17) = dble(out_biosphere%wcont(:))
         output(idx_start:idx_end,18) = dble(out_biosphere%snow(:))
         output(idx_start:idx_end,19) = dble(out_biosphere%cond(:))
->>>>>>> master
 
       end if
 

@@ -143,22 +143,12 @@ runread_pmodel_f <- function(
       multidplyr::partition(cl) %>% 
       dplyr::mutate(data = purrr::map(input, 
                                       ~run_pmodel_f_bysite(
-<<<<<<< HEAD
-                                        sitename       = .x$sitename[[1]], 
-                                        params_siml    = .x$params_siml[[1]], 
-                                        site_info      = .x$site_info[[1]], 
-                                        forcing        = .x$forcing[[1]], 
-                                        params_soil    = .x$params_soil[[1]], 
-                                        par            = par, 
-                                        makecheck      = makecheck )
-=======
                                         sitename    = .x$sitename[[1]], 
                                         params_siml = .x$params_siml[[1]], 
                                         site_info   = .x$site_info[[1]], 
                                         forcing     = .x$forcing[[1]], 
                                         par         = par, 
                                         makecheck   = makecheck )
->>>>>>> master
       ))
     
     # collect the cluster data

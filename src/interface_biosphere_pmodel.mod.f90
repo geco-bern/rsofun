@@ -18,15 +18,6 @@ module md_interface_pmodel
 
   type paramstype_calib
     real :: kphio
-<<<<<<< HEAD
-    real :: soilm_par_a
-    real :: soilm_par_b
-    real :: kphio_par_a
-    real :: kphio_par_b
-    real :: kphio_par_c
-    real :: kphio_par_d
-    real :: kphio_par_e
-=======
     real :: kphio_par_a
     real :: kphio_par_b
     real :: soilm_thetastar
@@ -35,9 +26,11 @@ module md_interface_pmodel
     real :: rd_to_vcmax
     real :: tau_acclim
     real :: kc_jmax
->>>>>>> master
-  end type paramstype_calib  
-
+    real :: coldacclim_par_a
+    real :: coldacclim_par_b
+    real :: coldacclim_par_c
+    real :: coldacclim_par_d
+  end type paramstype_calib
 
   type interfacetype_biosphere
     integer                                 :: year
@@ -74,7 +67,6 @@ module md_interface_pmodel
     real, dimension(ndayyear) :: wscal
     real, dimension(ndayyear) :: chi
     real, dimension(ndayyear) :: iwue
-    real, dimension(ndayyear) :: snow
     real, dimension(ndayyear) :: rd
     real, dimension(ndayyear) :: tsoil         ! soil temperature, deg C
     real, dimension(ndayyear) :: netrad

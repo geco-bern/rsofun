@@ -95,18 +95,18 @@ calib_sofun <- function(
   lower <- upper <- out_optim <- NULL
   
   # check input variables
-  if(missing(obs) | missing(drivers) | missing(settings)){
+  if (missing(obs) | missing(drivers) | missing(settings)){
     stop("missing input arguments, please check all parameters")
   }
   
   # check data structure
-  if(is.data.frame(obs)){
+  if (is.data.frame(obs)){
     if (nrow(obs) == 0){
       warning("no validation data available, returning NA parameters")
       return(lapply(settings$par,
                     function(x) NA))
     }
-  }else{
+  } else {
     stop("obs must be a (nested) data.frame")
   }
   
@@ -121,16 +121,6 @@ calib_sofun <- function(
     upper <- unlist(lapply(settings$par, function(x) x$upper))
     pars  <- unlist(lapply(settings$par, function(x) x$init))
     
-<<<<<<< HEAD
-    out_optim <- GenSA::GenSA(
-      par     = pars,
-      fn      = cost,
-      lower   = lower,
-      upper   = upper,
-      control = settings$control,
-      obs     = obs,
-      drivers = drivers
-=======
     out <- GenSA::GenSA(
       par   = pars,
       fn    = cost,
@@ -140,11 +130,11 @@ calib_sofun <- function(
       obs = obs,
       drivers = drivers,
       ...
->>>>>>> master
     )
-    if(optim_out){
+
+    if (optim_out){
       out_optim <- list(par = out$par, mod = out)
-    }else{
+    } else {
       out_optim <- list(par = out$par)
     }
     
@@ -171,66 +161,6 @@ calib_sofun <- function(
       unlist(pars$init)
     )
     
-<<<<<<< HEAD
-    ## Hack: determine whether cost function is a bayesian-style likelihood function or a "traditional" cost function
-    ## traditional cost functions as implemented here have an argument 'inverse'. Use that to determine and if so
-    ## set it to TRUE to use the cost function.
-    ## solution with 'header' is based on https://stackoverflow.com/questions/30125590/how-can-a-function-return-its-name-and-arguments-in-r 
-    ## this may break if argument 'inverse' is abandoned and a better solution should be found eventually.
-    header <- function(x){
-      UseMethod('header', x)
-    }
-    header.function <-function(x){
-      y<-list(args(x))
-      x<-as.character(substitute(x))
-      print(sprintf('%s=%s',x,y))
-    }
-    if (grepl("inverse" , header(cost))){
-
-      # setup the bayes run, no message forwarding is provided
-      # so wrap the function in a do.call
-      setup <- BayesianTools::createBayesianSetup(
-        likelihood = function(
-          random_par,
-          par_names = names(settings$par)) {
-                do.call("cost",
-                        list(
-                          par = random_par,
-                          obs = obs,
-                          drivers = drivers,
-                          # This is a hack. BayesianTools expects a likelihood function to be calculated here, 
-                          # but we're just calculating the RMSE and return its inverse (we want the RMSE 
-                          # minimised, its inverse maximised - imitating likelihood maximisation)
-                          inverse = TRUE     
-                        ))
-              },
-          prior = priors,
-          names = names(settings$par)
-        )    
-      
-    } else {
-
-      # setup the bayes run, no message forwarding is provided
-      # so wrap the function in a do.call
-      setup <- BayesianTools::createBayesianSetup(
-        likelihood = function(
-          random_par,
-          par_names = names(settings$par)) {
-                do.call("cost",
-                        list(
-                          par = random_par,
-                          par_names = par_names,
-                          obs = obs,
-                          targets = settings$targets,
-                          drivers = drivers
-                        ))
-              },
-          prior = priors,
-          names = names(settings$par)
-        )   
-    }
-
-=======
     # setup the bayes run, no message forwarding is provided
     # so wrap the function in a do.call
     setup <- BayesianTools::createBayesianSetup(
@@ -246,7 +176,6 @@ calib_sofun <- function(
     prior = priors,
     names = names(settings$par)
     )    
->>>>>>> master
     
     # set bt control parameters
     bt_settings <- settings$control$settings
@@ -261,9 +190,9 @@ calib_sofun <- function(
     # drop last value
     bt_par <- BayesianTools::MAP(out)$parametersMAP
     bt_par <- bt_par[1:(length(bt_par))]
-    if(optim_out){
+    if (optim_out){
       out_optim <- list(par = bt_par, mod = out)
-    }else{
+    } else {
       out_optim <- list(par = bt_par)
     }
     

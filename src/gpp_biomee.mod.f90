@@ -52,11 +52,7 @@ contains
     !------------------------------------------------------------------------
     use md_forcing_biomee, only: climate_type
     use md_photosynth, only: pmodel, zero_pmodel, outtype_pmodel, calc_ftemp_inst_rd
-<<<<<<< HEAD:src/gpp_lm3ppa.mod.f90
-    use md_photosynth, only: calc_ftemp_kphio_coldhard, calc_ftemp_kphio, calc_soilmstress
-=======
-    use md_photosynth, only: calc_kphio_temp, calc_soilmstress
->>>>>>> master:src/gpp_biomee.mod.f90
+    use md_photosynth, only: calc_coldacclim, calc_kphio_temp, calc_soilmstress
     use md_params_core, only: kTkelvin, kfFEC, c_molmass
     use md_sofunutils, only: dampen_variability
 
