@@ -121,7 +121,8 @@ contains
       lu = 1
     
       !----------------------------------------------------------------
-      ! Low-temperature effect on quantum yield efficiency 
+      ! Low-temperature effect on quantum yield efficiency: updates 
+      ! coldhardiness acclimation factor 'level_hard' (0-1). 
       !----------------------------------------------------------------
       ! take the instananeously varying temperature for governing quantum yield variations
       if (abs(params_pft_gpp(pft)%kphio_par_a) < eps) then
@@ -140,7 +141,6 @@ contains
       ! acclimated to slowly varying conditions
       !----------------------------------------------------------------
       if (tile(lu)%plant(pft)%fpc_grid > 0.0 .and. &      ! PFT is present
-          grid%dayl > 0.0 .and.                    &      ! no arctic night
           temp_memory > -30.0 ) then                      ! minimum temp threshold to avoid fpe
 
         !================================================================
@@ -148,7 +148,7 @@ contains
         ! damped climate forcing.
         !----------------------------------------------------------------
         out_pmodel = pmodel(  &
-                              kphio          = kphio_temp, &
+                              kphio          = kphio_temp * level_hard, &
                               beta           = params_gpp%beta, &
                               kc_jmax        = params_gpp%kc_jmax, &
                               ppfd           = ppfd_memory, &

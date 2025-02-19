@@ -29,8 +29,9 @@ module md_interface_pmodel
     real :: kphio_par_c
     real :: kphio_par_d
     real :: kphio_par_e
+    real :: coldacclim_par_c
+    real :: coldacclim_par_d
   end type paramstype_calib  
-
 
   type interfacetype_biosphere
     integer                                 :: year
