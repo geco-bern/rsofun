@@ -16,44 +16,54 @@ if(!exists('par_calib')){
     'analysis/02-bayesian-calibration.R')) # path relative to project location
 }
 
+# run 02-bayesian-calibration.R to create the file containing the calibration result
+par_calib <- readRDS(file = paste0("./analysis/paper_results_files/par_calib.rds"))
+
 # Set random seed for reproducibility
 set.seed(2023)
 
 # Evaluation of the uncertainty coming from the model parameters' uncertainty
 
 # Sample parameter values from the posterior distribution
-samples_par <- getSample(par_calib$mod,
-                         thin = 60,              # get 600 samples in total
-                         whichParameters = 1:4) |>
+samples_par <- getSample(
+  par_calib$mod,
+  thin = 60
+  ) |>
   as.data.frame() |>
   dplyr::mutate(mcmc_id = 1:n()) |>
   tidyr::nest(.by = mcmc_id, .key = "pars")
 
 # Define function to run model for a set of sampled parameters
-run_pmodel <- function(sample_par){
+run_pmodel <- function(par){
   # Function that runs the P-model for a sample of parameters
   # and also adds the new observation error
   
   out <- runread_pmodel_f(
     drivers = p_model_drivers,
-    par =  list(                      # copied from par_fixed above
-      kphio = sample_par$kphio,
-      kphio_par_a = -0.0025,
-      kphio_par_b = sample_par$kphio_par_b,
-      soilm_thetastar    = 0.6*240,
-      soilm_betao        = 0.2,
+    par =  list(
+      kphio              = par$kphio,
+      kphio_par_a        = par$kphio_par_a,
+      kphio_par_b        = par$kphio_par_b,
+      soilm_thetastar    = par$soilm_thetastar,
+      soilm_betao        = par$soilm_betao,
       beta_unitcostratio = 146.0,
       rd_to_vcmax        = 0.014,
-      tau_acclim         = 30.0,
-      kc_jmax            = sample_par$kc_jmax)       # value from posterior
+      tau_acclim         = 20.0,
+      kc_jmax            = 0.41
+      )
   )
   
   # return modelled GPP and prediction for a new GPP observation
   gpp <- out$data[[1]][, "gpp"]
-  data.frame(gpp = gpp, 
-             gpp_pred = rnorm(n = length(gpp), mean = gpp,
-                                    sd = sample_par$err_gpp),
-             date = out$data[[1]][, "date"])
+  out <- data.frame(
+    gpp = gpp, 
+    gpp_pred = rnorm(
+      n = length(gpp), 
+      mean = gpp,
+      sd = par$err_gpp
+      ),
+    date = out$data[[1]][, "date"])
+  return(out)
 }
 
 # Run the P-model for each set of parameters
@@ -72,6 +82,15 @@ pmodel_runs <- samples_par |>
     gpp_pred_q95 = quantile(gpp_pred, 0.95, na.rm = TRUE)
   )
 
+saveRDS(pmodel_runs, file = paste0("./analysis/paper_results_files/pmodel_runs.rds"))
+
+# Run model with maximum a posteriori parameter estimates (not shown on plot).
+pmodel_run_map <- run_pmodel(
+  MAP(par_calib$mod)$parametersMAP |> 
+    t() |> 
+    as_tibble()
+)
+
 # Plot the credible intervals computed above
 # for the first year only
 data_to_plot <- pmodel_runs |>
@@ -81,34 +100,50 @@ data_to_plot <- pmodel_runs |>
     # Merge GPP validation data (first year)
     p_model_validation$data[[1]][1:365, ] |>
       dplyr::rename(gpp_obs = gpp),
-    by = "date")
+    by = "date") |> 
+  dplyr::left_join(
+    pmodel_run_map |> 
+      dplyr::select(date, gpp_map = gpp),
+    by = "date"
+  )
 
 plot_gpp_error <- ggplot(data = data_to_plot) +
   geom_ribbon(
-    aes(ymin = gpp_pred_q05,
-        ymax = gpp_pred_q95,
-        x = date,
-        fill = "Model uncertainty"
+    aes(
+      ymin = gpp_pred_q05,
+      ymax = gpp_pred_q95,
+      x = date,
+      fill = "Model uncertainty"
     )) +
   geom_ribbon(
-    aes(ymin = gpp_q05, 
-        ymax = gpp_q95,
-        x = date,
-        fill = "Parameter uncertainty"
+    aes(
+      ymin = gpp_q05, 
+      ymax = gpp_q95,
+      x = date,
+      fill = "Parameter uncertainty"
     )) +
   # Include observations in the plot
   geom_point(
-    aes(x = date,
-        y = gpp_obs,
-        color = "Observations"
+    aes(
+      x = date,
+     y = gpp_obs,
+     color = "Observations"
     ),
   ) +
   geom_line(
-    aes(x = date,
-        y = gpp_q50,
-        color = "Predictions"
+    aes(
+      x = date,
+      y = gpp_q50,
+      color = "Predictions"
     )
   ) +
+  # geom_line(
+  #   aes(
+  #     x = date,
+  #     y = gpp_map,
+  #     color = "MAP"
+  #   )
+  # ) +
   theme_classic() +
   theme(panel.grid.major.y = element_line(),
         legend.position = "bottom") +
@@ -131,5 +166,6 @@ plot_gpp_error <- plot_gpp_error +
 plot_gpp_error
 
 settings_string <- get_settings_str(par_calib)
-ggsave(paste0("./analysis/paper_results_files/",settings_string,"_gpp_predictions_observations.pdf"), plot = plot_gpp_error, width = 6, height = 5)
-ggsave(paste0("./analysis/paper_results_files/",settings_string,"_gpp_predictions_observations.png"), plot = plot_gpp_error, width = 6, height = 5)
+
+ggsave(paste0("./analysis/paper_results_files/gpp_predictions_observations.pdf"), plot = plot_gpp_error, width = 6, height = 5)
+ggsave(paste0("./analysis/paper_results_files/gpp_predictions_observations.png"), plot = plot_gpp_error, width = 6, height = 5)

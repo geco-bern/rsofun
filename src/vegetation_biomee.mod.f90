@@ -1449,7 +1449,7 @@ contains
     integer :: i
 
     ! We artificially refill N inorg
-    if (myinterface%params_siml%do_closedN_run) vegn%ninorg%n14 = 0.2
+    if (myinterface%params_siml%do_closedN_run) vegn%ninorg%n14 = myinterface%init_soil%init_Nmineral
 
     ! Nitrogen uptake parameter
     ! It considers competition here. How much N one can absorp depends on 
