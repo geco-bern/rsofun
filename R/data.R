@@ -344,7 +344,26 @@
 #'      The array is a nxn square matrix, where n is the number of LU (i.e. dimension of init_lu).
 #'      Each cell f(i, j) expresses the fraction of LU i (row) being transfered to LU j (column).
 #'      Self transitions are allowed, meaning that a fraction of the land unit is clear cut, but the area remains in the same land use.
-#' }
+#'      Note: must not be used if \code{luh2} is provided.}
+#'   \item{luh2}{A data.frame containing parameters for parsing LUH2 data instead of \code{lu_forcing} and set up \code{init_lu} if the latter is not provided.
+#'     LUH2 data can be downloaded at this address: https://luh.umd.edu/data.shtml.
+#'     The cell extracted is the closest cell from the coordinates provided in \code{site_info}.
+#'     Includes the following data:
+#'     \describe{
+#'       \item{cst_file}{Path to staticDataquarterdeg.nc ncdf file}
+#'       \item{state_file}{Path to states.nc ncdf file}
+#'       \item{trans_file}{trans_file Path to transitions.nc ncdf file}
+#'       \item{start}{Time index to start extracting data. Default: 1}
+#'       \item{n}{Number of years to extract. Default: \code{params_siml$nyeartrend}}
+#'       \item{simplified}{Flag indicating whether the 12 original LUH2 states should be simplified to 5. Default: FALSE
+#'       If TRUE, the merging is as follows:
+#'         primf, primn -> prim
+#'         secdf, secdn -> prim
+#'         urban -> urban
+#'         cxxxx -> cropland
+#'         pastr, rang -> pasture
+#'       }
+#'     }}
 #' }
 "biomee_gs_leuning_drivers"
 

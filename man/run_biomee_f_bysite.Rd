@@ -15,6 +15,7 @@ run_biomee_f_bysite(
   init_soil,
   init_lu = NULL,
   luc_forcing = NULL,
+  luh2 = NULL,
   makecheck = TRUE
 )
 }
@@ -38,7 +39,9 @@ with one species per row. See examples \code{\link{biomee_gs_leuning_drivers}} o
 
 \item{init_lu}{A data.frame of initial land unit (LU) specifications.}
 
-\item{luc_forcing}{An array of land use change (LUC) used during transient phase.
+\item{luc_forcing}{An array of land use change (LUC) used during transient phase. Must not be provided if \code{luh2} is.}
+
+\item{luh2}{A data.frame containing parameters for parsing LUH2 data instead of \code{lu_forcing} and set up \code{init_lu} (if not provided).
 
 For further specifications of above inputs and examples see \code{\link{biomee_gs_leuning_drivers}} or \code{\link{biomee_p_model_drivers}}.}
 

@@ -68,7 +68,8 @@ Imports:
     BayesianTools,
     multidplyr,
     stats,
-    utils
+    utils,
+    ncdf4
 LazyData: true
 LazyDataCompression: xz
 ByteCompile: true

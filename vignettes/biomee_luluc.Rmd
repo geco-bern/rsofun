@@ -47,6 +47,7 @@ In effect, this models the forestry practice of clear-cutting as well as crop ha
 ### Other land management practices
 
 LUs can furthermore be tailored to model broad categories of land management:
+
 - which species grow in the LU (or none in the case of an urban area),
 - fixed addition of nitrogen (N fertilization)
 - extra soil turnover rate (ex: tillage)
@@ -122,7 +123,7 @@ Next, we define some convenience functions for displaying plots:
 library(gridExtra)
 library(purrr)
 
-plot1 <- function(lu_name, variable, out, y_limit=NA) {
+plot1 <- function(lu_name, variable, out, y_limit=NA, yr_start=1) {
   tile <- out[[lu_name]][[1]]
   if(lu_name != 'aggregated')
           tile <- tile$output_annual_tile
@@ -131,7 +132,7 @@ plot1 <- function(lu_name, variable, out, y_limit=NA) {
           ggplot() +
           geom_line(aes(x = year,
                         y = get(variable) * lu_fraction)) +
-          xlim(0, NA) +
+          xlim(yr_start, NA) +
           ylim(0, y_limit) +
           theme_classic() +
           labs(x = "Year", y = paste(variable, "(", lu_name, ")"))
@@ -140,7 +141,7 @@ plot1 <- function(lu_name, variable, out, y_limit=NA) {
             ggplot() +
             geom_line(aes(x = year,
                           y = get(variable))) +
-            xlim(0, NA) +
+            xlim(yr_start, NA) +
             ylim(0, y_limit) +
             theme_classic() +
             labs(x = "Year", y = paste(variable, "(", lu_name, ")"))
@@ -149,18 +150,21 @@ plot1 <- function(lu_name, variable, out, y_limit=NA) {
   return(res)
 }
 
-plot_variable <- function(variable, out) {
+plot_variable <- function(variable, out, yr_start=1) {
   agg <- out[['aggregated']][[1]]
   y_limit <- max(agg[variable] * agg$lu_fraction) * 1.01
 
-  names <- c(df_drivers$init_lu[[1]]$name, 'aggregated')
+  # We remove sitename and aggregated
+  tile_names <- names(out)[3:length(names(out))]
 
-  names |> lmap(\(x) plot1(x, variable, out, y_limit))
+  names <- c(tile_names, 'aggregated')
+
+  names |> lmap(\(x) plot1(x, variable, out, y_limit, yr_start))
 }
 
-plot_variables <- function(variables, out) {
+plot_variables <- function(variables, out, yr_start=1) {
 
-  plots <- variables |> lmap(\(x) plot_variable(x, out))
+  plots <- variables |> lmap(\(x) plot_variable(x, out, yr_start))
   grid.arrange(grobs=plots, nrow = length(variables))
 }
 ```
@@ -364,3 +368,104 @@ Notes:
 
 - Crop harvesting is already included in land management (via `oxidized_litter_fraction`), so it does not require a self-transition as for wood harvesting.
 - This example uses a dummy C4 grass setup (species 1) and would not yield meaningful results.
+
+## LUH2 integration
+
+BiomeE can work directly with LUH2 v2 data (https://luh.umd.edu/data.shtml).
+
+### Automatic configuration
+
+Below is an example of minimal configuration:
+
+```{r eval = FALSE}
+df_drivers <- biomee_p_model_drivers
+# Disable daily diagnostics (optional)
+df_drivers$params_siml[[1]]$daily_diagnostics <- FALSE
+
+# Simulate for 10 years after the spinup period. By default the same number of years are extracted from LUH2 dtaa.
+df_drivers$params_siml[[1]]$nyeartrend <- 10
+# In order to extract a custom number of years, set the following:
+# df_drivers$luh2[[1]]$n <- ...
+# By default the extraction start at the first year in the ncdf files. To extract from a custom index:
+# df_drivers$luh2[[1]]$start <- ...
+
+# Setting the path to LUH2 files. These may be different on your computer.
+df_drivers$luh2[[1]]$cst_file   <- 'path/to/staticData_quarterdeg.nc'
+df_drivers$luh2[[1]]$state_file <- 'path/to/states.nc'
+df_drivers$luh2[[1]]$trans_file <- 'path/to/transitions.nc'
+
+# Indicate whether to use simplified states.
+df_drivers$luh2[[1]]$simplified <- TRUE
+# By default all the states defined in LUH2 v2 are used (12 states)
+# In the simplified mode, only 5 states are used:
+# prim     <- primf + primn
+# secd     <- secdf + secdn
+# urban    <- urban
+# cropland <- cxxxx
+# pasture  <- pastr + range
+```
+
+Then run the simulation as before.
+
+Notes:
+
+- Extracting data from LUH2 ncdf files may take some time.
+- The cell that is extracted from LUH2 data is the closest cell from the coordinates provided in site_info.
+- If no `init_lu` is present in the configuration, a default configuration is automatically generated. If you wish to provide your own, make sure to use the right state names.
+- When using LUH2 data, `luc_forcing` must not be provided in the driver.
+
+### Manual configuration
+
+The automatic configuration presented above is convenient, but parsing LUH2 data is slow, so it might be worth parsing once and
+storing the transitions for later reuse. This can be done using `parse_luh2`, then manually building the `init_lu` configuration:
+
+```{r eval = FALSE}
+# We start from the example driver
+df_drivers_luh2 <- biomee_p_model_luluc_drivers
+
+# The LUH2 dataset contains 80 years
+df_drivers_luh2$params_siml[[1]]$nyeartrend <- 80
+df_drivers_luh2$params_siml[[1]]$daily_diagnostics <- FALSE
+
+# Files downloaded from https://luh.umd.edu/data.shtml)
+# These path may be different on your machine.
+cst_file   <- '~/RPC2.6_SSP1/staticData_quarterdeg.nc'
+state_file <- '~/RPC2.6_SSP1/multiple-states_input4MIPs_landState_ScenarioMIP_UofMD-IMAGE-ssp126-2-1-f_gn_2015-2100.nc'
+trans_file <- '~/RPC2.6_SSP1/multiple-transitions_input4MIPs_landState_ScenarioMIP_UofMD-IMAGE-ssp126-2-1-f_gn_2015-2100.nc'
+
+# Parse LUH2 data
+parsed_luh2 <- parse_luh2(cst_file, state_file, trans_file,
+                          df_drivers_luh2$site_info[[1]]$lon, df_drivers_luh2$site_info[[1]]$lat,
+                          start=1, n=df_drivers_luh2$params_siml[[1]]$nyeartrend, # We parse the whole dataset
+                          simplified=TRUE # simplified mode: 5 states only
+)
+
+# Create the init_lu config
+init_lu <- tibble(
+        # Keep these two lines
+        name      = names(parsed_luh2$states_init),
+        fraction  = parsed_luh2$states_init,
+        # The following line should be taylored to your application:
+        preset    = c(rep('unmanaged', 2), 'urban', 'cropland', 'pasture')
+        # In addition more fine-graind parameters could be set ('extra_N_input', 'extra_turnover_rate', 'oxidized_litter_fraction')
+)
+
+# Set init_lu and luc_forcing in driver
+df_drivers_luh2$init_lu[[1]] <- init_lu
+df_drivers_luh2$luc_forcing[[1]] <- parsed_luh2$luc_matrix
+
+# Note: in this example, we do not set df_drivers$init_cohort for brevity, but it should be done as well as demonstrated in the previous sections.
+```
+
+```{r load luluc driver, include = FALSE}
+# Since the LUH2 data is not stored in this repo, we load the driver from disk
+#saveRDS(df_drivers_luh2, "files/biomee_luluc.Rmd__biomee_p_model_luluc_driver.RDS")
+df_drivers_luh2 <- readRDS("files/biomee_luluc.Rmd__biomee_p_model_luluc_driver.RDS")
+```
+
+We can now simulate and display the plots:
+
+```{r eval = TRUE, results = 'hide', warning = FALSE, fig.width=7, fig.height=7}
+out_sim_3 <- runread_biomee_f(df_drivers_luh2)
+plot_variables(c('GPP', 'fastSOM', 'lu_fraction'), out_sim_3, df_drivers_luh2$params_siml[[1]]$spinupyears)
+```
