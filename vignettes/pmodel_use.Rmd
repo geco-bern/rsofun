@@ -113,7 +113,7 @@ plot_eval <- function(df, is_gpp = TRUE, return_gg1 = FALSE, return_gg2 = FALSE)
     theme_classic() +
     geom_abline(intercept = 0, slope = 1, linetype = "dotted") +
     geom_hline(yintercept = 0, linetype = "dotted") +
-    geom_vline(xintercept = 0, linetype = "dotted")+ 
+    geom_vline(xintercept = 0, linetype = "dotted") + 
     geom_smooth(method = "lm", formula = y ~ x + 0, color = "red", size = 0.5, se = FALSE) +
     xlim(lims[1], lims[2]) + 
     ylim(lims[1], lims[2]) +
