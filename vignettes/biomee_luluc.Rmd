@@ -127,14 +127,14 @@ Next, we define some convenience functions for displaying plots:
 library(gridExtra)
 library(purrr)
 
-plot1 <- function(lu_name, variable, out, y_limit=NA, yr_start=1) {
+plot1 <- function(lu_name, variable, out, y_limit=NA, yr_start=1, yr_label_offset=0) {
   tile <- out[[lu_name]][[1]]
   if(lu_name != 'aggregated')
           tile <- tile$output_annual_tile
   if (variable != 'lu_fraction') {
     res <- tile %>%
           ggplot() +
-          geom_line(aes(x = year,
+          geom_line(aes(x = year + yr_label_offset,
                         y = get(variable) * lu_fraction)) +
           xlim(yr_start, NA) +
           ylim(0, y_limit) +
@@ -143,7 +143,7 @@ plot1 <- function(lu_name, variable, out, y_limit=NA, yr_start=1) {
   } else {
     res <- tile %>%
             ggplot() +
-            geom_line(aes(x = year,
+            geom_line(aes(x = year + yr_label_offset,
                           y = get(variable))) +
             xlim(yr_start, NA) +
             ylim(0, y_limit) +
@@ -154,7 +154,7 @@ plot1 <- function(lu_name, variable, out, y_limit=NA, yr_start=1) {
   return(res)
 }
 
-plot_variable <- function(variable, out, yr_start=1) {
+plot_variable <- function(variable, out, yr_start=1, yr_label_offset=0) {
   agg <- out[['aggregated']][[1]]
   y_limit <- max(agg[variable] * agg$lu_fraction) * 1.01
 
@@ -163,12 +163,12 @@ plot_variable <- function(variable, out, yr_start=1) {
 
   names <- c(tile_names, 'aggregated')
 
-  names |> lmap(\(x) plot1(x, variable, out, y_limit, yr_start))
+  names |> lmap(\(x) plot1(x, variable, out, y_limit, yr_start, yr_label_offset))
 }
 
-plot_variables <- function(variables, out, yr_start=1) {
+plot_variables <- function(variables, out, yr_start=1, yr_label_offset=0) {
 
-  plots <- variables |> lmap(\(x) plot_variable(x, out, yr_start))
+  plots <- variables |> lmap(\(x) plot_variable(x, out, yr_start, yr_label_offset))
   grid.arrange(grobs=plots, nrow = length(variables))
 }
 ```
@@ -433,7 +433,7 @@ df_drivers_luh2 <- biomee_p_model_luluc_drivers
 df_drivers_luh2$params_siml[[1]]$nyeartrend <- 85
 df_drivers_luh2$params_siml[[1]]$daily_diagnostics <- FALSE
 
-# Files downloaded from https://luh.umd.edu/data.shtml)
+# Data v2f SSP1 RPC2.6 downloaded from https://luh.umd.edu/data.shtml)
 # These paths may be different on your machine.
 state_file <- '~/RPC2.6_SSP1/multiple-states_input4MIPs_landState_ScenarioMIP_UofMD-IMAGE-ssp126-2-1-f_gn_2015-2100.nc'
 trans_file <- '~/RPC2.6_SSP1/multiple-transitions_input4MIPs_landState_ScenarioMIP_UofMD-IMAGE-ssp126-2-1-f_gn_2015-2100.nc'
@@ -472,5 +472,5 @@ We can now simulate and display the plots as before:
 
 ```{r eval = TRUE, results = 'hide', warning = FALSE, fig.width=7, fig.height=7}
 out_sim_3 <- runread_biomee_f(df_drivers_luh2)
-plot_variables(c('GPP', 'fastSOM', 'lu_fraction'), out_sim_3, df_drivers_luh2$params_siml[[1]]$spinupyears)
+plot_variables(c('GPP', 'fastSOM', 'lu_fraction'), out_sim_3, 2015, 2015 - df_drivers_luh2$params_siml[[1]]$spinupyears - 1)
 ```

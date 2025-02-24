@@ -51,6 +51,7 @@ build_luc_matrix <- function(patterns, n_lu, n_years, out=vector()) {
 #'
 #' Build land-use change (LUC) transition matrix and initial states from LUH2 v2 data (https://luh.umd.edu/data.shtml).
 #'
+#' @param state_file Path to states.nc ncdf file
 #' @param trans_file Path to transitions.nc ncdf file
 #' @param lon Longitude (degrees E)
 #' @param lat Latitude (degrees N)
