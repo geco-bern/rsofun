@@ -179,7 +179,7 @@
 
 #' rsofun BiomeE driver data (Leuning photosynthesis model)
 #' 
-#' Small dataset representing the driver to run the BiomeE-model at the CH-LAE site
+#' Example driver to run the BiomeE-model at the CH-LAE site
 #' using the Leuning photosynthesis specification (and half-hourly time step)
 #' It can also be used together with leaf trait data from CH-LAE (\code{\link{biomee_validation}}) 
 #' to optimize model parameters.
@@ -190,16 +190,14 @@
 #'   \item{params_siml}{Simulation parameters as a data.frame, including
 #'   the following data:
 #'     \describe{
-#'       \item{spinup}{Flag indicating whether this simulation does spin-up.}
-#'       \item{spinupyears}{Number of spin-up years.}
+#'       \item{spinup}{Flag indicating whether this simulation does spin-up (deprecated).}
+#'       \item{spinupyears}{Number of spin-up years. Set to 0 for no spinup.}
 #'       \item{recycle}{Number of first N years of forcing data.frame that are recycled for spin-up.}
 #'       \item{firstyeartrend}{Year of first transient year (AD) (optional). Is only used to set years in output data frames. Defaults to 0 if not provided.}
 #'       \item{nyeartrend}{Number of transient years (optional). Determines the length of simulation output after spin-up. Defaults to number of years contained in the forcing data. (If longer than forcing data, last year of forcing is repeated until the end (spin-down).)}
 #'       \item{steps_per_day}{Time resolution of the forcing (day-1).}
 #'       \item{do_U_shaped_mortality}{Flag indicating whether U-shaped
 #'         mortality is used.}
-#'       \item{update_annualLAImax}{Flag indicating whether updating
-#'         LAImax according to mineral N in soil.}
 #'       \item{do_closedN_run}{Flag indicating whether doing N closed
 #'         runs to recover N balance enforcing 0.2 kg N m-2 in the inorganic N pool.}
 #'       \item{code_method_photosynth}{String specifying the method of photosynthesis
@@ -208,6 +206,7 @@
 #'         model. One of the following: "dbh" is size-dependent mortality, "const_selfthin"
 #'         is constant self thinning (in development), "cstarvation" is carbon starvation, and
 #'         "growthrate" is growth rate dependent mortality.}
+#'       \item{daily_diagnostics}{Whether to output daily diagnostics ('output_daily_tile'). Default: True.}
 #'     }}
 #'   \item{site_info}{Site meta info in a data.frame.
 #' This data structure can be freely used for documenting the dataset, but must include at least the following data:
@@ -285,7 +284,7 @@
 #'       \item{betaOFF}{Critical soil moisture for phenology offset.}
 #'       \item{seedlingsize}{Initial size of seedlings, in kg C per individual.}
 #'       \item{LNbase}{Basal leaf N per unit area, in kg N m\eqn{^{-2}}.}
-#'       \item{lAImax}{Maximum crown LAI (leaf area index).}
+#'       \item{lAImax}{Maximum crown LAI (leaf area index) (not used, see LAI_light).}
 #'       \item{Nfixrate0}{Reference N fixation rate (kg N kg C\eqn{^{-1}} root).}
 #'       \item{NfixCost0}{Carbon cost of N fixation (kg C kg N\eqn{^{-1}}).}
 #'       \item{phiCSA}{Ratio of sapwood area to leaf area.}
@@ -315,6 +314,8 @@
 #'       \item{init_cohort_bHW}{Initial biomass of heartwood, in kg C per individual.}
 #'       \item{init_cohort_seedC}{Initial biomass of seed, in kg C per individual.}
 #'       \item{init_cohort_nsc}{Initial non-structural biomass, in kg C per individual.}
+#'       \item{lu_index}{Land use type this cohorts belongs to (given as index in init_lu aray).
+#'        Default: 0 (attach to all LU types except thoses which do not accept vegetation -- cf  init_lu.vegetated).}
 #'     }}
 #'   \item{init_soil}{A data.frame of initial soil pools, including
 #'   the following data:
@@ -325,12 +326,49 @@
 #'       \item{N_input}{Annual nitrogen input to soil N pool, in kg N m\eqn{^{-2}}
 #'         year\eqn{^{-1}}.}
 #'     }}
+#'   \item{init_lu}{A data.frame of initial land unit (LU) specifications, including
+#'     the following data:
+#'     \describe{
+#'       \item{fraction}{Initial cell fraction occupied by this LU, dimensionless (0 to 1).
+#'         The sum of all fractions is typically equal to 1, but may be less in which case the difference is the fraction of the grid cell occupied by ice/water.}
+#'       \item{preset}{Predefined land use type (optional). One of: 'unmanaged', 'urban', 'cropland', 'pasture'. See below for meaning of these presets. Leave empty to not use any preset.}
+#'       \item{vegetated}{Whether this LU accepts vegetation. Default for preset 'urban': False, default for other presets: True.}
+#'       \item{extra_N_input}{Additional inorg N supply (to account for N fertiliser application), in kg m-2 yr-1. Default for preset 'cropland': 0.01, default other presets: 0.}
+#'       \item{extra_turnover_rate}{Additional soil turnover rate (to account for soil management such as tillage), dimensionless. Default for preset 'cropland': 0.2, default for other presets: 0.}
+#'       \item{oxidized_litter_fraction}{Fraction of above-ground turnover that is directly oxidized (crop and grass harvest), dimensionless.
+#'         Default for preset 'cropland': 0.9, default for preset 'pasture': 0.4, default for other presets: 0.}
+#'     }}
+#'   \item{luc_forcing}{Array of land use change (LUC) used during transient phase.
+#'      During spinup, the initial land unit fractions are used (i.e. no transition).
+#'      If there are more transient years than provided LUC data, the last state is maintained until the end of the transient phase (i.e. no transition).
+#'      The array is a nxn square matrix, where n is the number of LU (i.e. dimension of init_lu).
+#'      Each cell f(i, j) expresses the fraction of LU i (row) being transfered to LU j (column).
+#'      Self transitions are allowed, meaning that a fraction of the land unit is clear cut, but the area remains in the same land use.
+#'      Note: must not be used if \code{luh2} is provided.}
+#'   \item{luh2}{A data.frame containing parameters for parsing LUH2 data instead of \code{lu_forcing} and set up \code{init_lu} if the latter is not provided.
+#'     LUH2 data can be downloaded at this address: https://luh.umd.edu/data.shtml.
+#'     The cell extracted is the closest cell from the coordinates provided in \code{site_info}.
+#'     Includes the following data:
+#'     \describe{
+#'       \item{state_file}{Path to states.nc ncdf file}
+#'       \item{trans_file}{trans_file Path to transitions.nc ncdf file}
+#'       \item{start}{Time index to start extracting data. Default: 1}
+#'       \item{n}{Number of years to extract. Default: \code{params_siml$nyeartrend}}
+#'       \item{simplified}{Flag indicating whether the 12 original LUH2 states should be simplified to 5. Default: FALSE
+#'       If TRUE, the merging is as follows:
+#'         primf, primn -> prim
+#'         secdf, secdn -> prim
+#'         urban -> urban
+#'         cxxxx -> cropland
+#'         pastr, rang -> pasture
+#'       }
+#'     }}
 #' }
 "biomee_gs_leuning_drivers"
 
 #' rsofun BiomeE driver data (P-model photosynthesis model)
 #' 
-#' Small dataset representing the driver to run the BiomeE-model at the CH-LAE site
+#' Example driver data to run the BiomeE-model at the CH-LAE site
 #' using the P-model photosynthesis specification (and daily time step).
 #' It can also be used together with leaf trait data from CH-LAE (\code{\link{biomee_validation}}) 
 #' to optimize model parameters.
@@ -339,6 +377,17 @@
 #'
 #' @inherit biomee_gs_leuning_drivers source
 "biomee_p_model_drivers"
+
+#' rsofun BiomeE driver data (P-model photosynthesis model) with LULUC
+#'
+#' Example driver data to run the BiomeE-model at the CH-LAE site
+#' using the P-model photosynthesis specification (and daily time step).
+#' It provides an example of land use change (LUC).
+#'
+#' @format See \code{\link{biomee_gs_leuning_drivers}}
+#'
+#' @inherit biomee_gs_leuning_drivers source
+"biomee_p_model_luluc_drivers"
 
 #' rsofun BiomeE targets validation data
 #'
@@ -356,16 +405,20 @@
 #' Dataset. https://doi.org/10.18140/FLX/1440134
 "biomee_validation"
 
-#' rsofun BiomeE (P-model) output data
-#'
-#' Example output dataset from a BiomeE-model run (p-model)
-#' See \code{\link{run_biomee_f_bysite}} for a detailed 
-#' description of the outputs.
-"biomee_p_model_output"
-
 #' rsofun BiomeE (gs_leuning) output data
 #'
-#' Example output dataset from a BiomeE-model run (gs_leuning)
-#' See \code{\link{run_biomee_f_bysite}} for a detailed 
-#' description of the outputs.
+#' Example output dataset from a BiomeE-model run using divers \code{\link{biomee_gs_leuning_drivers}}
+#' See \code{\link{runread_biomee_f}} and \code{\link{run_biomee_f_bysite}} for a detailed description of the outputs.
 "biomee_gs_leuning_output"
+
+#' rsofun BiomeE (P-model) output data
+#'
+#' Example output dataset from a BiomeE-model run using divers \code{\link{biomee_p_model_drivers}}
+#' See \code{\link{runread_biomee_f}} and \code{\link{run_biomee_f_bysite}} for a detailed description of the outputs.
+"biomee_p_model_output"
+
+#' rsofun BiomeE (P-model) output data
+#'
+#' Example output dataset from a BiomeE-model run using divers \code{\link{biomee_p_model_luluc_drivers}}
+#' See \code{\link{runread_biomee_f}} and \code{\link{run_biomee_f_bysite}} for a detailed description of the outputs.
+"biomee_p_model_luluc_output"
