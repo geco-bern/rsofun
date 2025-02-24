@@ -51,8 +51,6 @@ build_luc_matrix <- function(patterns, n_lu, n_years, out=vector()) {
 #'
 #' Build land-use change (LUC) transition matrix and initial states from LUH2 v2 data (https://luh.umd.edu/data.shtml).
 #'
-#' @param cst_file Path to staticDataquarterdeg.nc ncdf file
-#' @param state_file Path to states.nc ncdf file
 #' @param trans_file Path to transitions.nc ncdf file
 #' @param lon Longitude (degrees E)
 #' @param lat Latitude (degrees N)
@@ -64,20 +62,18 @@ build_luc_matrix <- function(patterns, n_lu, n_years, out=vector()) {
 #' @export
 #' @import ncdf4
 #' @importFrom utils head
-parse_luh2 <- function(cst_file, state_file, trans_file, lon, lat, start=1, n=-1, simplified=FALSE){
+parse_luh2 <- function(state_file, trans_file, lon, lat, start=1, n=-1, simplified=FALSE){
 
   ### Open the ncdf files
 
-  # CST[lon,lat]
-  nc_cst   <- nc_open(cst_file)
   # State[lon,lat,time]
   nc_state <- nc_open(state_file)
   # Trans[lon,lat,time]
   nc_trans <- nc_open(trans_file)
 
   ### Convert lon, lat into indices
-  lon_idx <- which.min(abs(nc_cst$dim$lon$vals - lon))
-  lat_idx <- which.min(abs(nc_cst$dim$lat$vals - lat))
+  lon_idx <- which.min(abs(nc_state$dim$lon$vals - lon))
+  lat_idx <- which.min(abs(nc_state$dim$lat$vals - lat))
 
   ### Convenience function to extract one variable from ncdf
   get_var <- function(var_name, data, lon_idx, lat_idx, start=1, n=-1) {
@@ -119,7 +115,6 @@ parse_luh2 <- function(cst_file, state_file, trans_file, lon, lat, start=1, n=-1
   trans <- sapply(trans_names, \(x) get_var(x, nc_trans, lon_idx, lat_idx, start, n))
 
   # Close all files
-  nc_close(nc_cst)
   nc_close(nc_state)
   nc_close(nc_trans)
 

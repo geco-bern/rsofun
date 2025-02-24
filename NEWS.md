@@ -16,7 +16,7 @@ drivers to protect against data corruption.
     * `underLAImax` takes value `min(LAImax, 1.2)`
   * `do_closedN_run` flag now uses initial inorganic N setting rather than arbitrary value and is false by default.
   * Modified drivers to use more sensibles values
-    * Species 0 is now a C4 crop
+    * Species 1 is now a C4 crop
     * `N_input` is set to 0.01 to limit N starvation.
 
 # rsofun v5.0.0

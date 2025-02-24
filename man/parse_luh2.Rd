@@ -5,7 +5,6 @@
 \title{Parse LUH2 data}
 \usage{
 parse_luh2(
-  cst_file,
   state_file,
   trans_file,
   lon,
@@ -16,10 +15,6 @@ parse_luh2(
 )
 }
 \arguments{
-\item{cst_file}{Path to staticDataquarterdeg.nc ncdf file}
-
-\item{state_file}{Path to states.nc ncdf file}
-
 \item{trans_file}{Path to transitions.nc ncdf file}
 
 \item{lon}{Longitude (degrees E)}

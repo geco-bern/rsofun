@@ -21,28 +21,30 @@ library(ggplot2)
 
 ## Overview
 
-BiomeE is a dynamic vegetation demography simulation engine capable of predicting the evolution of a *vegetation tile* characterized by static parameters (species, soil parameters, initial conditions, etc)
+BiomeE is a dynamic vegetation demography simulation engine capable of predicting the evolution of a *vegetation tile* characterized by static parameters (species, soil parameters, initial vegetation, etc)
 when subject to environmental forcing. To learn more, please refer to `vignette("BiomeE usage")`. Starting from v5.1, BiomeE is capable of simulating land use and land-use change (LULUC) by evolving multiple vegetation tiles, each with different vegetation types and/or different land-use practices. This section presents an overview of the concepts and methods.
 
 ### Fractional tiles
 
-Conceptually, BiomeE simulates a grid cell of area 1 (arbitrary unit) divided in several *land units* (LU). The *fraction* of the cell occupied by each LU varies with time driven by *land-use change* forcing.
-Each LU is implemented as a fractional tile, that is a vegetation tile associated with a scalar (`fraction`) keeping track of the area occupied by the LU.
+Conceptually, BiomeE simulates a grid cell of area 1 (arbitrary unit) divided in several *land units* (LU). The *fraction* of the cell occupied by each LU varies with time driven by *land-use change* (LUC) forcing.
+Each LU is implemented as a vegetation tile associated with the scalar `fraction` (indicating the fraction occupied by the LU).
 
 ### LU transitions
 
-A square transition matrix `T` encodes the exogenous yearly land-use change: `T_{i,j}` is the fraction of LU `i` transitioning to LU `j` on January 1st (start of the year).
-Such a LUC transition is modelled as a clear-cut of the fraction `T_{i,j}` in LU `i` and transfer of the corresponding area to LU `j`, along with the soil organic pools, water, and belowground biomass converted to litter.
+A square transition matrix $T$ encodes the exogenous yearly land-use change: $T_{i,j}$ is the fraction of LU $i$ transitioning to LU $j$ on January 1st (start of the year).
+Such a LUC transition is modelled as a clear-cut of the fraction $T_{i,j}$ in LU $i$ and transfer of the corresponding area to LU $j$, along with the soil organic pools, water, and belowground biomass converted to litter.
 The aboveground biomass is sent to 3 product pools with e-folding times of 0, 2 and 20 years respectively.
 
-Each transition found in the matrix is evaluated in turn and the transfer of matter to each destination LU is kept track of throughout the update process and finally added to the LUs.
-This gross transition heuristic provides better accuracy compared to a strategy where net transitions are considered (thereby transitions from `i` to and from `j` cancels each others out).
+Each transition found in the matrix is evaluated in turn, and the transfer of matter to each destination LU is accounted throughout the update process, to ultimately be added to the appropriate LUs.
+This gross transition heuristic provides better accuracy compared to a strategy where net transitions are considered (thereby transitions from $i$ to and from $j$ cancels each others out).
 
-### Clear-cut and harvest
+### Clear-cut and wood harvest
 
-The diagonal of the transition matrix contains self transitions `T_{i,i}`, where a fraction of LU `i` is clear-cut, but without any transfer of area, water or soil organic matter.
-The aboveground biomass as exported to the product pools, while the belowground biomass is converted to litter and remains in place.
-In effect, this models the forestry practice of clear-cutting as well as crop harvest.
+The diagonal of the transition matrix contains self transitions $T_{i,i}$, where a fraction of LU $i$ is clear-cut, but without any transfer of area, water or soil organic matter.
+The aboveground biomass is exported to the product pools, while the belowground biomass is converted to litter and remains in place.
+In effect, this models the forestry practice of clear-cutting.
+
+Note: crop harvest uses a different mechanism (direct litter oxidation). Self-transitions should therefore be used for wood harvest exclusively.
 
 ### Other land management practices
 
@@ -55,7 +57,7 @@ LUs can furthermore be tailored to model broad categories of land management:
 
 ### Output
 
-The output contains the cohort and tile annual diagnostics for each LU, as well as for a virtual tile aggregating each LU.
+The output contains the cohorts and tile annual diagnostics for each LU, as well as a virtual tile aggregating all the LUs of the grid cell.
 
 An example of output is available in the package:
 ```{r eval = FALSE}
@@ -73,7 +75,7 @@ This section demonstrates how to simulate LULUC with BiomeE.
 ### Setup
 
 The package contains an example of driver from the Swiss CH-LAE fluxnet site, using environmental data for the year 2009,
-where 40 % of an initial primary forest is clear-cut and convert to a secondary (yet unmanaged) forest.
+where 40% of an initial primary forest is clear-cut and convert to a secondary (yet unmanaged) forest.
 
 ```{r eval = FALSE}
 library(rsofun)
@@ -95,6 +97,7 @@ df_drivers$init_lu[[1]]
 ```
 
 There are two LU defined:
+
 - `primary`: with an initial fraction of 1
 - `secondary`: with an initial fraction of 0
 
@@ -112,7 +115,7 @@ In this case we have only one year, meaning that there is only one LU change at 
 
 ### Simulation
 
-We can now run the simulation:
+Let us run the simulation:
 
 ```{r eval = TRUE, results = 'hide', warning = FALSE}
 out_sim_1 <- runread_biomee_f(df_drivers)
@@ -176,17 +179,17 @@ We finally plot, for each LU and the aggregated tile, GPP, the litter carbon (`f
 plot_variables(c('GPP', 'fastSOM', 'lu_fraction'), out_sim_1)
 ```
 
-Looking at GPP (first row), the primary forest (left column) spins-up to steady state until year 250 which marks the end of the spin-up period and start of the transient period. A sharp drop corresponds to the loss of 40% of the area (see third row). The pattern corresponding to the steady-state continues but scaled down. We observe a similar behavior for the litter (second row).
+Looking at GPP (first row), the primary forest (left column) spins-up to steady state until year 250 which marks the start of the transient period. A sharp drop corresponds to the loss of 40% of the area (see third row). The pattern corresponding to the steady-state continues but scaled down. We observe a similar behavior for the litter (second row).
 
 The secondary forest (second column) has no data until year 250 as the initial fraction was 0.
 GPP increases until reaching steady-state as expected. Since the same species is used in both LU, the GPP stabilizes at the same level (proportionally to the LU fraction).
-The litter follows a different pattern: at year 250, it inherits a lot of litter from the primary LU. The amount of litter drops sharply due to natural processes and not replenishment because of the low initial productivity of the tile. As productivity increases (see GPP), the amount of litter finally increases again and stabilizes at a level proportional to its fraction.
+The litter follows a different pattern: at year 250, it inherits a lot of biomass from the primary forest. The amount of litter drops sharply due to natural processes and not replenishment because of the low initial productivity of the LU. As productivity increases (see GPP), the amount of litter finally increases again and stabilizes at a level proportional to its fraction.
 
-The third column displays the aggregated tile, summing each tile relative to its fraction.
+The third column displays the aggregated tile, summing each LU relative to its fraction.
 GPP shows a sharp drop then recovery. Litter shows a sharp increase (due to below ground biomass being converted to litter) followed by a drop (mineralization) then recovery.
-Finally, the fraction, remains constant throughout the simulation.
+Finally, as expected, the fraction of the aggregated tile remains constant throughout the simulation.
 
-To conclude this demonstration, we can plot the product pools:
+To conclude this demonstration, let us plot the product pools:
 
 ```{r eval = TRUE, results = 'hide', fig.width=7, fig.height=3}
 p1 <- out_sim_1$aggregated[[1]] %>%
@@ -204,17 +207,17 @@ p2 <- out_sim_1$aggregated[[1]] %>%
 grid.arrange(p1, p2, nrow = 1)
 ```
 
-As expected, the product pools get filled with the wood harvested and decay with their respective e-folding time.
+As expected, the product pools get filled with the wood harvest and decay with their respective e-folding times.
 
 ## Wood harvest and urbanism
 
 We will now implement a more complex scenario.
 In addition to the one time transition from a primary to a secondary forest:
 
-- each year, one thousand of the primary forest will transition to an urban tile,
-- every 40 years, one quarter of the secondary forest will be clear-cut (wood harvest), but the area will remain in the same tile.
+- each year, one thousands of the primary forest is converted to urban area,
+- every 40 years, one quarter of the secondary forest is clear-cut (wood harvest), but the area remains in the same tile.
 
-Furthermore, the species planted in the secondary forest is another one than that of the primary forest.
+Furthermore, the species planted in the secondary forest are different than that occurring naturally in the primary forest.
 
 Let us configure these requirements:
 
@@ -225,25 +228,11 @@ df_drivers <- biomee_p_model_luluc_drivers
 n_trans <- 300
 df_drivers$params_siml[[1]]$nyeartrend <- n_trans
 
-# We configure two cohorts with two different species (see 'init_cohort_species'): one for tile 1 and one for tile 2 (see 'lu_index').
-# Tile 3 is a urban tile: it does not accept any cohort.
-df_drivers$init_cohort[[1]] <- tibble(
-        init_cohort_species = c(2, 3),      # species
-        init_cohort_nindivs = rep(0.05, 2), # initial individual density, individual/m2 ! 1 indiv/m2 = 10.000 indiv/ha
-        init_cohort_bl      = rep(0.0,  2), # initial biomass of leaves, kg C/individual
-        init_cohort_br      = rep(0.0,  2), # initial biomass of fine roots, kg C/individual
-        init_cohort_bsw     = rep(0.05, 2), # initial biomass of sapwood, kg C/individual
-        init_cohort_bHW     = rep(0.0,  2), # initial biomass of heartwood, kg C/tree
-        init_cohort_seedC   = rep(0.0,  2), # initial biomass of seeds, kg C/individual
-        init_cohort_nsc     = rep(0.05, 2), # initial non-structural biomass
-        lu_index            = c(1, 2)       # index land use (LU) containing this cohort. 0 (default) means any vegetated tile will contain a copy.
-)
-
 lu_defs <- tibble(
         name      = c('primary', 'secondary', 'urban'),
         fraction  = c(1.0, 0.0, 0.0),
         # We defined which LU can accept vegetation cohorts
-        # Technically, this was not necessary since no 'lu_index' above points to the third LU
+        # Technically, this was not necessary since no 'lu_index' (see below) points to the third LU
         # (but it is a good idea to enforce this anyways)
         vegetated = c(TRUE, TRUE, FALSE)
         # Equivalently, presets could have been used instead:
@@ -275,6 +264,20 @@ transitions_matrix <- build_luc_matrix(list(initial_transition, harvest_transiti
 # We set the LU definitions and transition forcing in the driver:
 df_drivers$init_lu[[1]] <- lu_defs
 df_drivers$luc_forcing[[1]]  <- transitions_matrix
+
+# Finally, we configure two cohorts with two different species (see 'init_cohort_species'): one for tile 1 and one for tile 2 (see 'lu_index').
+# LU 3 is an urban tile: it does not accept any cohort.
+df_drivers$init_cohort[[1]] <- tibble(
+        init_cohort_species = c(2, 3),      # species
+        init_cohort_nindivs = rep(0.05, 2), # initial individual density, individual/m2 ! 1 indiv/m2 = 10.000 indiv/ha
+        init_cohort_bl      = rep(0.0,  2), # initial biomass of leaves, kg C/individual
+        init_cohort_br      = rep(0.0,  2), # initial biomass of fine roots, kg C/individual
+        init_cohort_bsw     = rep(0.05, 2), # initial biomass of sapwood, kg C/individual
+        init_cohort_bHW     = rep(0.0,  2), # initial biomass of heartwood, kg C/tree
+        init_cohort_seedC   = rep(0.0,  2), # initial biomass of seeds, kg C/individual
+        init_cohort_nsc     = rep(0.05, 2), # initial non-structural biomass
+        lu_index            = c(1, 2)       # index land use (LU) containing this cohort. 0 (default) means any vegetated tile will contain a copy.
+)
 ```
 
 We can now run the simulation and display some of the outputs:
@@ -284,7 +287,7 @@ out_sim_2 <- runread_biomee_f(df_drivers)
 plot_variables(c('GPP', 'fastSOM', 'lu_fraction'), out_sim_2)
 ```
 
-As expected GPP is null for the urban tile (non vegetation). Note that the litter for this tile is not zero, but too small to be seen at this scale.
+As expected GPP is null for the urban tile (no vegetation). Note that the litter for this tile is not zero, but too small to be seen at this scale.
 
 As before, we can also look at the product pools:
 
@@ -318,19 +321,6 @@ df_drivers <- biomee_p_model_luluc_drivers
 n_trans <- 300
 df_drivers$params_siml[[1]]$nyeartrend <- n_trans
 
-# We configure three cohorts
-df_drivers$init_cohort[[1]] <- tibble(
-        init_cohort_species = c(2, 1, 2),      # species
-        init_cohort_nindivs = rep(0.05, 3), # initial individual density, individual/m2 ! 1 indiv/m2 = 10.000 indiv/ha
-        init_cohort_bl      = rep(0.0,  3), # initial biomass of leaves, kg C/individual
-        init_cohort_br      = rep(0.0,  3), # initial biomass of fine roots, kg C/individual
-        init_cohort_bsw     = rep(0.05, 3), # initial biomass of sapwood, kg C/individual
-        init_cohort_bHW     = rep(0.0,  3), # initial biomass of heartwood, kg C/tree
-        init_cohort_seedC   = rep(0.0,  3), # initial biomass of seeds, kg C/individual
-        init_cohort_nsc     = rep(0.05, 3), # initial non-structural biomass
-        lu_index            = c(1, 2, 3)    # index land use (LU) containing this cohort. 0 (default) means any vegetated tile will contain a copy.
-)
-
 lu_defs <- tibble(
         name      = c('primary', 'crop', 'fallow'),
         fraction  = c(1.0, 0.0, 0.0),
@@ -361,18 +351,31 @@ transitions_matrix <- build_luc_matrix(list(initial_transition, fallow_transitio
 # We set the LU definitions and transition forcing in the driver:
 df_drivers$init_lu[[1]] <- lu_defs
 df_drivers$luc_forcing[[1]]  <- transitions_matrix
+
+# We configure three cohorts
+df_drivers$init_cohort[[1]] <- tibble(
+        init_cohort_species = c(2, 1, 2),      # species
+        init_cohort_nindivs = rep(0.05, 3), # initial individual density, individual/m2 ! 1 indiv/m2 = 10.000 indiv/ha
+        init_cohort_bl      = rep(0.0,  3), # initial biomass of leaves, kg C/individual
+        init_cohort_br      = rep(0.0,  3), # initial biomass of fine roots, kg C/individual
+        init_cohort_bsw     = rep(0.05, 3), # initial biomass of sapwood, kg C/individual
+        init_cohort_bHW     = rep(0.0,  3), # initial biomass of heartwood, kg C/tree
+        init_cohort_seedC   = rep(0.0,  3), # initial biomass of seeds, kg C/individual
+        init_cohort_nsc     = rep(0.05, 3), # initial non-structural biomass
+        lu_index            = c(1, 2, 3)    # index land use (LU) containing this cohort. 0 (default) means any vegetated tile will contain a copy.
+)
 ```
 
 We can now run the simulation as before.
 
 Notes:
 
-- Crop harvesting is already included in land management (via `oxidized_litter_fraction`), so it does not require a self-transition as for wood harvesting.
-- This example uses a dummy C4 grass setup (species 1) and would not yield meaningful results.
+- Crop harvesting is already included in land management (via `oxidized_litter_fraction`), so it does not require self-transitions as for wood harvesting.
+- This example uses a dummy C4 grass setup (species 1) and should not be expected to yield meaningful results. For accurate simulations, please provide values in `params_species` for the crop you which to simulate.
 
 ## LUH2 integration
 
-BiomeE can work directly with LUH2 v2 data (https://luh.umd.edu/data.shtml).
+BiomeE integrates seamlessly with LUH2 v2 data (https://luh.umd.edu/data.shtml).
 
 ### Automatic configuration
 
@@ -390,8 +393,7 @@ df_drivers$params_siml[[1]]$nyeartrend <- 10
 # By default the extraction start at the first year in the ncdf files. To extract from a custom index:
 # df_drivers$luh2[[1]]$start <- ...
 
-# Setting the path to LUH2 files. These may be different on your computer.
-df_drivers$luh2[[1]]$cst_file   <- 'path/to/staticData_quarterdeg.nc'
+# Setting the paths to LUH2 files. These may be different on your computer.
 df_drivers$luh2[[1]]$state_file <- 'path/to/states.nc'
 df_drivers$luh2[[1]]$trans_file <- 'path/to/transitions.nc'
 
@@ -406,36 +408,38 @@ df_drivers$luh2[[1]]$simplified <- TRUE
 # pasture  <- pastr + range
 ```
 
-Then run the simulation as before.
+Then, run the simulation as before.
 
 Notes:
 
 - Extracting data from LUH2 ncdf files may take some time.
-- The cell that is extracted from LUH2 data is the closest cell from the coordinates provided in site_info.
+- The cell that is extracted from LUH2 data is the closest cell from the coordinates provided in `site_info`.
 - If no `init_lu` is present in the configuration, a default configuration is automatically generated. If you wish to provide your own, make sure to use the right state names.
 - When using LUH2 data, `luc_forcing` must not be provided in the driver.
+- The fraction of the aggregated tile should always remain constant. In most cases, it would be close to 1. But it may be less in cases where the cell contains a non-null water/ice fraction. This fraction is defined in `staticData_quarterdeg.nc/icwtr`.
+- BiomeE assumes a cell of arbitrary area (i.e. the cell has an area of 1). To convert densities into real units, all densities should be scaled by the area of the cell, which is available in `staticData_quarterdeg.nc/carea`.
 
 ### Manual configuration
 
-The automatic configuration presented above is convenient, but parsing LUH2 data is slow, so it might be worth parsing once and
-storing the transitions for later reuse. This can be done using `parse_luh2`, then manually building the `init_lu` configuration:
+The automatic configuration presented above is convenient but has some drawbacks, such as the need to parse LUH2 data each time a simulation is run.
+An alternative offering more flexibility is to parse LUH2 manually and set the necessary data in the driver before running BiomeE.
+This can easily be done using `parse_luh2()` function as illustrated below:
 
 ```{r eval = FALSE}
 # We start from the example driver
 df_drivers_luh2 <- biomee_p_model_luluc_drivers
 
-# The LUH2 dataset used contains 85 years (2015-2100)
+# LUH2 v2f dataset contains 85 years (2015-2100)
 df_drivers_luh2$params_siml[[1]]$nyeartrend <- 85
 df_drivers_luh2$params_siml[[1]]$daily_diagnostics <- FALSE
 
 # Files downloaded from https://luh.umd.edu/data.shtml)
-# These path may be different on your machine.
-cst_file   <- '~/RPC2.6_SSP1/staticData_quarterdeg.nc'
+# These paths may be different on your machine.
 state_file <- '~/RPC2.6_SSP1/multiple-states_input4MIPs_landState_ScenarioMIP_UofMD-IMAGE-ssp126-2-1-f_gn_2015-2100.nc'
 trans_file <- '~/RPC2.6_SSP1/multiple-transitions_input4MIPs_landState_ScenarioMIP_UofMD-IMAGE-ssp126-2-1-f_gn_2015-2100.nc'
 
 # Parse LUH2 data
-parsed_luh2 <- parse_luh2(cst_file, state_file, trans_file,
+parsed_luh2 <- parse_luh2(state_file, trans_file,
                           df_drivers_luh2$site_info[[1]]$lon, df_drivers_luh2$site_info[[1]]$lat,
                           start=1, n=df_drivers_luh2$params_siml[[1]]$nyeartrend, # We parse the whole dataset
                           simplified=TRUE # simplified mode: 5 states only
@@ -464,7 +468,7 @@ df_drivers_luh2$luc_forcing[[1]] <- parsed_luh2$luc_matrix
 df_drivers_luh2 <- readRDS("files/biomee_luluc.Rmd__biomee_p_model_luluc_driver.RDS")
 ```
 
-We can now simulate and display the plots:
+We can now simulate and display the plots as before:
 
 ```{r eval = TRUE, results = 'hide', warning = FALSE, fig.width=7, fig.height=7}
 out_sim_3 <- runread_biomee_f(df_drivers_luh2)

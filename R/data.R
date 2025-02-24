@@ -350,7 +350,6 @@
 #'     The cell extracted is the closest cell from the coordinates provided in \code{site_info}.
 #'     Includes the following data:
 #'     \describe{
-#'       \item{cst_file}{Path to staticDataquarterdeg.nc ncdf file}
 #'       \item{state_file}{Path to states.nc ncdf file}
 #'       \item{trans_file}{trans_file Path to transitions.nc ncdf file}
 #'       \item{start}{Time index to start extracting data. Default: 1}
