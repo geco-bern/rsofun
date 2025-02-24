@@ -62,8 +62,9 @@ build_luc_matrix <- function(patterns, n_lu, n_years, out=vector()) {
 #'
 #' @return A list containing the intial states ('states_init') and transition matrix ('luc_matrix')
 #' @export
+#' @import ncdf4
+#' @importFrom utils head
 parse_luh2 <- function(cst_file, state_file, trans_file, lon, lat, start=1, n=-1, simplified=FALSE){
-  library(ncdf4)
 
   ### Open the ncdf files
 
@@ -189,17 +190,17 @@ simplify_luh2_states <- function(init_states) {
 simplify_luh2_transitions <- function(trans) {
 
   arr <- array(c(
-    colSums(trans[1:2, 1:2,], dim=2),
-    colSums(trans[1:2, 3:4,], dim=2),
+    colSums(trans[1:2, 1:2,], dims=2),
+    colSums(trans[1:2, 3:4,], dims=2),
     colSums(trans[1:2, 5,]),
-    colSums(trans[1:2, 6:10,], dim=2),
-    colSums(trans[1:2, 11:12,], dim=2),
+    colSums(trans[1:2, 6:10,], dims=2),
+    colSums(trans[1:2, 11:12,], dims=2),
     #
-    colSums(trans[3:4, 1:2,], dim=2),
-    colSums(trans[3:4, 3:4,], dim=2),
+    colSums(trans[3:4, 1:2,], dims=2),
+    colSums(trans[3:4, 3:4,], dims=2),
     colSums(trans[3:4, 5,]),
-    colSums(trans[3:4, 6:10,], dim=2),
-    colSums(trans[3:4, 11:12,], dim=2),
+    colSums(trans[3:4, 6:10,], dims=2),
+    colSums(trans[3:4, 11:12,], dims=2),
     #
     colSums(trans[5, 1:2,]),
     colSums(trans[5, 3:4,]),
@@ -207,17 +208,17 @@ simplify_luh2_transitions <- function(trans) {
     colSums(trans[5, 6:10,]),
     colSums(trans[5, 11:12,]),
     #
-    colSums(trans[6:10, 1:2,], dim=2),
-    colSums(trans[6:10, 3:4,], dim=2),
+    colSums(trans[6:10, 1:2,], dims=2),
+    colSums(trans[6:10, 3:4,], dims=2),
     colSums(trans[6:10, 5,]),
-    colSums(trans[6:10, 6:10,], dim=2),
-    colSums(trans[6:10, 11:12,], dim=2),
+    colSums(trans[6:10, 6:10,], dims=2),
+    colSums(trans[6:10, 11:12,], dims=2),
     #
-    colSums(trans[11:12, 1:2,], dim=2),
-    colSums(trans[11:12, 3:4,], dim=2),
+    colSums(trans[11:12, 1:2,], dims=2),
+    colSums(trans[11:12, 3:4,], dims=2),
     colSums(trans[11:12, 5,]),
-    colSums(trans[11:12, 6:10,], dim=2),
-    colSums(trans[11:12, 11:12,], dim=2)
+    colSums(trans[11:12, 6:10,], dims=2),
+    colSums(trans[11:12, 11:12,], dims=2)
   ), c(length(trans[1,1,]), 5, 5)
   )
   aperm(arr, 3:1)

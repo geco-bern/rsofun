@@ -72,7 +72,8 @@ This section demonstrates how to simulate LULUC with BiomeE.
 
 ### Setup
 
-The package contains an example of drivers from the Swiss CH-LAE fluxnet site to which we clear-cut 40% of a primary forest and convert this free patch into a secondary (yet unmanaged), forest.
+The package contains an example of driver from the Swiss CH-LAE fluxnet site, using environmental data for the year 2009,
+where 40 % of an initial primary forest is clear-cut and convert to a secondary (yet unmanaged) forest.
 
 ```{r eval = FALSE}
 library(rsofun)
@@ -423,8 +424,8 @@ storing the transitions for later reuse. This can be done using `parse_luh2`, th
 # We start from the example driver
 df_drivers_luh2 <- biomee_p_model_luluc_drivers
 
-# The LUH2 dataset contains 80 years
-df_drivers_luh2$params_siml[[1]]$nyeartrend <- 80
+# The LUH2 dataset used contains 85 years (2015-2100)
+df_drivers_luh2$params_siml[[1]]$nyeartrend <- 85
 df_drivers_luh2$params_siml[[1]]$daily_diagnostics <- FALSE
 
 # Files downloaded from https://luh.umd.edu/data.shtml)
