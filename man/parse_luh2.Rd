@@ -15,6 +15,8 @@ parse_luh2(
 )
 }
 \arguments{
+\item{state_file}{Path to states.nc ncdf file}
+
 \item{trans_file}{Path to transitions.nc ncdf file}
 
 \item{lon}{Longitude (degrees E)}

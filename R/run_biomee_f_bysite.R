@@ -222,7 +222,6 @@ run_biomee_f_bysite <- function(
     print('Parsing LUH2 data...')
     simplified <- ifelse(is.null(luh2$simplified), FALSE, luh2$simplified)
     parsed_luh2 <- parse_luh2(
-                                luh2$cst_file,
                                 luh2$state_file,
                                 luh2$trans_file,
                                 site_info$lon,
