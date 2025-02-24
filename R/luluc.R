@@ -21,7 +21,7 @@
 #'   pattern1 <- c(0, 0, 0.5, 0)
 #'   # The null pattern (no transition)
 #'   null_pattern <- rep(0, 4)
-#'   # A repeated time self-transition of 0.1 of the total cell fraction from LU 2 to LU 2 every other year
+#'   # A repeated self-transition of 0.1 of the total cell fraction from LU 2 to LU 2 every other year
 #'   pattern2 <- rep(c(c(0, 0, 0, 0.1), null_pattern), 3)
 #'
 #'   # Building the transition matrix

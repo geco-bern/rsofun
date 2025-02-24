@@ -1,15 +1,23 @@
 # rsofun (development version v5.1.0)
 
-* Added support for LULUC (land use land use change) in BiomeE
+## New features
+
+* Added support for LULUC (land use, land-use change) in BiomeE. See vignette `biome_luluc` for details.
 * New BiomeE behavior to recycle last year of forcing if requested simulation time span (`nyeartrend`) is longer than 
-available forcing data
-* Breaking changes in biomee drivers
+available forcing data.
+
+## Breaking changes
+
+* Breaking changes in biomee drivers:
   * `init_cohort$init_n_cohorts` column has been phased out and must not be present in  
 drivers to protect against data corruption.
   * `update_annualLAImax` flag was removed and the behavior is now slightly altered since `LAImax` and `underLAImax` are set and kept constant at the start of the simulation:
     * `LAImax` takes value `max(LAI_light, 0.5)`
     * `underLAImax` takes value `min(LAImax, 1.2)`
-  * `do_closedN_run` flag now uses initial inorganic N setting rather than arbitrary value.
+  * `do_closedN_run` flag now uses initial inorganic N setting rather than arbitrary value and is false by default.
+  * Modified drivers to use more sensibles values
+    * Species 0 is now a C4 crop
+    * `N_input` is set to 0.01 to limit N starvation.
 
 # rsofun v5.0.0
 
