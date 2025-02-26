@@ -17,7 +17,7 @@ module md_gpp_pmodel
   implicit none
 
   private
-  public params_pft_gpp, gpp, getpar_modl_gpp
+  public params_pft_gpp, gpp, getpar_modl_gpp, paramstype_gpp, params_gpp
     
   !-----------------------------------------------------------------------
   ! Uncertain (unknown) parameters. Runtime read-in
@@ -30,6 +30,8 @@ module md_gpp_pmodel
     real :: tau_acclim_tempstress
     real :: par_shape_tempstress
     real :: kc_jmax
+    real :: gw_calib
+
   end type paramstype_gpp
 
   ! PFT-DEPENDENT PARAMETERS
@@ -675,11 +677,14 @@ contains
     ! Jmax cost coefficient, c* in Stocker et al., 2020 GMD (Eq 15) and Wang et al., 2017
     params_gpp%kc_jmax = myinterface%params_calib%kc_jmax  ! 0.41
 
+    
     ! Acclimation time scale for photosynthesis (d), multiple lines of evidence suggest about monthly is alright 
     params_gpp%tau_acclim = myinterface%params_calib%tau_acclim  ! 30.0
 
     ! Re-interpreted soil moisture stress parameter, previously thetastar = 0.6
     params_gpp%soilm_thetastar = myinterface%params_calib%soilm_thetastar
+    
+    params_gpp%gw_calib = myinterface%params_calib%gw_calib 
 
     ! quantum yield efficiency at optimal temperature, phi_0 (Stocker et al., 2020 GMD Eq. 10)
     params_pft_gpp(:)%kphio = myinterface%params_calib%kphio
