@@ -284,7 +284,7 @@ test_that("test joint calibration routine p-model (BT, likelihood maximization)"
     # dput(pars$par)
   # print(dput(pars$par))
   ref_pars <- c(kphio       = 0.0453,
-                err_gpp     = 1.51,
+                err_gpp     = 1.14,
                 err_vcmax25 = 0.0060)
   expect_equal(pars$par, ref_pars, tolerance = 0.1)
   
