@@ -97,8 +97,8 @@ runread_pmodel_f <- function( # TODO: Above docstring appears duplicated in run_
   makecheck = TRUE,
   parallel = FALSE,
   ncores = 1){
-
-    # predefine variables for CRAN check compliance
+  
+  # predefine variables for CRAN check compliance
   sitename <- params_siml <- site_info <-
     input <- forcing <- forcing_acclim <- . <- NULL
   

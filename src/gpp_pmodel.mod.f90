@@ -31,7 +31,6 @@ module md_gpp_pmodel
     real :: par_shape_tempstress
     real :: kc_jmax
     real :: gw_calib
-
   end type paramstype_gpp
 
   ! PFT-DEPENDENT PARAMETERS

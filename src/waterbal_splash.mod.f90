@@ -13,7 +13,6 @@ module md_waterbal
   use md_sofunutils, only: radians, dgsin, dgcos, degrees
   use md_gpp_pmodel, only:  params_gpp
 
-
   implicit none
 
   private
@@ -490,8 +489,7 @@ contains
         ! See also calc_transpiration_pm() in photosynth_phydro.mod.f90
         tile_fluxes%canopy%daet_e_canop = (epsilon * fapar * tile_fluxes%canopy%drn + (rho_water * cp / gamma) &
           * ga * climate%dvpd) / (epsilon + 1.0 + ga / gw) 
-          
-          
+        
         tile_fluxes%canopy%dpet_e   =(epsilon * fapar * tile_fluxes%canopy%drn + (rho_water * cp / gamma) &
           * ga * climate%dvpd) / (epsilon + 1.0) 
         tile_fluxes%canopy%dpet = dpet_soil + tile_fluxes%canopy%dpet_e * energy_to_mm 
@@ -509,7 +507,6 @@ contains
         ! print*,'ga      ', ga
         ! print*,'vpd     ', climate%dvpd
         ! print*,'gw      ', gw
-        
         ! print*,'-----------------------'
 
         ! ! W m-2 ---> mol m-2 s-1
@@ -519,13 +516,6 @@ contains
         ! W m-2 ---> kg m-2 s-1
         ! XXX test: these units don't convert
         tile_fluxes%canopy%daet_canop = tile_fluxes%canopy%daet_e_canop * energy_to_mm
-        
-        ! print*,'pet      ', tile_fluxes%canopy%dpet
-        ! print*,'aet      ', tile_fluxes%canopy%daet_canop 
-        
-        ! print*,'-----------------------'
-        
-        
 
         ! print*,'PML: tile_fluxes%canopy%daet_canop, tile_fluxes%canopy%daet_soil ', tile_fluxes%canopy%daet_canop, tile_fluxes%canopy%daet_soil
 
