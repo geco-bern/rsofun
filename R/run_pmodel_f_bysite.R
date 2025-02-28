@@ -421,6 +421,7 @@ run_pmodel_f_bysite <- function( # TODO: Above docstring appears duplicated in r
       as.numeric(params_modl$rd_to_vcmax),
       as.numeric(params_modl$tau_acclim),
       as.numeric(params_modl$kc_jmax),
+      as.numeric(params_modl$gw_calib),
       ifelse(params_siml$use_phydro, 
              no  = dummy_val,
              yes = params_modl$phydro_K_plant),
@@ -513,7 +514,9 @@ run_pmodel_f_bysite <- function( # TODO: Above docstring appears duplicated in r
           "le_canopy",
           "le_soil",
           "dpsi",
-          "psi_leaf")
+          "psi_leaf",
+          "daily_rad",
+          "night_rad")
         ) %>%
       as_tibble(.name_repair = "check_unique") %>%
       dplyr::bind_cols(ddf,.)
@@ -573,6 +576,7 @@ required_param_names <- list(
   ),
   p_model = c(# P-model needs these parameters:
   'beta_unitcostratio', 
+  'gw_calib',
   'kc_jmax', 
   'kphio', 
   'kphio_par_a', 
