@@ -273,9 +273,9 @@ params_modl <- list(
 
 # run the model for these parameters
 output <- rsofun::runread_pmodel_f(
-  rsofun::p_model_drivers_format2024_08,
+  rsofun::p_model_drivers_format2024_08 |> rowwise() |> mutate(forcing = list(mutate(forcing, vwind=2.0))) |> ungroup(),
   par = params_modl
-  )
+  )  
 ```
 
 ### Plotting output
@@ -379,7 +379,7 @@ params_modl$kphio <- pars$par["kphio"]
 
 # Run the model for these parameters
 output_new <- rsofun::runread_pmodel_f(
-  rsofun::p_model_drivers_format2024_08,
+  rsofun::p_model_drivers_format2024_08 |> rowwise() |> mutate(forcing = list(mutate(forcing, vwind=2.0))) |> ungroup(),
   par = params_modl
   )
 
@@ -441,7 +441,7 @@ Run the model and plot outputs
 ```{r}
 # run the model for these parameters
 output <- rsofun::runread_pmodel_f(
-  mutate(rsofun::p_model_drivers_format2024_08,
+  mutate(rsofun::p_model_drivers_format2024_08 |> rowwise() |> mutate(forcing = list(mutate(forcing, vwind=2.0))) |> ungroup(),
          params_siml = params_siml |> mutate(use_gs = FALSE) |> list()),
   par = params_modl
 )
@@ -491,7 +491,7 @@ Run the model.
 ```{r}
 # run the model for these parameters
 output <- rsofun::runread_pmodel_f(
-  mutate(rsofun::p_model_drivers_format2024_08,
+  mutate(rsofun::p_model_drivers_format2024_08 |> rowwise() |> mutate(forcing = list(mutate(forcing, vwind=2.0))) |> ungroup(),
          params_siml = params_siml |> mutate(use_gs = TRUE) |> list()),
   par = params_modl
 )
@@ -543,7 +543,7 @@ Run the model.
 ```{r}
 # run the model for these parameters
 output <- rsofun::runread_pmodel_f(
-  mutate(rsofun::p_model_drivers_format2024_08,
+  mutate(rsofun::p_model_drivers_format2024_08  |> rowwise() |> mutate(forcing = list(mutate(forcing, vwind=2.0))) |> ungroup(),
          params_siml = params_siml |> mutate(use_gs = TRUE, use_pml = TRUE, use_phydro + FALSE) |> list()),
   par = params_modl
 )
@@ -589,10 +589,12 @@ out_le$gg +
 For P-hydro, we must use the 3-hr daily max forcing as the acclimation forcing. So let's rename it in the data.
 
 ```{r}
-phdro_model_drivers <- rsofun::p_model_drivers_format2024_08 |> 
-  rename(forcing_acclim = forcing_3hrmax)
-
-phdro_model_drivers$forcing_acclim[[1]] |>
+phydro_model_drivers <- rsofun::p_model_drivers_format2024_08  |> 
+  rename(forcing_acclim = forcing_3hrmax) |>
+  rowwise() |> mutate(forcing = list(mutate(forcing, vwind=2.0)),
+                      forcing_acclim = list(mutate(forcing_acclim, vwind=2.0))) |> ungroup()
+  
+phydro_model_drivers$forcing_acclim[[1]] |>
     # dplyr::filter(year(date) >= ystart & year(date) <= yend) |>
     dplyr::select(date, co2, ppfd, netrad, temp, vpd, fapar, rain, ccov) |>
     tidyr::pivot_longer(-date) |>
@@ -608,7 +610,7 @@ phdro_model_drivers$forcing_acclim[[1]] |>
     theme_classic() +
     theme(strip.background = element_rect(color = "white", size = 1))+
     facet_wrap(~name, scales = "free")+
-    ggtitle(phdro_model_drivers$sitename[[1]])
+    ggtitle(phydro_model_drivers$sitename[[1]])
 ```
 
 For P-hydro runs, we always set `use_phydro = T` and `use_gs = T`.
@@ -633,7 +635,7 @@ params_modl <- list(
 
 # run the model for these parameters
 output <- rsofun::runread_pmodel_f(
-  mutate(phdro_model_drivers, 
+  mutate(phydro_model_drivers, 
          params_siml = params_siml |> mutate(use_gs = TRUE, use_phydro = TRUE) |> list()),
   par = params_modl
 )

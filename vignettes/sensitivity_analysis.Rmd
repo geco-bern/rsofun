@@ -3,7 +3,7 @@ title: "Sensitivity analysis and calibration interpretation"
 author: "Josefa Arán"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Sensitivity analysis}
+  %\VignetteIndexEntry{Sensitivity analysis and calibration interpretation}
   %\VignetteEngine{knitr::rmarkdown}
   %\usepackage[utf8]{inputenc}
 ---
@@ -61,7 +61,7 @@ ll_pmodel <- function(
   rsofun::cost_likelihood_pmodel(        # reuse likelihood cost function
     as.list(par_v),                      # must be a named list
     obs = rsofun::p_model_validation,    # example data from package
-    drivers = rsofun::p_model_drivers_format2024_08, #TODO rsofun::p_model_drivers is NOT YET UPDATED FOR PHYDRO (a newformat, b add phydro_ parameters)
+    drivers = rsofun::p_model_drivers_format2024_08 |> rowwise() |> mutate(forcing = list(mutate(forcing, vwind=2.0))) |> ungroup(), #TODO rsofun::p_model_drivers is NOT YET UPDATED FOR PHYDRO (a newformat, b add phydro_ parameters)
     targets = "gpp"
   )
 }
@@ -78,7 +78,6 @@ ll_pmodel(
     rd_to_vcmax        = 0.014,      # value from Atkin et al. 2015 for C3 herbaceous
     tau_acclim         = 30.0,
     kc_jmax            = 0.41,
-    whc                = 430,
     err_gpp            = 0.9         # value from previous simulations
 ))
 ```
@@ -98,7 +97,6 @@ par_cal_best <- c(
     rd_to_vcmax        = 0.014,
     tau_acclim         = 30.0,
     kc_jmax            = 0.41,
-    whc                = 430,
     err_gpp          = 1
   )
 
@@ -112,7 +110,6 @@ par_cal_min <- c(
     rd_to_vcmax        = 0.01,
     tau_acclim         = 7.0,
     kc_jmax            = 0.2,
-    whc                = 300,
     err_gpp            = 0.01
   )
 
@@ -126,7 +123,6 @@ par_cal_max <- c(
     rd_to_vcmax        = 0.1,
     tau_acclim         = 60.0,
     kc_jmax            = 0.8,
-    whc                = 600,
     err_gpp            = 4
   )
 ```
@@ -270,7 +266,7 @@ settings_calib <- list(
 
 # Calibrate kphio-related parameters and err_gpp 
 par_calib <- calib_sofun(
-  drivers = rsofun::p_model_drivers_format2024_08, # TODO: NOT YET UPDATED FOR PHYDRO (still add default phydro_* parameters)
+  drivers = rsofun::p_model_drivers_format2024_08 |> rowwise() |> mutate(forcing = list(mutate(forcing, vwind=2.0))) |> ungroup(), # TODO: NOT YET UPDATED FOR PHYDRO (still add default phydro_* parameters)
   obs = p_model_validation,
   settings = settings_calib,
   par_fixed = list(
@@ -278,8 +274,7 @@ par_calib <- calib_sofun(
     beta_unitcostratio = 146.0,
     rd_to_vcmax        = 0.014,
     tau_acclim         = 30.0,
-    kc_jmax            = 0.41,
-    whc                = 430),
+    kc_jmax            = 0.41),
   targets = "gpp"
 )
 
@@ -310,7 +305,7 @@ settings_calib <- list(
 )
 
 par_calib <- calib_sofun(
-  drivers = rsofun::p_model_drivers_format2024_08, # TODO: NOT YET UPDATED FOR PHYDRO (still add default phydro_* parameters)
+  drivers = rsofun::p_model_drivers_format2024_08 |> rowwise() |> mutate(forcing = list(mutate(forcing, vwind=2.0))) |> ungroup(), # TODO: NOT YET UPDATED FOR PHYDRO (still add default phydro_* parameters)
   obs = p_model_validation,
   settings = settings_calib,
   par_fixed = list(
@@ -318,8 +313,7 @@ par_calib <- calib_sofun(
     kphio_par_b = 20,
     beta_unitcostratio = 146.0,
     rd_to_vcmax        = 0.014,
-    tau_acclim         = 30.0,
-    whc                = 430),
+    tau_acclim         = 30.0),
   targets = "gpp"
 )
 ```
@@ -406,7 +400,7 @@ run_pmodel <- function(sample_par){
   # and also adds the new observation error
   
   out <- runread_pmodel_f(
-    drivers = rsofun::p_model_drivers_format2024_08, # TODO: NOT YET UPDATED FOR PHYDRO (still add default phydro_* parameters)
+    drivers = rsofun::p_model_drivers_format2024_08 |> rowwise() |> mutate(forcing = list(mutate(forcing, vwind=2.0))) |> ungroup(), # TODO: NOT YET UPDATED FOR PHYDRO (still add default phydro_* parameters)
     par =  list(                      # copied from par_fixed above
       kphio = sample_par$kphio,
       kphio_par_a = sample_par$kphio_par_a,
@@ -415,7 +409,6 @@ run_pmodel <- function(sample_par){
       beta_unitcostratio = 146.0,
       rd_to_vcmax        = 0.014,
       tau_acclim         = 30.0,
-      whc                = 430,
       kc_jmax            = 0.41)       # value from posterior
   )
   
@@ -515,7 +508,7 @@ plot_gpp_error +
 # 
 # Plot observed and predicted GPP, with a 95% confidence interval using err_gpp
 plot_gpp_error <- ggplot(data = runread_pmodel_f(
-    drivers = rsofun::p_model_drivers_format2024_08, # TODO: NOT YET UPDATED FOR PHYDRO (still add default phydro_* parameters)
+    drivers = rsofun::p_model_drivers_format2024_08 |> rowwise() |> mutate(forcing = list(mutate(forcing, vwind=2.0))) |> ungroup(), # TODO: NOT YET UPDATED FOR PHYDRO (still add default phydro_* parameters)
     par =  list(                       
       kphio = par_calib$par[1],        # values from posterior
       kphio_par_a = par_calib$par[2],
@@ -524,7 +517,6 @@ plot_gpp_error <- ggplot(data = runread_pmodel_f(
       beta_unitcostratio = 146.0,
       rd_to_vcmax        = 0.014,
       tau_acclim         = 30.0,
-      whc                = 430,
       kc_jmax            = 0.41)       
   ) |>
     dplyr::select(sitename, data) |>

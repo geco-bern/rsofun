@@ -33,7 +33,7 @@ test_that("run_pmodel_f_bysite()", {
   )
 
   # read in demo data
-  df_drivers <- rsofun::p_model_drivers_format2024_08
+  df_drivers <- rsofun::p_model_drivers_format2024_08 |> rowwise() |> mutate(forcing = list(mutate(forcing, vwind=2.0))) |> ungroup()
   
   # check run_pmodel_f_bysite() ##########################
   # run the SOFUN Fortran P-model using the internal function `run_pmodel_f_bysite`
@@ -281,6 +281,7 @@ test_that("runread_pmodel_f()", {
   
   # read in demo data
   df_drivers <- rsofun::p_model_drivers_format2024_08 # TODO: NOT YET UPDATED FOR PHYDRO (still add default phydro_* parameters)
+  for (it in seq_along((df_drivers$forcing))){df_drivers$forcing[[it]]$vwind = 2.0} # TODO: add vwind, TODO: this would need to be changed in rsofun example data
   
   df_output_singlecore <- rsofun::runread_pmodel_f(
     df_drivers,
@@ -337,7 +338,8 @@ test_that("p-model run check Vcmax25", {
                                   mutate(x,
                                          canopy_height = 5,
                                          reference_height = 10)))
-  
+  for (it in seq_along((df_drivers$forcing))){df_drivers$forcing[[it]]$vwind = 2.0} # TODO: add vwind, TODO: this would need to be changed in rsofun example data
+
   # run the SOFUN Fortran P-model
   mod <- rsofun::run_pmodel_f_bysite( 
     df_drivers$sitename[1],
@@ -395,7 +397,8 @@ test_that("phydro-model run check LE and AET", {
   # read in demo data
   df_drivers <- rsofun::p_model_drivers_format2024_08 # TODO: NOT YET UPDATED FOR PHYDRO (still add default phydro_* parameters)
   df_drivers$params_siml[[1]]$use_gs     <- TRUE
-
+  for (it in seq_along((df_drivers$forcing))){df_drivers$forcing[[it]]$vwind = 2.0} # TODO: add vwind, TODO: this would need to be changed in rsofun example data
+  
   # run the SOFUN Fortran PHYDRO-model
   # Run 3 simulations with different WHC:
   df_output <- bind_rows(

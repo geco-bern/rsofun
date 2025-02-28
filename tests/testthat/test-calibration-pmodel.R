@@ -3,7 +3,7 @@ set.seed(10)
 
 test_that("test GPP calibration routine p-model (BT, likelihood maximization)", {
   skip_on_cran()
-  drivers <- rsofun::p_model_drivers_format2024_08 # TODO: NOT YET UPDATED FOR PHYDRO (still add default phydro_* parameters)
+  drivers <- rsofun::p_model_drivers_format2024_08 |> rowwise() |> mutate(forcing = list(mutate(forcing, vwind=2.0))) |> ungroup() # TODO: NOT YET UPDATED FOR PHYDRO (still add default phydro_* parameters)
   drivers$params_siml[[1]]$use_gs     <- TRUE
   
   obs <- rsofun::p_model_validation
@@ -56,7 +56,7 @@ test_that("test GPP calibration routine p-model (BT, likelihood maximization)", 
 
 test_that("test GPP calibration routine p-model (GenSA, rmse, all params)", {
   skip_on_cran()
-  drivers <- rsofun::p_model_drivers_format2024_08 # TODO: NOT YET UPDATED FOR PHYDRO (still add default phydro_* parameters)
+  drivers <- rsofun::p_model_drivers_format2024_08 |> rowwise() |> mutate(forcing = list(mutate(forcing, vwind=2.0))) |> ungroup() # TODO: NOT YET UPDATED FOR PHYDRO (still add default phydro_* parameters)
   drivers$params_siml[[1]]$use_gs     <- TRUE
   obs <- rsofun::p_model_validation
   
@@ -108,7 +108,8 @@ test_that("test Vcmax25 calibration routine p-model (BT, likelihood, all params)
     dplyr::mutate(site_info = purrr::map(site_info, \(x)
                                   dplyr::mutate(x,
                                          canopy_height = 5,
-                                         reference_height = 10)))
+                                         reference_height = 10))) |> 
+    rowwise() |> mutate(forcing = list(mutate(forcing, vwind=2.0))) |> ungroup()
   
   obs <- rsofun::p_model_validation_vcmax25
   
@@ -168,7 +169,8 @@ test_that("test Vcmax25 calibration routine p-model (GenSA, rmse)", {
     dplyr::mutate(site_info = purrr::map(site_info, \(x)
                                   dplyr::mutate(x,
                                          canopy_height = 5,
-                                         reference_height = 10)))
+                                         reference_height = 10))) |> 
+    rowwise() |> mutate(forcing = list(mutate(forcing, vwind=2.0))) |> ungroup()
   
   obs <- rsofun::p_model_validation_vcmax25
   params_fix <- list(
@@ -228,7 +230,7 @@ test_that("test joint calibration routine p-model (BT, likelihood maximization)"
       dplyr::mutate(forcing_24h = forcing,
              forcing_daytime = forcing,
              forcing_3hrmax = forcing) # TODO: this is just to make it work
-    )
+    ) |> rowwise() |> mutate(forcing = list(mutate(forcing, vwind=2.0))) |> ungroup()
   
   obs <- rbind(gpp = rsofun::p_model_validation,
               vcmax25 = rsofun::p_model_validation_vcmax25)
