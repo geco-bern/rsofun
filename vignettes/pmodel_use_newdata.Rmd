@@ -273,7 +273,7 @@ params_modl <- list(
 
 # run the model for these parameters
 output <- rsofun::runread_pmodel_f(
-  rsofun::p_model_drivers_format2024_08 |> rowwise() |> mutate(forcing = list(mutate(forcing, vwind=2.0))) |> ungroup(),
+  rsofun::p_model_drivers_format2025_02,
   par = params_modl
   )  
 ```
@@ -379,7 +379,7 @@ params_modl$kphio <- pars$par["kphio"]
 
 # Run the model for these parameters
 output_new <- rsofun::runread_pmodel_f(
-  rsofun::p_model_drivers_format2024_08 |> rowwise() |> mutate(forcing = list(mutate(forcing, vwind=2.0))) |> ungroup(),
+  rsofun::p_model_drivers_format2025_02,
   par = params_modl
   )
 
@@ -441,7 +441,7 @@ Run the model and plot outputs
 ```{r}
 # run the model for these parameters
 output <- rsofun::runread_pmodel_f(
-  mutate(rsofun::p_model_drivers_format2024_08 |> rowwise() |> mutate(forcing = list(mutate(forcing, vwind=2.0))) |> ungroup(),
+  mutate(rsofun::p_model_drivers_format2025_02,
          params_siml = params_siml |> mutate(use_gs = FALSE) |> list()),
   par = params_modl
 )
@@ -491,7 +491,7 @@ Run the model.
 ```{r}
 # run the model for these parameters
 output <- rsofun::runread_pmodel_f(
-  mutate(rsofun::p_model_drivers_format2024_08 |> rowwise() |> mutate(forcing = list(mutate(forcing, vwind=2.0))) |> ungroup(),
+  mutate(rsofun::p_model_drivers_format2025_02,
          params_siml = params_siml |> mutate(use_gs = TRUE) |> list()),
   par = params_modl
 )
@@ -543,7 +543,7 @@ Run the model.
 ```{r}
 # run the model for these parameters
 output <- rsofun::runread_pmodel_f(
-  mutate(rsofun::p_model_drivers_format2024_08  |> rowwise() |> mutate(forcing = list(mutate(forcing, vwind=2.0))) |> ungroup(),
+  mutate(rsofun::p_model_drivers_format2025_02,
          params_siml = params_siml |> mutate(use_gs = TRUE, use_pml = TRUE, use_phydro + FALSE) |> list()),
   par = params_modl
 )
@@ -589,10 +589,8 @@ out_le$gg +
 For P-hydro, we must use the 3-hr daily max forcing as the acclimation forcing. So let's rename it in the data.
 
 ```{r}
-phydro_model_drivers <- rsofun::p_model_drivers_format2024_08  |> 
-  rename(forcing_acclim = forcing_3hrmax) |>
-  rowwise() |> mutate(forcing = list(mutate(forcing, vwind=2.0)),
-                      forcing_acclim = list(mutate(forcing_acclim, vwind=2.0))) |> ungroup()
+phydro_model_drivers <- rsofun::p_model_drivers_format2025_02  |> 
+  rename(forcing_acclim = forcing_3hrmax)
   
 phydro_model_drivers$forcing_acclim[[1]] |>
     # dplyr::filter(year(date) >= ystart & year(date) <= yend) |>
