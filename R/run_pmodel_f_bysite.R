@@ -561,7 +561,7 @@ run_pmodel_f_bysite <- function( # TODO: Above docstring appears duplicated in r
 required_param_names <- list(
   phydro_model = c( # P-hydro model needs these parameters:
   'bsoil', 
-  # 'gw_calib', # TODO: is phydro not using gw_calib????
+  'gw_calib',
   'kc_jmax', 
   'kphio', 
   'kphio_par_a', 
