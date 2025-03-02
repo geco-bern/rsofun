@@ -245,7 +245,7 @@ contains
                             kphio = dble(kphio_temp), &
                             psi_soil = dble(swp_memory(pft)), & !0.d0, &
                             rdark = dble(params_gpp%rd_to_vcmax), &
-                            vwind = 3.0d0, &
+                            vwind = 3.0d0, &            ! NOTE: this is hardcoded as 3.0, while other places use v_wind (that used to have a default of 2.0)
                             par_plant = par_plant, &
                             par_cost = par_cost, &
                             par_control = options &
@@ -307,7 +307,7 @@ contains
                             kphio = dble(kphio_temp), &
                             psi_soil = dble(swp(pft)), & !0.d0, &
                             rdark = dble(params_gpp%rd_to_vcmax), &
-                            vwind = 3.0d0, &
+                            vwind = 3.0d0, &             ! NOTE: this is hardcoded as 3.0, while other places use v_wind (that used to have a default of 2.0)
                             par_plant = par_plant, &
                             par_cost = par_cost, &
                             par_control = options &
