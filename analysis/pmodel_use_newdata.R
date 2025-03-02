@@ -6,8 +6,8 @@ library(tidyr)
 library(khroma)
 
 ## ----------------------------------------------------------------------------------------------------------------------
-p_model_drivers <- rsofun::p_model_drivers_format2024_08 # TODO: NOT YET UPDATED FOR PHYDRO (still add default phydro_* parameters)
-# p_model_validation <- rsofun::p_model_validation_format2024_08
+p_model_drivers <- rsofun::p_model_drivers_format2025_02 # TODO: NOT YET UPDATED FOR PHYDRO (still add default phydro_* parameters)
+# p_model_validation <- rsofun::p_model_validation_format2025_02
 
 ## ----------------------------------------------------------------------------------------------------------------------
 # define model parameter values from previous work

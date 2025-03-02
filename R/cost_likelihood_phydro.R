@@ -78,7 +78,7 @@
 #'     err_gpp            = 0.9         # value from previous simulations
 #'   ),                          # must be a named list
 #'   obs     = p_model_validation,   # example data from package
-#'   drivers = p_model_drivers_format2024_08 %>%
+#'   drivers = p_model_drivers_format2025_02 %>%
 #'     ungroup() %>% dplyr::mutate(params_siml = purrr::map(params_siml, ~mutate(.x, use_phydro = TRUE, use_pml = TRUE, use_gs = TRUE))),
 #'   targets = "gpp",
 #'   par_fixed = list()

@@ -144,11 +144,11 @@
 #' # Run the Fortran P-model
 #' mod_output <- run_pmodel_f_bysite(
 #'   # unnest drivers example data
-#'   sitename = p_model_drivers_format2024_08$sitename[1],
-#'   params_siml = p_model_drivers_format2024_08$params_siml[[1]],
-#'   site_info = p_model_drivers_format2024_08$site_info[[1]],
-#'   forcing = p_model_drivers_format2024_08$forcing[[1]],
-#'   forcing_acclim = p_model_drivers_format2024_08$forcing_daytime[[1]],
+#'   sitename = p_model_drivers_format2025_02$sitename[1],
+#'   params_siml = p_model_drivers_format2025_02$params_siml[[1]],
+#'   site_info = p_model_drivers_format2025_02$site_info[[1]],
+#'   forcing = p_model_drivers_format2025_02$forcing[[1]],
+#'   forcing_acclim = p_model_drivers_format2025_02$forcing_daytime[[1]],
 #'   params_modl = params_modl
 #'  )
 run_pmodel_f_bysite <- function( # TODO: Above docstring appears duplicated in runread_pmodel_f.R. This redunduncy should be reduced.
@@ -561,6 +561,7 @@ run_pmodel_f_bysite <- function( # TODO: Above docstring appears duplicated in r
 required_param_names <- list(
   phydro_model = c( # P-hydro model needs these parameters:
   'bsoil', 
+  # 'gw_calib', # TODO: is phydro not using gw_calib????
   'kc_jmax', 
   'kphio', 
   'kphio_par_a', 

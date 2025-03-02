@@ -63,7 +63,7 @@
 #'     err_gpp            = 0.9         # value from previous simulations
 #'   ),                          # must be a named list
 #'   obs = p_model_validation,   # example data from package
-#'   drivers = p_model_drivers_format2024_08, #TODO rsofun::p_model_drivers is NOT YET UPDATED FOR PHYDRO (a newformat, b add phydro_ parameters)
+#'   drivers = p_model_drivers_format2025_02, #TODO rsofun::p_model_drivers is NOT YET UPDATED FOR PHYDRO (a newformat, b add phydro_ parameters)
 #'   targets = "gpp",
 #'   par_fixed = list(
 #'     soilm_thetastar    = 0.6 * 240,  # to recover old setup with soil moisture stress
