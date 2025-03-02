@@ -214,8 +214,8 @@ To optimize new parameters based upon driver data and a validation dataset we mu
 
 ```{r}
 settings <- list(
-  method               = "GenSA",
-  metric               = cost_rmse_pmodel,
+  method = "GenSA",
+  metric = cost_rmse_pmodel,
   control = list(maxit = 3000),
   par = list(
     # all model parameters are calibratable
