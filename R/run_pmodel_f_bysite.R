@@ -207,7 +207,8 @@ run_pmodel_f_bysite <- function( # TODO: Above docstring appears duplicated in r
     "fapar",
     "patm",
     "tmin",
-    "tmax"
+    "tmax",
+    "vwind"
   )
   forcing <- forcing %>% 
     dplyr::mutate(fsun = (100-ccov)/100) %>% 
@@ -230,7 +231,8 @@ run_pmodel_f_bysite <- function( # TODO: Above docstring appears duplicated in r
       "fapar",
       "patm",
       "tmin",
-      "tmax"
+      "tmax",
+      "vwind"
     )
     # list variable to check for
     check_vars_acclim <- c(

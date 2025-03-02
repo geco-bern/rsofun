@@ -49,7 +49,7 @@ contains
   !   soilwp = 1 - wscal**(-bsoil)
   ! end function
 
-  subroutine gpp( tile, tile_fluxes, co2, climate, climate_acclimation, grid, init, in_ppfd, use_phydro, use_pml)
+  subroutine gpp( tile, tile_fluxes, co2, climate, climate_acclimation, grid, init, in_ppfd, use_phydro)
     !//////////////////////////////////////////////////////////////////
     ! Wrapper function to call to P-model. 
     ! Calculates meteorological conditions with memory based on daily
@@ -70,7 +70,6 @@ contains
     logical, intent(in) :: init                              ! is true on the very first simulation day (first subroutine call of each gridcell)
     logical, intent(in) :: in_ppfd                           ! whether to use PPFD from forcing or from SPLASH output
     logical, intent(in) :: use_phydro                        ! whether to use P-Hydro for photosynthesis and transpiration
-    logical, intent(in) :: use_pml                           ! whether to use uncoupled PM formulation for canopy transpiration (whether to plug gs into PM equation. Alternatively, 1.6gsD will be used)
 
     ! local variables
     type(outtype_pmodel) :: out_pmodel              ! list of P-model output variables
@@ -279,6 +278,7 @@ contains
       ! but not too dangerous...
       !----------------------------------------------------------------
       if (.not. use_phydro) then
+
         if( in_ppfd ) then
           ! print *, "Using in_ppfd"
           ! Take input daily PPFD (in mol/m^2)
@@ -289,6 +289,7 @@ contains
           tile_fluxes(lu)%plant(pft)%dgpp = tile(lu)%plant(pft)%fpc_grid * tile(lu)%canopy%fapar &
             * tile_fluxes(lu)%canopy%ppfd_splash * out_pmodel%lue * soilmstress
         end if
+
       else ! Using phydro - run instantaneous model
         ! print *, "sw / swp = ", sw, swp
         out_phydro_inst = phydro_instantaneous_analytical( &
@@ -357,7 +358,7 @@ contains
       !----------------------------------------------------------------
       if (.not. use_phydro) then
         ! Jaideep NOTE: I have applied the soilmstress factor to gs here because it is needed in calculating canopy transpiration
-        tile_fluxes(lu)%plant(pft)%gs_accl = out_pmodel%gs_setpoint * soilmstress
+        tile_fluxes(lu)%plant(pft)%gs_accl = climate%dppfd * out_pmodel%gs_setpoint * soilmstress
 
         ! print*,'in gpp: soilmstress, gs_accl ', soilmstress, tile_fluxes(lu)%plant(pft)%gs_accl
       else 
@@ -389,9 +390,9 @@ contains
         ! Note here that stomatal conductance is already normalized by patm (=gs/patm) so E = 1.6 * (gs/patm) * vpd, which is the same as 1.6 gs (vpd/patm)
         ! but it is expressed per unit absorbed light, so multiply by PPFD*fapar
         ! dtransp is in mm d-1
-        tile_fluxes(lu)%plant(pft)%dtransp = (1.6 &                                           ! 1.6
-          * tile_fluxes(lu)%plant(pft)%gs_accl * tile(lu)%canopy%fapar * climate%dppfd &  ! gs
-          * climate%dvpd) &                                                               ! D
+        tile_fluxes(lu)%plant(pft)%dtransp = (1.6 &                       ! 1.6
+          * tile_fluxes(lu)%plant(pft)%gs_accl * tile(lu)%canopy%fapar &  ! gs
+          * climate%dvpd) &                                               ! D
           * h2o_molmass * (1.0d0 / rho_water) &
           * myinterface%params_siml%secs_per_tstep  ! convert: mol m-2 s-1 * kg-h2o mol-1 * m3 kg-1 * s day-1 * mm m-1 = mm day-1
 

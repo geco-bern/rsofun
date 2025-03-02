@@ -140,8 +140,7 @@ contains
                   myinterface%grid, &
                   init_daily, &
                   myinterface%params_siml%in_ppfd, &
-                  myinterface%params_siml%use_phydro, &
-                  myinterface%params_siml%use_pml &
+                  myinterface%params_siml%use_phydro &
                   )
         ! if (verbose) print*,'... done'
 

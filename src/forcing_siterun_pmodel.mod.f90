@@ -95,7 +95,7 @@ contains
     out_climate(:)%dpatm   = real(forcing(idx_start:idx_end, 10))
     out_climate(:)%dtmin   = real(forcing(idx_start:idx_end, 11))
     out_climate(:)%dtmax   = real(forcing(idx_start:idx_end, 12))
-    out_climate(:)%dwind   = 2.0  ! xxx try
+    out_climate(:)%dwind   = real(forcing(idx_start:idx_end, 13))
 
   end function getclimate
 

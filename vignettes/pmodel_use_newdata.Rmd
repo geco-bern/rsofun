@@ -219,7 +219,7 @@ The package includes two demo datasets to run and validate pmodel output using G
 
 ### Visualize drivers
 
-```{r}
+```{r eval=FALSE}
 rsofun::p_model_drivers_format2024_08$forcing[[1]] |>
     # dplyr::filter(year(date) >= ystart & year(date) <= yend) |>
     dplyr::select(date, co2, ppfd, netrad, temp, vpd, fapar, rain, ccov) |>
