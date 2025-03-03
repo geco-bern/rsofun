@@ -22,8 +22,10 @@
 #'       \item{rain}{Rain as precipitation in liquid form in mm s\eqn{^{-1}}.}
 #'       \item{tmin}{Daily minimum air temperature in \eqn{^\circ}C.}
 #'       \item{tmax}{Daily maximum air temperature in \eqn{^\circ}C.}
+#'       \item{vwind}{Windspeed in m/s assumed to be measured at the reference 
+#'       height (site_info$reference_height).}
 #'       \item{fapar}{Fraction of photosynthetic active radiation (fAPAR), taking
-#'      values between 0 and 1.}
+#'       values between 0 and 1.}
 #'       \item{co2}{Atmospheric CO\eqn{_2} concentration.}
 #'       \item{ccov}{Cloud coverage in \%. This is only used when either PPFD or
 #'       net radiation are not prescribed.}
@@ -43,6 +45,9 @@
 #'       \item{lgn3}{A logical value, \code{TRUE} if grass with C3 photosynthetic
 #'       pathway and N-fixing.}
 #'       \item{lgr4}{A logical value, \code{TRUE} if grass with C4 photosynthetic pathway.}
+#'       \item{use_pml}{TODO: document.}
+#'       \item{use_gs}{TODO: document.}
+#'       \item{use_phydro}{TODO: document.}
 #'     }
 #'   }
 #'   \item{site_info}{A tibble containing site meta information.
@@ -51,6 +56,8 @@
 #'       \item{lat}{Latitude of the site location in degrees north.}
 #'       \item{elv}{Elevation of the site location, in meters above sea level.}
 #'       \item{whc}{A numeric value for the rooting zone water holding capacity (in mm)}
+#'       \item{canopy_height}{Height of canopy, in meters above ground.}
+#'       \item{reference_height}{Height of windspeed and VPD measurement, in meters above ground.}
 #'     }
 #'   }
 #' }
