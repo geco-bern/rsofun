@@ -206,8 +206,7 @@ contains
         out_biosphere%latenth_soil(doy) = tile_fluxes(1)%canopy%daet_e_soil
         out_biosphere%dpsi(doy)    = tile_fluxes(1)%plant(1)%dpsi
         out_biosphere%psi_leaf(doy)    = tile_fluxes(1)%plant(1)%psi_leaf
-        out_biosphere%daily_rad(doy) = tile_fluxes(1)%canopy%drn / myinterface%params_siml%secs_per_tstep
-        out_biosphere%night_rad(doy) = tile_fluxes(1)%canopy%drnn / myinterface%params_siml%secs_per_tstep
+
 
         init_daily = .false.
 

@@ -310,7 +310,7 @@ contains
     type(climate_type), intent(in)        :: climate
     real, intent(in)                      :: sw            ! evaporative supply rate, mm/hr
     real, intent(in)                      :: fapar   
-    real, intent(in)                      :: gw_calib
+    real, intent(in)                      :: gw_calib      ! scaling factor from leaf-level to canopy-level conductance
     logical, intent(in)                   :: using_phydro
     logical, intent(in)                   :: using_gs   ! Should Pmodel/Phydro gs be used in ET calc? (otherwise, PT formulation will be used)
     logical, intent(in)                   :: using_pml  ! If using Pmodel/Phydro gs, should ET be calculated using PM equation (otherwise, diffusion equation will be used)
@@ -489,6 +489,9 @@ contains
         ! See also calc_transpiration_pm() in photosynth_phydro.mod.f90
         tile_fluxes%canopy%daet_e_canop = (epsilon * fapar * tile_fluxes%canopy%drn + (rho_water * cp / gamma) &
           * ga * climate%dvpd) / (epsilon + 1.0 + ga / gw) 
+          
+        
+        ! FRANCESCO: canopy conductance assuming gw = infinite
         
         tile_fluxes%canopy%dpet_e   =(epsilon * fapar * tile_fluxes%canopy%drn + (rho_water * cp / gamma) &
           * ga * climate%dvpd) / (epsilon + 1.0) 
