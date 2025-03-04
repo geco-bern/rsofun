@@ -22,7 +22,6 @@ library(dplyr)
 library(tidyr)
 library(ggplot2)
 library(khroma)
-library(cowplot)
 
 # define function for evaluation plots
 plot_eval <- function(df, is_gpp = TRUE, return_gg1 = FALSE, return_gg2 = FALSE){
@@ -136,10 +135,10 @@ plot_eval <- function(df, is_gpp = TRUE, return_gg1 = FALSE, return_gg2 = FALSE)
     return(gg1)
   } else if (return_gg2){
     return(gg2)
-  } else {
-    cow <- cowplot::plot_grid(gg1, gg2, nrow = 1)
-    return(cow)
-  }
+  } #else {
+  #   cow <- cowplot::plot_grid(gg1, gg2, nrow = 1)
+  #   return(cow)
+  # }
 }
 ```
 
@@ -223,7 +222,8 @@ df_plot <- output |>
     by = join_by(date)
   )
 
-plot_eval(df_plot)
+plot_eval(df_plot, return_gg1 = TRUE)
+plot_eval(df_plot, return_gg2 = TRUE)
 ```
 
 ## Calibrating model parameters

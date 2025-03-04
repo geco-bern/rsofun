@@ -440,11 +440,9 @@ Run the model and plot outputs
 
 ```{r}
 # run the model for these parameters
-output <- rsofun::runread_pmodel_f(
-  mutate(rsofun::p_model_drivers_formatPhydro,
-         params_siml = params_siml |> mutate(use_gs = FALSE) |> list()),
-  par = params_modl
-)
+output <- rsofun::p_model_drivers_formatPhydro |>
+  mutate(params_siml = purrr::map(params_siml, ~mutate(., use_gs = FALSE))) |>
+  rsofun::runread_pmodel_f(par = params_modl)
 ```
 
 ```{r}
@@ -490,11 +488,9 @@ Run the model.
 
 ```{r}
 # run the model for these parameters
-output <- rsofun::runread_pmodel_f(
-  mutate(rsofun::p_model_drivers_formatPhydro,
-         params_siml = params_siml |> mutate(use_gs = TRUE) |> list()),
-  par = params_modl
-)
+output <- rsofun::p_model_drivers_formatPhydro |>
+  mutate(params_siml = purrr::map(params_siml, ~mutate(., use_gs = TRUE))) |>
+  rsofun::runread_pmodel_f(par = params_modl)
 ```
 
 Plot outputs. 
@@ -542,11 +538,9 @@ Run the model.
 
 ```{r}
 # run the model for these parameters
-output <- rsofun::runread_pmodel_f(
-  mutate(rsofun::p_model_drivers_formatPhydro,
-         params_siml = params_siml |> mutate(use_gs = TRUE, use_pml = TRUE, use_phydro + FALSE) |> list()),
-  par = params_modl
-)
+output <- rsofun::p_model_drivers_formatPhydro |>
+  mutate(params_siml = purrr::map(params_siml, ~mutate(., use_gs = TRUE, use_pml = TRUE, use_phydro = FALSE))) |>
+  rsofun::runread_pmodel_f(par = params_modl)
 ```
 
 Plot outputs. 
@@ -632,12 +626,9 @@ params_modl <- list(
 )
 
 # run the model for these parameters
-output <- rsofun::runread_pmodel_f(
-  mutate(phydro_model_drivers, 
-         params_siml = params_siml |> mutate(use_gs = TRUE, use_phydro = TRUE) |> list()),
-  par = params_modl
-)
-
+output <- rsofun::p_model_drivers_formatPhydro |>
+  mutate(params_siml = purrr::map(params_siml, ~mutate(., use_gs = TRUE, use_phydro = TRUE))) |>
+  rsofun::runread_pmodel_f(par = params_modl)
 ```
 
 ## Plot Phydro outputs
