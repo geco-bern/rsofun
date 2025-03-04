@@ -61,7 +61,7 @@ ll_pmodel <- function(
   rsofun::cost_likelihood_pmodel(        # reuse likelihood cost function
     as.list(par_v),                      # must be a named list
     obs = rsofun::p_model_validation,    # example data from package
-    drivers = rsofun::p_model_drivers_format2025_02, #TODO rsofun::p_model_drivers is NOT YET UPDATED FOR PHYDRO (a newformat, b add phydro_ parameters)
+    drivers = rsofun::p_model_drivers_formatPhydro, #TODO rsofun::p_model_drivers is NOT YET UPDATED FOR PHYDRO (a newformat, b add phydro_ parameters)
     targets = "gpp"
   )
 }
@@ -269,7 +269,7 @@ settings_calib <- list(
 
 # Calibrate kphio-related parameters and err_gpp 
 par_calib <- calib_sofun(
-  drivers = rsofun::p_model_drivers_format2025_02, # TODO: NOT YET UPDATED FOR PHYDRO (still add default phydro_* parameters)
+  drivers = rsofun::p_model_drivers_formatPhydro, # TODO: NOT YET UPDATED FOR PHYDRO (still add default phydro_* parameters)
   obs = p_model_validation,
   settings = settings_calib,
   par_fixed = list(
@@ -308,7 +308,7 @@ settings_calib <- list(
 )
 
 par_calib <- calib_sofun(
-  drivers = rsofun::p_model_drivers_format2025_02, # TODO: NOT YET UPDATED FOR PHYDRO (still add default phydro_* parameters)
+  drivers = rsofun::p_model_drivers_formatPhydro, # TODO: NOT YET UPDATED FOR PHYDRO (still add default phydro_* parameters)
   obs = p_model_validation,
   settings = settings_calib,
   par_fixed = list(
@@ -421,7 +421,7 @@ samples_par <- getSample(par_calib$mod,
 run_pmodel <- function(par){
   # Function that runs the P-model for a sample of parameters
   out <- runread_pmodel_f(
-    drivers = rsofun::p_model_drivers_format2025_02, # TODO: NOT YET UPDATED FOR PHYDRO (still add default phydro_* parameters)
+    drivers = rsofun::p_model_drivers_formatPhydro, # TODO: NOT YET UPDATED FOR PHYDRO (still add default phydro_* parameters)
     par =  list(
       # values from posterior:
       kc_jmax         = par$kc_jmax,

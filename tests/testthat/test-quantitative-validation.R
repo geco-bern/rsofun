@@ -20,7 +20,7 @@ test_that("p-model quantitative check versus observations (FR-Pue)", {
     kc_jmax            = 0.41
   )
   
-  df_drivers <- rsofun::p_model_drivers_format2025_02 # TODO: NOT YET UPDATED FOR PHYDRO (still add default phydro_* parameters) # |>        
+  df_drivers <- rsofun::p_model_drivers_formatPhydro # TODO: NOT YET UPDATED FOR PHYDRO (still add default phydro_* parameters) # |>        
     # formerly we corrected to 2000mm: tidyr::unnest(site_info) |> mutate(whc = 2000) |>        
     # formerly we corrected to 2000mm: tidyr::nest(site_info = !c(sitename, params_siml, starts_with("forcing")))        
   
