@@ -160,12 +160,13 @@ morrisOut <- sensitivity::morris(
 
 ```{r eval = FALSE, echo = FALSE}
 # Save Morris sensitivity output because it takes very long to compute
-save(morrisOut, file = "files/morrisOut.rda")
+saveRDS(morrisOut, "files/sensitivity_analysis.Rmd__morrisOut.rds")
 ```
 
 ```{r eval = TRUE, echo = FALSE}
 # Load Morris sensitivity output
-load("files/morrisOut.rda")
+morrisOut <- readRDS("files/sensitivity_analysis.Rmd__morrisOut.rds")
+
 ```
 
 The analysis evaluates the variability of the target function, i.e. the 
@@ -181,7 +182,7 @@ morrisOut.df <- data.frame(
   parameter = names(par_cal_best),
   mu.star = apply(abs(morrisOut$ee), 2, mean, na.rm = T),
   sigma = apply(morrisOut$ee, 2, sd, na.rm = T)
-) %>%
+) |>
   arrange( mu.star )
 
 morrisOut.df |>
@@ -192,16 +193,18 @@ morrisOut.df |>
     fill = variable),
     color = NA) +
   geom_bar(position = position_dodge(), stat = 'identity') +
-  scale_fill_brewer("", labels = c('mu.star' = expression(mu * "*"),
-                                   'sigma' = expression(sigma)),
-                    palette = "Greys") +
+  scale_fill_manual("", 
+                    labels = c('mu.star' = expression(mu * "*"),
+                               'sigma' = expression(sigma)),
+                    values = c('mu.star' = "#29a274ff", 
+                               'sigma' = "#777055ff")) +
   theme_classic() +
   theme(
     axis.text = element_text(size = 6),
     axis.title = element_blank(),
-    legend.position.inside = c(0.05, 0.95), legend.justification = c(0.05, 0.95)
-  )
-
+    legend.position = c(0.9, 0.1), legend.justification = c(0.95, 0.05)
+  ) +
+  coord_flip()    # make horizontal
 ```
 
 The outcome of the Morris sensitivity analysis depends strongly on the choice of
@@ -281,7 +284,7 @@ par_calib <- calib_sofun(
 # This code takes 15 minutes to run
 ```
 
-```{r eval = FALSE, echo = FALSE}
+```{r eval = FALSE, echo = TRUE}
 # Calibrates kphio, kc_jmax, soilm_thetastar - top 3 model params # TODO: redefined for PHYDRO the parameters () instead of (kphio, betao, kc_jmax)
 set.seed(2023)
 
@@ -320,12 +323,12 @@ par_calib <- calib_sofun(
 
 ```{r eval = FALSE, echo = FALSE}
 # Save calibration output because it takes very long to compute
-save(par_calib, file = "files/par_calib.rda")
+saveRDS(par_calib, "files/sensitivity_analysis.Rmd__par_calib.rds")
 ```
 
 ```{r eval = TRUE, echo = FALSE}
 # Load calibration output
-load("files/par_calib.rda")
+par_calib <- readRDS("files/sensitivity_analysis.Rmd__par_calib.rds")
 ```
 
 `BayesianTools` makes it easy to produce the trace plot of the MCMC chains and the posterior density plot for the parameters. Trace plots show the time series of the sampled chains, which should reach a stationary state. One can also choose a burnin visually, to discard the early iterations and keep only the samples from the stationary distribution to which they converge. We set \code{burnin = 3000} above from previous runs, and those iterations are not shown by the following trace plot. The samples after the burnin period should be used for inference.
@@ -345,15 +348,35 @@ When convergence has been reached, the oscillation of the time series should loo
 plot_acf_mcmc <- function(chains, par_names){
   # chains: from the BayesianTools output
   n_chains <- length(chains)
+  n_internal_chains <- length(chains[[1]]$chain)
   par(mfrow = c(length(par_names), n_chains))
+  if(!all(par_names %in% chains[[1]][[1]]$names)){
+    stop(sprintf("Requested par_names: %s,\navailable par_names: %s", 
+                 paste0(par_names, collapse=","),
+                 paste0(chains[[1]][[1]]$names, collapse=",")))
+  }
   for(par_name in par_names){
     for(i in 1:n_chains){
-      getSample(chains[[1]])[,par_name] |> # alternatively: as_tibble(getSample(chains[[i]]))[par_name] |>
-        pacf(main = paste0("Series of ", par_name, " , chain ", i))
+      stopifnot(all(par_names %in% chains[[i]][[1]]$names)) # check again
+      stopifnot(n_internal_chains<=3); color = c("blue", "red", "darkgreen")
+      spacing = 0.5/n_internal_chains
+      for(j in 1:n_internal_chains){
+        autocorr_internal_chain <- pacf(getSample(chains[[i]]$chain[[j]])[, par_name], plot = FALSE)
+        if(j==1){
+          plot(autocorr_internal_chain, col = color[j], 
+               main = sprintf("Series of %s , chain (%i)", par_name, i))  
+        } else {
+          lines(autocorr_internal_chain$lag + spacing*(j-1),
+                autocorr_internal_chain$acf,
+                col = color[j], type = "h")  
+        }
+      }
     }
   }
 }
-plot_acf_mcmc(par_calib$mod, par_names = c("kphio", "kphio_par_a", "kphio_par_b", "err_gpp"))
+plot_acf_mcmc(
+  par_calib$mod, 
+  par_names = c("kphio", "kc_jmax", "soilm_thetastar", "err_gpp"))
 ```
 
 Looking at the correlation between chains for different parameters is also helpful because parameter correlation may slow down convergence, or the chains may oscillate in the multivariate posterior space. In this calibration we expect parameter samples to be somewhat correlated, especially `kphio_par_a` and `kphio_par_b` because they specify the shape of the temperature dependence of the quantum yield efficiency, $\varphi_o(T)$. We can also see that `err_gpp` is correlated with `kphio` (to which the P-model is very sensitive), since the error represents how good the model fits the observed GPP.
@@ -395,35 +418,41 @@ samples_par <- getSample(par_calib$mod,
   dplyr::mutate(mcmc_id = 1:n()) |>
   tidyr::nest(.by = mcmc_id, .key = "pars")
 
-run_pmodel <- function(sample_par){
+run_pmodel <- function(par){
   # Function that runs the P-model for a sample of parameters
-  # and also adds the new observation error
-  
   out <- runread_pmodel_f(
     drivers = rsofun::p_model_drivers_format2025_02, # TODO: NOT YET UPDATED FOR PHYDRO (still add default phydro_* parameters)
-    par =  list(                      # copied from par_fixed above
-      kphio = sample_par$kphio,
-      kphio_par_a = sample_par$kphio_par_a,
-      kphio_par_b = sample_par$kphio_par_b,
-      soilm_thetastar    = 0.6*240,
+    par =  list(
+      # values from posterior:
+      kc_jmax         = par$kc_jmax,
+      kphio           = par$kphio,
+      soilm_thetastar = par$soilm_thetastar,
+                      # par$err_gpp
+      # copied from par_fixed above
+      kphio_par_a = -0.0025,
+      kphio_par_b = 20,
       beta_unitcostratio = 146.0,
       rd_to_vcmax        = 0.014,
-      tau_acclim         = 30.0,
-      kc_jmax            = 0.41)       # value from posterior
+      tau_acclim         = 30.0)
   )
-  
+  return(out)
+}
+run_pmodel_with_error <- function(par){
+  # Function that runs the P-model for a sample of parameters
+  # and also adds the new observation error
+  out <- run_pmodel(par)
   # return modelled GPP and prediction for a new GPP observation
   gpp <- out$data[[1]][, "gpp"]
   data.frame(gpp = gpp, 
              gpp_pred = gpp + rnorm(n = length(gpp), mean = 0, 
-                                   sd = sample_par$err_gpp),
+                                   sd = par$err_gpp),
              date = out$data[[1]][, "date"])
 }
 
 set.seed(2023)
 # Run the P-model for each set of parameters
 pmodel_runs <- samples_par |>
-  dplyr::mutate(sim = purrr::map(pars, ~run_pmodel(.x))) |>
+  dplyr::mutate(sim = purrr::map(pars, ~run_pmodel_with_error(.x))) |>
   # format to obtain 90% credible intervals
   dplyr::select(mcmc_id, sim) |>
   tidyr::unnest(sim) |>
@@ -431,7 +460,7 @@ pmodel_runs <- samples_par |>
   # compute quantiles for each day
   dplyr::summarise(
     gpp_q05 = quantile(gpp, 0.05, na.rm = TRUE),
-    gpp = quantile(gpp, 0.5, na.rm = TRUE),          # get median
+    gpp_q50 = quantile(gpp, 0.5, na.rm = TRUE),          # get median
     gpp_q95 = quantile(gpp, 0.95, na.rm = TRUE),
     gpp_pred_q05 = quantile(gpp_pred, 0.05, na.rm = TRUE),
     gpp_pred_q95 = quantile(gpp_pred, 0.95, na.rm = TRUE)
@@ -439,11 +468,11 @@ pmodel_runs <- samples_par |>
 ```
 
 ```{r eval = FALSE, echo = FALSE}
-save(pmodel_runs, file = "files/pmodel_runs.rda")
+saveRDS(pmodel_runs, "files/sensitivity_analysis.Rmd__pmodel_runs.rds")
 ```
 
 ```{r echo = FALSE, eval = TRUE}
-load("files/pmodel_runs.rda")
+pmodel_runs <- readRDS("files/sensitivity_analysis.Rmd__pmodel_runs.rds")
 ```
 
 Below we plot the first year of observed GPP (in black) against the predicted 
@@ -455,48 +484,72 @@ credible interval is quite small, in comparison to the model uncertainty
 captured by the predictive interval.
 
 ```{r fig.width=7, fig.height=5}
+## add transparency to color given as a name
+add_alpha <- function( col, alpha ){
+  col    <- col2rgb( col, alpha = TRUE )/255
+  col[4] <- alpha
+  col    <- rgb(col[1,],col[2,],col[3,],col[4,])
+  return( col )
+}
+
 # Plot the credible intervals computed above
 # for the first year only
-plot_gpp_error <- ggplot(data = pmodel_runs |>
-    dplyr::slice(1:365)) +             # Plot only first year
+data_to_plot <- pmodel_runs |>
+  # Plot only first year
+  dplyr::slice(1:365) |>
+  dplyr::left_join(
+    # Merge GPP validation data (first year)
+    p_model_validation$data[[1]][1:365, ] |>
+      dplyr::rename(gpp_obs = gpp),
+    by = "date")
+
+plot_gpp_error <- ggplot(data = data_to_plot) +
   geom_ribbon(
-    aes(ymin = gpp_q05, 
-        ymax = gpp_q95,
-        x = date),
-    fill = 'blue', alpha = 0.5) +
+    aes(
+      ymin = gpp_pred_q05,
+      ymax = gpp_pred_q95,
+      x = date,
+      fill = "Model uncertainty"
+    )) +
   geom_ribbon(
-    aes(ymin = gpp_pred_q05, 
-        ymax = gpp_pred_q95,
-        x = date),
-    fill = 'grey40', alpha = 0.2) +
+    aes(
+      ymin = gpp_q05, 
+      ymax = gpp_q95,
+      x = date,
+      fill = "Parameter uncertainty"
+    )) +
+  # Include observations in the plot
+  geom_point(
+    aes(
+      x = date,
+     y = gpp_obs,
+     color = "Observations"
+    ),
+  ) +
   geom_line(
     aes(
-      date,
-      gpp
-    ),
-    colour = "grey40",
-    alpha = 0.8
+      x = date,
+      y = gpp_q50,
+      color = "Predictions"
+    )
   ) +
   theme_classic() +
-  theme(panel.grid.major.y = element_line()) +
+  theme(panel.grid.major.y = element_line(),
+        legend.position = "bottom") +
   labs(
     x = 'Date',
     y = expression(paste("GPP (g C m"^-2, "s"^-1, ")"))
-  )
-
-# Define GPP validation data (first year)
-validation_data <- p_model_validation$data[[1]][1:365, ]
-
-# Include observations in the plot
-plot_gpp_error +  
-  geom_line(
-    data = validation_data,
-    aes(
-      date,
-      gpp
-    ),
-    alpha = 0.8
-  )
+  ) +
+  scale_color_manual(NULL,
+                     breaks = c("Observations",
+                                "Predictions"),
+                     values = c("black", "tomato")) +
+  scale_fill_manual(NULL,
+                    breaks = c("Model uncertainty",
+                               "Parameter uncertainty"),
+                    values = c(add_alpha("tomato", 0.5),
+                               "#1b9e77", 0))
+plot_gpp_error
 ```
 
 <!-- Below we plot the first year of predicted GPP (in grey) against GPP observations (in black). -->
@@ -505,54 +558,61 @@ plot_gpp_error +
 <!-- with standard deviation `err_gpp`. -->
 
 ```{r fig.width=7, fig.height=5, echo = FALSE, eval = FALSE}
-# 
 # Plot observed and predicted GPP, with a 95% confidence interval using err_gpp
-plot_gpp_error <- ggplot(data = runread_pmodel_f(
-    drivers = rsofun::p_model_drivers_format2025_02, # TODO: NOT YET UPDATED FOR PHYDRO (still add default phydro_* parameters)
-    par =  list(                       
-      kphio = par_calib$par[1],        # values from posterior
-      kphio_par_a = par_calib$par[2],
-      kphio_par_b = par_calib$par[3],
-      soilm_thetastar    = 0.6*240,    # copied from par_fixed above
-      beta_unitcostratio = 146.0,
-      rd_to_vcmax        = 0.014,
-      tau_acclim         = 30.0,
-      kc_jmax            = 0.41)       
-  ) |>
-    dplyr::select(sitename, data) |>
-    tidyr::unnest(data) |>
-    dplyr::slice(1:365)) +             # Plot only first year
-  geom_ribbon(
-    aes(ymin = gpp - 2*par_calib$par[4], 
-        ymax = gpp + 2*par_calib$par[4],
-        x = date),
-    fill = 'grey40', alpha = 0.2) +
+# Run model with maximum a posteriori parameter estimates (not shown on plot).
+pmodel_run_map <- run_pmodel(
+  BayesianTools::MAP(par_calib$mod)$parametersMAP |> 
+    t() |> 
+    as_tibble()
+) |> 
+  dplyr::select(-site_info) |> 
+  tidyr::unnest(data)
+
+# Plot the credible intervals computed above
+# for the first year only
+data_to_plot <- pmodel_run_map |>
+  # Plot only first year
+  dplyr::slice(1:365) |>
+  dplyr::left_join(
+    # Merge GPP validation data (first year)
+    p_model_validation$data[[1]][1:365, ] |>
+      dplyr::rename(gpp_obs = gpp),
+    by = "date")
+
+plot_gpp_error <- ggplot(data = data_to_plot) +
+  # Include observations in the plot
+  geom_point(
+    aes(
+      x = date,
+     y = gpp_obs,
+     color = "Observations"
+    ),
+  ) +
   geom_line(
     aes(
-      date,
-      gpp
-    ),
-    colour = "grey40",
-    alpha = 0.8
+      x = date,
+      y = gpp,
+      color = "Predictions based on MAP"
+    )
   ) +
+  geom_ribbon(
+    aes(x = date,
+        ymin = gpp - 2*BayesianTools::MAP(par_calib$mod)$parametersMAP['err_gpp'], 
+        ymax = gpp + 2*BayesianTools::MAP(par_calib$mod)$parametersMAP['err_gpp'],
+        fill = "90% confidence interval"),
+      alpha = 0.2) +
+
   theme_classic() +
-  theme(panel.grid.major.y = element_line()) +
+  theme(panel.grid.major.y = element_line(),
+        legend.position = "bottom") +
   labs(
     x = 'Date',
     y = expression(paste("GPP (g C m"^-2, "s"^-1, ")"))
-  )
-
-# Define GPP validation data (first year)
-validation_data <- p_model_validation$data[[1]][1:365, ]
-
-# Include observations in the plot
-plot_gpp_error +  
-  geom_line(
-    data = validation_data,
-    aes(
-      date,
-      gpp
-    ),
-    alpha = 0.8
-  )
+  ) +
+  scale_color_manual(NULL, aesthetics = c("colour","fill"),
+                     breaks = c("Observations",
+                                "Predictions based on MAP",
+                                "90% confidence interval"),
+                     values = c("black", "tomato", "grey40"))
+plot_gpp_error
 ```
