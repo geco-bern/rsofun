@@ -18,7 +18,7 @@ ll_pmodel <- function(
   rsofun::cost_likelihood_pmodel(        # likelihood cost function from package
     as.list(par_v),                      # must be a named list
     obs = rsofun::p_model_validation,    # example data from package
-    drivers = rsofun::p_model_drivers_format2025_02, #TODO rsofun::p_model_drivers is NOT YET UPDATED FOR PHYDRO (a newformat, b add phydro_ parameters)
+    drivers = rsofun::p_model_drivers_formatPhydro, #TODO rsofun::p_model_drivers is NOT YET UPDATED FOR PHYDRO (a newformat, b add phydro_ parameters)
     targets = "gpp"
   )
 }

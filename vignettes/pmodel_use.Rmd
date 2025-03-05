@@ -22,7 +22,6 @@ library(dplyr)
 library(tidyr)
 library(ggplot2)
 library(khroma)
-library(cowplot)
 
 # define function for evaluation plots
 plot_eval <- function(df, is_gpp = TRUE, return_gg1 = FALSE, return_gg2 = FALSE){
@@ -136,10 +135,10 @@ plot_eval <- function(df, is_gpp = TRUE, return_gg1 = FALSE, return_gg2 = FALSE)
     return(gg1)
   } else if (return_gg2){
     return(gg2)
-  } else {
-    cow <- cowplot::plot_grid(gg1, gg2, nrow = 1)
-    return(cow)
-  }
+  } #else {
+  #   cow <- cowplot::plot_grid(gg1, gg2, nrow = 1)
+  #   return(cow)
+  # }
 }
 ```
 
@@ -223,7 +222,8 @@ df_plot <- output |>
     by = join_by(date)
   )
 
-plot_eval(df_plot)
+plot_eval(df_plot, return_gg1 = TRUE)
+plot_eval(df_plot, return_gg2 = TRUE)
 ```
 
 ## Calibrating model parameters
@@ -443,7 +443,7 @@ plot_eval(df_plot, is_gpp = FALSE)
 <!-- For P-hydro, we must use the 3-hr daily max forcing as the acclimation forcing. So let's rename it in the data. -->
 
 <!-- ```{r} -->
-<!-- phydro_model_drivers <- rsofun::p_model_drivers_format2024_08 |>  -->
+<!-- phydro_model_drivers <- rsofun::p_model_drivers_formatPhydro |>  -->
 <!--   rename(forcing_acclim = forcing_3hrmax) -->
 
 <!--   # mutate(forcing = purrr::map(forcing, ~mutate(., vwind = NA))) -->
@@ -490,7 +490,7 @@ plot_eval(df_plot, is_gpp = FALSE)
 <!-- df_plot <- output$data[[1]] |>  -->
 <!--   select(date, mod = gpp) |>  -->
 <!--   left_join( -->
-<!--     rsofun::p_model_validation_format2024_08$data[[1]] |>  -->
+<!--     rsofun::p_model_validation_formatPhydro$data[[1]] |>  -->
 <!--       select(date, obs = gpp), -->
 <!--     by = join_by(date) -->
 <!--   ) |>  -->
@@ -503,7 +503,7 @@ plot_eval(df_plot, is_gpp = FALSE)
 <!--   mutate(le =  le / (24 * 60 * 60)) |>  -->
 <!--   select(date, mod = le) |>  -->
 <!--   left_join( -->
-<!--     rsofun::p_model_validation_format2024_08$data[[1]] |>  -->
+<!--     rsofun::p_model_validation_formatPhydro$data[[1]] |>  -->
 <!--       mutate(le =  le / (24 * 60 * 60)) |>  -->
 <!--       select(date, obs = le), -->
 <!--     by = join_by(date) -->

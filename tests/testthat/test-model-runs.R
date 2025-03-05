@@ -33,7 +33,7 @@ test_that("run_pmodel_f_bysite()", {
   )
 
   # read in demo data
-  df_drivers <- rsofun::p_model_drivers_format2025_02
+  df_drivers <- rsofun::p_model_drivers_formatPhydro
   
   # check run_pmodel_f_bysite() ##########################
   # run the SOFUN Fortran P-model using the internal function `run_pmodel_f_bysite`
@@ -278,7 +278,7 @@ test_that("runread_pmodel_f()", {
   )
   
   # read in demo data
-  df_drivers <- rsofun::p_model_drivers_format2025_02 # TODO: NOT YET UPDATED FOR PHYDRO (still add default phydro_* parameters)
+  df_drivers <- rsofun::p_model_drivers_formatPhydro # TODO: NOT YET UPDATED FOR PHYDRO (still add default phydro_* parameters)
 
   df_output_singlecore <- rsofun::runread_pmodel_f(
     df_drivers,
@@ -393,7 +393,7 @@ test_that("phydro-model run check LE and AET", {
   )
 
   # read in demo data
-  df_drivers <- rsofun::p_model_drivers_format2025_02 # TODO: NOT YET UPDATED FOR PHYDRO (still add default phydro_* parameters)
+  df_drivers <- rsofun::p_model_drivers_formatPhydro # TODO: NOT YET UPDATED FOR PHYDRO (still add default phydro_* parameters)
   df_drivers$params_siml[[1]]$use_gs     <- TRUE
 
   # run the SOFUN Fortran PHYDRO-model

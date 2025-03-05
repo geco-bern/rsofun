@@ -144,11 +144,11 @@
 #' # Run the Fortran P-model
 #' mod_output <- run_pmodel_f_bysite(
 #'   # unnest drivers example data
-#'   sitename = p_model_drivers_format2025_02$sitename[1],
-#'   params_siml = p_model_drivers_format2025_02$params_siml[[1]],
-#'   site_info = p_model_drivers_format2025_02$site_info[[1]],
-#'   forcing = p_model_drivers_format2025_02$forcing[[1]],
-#'   forcing_acclim = p_model_drivers_format2025_02$forcing_daytime[[1]],
+#'   sitename = p_model_drivers_formatPhydro$sitename[1],
+#'   params_siml = p_model_drivers_formatPhydro$params_siml[[1]],
+#'   site_info = p_model_drivers_formatPhydro$site_info[[1]],
+#'   forcing = p_model_drivers_formatPhydro$forcing[[1]],
+#'   forcing_acclim = p_model_drivers_formatPhydro$forcing_daytime[[1]],
 #'   params_modl = params_modl
 #'  )
 run_pmodel_f_bysite <- function( # TODO: Above docstring appears duplicated in runread_pmodel_f.R. This redunduncy should be reduced.

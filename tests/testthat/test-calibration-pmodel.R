@@ -3,7 +3,7 @@ set.seed(10)
 
 test_that("test GPP calibration routine p-model (BT, likelihood maximization)", {
   skip_on_cran()
-  drivers <- rsofun::p_model_drivers_format2025_02 # TODO: NOT YET UPDATED FOR PHYDRO (still add default phydro_* parameters)
+  drivers <- rsofun::p_model_drivers_formatPhydro # TODO: NOT YET UPDATED FOR PHYDRO (still add default phydro_* parameters)
   drivers$params_siml[[1]]$use_gs     <- TRUE
   
   obs <- rsofun::p_model_validation
@@ -57,7 +57,7 @@ test_that("test GPP calibration routine p-model (BT, likelihood maximization)", 
 
 test_that("test GPP calibration routine p-model (GenSA, rmse, all params)", {
   skip_on_cran()
-  drivers <- rsofun::p_model_drivers_format2025_02 # TODO: NOT YET UPDATED FOR PHYDRO (still add default phydro_* parameters)
+  drivers <- rsofun::p_model_drivers_formatPhydro # TODO: NOT YET UPDATED FOR PHYDRO (still add default phydro_* parameters)
   drivers$params_siml[[1]]$use_gs     <- TRUE
   obs <- rsofun::p_model_validation
   
@@ -213,7 +213,7 @@ test_that("test Vcmax25 calibration routine p-model (GenSA, rmse)", {
 test_that("test joint calibration routine p-model (BT, likelihood maximization)", {
   skip_on_cran()
   drivers <- rbind(
-    gpp     = rsofun::p_model_drivers_format2025_02, # TODO: NOT YET UPDATED FOR PHYDRO (still add default phydro_* parameters)
+    gpp     = rsofun::p_model_drivers_formatPhydro, # TODO: NOT YET UPDATED FOR PHYDRO (still add default phydro_* parameters)
     vcmax25 = rsofun::p_model_drivers_vcmax25  |>
       # TODO: NOT YET UPDATED FOR PHYDRO
       # # specify additionally needed params_siml flags:
