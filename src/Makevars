@@ -1,30 +1,11 @@
-# Add package flags
-# For debugging purpose, the following can be added to your local ~/.R/Makevars file
-#PKG_FFLAGS = -frecursive -fbounds-check -fcheck=all -Wall -Wextra -pedantic -g -O0 -fbacktrace -ffpe-trap=invalid,zero,overflow -finit-real=snan -finit-integer=-9999999 -finit-derived
-# -frecursive: to avoid "Warning: Array 'out_biosphere' at (1) is larger than limit ..."
-# -fbounds-check: https://scicomp.stackexchange.com/questions/36045/ifort-everithing-ok-but-with-gfortran-segmentation-fault
-# -Wall -Wextra -Wpedantic: to get more warnings
-# -fbacktrace: Specify that, when a runtime error is encountered, the Fortran runtime library should output a backtrace of the error. This option only has influence for compilation of the Fortran main program.
-# -fcheck=all: enable "run-time tests", such as, for instance, array bounds checks.
-# -ffpe-trap=invalid,zero,overflow: Traps usual FP exceptions (for better debugging)
-# The following are useful for debugging uninitialized values. It should not be used in production!
-# -finit-real=snan -finit-integer=-9999999: Initialize uninitialized values to NaN for reals, and -9999999 for integers.
-# -finit-derived: applies the settings above to fields in derive types too
-
 # C objects
 C_OBJS = wrappersc.o
 
 # Fortran objects: refer to file names <name.o>, order reflects dependency structure
-FT_OBJS = params_core.mod.o sofunutils.mod.o grid_siterun.mod.o params_siml_pmodel.mod.o params_siml_biomee.mod.o forcing_siterun_pmodel.mod.o forcing_siterun_biomee.mod.o params_soil_biomee.mod.o interface_biosphere_pmodel.mod.o interface_biosphere_biomee.mod.o tile_pmodel.mod.o plant_pmodel.mod.o soiltemp_sitch.mod.o waterbal_splash.mod.o vegdynamics_pmodel.mod.o gpp_pmodel.mod.o gpp_biomee.mod.o photosynth_pmodel.mod.o biosphere_pmodel.mod.o biosphere_biomee.mod.o biosphere_biomee.mod.o vegetation_biomee.mod.o soil_biomee.mod.o sofun_r.o
-
-# Link-time optimization
-# See https://cran.r-project.org/doc/manuals/R-admin.html#LTO-with-GCC-1
-#LTO_OPT = -flto
-#LTO_FC_OPT = -flto
-#AR = gcc-ar
-#NM = gcc-nm
-#UserNM_ = gcc-nm
-#RANLIB=gcc-ranlib
+FT_OBJS = params_core.mod.o sofunutils.mod.o grid_siterun.mod.o params_siml_pmodel.mod.o params_siml_biomee.mod.o forcing_siterun_pmodel.mod.o forcing_siterun_biomee.mod.o params_soil_biomee.mod.o \
+		  interface_biosphere_pmodel.mod.o interface_biosphere_biomee.mod.o tile_pmodel.mod.o plant_pmodel.mod.o soiltemp_sitch.mod.o waterbal_splash.mod.o vegdynamics_pmodel.mod.o \
+		  photosynth_pmodel.mod.o photosynth_phydro.mod.o  \
+		  gpp_pmodel.mod.o gpp_biomee.mod.o biosphere_pmodel.mod.o biosphere_biomee.mod.o vegetation_biomee.mod.o soil_biomee.mod.o sofun_r.o
 
 all: $(SHLIB) clean
 
@@ -43,7 +24,6 @@ waterbal_splash.mod.o: params_core.mod.o tile_pmodel.mod.o plant_pmodel.mod.o so
 gpp_pmodel.mod.o: params_core.mod.o sofunutils.mod.o plant_pmodel.mod.o tile_pmodel.mod.o interface_biosphere_pmodel.mod.o photosynth_pmodel.mod.o photosynth_phydro.mod.o
 gpp_biomee.mod.o: datatypes.mod.o soil_biomee.mod.o forcing_siterun_biomee.mod.o photosynth_pmodel.mod.o params_core.mod.o sofunutils.mod.o
 photosynth_pmodel.mod.o: params_core.mod.o sofunutils.mod.o
-photosynth_phydro.mod.o: params_core.mod.o sofunutils.mod.o photosynth_pmodel.mod.o
 soiltemp_sitch.mod.o: params_core.mod.o sofunutils.mod.o tile_pmodel.mod.o interface_biosphere_pmodel.mod.o
 plant_pmodel.mod.o: params_core.mod.o sofunutils.mod.o interface_biosphere_pmodel.mod.o
 vegdynamics_pmodel.mod.o: params_core.mod.o tile_pmodel.mod.o plant_pmodel.mod.o gpp_pmodel.mod.o waterbal_splash.mod.o
@@ -53,6 +33,7 @@ soil_biomee.mod.o: datatypes.mod.o
 vegetation_biomee.mod.o: datatypes.mod.o soil_biomee.mod.o gpp_biomee.mod.o
 datatypes.mod.o: interface_biosphere_biomee.mod.o params_core.mod.o classdefs.mod.o
 sofunutils.mod.o: params_core.mod.o
+photosynth_phydro.mod.o: sofunutils.mod.o photosynth_pmodel.mod.o
 
 # Source (object) of Fortran modules
 # <modulename.mod>: <filename.o>

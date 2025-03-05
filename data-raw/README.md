@@ -21,13 +21,13 @@ p_model_drivers <- p_model_drivers |>
   rowwise() |> mutate(forcing = list(mutate(forcing, vwind=2.0))) |> ungroup()
 save(p_model_drivers, file = "~/GitHub/geco-bern/rsofun/data/p_model_drivers.rda", compress = "bzip2")
 
-load("~/GitHub/geco-bern/rsofun/data/p_model_drivers_format2024_08.rda")
-p_model_drivers_format2025_02 <- p_model_drivers_format2024_08 |> 
+load("~/GitHub/geco-bern/rsofun/data/p_model_drivers_formatPhydro.rda")
+p_model_drivers_formatPhydro <- p_model_drivers_formatPhydro |> 
   rowwise() |> mutate(forcing = list(mutate(forcing, vwind=2.0))) |> ungroup()
-save(p_model_drivers_format2025_02, file = "~/GitHub/geco-bern/rsofun/data/p_model_drivers_format2025_02.rda", compress = "bzip2")
-load("~/GitHub/geco-bern/rsofun/data/p_model_validation_format2024_08.rda")
-p_model_validation_format2025_02 <- p_model_validation_format2024_08
-save(p_model_validation_format2025_02, file = "~/GitHub/geco-bern/rsofun/data/p_model_validation_format2025_02.rda", compress = "bzip2")
+save(p_model_drivers_formatPhydro, file = "~/GitHub/geco-bern/rsofun/data/p_model_drivers_formatPhydro.rda", compress = "bzip2")
+load("~/GitHub/geco-bern/rsofun/data/p_model_validation_formatPhydro.rda")
+p_model_validation_formatPhydro <- p_model_validation_formatPhydro
+save(p_model_validation_formatPhydro, file = "~/GitHub/geco-bern/rsofun/data/p_model_validation_formatPhydro.rda", compress = "bzip2")
 ```
 
 TODO: what still needs to be updated in branch phydro are other information in the example drivers, namely params_siml (use_pml, use_gs, use_phydro) and site_info (canopy_height, reference_height):

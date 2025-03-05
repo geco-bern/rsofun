@@ -54,7 +54,7 @@
 #' cost_rmse_pmodel(
 #'  par = c(kphio = 0.05, kphio_par_a = -0.01, kphio_par_b = 0.5),  # kphio related parameters
 #'  obs = p_model_validation,
-#'  drivers = p_model_drivers_format2024_08,
+#'  drivers = p_model_drivers_formatPhydro,
 #'  targets = c('gpp'),
 #'  par_fixed = list(
 #'   soilm_thetastar    = 0.6 * 240,  # old setup with soil moisture stress

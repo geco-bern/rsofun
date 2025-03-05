@@ -1,4 +1,0 @@
-#!/bin/sh
-
-# Complete the Makevars file with known system agnostic settings
-cat src/Makevars.in > src/Makevars
