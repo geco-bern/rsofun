@@ -675,7 +675,6 @@ contains
 
     ! Jmax cost coefficient, c* in Stocker et al., 2020 GMD (Eq 15) and Wang et al., 2017
     params_gpp%kc_jmax = myinterface%params_calib%kc_jmax  ! 0.41
-
     
     ! Acclimation time scale for photosynthesis (d), multiple lines of evidence suggest about monthly is alright 
     params_gpp%tau_acclim = myinterface%params_calib%tau_acclim  ! 30.0
@@ -683,6 +682,7 @@ contains
     ! Re-interpreted soil moisture stress parameter, previously thetastar = 0.6
     params_gpp%soilm_thetastar = myinterface%params_calib%soilm_thetastar
     
+    ! Scaling factor from leaf-level to canopy-level conductance
     params_gpp%gw_calib = myinterface%params_calib%gw_calib 
 
     ! quantum yield efficiency at optimal temperature, phi_0 (Stocker et al., 2020 GMD Eq. 10)

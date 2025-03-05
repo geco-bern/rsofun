@@ -318,8 +318,8 @@ test_that("p-model run check Vcmax25", {
     beta_unitcostratio = 146.0,
     rd_to_vcmax        = 0.014, # value from Atkin et al. 2015 for C3 herbaceous
     tau_acclim         = 30.0,
-    kc_jmax            = 0.41
-    # TODO: why is gw_calib not activated in phydro model??? gw_calib           = 2.0
+    kc_jmax            = 0.41,
+    gw_calib           = 2.0
   )
   
   # read in demo data
@@ -345,7 +345,7 @@ test_that("p-model run check Vcmax25", {
     forcing        = df_drivers$forcing[[1]],
     forcing_acclim = df_drivers$forcing[[1]],
     params_modl = params_modl,
-    makecheck = FALSE
+    makecheck = TRUE
   )
   
   # test if the returned values

@@ -207,7 +207,6 @@ contains
         out_biosphere%dpsi(doy)    = tile_fluxes(1)%plant(1)%dpsi
         out_biosphere%psi_leaf(doy)    = tile_fluxes(1)%plant(1)%psi_leaf
 
-
         init_daily = .false.
 
       end do dayloop

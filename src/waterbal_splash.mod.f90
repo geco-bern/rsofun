@@ -297,7 +297,7 @@ contains
   end subroutine solar
 
 
-  subroutine calc_et( tile_fluxes, grid, climate, sw, fapar, using_phydro, using_gs, using_pml,gw_calib )
+  subroutine calc_et( tile_fluxes, grid, climate, sw, fapar, using_phydro, using_gs, using_pml, gw_calib )
     !/////////////////////////////////////////////////////////////////////////
     !
     !-------------------------------------------------------------------------  
@@ -491,8 +491,7 @@ contains
           * ga * climate%dvpd) / (epsilon + 1.0 + ga / gw) 
           
         
-        ! FRANCESCO: canopy conductance assuming gw = infinite
-        
+        ! canopy conductance assuming gw = infinite
         tile_fluxes%canopy%dpet_e   =(epsilon * fapar * tile_fluxes%canopy%drn + (rho_water * cp / gamma) &
           * ga * climate%dvpd) / (epsilon + 1.0) 
         tile_fluxes%canopy%dpet = dpet_soil + tile_fluxes%canopy%dpet_e * energy_to_mm 
