@@ -148,7 +148,7 @@
 #'   params_siml = p_model_drivers_formatPhydro$params_siml[[1]],
 #'   site_info = p_model_drivers_formatPhydro$site_info[[1]],
 #'   forcing = p_model_drivers_formatPhydro$forcing[[1]],
-#'   forcing_acclim = p_model_drivers_formatPhydro$forcing_daytime[[1]],
+#'   forcing_acclim = p_model_drivers_formatPhydro$forcing_daytime[[1]] |> dplyr::mutate(vwind=2.0), # TODO: update p_model_drivers_formatPhydro
 #'   params_modl = params_modl
 #'  )
 run_pmodel_f_bysite <- function( # TODO: Above docstring appears duplicated in runread_pmodel_f.R. This redunduncy should be reduced.
