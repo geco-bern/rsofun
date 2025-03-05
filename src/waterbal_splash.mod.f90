@@ -11,6 +11,7 @@ module md_waterbal
   use md_grid, only: gridtype
   use md_interface_pmodel, only: myinterface
   use md_sofunutils, only: radians, dgsin, dgcos, degrees
+  use md_gpp_pmodel, only:  params_gpp
 
   implicit none
 
@@ -87,7 +88,7 @@ contains
       !---------------------------------------------------------
       ! Canopy transpiration and soil evaporation
       !---------------------------------------------------------
-      call calc_et( tile_fluxes(lu), grid, climate, sw, fapar(lu), using_phydro, using_gs, using_pml )
+      call calc_et( tile_fluxes(lu), grid, climate, sw, fapar(lu), using_phydro, using_gs, using_pml, params_gpp%gw_calib )
 
       !---------------------------------------------------------
       ! Update soil moisture and snow pack
@@ -296,7 +297,7 @@ contains
   end subroutine solar
 
 
-  subroutine calc_et( tile_fluxes, grid, climate, sw, fapar, using_phydro, using_gs, using_pml )
+  subroutine calc_et( tile_fluxes, grid, climate, sw, fapar, using_phydro, using_gs, using_pml, gw_calib )
     !/////////////////////////////////////////////////////////////////////////
     !
     !-------------------------------------------------------------------------  
@@ -308,7 +309,8 @@ contains
     type(gridtype), intent(in)            :: grid
     type(climate_type), intent(in)        :: climate
     real, intent(in)                      :: sw            ! evaporative supply rate, mm/hr
-    real, intent(in)                      :: fapar          
+    real, intent(in)                      :: fapar   
+    real, intent(in)                      :: gw_calib      ! scaling factor from leaf-level to canopy-level conductance
     logical, intent(in)                   :: using_phydro
     logical, intent(in)                   :: using_gs   ! Should Pmodel/Phydro gs be used in ET calc? (otherwise, PT formulation will be used)
     logical, intent(in)                   :: using_pml  ! If using Pmodel/Phydro gs, should ET be calculated using PM equation (otherwise, diffusion equation will be used)
@@ -481,12 +483,18 @@ contains
         ! print*,'in waterbal: gs_accl ', tile_fluxes%canopy%gs_accl
         ! introduced scaling with LAI
         lai_fapar = -1.0 / k_beer * log(1.0 - fapar)
-        gw = max(2.0 * lai_fapar * tile_fluxes%canopy%gs_accl * 1.6 * kR * (climate%dtemp + kTkelvin), eps)
+        gw = max(gw_calib * lai_fapar * tile_fluxes%canopy%gs_accl * 1.6 * kR * (climate%dtemp + kTkelvin), eps)
         
         ! latent energy flux from canopy (W m-2) 
         ! See also calc_transpiration_pm() in photosynth_phydro.mod.f90
         tile_fluxes%canopy%daet_e_canop = (epsilon * fapar * tile_fluxes%canopy%drn + (rho_water * cp / gamma) &
           * ga * climate%dvpd) / (epsilon + 1.0 + ga / gw) 
+          
+        
+        ! canopy conductance assuming gw = infinite
+        tile_fluxes%canopy%dpet_e   =(epsilon * fapar * tile_fluxes%canopy%drn + (rho_water * cp / gamma) &
+          * ga * climate%dvpd) / (epsilon + 1.0) 
+        tile_fluxes%canopy%dpet = dpet_soil + tile_fluxes%canopy%dpet_e * energy_to_mm 
 
         ! print*,'-----------------------'
         ! print*,'canopy_height ', myinterface%canopy_height

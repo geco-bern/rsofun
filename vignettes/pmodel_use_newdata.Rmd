@@ -268,7 +268,8 @@ params_modl <- list(
     beta_unitcostratio = 146.0,
     rd_to_vcmax        = 0.014,      # value from Atkin et al. 2015 for C3 herbaceous
     tau_acclim         = 30.0,
-    kc_jmax            = 0.41
+    kc_jmax            = 0.41,
+    gw_calib           = 2.0
   )
 
 # run the model for these parameters
@@ -622,7 +623,8 @@ params_modl <- list(
   phydro_b_plant     = 1,
   phydro_alpha       = 0.08,
   bsoil              = 3,
-  Ssoil              = 113
+  Ssoil              = 113,
+  gw_calib           = 2.0
 )
 
 # run the model for these parameters

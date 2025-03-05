@@ -148,7 +148,7 @@
 #'   params_siml = p_model_drivers_formatPhydro$params_siml[[1]],
 #'   site_info = p_model_drivers_formatPhydro$site_info[[1]],
 #'   forcing = p_model_drivers_formatPhydro$forcing[[1]],
-#'   forcing_acclim = p_model_drivers_formatPhydro$forcing_daytime[[1]],
+#'   forcing_acclim = p_model_drivers_formatPhydro$forcing_daytime[[1]] |> dplyr::mutate(vwind=2.0), # TODO: update p_model_drivers_formatPhydro
 #'   params_modl = params_modl
 #'  )
 run_pmodel_f_bysite <- function( # TODO: Above docstring appears duplicated in runread_pmodel_f.R. This redunduncy should be reduced.
@@ -421,6 +421,7 @@ run_pmodel_f_bysite <- function( # TODO: Above docstring appears duplicated in r
       as.numeric(params_modl$rd_to_vcmax),
       as.numeric(params_modl$tau_acclim),
       as.numeric(params_modl$kc_jmax),
+      as.numeric(params_modl$gw_calib),
       ifelse(params_siml$use_phydro, 
              no  = dummy_val,
              yes = params_modl$phydro_K_plant),
@@ -558,6 +559,7 @@ run_pmodel_f_bysite <- function( # TODO: Above docstring appears duplicated in r
 required_param_names <- list(
   phydro_model = c( # P-hydro model needs these parameters:
   'bsoil', 
+  'gw_calib',
   'kc_jmax', 
   'kphio', 
   'kphio_par_a', 
@@ -573,6 +575,7 @@ required_param_names <- list(
   ),
   p_model = c(# P-model needs these parameters:
   'beta_unitcostratio', 
+  'gw_calib',
   'kc_jmax', 
   'kphio', 
   'kphio_par_a', 
