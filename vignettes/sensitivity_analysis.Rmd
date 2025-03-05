@@ -63,7 +63,7 @@ ll_pmodel <- function(
     obs = rsofun::p_model_validation,    # example data from package
     drivers = rsofun::p_model_drivers_formatPhydro, #TODO rsofun::p_model_drivers is NOT YET UPDATED FOR PHYDRO (a newformat, b add phydro_ parameters)
     targets = "gpp", 
-    par_fixed = list(gw_calib = 2.0)
+    par_fixed = list()
   )
 }
 
@@ -79,6 +79,7 @@ ll_pmodel(
     rd_to_vcmax        = 0.014,      # value from Atkin et al. 2015 for C3 herbaceous
     tau_acclim         = 30.0,
     kc_jmax            = 0.41,
+    gw_calib           = 2.0,
     err_gpp            = 0.9         # value from previous simulations
 ))
 ```
@@ -98,6 +99,7 @@ par_cal_best <- c(
     rd_to_vcmax        = 0.014,
     tau_acclim         = 30.0,
     kc_jmax            = 0.41,
+    gw_calib           = 2.0,
     err_gpp          = 1
   )
 
@@ -111,6 +113,7 @@ par_cal_min <- c(
     rd_to_vcmax        = 0.01,
     tau_acclim         = 7.0,
     kc_jmax            = 0.2,
+    gw_calib           = 1.5,
     err_gpp            = 0.01
   )
 
@@ -124,6 +127,7 @@ par_cal_max <- c(
     rd_to_vcmax        = 0.1,
     tau_acclim         = 60.0,
     kc_jmax            = 0.8,
+    gw_calib           = 2.5,
     err_gpp            = 4
   )
 ```
@@ -278,7 +282,8 @@ par_calib <- calib_sofun(
     beta_unitcostratio = 146.0,
     rd_to_vcmax        = 0.014,
     tau_acclim         = 30.0,
-    kc_jmax            = 0.41),
+    kc_jmax            = 0.41,
+    gw_calib           = 2.0),
   targets = "gpp"
 )
 
@@ -317,7 +322,8 @@ par_calib <- calib_sofun(
     kphio_par_b = 20,
     beta_unitcostratio = 146.0,
     rd_to_vcmax        = 0.014,
-    tau_acclim         = 30.0),
+    tau_acclim         = 30.0,
+    gw_calib           = 2.0),
   targets = "gpp"
 )
 ```
@@ -434,7 +440,8 @@ run_pmodel <- function(par){
       kphio_par_b = 20,
       beta_unitcostratio = 146.0,
       rd_to_vcmax        = 0.014,
-      tau_acclim         = 30.0)
+      tau_acclim         = 30.0,
+      gw_calib           = 2.0)
   )
   return(out)
 }
