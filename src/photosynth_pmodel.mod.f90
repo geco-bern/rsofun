@@ -947,7 +947,7 @@ contains
   end function calc_ftemp_inst_vcmax
 
 
-  function calc_ftemp_inst_jmax( tcleaf, tcgrowth, tcref ) result( fv )
+  function calc_ftemp_inst_jmax( tcleaf, tcgrowth, tchome, tcref ) result( fv )
     !-----------------------------------------------------------------------
     ! Calculates the instantaneous temperature response of Jmax
     ! 
@@ -963,6 +963,7 @@ contains
     ! arguments
     real, intent(in) :: tcleaf
     real, intent(in) :: tcgrowth
+    real, intent(in) :: tchome
     real, intent(in), optional :: tcref
 
     ! function return variable

@@ -177,6 +177,12 @@ run_pmodel_f_bysite <- function(
     dplyr::select(
         all_of(forcing_features)
     )
+
+  # Determine home temperature for adaptation as the mean maximum temperature of the warmest month
+  # 1. determine warmest month
+  # ...
+  temp_home = ...
+
   
   # validate input
   if (makecheck){
@@ -279,8 +285,7 @@ run_pmodel_f_bysite <- function(
     }
   }
   
-  if(continue){
-    
+  if (continue){    
     
     ## C wrapper call
     out <- .Call(
@@ -308,6 +313,7 @@ run_pmodel_f_bysite <- function(
       latitude                  = as.numeric(site_info$lat),
       altitude                  = as.numeric(site_info$elv),
       whc                       = as.numeric(site_info$whc),
+      temp_home                 = as.numeric(temp_home),
       n                         = as.integer(nrow(forcing)), # number of rows in matrix (pre-allocation of memory)
       par                       = c(as.numeric(params_modl$kphio), # model parameters as vector in order
                                     as.numeric(params_modl$kphio_par_a),
