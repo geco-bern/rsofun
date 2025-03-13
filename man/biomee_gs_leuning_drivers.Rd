@@ -17,12 +17,9 @@ A tibble of driver data.
       \item{firstyeartrend}{Year of first transient year (AD) (optional). Is only used to set years in output data frames. Defaults to 0 if not provided.}
       \item{nyeartrend}{Number of transient years (optional). Determines the length of simulation output after spin-up. Defaults to number of years contained in the forcing data. (If longer than forcing data, last year of forcing is repeated until the end (spin-down).)}
       \item{steps_per_day}{Time resolution of the forcing (day-1).}
-      \item{do_U_shaped_mortality}{Flag indicating whether U-shaped
-        mortality is used.}
-      \item{do_closedN_run}{Flag indicating whether doing N closed
-        runs to recover N balance enforcing 0.2 kg N m-2 in the inorganic N pool.}
-      \item{code_method_photosynth}{String specifying the method of photosynthesis
-        used in the model, either "pmodel" or "gs_leuning".document()}
+      \item{do_U_shaped_mortality}{Flag indicating whether U-shaped mortality is used.}
+      \item{do_closedN_run}{Flag indicating whether doing N closed runs to recover N balance enforcing 0.2 kg N m-2 in the inorganic N pool.}
+      \item{code_method_photosynth}{String specifying the method of photosynthesis used in the model, either "pmodel" or "gs_leuning".document()}
       \item{code_method_mortality}{String indicating the type of mortality in the
         model. One of the following: "dbh" is size-dependent mortality, "const_selfthin"
         is constant self thinning (in development), "cstarvation" is carbon starvation, and
@@ -46,15 +43,11 @@ This data structure can be freely used for documenting the dataset, but must inc
       \item{pair}{Atmospheric pressure (pa)}
       \item{co2}{CO2 atmospheric concentration (ppm)}
     }}
-  \item{params_tile}{Tile-level model parameters, into a single row data.frame, including
-  the following data:
+  \item{params_tile}{Tile-level model parameters, into a single row data.frame, including the following data:
     \describe{
-      \item{soiltype}{Integer indicating the type of soil: Sand = 1, LoamySand = 2,
-        SandyLoam = 3, SiltLoam = 4, FrittedClay = 5, Loam = 6, Clay = 7.}
-      \item{FLDCAP}{Field capacity (vol/vol). Water remaining in a soil after it
-        has been thoroughly saturated and allowed to drain freely.}
-      \item{WILTPT}{Wilting point (vol/vol). Water content of a soil at which
-      plants wilt and fail to recover.}
+      \item{soiltype}{Integer indicating the type of soil: Sand = 1, LoamySand = 2, SandyLoam = 3, SiltLoam = 4, FrittedClay = 5, Loam = 6, Clay = 7.}
+      \item{FLDCAP}{Field capacity (vol/vol). Water remaining in a soil after it has been thoroughly saturated and allowed to drain freely.}
+      \item{WILTPT}{Wilting point (vol/vol). Water content of a soil at which plants wilt and fail to recover.}
       \item{K1}{Fast soil C decomposition rate (year\eqn{^{-1}}).}
       \item{K2}{Slow soil C decomposition rate (year\eqn{^{-1}}).}
       \item{K_nitrogen}{Mineral Nitrogen turnover rate (year\eqn{^{-1}}).}
@@ -68,67 +61,68 @@ This data structure can be freely used for documenting the dataset, but must inc
       \item{retransN}{Retranslocation coefficient of nitrogen.}
       \item{f_initialBSW}{Coefficient for setting up initial sapwood.}
       \item{f_N_add}{Re-fill of N for sapwood.}
-      \item{tf_base}{Calibratable scalar for respiration, used to increase LUE
-        levels.}
+      \item{tf_base}{Calibratable scalar for respiration, used to increase LUE levels.}
       \item{par_mort}{Canopy mortality parameter.}
       \item{par_mort_under}{Parameter for understory mortality.}
     }}
-  \item{params_species}{A data.frame containing species-specific model parameters,
-      with one species per row, including the following data:
+  \item{params_species}{A data.frame containing species-specific model parameters, with one species per row, including the following data:
     \describe{
+    \item{The following columns pertaining to the \bold{plant type}:}{\describe{
       \item{lifeform}{Integer set to 0 for grasses and 1 for trees.}
       \item{phenotype}{Integer set to 0 for deciduous and 1 for evergreen.}
-      \item{pt}{Integer indicating the type of plant according to photosynthesis:
-        0 for C3; 1 for C4}
+      \item{pt}{Integer indicating the type of plant according to photosynthesis: 0 for C3; 1 for C4}
+    }}\item{The following columns pertaining to the \bold{root parameters}:}{\describe{
       \item{alpha_FR}{Fine root turnover rate (year\eqn{^{-1}}).}
       \item{rho_FR}{Material density of fine roots (kg C m\eqn{^{-3}}).}
       \item{root_r}{Radius of the fine roots, in m.}
       \item{root_zeta}{e-folding parameter of root vertical distribution, in m.}
-      \item{Kw_root}{Fine root water conductivity (mol m\eqn{^{-2}}
-        s\eqn{^{-1}} MPa\eqn{^{-1}}).}
+      \item{Kw_root}{Fine root water conductivity (mol m\eqn{^{-2}} s\eqn{^{-1}} MPa\eqn{^{-1}}).}
       \item{leaf_size}{Characteristic leaf size.}
+    }}\item{The following columns pertaining to the \bold{photosynthesis parameters}:}{\describe{
       \item{Vmax}{Max RuBisCo rate, in mol m\eqn{^{-2}} s\eqn{^{-1}}.}
-      \item{Vannual}{Annual productivity per unit area at full sun (kg C
-        m\eqn{^{-2}} year\eqn{^{-2}}).}
+      \item{Vannual}{Annual productivity per unit area at full sun (kg C m\eqn{^{-2}} year\eqn{^{-2}}).}
       \item{wet_leaf_dreg}{Wet leaf photosynthesis down-regulation.}
       \item{m_cond}{Factor of stomatal conductance.}
       \item{alpha_phot}{Photosynthesis efficiency.}
       \item{gamma_L}{Leaf respiration coefficient, in year\eqn{^{-1}}.}
       \item{gamma_LN}{Leaf respiration coefficient per unit N.}
       \item{gamma_SW}{Sapwood respiration rate, in kg C m\eqn{^{-2}} year\eqn{^{-1}}.}
-      \item{gamma_FR}{Fine root respiration rate, kg C kg C\eqn{^{-1}}
-        year\eqn{^{-1}}.}
+      \item{gamma_FR}{Fine root respiration rate, kg C kg C\eqn{^{-1}} year\eqn{^{-1}}.}
       \item{tc_crit}{Critical temperature triggerng offset of phenology, in Kelvin.}
       \item{tc_crit_on}{Critical temperature triggerng onset of phenology, in Kelvin.}
       \item{gdd_crit}{Critical value of GDD5 for turning ON growth season.}
       \item{betaON}{Critical soil moisture for phenology onset.}
       \item{betaOFF}{Critical soil moisture for phenology offset.}
-      \item{seedlingsize}{Initial size of seedlings, in kg C per individual.}
-      \item{LNbase}{Basal leaf N per unit area, in kg N m\eqn{^{-2}}.}
-      \item{lAImax}{Maximum crown LAI (leaf area index) (not used, see LAI_light).}
-      \item{Nfixrate0}{Reference N fixation rate (kg N kg C\eqn{^{-1}} root).}
-      \item{NfixCost0}{Carbon cost of N fixation (kg C kg N\eqn{^{-1}}).}
-      \item{phiCSA}{Ratio of sapwood area to leaf area.}
-      \item{mortrate_d_c}{Canopy tree mortality rate (year\eqn{^{-1}}).}
-      \item{mortrate_d_u}{Understory tree mortality rate (year\eqn{^{-1}}).}
-      \item{maturalage}{Age at which trees can reproduce (years).}
-      \item{v_seed}{Fraction of G_SF to G_F.}
-      \item{fNSmax}{Multiplier for NSNmax as sum of potential bl and br.}
-      \item{LMA}{Leaf mass per unit area (kg C m\eqn{^{-2}}).}
-      \item{rho_wood}{Wood density (kg C m\eqn{^{-3}}).}
+    }}\item{The following columns pertaining to the \bold{allometry parameters}:}{\describe{
       \item{alphaBM}{Coefficient for allometry (biomass = alphaBM * DBH ** thetaBM).}
       \item{thetaBM}{Coefficient for allometry (biomass = alphaBM * DBH ** thetaBM).}
-      \item{kphio}{Quantum yield efficiency \eqn{\varphi_0},
-       in mol mol\eqn{^{-1}}.}
+    }}\item{The following columns pertaining to the \bold{reproduction parameters}:}{\describe{
+      \item{seedlingsize}{Initial size of seedlings, in kg C per individual.}
+      \item{maturalage}{Age at which trees can reproduce (years).}
+      \item{v_seed}{Fraction of G_SF to G_F.}
+    }}\item{The following columns pertaining to the \bold{mortality parameters}:}{\describe{
+      \item{mortrate_d_c}{Canopy tree mortality rate (year\eqn{^{-1}}).}
+      \item{mortrate_d_u}{Understory tree mortality rate (year\eqn{^{-1}}).}
+    }}\item{The following columns pertaining to the \bold{leaf parameters}:}{\describe{
+      \item{LMA}{Leaf mass per unit area (kg C m\eqn{^{-2}}).}
+      \item{LNbase}{Basal leaf N per unit area, in kg N m\eqn{^{-2}}.}
+      \item{rho_wood}{Wood density (kg C m\eqn{^{-3}}).}
+      \item{lAImax}{Maximum crown LAI (leaf area index).}
+      \item{phiCSA}{Ratio of sapwood area to leaf area.}
+    }}\item{The following columns pertaining to the \bold{C/N ratios for plant pools}:}{\describe{
+      \item{Nfixrate0}{Reference N fixation rate (kg N kg C\eqn{^{-1}} root).}
+      \item{NfixCost0}{Carbon cost of N fixation (kg C kg N\eqn{^{-1}}).}
+      \item{fNSmax}{TODO:removed...Multiplier for NSNmax as sum of potential bl and br.}
+    }}\item{The following columns pertaining to the \bold{calibratable parameters}:}{\describe{
+      \item{kphio}{Quantum yield efficiency \eqn{\varphi_0}, in mol mol\eqn{^{-1}}.}
       \item{phiRL}{Ratio of fine root to leaf area.}
       \item{LAI_light}{Maximum LAI limited by light.}
-    }}
+    }}}}
   \item{init_cohort}{A data.frame of initial cohort specifications, including
   the following data:
     \describe{
       \item{init_cohort_species}{Index of a species described in param_species.}
-      \item{init_cohort_nindivs}{Initial individual density, in individuals per
-        m\eqn{^{2}}.}
+      \item{init_cohort_nindivs}{Initial individual density, in individuals per m\eqn{^{2}}.}
       \item{init_cohort_bl}{Initial biomass of leaf, in kg C per individual.}
       \item{init_cohort_br}{Initial biomass of fine root, in kg C per individual.}
       \item{init_cohort_bsw}{Initial biomass of sapwood, in kg C per individual.}
@@ -144,8 +138,7 @@ This data structure can be freely used for documenting the dataset, but must inc
       \item{init_fast_soil_C}{Initial fast soil carbon, in kg C m\eqn{^{-2}}.}
       \item{init_slow_soil_C}{Initial slow soil carbon, in kg C m\eqn{^{-2}}.}
       \item{init_Nmineral}{Mineral nitrogen pool, in kg N m\eqn{^{-2}}.}
-      \item{N_input}{Annual nitrogen input to soil N pool, in kg N m\eqn{^{-2}}
-        year\eqn{^{-1}}.}
+      \item{N_input}{Annual nitrogen input to soil N pool, in kg N m\eqn{^{-2}} year\eqn{^{-1}}.}
     }}
   \item{init_lu}{A data.frame of initial land unit (LU) specifications, including
     the following data:

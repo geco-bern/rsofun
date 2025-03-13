@@ -9,7 +9,8 @@ runread_biomee_f(drivers, makecheck = TRUE, parallel = FALSE, ncores = 1)
 \arguments{
 \item{drivers}{A nested data frame with one row for each site and columns
 named according to the arguments of function \code{\link{run_biomee_f_bysite}}.
-Namely \code{sitename, params_siml, site_info} and \code{forcing}.}
+Namely \code{sitename, params_siml, site_info, forcing, params_tile, 
+params_species, init_cohort} and \code{init_soil}.}
 
 \item{makecheck}{A logical specifying whether checks are performed 
 to verify forcings and model parameters. \code{TRUE} by default.}
