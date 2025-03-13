@@ -95,12 +95,9 @@ Model output is provided as a list, with elements:
     \item{LAI}{Leaf area index (m\eqn{^2}/m\eqn{^2}).}
     \item{Density}{Number of trees per area (trees ha\eqn{^{-1}}).}
     \item{DBH}{Diameter at tile level (cm).}
-    \item{Density12}{Tree density for trees with DBH > 12 cm (individuals 
-      ha\eqn{^{-1}}).}
-    \item{DBH12}{Diameter at tile level considering trees with DBH > 12 cm
-      (cm).}
-    \item{QMD12}{Quadratic mean diameter at tile level considering trees with
-      DBH > 12 cm (cm).}
+    \item{Density12}{Tree density for trees with DBH > 12 cm (individuals ha\eqn{^{-1}}).}
+    \item{DBH12}{Diameter at tile level considering trees with DBH > 12 cm(cm).}
+    \item{QMD12}{Quadratic mean diameter at tile level considering trees withDBH > 12 cm (cm).}
     \item{NPP}{Net primary productivity (kg C m\eqn{^{-2}} yr\eqn{^{-1}}).}
     \item{GPP}{Gross primary productivity (kg C m\eqn{^{-2}} yr\eqn{^{-1}}).}
     \item{Rauto}{Plant autotrophic respiration (kg C m\eqn{^{-2}} yr\eqn{^{-1}}).}
@@ -141,32 +138,24 @@ Model output is provided as a list, with elements:
     \item{N_loss}{Annual nitrogen loss (kg N m\eqn{^{-2}}).}
     \item{totseedC}{Total seed carbon (kg C m\eqn{^{-2}}).}
     \item{totseedN}{Total seed nitrogen (kg N m\eqn{^{-2}}).}
-    \item{Seedling_C}{Total carbon from all compartments but seeds 
-      (kg C m\eqn{^{-2}}).}
-    \item{Seeling_N}{Total nitrogen from all compartments but seeds
-      (kg N m\eqn{^{-2}}).}
+    \item{Seedling_C}{Total carbon from all compartments but seeds (kg C m\eqn{^{-2}}).}
+    \item{Seeling_N}{Total nitrogen from all compartments but seeds(kg N m\eqn{^{-2}}).}
     \item{MaxAge}{Age of the oldest tree in the tile (years).}
     \item{MaxVolume}{Maximum volumne of a tree in the tile (m\eqn{^3}).}
     \item{MaxDBH}{Maximum DBH of a tree in the tile (m).}
-    \item{NPPL}{Growth of a tree, including carbon allocated to leaves
-      (kg C m\eqn{^{-2}} year\eqn{^{-1}}).}
-    \item{NPPW}{Growth of a tree, including carbon allocated to sapwood
-      (kg C m\eqn{^{-2}} year\eqn{^{-1}}).}
+    \item{NPPL}{Growth of a tree, including carbon allocated to leaves(kg C m\eqn{^{-2}} year\eqn{^{-1}}).}
+    \item{NPPW}{Growth of a tree, including carbon allocated to sapwood(kg C m\eqn{^{-2}} year\eqn{^{-1}}).}
     \item{n_deadtrees}{Number of trees that died (trees m\eqn{^{-2}} year\eqn{^{-1}}).}
-    \item{c_deadtrees}{Carbon biomass of trees that died (kg C 
-      m\eqn{^{-2}} year\eqn{^{-1}}).}
+    \item{c_deadtrees}{Carbon biomass of trees that died (kg C m\eqn{^{-2}} year\eqn{^{-1}}).}
     \item{m_turnover}{Continuous biomass turnover (kg C m\eqn{^{-2}} year\eqn{^{-1}}).}
-    \item{c_turnover_time}{Carbon turnover rate, calculated as the ratio
-      between plant biomass and NPP (year\eqn{^{-1}}).}
+    \item{c_turnover_time}{Carbon turnover rate, calculated as the ratiobetween plant biomass and NPP (year\eqn{^{-1}}).}
   }}
-  \item{\code{output_annual_cohorts}}{A data.frame of annual outputs at the
-    cohort level.
+  \item{\code{output_annual_cohorts}}{A data.frame of annual outputs at the cohort level.
   \describe{
     \item{year}{Year of the simulation.}
     \item{cID}{An integer indicating the cohort identity.}
     \item{PFT}{An integer indicating the Plant Functional Type.}
-    \item{layer}{An integer indicating the crown layer, numbered from top to 
-      bottom.}
+    \item{layer}{An integer indicating the crown layer, numbered from top to bottom.}
     \item{density}{Number of trees per area (trees ha\eqn{^{-1}}).}
     \item{f_layer}{Fraction of layer area occupied by this cohort.}
     \item{dDBH}{Diameter growth of a tree in this cohort (cm year\eqn{^{-1}}).}
@@ -174,20 +163,16 @@ Model output is provided as a list, with elements:
     \item{height}{Tree height (m).}
     \item{age}{Age of the cohort (years).}
     \item{Acrow}{Crown area of a tree in this cohort (m\eqn{^2}).}
-    \item{wood}{Sum of sapwood and heartwood biomass of a tree in this cohort
-     (kg C tree\eqn{^{-1}}).}
+    \item{wood}{Sum of sapwood and heartwood biomass of a tree in this cohort (kg C tree\eqn{^{-1}}).}
     \item{nsc}{Nonstructural carbohydrates in a tree (kg C tree\eqn{^{-1}}).}
     \item{NSN}{Nonstructural nitrogen of a tree (kg N tree\eqn{^{-1}}).}
-    \item{NPPtr}{Total growth of a tree, including carbon allocated to seeds, 
-      leaves, fine roots, and sapwood (kg C tree\eqn{^{-1}} year\eqn{^{-1}}).}
+    \item{NPPtr}{Total growth of a tree, including carbon allocated to seeds, leaves, fine roots, and sapwood (kg C tree\eqn{^{-1}} year\eqn{^{-1}}).}
     \item{seed}{Fraction of carbon allocated to seeds to total growth.}
     \item{NPPL}{Fraction of carbon allocated to leaves to total growth.}
     \item{NPPR}{Fraction of carbon allocated to fine roots to total growth.}
     \item{NPPW}{Fraction of carbon allocated to sapwood to total growth.}
-    \item{GPP_yr}{Gross primary productivity of a tree (kg C tree\eqn{^{-1}} 
-      year\eqn{^{-1}}).}
-    \item{NPP_yr}{Net primary productivity of a tree (kg C tree\eqn{^{-1}} 
-      year\eqn{^{-1}}).}
+    \item{GPP_yr}{Gross primary productivity of a tree (kg C tree\eqn{^{-1}} year\eqn{^{-1}}).}
+    \item{NPP_yr}{Net primary productivity of a tree (kg C tree\eqn{^{-1}} year\eqn{^{-1}}).}
     \item{Rauto}{Plant autotrophic respiration (kg C tree\eqn{^{-1}} yr\eqn{^{-1}}).}
     \item{N_uptk}{Nitrogen uptake (kg N tree\eqn{^{-1}} yr\eqn{^{-1}}).}
     \item{N_fix}{Nitrogen fixation (kg N tree\eqn{^{-1}} yr\eqn{^{-1}}).}

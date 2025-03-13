@@ -256,21 +256,38 @@ test_that("Regression tests run_biomee_f_bysite()", {
   
   # read in demo data
   df_drivers_BiomeE_Pmodel <- rsofun::biomee_p_model_drivers
+  df_drivers_BiomeE_PLULUC <- rsofun::biomee_p_model_luluc_drivers
   df_drivers_BiomeE_gsLeun <- rsofun::biomee_gs_leuning_drivers
+  
+  df_drivers_BiomeE_PLULUC$params_siml[[1]]$daily_diagnostics <- TRUE
+  
   # remove spinup that we can check initial conditions and transient phases
   df_drivers_BiomeE_Pmodel$params_siml[[1]]$spinupyears = 0
+  df_drivers_BiomeE_PLULUC$params_siml[[1]]$spinupyears = 0
   df_drivers_BiomeE_gsLeun$params_siml[[1]]$spinupyears = 0
   df_drivers_BiomeE_Pmodel$params_siml[[1]]$nyeartrend = 251
+  df_drivers_BiomeE_PLULUC$params_siml[[1]]$nyeartrend = 251
   df_drivers_BiomeE_gsLeun$params_siml[[1]]$nyeartrend = 251
   df_drivers_BiomeE_Pmodel$forcing[[1]] <- df_drivers_BiomeE_Pmodel$forcing[[1]] |>
     # repeat forcing and update dates
     list() |> rep(251) |> bind_rows(.id = "repeatedyear") |> 
-    mutate(date = date + lubridate::years(as.numeric(repeatedyear) - 1)) |> 
+    # While we could change the date of each row with below code, 
+    # it is actually not needed since it is not read by run_biomee_f_bysite()
+    # mutate(date = date + lubridate::years(as.numeric(repeatedyear) - 1)) |> 
+    select(-repeatedyear)
+  df_drivers_BiomeE_PLULUC$forcing[[1]] <- df_drivers_BiomeE_PLULUC$forcing[[1]] |>
+    # repeat forcing and update dates
+    list() |> rep(251) |> bind_rows(.id = "repeatedyear") |> 
+    # While we could change the date of each row with below code, 
+    # it is actually not needed since it is not read by run_biomee_f_bysite()
+    # mutate(date = date + lubridate::years(as.numeric(repeatedyear) - 1)) |> 
     select(-repeatedyear)
   df_drivers_BiomeE_gsLeun$forcing[[1]] <- df_drivers_BiomeE_gsLeun$forcing[[1]] |>
     # repeat forcing and update dates
     list() |> rep(251) |> bind_rows(.id = "repeatedyear") |> 
-    mutate(date = date + lubridate::years(as.numeric(repeatedyear) - 1)) |> 
+    # While we could change the date of each row with below code, 
+    # it is actually not needed since it is not read by run_biomee_f_bysite()
+    # mutate(date = date + lubridate::years(as.numeric(repeatedyear) - 1)) |> 
     select(-repeatedyear)
   
   
@@ -285,6 +302,19 @@ test_that("Regression tests run_biomee_f_bysite()", {
     params_species = df_drivers_BiomeE_Pmodel$params_species[[1]],
     init_cohort    = df_drivers_BiomeE_Pmodel$init_cohort[[1]],
     init_soil      = df_drivers_BiomeE_Pmodel$init_soil[[1]],
+    makecheck      = TRUE
+  )
+  mod_BiomeE_PLULUC <- run_biomee_f_bysite(
+    sitename       = df_drivers_BiomeE_PLULUC$sitename[1],
+    params_siml    = df_drivers_BiomeE_PLULUC$params_siml[[1]],
+    site_info      = df_drivers_BiomeE_PLULUC$site_info[[1]],
+    forcing        = df_drivers_BiomeE_PLULUC$forcing[[1]],
+    params_tile    = df_drivers_BiomeE_PLULUC$params_tile[[1]],
+    params_species = df_drivers_BiomeE_PLULUC$params_species[[1]],
+    init_cohort    = df_drivers_BiomeE_PLULUC$init_cohort[[1]],
+    init_soil      = df_drivers_BiomeE_PLULUC$init_soil[[1]],
+    init_lu        = df_drivers_BiomeE_PLULUC$init_lu[[1]],
+    luc_forcing    = df_drivers_BiomeE_PLULUC$luc_forcing[[1]],
     makecheck      = TRUE
   )
   mod_BiomeE_gsLeun <- run_biomee_f_bysite(
@@ -311,6 +341,19 @@ test_that("Regression tests run_biomee_f_bysite()", {
     init_soil      = df_drivers_BiomeE_gsLeun$init_soil[[1]],
     makecheck      = TRUE
   )
+  mod_BiomeE_PLULUC_2ndTry <- run_biomee_f_bysite(
+    sitename       = df_drivers_BiomeE_PLULUC$sitename[1],
+    params_siml    = df_drivers_BiomeE_PLULUC$params_siml[[1]],
+    site_info      = df_drivers_BiomeE_PLULUC$site_info[[1]],
+    forcing        = df_drivers_BiomeE_PLULUC$forcing[[1]],
+    params_tile    = df_drivers_BiomeE_PLULUC$params_tile[[1]],
+    params_species = df_drivers_BiomeE_PLULUC$params_species[[1]],
+    init_cohort    = df_drivers_BiomeE_PLULUC$init_cohort[[1]],
+    init_soil      = df_drivers_BiomeE_PLULUC$init_soil[[1]],
+    init_lu        = df_drivers_BiomeE_PLULUC$init_lu[[1]],
+    luc_forcing    = df_drivers_BiomeE_PLULUC$luc_forcing[[1]],
+    makecheck      = TRUE
+  )
   mod_BiomeE_Pmodel_2ndTry <- run_biomee_f_bysite(
     sitename       = df_drivers_BiomeE_Pmodel$sitename[1],
     params_siml    = df_drivers_BiomeE_Pmodel$params_siml[[1]],
@@ -324,25 +367,50 @@ test_that("Regression tests run_biomee_f_bysite()", {
   )
   
   # Testing if the returned values are in a list (don't error / warning)
+  # a) expect data.frames()
   expect_type(mod_BiomeE_Pmodel, "list")
+  expect_type(mod_BiomeE_PLULUC, "list")
+  expect_type(mod_BiomeE_gsLeun, "list")
   expect_s3_class(mod_BiomeE_Pmodel$data$output_daily_tile, "data.frame")
   expect_s3_class(mod_BiomeE_Pmodel$data$output_annual_tile, "data.frame")
   expect_s3_class(mod_BiomeE_Pmodel$data$output_annual_cohorts, "data.frame")
   
+  expect_s3_class(mod_BiomeE_PLULUC$primary$output_daily_tile, "data.frame")
+  expect_s3_class(mod_BiomeE_PLULUC$primary$output_annual_tile, "data.frame")
+  expect_s3_class(mod_BiomeE_PLULUC$primary$output_annual_cohorts, "data.frame")
+  expect_s3_class(mod_BiomeE_PLULUC$secondary$output_daily_tile, "data.frame")
+  expect_s3_class(mod_BiomeE_PLULUC$secondary$output_annual_tile, "data.frame")
+  expect_s3_class(mod_BiomeE_PLULUC$secondary$output_annual_cohorts, "data.frame")
+  
+  expect_s3_class(mod_BiomeE_gsLeun$data$output_daily_tile, "data.frame")
+  expect_s3_class(mod_BiomeE_gsLeun$data$output_annual_tile, "data.frame")
+  expect_s3_class(mod_BiomeE_gsLeun$data$output_annual_cohorts, "data.frame")
+  
+  # b) expect no NA
   expect_true(all(!is.na(tibble(mod_BiomeE_Pmodel$data$output_daily_tile))))
   expect_true(all(!is.na(tibble(mod_BiomeE_Pmodel$data$output_annual_tile))))
   expect_true(all(!is.na(tibble(mod_BiomeE_Pmodel$data$output_annual_cohorts))))
+  
+  expect_true(all(!is.na(tibble(mod_BiomeE_PLULUC$primary$output_daily_tile))))
+  expect_true(all(!is.na(tibble(mod_BiomeE_PLULUC$secondary$output_daily_tile))))
+  expect_true(all(!is.na(tibble(mod_BiomeE_PLULUC$primary$output_annual_tile))))
+  expect_true(all(!is.na(tibble(mod_BiomeE_PLULUC$secondary$output_annual_tile))))
+  expect_true(all(!is.na(tibble(mod_BiomeE_PLULUC$primary$output_annual_cohorts))))
+  expect_true(all(!is.na(tibble(mod_BiomeE_PLULUC$secondary$output_annual_cohorts))))
+  
   expect_true(all(!is.na(tibble(mod_BiomeE_gsLeun$data$output_daily_tile))))
   expect_true(all(!is.na(tibble(mod_BiomeE_gsLeun$data$output_annual_tile))))
   expect_true(all(!is.na(tibble(mod_BiomeE_gsLeun$data$output_annual_cohorts))))
+  
   expect_true(all(!is.na(tibble(mod_BiomeE_Pmodel_2ndTry$data$output_daily_tile))))
   expect_true(all(!is.na(tibble(mod_BiomeE_Pmodel_2ndTry$data$output_annual_tile))))
   expect_true(all(!is.na(tibble(mod_BiomeE_Pmodel_2ndTry$data$output_annual_cohorts))))
+  
   expect_true(all(!is.na(tibble(mod_BiomeE_gsLeun_2ndTry$data$output_daily_tile))))
   expect_true(all(!is.na(tibble(mod_BiomeE_gsLeun_2ndTry$data$output_annual_tile))))
   expect_true(all(!is.na(tibble(mod_BiomeE_gsLeun_2ndTry$data$output_annual_cohorts))))
 
-  # Testing memory leakage, i.e. repeatability
+  # c) Testing memory leakage, i.e. repeatability
   expect_equal(tibble(mod_BiomeE_Pmodel$data$output_daily_tile    ), tibble(mod_BiomeE_Pmodel_2ndTry$data$output_daily_tile    ), tolerance = 1e-6)
   expect_equal(tibble(mod_BiomeE_Pmodel$data$output_annual_tile   ), tibble(mod_BiomeE_Pmodel_2ndTry$data$output_annual_tile   ), tolerance = 1e-6)
   expect_equal(tibble(mod_BiomeE_Pmodel$data$output_annual_cohorts), tibble(mod_BiomeE_Pmodel_2ndTry$data$output_annual_cohorts), tolerance = 1e-6)
@@ -350,6 +418,25 @@ test_that("Regression tests run_biomee_f_bysite()", {
   expect_equal(tibble(mod_BiomeE_gsLeun$data$output_annual_tile   ), tibble(mod_BiomeE_gsLeun_2ndTry$data$output_annual_tile   ), tolerance = 1e-6)
   expect_equal(tibble(mod_BiomeE_gsLeun$data$output_annual_cohorts), tibble(mod_BiomeE_gsLeun_2ndTry$data$output_annual_cohorts), tolerance = 1e-6)
   
+  expect_equal(tibble(mod_BiomeE_PLULUC$aggregated),                       tibble(mod_BiomeE_PLULUC_2ndTry$aggregated),                      tolerance = 1e-6)
+  expect_equal(tibble(mod_BiomeE_PLULUC$primary$output_daily_tile),        tibble(mod_BiomeE_PLULUC_2ndTry$primary$output_daily_tile),       tolerance = 1e-6)
+  expect_equal(tibble(mod_BiomeE_PLULUC$primary$output_daily_tile),        tibble(mod_BiomeE_PLULUC_2ndTry$primary$output_daily_tile),       tolerance = 1e-6)
+  expect_equal(tibble(mod_BiomeE_PLULUC$primary$output_annual_tile),       tibble(mod_BiomeE_PLULUC_2ndTry$primary$output_annual_tile),      tolerance = 1e-6)
+  expect_equal(tibble(mod_BiomeE_PLULUC$primary$output_annual_cohorts),    tibble(mod_BiomeE_PLULUC_2ndTry$primary$output_annual_cohorts),   tolerance = 1e-6)
+  expect_equal(tibble(mod_BiomeE_PLULUC$primary$output_annual_cohorts),    tibble(mod_BiomeE_PLULUC_2ndTry$primary$output_annual_cohorts),   tolerance = 1e-6)
+  expect_equal(tibble(mod_BiomeE_PLULUC$primary$output_annual_cohorts),    tibble(mod_BiomeE_PLULUC_2ndTry$primary$output_annual_cohorts),   tolerance = 1e-6)
+  expect_equal(tibble(mod_BiomeE_PLULUC$secondary$output_daily_tile),      tibble(mod_BiomeE_PLULUC_2ndTry$secondary$output_daily_tile),     tolerance = 1e-6)
+  expect_equal(tibble(mod_BiomeE_PLULUC$secondary$output_daily_tile),      tibble(mod_BiomeE_PLULUC_2ndTry$secondary$output_daily_tile),     tolerance = 1e-6)
+  expect_equal(tibble(mod_BiomeE_PLULUC$secondary$output_annual_tile),     tibble(mod_BiomeE_PLULUC_2ndTry$secondary$output_annual_tile),    tolerance = 1e-6)
+  expect_equal(tibble(mod_BiomeE_PLULUC$secondary$output_annual_cohorts),  tibble(mod_BiomeE_PLULUC_2ndTry$secondary$output_annual_cohorts), tolerance = 1e-6)
+  expect_equal(tibble(mod_BiomeE_PLULUC$secondary$output_annual_cohorts),  tibble(mod_BiomeE_PLULUC_2ndTry$secondary$output_annual_cohorts), tolerance = 1e-6)
+  expect_equal(tibble(mod_BiomeE_PLULUC$secondary$output_annual_cohorts),  tibble(mod_BiomeE_PLULUC_2ndTry$secondary$output_annual_cohorts), tolerance = 1e-6)
+  
+  # d) Testing numeric values against below reference values
+  #    By hardcoding the outputs below:
+  #       - any code changes to the numeric outputs must be reflected in below values
+  #       - and thus such breaking changes are legibly tracked in the git history
+  #
   # Hardcoded reference outputs.
   # NOTE: this is expected to change reasonably frequently whenever something is
   #       changed in the model.
@@ -864,6 +951,585 @@ test_that("Regression tests run_biomee_f_bysite()", {
   expect_equal(tibble(mod_BiomeE_gsLeun$data$output_annual_cohorts)|>filter(year==  2)|>arrange(-DBH),                 ref_BiomeE_gsLeun_oac_yr2)
   expect_equal(tibble(mod_BiomeE_gsLeun$data$output_annual_cohorts)|>filter(year==251)|>arrange(-DBH),                 ref_BiomeE_gsLeun_oac_yr251)
   
+  
+  # Hardcoded reference outputs.
+  # NOTE: this is expected to change reasonably frequently whenever something is
+  #       changed in the model.
+  #       If this is expected, please update the hardcoded reference values below.
+  #       To do so, simply use the commented code, making use of dput(). Thanks!
+  # mod_BiomeE_PLULUC$aggregated|>filter(                           year %in% c(1, 2, 8, 9, 16, 251)) |> dput()
+  # mod_BiomeE_PLULUC$primary$output_daily_tile|>filter(year==  1, doy %in% c(1, 2, 180, 364, 365)) |> dput()
+  # mod_BiomeE_PLULUC$primary$output_daily_tile|>filter(year==251, doy %in% c(1, 2, 180, 364, 365)) |> dput()
+  # mod_BiomeE_PLULUC$primary$output_annual_tile|>filter(           year %in% c(1, 2, 8, 9, 16, 251)) |> dput()
+  # mod_BiomeE_PLULUC$primary$output_annual_cohorts|>filter(year==  1) |> dput()
+  # mod_BiomeE_PLULUC$primary$output_annual_cohorts|>filter(year==  2) |> dput()
+  # mod_BiomeE_PLULUC$primary$output_annual_cohorts|>filter(year==251) |> dput()
+  # mod_BiomeE_PLULUC$secondary$output_daily_tile|>filter(year==  1, doy %in% c(1, 2, 180, 364, 365)) |> dput()
+  # mod_BiomeE_PLULUC$secondary$output_daily_tile|>filter(year==251, doy %in% c(1, 2, 180, 364, 365)) |> dput()
+  # mod_BiomeE_PLULUC$secondary$output_annual_tile|>filter(           year %in% c(1, 2, 8, 9, 16, 251)) |> dput()
+  # mod_BiomeE_PLULUC$secondary$output_annual_cohorts|>filter(year==  1) |> dput()
+  # mod_BiomeE_PLULUC$secondary$output_annual_cohorts|>filter(year==  2) |> dput()
+  # mod_BiomeE_PLULUC$secondary$output_annual_cohorts|>filter(year==251) |> dput()
+  ref_BiomeE_PLULUC_aggregated <- tibble(
+    year            = c(1,2,8,9,16,251),
+    CAI             = c(0.00416006147861481,0.0051026726141572,0.013795854523778,0.0158615466207266,0.0471739545464516,1.34490156173706),
+    LAI             = c(0.00620649103075266,0.00972458533942699,0.043438233435154,0.0499434173107147,0.144030258059502,3.74448251724243),
+    Density         = c(500,494.722717285156,462.53564453125,456.990539550781,1980.70007324219,46017.578125),
+    DBH             = c(0.67508590221405,0.779046058654785,1.58127772808075,1.74943614006042,1.17045211791992,1.05999457836151),
+    Density12       = c(0,0,0,0,0,214.249755859375),
+    DBH12           = c(0,0,0,0,0,21.6128616333008),
+    QMD12           = c(0,0,0,0,0,21.6495342254639),
+    NPP             = c(0.00230822991579771,0.00474032014608383,0.0180877968668938,0.0207991693168879,0.0605944767594337,1.43212604522705),
+    GPP             = c(0.00443602073937654,0.00687614921480417,0.0263272896409035,0.0303885489702225,0.0890411883592606,2.20210719108582),
+    Rauto           = c(0.00212779105640948,0.00213582930155098,0.00823949463665485,0.00958937965333462,0.0284467153251171,0.769981026649475),
+    Rh              = c(0.0028953910805285,0.00248773163184524,0.00351402210071683,0.00408122735098004,0.0118605736643076,1.29935908317566),
+    rain            = c(587.529663085938,587.529663085938,587.529663085938,587.529663085938,587.529663085938,587.529663085938),
+    SoilWater       = c(799.904052734375,799.904052734375,799.904724121094,799.904907226562,799.90673828125,799.930053710938),
+    Transp          = c(0,0,0,0,0,0),
+    Evap            = c(159.599700927734,159.441146850586,157.805053710938,157.495330810547,153.281402587891,94.2941207885742),
+    Runoff          = c(428.025756835938,428.088317871094,429.724426269531,430.034057617188,434.247924804688,493.235290527344),
+    plantC          = c(0.00990187004208565,0.0133129954338074,0.0604372769594193,0.0732633098959923,0.244614720344543,11.881664276123),
+    soilC           = c(0.0111686438322067,0.010008754208684,0.0205024518072605,0.0243835598230362,0.0789381265640259,78.5517730712891),
+    plantN          = c(0.000283176312223077,0.000251700810622424,0.00107245030812919,0.00126676075160503,0.00361416721716523,0.112356156110764),
+    soilN           = c(0.00390609027817845,0.00347790773957968,0.00353616685606539,0.00364831881597638,0.00530428625643253,1.62823057174683),
+    totN            = c(0.00418926635757089,0.00372960884124041,0.00460861716419458,0.0049150800332427,0.00891845300793648,1.74058675765991),
+    NSC             = c(0.0042251693084836,0.00518226251006126,0.0209579616785049,0.0248370207846165,0.0757390111684799,2.22338700294495),
+    SeedC           = c(0,0,0.00153295951895416,0.00226585427299142,0.00386109342798591,0.0703786015510559),
+    leafC           = c(0.0010551034938544,0.00165317952632904,0.00738450000062585,0.00849038176238537,0.024485144764185,0.636562049388885),
+    rootC           = c(0.000629958754871041,0.00098704535048455,0.00440898025408387,0.00506925676018,0.0146190682426095,0.380062103271484),
+    SapwoodC        = c(0.00115265452768654,0.00201194896362722,0.0154777374118567,0.0192941222339869,0.0739047154784203,4.9033055305481),
+    WoodC           = c(0.00283898459747434,0.00347855873405933,0.0106751378625631,0.0133066764101386,0.0520057007670403,3.66797018051147),
+    NSN             = c(0.000237868691328913,0.000182893098099157,0.000683798047248274,0.000787506462074816,0.00227460172027349,0.0638936385512352),
+    SeedN           = c(0,0,7.66480516176671e-05,0.00011329265544191,0.000193054700503126,0.00351893017068505),
+    leafN           = c(1.81540090125054e-05,2.84444759017788e-05,0.000127057341160253,0.000146085250889882,0.000421290402300656,0.01095269061625),
+    rootN           = c(1.57489594130311e-05,2.46760791924316e-05,0.000110224369564094,0.000126731349155307,0.000365475978469476,0.00950152892619371),
+    SapwoodN        = c(3.29329850501381e-06,5.74842579226242e-06,4.42221135017462e-05,5.51260673091747e-05,0.00021115635172464,0.0140094440430403),
+    WoodN           = c(8.11138215794927e-06,9.93873254628852e-06,3.05004105030093e-05,3.80190831492655e-05,0.00014858775830362,0.0104799186810851),
+    McrbC           = c(0.000287109753116965,0.000403904035920277,0.000671996036544442,0.000772989937104285,0.00220785499550402,0.194691598415375),
+    fastSOM         = c(0.00974625535309315,0.00818772707134485,0.0127302370965481,0.0147649068385363,0.0426847860217094,2.01838397979736),
+    SlowSOM         = c(0.00113527732901275,0.00141712243203074,0.00710021937265992,0.00884566642343998,0.0340454839169979,76.3387069702148),
+    McrbN           = c(2.87109760392923e-05,4.03904014092404e-05,6.71996021992527e-05,7.729899516562e-05,0.000220785499550402,0.0194691587239504),
+    fastSoilN       = c(0.000636344775557518,0.000536472711246461,0.000580763793550432,0.000662768143229187,0.00186954694800079,0.106583580374718),
+    slowSoilN       = c(2.69899937848095e-05,3.19643804687075e-05,0.000138284027343616,0.000170996616361663,0.000630303169600666,1.49933898448944),
+    mineralN        = c(0.00321404449641705,0.00286908028647304,0.00274991942569613,0.00273725506849587,0.00258365087211132,0.00283893477171659),
+    N_fxed          = c(0,0,0,0,0,0),
+    N_uptk          = c(0,0,0.000328844995237887,0.000375772069673985,0.00102190545294434,0.0221600160002708),
+    N_yrMin         = c(-0.0117859477177262,-0.000344965694239363,0.000317465397529304,0.000363108585588634,0.00100461498368531,0.0221987571567297),
+    N_P2S           = c(2.14073552342597e-05,3.33384523401037e-05,0.000169749677297659,0.000196994922589511,0.000581519561819732,0.0272029004991055),
+    N_loss          = c(0.0219198539853096,0.0104610156267881,0.00974620040506124,0.00970437098294497,0.00916359946131706,0.00925747770816088),
+    totseedC        = c(0,0,0,0,0.00356994639150798,0.0649071633815765),
+    totseedN        = c(0,0,0,0,0.000178497371962294,0.00324535788968205),
+    Seedling_C      = c(0,0,0,0,0.00356994639150798,0.0649071633815765),
+    Seedling_N      = c(0,0,0,0,0.000178497342858464,0.0032453581225127),
+    MaxAge          = c(1.00000047683716,1.99997925758362,8.00019931793213,9.00026512145996,16.0007247924805,77.7627334594727),
+    MaxVolume       = c(1.00000047683716,1.99997925758362,8.00019931793213,9.00026512145996,16.0007247924805,77.7627334594727),
+    MaxDBH          = c(1.00000047683716,1.99997925758362,8.00019931793213,9.00026512145996,16.0007247924805,77.7627334594727),
+    NPPL            = c(0.00121877959463745,0.0008825832628645,0.00248827692121267,0.002812419552356,0.00808483455330133,0.169744536280632),
+    NPPW            = c(0.00149163906462491,0.00154099613428116,0.00566299352794886,0.00676144752651453,0.02101119607687,0.651887178421021),
+    n_deadtrees     = c(4.3513900891412e-06,4.85187956655864e-06,2.36887444771128e-05,2.83907611446921e-05,9.52724803937599e-05,0.0140095250681043),
+    c_deadtrees     = c(0.00010314847168047,0.0001401223562425,0.000713716843165457,0.000889366143383086,0.00358403264544904,0.899706423282623),
+    m_turnover      = c(0.00010314847168047,0.0001401223562425,0.000713716843165457,0.000889366143383086,0.00358403264544904,0.899706423282623),
+    c_turnover_time = c(1.90326523780823,2.25734448432922,1.88507008552551,1.96802186965942,2.47514224052429,5.62669467926025),
+    lu_fraction     = c(1,1,1,1,1,1),
+    prod_pool_1_C   = c(0.000375000003259629,0.000227448996156454,1.13240193968522e-05,6.86836483509978e-06,2.07406671393073e-07,1.40129846432482e-45),
+    prod_pool_1_N   = c(1.07142852812103e-06,6.49854257517291e-07,3.23543396518744e-08,1.96238989502717e-08,5.92590532200177e-10,1.40129846432482e-45),
+    prod_pool_2_C   = c(0.000375000003259629,0.000356711039785296,0.000264258094830438,0.000251370074693114,0.000177137553691864,1.39750544470019e-09),
+    prod_pool_2_N   = c(1.07142852812103e-06,1.01917441952537e-06,7.55023165766033e-07,7.18200283245096e-07,5.06107255660027e-07,3.99287460733921e-12))
+  ref_BiomeE_PLULUC_primary_odt_yr1 <- tibble(
+    year            = c(1,1,1,1,1),
+    doy             = c(1,2,180,364,365),
+    Tc              = c(273.533660888672,271.508483886719,290.345184326172,271.626403808594,273.387603759766),
+    Prcp            = c(1.43654549121857,2.00381827354431,2.4158182144165,2.05754542350769,1.82609081268311),
+    totWs           = c(799.944641113281,799.947204589844,799.131042480469,799.930847167969,799.903991699219),
+    Trsp            = c(0,0,0,0,0),
+    Evap            = c(0.0553628616034985,0.0527696460485458,0.868921220302582,0.0691292807459831,0.0960086733102798),
+    Runoff          = c(1.43654549121857,1.94845604896545,1.08043730258942,1.96995043754578,1.75696134567261),
+    ws1             = c(19.944637298584,19.9472312927246,19.1310787200928,19.930871963501,19.9039936065674),
+    ws2             = c(179.999984741211,179.999984741211,179.999984741211,179.999984741211,179.999984741211),
+    ws3             = c(600,600,600,600,600),
+    LAI             = c(0,0.000364852574421093,0.00466133235022426,0.00618919776752591,0.00619784602895379),
+    GPP             = c(0,0,1.90892133105081e-05,6.17546766079613e-06,6.16563283983851e-06),
+    Rauto           = c(2.97977797991678e-09,5.82730172027368e-05,4.93635025122785e-06,4.55608324045897e-06,4.57825399280409e-06),
+    Rh              = c(2.77344884125341e-06,2.75237016467145e-06,1.03804013633635e-05,2.3680029244133e-06,2.36252321883512e-06),
+    NSC             = c(0.00582691049203277,0.00565209938213229,0.00398708041757345,0.00424133753404021,0.00423404527828097),
+    seedC           = c(0,0,0,0,0),
+    leafC           = c(0,6.20249411440454e-05,0.000792426522821188,0.00105216365773231,0.00105363386683166),
+    rootC           = c(0,3.70325360563584e-05,0.000473125197459012,0.000628203561063856,0.000629081332590431),
+    SW_C            = c(0.00250000017695129,0.00163697078824043,0.000808653887361288,0.00114870828110725,0.00115068175364286),
+    HW_C            = c(0,0.000880510022398084,0.00244240881875157,0.002835190622136,0.00283709052018821),
+    NSN             = c(0.000293089426122606,0.000291046482743695,0.00025848179939203,0.000238109059864655,0.000237988890148699),
+    seedN           = c(0,0,0,0,0),
+    leafN           = c(0,1.06719380710274e-06,1.36344051497872e-05,1.81034265551716e-05,1.81287232408067e-05),
+    rootN           = c(0,9.25813424146327e-07,1.18281122922781e-05,1.57050762936706e-05,1.57270224008244e-05),
+    SW_N            = c(7.14285715730512e-06,4.67705922346795e-06,2.31044009524339e-06,3.28202372656961e-06,3.28766213897325e-06),
+    HW_N            = c(0,2.5157430627587e-06,6.97831228535506e-06,8.10054189059883e-06,8.10597066447372e-06),
+    McrbC           = c(3.69218014384387e-07,7.35389221517835e-07,9.97748793452047e-05,0.000234167644521222,0.000234328705118969),
+    fastSOM         = c(0.009996865876019,0.00999375618994236,0.00931816641241312,0.00799902994185686,0.00799865275621414),
+    slowSOM         = c(0.000999990850687027,0.000999981770291924,0.00105635263025761,0.00113423995207995,0.00113475287798792),
+    McrbN           = c(3.6921800727896e-08,7.3538920730698e-08,9.97748793452047e-06,2.34167637245264e-05,2.34328708756948e-05),
+    fastSoilN       = c(0.000666457752231508,0.000666250416543335,0.000621211074758321,0.000531849800609052,0.000531776517163962),
+    slowSoilN       = c(2.49997719947714e-05,2.4999544621096e-05,2.58212767221266e-05,2.69752108579269e-05,2.69825650320854e-05),
+    mineralN        = c(0.0149249155074358,0.0148505438119173,0.00587099697440863,0.00320566212758422,0.00321121863089502),
+    N_uptk          = c(0,0,0,0,0))
+  ref_BiomeE_PLULUC_primary_odt_yr251 <- tibble(
+    year            = c(251,251,251,251,251),
+    doy             = c(1,2,180,364,365),
+    Tc              = c(273.533660888672,271.508483886719,290.345184326172,271.626403808594,273.387603759766),
+    Prcp            = c(1.43654549121857,2.00381827354431,2.4158182144165,2.05754542350769,1.82609081268311),
+    totWs           = c(799.960083007812,799.958984375,799.516296386719,799.951416015625,799.930053710938),
+    Trsp            = c(0,0,0,0,0),
+    Evap            = c(0.0399133116006851,0.0409998670220375,0.483673214912415,0.0485905706882477,0.0699304714798927),
+    Runoff          = c(1.36660242080688,1.96390557289124,1.74325275421143,1.99354791641235,1.77749955654144),
+    ws1             = c(19.9600887298584,19.9590015411377,19.5163269042969,19.9514083862305,19.9300708770752),
+    ws2             = c(179.999984741211,179.999984741211,179.999984741211,179.999984741211,179.999984741211),
+    ws3             = c(600,600,600,600,600),
+    LAI             = c(3.49222874641418,3.49872827529907,3.61742806434631,3.74305081367493,3.74376726150513),
+    GPP             = c(0.00227762688882649,0.00224546389654279,0.00936589110642672,0.00246698572300375,0.00246065924875438),
+    Rauto           = c(6.12458461546339e-05,0.00236867531202734,0.00243186368606985,0.00197461596690118,0.00198433455079794),
+    Rh              = c(0.00142561015672982,0.00141680834349245,0.00560735259205103,0.00138231716118753,0.00138092681299895),
+    NSC             = c(2.14304661750793,2.13828349113464,2.130375623703,2.23058652877808,2.22722387313843),
+    seedC           = c(0.00199680938385427,0.00217894976958632,0.0329008847475052,0.0699842646718025,0.0701815783977509),
+    leafC           = c(0.593678891658783,0.594783842563629,0.614962697029114,0.636318624019623,0.636440515518188),
+    rootC           = c(0.360928356647491,0.360858380794525,0.36590713262558,0.379916995763779,0.379989594221115),
+    SW_C            = c(4.5676908493042,4.5533447265625,4.69937038421631,4.90116691589355,4.90223693847656),
+    HW_C            = c(3.35169720649719,3.36794400215149,3.51899361610413,3.66643047332764,3.66720080375671),
+    NSN             = c(0.061430923640728,0.061454962939024,0.0630296841263771,0.064000092446804,0.0639436542987823),
+    seedN           = c(9.98404429992661e-05,0.000108947468106635,0.00164504407439381,0.0034992138389498,0.00350907910615206),
+    leafN           = c(0.0102148456498981,0.0102338576689363,0.0105810556560755,0.0109485015273094,0.0109505960717797),
+    rootN           = c(0.00902319513261318,0.00902144704014063,0.00914766173809767,0.00949790421873331,0.00949971843510866),
+    SW_N            = c(0.0130505450069904,0.0130095556378365,0.013426773250103,0.0140033354982734,0.0140063911676407),
+    HW_N            = c(0.00957628153264523,0.00962270237505436,0.0100542716681957,0.0104755219072104,0.0104777216911316),
+    McrbC           = c(0.194571763277054,0.194574505090714,0.195704534649849,0.194694772362709,0.194691613316536),
+    fastSOM         = c(2.17454314231873,2.17509269714355,2.18391823768616,2.01643490791321,2.01709246635437),
+    slowSOM         = c(76.9140014648438,76.9135589599609,76.7412033081055,76.3388214111328,76.3383941650391),
+    McrbN           = c(0.0194571763277054,0.0194574501365423,0.0195704530924559,0.0194694772362709,0.0194691605865955),
+    fastSoilN       = c(0.11321485042572,0.113226071000099,0.112775862216949,0.106537438929081,0.106550887227058),
+    slowSoilN       = c(1.50097978115082,1.50098061561584,1.50067782402039,1.49933409690857,1.49933516979218),
+    mineralN        = c(0.00281932600773871,0.00275931577198207,0.00167982396669686,0.00281613017432392,0.0028474279679358),
+    N_uptk          = c(0,9.1266272647772e-05,0,0,0))
+  ref_BiomeE_PLULUC_primary_oat <- tibble(
+    year            = c(1,2,8,9,16,251),
+    CAI             = c(0.00416006147861481,0.0051026726141572,0.013795854523778,0.0158615466207266,0.0471739545464516,1.34490144252777),
+    LAI             = c(0.00620649103075266,0.00972458533942699,0.043438233435154,0.0499434173107147,0.144030258059502,3.74448251724243),
+    Density         = c(500,494.722686767578,462.535614013672,456.990539550781,1980.70007324219,46017.57421875),
+    DBH             = c(0.67508590221405,0.77904599905014,1.58127772808075,1.74943602085114,1.17045211791992,1.0599946975708),
+    Density12       = c(0,0,0,0,0,214.249755859375),
+    DBH12           = c(0,0,0,0,0,21.6128597259521),
+    QMD12           = c(0,0,0,0,0,21.6495342254639),
+    NPP             = c(0.00230822968296707,0.00474032014608383,0.0180877950042486,0.0207991693168879,0.0605944767594337,1.43212604522705),
+    GPP             = c(0.00443602073937654,0.00687614921480417,0.0263272896409035,0.0303885489702225,0.0890411883592606,2.20210695266724),
+    Rauto           = c(0.00212779105640948,0.00213582930155098,0.00823949463665485,0.00958937965333462,0.028446713462472,0.769980907440186),
+    Rh              = c(0.00236286479048431,0.00206716731190681,0.00342911528423429,0.00401711370795965,0.0118518937379122,1.29935908317566),
+    rain            = c(587.529663085938,587.529663085938,587.529663085938,587.529663085938,587.529663085938,587.529663085938),
+    SoilWater       = c(799.903991699219,799.904052734375,799.904724121094,799.904907226562,799.90673828125,799.930053710938),
+    Transp          = c(0,0,0,0,0,0),
+    Evap            = c(159.599700927734,159.441146850586,157.805053710938,157.495330810547,153.281402587891,94.2941207885742),
+    Runoff          = c(428.025726318359,428.088317871094,429.724395751953,430.034057617188,434.247924804688,493.235260009766),
+    plantC          = c(0.00990187004208565,0.0133129954338074,0.0604372769594193,0.0732633098959923,0.244614720344543,11.881664276123),
+    soilC           = c(0.00937039777636528,0.0086310775950551,0.0202441606670618,0.0241893790662289,0.0789121612906456,78.5517883300781),
+    plantN          = c(0.000283176312223077,0.000251700810622424,0.00107309536542743,0.00126743607688695,0.00361612509004772,0.112349756062031),
+    soilN           = c(0.00379347242414951,0.00338095729239285,0.00351151009090245,0.00362917082384229,0.00529967527836561,1.62824010848999),
+    totN            = c(0.00407664850354195,0.00363265816122293,0.00458460533991456,0.00489660678431392,0.00891580060124397,1.74058985710144),
+    NSC             = c(0.00422516884282231,0.00518226251006126,0.0209579616785049,0.0248370189219713,0.0757390111684799,2.22338700294495),
+    SeedC           = c(0,0,0.00153295940253884,0.00226585427299142,0.00386109319515526,0.0703785941004753),
+    leafC           = c(0.0010551034938544,0.00165317952632904,0.00738449953496456,0.00849038176238537,0.0244851429015398,0.636562049388885),
+    rootC           = c(0.000629958754871041,0.00098704535048455,0.00440898025408387,0.00506925676018,0.0146190682426095,0.380062103271484),
+    SapwoodC        = c(0.00115265452768654,0.00201194896362722,0.0154777374118567,0.0192941222339869,0.0739047154784203,4.90330505371094),
+    WoodC           = c(0.00283898459747434,0.00347855873405933,0.0106751378625631,0.0133066764101386,0.05200569704175,3.66797018051147),
+    NSN             = c(0.000237868676776998,0.000182893098099157,0.000684443046338856,0.000788181787356734,0.00227655982598662,0.0638872385025024),
+    SeedN           = c(0,0,7.66480443417095e-05,0.00011329265544191,0.000193054700503126,0.00351893017068505),
+    leafN           = c(1.8154007193516e-05,2.84444759017788e-05,0.000127057341160253,0.000146085236337967,0.000421290373196825,0.0109526887536049),
+    rootN           = c(1.57489575940417e-05,2.46760791924316e-05,0.000110224362288136,0.000126731349155307,0.000365475978469476,0.00950152985751629),
+    SapwoodN        = c(3.29329850501381e-06,5.74842533751507e-06,4.42221098637674e-05,5.51260636711959e-05,0.000211156337172724,0.0140094431117177),
+    WoodN           = c(8.11138215794927e-06,9.93873254628852e-06,3.05004105030093e-05,3.80190831492655e-05,0.00014858775830362,0.0104799186810851),
+    McrbC           = c(0.000234328705118969,0.000333363102981821,0.00064427312463522,0.000751479179598391,0.00220471736975014,0.194691613316536),
+    fastSOM         = c(0.00800079107284546,0.00688059162348509,0.012499668635428,0.0145922340452671,0.0426619611680508,2.01838397979736),
+    SlowSOM         = c(0.00113527732901275,0.00141712243203074,0.00710021937265992,0.0088456654921174,0.0340454839169979,76.3387145996094),
+    McrbN           = c(2.34328708756948e-05,3.33363095705863e-05,6.44273095531389e-05,7.51479165046476e-05,0.000220471731154248,0.0194691605865955),
+    fastSoilN       = c(0.000531830999534577,0.000451567728305236,0.000561318185646087,0.000647874025162309,0.00186739815399051,0.106583803892136),
+    slowSoilN       = c(2.69899937848095e-05,3.19643804687075e-05,0.000138284027343616,0.000170996616361663,0.000630303169600666,1.49933969974518),
+    mineralN        = c(0.00321121863089502,0.00286408886313438,0.00274748052470386,0.00273515214212239,0.00258150254376233,0.0028474279679358),
+    N_fxed          = c(0,0,0,0,0,0),
+    N_uptk          = c(0,0,0.000328926253132522,0.000375810253899544,0.00102232070639729,0.0221474543213844),
+    N_yrMin         = c(-0.0117887761443853,-0.000347130466252565,0.000317916361382231,0.000363483210094273,0.00100469228345901,0.0222071725875139),
+    N_P2S           = c(2.14073552342597e-05,3.33384523401037e-05,0.000169757404364645,0.000197003231733106,0.000581549596972764,0.0272013004869223),
+    N_loss          = c(0.021915266290307,0.010445348918438,0.00973915681242943,0.0096988333389163,0.00916272588074207,0.00924919173121452),
+    totseedC        = c(0,0,0,0,0.00356994615867734,0.0649071559309959),
+    totseedN        = c(0,0,0,0,0.000178497357410379,0.00324535788968205),
+    Seedling_C      = c(0,0,0,0,0.00356994615867734,0.0649071559309959),
+    Seedling_N      = c(0,0,0,0,0.000178497342858464,0.0032453581225127),
+    MaxAge          = c(1.00000047683716,1.99997925758362,8.00019931793213,9.00026512145996,16.0007247924805,77.7627334594727),
+    MaxVolume       = c(0.000215764259337448,0.000299950072076172,0.00152817298658192,0.0019280546111986,0.00737557932734489,0.652382910251617),
+    MaxDBH          = c(0.00675085838884115,0.00779045978561044,0.0158127769827843,0.0174943599849939,0.0313498750329018,0.220105022192001),
+    NPPL            = c(0.00121877959463745,0.0008825832628645,0.00248827692121267,0.002812419552356,0.00808483455330133,0.169744521379471),
+    NPPW            = c(0.00149163894820958,0.00154099601786584,0.00566299306228757,0.00676144752651453,0.02101119607687,0.651887118816376),
+    n_deadtrees     = c(4.3513900891412e-06,4.85187956655864e-06,2.36964751820778e-05,2.83990775642451e-05,9.53025082708336e-05,0.0140079222619534),
+    c_deadtrees     = c(0.00010314847168047,0.0001401223562425,0.000713716843165457,0.000889366143383086,0.0035840324126184,0.899706423282623),
+    m_turnover      = c(0.00010314847168047,0.0001401223562425,0.000713716843165457,0.000889366143383086,0.0035840324126184,0.899706423282623),
+    c_turnover_time = c(1.90326523780823,2.25734448432922,1.88506996631622,1.96802186965942,2.47514224052429,5.62669515609741),
+    lu_fraction     = c(0.600000023841858,0.600000023841858,0.600000023841858,0.600000023841858,0.600000023841858,0.600000023841858))
+  ref_BiomeE_PLULUC_primary_oac_yr1 <- tibble(
+    cohort          = 1,
+    year            = 1,
+    cID             = 1,
+    PFT             = 2,
+    layer           = 1,
+    density         = 500,
+    flayer          = 0.00416006147861481,
+    DBH             = 0.675085842609406,
+    dDBH            = 0.124270185828209,
+    height          = 2.95789003372192,
+    age             = 1.00000047683716,
+    BA              = 3.57938079105224e-05,
+    dBA             = 1.19649921543896e-05,
+    Acrown          = 0.0832012295722961,
+    Aleaf           = 0.124129816889763,
+    nsc             = 0.0845033749938011,
+    seedC           = 0.00475737359374762,
+    leafC           = 0,
+    rootC           = 0.0211020689457655,
+    sapwC           = 0.0125991748645902,
+    woodC           = 0.0230530891567469,
+    nsn             = 0.0567796900868416,
+    treeG           = 0.0781993493437767,
+    fseed           = 0,
+    fleaf           = 0.311710923910141,
+    froot           = 0.306792557239532,
+    fwood           = 0.381496518850327,
+    GPP             = 0.0887204110622406,
+    NPP             = 0.0461645908653736,
+    Rauto           = 0.042555820196867,
+    Nupt            = 0,
+    Nfix            = 0,
+    deathrate       = 0.0105546750128269,
+    n_deadtrees     = 4.3513900891412e-06,
+    c_deadtrees     = 0.00010314847168047)
+  ref_BiomeE_PLULUC_primary_oac_yr2 <- tibble(
+    cohort          = 1,
+    year            = 2,
+    cID             = 1,
+    PFT             = 2,
+    layer           = 1,
+    density         = 494.722686767578,
+    flayer          = 0.0051026726141572,
+    DBH             = 0.77904599905014,
+    dDBH            = 0.103960141539574,
+    height          = 3.17748880386353,
+    age             = 1.99997925758362,
+    BA              = 4.76668064948171e-05,
+    dBA             = 1.18729985842947e-05,
+    Acrown          = 0.103142082691193,
+    Aleaf           = 0.196566388010979,
+    nsc             = 0.104750856757164,
+    seedC           = 0.00369688123464584,
+    leafC           = 0,
+    rootC           = 0.033416286110878,
+    sapwC           = 0.0199514869600534,
+    woodC           = 0.0406682156026363,
+    nsn             = 0.0703133046627045,
+    treeG           = 0.0755703151226044,
+    fseed           = 0,
+    fleaf           = 0.236070990562439,
+    froot           = 0.35174748301506,
+    fwood           = 0.412181466817856,
+    GPP             = 0.138989970088005,
+    NPP             = 0.0958177149295807,
+    Rauto           = 0.0431722514331341,
+    Nupt            = 0,
+    Nfix            = 0,
+    deathrate       = 0.0106876138597727,
+    n_deadtrees     = 4.85187956655864e-06,
+    c_deadtrees     = 0.0001401223562425)
+  ref_BiomeE_PLULUC_primary_oac_yr251 <- tibble(
+    cohort          = c(1,2,3,4,5,6),
+    year            = c(251,251,251,251,251,251),
+    cID             = c(453,399,405,451,433,25),
+    PFT             = c(2,2,2,2,2,2),
+    layer           = c(1,1,1,2,2,2),
+    density         = c(6186.80615234375,194.83171081543,19.4180297851562,1437.65539550781,133.359893798828,38045.50390625),
+    flayer          = c(0.752436757087708,0.301783740520477,0.0215486716479063,0.137903496623039,0.00330994161777198,0.12791895866394),
+    DBH             = c(4.03591012954712,22.0105018615723,17.6231174468994,3.44524002075195,1.39895117282867,0.369000434875488),
+    dDBH            = c(0.24162270128727,0.415582954883575,0.391332805156708,0.0729762017726898,0.00261068344116211,0.0290364492684603),
+    height          = c(7.2322473526001,16.8895263671875,15.1127624511719,6.68208932876587,4.25798177719116,2.18683457374573),
+    age             = c(25.6355724334717,77.7627258300781,77.7627334594727,25.635570526123,22.6215229034424,2.81209373474121),
+    BA              = c(0.00127930147573352,0.0380495749413967,0.0243924465030432,0.000932242430280894,0.00015370748587884,1.06940851765103e-05),
+    dBA             = c(0.000148593680933118,0.00142327323555946,0.00107127241790295,3.90747445635498e-05,5.73156285099685e-07,1.61680509336293e-06),
+    Acrown          = c(1.21619582176208,15.4894561767578,11.0972499847412,0.959224998950958,0.248196184635162,0.0336226224899292),
+    Aleaf           = c(3.83005237579346,48.7879486083984,34.9530982971191,1.51069128513336,0.0880051031708717,0.036306157708168),
+    nsc             = c(2.28830218315125,35.3928833007812,24.9768371582031,0.331827044487,0.000859242165461183,0.00575008522719145),
+    seedC           = c(0.0601722933351994,0.76550430059433,0.54928994178772,0.0238187629729509,0.00613935943692923,0.00188525673002005),
+    leafC           = c(0.0717583149671555,1.15043652057648,0.80964070558548,0.0115929879248142,0.0247553531080484,0),
+    rootC           = c(0.651108920574188,8.2939510345459,5.94202709197998,0.256817519664764,0.0149608682841063,0.00617204699665308),
+    sapwC           = c(0.388750284910202,4.95197582244873,3.54773926734924,0.153335139155388,0.00871927756816149,0.00368507485836744),
+    woodC           = c(2.88789677619934,142.90104675293,85.6981048583984,1.03218019008636,0.129873126745224,0.00418471964076161),
+    nsn             = c(1.99099254608154,98.4806365966797,59.0609397888184,2.35829377174377,0.296707808971405,0.0157136470079422),
+    treeG           = c(1.38240838050842,19.4165687561035,13.7977523803711,0.350733578205109,0.0369470864534378,0.0105907050892711),
+    fseed           = c(0.0519081875681877,0.059250246733427,0.058679174631834,0.0330535434186459,0.670021772384644,0),
+    fleaf           = c(0.134158194065094,0.0987088829278946,0.101414486765862,0.0458624847233295,0.0212229881435633,0.313251167535782),
+    froot           = c(0.346759855747223,0.308788985013962,0.311794072389603,0.45660537481308,0.259258568286896,0.363957613706589),
+    fwood           = c(0.46717369556427,0.533251881599426,0.528112292289734,0.464478641748428,0.0494967177510262,0.322791159152985),
+    GPP             = c(2.39950299263,31.5417327880859,22.540979385376,0.247082218527794,0.0197645165026188,0.00617480790242553),
+    NPP             = c(1.60801732540131,20.4554824829102,14.665210723877,0.0583550482988358,0.012063343077898,0.000449975952506065),
+    Rauto           = c(0.791485667228699,11.0862493515015,7.87576818466187,0.188727170228958,0.00770117342472076,0.00572483194991946),
+    Nupt            = c(0.0258084423840046,0.290791153907776,0.208818271756172,0.000735382083803415,0.000264835951384157,0),
+    Nfix            = c(0,0,0,0,0,0),
+    deathrate       = c(0.0181079730391502,0.113263040781021,0.0839816629886627,0.152398899197578,0.266000390052795,0.351924955844879),
+    n_deadtrees     = c(0.00199735490605235,0.00616554636508226,0.000313321856083348,0.00161606096662581,3.86729298043065e-05,0.0038769650273025),
+    c_deadtrees     = c(0.0918554291129112,0.640294253826141,0.029240844771266,0.0901064053177834,0.00168161757756025,0.0465278774499893))
+  ref_BiomeE_PLULUC_secondary_odt_yr1 <- tibble(
+    year            = c(1,1,1,1,1),
+    doy             = c(1,2,180,364,365),
+    Tc              = c(273.533660888672,271.508483886719,290.345184326172,271.626403808594,273.387603759766),
+    Prcp            = c(1.43654549121857,2.00381827354431,2.4158182144165,2.05754542350769,1.82609081268311),
+    totWs           = c(799.944641113281,799.947204589844,799.131042480469,799.930847167969,799.903991699219),
+    Trsp            = c(0,0,0,0,0),
+    Evap            = c(0.0553628727793694,0.0527696460485458,0.868921220302582,0.0691292807459831,0.0960086733102798),
+    Runoff          = c(1.43660509586334,1.94845604896545,1.08043730258942,1.96995043754578,1.75696134567261),
+    ws1             = c(19.944637298584,19.9472312927246,19.1310787200928,19.930871963501,19.9039936065674),
+    ws2             = c(179.999984741211,179.999984741211,179.999984741211,179.999984741211,179.999984741211),
+    ws3             = c(600,600,600,600,600),
+    LAI             = c(0,0.000364852574421093,0.00466133235022426,0.00618919776752591,0.00619784602895379),
+    GPP             = c(0,0,1.90892133105081e-05,6.17546766079613e-06,6.16563283983851e-06),
+    Rauto           = c(2.97977797991678e-09,5.82730172027368e-05,4.93635025122785e-06,4.55608324045897e-06,4.57825399280409e-06),
+    Rh              = c(4.38448614659137e-06,4.35115134678199e-06,1.62614360306179e-05,3.65712071470625e-06,3.64831771548779e-06),
+    NSC             = c(0.00582691049203277,0.00565209938213229,0.00398708041757345,0.00424133753404021,0.00423404527828097),
+    seedC           = c(0,0,0,0,0),
+    leafC           = c(0,6.20249411440454e-05,0.000792426522821188,0.00105216365773231,0.00105363386683166),
+    rootC           = c(0,3.70325360563584e-05,0.000473125197459012,0.000628203561063856,0.000629081332590431),
+    SW_C            = c(0.00250000017695129,0.00163697078824043,0.000808653887361288,0.00114870828110725,0.00115068175364286),
+    HW_C            = c(0,0.000880510022398084,0.00244240881875157,0.002835190622136,0.00283709052018821),
+    NSN             = c(0.000293089426122606,0.000291046482743695,0.00025848179939203,0.000238109059864655,0.000237988890148699),
+    seedN           = c(0,0,0,0,0),
+    leafN           = c(0,1.06719380710274e-06,1.36344051497872e-05,1.81034265551716e-05,1.81287232408067e-05),
+    rootN           = c(0,9.25813424146327e-07,1.18281122922781e-05,1.57050762936706e-05,1.57270224008244e-05),
+    SW_N            = c(7.14285715730512e-06,4.67705922346795e-06,2.31044009524339e-06,3.28202372656961e-06,3.28766213897325e-06),
+    HW_N            = c(0,2.5157430627587e-06,6.97831228535506e-06,8.10054189059883e-06,8.10597066447372e-06),
+    McrbC           = c(5.84022927796468e-07,1.16322576104722e-06,0.000156941576278768,0.00036603509215638,0.000366281310562044),
+    fastSOM         = c(0.0158219542354345,0.0158170331269503,0.0146148949861526,0.0123640624806285,0.0123623143881559),
+    slowSOM         = c(0.000999990850687027,0.000999981770291924,0.00105635263025761,0.00113423995207995,0.00113475287798792),
+    McrbN           = c(5.84022927796468e-08,1.16322574683636e-07,1.56941569002811e-05,3.6603509215638e-05,3.66281310562044e-05),
+    fastSoilN       = c(0.000959546654485166,0.000959338853135705,0.000903414911590517,0.000793190556578338,0.000793060928117484),
+    slowSoilN       = c(2.49997719947714e-05,2.4999544621096e-05,2.58212767221266e-05,2.69752108579269e-05,2.69825650320854e-05),
+    mineralN        = c(0.0149248940870166,0.0148505019024014,0.00587352132424712,0.00321272760629654,0.00321828341111541),
+    N_uptk          = c(0,0,0,0,0))
+  ref_BiomeE_PLULUC_secondary_odt_yr251 <- tibble(
+    year            = c(251,251,251,251,251),
+    doy             = c(1,2,180,364,365),
+    Tc              = c(273.533660888672,271.508483886719,290.345184326172,271.626403808594,273.387603759766),
+    Prcp            = c(1.43654549121857,2.00381827354431,2.4158182144165,2.05754542350769,1.82609081268311),
+    totWs           = c(799.960083007812,799.958984375,799.516296386719,799.951416015625,799.930053710938),
+    Trsp            = c(0,0,0,0,0),
+    Evap            = c(0.0399133116006851,0.0409998670220375,0.483673214912415,0.0485905706882477,0.0699304714798927),
+    Runoff          = c(1.36660242080688,1.96390557289124,1.74325275421143,1.99354791641235,1.77749955654144),
+    ws1             = c(19.9600887298584,19.9590015411377,19.5163269042969,19.9514083862305,19.9300708770752),
+    ws2             = c(179.999984741211,179.999984741211,179.999984741211,179.999984741211,179.999984741211),
+    ws3             = c(600,600,600,600,600),
+    LAI             = c(3.49222898483276,3.49872851371765,3.61742806434631,3.74305105209351,3.74376749992371),
+    GPP             = c(0.00227762712165713,0.00224546412937343,0.00936589296907187,0.00246698595583439,0.00246065971441567),
+    Rauto           = c(6.12458316027187e-05,0.00236864062026143,0.00243193446658552,0.00197466905228794,0.00198433012701571),
+    Rh              = c(0.00142560992389917,0.00141680822707713,0.00560735166072845,0.00138231704477221,0.00138092646375299),
+    NSC             = c(2.14304709434509,2.1382839679718,2.130375623703,2.23058581352234,2.22722291946411),
+    seedC           = c(0.00199680402874947,0.00217894441448152,0.0329008847475052,0.0699842646718025,0.0701815709471703),
+    leafC           = c(0.593678891658783,0.594783782958984,0.614962816238403,0.636318683624268,0.636440515518188),
+    rootC           = c(0.360928356647491,0.360858350992203,0.365907192230225,0.379917025566101,0.37998965382576),
+    SW_C            = c(4.56769132614136,4.55334520339966,4.69937133789062,4.90116834640503,4.90223836898804),
+    HW_C            = c(3.35169768333435,3.36794447898865,3.51899337768555,3.66643047332764,3.66720056533813),
+    NSN             = c(0.0614155009388924,0.0614405274391174,0.0627359002828598,0.0640160739421844,0.0639596432447433),
+    seedN           = c(9.9840181064792e-05,0.000108947206172161,0.00164504384156317,0.00349921360611916,0.00350907887332141),
+    leafN           = c(0.0102148419246078,0.010233853943646,0.0105810556560755,0.0109485043212771,0.0109505988657475),
+    rootN           = c(0.00902318954467773,0.00902143865823746,0.00914766173809767,0.00949790142476559,0.00949971750378609),
+    SW_N            = c(0.013050545938313,0.0130095593631268,0.0134267751127481,0.0140033364295959,0.0140063930302858),
+    HW_N            = c(0.00957628432661295,0.00962270237505436,0.0100542698055506,0.0104755200445652,0.0104777198284864),
+    McrbC           = c(0.19457171857357,0.19457446038723,0.195704430341721,0.194694697856903,0.19469153881073),
+    fastSOM         = c(2.17454314231873,2.17509269714355,2.18391823768616,2.01643490791321,2.01709246635437),
+    slowSOM         = c(76.9139709472656,76.9135284423828,76.7411727905273,76.3387908935547,76.3383636474609),
+    McrbN           = c(0.0194571726024151,0.019457446411252,0.0195704437792301,0.0194694697856903,0.0194691531360149),
+    fastSoilN       = c(0.113213919103146,0.113225139677525,0.112775057554245,0.106536857783794,0.106550313532352),
+    slowSoilN       = c(1.5009777545929,1.50097858905792,1.50067591667175,1.49933218955994,1.49933326244354),
+    mineralN        = c(0.00285031390376389,0.00278910622000694,0.00198135781101882,0.00279475073330104,0.0028261945117265),
+    N_uptk          = c(0,9.22516119317152e-05,0,0,0))
+  ref_BiomeE_PLULUC_secondary_oat <- tibble(
+    year            = c(1,2,8,9,16,251),
+    CAI             = c(0.00416006147861481,0.0051026726141572,0.013795854523778,0.0158615466207266,0.0471739545464516,1.34490156173706),
+    LAI             = c(0.00620649103075266,0.00972458533942699,0.043438233435154,0.0499434173107147,0.144030258059502,3.74448251724243),
+    Density         = c(500,494.722686767578,462.535614013672,456.990539550781,1980.70007324219,46017.578125),
+    DBH             = c(0.67508590221405,0.77904599905014,1.58127772808075,1.74943602085114,1.17045211791992,1.05999433994293),
+    Density12       = c(0,0,0,0,0,214.249740600586),
+    DBH12           = c(0,0,0,0,0,21.6128616333008),
+    QMD12           = c(0,0,0,0,0,21.6495323181152),
+    NPP             = c(0.00230822968296707,0.00474032014608383,0.0180877950042486,0.0207991693168879,0.0605944767594337,1.43212604522705),
+    GPP             = c(0.00443602073937654,0.00687614921480417,0.0263272896409035,0.0303885489702225,0.0890411883592606,2.20210719108582),
+    Rauto           = c(0.00212779105640948,0.00213582930155098,0.00823949463665485,0.00958937965333462,0.028446713462472,0.76998108625412),
+    Rh              = c(0.00369418039917946,0.00311857811175287,0.00364138255827129,0.0041773971170187,0.0118735916912556,1.29935908317566),
+    rain            = c(587.529663085938,587.529663085938,587.529663085938,587.529663085938,587.529663085938,587.529663085938),
+    SoilWater       = c(799.903991699219,799.904052734375,799.904724121094,799.904907226562,799.90673828125,799.930053710938),
+    Transp          = c(0,0,0,0,0,0),
+    Evap            = c(159.599700927734,159.441146850586,157.805053710938,157.495330810547,153.281402587891,94.2941131591797),
+    Runoff          = c(428.025787353516,428.088317871094,429.724395751953,430.034057617188,434.247924804688,493.235260009766),
+    plantC          = c(0.00990187004208565,0.0133129954338074,0.0604372769594193,0.0732633098959923,0.244614720344543,11.8816652297974),
+    soilC           = c(0.0138660119846463,0.0120752677321434,0.0208898894488811,0.0246748328208923,0.0789770632982254,78.5517578125),
+    plantN          = c(0.000283176312223077,0.000251700810622424,0.00107148278038949,0.0012657477054745,0.00361122959293425,0.112365745007992),
+    soilN           = c(0.00407501682639122,0.00362333352677524,0.00357315177097917,0.00367704103700817,0.00531120225787163,1.62821638584137),
+    totN            = c(0.00435819290578365,0.00387503439560533,0.00464463466778398,0.00494278874248266,0.00892243161797523,1.74058210849762),
+    NSC             = c(0.00422516884282231,0.00518226251006126,0.0209579616785049,0.0248370189219713,0.0757390111684799,2.22338676452637),
+    SeedC           = c(0,0,0.00153295940253884,0.00226585427299142,0.00386109319515526,0.0703786090016365),
+    leafC           = c(0.0010551034938544,0.00165317952632904,0.00738449953496456,0.00849038176238537,0.0244851429015398,0.636561989784241),
+    rootC           = c(0.000629958754871041,0.00098704535048455,0.00440898025408387,0.00506925676018,0.0146190682426095,0.380062103271484),
+    SapwoodC        = c(0.00115265452768654,0.00201194896362722,0.0154777374118567,0.0192941222339869,0.0739047154784203,4.9033055305481),
+    WoodC           = c(0.00283898459747434,0.00347855873405933,0.0106751378625631,0.0133066764101386,0.05200569704175,3.66796970367432),
+    NSN             = c(0.000237868676776998,0.000182893098099157,0.00068283051950857,0.000786493357736617,0.00227166432887316,0.063903234899044),
+    SeedN           = c(0,0,7.66480443417095e-05,0.00011329265544191,0.000193054700503126,0.00351893017068505),
+    leafN           = c(1.8154007193516e-05,2.84444759017788e-05,0.000127057341160253,0.000146085236337967,0.000421290373196825,0.0109526915475726),
+    rootN           = c(1.57489575940417e-05,2.46760791924316e-05,0.000110224362288136,0.000126731349155307,0.000365475978469476,0.00950152799487114),
+    SapwoodN        = c(3.29329850501381e-06,5.74842533751507e-06,4.42221098637674e-05,5.51260636711959e-05,0.000211156337172724,0.0140094440430403),
+    WoodN           = c(8.11138215794927e-06,9.93873254628852e-06,3.05004105030093e-05,3.80190831492655e-05,0.00014858775830362,0.0104799177497625),
+    McrbC           = c(0.000366281310562044,0.000509715406224132,0.000713580346200615,0.000805256073363125,0.0022125612013042,0.19469153881073),
+    fastSOM         = c(0.0123644527047873,0.0101484293118119,0.013076089322567,0.0150239123031497,0.0427190214395523,2.01838397979736),
+    SlowSOM         = c(0.00113527732901275,0.00141712243203074,0.00710021937265992,0.0088456654921174,0.0340454839169979,76.3386840820312),
+    McrbN           = c(3.66281310562044e-05,5.09715391672216e-05,7.13580375304446e-05,8.0525605881121e-05,0.000221256123040803,0.0194691531360149),
+    fastSoilN       = c(0.000793115410488099,0.000663830142002553,0.000609932118095458,0.000685109349433333,0.00187277025543153,0.10658323019743),
+    slowSoilN       = c(2.69899937848095e-05,3.19643804687075e-05,0.000138284027343616,0.000170996616361663,0.000630303169600666,1.49933779239655),
+    mineralN        = c(0.00321828341111541,0.00287656742148101,0.00275357742793858,0.00274040945805609,0.00258687301538885,0.0028261945117265),
+    N_fxed          = c(0,0,0,0,0,0),
+    N_uptk          = c(0,0,0.000328723050188273,0.000375714793335646,0.00102128251455724,0.0221788547933102),
+    N_yrMin         = c(-0.0117817036807537,-0.000341718521667644,0.000316788908094168,0.000362546648830175,0.00100449880119413,0.0221861302852631),
+    N_P2S           = c(2.14073552342597e-05,3.33384523401037e-05,0.000169738064869307,0.000196982437046245,0.000581474509090185,0.0272052995860577),
+    N_loss          = c(0.021926736459136,0.0104845138266683,0.00975676625967026,0.00971267651766539,0.00916490983217955,0.00926990620791912),
+    totseedC        = c(0,0,0,0,0.00356994615867734,0.0649071559309959),
+    totseedN        = c(0,0,0,0,0.000178497357410379,0.00324535765685141),
+    Seedling_C      = c(0,0,0,0,0.00356994615867734,0.0649071559309959),
+    Seedling_N      = c(0,0,0,0,0.000178497342858464,0.00324535788968205),
+    MaxAge          = c(1.00000047683716,1.99997925758362,8.00019931793213,9.00026512145996,16.0007247924805,77.7627334594727),
+    MaxVolume       = c(0.000215764259337448,0.000299950072076172,0.00152817298658192,0.0019280546111986,0.00737557932734489,0.652382910251617),
+    MaxDBH          = c(0.00675085838884115,0.00779045978561044,0.0158127769827843,0.0174943599849939,0.0313498750329018,0.220105022192001),
+    NPPL            = c(0.00121877959463745,0.0008825832628645,0.00248827692121267,0.002812419552356,0.00808483455330133,0.169744551181793),
+    NPPW            = c(0.00149163894820958,0.00154099601786584,0.00566299306228757,0.00676144752651453,0.02101119607687,0.651887238025665),
+    n_deadtrees     = c(4.3513900891412e-06,4.85187956655864e-06,2.36771447816864e-05,2.83782865153626e-05,9.52274349401705e-05,0.0140119269490242),
+    c_deadtrees     = c(0.00010314847168047,0.0001401223562425,0.000713716843165457,0.000889366143383086,0.0035840324126184,0.899706304073334),
+    m_turnover      = c(0.00010314847168047,0.0001401223562425,0.000713716843165457,0.000889366143383086,0.0035840324126184,0.899706304073334),
+    c_turnover_time = c(1.90326523780823,2.25734448432922,1.88506996631622,1.96802186965942,2.47514224052429,5.62669372558594),
+    lu_fraction     = c(0.400000005960464,0.400000005960464,0.400000005960464,0.400000005960464,0.400000005960464,0.400000005960464))
+  ref_BiomeE_PLULUC_secondary_oac_yr1 <- tibble(
+    cohort          = 1,
+    year            = 1,
+    cID             = 1,
+    PFT             = 2,
+    layer           = 1,
+    density         = 500,
+    flayer          = 0.00416006147861481,
+    DBH             = 0.675085842609406,
+    dDBH            = 0.124270185828209,
+    height          = 2.95789003372192,
+    age             = 1.00000047683716,
+    BA              = 3.57938079105224e-05,
+    dBA             = 1.19649921543896e-05,
+    Acrown          = 0.0832012295722961,
+    Aleaf           = 0.124129816889763,
+    nsc             = 0.0845033749938011,
+    seedC           = 0.00475737359374762,
+    leafC           = 0,
+    rootC           = 0.0211020689457655,
+    sapwC           = 0.0125991748645902,
+    woodC           = 0.0230530891567469,
+    nsn             = 0.0567796900868416,
+    treeG           = 0.0781993493437767,
+    fseed           = 0,
+    fleaf           = 0.311710923910141,
+    froot           = 0.306792557239532,
+    fwood           = 0.381496518850327,
+    GPP             = 0.0887204110622406,
+    NPP             = 0.0461645908653736,
+    Rauto           = 0.042555820196867,
+    Nupt            = 0,
+    Nfix            = 0,
+    deathrate       = 0.0105546750128269,
+    n_deadtrees     = 4.3513900891412e-06,
+    c_deadtrees     = 0.00010314847168047)
+  ref_BiomeE_PLULUC_secondary_oac_yr2 <- tibble(
+    cohort          = 1,
+    year            = 2,
+    cID             = 1,
+    PFT             = 2,
+    layer           = 1,
+    density         = 494.722686767578,
+    flayer          = 0.0051026726141572,
+    DBH             = 0.77904599905014,
+    dDBH            = 0.103960141539574,
+    height          = 3.17748880386353,
+    age             = 1.99997925758362,
+    BA              = 4.76668064948171e-05,
+    dBA             = 1.18729985842947e-05,
+    Acrown          = 0.103142082691193,
+    Aleaf           = 0.196566388010979,
+    nsc             = 0.104750856757164,
+    seedC           = 0.00369688123464584,
+    leafC           = 0,
+    rootC           = 0.033416286110878,
+    sapwC           = 0.0199514869600534,
+    woodC           = 0.0406682156026363,
+    nsn             = 0.0703133046627045,
+    treeG           = 0.0755703151226044,
+    fseed           = 0,
+    fleaf           = 0.236070990562439,
+    froot           = 0.35174748301506,
+    fwood           = 0.412181466817856,
+    GPP             = 0.138989970088005,
+    NPP             = 0.0958177149295807,
+    Rauto           = 0.0431722514331341,
+    Nupt            = 0,
+    Nfix            = 0,
+    deathrate       = 0.0106876138597727,
+    n_deadtrees     = 4.85187956655864e-06,
+    c_deadtrees     = 0.0001401223562425)
+  ref_BiomeE_PLULUC_secondary_oac_yr251 <- tibble(
+    cohort          = c(1,2,3,4,5,6),
+    year            = c(251,251,251,251,251,251),
+    cID             = c(453,399,405,451,433,25),
+    PFT             = c(2,2,2,2,2,2),
+    layer           = c(1,1,1,2,2,2),
+    density         = c(6186.8037109375,194.83171081543,19.4180202484131,1437.65393066406,133.359298706055,38045.51171875),
+    flayer          = c(0.752436935901642,0.301783740520477,0.0215486623346806,0.137903317809105,0.00330992136150599,0.12791895866394),
+    DBH             = c(4.03591156005859,22.0105018615723,17.6231174468994,3.44523930549622,1.39894962310791,0.369000375270844),
+    dDBH            = c(0.241623073816299,0.415582954883575,0.391329824924469,0.0729750841856003,0.00261003151535988,0.0290364250540733),
+    height          = c(7.23224830627441,16.8895263671875,15.1127624511719,6.68208789825439,4.25797939300537,2.18683457374573),
+    age             = c(25.6355743408203,77.7627258300781,77.7627334594727,25.6355743408203,22.6215171813965,2.81209349632263),
+    BA              = c(0.00127930240705609,0.0380495749413967,0.0243924465030432,0.000932242081034929,0.000153707136632875,1.06940833575209e-05),
+    dBA             = c(0.000148594030179083,0.00142327323555946,0.00107126496732235,3.90742206946015e-05,5.73010765947402e-07,1.61680509336293e-06),
+    Acrown          = c(1.21619653701782,15.4894561767578,11.0972499847412,0.959224700927734,0.248195767402649,0.0336226150393486),
+    Aleaf           = c(3.83005428314209,48.7879486083984,34.9530982971191,1.5106908082962,0.0880047231912613,0.0363061539828777),
+    nsc             = c(2.2883026599884,35.3928833007812,24.9768085479736,0.331826537847519,0.000859237799886614,0.00575008150190115),
+    seedC           = c(0.0601347424089909,0.767691552639008,0.548487424850464,0.0238057114183903,0.00614411663264036,0.00188525626435876),
+    leafC           = c(0.0717583522200584,1.15043652057648,0.809639990329742,0.0115929869934916,0.0247552022337914,0),
+    rootC           = c(0.651109218597412,8.2939510345459,5.94202709197998,0.256817430257797,0.014960803091526,0.00617204606533051),
+    sapwC           = c(0.388750463724136,4.95197582244873,3.54773926734924,0.153335094451904,0.0087192403152585,0.00368507415987551),
+    woodC           = c(2.88789963722229,142.90104675293,85.6981048583984,1.03217899799347,0.129872813820839,0.00418471451848745),
+    nsn             = c(1.99099385738373,98.4806365966797,59.0609588623047,2.35829281806946,0.296707034111023,0.0157136432826519),
+    treeG           = c(1.38240885734558,19.4165687561035,13.7977504730225,0.350733309984207,0.0369468815624714,0.0105907050892711),
+    fseed           = c(0.0519081987440586,0.059250246733427,0.0586791299283504,0.0330535657703876,0.670021414756775,0),
+    fleaf           = c(0.134158238768578,0.0987088829278946,0.101414784789085,0.0458623692393303,0.0212228074669838,0.313251227140427),
+    froot           = c(0.346759766340256,0.308788985013962,0.31179416179657,0.456605494022369,0.259258955717087,0.363957554101944),
+    fwood           = c(0.467173844575882,0.533251881599426,0.528111934661865,0.464478582143784,0.0494967699050903,0.322791188955307),
+    GPP             = c(2.39950466156006,31.5417327880859,22.5409812927246,0.24708203971386,0.0197644270956516,0.00617480464279652),
+    NPP             = c(1.60801827907562,20.4554824829102,14.665210723877,0.0583549737930298,0.0120632881298661,0.000449972227215767),
+    Rauto           = c(0.791486382484436,11.0862493515015,7.8757700920105,0.18872706592083,0.0077011389657855,0.00572483241558075),
+    Nupt            = c(0.0257927291095257,0.292662113904953,0.209771111607552,0.000754328153561801,0.000272400298854336,0),
+    Nfix            = c(0,0,0,0,0,0),
+    deathrate       = c(0.0181079767644405,0.113263040781021,0.0839816629886627,0.152398928999901,0.266000509262085,0.351924955844879),
+    n_deadtrees     = c(0.00199693441390991,0.0061703734099865,0.000313190830638632,0.00161577318795025,3.86895844712853e-05,0.00387696595862508),
+    c_deadtrees     = c(0.0918554738163948,0.640294253826141,0.0292408317327499,0.0901062712073326,0.00168160616885871,0.0465278774499893))
+  expect_equal(tibble(mod_BiomeE_PLULUC$aggregated|>filter(                           year %in% c(1, 2, 8, 9, 16, 251))),   ref_BiomeE_PLULUC_aggregated)
+  expect_equal(tibble(mod_BiomeE_PLULUC$primary$output_daily_tile|>filter(year==  1, doy %in% c(1, 2, 180, 364, 365))),     ref_BiomeE_PLULUC_primary_odt_yr1)
+  expect_equal(tibble(mod_BiomeE_PLULUC$primary$output_daily_tile|>filter(year==251, doy %in% c(1, 2, 180, 364, 365))),     ref_BiomeE_PLULUC_primary_odt_yr251)
+  expect_equal(tibble(mod_BiomeE_PLULUC$primary$output_annual_tile|>filter(           year %in% c(1, 2, 8, 9, 16, 251))),   ref_BiomeE_PLULUC_primary_oat)
+  expect_equal(tibble(mod_BiomeE_PLULUC$primary$output_annual_cohorts|>filter(year==  1)),                                  ref_BiomeE_PLULUC_primary_oac_yr1)
+  expect_equal(tibble(mod_BiomeE_PLULUC$primary$output_annual_cohorts|>filter(year==  2)),                                  ref_BiomeE_PLULUC_primary_oac_yr2)
+  expect_equal(tibble(mod_BiomeE_PLULUC$primary$output_annual_cohorts|>filter(year==251)),                                  ref_BiomeE_PLULUC_primary_oac_yr251)
+  expect_equal(tibble(mod_BiomeE_PLULUC$secondary$output_daily_tile|>filter(year==  1, doy %in% c(1, 2, 180, 364, 365))),     ref_BiomeE_PLULUC_secondary_odt_yr1)
+  expect_equal(tibble(mod_BiomeE_PLULUC$secondary$output_daily_tile|>filter(year==251, doy %in% c(1, 2, 180, 364, 365))),     ref_BiomeE_PLULUC_secondary_odt_yr251)
+  expect_equal(tibble(mod_BiomeE_PLULUC$secondary$output_annual_tile|>filter(           year %in% c(1, 2, 8, 9, 16, 251))),   ref_BiomeE_PLULUC_secondary_oat)
+  expect_equal(tibble(mod_BiomeE_PLULUC$secondary$output_annual_cohorts|>filter(year==  1)),                                  ref_BiomeE_PLULUC_secondary_oac_yr1)
+  expect_equal(tibble(mod_BiomeE_PLULUC$secondary$output_annual_cohorts|>filter(year==  2)),                                  ref_BiomeE_PLULUC_secondary_oac_yr2)
+  expect_equal(tibble(mod_BiomeE_PLULUC$secondary$output_annual_cohorts|>filter(year==251)),                                  ref_BiomeE_PLULUC_secondary_oac_yr251)
 })
 
 
