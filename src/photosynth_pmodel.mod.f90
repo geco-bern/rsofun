@@ -893,137 +893,155 @@ contains
     
   end function calc_ftemp_inst_rd
 
+  function calc_ftemp_inst_vcmax( tcleaf, tcgrowth, tchome) result( vcmax_Tk )
+    !----------------------------------------------------------------------
+    ! Calculate the instantaneous temperature response of Vcmax based on
+    ! leaf temperature, short-term growth temperature, and long-term max
+    ! temperature of the warmest month.
+    !
+    ! Arguments:
+    !   tcleaf   : Instantaneous leaf temperature in degrees Celsius (°C).
+    !   tcgrowth : Short-term growth temperature in degrees Celsius (°C).
+    !              This represents the 30-day mean temperature.
+    !   tchome    : Long-term mean maximum temperature of the warmest month
+    !              in degrees Celsius (°C).
+    !
+    ! Returns:
+    !   vcmax_Tk : The temperature-dependent Vcmax factor.
+    !              Reference: Kumarathunge et al. (2019).
+    !----------------------------------------------------------------------
 
-  function calc_ftemp_inst_vcmax( tcleaf, tcgrowth, tcref ) result( fv )
-    !-----------------------------------------------------------------------
-    ! arguments
-    ! tcleaf: temperature (degrees C)
-    ! tref: is 'to' in Nick's set it to 25 C (=298.15 K in other cals)
-    !
-    ! function return variable
-    ! fv: temperature response factor, relative to 25 deg C.
-    !
-    ! Output:   Factor fv to correct for instantaneous temperature response
-    !           of Vcmax for:
-    !
-    !               Vcmax(temp) = fv * Vcmax(25 deg C) 
-    !
-    ! Ref:      Wang Han et al. (in prep.)
-    !-----------------------------------------------------------------------
-    ! arguments
+    ! Input arguments
     real, intent(in) :: tcleaf
     real, intent(in) :: tcgrowth
-    real, intent(in), optional :: tcref
+    real, intent(in) :: tchome  
 
-    ! function return variable
-    real :: fv
+    ! Output variable
+    real :: vcmax_Tk
 
-    ! loal parameters
-    real, parameter :: Ha    = 71513  ! activation energy (J/mol)
-    real, parameter :: Hd    = 200000 ! deactivation energy (J/mol)
-    real, parameter :: a_ent = 668.39 ! offset of entropy vs. temperature relationship from Kattge & Knorr (2007) (J/mol/K)
-    real, parameter :: b_ent = 1.07   ! slope of entropy vs. temperature relationship from Kattge & Knorr (2007) (J/mol/K^2)
-    
-    ! local variables
-    real :: tkref, tkleaf, dent, fva, fvb, mytcref
+    ! Constants
+    real, parameter :: R = 8.314     ! Universal gas constant, J/mol/K (Allen, 1973)
+    real, parameter :: Hd = 200.0    ! Deactivation energy (kJ mol^-1) (Kopp & Lean, 2011)
 
-    if (present(tcref)) then
-      mytcref = tcref
-    else
-      mytcref = 298.15
-    end if
+    ! Local variables
+    real :: Tk                       ! Instantaneous leaf temperature (K)
+    real :: EaV                      ! Activation energy (kJ mol^-1)
+    real :: deltaS_v                 ! Entropy term (kJ mol^-1 K^-1)
+    real :: fva                      ! Arrhenius temperature response
+    real :: fvb                      ! Thermal inhibition
 
-    tkref = mytcref + 273.15  ! to Kelvin
+    ! Convert temperatures from Celsius to Kelvin
+    Tk = tcleaf + 273.15
 
-    ! conversion of temperature to Kelvin, tcleaf is the instantaneous leaf temperature in degrees C. 
-    tkleaf = tcleaf + 273.15
+    ! Compute activation energy for Vcmax
+    EaV = 42.6 + 1.14 * tcgrowth 
 
-    ! calculate entropy following Kattge & Knorr (2007), negative slope and y-axis intersect is when expressed as a function of temperature in degrees Celsius, not Kelvin !!!
-    dent = a_ent - b_ent * tcgrowth   ! 'tcgrowth' corresponds to 'tmean' in Nicks, 'tc25' is 'to' in Nick's
-    fva = calc_ftemp_arrhenius( tkleaf, Ha, tkref )
-    fvb = (1.0 + exp( (tkref * dent - Hd)/(kR * tkref) ) ) / (1.0 + exp( (tkleaf * dent - Hd)/(kR * tkleaf) ) )
-    fv  = fva * fvb
+    ! Compute entropy term for Vcmax
+    deltaS_v = 645.13 - 0.38 * tcgrowth
 
+    ! Compute Arrhenius temperature response 
+    fva = calc_ftemp_arrhenius(EaV, tcleaf)
+
+    ! Compute thermal inhibition term 
+    fvb = (1.0 + exp((298.15 * deltaS_v - Hd * 1.0e3) / (298.15 * R))) / &
+          (1.0 + exp((Tk * deltaS_v - Hd * 1.0e3) / (Tk * R)))
+
+    ! Compute final temperature-dependent Vcmax
+    vcmax_Tk = fva * fvb
   end function calc_ftemp_inst_vcmax
 
 
-  function calc_ftemp_inst_jmax( tcleaf, tcgrowth, tcref ) result( fv )
+  function calc_ftemp_inst_jmax( tcleaf, tcgrowth, tchome ) result( jmax_Tk )
     !-----------------------------------------------------------------------
-    ! Calculates the instantaneous temperature response of Jmax
-    ! 
-    ! Given Jmax at a reference temperature (argument tcref)
-    ! this function calculates its temperature-scaling factor following modified Arrhenius
-    ! kinetics based on Kattge & Knorr (2007).
+    ! Calculate the instantaneous temperature response of Jmax based on
+    ! leaf temperature, short-term growth temperature, and long-term max
+    ! temperature of the warmest month.
     !
-    ! Reference:
-    ! Kattge, J. and Knorr, W.: Temperature acclimation in a biochemical model of 
-    ! photosynthesis: a reanalysis of data from 36 species, Plant, Cell and Environment, 
-    ! 30,1176â1190, 2007.
-    !-----------------------------------------------------------------------
-    ! arguments
-    real, intent(in) :: tcleaf
-    real, intent(in) :: tcgrowth
-    real, intent(in), optional :: tcref
-
-    ! function return variable
-    real :: fv
-
-    ! loal parameters
-    real, parameter :: Ha    = 49884  ! activation energy (J/mol)
-    real, parameter :: Hd    = 200000 ! deactivation energy (J/mol)
-    real, parameter :: a_ent = 659.70 ! offset of entropy vs. temperature relationship from Kattge & Knorr (2007) (J/mol/K)
-    real, parameter :: b_ent = 0.75   ! slope of entropy vs. temperature relationship from Kattge & Knorr (2007) (J/mol/K^2)
-    
-    ! local variables
-    real :: tkref, tkleaf, dent, fva, fvb, mytcref
-
-    if (present(tcref)) then
-      mytcref = tcref
-    else
-      mytcref = 298.15
-    end if
-
-    tkref = mytcref + 273.15  ! to Kelvin
-
-    ! conversion of temperature to Kelvin, tcleaf is the instantaneous leaf temperature in degrees C. 
-    tkleaf = tcleaf + 273.15
-
-    ! calculate entropy following Kattge & Knorr (2007), negative slope and y-axis intersect is when expressed as a function of temperature in degrees Celsius, not Kelvin !!!
-    dent = a_ent - b_ent * tcgrowth   ! 'tcgrowth' corresponds to 'tmean' in Nicks, 'tc25' is 'to' in Nick's
-    fva = calc_ftemp_arrhenius( tkleaf, Ha, tkref )
-    fvb = (1.0 + exp( (tkref * dent - Hd)/(kR * tkref) ) ) / (1.0 + exp( (tkleaf * dent - Hd)/(kR * tkleaf) ) )
-    fv  = fva * fvb
-
-  end function calc_ftemp_inst_jmax  
-
-
-  function calc_ftemp_arrhenius( tk, dha, tkref ) result( ftemp )
-    !-----------------------------------------------------------------------
-    ! Calculates the factor to account for the temperature response following 
-    ! Arrhenius: 
+    ! Arguments:
+    !   tcleaf   : Instantaneous leaf temperature in degrees Celsius (°C).
+    !   tcgrowth : Short-term growth temperature in degrees Celsius (°C).
+    !              This represents the 30-day mean temperature.
+    !   tchome    : Long-term mean maximum temperature of the warmest month
+    !              in degrees Celsius (°C).
     !
-    !               var(T) = ftemp * var(T=T_ref)
-    !
-    ! T_ref is 25 deg C (=298.13 K) per default.
+    ! Returns:
+    !   jmax_Tk : The temperature-dependent Jmax factor.
+    !             Reference: Kumarathunge et al. (2019).
     !-----------------------------------------------------------------------
-    ! arguments
-    real, intent(in) :: tk                 ! temperature (Kelvin)
-    real, intent(in) :: dha                ! activation energy (J/mol)
-    real, intent(in), optional :: tkref    ! reference temperature 
+      ! Input arguments
+      real, intent(in) :: tcleaf
+      real, intent(in) :: tcgrowth
+      real, intent(in) :: tchome
 
-    ! local variables
-    real :: mytkref                        ! reference temperature 
+      ! Output variable
+      real :: jmax_Tk
 
-    ! function return variable
+      ! Constants
+      real, parameter :: R = 8.314    ! Universal gas constant, J/mol/K (Allen, 1973)
+      real, parameter :: Hd = 200     ! deactivation energy (kJ mol^-1) (Kopp & Lean, 2011)
+
+      ! Local variables
+      real :: Tk                      ! Instantaneous leaf temperature (K)
+      real :: EaJ                     ! Activation energy (kJ mol^-1) 
+      real :: deltaS_J                ! Entropy term (kJ mol^-1 K^-1)
+      real :: fva                     ! Arrhenius temperature response 
+      real :: fvb                     ! Thermal inhibition term 
+
+      ! Convert temperatures from Celsius to Kelvin
+      Tk = tcleaf + 273.15
+
+      ! Compute activation energy for Jmax
+      EaJ = 40.71  
+
+      ! Compute entropy term for Jmax 
+      deltaS_J = 658.77 - 0.84 * tchome - 0.52 * (tcgrowth - tchome)
+
+      ! Compute Arrhenius temperature response
+      fva = calc_ftemp_arrhenius(EaJ, tcleaf)
+
+      ! Compute thermal inhibition term
+      fvb = (1.0 + exp((298.15 * deltaS_J - Hd * 1.0e3) / (298.15 * R))) / &
+            (1.0 + exp((Tk * deltaS_J - Hd * 1.0e3) / (Tk * R)))
+
+      ! Compute final temperature-dependent Jmax
+      jmax_Tk = fva * fvb
+
+  end function calc_ftemp_inst_jmax
+
+
+  function calc_ftemp_arrhenius( dha, tcleaf ) result( ftemp )
+    !-----------------------------------------------------------------------
+    ! Calculate the Arrhenius temperature response factor for a given 
+    ! activation energy and instantaneous leaf temperature.
+    !
+    ! Arguments:
+    !   dha     : Activation energy (kJ mol^-1).
+    !   tcleaf  : Instantaneous leaf temperature (°C).
+    !
+    ! Returns:
+    !   ftemp   : The Arrhenius temperature response factor.
+    !             Reference: Allen et al. (1998).
+    !-----------------------------------------------------------------------
+
+    ! Input arguments
+    real, intent(in) :: dha         ! Activation energy (kJ mol^-1)
+    real, intent(in) :: tcleaf        ! Instantaneous leaf temperature (°C)
+    real, intent(in), optional :: tkref    ! reference temperature (K)
+
+    ! Output variable
     real :: ftemp
 
-    if (present(tkref)) then
-      mytkref = tkref
-    else
-      mytkref = 298.15
-    end if
+    ! Constants
+    real, parameter :: R = 8.314    ! universal gas constant (J mol^-1 K^-1)
 
-    ftemp = exp( dha * (tk - mytkref) / (mytkref * kR * tk) )
+    ! Local variables
+    real :: Tk
+
+    ! Convert temperatures from Celsius to Kelvin
+    Tk = tcleaf + 273.15
+
+    ! Arrhenius Temperature Dependence
+    ftemp = exp((dha * 1.0e3 * (Tk - 298.15)) / (298.15 * R * Tk))
 
   end function calc_ftemp_arrhenius
 

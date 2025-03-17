@@ -138,6 +138,7 @@ contains
                   myinterface%grid, &
                   init_daily, &
                   myinterface%params_siml%in_ppfd &
+                  myinterface%temp_home &
                   )
         ! if (verbose) print*,'... done'
 

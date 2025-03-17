@@ -178,6 +178,20 @@ run_pmodel_f_bysite <- function(
         all_of(forcing_features)
     )
   
+  # Compute home temperature (T_home) as the long-term max temperature of the warmest month
+  temp_home <- forcing %>%
+      dplyr::mutate(
+          year = lubridate::year(date),  # Extract year
+          month = lubridate::month(date)  # Extract month
+      ) %>%
+      dplyr::group_by(year, month) %>%  # Group by year & month
+      dplyr::summarise(tmax_mean = mean(tmax, na.rm = TRUE), .groups = "drop") %>%  
+      dplyr::group_by(month) %>%  # Group by month only
+      dplyr::summarise(tmax_longterm = mean(tmax_mean, na.rm = TRUE), .groups = "drop") %>%
+      dplyr::arrange(desc(tmax_longterm)) %>%
+      dplyr::slice(1) %>%
+      dplyr::pull(tmax_longterm)
+
   # validate input
   if (makecheck){
 
@@ -308,6 +322,7 @@ run_pmodel_f_bysite <- function(
       latitude                  = as.numeric(site_info$lat),
       altitude                  = as.numeric(site_info$elv),
       whc                       = as.numeric(site_info$whc),
+      temp_home                 = as.numeric(temp_home),
       n                         = as.integer(nrow(forcing)), # number of rows in matrix (pre-allocation of memory)
       par                       = c(as.numeric(params_modl$kphio), # model parameters as vector in order
                                     as.numeric(params_modl$kphio_par_a),
