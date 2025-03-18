@@ -132,7 +132,7 @@ contains
     real :: fact_jmaxlim        ! Jmax limitation factor (unitless)
 
     ! local variables for Jmax limitation following Nick Smith's method
-    real :: omega, omega_star, tcref, jmax_over_vcmax, jmax_prime
+    real :: omega, omega_star, tcref, jmax_over_vcmax, jmax_prime, tchome
 
     real, parameter :: theta = 0.85          ! used only for smith19 setup
     real, parameter :: c_cost = 0.05336251   ! used only for smith19 setup
@@ -1016,8 +1016,8 @@ contains
     ! activation energy and instantaneous leaf temperature.
     !
     ! Arguments:
-    !   dha     : Activation energy (kJ mol^-1).
     !   tcleaf  : Instantaneous leaf temperature (°C).
+    !   dha     : Activation energy (kJ mol^-1).
     !
     ! Returns:
     !   ftemp   : The Arrhenius temperature response factor.
@@ -1025,8 +1025,8 @@ contains
     !-----------------------------------------------------------------------
 
     ! Input arguments
+      real, intent(in) :: tcleaf        ! Instantaneous leaf temperature (°C)
     real, intent(in) :: dha         ! Activation energy (kJ mol^-1)
-    real, intent(in) :: tcleaf        ! Instantaneous leaf temperature (°C)
 
     ! Output variable
     real :: ftemp
