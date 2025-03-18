@@ -269,7 +269,7 @@ contains
       tcref = 0.44 * tc + 24.92
 
       ! calculated acclimated Vcmax at prevailing growth temperatures
-      ftemp_inst_vcmax = calc_ftemp_inst_vcmax( tc, tc, tcref = tcref )
+      ftemp_inst_vcmax = calc_ftemp_inst_vcmax( tc, tc, tchome = tcref )
       vcmax = vcmax_star * ftemp_inst_vcmax   ! Eq. 20
       
       ! calculate Jmax
@@ -277,7 +277,7 @@ contains
       jmax_prime = jmax_over_vcmax * vcmax 
 
       ! light use efficiency
-      lue = c_molmass * kphio * out_optchi%mj * omega_star / (8.0 * theta) ! * calc_ftemp_inst_vcmax( tc, tc, tcref = tcref )     ! treat theta as a calibratable parameter
+      lue = c_molmass * kphio * out_optchi%mj * omega_star / (8.0 * theta) ! * calc_ftemp_inst_vcmax( tc, tc, tchome = tcref )     ! treat theta as a calibratable parameter
 
 
     else if (method_jmaxlim=="none") then
@@ -306,7 +306,7 @@ contains
     ! Corrolary preditions (This is prelimirary!)
     !-----------------------------------------------------------------------
     ! Vcmax25 (vcmax normalized to 25 deg C)
-    ftemp_inst_vcmax  = calc_ftemp_inst_vcmax( tc, tc, tcref = 25.0 )
+    ftemp_inst_vcmax  = calc_ftemp_inst_vcmax( tc, tc, tchome )
     vcmax25  = vcmax / ftemp_inst_vcmax
 
     ! ! Dark respiration at growth temperature
@@ -330,7 +330,8 @@ contains
         jmax = 4.0 * kphio * ppfd / sqrt( (1.0/fact_jmaxlim)**2 - 1.0 )
       end if
       ! for normalization using temperature response from Duursma et al., 2015, implemented in plantecophys R package
-      ftemp_inst_jmax  = calc_ftemp_inst_jmax( tc, tc, tcref = 25.0 )
+      ftemp_inst_jmax  = calc_ftemp_inst_jmax( tc, tc, tchome)
+
       jmax25  = jmax  / ftemp_inst_jmax
     end if
 
@@ -940,7 +941,7 @@ contains
     deltaS_v = 645.13 - 0.38 * tcgrowth
 
     ! Compute Arrhenius temperature response 
-    fva = calc_ftemp_arrhenius(EaV, tcleaf)
+    fva = calc_ftemp_arrhenius(tcleaf, EaV)
 
     ! Compute thermal inhibition term 
     fvb = (1.0 + exp((298.15 * deltaS_v - Hd * 1.0e3) / (298.15 * R))) / &
@@ -951,7 +952,7 @@ contains
   end function calc_ftemp_inst_vcmax
 
 
-  function calc_ftemp_inst_jmax( tcleaf, tcgrowth, tchome ) result( jmax_Tk )
+  function calc_ftemp_inst_jmax( tcleaf, tcgrowth, tchome) result( jmax_Tk )
     !-----------------------------------------------------------------------
     ! Calculate the instantaneous temperature response of Jmax based on
     ! leaf temperature, short-term growth temperature, and long-term max
@@ -997,7 +998,7 @@ contains
       deltaS_J = 658.77 - 0.84 * tchome - 0.52 * (tcgrowth - tchome)
 
       ! Compute Arrhenius temperature response
-      fva = calc_ftemp_arrhenius(EaJ, tcleaf)
+      fva = calc_ftemp_arrhenius(tcleaf, EaJ)
 
       ! Compute thermal inhibition term
       fvb = (1.0 + exp((298.15 * deltaS_J - Hd * 1.0e3) / (298.15 * R))) / &
@@ -1009,7 +1010,7 @@ contains
   end function calc_ftemp_inst_jmax
 
 
-  function calc_ftemp_arrhenius( dha, tcleaf ) result( ftemp )
+  function calc_ftemp_arrhenius(tcleaf, dha) result( ftemp )
     !-----------------------------------------------------------------------
     ! Calculate the Arrhenius temperature response factor for a given 
     ! activation energy and instantaneous leaf temperature.
@@ -1026,7 +1027,6 @@ contains
     ! Input arguments
     real, intent(in) :: dha         ! Activation energy (kJ mol^-1)
     real, intent(in) :: tcleaf        ! Instantaneous leaf temperature (°C)
-    real, intent(in), optional :: tkref    ! reference temperature (K)
 
     ! Output variable
     real :: ftemp
@@ -1039,6 +1039,7 @@ contains
 
     ! Convert temperatures from Celsius to Kelvin
     Tk = tcleaf + 273.15
+
 
     ! Arrhenius Temperature Dependence
     ftemp = exp((dha * 1.0e3 * (Tk - 298.15)) / (298.15 * R * Tk))
