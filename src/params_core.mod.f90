@@ -126,7 +126,7 @@ contains
       curr_year_steering_state%outyear = year + steering_params%firstyeartrend - steering_params%spinupyears - 1
 
     else
-
+      curr_year_steering_state%spinup = .false.
       curr_year_steering_state%climateyear = year + steering_params%firstyeartrend - 1
       curr_year_steering_state%climateyear_idx = year
       curr_year_steering_state%outyear = curr_year_steering_state%climateyear
