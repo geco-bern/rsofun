@@ -50,8 +50,8 @@ contains
 
     implicit none
 
-    ! mutble state keeping track of simulation state and climate
-    type(outtype_steering) :: state
+    ! mutble state keeping track of simulation steering and climate
+    type(outtype_steering) :: steering_state
     type(climate_type), dimension(:), allocatable :: climate
 
     ! Array dimensions
@@ -118,11 +118,11 @@ contains
     !----------------------------------------------------------------
     ! Run simulation
     !----------------------------------------------------------------
-    yearloop: do yr=1, inputs%params_siml%steering%runyears
+    yearloop: do yr=1, inputs%params_siml%steering_params%runyears
       !----------------------------------------------------------------
-      ! Define simulations "steering" variables (forcingyear, etc.)
+      ! Define simulations "steering" variables (indices for forcing, but also output flags)
       !----------------------------------------------------------------
-      state = get_steering( yr, inputs%params_siml%steering )
+      steering_state = get_steering( yr, inputs%params_siml%steering_params )
 
       !----------------------------------------------------------------
       ! Get external (environmental) forcing (for biomee, co2 is in inputs%climate)
@@ -132,14 +132,14 @@ contains
          nt, &
          inputs%ntstepsyear, &
          forcing, &
-         state%climateyear_idx &
+         steering_state%climateyear_idx &
       )
 
       !----------------------------------------------------------------
-      ! Update LU state using LUC forcing if we are in transient state
+      ! Update LU state using LUC forcing if we are in transient simulation step
       !----------------------------------------------------------------
-      if ((.not.state%spinup) .and. (state%forcingyear_idx <= n_lu_tr_years)) then
-        export = aggregat%update_lu_fractions(real(luc_forcing(:,:,state%forcingyear_idx)))
+      if ((.not.steering_state%spinup) .and. (steering_state%forcingyear_idx <= n_lu_tr_years)) then
+        export = aggregat%update_lu_fractions(real(luc_forcing(:,:,steering_state%forcingyear_idx)))
       else
         export = orgpool()
       end if
@@ -154,7 +154,7 @@ contains
             !----------------------------------------------------------------
             ! Call biosphere (wrapper for all modules, contains time loops)
             !----------------------------------------------------------------
-            call biosphere_annual(state, climate, lu%vegn)
+            call biosphere_annual(steering_state, climate, lu%vegn)
 
           end if
         end associate
@@ -165,16 +165,16 @@ contains
       ! Fill outputs
       ! We conditionally pass daily and cohorts arrays
       !----------------------------------------------------------------
-      call aggregat%populate_outarrays(output_annual_aggregated(state%year,:), &
-          output_annual_tile(state%year, :, :))
+      call aggregat%populate_outarrays(output_annual_aggregated(steering_state%year,:), &
+          output_annual_tile(steering_state%year, :, :))
 
-      idx =  state%year - inputs%params_siml%steering%spinupyears
-      if (state%cohort_reporting) call aggregat%populate_outcohorts(output_annual_cohorts(:, idx,:, :))
+      idx =  steering_state%year - inputs%params_siml%steering_params%spinupyears
+      if (steering_state%cohort_reporting) call aggregat%populate_outcohorts(output_annual_cohorts(:, idx,:, :))
 
-      if (state%daily_reporting) then
+      if (steering_state%daily_reporting) then
         ! Indices for daily output
         ! Spinup years are not stored, which is why we offset by -spinupyears
-        idx_daily_start = (state%year - inputs%params_siml%steering%spinupyears - 1) * ndayyear + 1
+        idx_daily_start = (steering_state%year - inputs%params_siml%steering_params%spinupyears - 1) * ndayyear + 1
         idx_daily_end   = idx_daily_start + ndayyear - 1
         call aggregat%populate_outdaily(output_daily_tile(idx_daily_start:idx_daily_end, :, :))
 

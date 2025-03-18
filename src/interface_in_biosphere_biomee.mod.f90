@@ -43,7 +43,7 @@ module md_interface_in_biomee
 
   type params_siml_biomee
 
-    type(steering_parameters) :: steering
+    type(steering_parameters) :: steering_params
     logical :: do_U_shaped_mortality
     logical :: do_closedN_run
     character(len=30) :: method_photosynth
@@ -250,18 +250,18 @@ contains
     class(params_siml_biomee), intent(inout) :: self
     real(kind=c_double), dimension(nvars_params_siml), intent(in) :: params_siml
 
-    self%steering%do_spinup        = int(params_siml(1)) /= 0
-    self%steering%spinupyears      = int(params_siml(2))
-    self%steering%recycle          = int(params_siml(3))
-    self%steering%firstyeartrend   = int(params_siml(4))
-    self%steering%nyeartrend       = int(params_siml(5))
+    self%steering_params%do_spinup        = int(params_siml(1)) /= 0
+    self%steering_params%spinupyears      = int(params_siml(2))
+    self%steering_params%recycle          = int(params_siml(3))
+    self%steering_params%firstyeartrend   = int(params_siml(4))
+    self%steering_params%nyeartrend       = int(params_siml(5))
 
-    if (self%steering%do_spinup) then
-      self%steering%runyears = self%steering%nyeartrend &
-              + self%steering%spinupyears
+    if (self%steering_params%do_spinup) then
+      self%steering_params%runyears = self%steering_params%nyeartrend &
+              + self%steering_params%spinupyears
     else
-      self%steering%runyears    = self%steering%nyeartrend
-      self%steering%spinupyears = 0
+      self%steering_params%runyears    = self%steering_params%nyeartrend
+      self%steering_params%spinupyears = 0
     endif
 
     ! Simulation parameters
@@ -288,7 +288,7 @@ contains
       self%method_mortality = "bal"
     end select
 
-    self%steering%daily_reporting       = int(params_siml(11)) /= 0
+    self%steering_params%daily_reporting       = int(params_siml(11)) /= 0
 
   end subroutine populate_params_siml
 
