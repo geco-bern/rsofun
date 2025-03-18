@@ -156,6 +156,12 @@ run_pmodel_f_bysite <- function(
     as.integer() %>%
     abs()
   
+  # extract dates 
+  forcing_dates <- forcing %>%
+    dplyr::select(date) %>%
+    dplyr::mutate(date = lubridate::ymd(date),
+                  month = lubridate::month(date))
+
   # re-define units and naming of forcing dataframe
   # keep the order of columns - it's critical for Fortran (reading by column number)
   forcing_features <- c(
@@ -178,9 +184,9 @@ run_pmodel_f_bysite <- function(
         all_of(forcing_features)
     )
   
-  # Compute home temperature (T_home) as the long-term max temperature of the warmest month
-  temp_home <- forcing %>%
-    dplyr::mutate(month = lubridate::month(date)) %>%  # Extract month
+  # Compute temp_home using pre-extracted months
+  temp_home <- forcing_dates %>%
+    dplyr::left_join(forcing, by = c("date" = "date")) %>%  # Reattach date-based info
     dplyr::group_by(month) %>%
     dplyr::summarise(mean_tmax = mean(tmax, na.rm = TRUE), .groups = "drop") %>%  # Compute mean tmax for each month
     dplyr::slice_max(mean_tmax, n = 1) %>%  # Select the warmest month
