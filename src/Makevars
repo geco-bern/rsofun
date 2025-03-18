@@ -1,5 +1,3 @@
-PKG_FFLAGS = -frecursive -fbounds-check -fcheck=all -Wall -Wextra -pedantic -g -O0 -fbacktrace -ffpe-trap=invalid,zero,overflow -finit-real=snan -finit-integer=-9999999 # -finit-derived
-
 # C objects
 C_OBJS = wrappersc.o
 
