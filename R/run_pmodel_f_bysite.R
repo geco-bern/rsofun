@@ -180,17 +180,11 @@ run_pmodel_f_bysite <- function(
   
   # Compute home temperature (T_home) as the long-term max temperature of the warmest month
   temp_home <- forcing %>%
-      dplyr::mutate(
-          year = lubridate::year(date),  # Extract year
-          month = lubridate::month(date)  # Extract month
-      ) %>%
-      dplyr::group_by(year, month) %>%  # Group by year & month
-      dplyr::summarise(tmax_mean = mean(tmax, na.rm = TRUE), .groups = "drop") %>%  
-      dplyr::group_by(month) %>%  # Group by month only
-      dplyr::summarise(tmax_longterm = mean(tmax_mean, na.rm = TRUE), .groups = "drop") %>%
-      dplyr::arrange(desc(tmax_longterm)) %>%
-      dplyr::slice(1) %>%
-      dplyr::pull(tmax_longterm)
+    dplyr::mutate(month = lubridate::month(date)) %>%  # Extract month
+    dplyr::group_by(month) %>%
+    dplyr::summarise(mean_tmax = mean(tmax, na.rm = TRUE), .groups = "drop") %>%  # Compute mean tmax for each month
+    dplyr::slice_max(mean_tmax, n = 1) %>%  # Select the warmest month
+    dplyr::pull(mean_tmax)  # Get the long-term mean max temperature of that month
 
   # validate input
   if (makecheck){
