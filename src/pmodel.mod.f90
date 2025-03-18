@@ -83,18 +83,18 @@ contains
     !----------------------------------------------------------------
     ! GET SIMULATION PARAMETERS
     !----------------------------------------------------------------
-    myinterface%params_siml%steering%do_spinup      = spinup /= 0
-    myinterface%params_siml%steering%spinupyears    = spinupyears
-    myinterface%params_siml%steering%recycle        = recycle
-    myinterface%params_siml%steering%firstyeartrend = firstyeartrend
-    myinterface%params_siml%steering%nyeartrend     = nyeartrend
+    myinterface%params_siml%steering_params%do_spinup      = spinup /= 0
+    myinterface%params_siml%steering_params%spinupyears    = spinupyears
+    myinterface%params_siml%steering_params%recycle        = recycle
+    myinterface%params_siml%steering_params%firstyeartrend = firstyeartrend
+    myinterface%params_siml%steering_params%nyeartrend     = nyeartrend
 
-    if (myinterface%params_siml%steering%do_spinup) then
-      myinterface%params_siml%steering%runyears = myinterface%params_siml%steering%nyeartrend &
-              + myinterface%params_siml%steering%spinupyears
+    if (myinterface%params_siml%steering_params%do_spinup) then
+      myinterface%params_siml%steering_params%runyears = myinterface%params_siml%steering_params%nyeartrend &
+              + myinterface%params_siml%steering_params%spinupyears
     else
-      myinterface%params_siml%steering%runyears = myinterface%params_siml%steering%nyeartrend
-      myinterface%params_siml%steering%spinupyears = 0
+      myinterface%params_siml%steering_params%runyears = myinterface%params_siml%steering_params%nyeartrend
+      myinterface%params_siml%steering_params%spinupyears = 0
     endif
     
     myinterface%params_siml%in_ppfd            = in_ppfd /= 0
@@ -139,12 +139,12 @@ contains
     !----------------------------------------------------------------
     myinterface%fpc_grid(:) = get_fpc_grid( myinterface%params_siml )
     
-    do yr=1,myinterface%params_siml%steering%runyears
+    do yr=1,myinterface%params_siml%steering_params%runyears
 
       !----------------------------------------------------------------
       ! Define simulations "steering" variables (forcingyear, etc.)
       !----------------------------------------------------------------
-      myinterface%steering = get_steering( yr, myinterface%params_siml%steering )
+      myinterface%steering_state = get_steering( yr, myinterface%params_siml%steering_params )
 
       !----------------------------------------------------------------
       ! Get external (environmental) forcing
@@ -152,7 +152,7 @@ contains
       ! Get climate variables for this year (full fields and 365 daily values for each variable)
       myinterface%climate(:) = getclimate(nt, &
                                           forcing, &
-                                          myinterface%steering%climateyear_idx, &
+                                          myinterface%steering_state%climateyear_idx, &
                                           myinterface%params_siml%in_ppfd,  &
                                           myinterface%params_siml%in_netrad &
                                           )
@@ -160,8 +160,8 @@ contains
       ! Get annual, gobally uniform CO2
       myinterface%pco2 = getco2(  nt, &
                                   forcing, &
-                                  myinterface%steering%forcingyear, &
-                                  myinterface%params_siml%steering%firstyeartrend &
+                                  myinterface%steering_state%forcingyear, &
+                                  myinterface%params_siml%steering_params%firstyeartrend &
                                   )
 
       !----------------------------------------------------------------
@@ -170,7 +170,7 @@ contains
       myinterface%vegcover(:) = getfapar( &
                                         nt, &
                                         forcing, &
-                                        myinterface%steering%forcingyear_idx &
+                                        myinterface%steering_state%forcingyear_idx &
                                         )
 
       !----------------------------------------------------------------
@@ -182,9 +182,9 @@ contains
       !----------------------------------------------------------------
       ! Populate Fortran output array which is passed back to C/R
       !----------------------------------------------------------------
-      if (yr > myinterface%params_siml%steering%spinupyears ) then
+      if (yr > myinterface%params_siml%steering_params%spinupyears ) then
 
-        idx_start = (myinterface%steering%forcingyear_idx - 1) * ndayyear + 1
+        idx_start = (myinterface%steering_state%forcingyear_idx - 1) * ndayyear + 1
         idx_end   = idx_start + ndayyear - 1
 
         output(idx_start:idx_end,1)  = dble(out_biosphere%fapar(:))  

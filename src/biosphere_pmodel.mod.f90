@@ -45,7 +45,7 @@ contains
     !----------------------------------------------------------------
     ! INITIALISATIONS
     !----------------------------------------------------------------
-    if (myinterface%steering%init) then
+    if (myinterface%steering_state%init) then
 
       ! set to true on first simulation year and first day
       init_daily = .true.
@@ -88,7 +88,7 @@ contains
         doy=doy+1
 
         ! if (verbose) print*,'----------------------'
-        ! if (verbose) print*,'YEAR, Doy ', myinterface%steering%year, doy
+        ! if (verbose) print*,'YEAR, Doy ', myinterface%steering_state%year, doy
         ! if (verbose) print*,'----------------------'
 
         !----------------------------------------------------------------
@@ -159,8 +159,8 @@ contains
                       tile(:)%soil, &
                       myinterface%climate(:)%dtemp, &
                       doy, &
-                      myinterface%steering%init, &
-                      myinterface%steering%finalize &
+                      myinterface%steering_state%init, &
+                      myinterface%steering_state%finalize &
                       )
         ! if (verbose) print*, '... done'
 

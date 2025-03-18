@@ -19,7 +19,7 @@ module md_biosphere_biomee
 contains
 
   subroutine biosphere_annual( &
-    state, &
+    steering_state, &
     climate, &
     vegn &
   )
@@ -31,7 +31,7 @@ contains
     use, intrinsic :: iso_c_binding, only: c_double
 
     ! Input vairables
-    type(outtype_steering), intent(in)  :: state
+    type(outtype_steering), intent(in)  :: steering_state
     type(climate_type), intent(in), dimension(:) :: climate ! Dimension is ndayyear * steps_per_day
     type(vegn_tile_type), intent(inout) :: vegn
 
@@ -91,7 +91,7 @@ contains
       !-------------------------------------------------
 
       ! sum over fast time steps and cohorts
-      call daily_diagnostics( vegn, state%year, doy, state%daily_reporting)
+      call daily_diagnostics( vegn, steering_state%year, doy, steering_state%daily_reporting)
 
       ! Determine start and end of season and maximum leaf (root) mass
       call vegn_phenology( vegn )
@@ -106,7 +106,7 @@ contains
     !----------------------------------------------------------------
 
     !===== Get annual diagnostics
-    call vegn%annual_diagnostics(state%year, state%cohort_reporting)
+    call vegn%annual_diagnostics(steering_state%year, steering_state%cohort_reporting)
 
     !===== Reproduction and mortality
     ! Kill all individuals in a cohort if NSC falls below critical point
@@ -125,7 +125,7 @@ contains
     call vegn%reduce()
 
     !===== Update post-mortality metrics
-    call vegn%annual_diagnostics_post_mortality(state%cohort_reporting)
+    call vegn%annual_diagnostics_post_mortality(steering_state%cohort_reporting)
 
   end subroutine biosphere_annual
 

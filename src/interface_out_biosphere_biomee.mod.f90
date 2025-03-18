@@ -161,7 +161,7 @@ module md_interface_out_biomee
 
   !=============== Aggregated tile
 
-  integer, public, parameter :: nvars_aggregated_out = 62
+  integer, public, parameter :: nvars_aggregated_out = nvars_annual_tile + 4
 
   integer, public, parameter :: AGGREGATED_TILE_PROD_POOL_1_C = nvars_annual_tile + 1
   integer, public, parameter :: AGGREGATED_TILE_PROD_POOL_1_N = nvars_annual_tile + 2
