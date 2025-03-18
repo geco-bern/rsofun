@@ -106,15 +106,15 @@ contains
     curr_year_steering_state%year = year
 
     if (steering_params%do_spinup) then
-
       if (year <= steering_params%spinupyears) then
         ! during spinup
-        curr_year_steering_state%spinup = .true.
         cycleyear = get_cycleyear( year, steering_params%spinupyears, steering_params%recycle )
-        curr_year_steering_state%climateyear = cycleyear + steering_params%firstyeartrend - 1
+
+        curr_year_steering_state%spinup          = .true.
+        curr_year_steering_state%climateyear     = cycleyear + steering_params%firstyeartrend - 1
         curr_year_steering_state%climateyear_idx = cycleyear
-        curr_year_steering_state%forcingyear = steering_params%firstyeartrend
-        curr_year_steering_state%forcingyear_idx  = 1
+        curr_year_steering_state%forcingyear     = steering_params%firstyeartrend
+        curr_year_steering_state%forcingyear_idx = 1
       else
         ! during transient simulation
         curr_year_steering_state%spinup          = .false.
@@ -123,16 +123,14 @@ contains
         curr_year_steering_state%forcingyear     = curr_year_steering_state%climateyear
         curr_year_steering_state%forcingyear_idx = curr_year_steering_state%climateyear_idx
       endif
-      curr_year_steering_state%outyear = year + steering_params%firstyeartrend - steering_params%spinupyears - 1
-
+      curr_year_steering_state%outyear           = year + steering_params%firstyeartrend - steering_params%spinupyears - 1
     else
-      curr_year_steering_state%spinup = .false.
-      curr_year_steering_state%climateyear = year + steering_params%firstyeartrend - 1
+      curr_year_steering_state%spinup          = .false.
+      curr_year_steering_state%climateyear     = year + steering_params%firstyeartrend - 1
       curr_year_steering_state%climateyear_idx = year
-      curr_year_steering_state%outyear = curr_year_steering_state%climateyear
-      curr_year_steering_state%forcingyear = curr_year_steering_state%climateyear
+      curr_year_steering_state%forcingyear     = curr_year_steering_state%climateyear
       curr_year_steering_state%forcingyear_idx = curr_year_steering_state%climateyear_idx
-
+      curr_year_steering_state%outyear         = curr_year_steering_state%climateyear
     endif
 
     if (curr_year_steering_state%spinup)  then
