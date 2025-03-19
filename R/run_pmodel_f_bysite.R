@@ -148,8 +148,8 @@ run_pmodel_f_bysite <- function(
   if ('firstyeartrend' %in% names(params_siml)) {stop("Unexpectedly received params_siml$firstyeartrend for p-model.")}
   params_siml$firstyeartrend <- firstyear_forcing
   
-  # Calculate tchome as the long-term mean maximum temperature of the warmest month
-  tchome <- forcing %>%
+  # Calculate temp_home as the long-term mean maximum temperature of the warmest month
+  temp_home <- forcing %>%
     dplyr::mutate(month = lubridate::month(date)) %>%  # Extract month from date
     dplyr::group_by(month) %>%
     dplyr::summarise(mean_tmax = mean(temp, na.rm = TRUE), .groups = "drop") %>%  # Compute mean max temp per month
