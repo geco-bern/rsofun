@@ -148,6 +148,14 @@ run_pmodel_f_bysite <- function(
   if ('firstyeartrend' %in% names(params_siml)) {stop("Unexpectedly received params_siml$firstyeartrend for p-model.")}
   params_siml$firstyeartrend <- firstyear_forcing
   
+  # Calculate tchome as the long-term mean maximum temperature of the warmest month
+  tchome <- forcing %>%
+    dplyr::mutate(month = lubridate::month(date)) %>%  # Extract month from date
+    dplyr::group_by(month) %>%
+    dplyr::summarise(mean_tmax = mean(temp, na.rm = TRUE), .groups = "drop") %>%  # Compute mean max temp per month
+    dplyr::slice(which.max(mean_tmax)) %>%  # Select the warmest month
+    dplyr::pull(mean_tmax)  # Get long-term mean max temperature
+
   # determine number of seconds per time step
   times <- forcing %>%
     dplyr::pull(date) %>%
@@ -155,12 +163,6 @@ run_pmodel_f_bysite <- function(
   secs_per_tstep <- difftime(times[1], times[2], units = "secs") %>%
     as.integer() %>%
     abs()
-  
-  # extract dates 
-  forcing_dates <- forcing %>%
-    dplyr::select(date) %>%
-    dplyr::mutate(date = lubridate::ymd(date),
-                  month = lubridate::month(date))
 
   # re-define units and naming of forcing dataframe
   # keep the order of columns - it's critical for Fortran (reading by column number)
@@ -184,13 +186,6 @@ run_pmodel_f_bysite <- function(
         all_of(forcing_features)
     )
   
-  # Compute temp_home using pre-extracted months
-  temp_home <- forcing_dates %>%
-    dplyr::left_join(forcing, by = c("date" = "date")) %>%  # Reattach date-based info
-    dplyr::group_by(month) %>%
-    dplyr::summarise(mean_tmax = mean(tmax, na.rm = TRUE), .groups = "drop") %>%  # Compute mean tmax for each month
-    dplyr::slice_max(mean_tmax, n = 1) %>%  # Select the warmest month
-    dplyr::pull(mean_tmax)  # Get the long-term mean max temperature of that month
 
   # validate input
   if (makecheck){
