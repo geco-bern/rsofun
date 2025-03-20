@@ -137,7 +137,7 @@ run_pmodel_f_bysite <- function(
     dplyr::pull(date) %>%
     format("%Y") %>%
     as.numeric()
-
+print(firstyear_forcing)
   # Default value for nyeartrend
   if ('nyeartrend' %in% names(params_siml)) {stop("Unexpectedly received params_siml$nyeartrend for p-model.")}
   params_siml$nyeartrend <- forcing_years
@@ -150,28 +150,29 @@ run_pmodel_f_bysite <- function(
   
   # Calculate temp_home as the long-term mean maximum temperature of the warmest month
 temp_home <- forcing %>%
+  dplyr::mutate(year = lubridate::year(date), month = lubridate::month(date)) %>%
+  dplyr::group_by(year, month) %>%
+  dplyr::summarise(max_tmax = max(temp, na.rm = TRUE), .groups = "drop") %>%  # Max temp per month per year
+  dplyr::group_by(year) %>%
+  dplyr::slice_max(max_tmax, n = 1, with_ties = FALSE) %>%  # Select the warmest month per year
   dplyr::ungroup() %>%
-  dplyr::filter(format(date, "%Y") >= firstyear_forcing) %>%
+  dplyr::summarise(temp_home = mean(max_tmax, na.rm = TRUE)) %>%  # Compute long-term mean
+  dplyr::pull(temp_home)  # Extract the numeric value
+
+print(temp_home)
+
+
+
+temp_home_check <- forcing %>%
+  dplyr::ungroup() %>%
   dplyr::mutate(month = lubridate::month(date)) %>%  # Extract month from date
   dplyr::group_by(month) %>%
   dplyr::summarise(max_tmax = max(temp, na.rm = TRUE), .groups = "drop") %>%  # Compute max temp per month
   dplyr::arrange(desc(max_tmax)) %>% 
-  dplyr::slice(1)  # Ensures only one value is chosen
+  dplyr::slice(1)  # Get the hottest month and max temperature
 
-print(temp_home)
-
-forcing %>%
-  dplyr::filter(format(date, "%Y") >= firstyear_forcing) %>%
-  dplyr::mutate(month = lubridate::month(date)) %>%
-  ggplot(aes(x = month, y = temp)) +
-  geom_boxplot() +
-  geom_point(aes(color = factor(month)), alpha = 0.5) +
-  theme_minimal() +
-  labs(title = "Monthly Maximum Temperatures",
-       x = "Month",
-       y = "Temperature",
-       color = "Month")
-
+print(temp_home_check)
+identical(temp_home, temp_home_check)  # Should return TRUE if consistent
 
   # determine number of seconds per time step
   times <- forcing %>%
