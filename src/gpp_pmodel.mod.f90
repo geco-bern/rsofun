@@ -151,7 +151,6 @@ contains
                               tc             = temp_memory, &
                               vpd            = vpd_memory, &
                               patm           = patm_memory, &
-                              tchome         = tchome, &
                               c4             = params_pft_plant(pft)%c4, &
                               method_optci   = "prentice14", &
                               method_jmaxlim = "wang17" &
