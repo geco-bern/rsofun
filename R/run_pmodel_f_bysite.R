@@ -157,9 +157,10 @@ temp_home <- forcing %>%
   dplyr::slice_max(max_tmax, n = 1, with_ties = FALSE) %>%  # Select the warmest month per year
   dplyr::ungroup() %>%
   dplyr::summarise(temp_home = mean(max_tmax, na.rm = TRUE)) %>%  # Compute long-term mean
-  dplyr::pull(mean(temp_home))  # Extract the numeric value
+  dplyr::pull(temp_home)  # Extract a single numeric value
 
 print(temp_home)
+
 
 
   # determine number of seconds per time step
