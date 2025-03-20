@@ -132,7 +132,7 @@ contains
     real :: fact_jmaxlim        ! Jmax limitation factor (unitless)
 
     ! local variables for Jmax limitation following Nick Smith's method
-    real :: omega, omega_star, tcref, jmax_over_vcmax, jmax_prime, temp_home
+    real :: omega, omega_star, tcref, jmax_over_vcmax, jmax_prime, tchome
 
     real, parameter :: theta = 0.85          ! used only for smith19 setup
     real, parameter :: c_cost = 0.05336251   ! used only for smith19 setup
@@ -306,7 +306,7 @@ contains
     ! Corrolary preditions (This is prelimirary!)
     !-----------------------------------------------------------------------
     ! Vcmax25 (vcmax normalized to 25 deg C)
-    ftemp_inst_vcmax  = calc_ftemp_inst_vcmax(tc, tcgrowth, temp_home)
+    ftemp_inst_vcmax  = calc_ftemp_inst_vcmax(tc, tc, tchome)
     vcmax25  = vcmax / ftemp_inst_vcmax
 
     ! ! Dark respiration at growth temperature
@@ -330,7 +330,7 @@ contains
         jmax = 4.0 * kphio * ppfd / sqrt( (1.0/fact_jmaxlim)**2 - 1.0 )
       end if
       ! for normalization using temperature response from Duursma et al., 2015, implemented in plantecophys R package
-      ftemp_inst_jmax  = calc_ftemp_inst_jmax(tc, tcgrowth, temp_home)
+      ftemp_inst_jmax  = calc_ftemp_inst_jmax(tc, tc, tchome)
 
       jmax25  = jmax  / ftemp_inst_jmax
     end if
@@ -895,7 +895,7 @@ contains
   end function calc_ftemp_inst_rd
 
 
-  function calc_ftemp_kumarathunge(tcleaf, tcgrowth, Ea, DS, temp_home) result(ftemp)
+  function calc_ftemp_kumarathunge(tcleaf, tcgrowth, Ea, DS, tchome) result(ftemp)
   !-----------------------------------------------------------------------
   ! Implements the Kumarathunge et al. 2019 temperature response function
   ! 
@@ -903,10 +903,10 @@ contains
   ! tcgrowth  : Growth temperature (Tgrowth, Kelvin)
   ! Ea        : Activation energy (kJ/mol)
   ! DS        : Entropy term (J/mol/K)
-  ! temp_home : Home temperature (can be passed from model forcing)
+  ! tchome : Home temperature (can be passed from model forcing)
   !-----------------------------------------------------------------------
 
-    real, intent(in) :: tcleaf, tcgrowth, Ea, DS, temp_home
+    real, intent(in) :: tcleaf, tcgrowth, Ea, DS, tchome
 
     real, parameter  :: R = 8.314  ! Universal gas constant (J mol^-1 K^-1)
     real, parameter  :: Hd = 200.0 ! Fixed deactivation energy (kJ/mol)
@@ -925,16 +925,16 @@ contains
 
   end function calc_ftemp_kumarathunge
 
-  function calc_ftemp_inst_vcmax(tcleaf, tcgrowth, temp_home) result(fv)
+  function calc_ftemp_inst_vcmax(tcleaf, tcgrowth, tchome) result(fv)
     !----------------------------------------------------------------------
     ! Calculate the instantaneous temperature response of Vcmax
     ! Arguments:
     !   tcleaf   : Leaf temperature (°C)
     !   tcgrowth : Short-term growth temperature (30-day mean °C)
-    !   temp_home : Long-term max temperature of warmest month (°C)
+    !   tchome : Long-term max temperature of warmest month (°C)
     !----------------------------------------------------------------------
 
-    real, intent(in) :: tcleaf, tcgrowth, temp_home
+    real, intent(in) :: tcleaf, tcgrowth, tchome
 
     real :: fv
     real :: EaV, DSv
@@ -942,30 +942,30 @@ contains
     EaV = 42.6 + 1.14 * tcgrowth
     DSv = 645.13 - (0.38 * tcgrowth)
 
-    fv = calc_ftemp_kumarathunge(tcleaf, tcgrowth, EaV, DSv, temp_home)
+    fv = calc_ftemp_kumarathunge(tcleaf, tcgrowth, EaV, DSv, tchome)
 
   end function calc_ftemp_inst_vcmax
 
 
 
-  function calc_ftemp_inst_jmax(tcleaf, tcgrowth, temp_home) result(fv)
+  function calc_ftemp_inst_jmax(tcleaf, tcgrowth, tchome) result(fv)
     !-----------------------------------------------------------------------
     ! Calculate the instantaneous temperature response of Jmax
     ! Arguments:
     !   tcleaf   : Leaf temperature (°C)
     !   tcgrowth : Short-term growth temperature (30-day mean °C)
-    !   temp_home : Long-term max temperature of warmest month (°C)
+    !   tchome : Long-term max temperature of warmest month (°C)
     !-----------------------------------------------------------------------
-    real, intent(in) :: tcleaf, tcgrowth, temp_home
+    real, intent(in) :: tcleaf, tcgrowth, tchome
 
     real :: fv
     real :: EaJ, DSJ
 
     ! Compute Activation Energy and Entropy for Jmax
     EaJ = 40.71
-    DSJ = 658.77 - (0.84 * temp_home) - 0.52 * (tcgrowth - temp_home)
+    DSJ = 658.77 - (0.84 * tchome) - 0.52 * (tcgrowth - tchome)
 
-    fv = calc_ftemp_kumarathunge(tcleaf, tcgrowth, EaJ, DSJ, temp_home)
+    fv = calc_ftemp_kumarathunge(tcleaf, tcgrowth, EaJ, DSJ, tchome)
 
   end function calc_ftemp_inst_jmax
 
@@ -984,7 +984,7 @@ contains
     real :: ftemp
 
     real, parameter :: R = 8.314  ! Universal gas constant (J mol^-1 K^-1)
-    
+
     real :: Tk
 
     ! Convert temperature to Kelvin
