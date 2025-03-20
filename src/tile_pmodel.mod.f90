@@ -230,7 +230,7 @@ contains
     ! argument
     type(soil_type), intent(inout) :: soil
 
-    call initglobal_soil_phy( soil%phy )
+    call initglobal_soil_phy( soil%phy ) ! TODO: doesn't this to be updated daily, since it represents physical water status of soil...
     call initglobal_soil_params( soil%params )
 
     soil%phy%wscal = soil%phy%wcont / soil%params%whc
@@ -443,15 +443,33 @@ contains
     tile_fluxes(:)%canopy%drn = 0.0              
     tile_fluxes(:)%canopy%drnn = 0.0             
     tile_fluxes(:)%canopy%rnl = 0.0             
-    tile_fluxes(:)%canopy%dcn = 0.0              
+    tile_fluxes(:)%canopy%dcn = 0.0
+    tile_fluxes(:)%canopy%deet = 0.0
+    tile_fluxes(:)%canopy%dpet = 0.0
+    tile_fluxes(:)%canopy%dpet_e = 0.0
+    ! TODO: missing here, i.e. still nan initialized: deet, dpet, dpet_e              
     tile_fluxes(:)%canopy%daet = 0.0            
     tile_fluxes(:)%canopy%daet_e = 0.0          
     tile_fluxes(:)%canopy%daet_soil = 0.0       
     tile_fluxes(:)%canopy%daet_e_soil = 0.0     
     tile_fluxes(:)%canopy%daet_canop = 0.0      
     tile_fluxes(:)%canopy%daet_e_canop = 0.0    
+    ! TODO: missing here, i.e. still nan initialized: cpa, dtransp, dgs, dgc,
+    tile_fluxes(:)%canopy%cpa = 0.0
+    tile_fluxes(:)%canopy%dtransp = 0.0
+    tile_fluxes(:)%canopy%dgs = 0.0
+    tile_fluxes(:)%canopy%dgc = 0.0
     tile_fluxes(:)%canopy%dgpp = 0.0
     tile_fluxes(:)%canopy%drd = 0.0
+    ! TODO: missing here, i.e. still nan initialized: assim,vcmax25,jmax25,vcmax,jmax,gs_accl,chi,iwue,
+    tile_fluxes(:)%canopy%assim = 0.0
+    tile_fluxes(:)%canopy%vcmax25 = 0.0
+    tile_fluxes(:)%canopy%jmax25 = 0.0
+    tile_fluxes(:)%canopy%vcmax = 0.0
+    tile_fluxes(:)%canopy%jmax = 0.0
+    tile_fluxes(:)%canopy%gs_accl = 0.0
+    tile_fluxes(:)%canopy%chi = 0.0
+    tile_fluxes(:)%canopy%iwue = 0.0
     tile_fluxes(:)%canopy%ppfd_splash = 0.0
     tile_fluxes(:)%canopy%dra = 0.0
     ! tile_fluxes(:)%canopy%nu = 0.0
@@ -460,6 +478,15 @@ contains
     do pft = 1,npft
       tile_fluxes(:)%plant(npft)%dgpp     = 0.0
       tile_fluxes(:)%plant(npft)%drd      = 0.0
+      ! TODO: missing here, i.e. still nan initialized: assim,vcmax25,jmax25,vcmax,jmax,gs_accl,chi,iwue,
+      tile_fluxes(:)%plant(npft)%assim    = 0.0
+      tile_fluxes(:)%plant(npft)%vcmax25  = 0.0
+      tile_fluxes(:)%plant(npft)%jmax25   = 0.0
+      tile_fluxes(:)%plant(npft)%vcmax    = 0.0
+      tile_fluxes(:)%plant(npft)%jmax     = 0.0
+      tile_fluxes(:)%plant(npft)%gs_accl  = 0.0
+      tile_fluxes(:)%plant(npft)%chi      = 0.0
+      tile_fluxes(:)%plant(npft)%iwue     = 0.0
       tile_fluxes(:)%plant(npft)%dtransp  = 0.0
       tile_fluxes(:)%plant(npft)%dlatenth = 0.0
       tile_fluxes(:)%plant(npft)%dpsi     = 0.0
@@ -542,6 +569,7 @@ contains
     ! Sum over PFTs to get canopy-level quantities
     !----------------------------------------------------------------
     do lu=1,nlu
+      ! TODO: missing here, DEBUG FABIAN: there are many more members in tile_fluxes(lu)%canopy than what is aggregated below. Is this right?
       tile_fluxes(lu)%canopy%dgpp    = sum(tile_fluxes(lu)%plant(:)%dgpp    * tile(lu)%plant(:)%fpc_grid)
       tile_fluxes(lu)%canopy%dtransp = sum(tile_fluxes(lu)%plant(:)%dtransp * tile(lu)%plant(:)%fpc_grid)
       tile_fluxes(lu)%canopy%drd     = sum(tile_fluxes(lu)%plant(:)%drd     * tile(lu)%plant(:)%fpc_grid)
