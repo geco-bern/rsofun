@@ -85,14 +85,14 @@ contains
     integer:: i, layer=0
 
     ! local variables used for P-model part
-    real :: tk, kphio_temp
+    real :: tk, kphio_temp, tchome
     real, save :: co2_memory
     real, save :: vpd_memory
     real, save :: temp_memory
     real, save :: patm_memory
     real, dimension(nlayers_max), save :: par_memory
     type(outtype_pmodel) :: out_pmodel      ! list of P-model output variables
-
+    tchome = 25.0
     !-----------------------------------------------------------
     ! Canopy light absorption
     !-----------------------------------------------------------
