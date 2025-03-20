@@ -306,7 +306,7 @@ contains
     ! Corrolary preditions (This is prelimirary!)
     !-----------------------------------------------------------------------
     ! Vcmax25 (vcmax normalized to 25 deg C)
-    ftemp_inst_vcmax  = calc_ftemp_inst_vcmax(tc, tc, tchome)
+    ftemp_inst_vcmax  = calc_ftemp_inst_vcmax(tc, tc, tcref)
     vcmax25  = vcmax / ftemp_inst_vcmax
 
     ! ! Dark respiration at growth temperature
@@ -330,7 +330,7 @@ contains
         jmax = 4.0 * kphio * ppfd / sqrt( (1.0/fact_jmaxlim)**2 - 1.0 )
       end if
       ! for normalization using temperature response from Duursma et al., 2015, implemented in plantecophys R package
-      ftemp_inst_jmax  = calc_ftemp_inst_jmax(tc, tc, tchome)
+      ftemp_inst_jmax  = calc_ftemp_inst_jmax(tc, tc, tcref)
 
       jmax25  = jmax  / ftemp_inst_jmax
     end if
