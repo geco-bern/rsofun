@@ -91,6 +91,7 @@ contains
     real, save :: temp_memory
     real, save :: patm_memory
     real, dimension(nlayers_max), save :: par_memory
+    real       :: tchome
     type(outtype_pmodel) :: out_pmodel      ! list of P-model output variables
 
     !-----------------------------------------------------------
@@ -264,6 +265,7 @@ contains
                                 tc             = temp_memory, &
                                 vpd            = vpd_memory, &
                                 patm           = patm_memory, &
+                                tchome         = tchome, &
                                 c4             = .false., &
                                 method_optci   = "prentice14", &
                                 method_jmaxlim = "wang17" &
