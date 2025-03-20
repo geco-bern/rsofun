@@ -138,6 +138,9 @@ run_pmodel_f_bysite <- function(
     format("%Y") %>%
     as.numeric()
 
+  print(firstyear_forcing)
+  print("---------------")
+  
   # Default value for nyeartrend
   if ('nyeartrend' %in% names(params_siml)) {stop("Unexpectedly received params_siml$nyeartrend for p-model.")}
   params_siml$nyeartrend <- forcing_years
