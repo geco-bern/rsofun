@@ -152,15 +152,13 @@ run_pmodel_f_bysite <- function(
   temp_home <- forcing %>%
     dplyr::mutate(year = lubridate::year(date), month = lubridate::month(date)) %>%
     dplyr::group_by(year, month) %>%
-    dplyr::summarise(max_tmax = max(temp, na.rm = TRUE), .groups = "drop") %>%  # Max temp per month per year
+    dplyr::summarise(max_tmax = max(temp, na.rm = TRUE), .groups = "drop") %>%
+    dplyr::mutate(max_tmax = ifelse(is.infinite(max_tmax), NA_real_, max_tmax)) %>%
     dplyr::group_by(year) %>%
-    dplyr::slice_max(max_tmax, n = 1, with_ties = FALSE) %>%  # Select the warmest month per year
+    dplyr::filter(max_tmax == max(max_tmax, na.rm = TRUE)) %>%
     dplyr::ungroup() %>%
-    dplyr::summarise(temp_home = mean(max_tmax, na.rm = TRUE)) %>%  # Compute long-term mean
-    dplyr::pull(temp_home)  # Extract a single numeric value
-
-  print(temp_home)
-  print("-------")
+    dplyr::summarise(temp_home = mean(max_tmax, na.rm = TRUE)) %>%
+    dplyr::pull(temp_home)
 
   # determine number of seconds per time step
   times <- forcing %>%

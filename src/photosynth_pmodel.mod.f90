@@ -132,7 +132,7 @@ contains
     real :: fact_jmaxlim        ! Jmax limitation factor (unitless)
 
     ! local variables for Jmax limitation following Nick Smith's method
-    real :: omega, omega_star, tcref, jmax_over_vcmax, jmax_prime, tchome
+    real :: omega, omega_star, tcref, jmax_over_vcmax, jmax_prime, temp_home
 
     real, parameter :: theta = 0.85          ! used only for smith19 setup
     real, parameter :: c_cost = 0.05336251   ! used only for smith19 setup
@@ -269,7 +269,7 @@ contains
       tcref = 0.44 * tc + 24.92
 
       ! calculated acclimated Vcmax at prevailing growth temperatures
-      ftemp_inst_vcmax = calc_ftemp_inst_vcmax( tc, tc, tchome = tcref )
+      ftemp_inst_vcmax = calc_ftemp_inst_vcmax( tc, tc, tcref )
       vcmax = vcmax_star * ftemp_inst_vcmax   ! Eq. 20
       
       ! calculate Jmax
@@ -277,7 +277,7 @@ contains
       jmax_prime = jmax_over_vcmax * vcmax 
 
       ! light use efficiency
-      lue = c_molmass * kphio * out_optchi%mj * omega_star / (8.0 * theta) ! * calc_ftemp_inst_vcmax( tc, tc, tchome = tcref )     ! treat theta as a calibratable parameter
+      lue = c_molmass * kphio * out_optchi%mj * omega_star / (8.0 * theta) ! * calc_ftemp_inst_vcmax( tc, tc, tcref )     ! treat theta as a calibratable parameter
 
 
     else if (method_jmaxlim=="none") then
@@ -306,7 +306,7 @@ contains
     ! Corrolary preditions (This is prelimirary!)
     !-----------------------------------------------------------------------
     ! Vcmax25 (vcmax normalized to 25 deg C)
-    ftemp_inst_vcmax  = calc_ftemp_inst_vcmax( tc, tc, tchome )
+    ftemp_inst_vcmax  = calc_ftemp_inst_vcmax(tc, tcgrowth, temp_home)
     vcmax25  = vcmax / ftemp_inst_vcmax
 
     ! ! Dark respiration at growth temperature
@@ -330,7 +330,7 @@ contains
         jmax = 4.0 * kphio * ppfd / sqrt( (1.0/fact_jmaxlim)**2 - 1.0 )
       end if
       ! for normalization using temperature response from Duursma et al., 2015, implemented in plantecophys R package
-      ftemp_inst_jmax  = calc_ftemp_inst_jmax( tc, tc, tchome)
+      ftemp_inst_jmax  = calc_ftemp_inst_jmax(tc, tcgrowth, temp_home)
 
       jmax25  = jmax  / ftemp_inst_jmax
     end if
@@ -894,157 +894,107 @@ contains
     
   end function calc_ftemp_inst_rd
 
-  function calc_ftemp_inst_vcmax( tcleaf, tcgrowth, tchome) result( vcmax_Tk )
+
+  function calc_ftemp_kumarathunge(tcleaf, tcgrowth, Ea, DS, temp_home) result(ftemp)
+  !-----------------------------------------------------------------------
+  ! Implements the Kumarathunge et al. 2019 temperature response function
+  ! 
+  ! tcleaf    : Leaf temperature (Tk, Kelvin)
+  ! tcgrowth  : Growth temperature (Tgrowth, Kelvin)
+  ! Ea        : Activation energy (kJ/mol)
+  ! DS        : Entropy term (J/mol/K)
+  ! temp_home : Home temperature (can be passed from model forcing)
+  !-----------------------------------------------------------------------
+
+    real, intent(in) :: tcleaf, tcgrowth, Ea, DS, temp_home
+
+    real, parameter  :: R = 8.314  ! Universal gas constant (J mol^-1 K^-1)
+    real, parameter  :: Hd = 200.0 ! Fixed deactivation energy (kJ/mol)
+    real, parameter  :: Tref = 298.15 ! 25°C in Kelvin
+
+    real :: ftemp
+
+    real :: num, denom
+
+    ftemp = calc_ftemp_arrhenius(tcleaf, Ea)
+
+    num = 1.0 + exp((Tref * DS - Hd * 1.0e3) / (Tref * R))
+    denom = 1.0 + exp((tcleaf * DS - Hd * 1.0e3) / (tcleaf * R))
+
+    ftemp = ftemp * (num / denom)
+
+  end function calc_ftemp_kumarathunge
+
+  function calc_ftemp_inst_vcmax(tcleaf, tcgrowth, temp_home) result(fv)
     !----------------------------------------------------------------------
-    ! Calculate the instantaneous temperature response of Vcmax based on
-    ! leaf temperature, short-term growth temperature, and long-term max
-    ! temperature of the warmest month.
-    !
+    ! Calculate the instantaneous temperature response of Vcmax
     ! Arguments:
-    !   tcleaf   : Instantaneous leaf temperature in degrees Celsius (°C).
-    !   tcgrowth : Short-term growth temperature in degrees Celsius (°C).
-    !              This represents the 30-day mean temperature.
-    !   tchome    : Long-term mean maximum temperature of the warmest month
-    !              in degrees Celsius (°C).
-    !
-    ! Returns:
-    !   vcmax_Tk : The temperature-dependent Vcmax factor.
-    !              Reference: Kumarathunge et al. (2019).
+    !   tcleaf   : Leaf temperature (°C)
+    !   tcgrowth : Short-term growth temperature (30-day mean °C)
+    !   temp_home : Long-term max temperature of warmest month (°C)
     !----------------------------------------------------------------------
 
-    ! Input arguments
-    real, intent(in) :: tcleaf
-    real, intent(in) :: tcgrowth
-    real, intent(in) :: tchome  
+    real, intent(in) :: tcleaf, tcgrowth, temp_home
 
-    ! Output variable
-    real :: vcmax_Tk
+    real :: fv
+    real :: EaV, DSv
 
-    ! Constants
-    real, parameter :: R = 8.314     ! Universal gas constant, J/mol/K (Allen, 1973)
-    real, parameter :: Hd = 200.0    ! Deactivation energy (kJ mol^-1) (Kopp & Lean, 2011)
+    EaV = 42.6 + 1.14 * tcgrowth
+    DSv = 645.13 - (0.38 * tcgrowth)
 
-    ! Local variables
-    real :: Tk                       ! Instantaneous leaf temperature (K)
-    real :: EaV                      ! Activation energy (kJ mol^-1)
-    real :: deltaS_v                 ! Entropy term (kJ mol^-1 K^-1)
-    real :: fva                      ! Arrhenius temperature response
-    real :: fvb                      ! Thermal inhibition
+    fv = calc_ftemp_kumarathunge(tcleaf, tcgrowth, EaV, DSv, temp_home)
 
-    ! Convert temperatures from Celsius to Kelvin
-    Tk = tcleaf + 273.15
-
-    ! Compute activation energy for Vcmax
-    EaV = 42.6 + 1.14 * tcgrowth 
-
-    ! Compute entropy term for Vcmax
-    deltaS_v = 645.13 - 0.38 * tcgrowth
-
-    ! Compute Arrhenius temperature response 
-    fva = calc_ftemp_arrhenius(tcleaf, EaV)
-
-    ! Compute thermal inhibition term 
-    fvb = (1.0 + exp((298.15 * deltaS_v - Hd * 1.0e3) / (298.15 * R))) / &
-          (1.0 + exp((Tk * deltaS_v - Hd * 1.0e3) / (Tk * R)))
-
-    ! Compute final temperature-dependent Vcmax
-    vcmax_Tk = fva * fvb
   end function calc_ftemp_inst_vcmax
 
 
-  function calc_ftemp_inst_jmax( tcleaf, tcgrowth, tchome) result( jmax_Tk )
+
+  function calc_ftemp_inst_jmax(tcleaf, tcgrowth, temp_home) result(fv)
     !-----------------------------------------------------------------------
-    ! Calculate the instantaneous temperature response of Jmax based on
-    ! leaf temperature, short-term growth temperature, and long-term max
-    ! temperature of the warmest month.
-    !
+    ! Calculate the instantaneous temperature response of Jmax
     ! Arguments:
-    !   tcleaf   : Instantaneous leaf temperature in degrees Celsius (°C).
-    !   tcgrowth : Short-term growth temperature in degrees Celsius (°C).
-    !              This represents the 30-day mean temperature.
-    !   tchome    : Long-term mean maximum temperature of the warmest month
-    !              in degrees Celsius (°C).
-    !
-    ! Returns:
-    !   jmax_Tk : The temperature-dependent Jmax factor.
-    !             Reference: Kumarathunge et al. (2019).
+    !   tcleaf   : Leaf temperature (°C)
+    !   tcgrowth : Short-term growth temperature (30-day mean °C)
+    !   temp_home : Long-term max temperature of warmest month (°C)
     !-----------------------------------------------------------------------
-      ! Input arguments
-      real, intent(in) :: tcleaf
-      real, intent(in) :: tcgrowth
-      real, intent(in) :: tchome
+    real, intent(in) :: tcleaf, tcgrowth, temp_home
 
-      ! Output variable
-      real :: jmax_Tk
+    real :: fv
+    real :: EaJ, DSJ
 
-      ! Constants
-      real, parameter :: R = 8.314    ! Universal gas constant, J/mol/K (Allen, 1973)
-      real, parameter :: Hd = 200     ! deactivation energy (kJ mol^-1) (Kopp & Lean, 2011)
+    ! Compute Activation Energy and Entropy for Jmax
+    EaJ = 40.71
+    DSJ = 658.77 - (0.84 * temp_home) - 0.52 * (tcgrowth - temp_home)
 
-      ! Local variables
-      real :: Tk                      ! Instantaneous leaf temperature (K)
-      real :: EaJ                     ! Activation energy (kJ mol^-1) 
-      real :: deltaS_J                ! Entropy term (kJ mol^-1 K^-1)
-      real :: fva                     ! Arrhenius temperature response 
-      real :: fvb                     ! Thermal inhibition term 
-
-      ! Convert temperatures from Celsius to Kelvin
-      Tk = tcleaf + 273.15
-
-      ! Compute activation energy for Jmax
-      EaJ = 40.71  
-
-      ! Compute entropy term for Jmax 
-      deltaS_J = 658.77 - 0.84 * tchome - 0.52 * (tcgrowth - tchome)
-
-      ! Compute Arrhenius temperature response
-      fva = calc_ftemp_arrhenius(tcleaf, EaJ)
-
-      ! Compute thermal inhibition term
-      fvb = (1.0 + exp((298.15 * deltaS_J - Hd * 1.0e3) / (298.15 * R))) / &
-            (1.0 + exp((Tk * deltaS_J - Hd * 1.0e3) / (Tk * R)))
-
-      ! Compute final temperature-dependent Jmax
-      jmax_Tk = fva * fvb
+    fv = calc_ftemp_kumarathunge(tcleaf, tcgrowth, EaJ, DSJ, temp_home)
 
   end function calc_ftemp_inst_jmax
 
 
-  function calc_ftemp_arrhenius(tcleaf, dha) result( ftemp )
+
+  function calc_ftemp_arrhenius(tcleaf, dha) result(ftemp)
     !-----------------------------------------------------------------------
-    ! Calculate the Arrhenius temperature response factor for a given 
-    ! activation energy and instantaneous leaf temperature.
-    !
+    ! Calculate the Arrhenius temperature response factor
     ! Arguments:
-    !   tcleaf  : Instantaneous leaf temperature (°C).
-    !   dha     : Activation energy (kJ mol^-1).
-    !
-    ! Returns:
-    !   ftemp   : The Arrhenius temperature response factor.
-    !             Reference: Allen et al. (1998).
+    !   tcleaf  : Leaf temperature (°C)
+    !   dha     : Activation energy (kJ mol^-1)
     !-----------------------------------------------------------------------
 
-    ! Input arguments
-      real, intent(in) :: tcleaf        ! Instantaneous leaf temperature (°C)
-    real, intent(in) :: dha         ! Activation energy (kJ mol^-1)
+    real, intent(in) :: tcleaf, dha
 
-    ! Output variable
     real :: ftemp
 
-    ! Constants
-    real, parameter :: R = 8.314    ! universal gas constant (J mol^-1 K^-1)
-
-    ! Local variables
+    real, parameter :: R = 8.314  ! Universal gas constant (J mol^-1 K^-1)
+    
     real :: Tk
 
-    ! Convert temperatures from Celsius to Kelvin
+    ! Convert temperature to Kelvin
     Tk = tcleaf + 273.15
 
-
-    ! Arrhenius Temperature Dependence
+    ! Compute Arrhenius function
     ftemp = exp((dha * 1.0e3 * (Tk - 298.15)) / (298.15 * R * Tk))
 
   end function calc_ftemp_arrhenius
+
 
   ! XXX REMOVED BECAUSE IT'S NOW IN SOFUNUTILS
   ! function calc_patm( elv ) result( patm )
