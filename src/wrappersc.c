@@ -95,8 +95,8 @@ extern SEXP pmodel_f_C(
         REAL(latitude),
         REAL(altitude),
         REAL(whc),
-        INTEGER(n),
         REAL(temp_home),
+        INTEGER(n),
         REAL(par),
         REAL(forcing),
         REAL(output)
