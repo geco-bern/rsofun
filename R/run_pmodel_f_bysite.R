@@ -155,8 +155,23 @@ temp_home <- forcing %>%
   dplyr::mutate(month = lubridate::month(date)) %>%  # Extract month from date
   dplyr::group_by(month) %>%
   dplyr::summarise(max_tmax = max(temp, na.rm = TRUE), .groups = "drop") %>%  # Compute max temp per month
-  dplyr::slice(which.max(max_tmax)) %>%  # Select the warmest month
-  dplyr::pull(max_tmax)  # Get long-term max max temperature
+  dplyr::arrange(desc(max_tmax)) %>% 
+  dplyr::slice(1)  # Ensures only one value is chosen
+
+print(temp_home)
+
+forcing %>%
+  dplyr::filter(format(date, "%Y") >= firstyear_forcing) %>%
+  dplyr::mutate(month = lubridate::month(date)) %>%
+  ggplot(aes(x = month, y = temp)) +
+  geom_boxplot() +
+  geom_point(aes(color = factor(month)), alpha = 0.5) +
+  theme_minimal() +
+  labs(title = "Monthly Maximum Temperatures",
+       x = "Month",
+       y = "Temperature",
+       color = "Month")
+
 
   # determine number of seconds per time step
   times <- forcing %>%
