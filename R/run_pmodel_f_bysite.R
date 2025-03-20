@@ -149,12 +149,14 @@ run_pmodel_f_bysite <- function(
   params_siml$firstyeartrend <- firstyear_forcing
   
   # Calculate temp_home as the long-term mean maximum temperature of the warmest month
-  temp_home <- forcing %>%
-    dplyr::mutate(month = lubridate::month(date)) %>%  # Extract month from date
-    dplyr::group_by(month) %>%
-    dplyr::summarise(mean_tmax = mean(temp, na.rm = TRUE), .groups = "drop") %>%  # Compute mean max temp per month
-    dplyr::slice(which.max(mean_tmax)) %>%  # Select the warmest month
-    dplyr::pull(mean_tmax)  # Get long-term mean max temperature
+temp_home <- forcing %>%
+  dplyr::ungroup() %>%
+  dplyr::filter(format(date, "%Y") >= firstyear_forcing) %>%
+  dplyr::mutate(month = lubridate::month(date)) %>%  # Extract month from date
+  dplyr::group_by(month) %>%
+  dplyr::summarise(max_tmax = max(temp, na.rm = TRUE), .groups = "drop") %>%  # Compute max temp per month
+  dplyr::slice(which.max(max_tmax)) %>%  # Select the warmest month
+  dplyr::pull(max_tmax)  # Get long-term max max temperature
 
   # determine number of seconds per time step
   times <- forcing %>%
@@ -317,7 +319,7 @@ run_pmodel_f_bysite <- function(
       latitude                  = as.numeric(site_info$lat),
       altitude                  = as.numeric(site_info$elv),
       whc                       = as.numeric(site_info$whc),
-      temp_home                 = as.integer(temp_home),
+      temp_home                 = as.numeric(temp_home),
       n                         = as.integer(nrow(forcing)), # number of rows in matrix (pre-allocation of memory)
       par                       = c(as.numeric(params_modl$kphio), # model parameters as vector in order
                                     as.numeric(params_modl$kphio_par_a),

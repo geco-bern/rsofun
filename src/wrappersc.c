@@ -31,7 +31,7 @@ void F77_NAME(pmodel_f)(
     double *latitude,
     double *altitude,
     double *whc,
-    int    *temp_home,
+    double *temp_home,
     int    *nt,
     double *par,
     double *forcing,
@@ -96,7 +96,7 @@ extern SEXP pmodel_f_C(
         REAL(altitude),
         REAL(whc),
         INTEGER(n),
-        INTEGER(temp_home),
+        REAL(temp_home),
         REAL(par),
         REAL(forcing),
         REAL(output)
