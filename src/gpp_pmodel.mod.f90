@@ -44,7 +44,7 @@ module md_gpp_pmodel
 
 contains
 
-  subroutine gpp( tile, tile_fluxes, co2, climate, grid, init, in_ppfd, temp_home)
+  subroutine gpp( tile, tile_fluxes, co2, climate, grid, init, in_ppfd, tchome)
     !//////////////////////////////////////////////////////////////////
     ! Wrapper function to call to P-model. 
     ! Calculates meteorological conditions with memory based on daily
@@ -63,8 +63,7 @@ contains
     type(gridtype)      :: grid
     logical, intent(in) :: init                              ! is true on the very first simulation day (first subroutine call of each gridcell)
     logical, intent(in) :: in_ppfd                           ! whether to use PPFD from forcing or from SPLASH output
-    real, intent(in)    :: temp_home                         ! long-term mean maximum temperature
-
+    real, intent(in)    :: tchome                            ! long-term mean maximum temperature
     ! local variables
     type(outtype_pmodel) :: out_pmodel              ! list of P-model output variables
     type(climate_type)   :: climate_acclimation     ! list of climate variables to which P-model calculates acclimated traits
@@ -152,11 +151,11 @@ contains
                               tc             = temp_memory, &
                               vpd            = vpd_memory, &
                               patm           = patm_memory, &
+                              tchome         = tchome, &
                               c4             = params_pft_plant(pft)%c4, &
                               method_optci   = "prentice14", &
                               method_jmaxlim = "wang17" &
                               )
-
       else
 
         ! PFT is not present 
@@ -210,8 +209,15 @@ contains
       tile_fluxes(lu)%plant(pft)%iwue    = out_pmodel%iwue
 
       ! quantities with instantaneous temperature response
-      tile_fluxes(lu)%plant(pft)%vcmax = calc_ftemp_inst_vcmax( climate%dtemp,temp_memory, temp_home) * out_pmodel%vcmax25
-      tile_fluxes(lu)%plant(pft)%jmax  = calc_ftemp_inst_jmax(  climate%dtemp, temp_memory, temp_home) * out_pmodel%jmax25
+      tile_fluxes(lu)%plant(pft)%vcmax = calc_ftemp_inst_vcmax( &
+          tcleaf   = climate%dtemp, &
+          tcgrowth = temp_memory, &
+          tchome   = tchome ) * out_pmodel%vcmax25
+
+      tile_fluxes(lu)%plant(pft)%jmax = calc_ftemp_inst_jmax( &
+          tcleaf   = climate%dtemp, &
+          tcgrowth = temp_memory, &
+          tchome   = tchome ) * out_pmodel%jmax25
 
       !----------------------------------------------------------------
       ! Stomatal conductance

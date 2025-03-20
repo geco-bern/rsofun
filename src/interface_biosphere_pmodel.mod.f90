@@ -40,7 +40,7 @@ module md_interface_pmodel
     type(paramstype_siml_pmodel)            :: params_siml
     real, dimension(npft)                   :: fpc_grid        ! allocatable because we don't know number of PFTs a priori
     type(paramstype_calib)                  :: params_calib    ! calibratable parameters
-    real                                    :: temp_home
+    real                                    :: tchome 
   end type interfacetype_biosphere
 
   type(interfacetype_biosphere) :: myinterface

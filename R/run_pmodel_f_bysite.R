@@ -119,6 +119,29 @@ run_pmodel_f_bysite <- function(
     makecheck = TRUE,
     verbose = TRUE
 ){
+
+  # Calculate tchome (mean maximum temperature of the warmest month across all available years)
+  calculate_tchome <- function(forcing) {
+    forcing %>%
+      dplyr::mutate(year = lubridate::year(date),
+                    month = lubridate::month(date)) %>%
+      dplyr::group_by(year, month) %>%
+      dplyr::summarise(mean_tmax_month = mean(tmax, na.rm = TRUE), .groups = "drop") %>%
+      dplyr::group_by(year) %>%
+      dplyr::summarise(warmest_month_tmax = max(mean_tmax_month, na.rm = TRUE), .groups = "drop") %>%
+      dplyr::summarise(tchome = mean(warmest_month_tmax, na.rm = TRUE)) %>%
+      dplyr::pull(tchome)
+  }
+
+  # Explicit calculation of tchome
+  tchome <- calculate_tchome(forcing)
+
+  # Validation
+  if (is.na(tchome) | length(tchome) == 0) {
+    if(verbose) warning("Calculated tchome is NA or missing; setting default to 25°C.")
+    tchome <- 25
+  }
+
   
   # predefine variables for CRAN check compliance
   ccov <- fsun <- . <- NULL
@@ -148,18 +171,6 @@ run_pmodel_f_bysite <- function(
   if ('firstyeartrend' %in% names(params_siml)) {stop("Unexpectedly received params_siml$firstyeartrend for p-model.")}
   params_siml$firstyeartrend <- firstyear_forcing
   
-  # Calculate temp_home as the long-term mean maximum temperature of the warmest month
-  temp_home <- forcing %>%
-    dplyr::mutate(year = lubridate::year(date), month = lubridate::month(date)) %>%
-    dplyr::group_by(year, month) %>%
-    dplyr::summarise(max_tmax = max(temp, na.rm = TRUE), .groups = "drop") %>%
-    dplyr::mutate(max_tmax = ifelse(is.infinite(max_tmax), NA_real_, max_tmax)) %>%
-    dplyr::group_by(year) %>%
-    dplyr::filter(max_tmax == max(max_tmax, na.rm = TRUE)) %>%
-    dplyr::ungroup() %>%
-    dplyr::summarise(temp_home = mean(max_tmax, na.rm = TRUE)) %>%
-    dplyr::pull(temp_home)
-
   # determine number of seconds per time step
   times <- forcing %>%
     dplyr::pull(date) %>%
@@ -167,7 +178,7 @@ run_pmodel_f_bysite <- function(
   secs_per_tstep <- difftime(times[1], times[2], units = "secs") %>%
     as.integer() %>%
     abs()
-
+  
   # re-define units and naming of forcing dataframe
   # keep the order of columns - it's critical for Fortran (reading by column number)
   forcing_features <- c(
@@ -190,7 +201,6 @@ run_pmodel_f_bysite <- function(
         all_of(forcing_features)
     )
   
-
   # validate input
   if (makecheck){
 
@@ -321,7 +331,7 @@ run_pmodel_f_bysite <- function(
       latitude                  = as.numeric(site_info$lat),
       altitude                  = as.numeric(site_info$elv),
       whc                       = as.numeric(site_info$whc),
-      temp_home                 = as.numeric(temp_home),
+      tchome                    = as.numeric(tchome),
       n                         = as.integer(nrow(forcing)), # number of rows in matrix (pre-allocation of memory)
       par                       = c(as.numeric(params_modl$kphio), # model parameters as vector in order
                                     as.numeric(params_modl$kphio_par_a),
