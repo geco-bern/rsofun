@@ -71,7 +71,6 @@ check_NA_output <- function(flag = TRUE){
     rd_to_vcmax        = 0.014,      # value from Atkin et al. 2015 for C3 herbaceous
     tau_acclim         = 30.0,
     kc_jmax            = 0.41,
-    gw_calib           = 2.0,
     phydro_K_plant     = 5e-17,   # TODO: add documentaiton: Phydro: Plant conductivity                
     phydro_p50_plant   = -0.46,   # TODO: add documentaiton: Phydro: Plant P50               
     phydro_b_plant     = 1,       # TODO: add documentaiton: Phydro: shape parameter of vulnerability curve           
