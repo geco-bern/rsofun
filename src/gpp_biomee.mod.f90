@@ -267,10 +267,10 @@ contains
                                 tc             = temp_memory, &
                                 vpd            = vpd_memory, &
                                 patm           = patm_memory, &
-                                tchome         = tchome, &
                                 c4             = .false., &
                                 method_optci   = "prentice14", &
-                                method_jmaxlim = "wang17" &
+                                method_jmaxlim = "wang17", &
+                                tchome         = tchome &
                                 )
 
           ! irrelevant variables for this setup  
