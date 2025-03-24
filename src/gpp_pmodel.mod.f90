@@ -63,7 +63,7 @@ contains
     type(gridtype)      :: grid
     logical, intent(in) :: init                              ! is true on the very first simulation day (first subroutine call of each gridcell)
     logical, intent(in) :: in_ppfd                           ! whether to use PPFD from forcing or from SPLASH output
-    real, intent(in)    :: tchome                            ! long-term mean maximum temperature
+    real, intent(in)    :: tchome                            ! long-term mean max temp of the warmest month in Celsius
     ! local variables
     type(outtype_pmodel) :: out_pmodel              ! list of P-model output variables
     type(climate_type)   :: climate_acclimation     ! list of climate variables to which P-model calculates acclimated traits

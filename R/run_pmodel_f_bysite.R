@@ -120,7 +120,7 @@ run_pmodel_f_bysite <- function(
     verbose = TRUE
 ){
 
-  # Calculate tchome (mean maximum temperature of the warmest month across all available years)
+  # Calculate tchome (mean maximum temperature of the warmest month)
   calculate_tchome <- function(forcing) {
     forcing %>%
       dplyr::mutate(year = lubridate::year(date),
@@ -137,10 +137,10 @@ run_pmodel_f_bysite <- function(
   tchome <- calculate_tchome(forcing)
 
   # Validation
-  if (is.na(tchome) | length(tchome) == 0) {
-    if(verbose) warning("Calculated tchome is NA or missing; setting default to 25°C.")
-    tchome <- 25
-  }
+  # if (is.na(tchome) | length(tchome) == 0) {
+  #   if(verbose) warning("Calculated tchome is NA or missing; setting default to 25°C.")
+  #   tchome <- 25
+  # }
   
   # predefine variables for CRAN check compliance
   ccov <- fsun <- . <- NULL

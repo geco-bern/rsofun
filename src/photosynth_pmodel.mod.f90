@@ -88,7 +88,7 @@ contains
     real, intent(in) :: tc           ! air temperature (deg C), relevant for acclimated response
     real, intent(in) :: vpd          ! vapor pressure (Pa), relevant for acclimated response
     real, intent(in) :: patm         ! atmospheric pressure (Pa), relevant for acclimated response
-    real, intent(in) :: tchome        ! long-term mean max temperature of warmest month 
+    real, intent(in) :: tchome       ! long-term mean max temperature of warmest month 
     logical, intent(in) :: c4        ! whether or not C4 photosynthesis pathway is followed. If .false., it's C3.
     character(len=*), intent(in) :: method_optci    ! Method used for deriving optimal ci:ca
     character(len=*), intent(in) :: method_jmaxlim  ! Method used for accounting for Jmax limitation
@@ -895,78 +895,82 @@ contains
   end function calc_ftemp_inst_rd
 
 
-  function calc_ftemp_inst_vcmax( tcleaf, tcgrowth, tchome ) result( kt )
-  !-----------------------------------------------------------------------
-  ! Updated function based on Kumarathunge et al., 2019 (Eq. 7) for Vcmax
-  ! tcleaf   : instantaneous leaf temperature in Celsius
-  ! tcgrowth : growth temperature (30-day mean damped temperature), Celsius
-  ! tchome    : long-term mean max temp of the warmest month (MAT as proxy)
-  !-----------------------------------------------------------------------
+  function calc_ftemp_inst_vcmax( tcleaf, tcgrowth, tchome ) result( fv )
+    !-----------------------------------------------------------------------
+    ! Updated function based on Kumarathunge et al., 2019 (Eq. 7) for Vcmax
+    ! tcleaf    : instantaneous leaf temperature in Celsius 
+    ! tcgrowth  : growth temperature (30-day mean damped temperature) in Celsius
+    ! tchome    : long-term mean max temp of the warmest month in Celsius
+    !-----------------------------------------------------------------------
 
     ! Function arguments
     real, intent(in) :: tcleaf, tcgrowth, tchome
 
     ! Local variables
-    real :: tk, ea, hd, deltas, kR, numerator, denominator
+    real :: tk, Ea, hd, deltas, kR, numerator, denominator
 
     ! Output variable
-    real :: kt
+    real :: fv
 
-    ! Constants
-    kR = 8.314          ! J mol-1 K-1 (universal gas constant)
-    hd   = 200000.0       ! J mol-1 (deactivation energy fixed at 200 kJ mol-1)
+    ! local parameters
+    real, parameter :: kR = 8.314            ! universal gas constant, J/mol/K (Allen, 1973)
+    real, parameter :: hd   = 200000.0       ! deactivation energy (J/mol)
 
-    ! Convert Celsius temperatures to Kelvin
+    ! Convert Celsius temperatures to Kelvin 
     tk = tcleaf + 273.15
 
-    ! Calculate Ea and Delta S based on Kumarathunge et al. (2019) for Vcmax
-    ea = (42.6 + 1.14 * tcgrowth) * 1.0e3  ! convert from kJ to J mol-1
-    deltas = 645.13 - 0.38 * tcgrowth      ! J mol-1 K-1
+    ! Calculate Ea (activation energy) and Delta S (entropy change) 
+    ! based on Kumarathunge et al. (2019) for Vcmax
+    Ea = 42.6 + 1.14 * tcgrowth          ! kJ/mol
+    deltas = 645.13 - 0.38 * tcgrowth    ! J/mol/K
 
     ! Calculate numerator and denominator for thermal inhibition
-    numerator   = 1.0 + exp((298.15 * deltas - hd) / (298.15 * kR))
-    denominator = 1.0 + exp((tk * deltas - hd) / (tk * kR))
+    numerator   = 1.0 + exp((298.15 * deltas - hd * 1.0e3) / (298.15 * kR))
+    denominator = 1.0 + exp((tk * deltas - hd * 1.0e3) / (tk * kR))
 
-    ! Final temperature response factor kt using Arrhenius function
-    kt = calc_ftemp_arrhenius(tk, ea) * (numerator / denominator)
+    fva = calc_ftemp_arrhenius(tk, Ea)
+    fvb = numerator / denominator
+    fv = fva * fvb
 
   end function calc_ftemp_inst_vcmax
 
 
-  function calc_ftemp_inst_jmax( tcleaf, tcgrowth, tchome ) result( kt )
+  function calc_ftemp_inst_jmax( tcleaf, tcgrowth, tchome ) result( fv )
     !-----------------------------------------------------------------------
-    ! Updated function based on Kumarathunge et al., 2019 (Eq. 7) for Jmax
-    ! tcleaf   : instantaneous leaf temperature in Celsius
-    ! tcgrowth : growth temperature (30-day mean damped temperature), Celsius
-    ! tchome    : long-term mean max temp of the warmest month (MAT as proxy)
+    ! Updated function based on Kumarathunge et al., 2019 (Eq. 7) for jmax
+    ! tcleaf    : instantaneous leaf temperature in Celsius 
+    ! tcgrowth  : growth temperature (30-day mean damped temperature) in Celsius
+    ! tchome    : long-term mean max temp of the warmest month in Celsius
     !-----------------------------------------------------------------------
 
     ! Function arguments
     real, intent(in) :: tcleaf, tcgrowth, tchome
 
     ! Local variables
-    real :: tk, ea, hd, deltas, kR, numerator, denominator
+    real :: tk, Ea, hd, deltas, kR, numerator, denominator
 
     ! Output variable
-    real :: kt
+    real :: fv
 
-    ! Constants
-    kR = 8.314          ! J mol-1 K-1 (universal gas constant)
-    hd   = 200000.0       ! J mol-1 (deactivation energy fixed at 200 kJ mol-1)
+    ! local parameters
+    real, parameter :: kR = 8.314            ! universal gas constant, J/mol/K (Allen, 1973)
+    real, parameter :: hd   = 200000.0       ! deactivation energy (J/mol)
 
-    ! Convert Celsius temperatures to Kelvin
+    ! Convert Celsius temperatures to Kelvin 
     tk = tcleaf + 273.15
 
-    ! Calculate Ea and Delta S based on Kumarathunge et al. (2019) for Jmax
-    ea = 40710.0  ! J mol-1 (constant activation energy for Jmax)
-    deltas = 658.77 - 0.84 * tchome - 0.52 * (tcgrowth - tchome)  ! J mol-1 K-1
+    ! Calculate Ea (activation energy) and Delta S (entropy change) 
+    ! based on Kumarathunge et al. (2019) for Jmax
+    Ea = 40.71                                                    ! kJ/mol
+    deltas = 658.77 - 0.84 * tchome - 0.52 * (tcgrowth - tchome)  ! J/mol/K
 
     ! Calculate numerator and denominator for thermal inhibition
-    numerator   = 1.0 + exp((298.15 * deltas - hd) / (298.15 * kR))
-    denominator = 1.0 + exp((tk * deltas - hd) / (tk * kR))
+    numerator   = 1.0 + exp((298.15 * deltas - hd * 1.0e3) / (298.15 * kR))
+    denominator = 1.0 + exp((tk * deltas - hd * 1.0e3) / (tk * kR))
 
-    ! Final temperature response factor kt using Arrhenius function
-    kt = calc_ftemp_arrhenius(tk, ea) * (numerator / denominator)
+    fva = calc_ftemp_arrhenius(tk, Ea)
+    fvb = numerator / denominator
+    fv = fva * fvb
 
   end function calc_ftemp_inst_jmax
 
@@ -981,7 +985,7 @@ contains
 
     ! Arguments
     real, intent(in) :: tk                ! Temperature in Kelvin
-    real, intent(in) :: dha               ! Activation energy (J mol⁻¹)
+    real, intent(in) :: dha               ! Activation energy (J/kmol)
     real, intent(in), optional :: tkref   ! Reference temperature (Kelvin)
 
     ! Local variables
@@ -990,8 +994,8 @@ contains
     ! Output variable
     real :: ftemp
 
-    ! Define constants
-    kR = 8.314 ! J mol⁻¹ K⁻¹, universal gas constant
+    ! local parameters
+    real, parameter :: kR = 8.314          ! universal gas constant, J/mol/K (Allen, 1973)
 
     ! Set reference temperature (default 298.15 K if not provided)
     if (present(tkref)) then
@@ -1001,7 +1005,7 @@ contains
     end if
 
     ! Calculate Arrhenius temperature response
-    ftemp = exp( dha * (tk - mytkref) / (mytkref * kR * tk) )
+    ftemp = exp( (dha * 1.0e3 * (tk - mytkref)) / (mytkref * kR * tk) )
 
   end function calc_ftemp_arrhenius
 
