@@ -135,7 +135,7 @@ run_pmodel_f_bysite <- function(
 
   # Explicit calculation of tchome
   tchome <- calculate_tchome(forcing)
-  print("tchome: ", tchome)
+  print(paste("tchome:", tchome))
 
   # Validation
   if (is.na(tchome) | length(tchome) == 0) {
