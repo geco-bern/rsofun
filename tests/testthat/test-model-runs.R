@@ -11,7 +11,7 @@ test_that("run_pmodel_f_bysite()", {
     rd_to_vcmax        = 0.014,   # value from Atkin et al. 2015 for C3 herbaceous
     tau_acclim         = 30.0,
     kc_jmax            = 0.41,
-
+    gw_calib           = 2.0,
     soilm_thetastar    = 0.6 * 240,  # to recover old setup with soil moisture stress
     beta_unitcostratio = 146.0
   )
@@ -22,7 +22,7 @@ test_that("run_pmodel_f_bysite()", {
     rd_to_vcmax        = 0.014,      # value from Atkin et al. 2015 for C3 herbaceous
     tau_acclim         = 30.0,
     kc_jmax            = 0.41,
-    
+    gw_calib           = 2.0,
     phydro_K_plant     = 5e-17,   # TODO: add documentaiton: Phydro: Plant conductivity                
     phydro_p50_plant   = -0.46,   # TODO: add documentaiton: Phydro: Plant P50               
     phydro_b_plant     = 1,       # TODO: add documentaiton: Phydro: shape parameter of vulnerability curve           
@@ -203,7 +203,7 @@ test_that("run_pmodel_f_bysite()", {
     gpp       = c(1.65618813037872, 6.02679443359375, 6.72385692596436, 1.84405922889709, 9.40890026092529, 0.896598398685455),
     aet       = c(0.0496958047151566, 0.866879522800446, 1.87889838218689, 0.156055122613907, 4.60135173797607, -0.136744096875191),
     le        = c(122955.984375, 2140935.5, 4637295, 384523.84375, 11185824, -339057.375), 
-    pet       = c(0.103817254304886, 1.45484209060669, 3.08336925506592, 0.335356384515762, 6.51526165008545, -0.377504140138626),
+    pet       = c(0.108938276767731, 1.35599589347839, 2.76327228546143, 0.326252281665802, 5.732346534729, -0.322612106800079),
     vcmax     = c(9.54577535594581e-06, 1.18804200610612e-05, 1.91590133908903e-05, 1.37124443426728e-05, 5.95575438637752e-05, 5.93948425375856e-06),
     jmax      = c(3.08439557556994e-05, 3.66509229934309e-05, 5.80160958634224e-05, 3.691642996273e-05, 0.000109297579911072, 2.01222374016652e-05),
     vcmax25   = c(3.51696653524414e-05, 3.77493124688044e-05, 5.76805359742139e-05, 3.59945297532249e-05, 5.17318439960945e-05, 2.60039796557976e-05),
@@ -231,7 +231,7 @@ test_that("run_pmodel_f_bysite()", {
     gpp       = c(2.47916746139526, 4.29396057128906, 6.37855243682861, 1.12339150905609, 4.18545007705688, 1.46236681938171),
     aet       = c(0.108937680721283, 1.35598421096802, 2.76325654983521, 0.32624351978302, 5.73224258422852, -0.3226118683815),
     le        = c(269530.59375, 3348879.5, 6819973, 803872.375, 13935005, -799917),
-    pet       = c(0.103817254304886, 1.45484209060669, 3.08336925506592, 0.335356384515762, 6.51526165008545, -0.377504140138626),
+    pet       = c(0.108938276767731, 1.35599589347839, 2.76327228546143, 0.326252281665802, 5.732346534729, -0.322612106800079),
     vcmax     = c(6.111431048339e-06, 7.75509124650853e-06, 1.19958594950731e-05, 3.18529146170476e-06, 4.026747046737e-05, 4.28107478001039e-06),
     jmax      = c(2.28475473704748e-05, 2.86447157122893e-05, 4.33829118264839e-05, 5.85015914111864e-06, 7.40396353648975e-05, 1.724714456941e-05),
     vcmax25   = c(1.77550300577423e-05, 2.02352257474558e-05, 2.96198322757846e-05, 7.76460092311027e-06, 3.53926807292737e-05, 1.51183612615569e-05),
@@ -250,7 +250,6 @@ test_that("run_pmodel_f_bysite()", {
     le_soil   = c(98347.3515625, 1303413.875, 2931274, 273886.84375, 5190479, -290766.28125),
     dpsi      = c(0.338661968708038, 1.0493232011795, 1.22259771823883, 0.456368923187256, 1.90744316577911, 0.0780341103672981),
     psi_leaf  = c(-0.624942302703857, -1.11408090591431, -1.22973167896271, -1.60701656341553, -2.70482659339905, -0.0780341103672981))
-
   expect_equal(dplyr::slice(tibble(mod1), c(1, 70, 1200, 1400, 2000, 2180)), ref1, tolerance = 1e-6)
   expect_equal(dplyr::slice(tibble(mod2), c(1, 70, 1200, 1400, 2000, 2180)), ref2, tolerance = 1e-6)
   expect_equal(dplyr::slice(tibble(mod3), c(1, 70, 1200, 1400, 2000, 2180)), ref3, tolerance = 1e-6)
@@ -274,7 +273,8 @@ test_that("runread_pmodel_f()", {
     beta_unitcostratio = 146.0,
     rd_to_vcmax        = 0.014, # value from Atkin et al. 2015 for C3 herbaceous
     tau_acclim         = 30.0,
-    kc_jmax            = 0.41
+    kc_jmax            = 0.41,
+    gw_calib           = 2.0
   )
   
   # read in demo data
@@ -318,7 +318,8 @@ test_that("p-model run check Vcmax25", {
     beta_unitcostratio = 146.0,
     rd_to_vcmax        = 0.014, # value from Atkin et al. 2015 for C3 herbaceous
     tau_acclim         = 30.0,
-    kc_jmax            = 0.41
+    kc_jmax            = 0.41,
+    gw_calib           = 2.0
   )
   
   # read in demo data
@@ -335,7 +336,6 @@ test_that("p-model run check Vcmax25", {
                                   mutate(x,
                                          canopy_height = 5,
                                          reference_height = 10)))
-  for (it in seq_along((df_drivers$forcing))){df_drivers$forcing[[it]]$vwind = 2.0} # TODO: add vwind, TODO: this would need to be changed in rsofun example data
 
   # run the SOFUN Fortran P-model
   mod <- rsofun::run_pmodel_f_bysite( 
@@ -345,7 +345,7 @@ test_that("p-model run check Vcmax25", {
     forcing        = df_drivers$forcing[[1]],
     forcing_acclim = df_drivers$forcing[[1]],
     params_modl = params_modl,
-    makecheck = FALSE
+    makecheck = TRUE
   )
   
   # test if the returned values
@@ -388,7 +388,8 @@ test_that("phydro-model run check LE and AET", {
     beta_unitcostratio = 146.0,
     rd_to_vcmax        = 0.014, # value from Atkin et al. 2015 for C3 herbaceous
     tau_acclim         = 30.0,
-    kc_jmax            = 0.41
+    kc_jmax            = 0.41,
+    gw_calib           = 2.0
   )
 
   # read in demo data

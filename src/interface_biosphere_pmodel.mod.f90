@@ -25,6 +25,7 @@ module md_interface_pmodel
     real :: rd_to_vcmax
     real :: tau_acclim
     real :: kc_jmax
+    real :: gw_calib
     real :: phydro_K_plant   
     real :: phydro_p50_plant 
     real :: phydro_b_plant   
