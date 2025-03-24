@@ -926,8 +926,8 @@ contains
     deltas = 645.13 - 0.38 * tcgrowth    ! J/mol/K
 
     ! Calculate numerator and denominator for thermal inhibition
-    numerator   = 1.0 + exp((298.15 * deltas - hd * 1.0e3) / (298.15 * kR))
-    denominator = 1.0 + exp((tk * deltas - hd * 1.0e3) / (tk * kR))
+    numerator   = 1.0 + exp((298.15 * deltas - hd) / (298.15 * kR))
+    denominator = 1.0 + exp((tk * deltas - hd) / (tk * kR))
 
     fva = calc_ftemp_arrhenius(tk, Ea)
     fvb = numerator / denominator
@@ -967,8 +967,8 @@ contains
     deltas = 658.77 - 0.84 * tchome - 0.52 * (tcgrowth - tchome)  ! J/mol/K
 
     ! Calculate numerator and denominator for thermal inhibition
-    numerator   = 1.0 + exp((298.15 * deltas - hd * 1.0e3) / (298.15 * kR))
-    denominator = 1.0 + exp((tk * deltas - hd * 1.0e3) / (tk * kR))
+    numerator   = 1.0 + exp((298.15 * deltas - hd) / (298.15 * kR))
+    denominator = 1.0 + exp((tk * deltas - hd) / (tk * kR))
 
     fva = calc_ftemp_arrhenius(tk, Ea)
     fvb = numerator / denominator
