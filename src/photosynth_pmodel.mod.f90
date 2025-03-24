@@ -907,14 +907,15 @@ contains
     real, intent(in) :: tcleaf, tcgrowth, tchome
 
     ! Local variables
-    real :: tk, Ea, hd, deltas, kR, numerator, denominator
+    real :: tk, Ea, deltas, numerator, denominator
+    real :: fv, fva, fvb
 
     ! Output variable
     real :: fv
 
     ! local parameters
-    real, parameter :: kR = 8.314            ! universal gas constant, J/mol/K (Allen, 1973)
-    real, parameter :: hd   = 200000.0       ! deactivation energy (J/mol)
+    real :: kR   = 8.314          ! universal gas constant, J/mol/K (Allen, 1973)
+    real :: hd   = 200000.0       ! deactivation energy (J/mol)
 
     ! Convert Celsius temperatures to Kelvin 
     tk = tcleaf + 273.15
@@ -947,14 +948,15 @@ contains
     real, intent(in) :: tcleaf, tcgrowth, tchome
 
     ! Local variables
-    real :: tk, Ea, hd, deltas, kR, numerator, denominator
+    real :: tk, Ea, deltas, numerator, denominator
+    real :: fv, fva, fvb
 
     ! Output variable
     real :: fv
 
     ! local parameters
-    real, parameter :: kR = 8.314            ! universal gas constant, J/mol/K (Allen, 1973)
-    real, parameter :: hd   = 200000.0       ! deactivation energy (J/mol)
+    real :: kR = 8.314            ! universal gas constant, J/mol/K (Allen, 1973)
+    real :: hd   = 200000.0       ! deactivation energy (J/mol)
 
     ! Convert Celsius temperatures to Kelvin 
     tk = tcleaf + 273.15
@@ -995,7 +997,7 @@ contains
     real :: ftemp
 
     ! local parameters
-    real, parameter :: kR = 8.314          ! universal gas constant, J/mol/K (Allen, 1973)
+    real :: kR = 8.314          ! universal gas constant, J/mol/K (Allen, 1973)
 
     ! Set reference temperature (default 298.15 K if not provided)
     if (present(tkref)) then
