@@ -94,7 +94,7 @@ contains
     type(outtype_pmodel) :: out_pmodel      ! list of P-model output variables
 
     ! local parameters for P-model part
-    real :: tchome = 25.0  ! long-term mean max temp of the warmest month,using 25°C as default temperature
+    real :: tchome = 25.0  ! long-term mean max temp of the warmest month, using 25°C as default temperature
     
     !-----------------------------------------------------------
     ! Canopy light absorption
@@ -266,6 +266,7 @@ contains
                                 co2            = co2_memory, &
                                 tc             = temp_memory, &
                                 vpd            = vpd_memory, &
+                                tchome         = tchome, &
                                 patm           = patm_memory, &
                                 c4             = .false., &
                                 method_optci   = "prentice14", &
