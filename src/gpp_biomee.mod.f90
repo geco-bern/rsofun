@@ -93,6 +93,9 @@ contains
     real, dimension(nlayers_max), save :: par_memory
     type(outtype_pmodel) :: out_pmodel      ! list of P-model output variables
 
+    ! local parameters for P-model part
+    real :: tchome = 25.0  ! long-term mean max temp of the warmest month,using 25°C as default temperature
+    
     !-----------------------------------------------------------
     ! Canopy light absorption
     !-----------------------------------------------------------
@@ -264,6 +267,7 @@ contains
                                 tc             = temp_memory, &
                                 vpd            = vpd_memory, &
                                 patm           = patm_memory, &
+                                tchome         = tchome, &
                                 c4             = .false., &
                                 method_optci   = "prentice14", &
                                 method_jmaxlim = "wang17" &
