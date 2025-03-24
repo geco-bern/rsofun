@@ -908,7 +908,7 @@ contains
 
     ! Local variables
     real :: tk, Ea, deltas, numerator, denominator
-    real :: fv, fva, fvb
+    real :: fva, fvb
 
     ! Output variable
     real :: fv
@@ -949,7 +949,7 @@ contains
 
     ! Local variables
     real :: tk, Ea, deltas, numerator, denominator
-    real :: fv, fva, fvb
+    real :: fva, fvb
 
     ! Output variable
     real :: fv
@@ -991,7 +991,7 @@ contains
     real, intent(in), optional :: tkref   ! Reference temperature (Kelvin)
 
     ! Local variables
-    real :: mytkref, kR
+    real :: mytkref
 
     ! Output variable
     real :: ftemp
