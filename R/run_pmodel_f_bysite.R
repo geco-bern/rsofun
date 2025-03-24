@@ -15,7 +15,7 @@
 #' For further specifications of above inputs and examples see \code{\link{p_model_drivers}} or \code{\link{p_model_drivers_vcmax25}}
 
 #' @import dplyr
-#' @import lubridate
+
 #' 
 #' @returns Model output is provided as a tidy dataframe, with columns:
 #' \describe{
@@ -124,8 +124,7 @@ run_pmodel_f_bysite <- function(
   # Calculate tchome (mean maximum temperature of the warmest month)
   calculate_tchome <- function(forcing) {
     forcing %>%
-      dplyr::mutate(year = lubridate::year(date),
-                    month = lubridate::month(date)) %>%
+      dplyr::mutate(year = format(date, "%Y"), month = format(date, "%m")) %>%
       dplyr::group_by(year, month) %>%
       dplyr::summarise(mean_tmax_month = mean(tmax, na.rm = TRUE), .groups = "drop") %>%
       dplyr::group_by(year) %>%
