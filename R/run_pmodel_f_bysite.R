@@ -135,12 +135,13 @@ run_pmodel_f_bysite <- function(
 
   # Explicit calculation of tchome
   tchome <- calculate_tchome(forcing)
+  print("tchome: ", tchome)
 
   # Validation
-  # if (is.na(tchome) | length(tchome) == 0) {
-  #   if(verbose) warning("Calculated tchome is NA or missing; setting default to 25°C.")
-  #   tchome <- 25
-  # }
+  if (is.na(tchome) | length(tchome) == 0) {
+    if(verbose) warning("Calculated tchome is NA or missing; setting default to 25°C.")
+    tchome <- 25
+  }
   
   # predefine variables for CRAN check compliance
   ccov <- fsun <- . <- NULL
