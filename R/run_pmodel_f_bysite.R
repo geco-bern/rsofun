@@ -133,6 +133,9 @@ run_pmodel_f_bysite <- function(
       dplyr::pull(tchome)
   }
 
+  # Explicit calculation of tchome
+  tchome <- calculate_tchome(forcing)
+
   # Validation
   if (is.na(tchome) | length(tchome) == 0) {
     if(verbose) warning("Calculated tchome is NA or missing; setting default to 25°C.")
