@@ -122,26 +122,21 @@ run_pmodel_f_bysite <- function(
 ){
 
   # Calculate tchome (mean maximum temperature of the warmest month)
-  calculate_tchome <- function(forcing) {
-    forcing %>%
-      dplyr::mutate(year = format(date, "%Y"), month = format(date, "%m")) %>%
-      dplyr::group_by(year, month) %>%
-      dplyr::summarise(mean_tmax_month = mean(tmax, na.rm = TRUE), .groups = "drop") %>%
-      dplyr::group_by(year) %>%
-      dplyr::summarise(warmest_month_tmax = max(mean_tmax_month, na.rm = TRUE), .groups = "drop") %>%
-      dplyr::summarise(tchome = mean(warmest_month_tmax, na.rm = TRUE)) %>%
-      dplyr::pull(tchome)
-  }
-
-  # Explicit calculation of tchome
-  tchome <- calculate_tchome(forcing)
+  tchome <- forcing %>%
+    dplyr::mutate(year = format(.data$date, "%Y"), month = format(.data$date, "%m")) %>%
+    dplyr::group_by(.data$year, .data$month) %>%
+    dplyr::summarise(mean_tmax_month = mean(.data$tmax, na.rm = TRUE), .groups = "drop") %>%
+    dplyr::group_by(.data$year) %>%
+    dplyr::summarise(warmest_month_tmax = max(.data$mean_tmax_month, na.rm = TRUE), .groups = "drop") %>%
+    dplyr::summarise(tchome = mean(.data$warmest_month_tmax, na.rm = TRUE)) %>%
+    dplyr::pull(.data$tchome)
 
   # Validation
   if (is.na(tchome) | length(tchome) == 0) {
     if(verbose) warning("Calculated tchome is NA or missing; setting default to 25°C.")
     tchome <- 25
   }
-  
+
   # predefine variables for CRAN check compliance
   ccov <- fsun <- . <- NULL
   
