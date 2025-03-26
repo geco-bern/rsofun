@@ -15,7 +15,6 @@
 #' For further specifications of above inputs and examples see \code{\link{p_model_drivers}} or \code{\link{p_model_drivers_vcmax25}}
 
 #' @import dplyr
-
 #' 
 #' @returns Model output is provided as a tidy dataframe, with columns:
 #' \describe{
@@ -120,7 +119,7 @@ run_pmodel_f_bysite <- function(
     makecheck = TRUE,
     verbose = TRUE
 ){
-
+  
   # Calculate tchome (mean maximum temperature of the warmest month)
   tchome <- forcing %>%
     dplyr::mutate(
