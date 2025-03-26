@@ -70,7 +70,7 @@ module md_photosynth
 
 contains
 
-  function pmodel( kphio, beta, kc_jmax, ppfd, co2, tc, vpd, patm, tchome, c4, &
+  function pmodel( kphio, beta, kc_jmax, ppfd, co2, tc, vpd, patm, tc_home, c4, &
                  method_optci, method_jmaxlim ) result( out_pmodel )
     !//////////////////////////////////////////////////////////////////
     ! Implements the P-model, providing predictions for ci, Vcmax, and 
@@ -88,7 +88,7 @@ contains
     real, intent(in) :: tc           ! air temperature (deg C), relevant for acclimated response
     real, intent(in) :: vpd          ! vapor pressure (Pa), relevant for acclimated response
     real, intent(in) :: patm         ! atmospheric pressure (Pa), relevant for acclimated response
-    real, intent(in) :: tchome       ! long-term mean max temperature of warmest month 
+    real, intent(in) :: tc_home       ! long-term mean max temperature of warmest month 
     logical, intent(in) :: c4        ! whether or not C4 photosynthesis pathway is followed. If .false., it's C3.
     character(len=*), intent(in) :: method_optci    ! Method used for deriving optimal ci:ca
     character(len=*), intent(in) :: method_jmaxlim  ! Method used for accounting for Jmax limitation
@@ -271,7 +271,7 @@ contains
       tcref = 0.44 * tc + 24.92
 
       ! calculated acclimated Vcmax at prevailing growth temperatures
-      ftemp_inst_vcmax = calc_ftemp_inst_vcmax(tc, tc, tchome)
+      ftemp_inst_vcmax = calc_ftemp_inst_vcmax(tc, tc, tc_home)
       vcmax = vcmax_star * ftemp_inst_vcmax   ! Eq. 20
       
       ! calculate Jmax
@@ -279,7 +279,7 @@ contains
       jmax_prime = jmax_over_vcmax * vcmax 
 
       ! light use efficiency
-      lue = c_molmass * kphio * out_optchi%mj * omega_star / (8.0 * theta) ! * calc_ftemp_inst_jmax(tc, tc, tchome)
+      lue = c_molmass * kphio * out_optchi%mj * omega_star / (8.0 * theta)
 
     else if (method_jmaxlim=="none") then
 
@@ -307,7 +307,7 @@ contains
     ! Corrolary preditions (This is prelimirary!)
     !-----------------------------------------------------------------------
     ! Vcmax25 (vcmax normalized to 25 deg C)
-    ftemp_inst_vcmax  = calc_ftemp_inst_vcmax(tc, tc, tchome)
+    ftemp_inst_vcmax  = calc_ftemp_inst_vcmax(tc, tc, tc_home)
     vcmax25  = vcmax / ftemp_inst_vcmax
 
     ! ! Dark respiration at growth temperature
@@ -331,7 +331,7 @@ contains
         jmax = 4.0 * kphio * ppfd / sqrt( (1.0/fact_jmaxlim)**2 - 1.0 )
       end if
       ! for normalization using temperature response from Duursma et al., 2015, implemented in plantecophys R package
-      ftemp_inst_jmax  = calc_ftemp_inst_jmax(tc, tc, tchome)
+      ftemp_inst_jmax  = calc_ftemp_inst_jmax(tc, tc, tc_home)
       jmax25  = jmax  / ftemp_inst_jmax
     end if
 
@@ -895,22 +895,22 @@ contains
   end function calc_ftemp_inst_rd
 
 
-  function calc_ftemp_inst_vcmax( tcleaf, tcgrowth, tchome ) result( fv )
+  function calc_ftemp_inst_vcmax( tc_leaf, tc_growth, tc_home ) result( fv )
     !-----------------------------------------------------------------------
     ! Calculates the instantaneous temperature response factor for Vcmax.
     ! Based on Kumarathunge et al., 2019 (Eq. 7).
     !
     ! Arguments:
-    !   tcleaf:    Instantaneous leaf temperature (°C)
-    !   tcgrowth:  Growth temperature, 30-day mean damped temperature (°C)
-    !   tchome:    Long-term mean maximum temperature of the warmest month (°C)
+    !   tc_leaf:    Instantaneous leaf temperature (°C)
+    !   tc_growth:  Growth temperature, 30-day mean damped temperature (°C)
+    !   tc_home:    Long-term mean maximum temperature of the warmest month (°C)
     !
     ! Returns:
     !   fv:        Instantaneous temperature response factor (unitless)
     !-----------------------------------------------------------------------
 
     ! Function arguments
-    real, intent(in) :: tcleaf, tcgrowth, tchome
+    real, intent(in) :: tc_leaf, tc_growth, tc_home
 
     ! Local variables
     real :: tk, ea, hd, deltas, kR, numerator, denominator, fva, fvb
@@ -923,11 +923,11 @@ contains
     hd   = 200000.0       ! deactivation energy (J/mol)
 
     ! Convert Celsius temperatures to Kelvin
-    tk = tcleaf + 273.15
+    tk = tc_leaf + 273.15
 
     ! Calculate Ea and Delta S based on Kumarathunge et al. (2019) for Vcmax
-    ea = (42.6 + 1.14 * tcgrowth) * 1.0e3  ! convert from kJ to J/mol
-    deltas = 645.13 - 0.38 * tcgrowth      ! J/mol/K
+    ea = (42.6 + 1.14 * tc_growth) * 1.0e3  ! convert from kJ to J/mol
+    deltas = 645.13 - 0.38 * tc_growth      ! J/mol/K
 
     ! Calculate numerator and denominator for thermal inhibition
     numerator   = 1.0 + exp((298.15 * deltas - hd) / (298.15 * kR))
@@ -941,22 +941,22 @@ contains
   end function calc_ftemp_inst_vcmax
 
 
-  function calc_ftemp_inst_jmax( tcleaf, tcgrowth, tchome ) result( fv )
+  function calc_ftemp_inst_jmax( tc_leaf, tc_growth, tc_home ) result( fv )
     !-----------------------------------------------------------------------
     ! Calculates the instantaneous temperature response factor for Jmax.
     ! Based on Kumarathunge et al., 2019 (Eq. 7).
     !
     ! Arguments:
-    !   tcleaf:    Instantaneous leaf temperature (°C)
-    !   tcgrowth:  Growth temperature, 30-day mean damped temperature (°C)
-    !   tchome:    Long-term mean maximum temperature of the warmest month (°C)
+    !   tc_leaf:    Instantaneous leaf temperature (°C)
+    !   tc_growth:  Growth temperature, 30-day mean damped temperature (°C)
+    !   tc_home:    Long-term mean maximum temperature of the warmest month (°C)
     !
     ! Returns:
     !   fv:        Instantaneous temperature response factor (unitless)
     !-----------------------------------------------------------------------
 
     ! Function arguments
-    real, intent(in) :: tcleaf, tcgrowth, tchome
+    real, intent(in) :: tc_leaf, tc_growth, tc_home
 
     ! Local variables
     real :: tk, ea, hd, deltas, kR, numerator, denominator, fva, fvb
@@ -969,11 +969,11 @@ contains
     hd   = 200000.0       ! deactivation energy (J/mol)
 
     ! Convert Celsius temperatures to Kelvin
-    tk = tcleaf + 273.15
+    tk = tc_leaf + 273.15
 
     ! Calculate Ea and Delta S based on Kumarathunge et al. (2019) for Jmax
     ea = 40.71 * 1.0e3                                           ! J/mol (constant activation energy for Jmax)
-    deltas = 658.77 - 0.84 * tchome - 0.52 * (tcgrowth - tchome)  ! J/mol/K
+    deltas = 658.77 - 0.84 * tc_home - 0.52 * (tc_growth - tc_home)  ! J/mol/K
 
     ! Calculate numerator and denominator for thermal inhibition
     numerator   = 1.0 + exp((298.15 * deltas - hd) / (298.15 * kR))
