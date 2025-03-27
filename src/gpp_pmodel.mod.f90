@@ -151,7 +151,7 @@ contains
                               tc             = temp_memory, &
                               vpd            = vpd_memory, &
                               patm           = patm_memory, &
-                              tchome         = tchome, &
+                              tc_home        = tchome, &
                               c4             = params_pft_plant(pft)%c4, &
                               method_optci   = "prentice14", &
                               method_jmaxlim = "wang17" &
@@ -210,14 +210,14 @@ contains
 
       ! quantities with instantaneous temperature response
       tile_fluxes(lu)%plant(pft)%vcmax = calc_ftemp_inst_vcmax( &
-          tcleaf   = climate%dtemp, &
-          tcgrowth = temp_memory, &
-          tchome   = tchome ) * out_pmodel%vcmax25
+          tc_leaf   = climate%dtemp, &
+          tc_growth = temp_memory, &
+          tc_home   = tchome ) * out_pmodel%vcmax25
 
       tile_fluxes(lu)%plant(pft)%jmax = calc_ftemp_inst_jmax( &
-          tcleaf   = climate%dtemp, &
-          tcgrowth = temp_memory, &
-          tchome   = tchome ) * out_pmodel%jmax25
+          tc_leaf   = climate%dtemp, &
+          tc_growth = temp_memory, &
+          tc_home   = tchome ) * out_pmodel%jmax25
 
       !----------------------------------------------------------------
       ! Stomatal conductance
