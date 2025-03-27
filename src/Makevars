@@ -4,7 +4,7 @@ C_OBJS = wrappersc.o
 # Fortran objects: refer to file names <name.o>, order reflects dependency structure
 FT_OBJS = pmodel.mod.o biomee.mod.o
 
-all: $(SHLIB)
+all: $(SHLIB) clean
 
 $(SHLIB): $(FT_OBJS) $(C_OBJS)
 
