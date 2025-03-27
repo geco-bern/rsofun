@@ -120,8 +120,8 @@ run_pmodel_f_bysite <- function(
     verbose = TRUE
 ){
   
-  # Calculate tchome (mean maximum temperature of the warmest month)
-  tchome <- forcing %>%
+  # Calculate tc_home (mean maximum temperature of the warmest month)
+  tc_home <- forcing %>%
     dplyr::mutate(
       year = format(.data$date, "%Y"), month = format(.data$date, "%m")
     ) %>%
@@ -134,17 +134,17 @@ run_pmodel_f_bysite <- function(
       warmest_month_tmax = max(.data$mean_tmax_month, na.rm = TRUE),
       .groups = "drop"
     ) %>%
-    dplyr::summarise(tchome = mean(.data$warmest_month_tmax, na.rm = TRUE)) %>%
-    dplyr::pull(.data$tchome)
+    dplyr::summarise(tc_home = mean(.data$warmest_month_tmax, na.rm = TRUE)) %>%
+    dplyr::pull(.data$tc_home)
 
   # Validation
-  if (is.na(tchome) || length(tchome) == 0) {
+  if (is.na(tc_home) || length(tc_home) == 0) {
     if (verbose) {
       warning(
-        "Calculated tchome is NA or missing; setting default to 25C."
+        "Calculated tc_home is NA or missing; setting default to 25C."
       )
     }
-    tchome <- 25
+    tc_home <- 25
   }
 
   # predefine variables for CRAN check compliance
@@ -335,7 +335,7 @@ run_pmodel_f_bysite <- function(
       latitude                  = as.numeric(site_info$lat),
       altitude                  = as.numeric(site_info$elv),
       whc                       = as.numeric(site_info$whc),
-      tchome                    = as.numeric(site_info$tchome),
+      tc_home                   = as.numeric(site_info$tc_home),
       n                         = as.integer(nrow(forcing)), # number of rows in matrix (pre-allocation of memory)
       par                       = c(as.numeric(params_modl$kphio), # model parameters as vector in order
                                     as.numeric(params_modl$kphio_par_a),
