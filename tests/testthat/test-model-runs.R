@@ -259,7 +259,7 @@ test_that("Regression tests run_biomee_f_bysite()", {
   df_drivers_BiomeE_PLULUC <- rsofun::biomee_p_model_luluc_drivers
   df_drivers_BiomeE_gsLeun <- rsofun::biomee_gs_leuning_drivers
   
-  df_drivers_BiomeE_PLULUC$params_siml[[1]]$daily_diagnostics <- TRUE
+  df_drivers_BiomeE_PLULUC$params_siml[[1]]$do_daily_diagnostics <- TRUE
   
   # remove spinup that we can check initial conditions and transient phases
   df_drivers_BiomeE_Pmodel$params_siml[[1]]$spinupyears = 0

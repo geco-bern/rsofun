@@ -43,7 +43,7 @@ params_siml_gs_leuning <- tibble(
   do_closedN_run = FALSE,
   method_photosynth = "gs_leuning",
   method_mortality = "dbh",
-  daily_diagnostics = TRUE # Default True
+  do_daily_diagnostics = TRUE # Default True
 )
 
 params_siml_pmodel <- params_siml_gs_leuning
@@ -241,7 +241,7 @@ lu_defs <- tibble(
   fraction  = c(1.0, 0.0)
 )
 transitions <- c(0, 0, 0.4, 0)
-biomee_p_model_luluc_drivers$params_siml[[1]]$daily_diagnostics <- FALSE
+biomee_p_model_luluc_drivers$params_siml[[1]]$do_daily_diagnostics <- FALSE
 
 n_lu <- length(lu_defs$name)
 n_trans <- length(transitions) / n_lu ^ 2
