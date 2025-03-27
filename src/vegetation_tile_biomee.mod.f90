@@ -295,11 +295,11 @@ contains
     ! while a newly created cohort, inserted in the cohort list, gets the complement (fraction).
     !---------------------------------------------------------------
     class(vegn_tile_type), intent(inout) :: self
-    type(cohort_item), pointer, intent(in) :: item
+    type(cohort_stack_item), pointer, intent(in) :: item
     real, intent(in) :: fraction
 
     ! Local variable
-    type(cohort_item), pointer :: new
+    type(cohort_stack_item), pointer :: new
 
     new => item%clone()
     new%cohort%density = item%cohort%density * fraction
@@ -312,8 +312,8 @@ contains
     ! Merge cohort c2 into c1 and return item following c2
     !---------------------------------------------------------------
     class(vegn_tile_type), intent(inout) :: self
-    type(cohort_item), pointer, intent(inout) :: c1, c2
-    type(cohort_item), pointer :: next_item
+    type(cohort_stack_item), pointer, intent(inout) :: c1, c2
+    type(cohort_stack_item), pointer :: next_item
 
 
     call c1%cohort%merge_in(c2%cohort)
@@ -325,7 +325,7 @@ contains
     ! Return the head of the cohort list for iteration purpose.
     !---------------------------------------------------------------
     class(vegn_tile_type), intent(in) :: self
-    type(cohort_item), pointer :: head_cohort
+    type(cohort_stack_item), pointer :: head_cohort
 
     head_cohort => self%cohort_list%head()
   end function cohorts
@@ -335,7 +335,7 @@ contains
     ! Return the head of the killed cohort list for iteration purpose.
     !---------------------------------------------------------------
     class(vegn_tile_type), intent(in) :: self
-    type(cohort_item), pointer :: head_cohort
+    type(cohort_stack_item), pointer :: head_cohort
 
     head_cohort => self%killed_fraction_list%head()
   end function killed_cohort_fractions
@@ -352,12 +352,12 @@ contains
     ! If fraction is 1, the cohort is moved from cohorts to killed_cohort_fractions.
     !---------------------------------------------------------------
     class(vegn_tile_type), intent(inout) :: self
-    type(cohort_item), pointer, intent(inout) :: item
+    type(cohort_stack_item), pointer, intent(inout) :: item
     real, optional, intent(in) :: fraction
-    type(cohort_item), pointer :: next_item
+    type(cohort_stack_item), pointer :: next_item
 
     ! Local variables
-    type(cohort_item), pointer :: killed
+    type(cohort_stack_item), pointer :: killed
     real :: frac
 
     frac = 1.0
@@ -393,7 +393,7 @@ contains
     !////////////////////////////////////////////////////////////////
     ! Get height
     !---------------------------------------------------------------
-    type(cohort_item), intent(in) :: item
+    type(cohort_stack_item), intent(in) :: item
     real :: res
 
     res = item%cohort%height()
@@ -414,7 +414,7 @@ contains
     !////////////////////////////////////////////////////////////////
     ! Get uid
     !---------------------------------------------------------------
-    type(cohort_item), intent(in) :: item
+    type(cohort_stack_item), intent(in) :: item
     real :: res
 
     res = real(item%uid())
@@ -436,7 +436,7 @@ contains
     ! Create and insert a new cohort at the head of the list and return its pointer.
     !---------------------------------------------------------------
     class(vegn_tile_type), intent(inout) :: self
-    type(cohort_item), pointer :: new_item
+    type(cohort_stack_item), pointer :: new_item
 
     new_item => create_cohort()
     call self%cohort_list%insert_item(new_item)
@@ -448,8 +448,8 @@ contains
     ! Move item to killed_cohort_fractions and return pointer to next
     !---------------------------------------------------------------
     class(vegn_tile_type), intent(inout) :: self
-    type(cohort_item), pointer, intent(inout) :: item
-    type(cohort_item), pointer :: next_item
+    type(cohort_stack_item), pointer, intent(inout) :: item
+    type(cohort_stack_item), pointer :: next_item
 
     item%cohort%deathrate = 1.0
     next_item => self%cohort_list%detach_item(item)
@@ -473,7 +473,7 @@ contains
     real    :: frac     ! fraction of the layer covered so far by the canopies
     real    :: fraction ! fraction to split off
 
-    type(cohort_item), pointer :: it  ! iterator
+    type(cohort_stack_item), pointer :: it  ! iterator
 
     ! We sort the cohorts be decreasing height (important to do it here!)
     call self%sort_cohorts_by_height(.false.)
@@ -523,8 +523,8 @@ contains
     class(vegn_tile_type), intent(inout) :: self
 
     ! local variables
-    type(cohort_item), pointer :: it1
-    type(cohort_item), pointer :: it2
+    type(cohort_stack_item), pointer :: it1
+    type(cohort_stack_item), pointer :: it2
 
     ! This sort is not technically necessary, but is helpful for debugging
     !call self%sort_cohorts_by_uid(.true.)
@@ -555,7 +555,7 @@ contains
     ! local variables
     logical :: at_least_one_survivor
 
-    type(cohort_item), pointer :: it
+    type(cohort_stack_item), pointer :: it
 
     at_least_one_survivor = .FALSE.
 
@@ -597,7 +597,7 @@ contains
     class(vegn_tile_type), intent(inout) :: self
 
     ! local variables
-    type(cohort_item), pointer :: it !iterator
+    type(cohort_stack_item), pointer :: it !iterator
 
     ! daily
     call self%zero_daily_diagnostics()
@@ -652,7 +652,7 @@ contains
 
     ! local variables
     type(cohort_type), pointer :: cc
-    type(cohort_item), pointer :: it
+    type(cohort_stack_item), pointer :: it
 
     self%age = self%age + inputs%dt_fast_yr
 
@@ -687,7 +687,7 @@ contains
 
     ! local variables
     type(cohort_type), pointer :: cc
-    type(cohort_item), pointer :: it
+    type(cohort_stack_item), pointer :: it
 
     it => self%cohorts()
     do while (associated(it))
@@ -769,7 +769,7 @@ contains
     real :: treeG, fseed, fleaf, froot, fwood, dDBH, BA, dBA
     real :: plantC, plantN, soilC, soilN
     type(cohort_type), pointer :: cc
-    type(cohort_item), pointer :: it
+    type(cohort_stack_item), pointer :: it
     integer :: i
     type(orgpool) :: pool
 
@@ -926,7 +926,7 @@ contains
 
     ! local variables
     type(cohort_type), pointer :: cc
-    type(cohort_item), pointer :: it
+    type(cohort_stack_item), pointer :: it
     integer :: i
     type(orgpool) :: loss_fine,loss_coarse, loss_total
 
@@ -1017,7 +1017,7 @@ contains
     ! Local variables
     integer :: i, init_n_cohorts
     type(cohort_type), pointer :: cc
-    type(cohort_item), pointer :: new
+    type(cohort_stack_item), pointer :: new
 
     ! Initialize lu_index
     self%lu_index = lu_index
@@ -1085,7 +1085,7 @@ contains
 
     ! local variables
     type(cohort_type), pointer :: cc
-    type(cohort_item), pointer :: it !iterator
+    type(cohort_stack_item), pointer :: it !iterator
 
     ! State variables
     self%plabl = orgpool()
@@ -1121,7 +1121,7 @@ contains
 
     ! local variables
     type(cohort_type), pointer :: cc
-    type(cohort_item), pointer :: it !iterator
+    type(cohort_stack_item), pointer :: it !iterator
     real :: dbh ! cache variable
     type(orgpool) :: total_pool
 

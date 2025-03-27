@@ -9,7 +9,7 @@ module md_aggregated_tile_biomee
   use md_interface_in_biomee, only: inputs, MAX_LEVELS
   use md_interface_out_biomee
   use md_cohort
-  use md_cohort_linked_list, only: cohort_item
+  use md_cohort_linked_list, only: cohort_stack_item
 
   implicit none
 
@@ -94,7 +94,7 @@ contains
     real, dimension(self%n_lu(), MAX_LEVELS) :: transfer_water
     real, dimension(self%n_lu()) :: old_lu_fractions, lu_fractions, received, lost
     type(cohort_type), pointer :: cc
-    type(cohort_item), pointer :: it
+    type(cohort_stack_item), pointer :: it
     integer, parameter :: PMICR    = 1
     integer, parameter :: INORG    = 2
     integer, parameter :: PSOIL_FS = 3
