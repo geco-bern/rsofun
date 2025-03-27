@@ -120,8 +120,8 @@ run_pmodel_f_bysite <- function(
     verbose = TRUE
 ){
   
-  # Calculate tc_home (mean maximum temperature of the warmest month)
-  tc_home <- forcing %>%
+  # Calculate tc_home (mean maximum temperature of the warmest month) and append to site_info
+  site_info$tc_home <- forcing %>%
     dplyr::mutate(
       year = format(.data$date, "%Y"), month = format(.data$date, "%m")
     ) %>%
@@ -138,13 +138,13 @@ run_pmodel_f_bysite <- function(
     dplyr::pull(.data$tc_home)
 
   # Validation
-  if (is.na(tc_home) || length(tc_home) == 0) {
+  if (is.na(site_info$tc_home) || length(site_info$tc_home) == 0) {
     if (verbose) {
       warning(
         "Calculated tc_home is NA or missing; setting default to 25C."
       )
     }
-    tc_home <- 25
+    site_info$tc_home <- 25
   }
 
   # predefine variables for CRAN check compliance
