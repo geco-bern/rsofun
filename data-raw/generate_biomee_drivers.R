@@ -87,7 +87,7 @@ params_species <- tibble(
   Vmax              = rep(35.0E-6, 5),
   Vannual           = rep(1.2, 5),
   wet_leaf_dreg     = rep(0.3, 5),
-  m_cond            = rep(7.0, 7.0, 7.0, 7.0, 7.0), #
+  m_cond            = c(7.0, 7.0, 7.0, 7.0, 7.0), #
   alpha_phot        = rep(0.06, 5),
   gamma_L           = rep(0.02, 5),
   gamma_LN          = rep(70.5, 5),
@@ -111,7 +111,7 @@ params_species <- tibble(
   v_seed            = rep(0.1, 5),
   # Mortality parameters
   mortrate_d_c      = c(0.02, 0.01, 0.01, 0.01, 0.01),# canopy tree mortality rate, year-1 (r0mort_c)
-  mortrate_d_u      = rep(4.0, 0.075, 0.075, 0.075, 0.075), # understory tree mortality rate, year-1 (A_sd)
+  mortrate_d_u      = c(4.0, 0.075, 0.075, 0.075, 0.075), # understory tree mortality rate, year-1 (A_sd)
   # Leaf parameters
   LMA               = c(0.02, 0.05, 0.17, 0.11, 0.1), # Leaf mass per unit area
   leafLS            = rep(1, 5),
@@ -137,6 +137,13 @@ params_species <- tibble(
   phiRL             = c(0.7, 3.5, 3.5, 3.5, 3.5),     # Root/Leaf area ratio
   LAI_light         = rep(3.5, 5)                      # Light-limited crown LAI
 )
+params_species <- params_species[2:5, ] # NOTE: current drivers and outputs had not been updated
+                                        #       with the first species (the grass species), leading
+                                        #       to test fail if run with all 5 species. Therefore,
+                                        #       the grass species is removed again here. 
+                                        # TODO: Later one can decide to include the grass species in the 
+                                        #       example driver, but this requires updating outputs and
+                                        #       tests as well.
 
 init_cohort <- tibble(
   init_cohort_species = rep(2, 1),    # indicates sps # 2 - Fagus sylvatica
@@ -244,3 +251,4 @@ biomee_p_model_luluc_drivers$luc_forcing[[1]]  <- array(transitions, c(n_lu, n_l
 save(biomee_p_model_luluc_drivers,
      file ="data/biomee_p_model_luluc_drivers.rda",
      compress = "xz")
+
