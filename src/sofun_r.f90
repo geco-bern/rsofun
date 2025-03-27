@@ -32,6 +32,7 @@ contains
     latitude,                  &     
     altitude,                  &   
     whc,                       &
+    tc_home,                   &
     nt,                        &
     par,                       &
     forcing,                   &
@@ -71,7 +72,8 @@ contains
     real(kind=c_double),  intent(in) :: latitude
     real(kind=c_double),  intent(in) :: altitude
     real(kind=c_double),  intent(in) :: whc
-    integer(kind=c_int),  intent(in) :: nt ! number of time steps
+    real(kind=c_double),  intent(in) :: tc_home
+    integer(kind=c_int),  intent(in) :: nt             ! number of time steps
     real(kind=c_double),  dimension(9), intent(in) :: par  ! free (calibratable) model parameters
     real(kind=c_double),  dimension(nt,12), intent(in) :: forcing  ! array containing all temporally varying forcing data (rows: time steps; columns: 1=air temperature, 2=rainfall, 3=vpd, 4=ppfd, 5=net radiation, 6=sunshine fraction, 7=snowfall, 8=co2, 9=fapar, 10=patm, 11=tmin, 12=tmax) 
     real(kind=c_double),  dimension(nt,19), intent(out) :: output
@@ -120,6 +122,11 @@ contains
     ! GET SOIL PARAMETERS
     !----------------------------------------------------------------
     myinterface%whc_prescr = real( whc )
+    
+    !----------------------------------------------------------------
+    ! GET Home TEMPERATURE (tc_home)
+    !----------------------------------------------------------------
+    myinterface%tc_home = real( tc_home )
     
     !----------------------------------------------------------------
     ! GET CALIBRATABLE MODEL PARAMETERS (so far a small list)
