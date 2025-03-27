@@ -609,8 +609,8 @@ prepare_params_species <- function(params_species){
     "gamma_LN",
     "gamma_SW",
     "gamma_FR",
-    "tc_crit",
-    "tc_crit_on",
+    "tc_crit",     # TODO: this should be renamed tk_crit    since it is in Kelvin (and names in default input modified)
+    "tc_crit_on",  # TODO: this should be renamed tk_crit_on since it is in Kelvin (and names in default input modified)
     "gdd_crit",
     "betaON",
     "betaOFF",
@@ -664,7 +664,7 @@ daily_tile_output <- function(raw_data){
   colnames(df) <- c(
     "year",
     "doy",
-    "Tc",
+    "Tc", # TODO: this should be renamed Tk since it is in Kelvin (and names in default output and tests modified)
     "Prcp",
     "totWs",
     "Trsp",

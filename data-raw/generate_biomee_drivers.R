@@ -93,8 +93,8 @@ params_species <- tibble(
   gamma_LN          = rep(70.5, 5),
   gamma_SW          = c(0.02, 0.08, 0.08, 0.08, 0.08), # Wood Acambium respiration rate (kgC/m2/yr)
   gamma_FR          = rep(12.0, 5),
-  tc_crit           = rep(283.16, 5),
-  tc_crit_on        = rep(280.16, 5),
+  tc_crit           = rep(283.16, 5),# TODO: this should be renamed tk_crit    since it is in Kelvin (and names in default input modified)
+  tc_crit_on        = rep(280.16, 5),# TODO: this should be renamed tk_crit_on since it is in Kelvin (and names in default input modified)
   gdd_crit          = rep(280.0, 5),
   betaON            = rep(0, 5), ######### Unused
   betaOFF           = rep(0, 5), ######### Unused

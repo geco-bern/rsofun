@@ -140,8 +140,8 @@ module md_interface_in_biomee
     real    :: CNseed0
 
     !===== Phenology
-    real    :: tc_crit                            ! K, for turning OFF a growth season
-    real    :: tc_crit_on                         ! K, for turning ON a growth season
+    real    :: tc_crit                            ! K, for turning OFF a growth season  # TODO: this should be renamed tk_crit    since it is in Kelvin (and names in default input modified)
+    real    :: tc_crit_on                         ! K, for turning ON a growth season   # TODO: this should be renamed tk_crit_on since it is in Kelvin (and names in default input modified)
     real    :: gdd_crit                           ! K, critical value of GDD5 for turning ON growth season
     real    :: betaON                             ! Critical soil moisture for PhenoON
     real    :: betaOFF                            ! Critical soil moisture for PhenoOFF
@@ -434,8 +434,8 @@ contains
     self%gamma_LN           = real( params_species(16))
     self%gamma_SW           = real( params_species(17))
     self%gamma_FR           = real( params_species(18))
-    self%tc_crit            = real( params_species(19))
-    self%tc_crit_on         = real( params_species(20))
+    self%tc_crit            = real( params_species(19)) ! TODO: this should be renamed tk_crit    since it is in Kelvin (and names in default input modified)
+    self%tc_crit_on         = real( params_species(20)) ! TODO: this should be renamed tk_crit_on since it is in Kelvin (and names in default input modified)
     self%gdd_crit           = real( params_species(21))
     self%betaON             = real( params_species(22))
     self%betaOFF            = real( params_species(23))

@@ -38,7 +38,7 @@ contains
     ! Local variables
     integer :: doy         ! Day of year
     integer :: dayloop_idx, fastloop_idx, simu_steps
-    real, dimension(ndayyear) :: daily_temp  ! Daily temperatures (average)
+    real, dimension(ndayyear) :: daily_temp  ! Daily temperatures (average) in Kelvin
     real, dimension(size(climate)) :: tair
 
     tair = climate(:)%Tair
@@ -62,7 +62,7 @@ contains
       doy = doy + 1
 
       ! Compute daily air and soil temperature
-      vegn%tc_daily = daily_temp(doy)
+      vegn%tk_daily = daily_temp(doy)
       vegn%tc_soil  = air_to_soil_temp( &
               vegn%thetaS(), &
               daily_temp - kTkelvin, &

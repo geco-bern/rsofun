@@ -116,9 +116,9 @@ module md_vegetation_tile_biomee
     !=====  Averaged quantities for PPA phenology
     ! Note, these fields do not follow the usual annual cycle (january-january)
     ! so they are not reset in zero_diagnostics
-    real    :: tc_daily           = 0.0           ! 24h average temperature (deg C)
+    real    :: tk_daily           = 0.0           ! 24h average temperature (Kelvin)
     real    :: gdd                = 0.0           ! growing degree-days
-    real    :: tc_pheno           = 0.0           ! smoothed canopy air temperature for phenology
+    real    :: tk_pheno           = 0.0           ! smoothed canopy air temperature for phenology (Kelvin)
     real    :: tc_soil            = 0.0           ! Daily soil temperature in (deg C)
 
     !===== Annual C/N allocation to seed and non-seed, kg m-2 yr-1
@@ -708,7 +708,7 @@ contains
 
       self%out_daily_tile(idoy, DAILY_TILE_YEAR       ) = iyears
       self%out_daily_tile(idoy, DAILY_TILE_DOY        ) = idoy
-      self%out_daily_tile(idoy, DAILY_TILE_TC         ) = self%tc_daily
+      self%out_daily_tile(idoy, DAILY_TILE_TK         ) = self%tk_daily
       self%out_daily_tile(idoy, DAILY_TILE_PRCP       ) = self%dailyPrcp
       self%out_daily_tile(idoy, DAILY_TILE_SOIL_W     ) = self%soilwater()
       self%out_daily_tile(idoy, DAILY_TILE_TRSP       ) = self%daily_fluxes%trsp

@@ -17,7 +17,7 @@ module md_interface_out_biomee
 
   integer, public, parameter :: DAILY_TILE_YEAR               =  1
   integer, public, parameter :: DAILY_TILE_DOY                =  2
-  integer, public, parameter :: DAILY_TILE_TC                 =  3
+  integer, public, parameter :: DAILY_TILE_TK                 =  3
   integer, public, parameter :: DAILY_TILE_PRCP               =  4
   integer, public, parameter :: DAILY_TILE_SOIL_W             =  5
   integer, public, parameter :: DAILY_TILE_TRSP               =  6

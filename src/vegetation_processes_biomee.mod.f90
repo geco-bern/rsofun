@@ -390,9 +390,9 @@ contains
 
     do_relayer = .false.
 
-    ! update vegn GDD and tc_pheno
-    vegn%gdd      = vegn%gdd + max(0.0, vegn%tc_daily - 278.15)
-    vegn%tc_pheno = vegn%tc_pheno * 0.8 + vegn%Tc_daily * 0.2
+    ! update vegn GDD and tk_pheno
+    vegn%gdd      = vegn%gdd + max(0.0, vegn%tk_daily - 278.15)
+    vegn%tk_pheno = vegn%tk_pheno * 0.8 + vegn%tk_daily * 0.2
 
     ! ON and OFF of phenology: change the indicator of growing season for deciduous
     it => vegn%cohorts()
@@ -400,7 +400,7 @@ contains
       cc => it%cohort
 
       ! update GDD for each cohort
-      cc%gdd = cc%gdd + max(0.0, vegn%tc_daily - 278.15) ! GDD5
+      cc%gdd = cc%gdd + max(0.0, vegn%tk_daily - 278.15) ! GDD5
 
       associate (sp => cc%sp() )
 
@@ -411,7 +411,7 @@ contains
       TURN_ON_life = (sp%phenotype == 0 .and. &
         cc%status    == LEAF_OFF       .and. &
         cc%gdd        > sp%gdd_crit    .and. &
-        vegn%tc_pheno > sp%tc_crit_on) .and. &
+        vegn%tk_pheno > sp%tc_crit_on) .and. & ! TODO: this should be renamed tk_crit_on since it is in Kelvin (and names in default input modified)
         (sp%lifeform /= 0 .OR.(sp%lifeform == 0 .and. cc%layer == 1))
 
       cc_firstday = .false.
@@ -465,7 +465,7 @@ contains
       TURN_OFF_life = (sp%phenotype  == 0 .and.     &
       cc%status == LEAF_ON .and.     &
       cc%gdd > sp%gdd_crit+600. .and. &
-      vegn%tc_pheno < sp%tc_crit)
+      vegn%tk_pheno < sp%tc_crit) ! TODO: this should be renamed tk_crit    since it is in Kelvin (and names in default input modified)
       end associate
 
       if (TURN_OFF_life) then
