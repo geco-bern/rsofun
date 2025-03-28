@@ -140,17 +140,17 @@ test_that("Snapshot tests run_biomee_f_bysite()", {
                                       cran = cran, ..., tolerance = tolerance, variant = variant, 
                                       trace_env = rlang::caller_env())
   }
-  expect_snapshot_value_fmt(mod_BiomeE_Pmodel_odt_yr1,   tolerance = 0.05)
-  expect_snapshot_value_fmt(mod_BiomeE_Pmodel_odt_yr251, tolerance = 0.05)
-  expect_snapshot_value_fmt(mod_BiomeE_Pmodel_oat,       tolerance = 0.05)
-  expect_snapshot_value_fmt(mod_BiomeE_Pmodel_oac_yr1,   tolerance = 0.05)
-  expect_snapshot_value_fmt(mod_BiomeE_Pmodel_oac_yr2,   tolerance = 0.05)
+  expect_snapshot_value_fmt(mod_BiomeE_Pmodel_odt_yr1,   tolerance = 0.01)
+  expect_snapshot_value_fmt(mod_BiomeE_Pmodel_odt_yr251, tolerance = 0.01)
+  expect_snapshot_value_fmt(mod_BiomeE_Pmodel_oat,       tolerance = 0.01)
+  expect_snapshot_value_fmt(mod_BiomeE_Pmodel_oac_yr1,   tolerance = 0.01)
+  expect_snapshot_value_fmt(mod_BiomeE_Pmodel_oac_yr2,   tolerance = 0.01)
   expect_snapshot_value_fmt(mod_BiomeE_Pmodel_oac_yr251, tolerance = 0.085) # For Nupt on Windows
   
-  expect_snapshot_value_fmt(mod_BiomeE_gsLeun_odt_yr1,   tolerance = 0.05)
-  expect_snapshot_value_fmt(mod_BiomeE_gsLeun_odt_yr251, tolerance = 0.05)
-  expect_snapshot_value_fmt(mod_BiomeE_gsLeun_oat,       tolerance = 0.05)
-  expect_snapshot_value_fmt(mod_BiomeE_gsLeun_oac_yr1,   tolerance = 0.05)
-  expect_snapshot_value_fmt(mod_BiomeE_gsLeun_oac_yr2,   tolerance = 0.05)
-  expect_snapshot_value_fmt(mod_BiomeE_gsLeun_oac_yr251, tolerance = 0.05)
+  expect_snapshot_value_fmt(mod_BiomeE_gsLeun_odt_yr1,   tolerance = 0.01)
+  expect_snapshot_value_fmt(mod_BiomeE_gsLeun_odt_yr251, tolerance = 0.01)
+  expect_snapshot_value_fmt(mod_BiomeE_gsLeun_oat,       tolerance = 0.01)
+  expect_snapshot_value_fmt(mod_BiomeE_gsLeun_oac_yr1,   tolerance = 0.01)
+  expect_snapshot_value_fmt(mod_BiomeE_gsLeun_oac_yr2,   tolerance = 0.01)
+  expect_snapshot_value_fmt(mod_BiomeE_gsLeun_oac_yr251, tolerance = 0.01)
 })
