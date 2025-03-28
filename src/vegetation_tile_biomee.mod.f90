@@ -438,7 +438,7 @@ contains
     class(vegn_tile_type), intent(inout) :: self
     type(cohort_stack_item), pointer :: new_item
 
-    new_item => create_cohort()
+    new_item => create_item()
     call self%cohort_list%insert_item(new_item)
 
   end function new_cohort

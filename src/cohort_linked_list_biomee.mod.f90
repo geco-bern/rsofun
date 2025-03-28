@@ -15,7 +15,7 @@ module md_cohort_linked_list
   public :: cohort_stack_item, cohort_stack
 
   !=============== Public procedures ===========================================================
-  public :: create_cohort
+  public :: create_item
 
   type, abstract :: linked_list_abstract_item
     ! Abstract type at the heart of the linked list.
@@ -88,7 +88,7 @@ contains
     ! Local variable
     type(cohort_stack_item), pointer :: ptr
 
-    ptr => create_cohort()
+    ptr => create_item()
     ptr%cohort = self%cohort
     if (same_uid) then
       ptr%uid_internal = self%uid_internal
@@ -145,14 +145,14 @@ contains
 
   end function
 
-  pure function create_cohort() result(new_cohort)
+  pure function create_item() result(new_itm)
     ! Create a new cohort
-    type(cohort_stack_item), pointer :: new_cohort
+    type(cohort_stack_item), pointer :: new_itm
 
-    new_cohort => null()
-    allocate(new_cohort)
+    new_itm => null()
+    allocate(new_itm)
 
-  end function create_cohort
+  end function create_item
 
   pure subroutine destroy_all(self)
     !////////////////////////////////////////////////////////////////
