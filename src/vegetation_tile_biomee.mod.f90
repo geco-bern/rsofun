@@ -301,9 +301,9 @@ contains
     ! Local variable
     type(cohort_stack_item), pointer :: new
 
-    new => item%clone()
+    new => item%clone(same_uid = .false.)   ! initializes new%uid_internal as 0
     new%cohort%density = item%cohort%density * fraction
-    call self%cohort_list%insert_item(new)
+    call self%cohort_list%insert_item(new)  ! upon insertion uid is created if uid_internal == 0
     item%cohort%density = item%cohort%density - new%cohort%density
   end subroutine split_cohort
 
@@ -368,7 +368,7 @@ contains
     elseif (frac >= 1.0) then
       next_item => self%kill_cohort(item)
     else
-      killed => item%clone(.true.)
+      killed => item%clone(same_uid = .true.)   ! uses same uid for killed
       killed%cohort%density = item%cohort%density * frac
       killed%cohort%deathrate = frac
       call self%killed_fraction_list%insert_item(killed)

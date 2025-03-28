@@ -31,7 +31,7 @@ module md_cohort_linked_list
 
   type, extends(linked_list_abstract_item) :: cohort_stack_item
     ! Wrapper around `cohort_type`, adding a unique ID (uid) and a helper method for cloning cohorts.
-    integer, private :: uid_internal = 0 ! Unique id. It is automatically set when inserted in a linked_list if 0.
+    integer, private :: uid_internal = 0 ! Unique id. If 0, it is automatically created upon insertion into a linked_list.
     type(cohort_type) :: cohort
 
     contains
@@ -76,27 +76,24 @@ contains
     res = self%uid_internal
   end function uid
 
-  pure function clone(self, keep_uid) result(ptr)
+  pure function clone(self, same_uid) result(ptr)
     !////////////////////////////////////////////////////////////////
     ! Clone this item.
-    ! If keep_uid is true, the uid is also copied (default: false)
+    ! If same_uid is true, the uid is copied, if not a new uid is created
     ! Note: to create a new cohort from scratch, use new_cohort() instead.
     !---------------------------------------------------------------
     class(cohort_stack_item), intent(in) :: self
-    logical, optional, intent(in) :: keep_uid
-    logical :: keep_uid_opt
+    logical, intent(in) :: same_uid
 
     ! Local variable
     type(cohort_stack_item), pointer :: ptr
 
-    keep_uid_opt = .false.
-
-    if (present(keep_uid)) keep_uid_opt = keep_uid
-
     ptr => create_cohort()
     ptr%cohort = self%cohort
-    if (keep_uid_opt) then
+    if (same_uid) then
       ptr%uid_internal = self%uid_internal
+    else
+      ptr%uid_internal = 0 ! Will be created when inserted into a stack
     end if
 
   end function clone

@@ -52,7 +52,7 @@ contains
          totWsup(i) = 0.0 ! Potential water uptake per layer by all cohorts
          it => vegn%cohorts()
          do while (associated(it))
-             cc => it%cohort
+            cc => it%cohort
             associate ( sp => cc%sp() )
             cc%WupL(i) = cc%rootareaL(i)*sp%Kw_root*dpsiSR(i) * (inputs%step_seconds*h2o_molmass*1e-3) ! kg H2O tree-1 step-1
             totWsup(i) = totWsup(i) + cc%WupL(i) * cc%density ! water uptake per layer by all cohorts
@@ -62,7 +62,7 @@ contains
          ! adjust cc%WupL(i) according to available water
          it => vegn%cohorts()
          do while (associated(it))
-             cc => it%cohort
+            cc => it%cohort
             if(totWsup(i)>0.0) &
                 fWup(i) = Min(0.25 * freewater(i) / totWsup(i),1.0)! ratio of available soil water
             cc%WupL(i) = fWup(i) * cc%WupL(i) ! kg tree-1 step-1
