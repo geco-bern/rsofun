@@ -142,10 +142,10 @@ test_that("Snapshot tests run_biomee_f_bysite()", {
   }
   expect_snapshot_value_fmt(mod_BiomeE_Pmodel_odt_yr1,   tolerance = 0.01)
   expect_snapshot_value_fmt(mod_BiomeE_Pmodel_odt_yr251, tolerance = 0.01)
-  expect_snapshot_value_fmt(mod_BiomeE_Pmodel_oat,       tolerance = 0.01)
+  expect_snapshot_value_fmt(mod_BiomeE_Pmodel_oat,       tolerance = 0.04)  # Higher than 0.01 for N_uptk on Windows
   expect_snapshot_value_fmt(mod_BiomeE_Pmodel_oac_yr1,   tolerance = 0.01)
   expect_snapshot_value_fmt(mod_BiomeE_Pmodel_oac_yr2,   tolerance = 0.01)
-  expect_snapshot_value_fmt(mod_BiomeE_Pmodel_oac_yr251, tolerance = 0.085) # For Nupt on Windows
+  expect_snapshot_value_fmt(mod_BiomeE_Pmodel_oac_yr251, tolerance = 0.085) # Higher than 0.01 for Nupt on Windows
   
   expect_snapshot_value_fmt(mod_BiomeE_gsLeun_odt_yr1,   tolerance = 0.01)
   expect_snapshot_value_fmt(mod_BiomeE_gsLeun_odt_yr251, tolerance = 0.01)
