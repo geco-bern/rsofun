@@ -44,8 +44,8 @@ module md_cohort_linked_list
   type :: cohort_stack
     ! The cohort list itself, containing instances of 'cohort_item'.
     ! It defines a number of important methods for modifying the list (adding and removing items, sorting, ...)
-    integer, private :: current_uid = 0
-    type(cohort_item), private, pointer :: head_internal => null() ! Pointer to head of linked list. Important to nullify here!
+    integer, private :: last_created_uid = 0
+    type(cohort_stack_item), private, pointer :: head_internal => null() ! Pointer to head of linked list. Important to nullify here!
 
   contains
 
@@ -56,7 +56,7 @@ module md_cohort_linked_list
     procedure destroy_item
     procedure insert_item
     procedure sort
-    procedure, private :: next_uid
+    procedure, private :: create_uid
 
   end type cohort_stack
 
@@ -319,13 +319,13 @@ contains
     class(cohort_stack), intent(inout) :: self
     type(cohort_item), pointer, intent(in) :: new_item
 
-    ! If the uid is not set, we set it using next_uid() (which gives us a brand new, UID)
-    if (new_item%uid_internal == 0) new_item%uid_internal = self%next_uid()
+    ! If the uid is not set, we create and set a new one with create_uid()
+    if (new_item%uid_internal == 0) new_item%uid_internal = self%create_uid()
     new_item%next_ptr => self%head_internal
     self%head_internal => new_item
   end subroutine insert_item
 
-  function next_uid(self) result(res)
+  function create_uid(self) result(res)
     !////////////////////////////////////////////////////////////////
     ! Get the next unique ID
     ! Private
@@ -333,9 +333,9 @@ contains
     class(cohort_stack), intent(inout) :: self
     integer :: res
 
-    self%current_uid = self%current_uid + 1
-    res = self%current_uid
-  end function next_uid
+    self%last_created_uid = self%last_created_uid + 1
+    res = self%last_created_uid
+  end function create_uid
 
   !----------------------------------------------------------------
   ! cohort_stack_item
