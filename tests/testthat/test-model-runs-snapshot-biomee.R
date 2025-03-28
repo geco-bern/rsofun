@@ -138,7 +138,7 @@ test_that("Snapshot tests run_biomee_f_bysite()", {
                                ..., tolerance = tolerance)
     testthat:::expect_snapshot_helper(lab, x, save = save, load = load, 
                                       cran = cran, ..., tolerance = tolerance, variant = variant, 
-                                      trace_env = caller_env())
+                                      trace_env = rlang::caller_env())
   }
   expect_snapshot_value_fmt(mod_BiomeE_Pmodel_odt_yr1,   tolerance = 0.05)
   expect_snapshot_value_fmt(mod_BiomeE_Pmodel_odt_yr251, tolerance = 0.05)
