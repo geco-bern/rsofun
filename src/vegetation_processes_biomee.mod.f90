@@ -755,7 +755,7 @@ contains
     ! We build new cohorts for seedlings
     do k = 1, nPFTs
 
-      new => vegn%new_cohort()
+      new => vegn%create_cohort()
       cc => new%cohort
 
       ! update child cohort parameters

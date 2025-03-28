@@ -185,7 +185,7 @@ module md_vegetation_tile_biomee
     !========= Cohort management
 
     procedure n_cohorts
-    procedure new_cohort
+    procedure create_cohort
     procedure sort_cohorts_by_height
     procedure sort_cohorts_by_uid
     procedure shut_down
@@ -431,7 +431,7 @@ contains
 
   end subroutine sort_cohorts_by_uid
 
-  function new_cohort(self) result(new_item)
+  function create_cohort(self) result(new_item)
     !////////////////////////////////////////////////////////////////
     ! Create and insert a new cohort at the head of the list and return its pointer.
     !---------------------------------------------------------------
@@ -441,7 +441,7 @@ contains
     new_item => create_item()
     call self%cohort_list%insert_item(new_item)
 
-  end function new_cohort
+  end function create_cohort
 
   function kill_cohort(self, item) result(next_item)
     !////////////////////////////////////////////////////////////////
@@ -1034,7 +1034,7 @@ contains
         ! If the cohort's registered lu_index is negative, it belongs to all LU types (except urban)
         if (inputs%init_cohort(i)%lu_index > 0 .and. self%lu_index /= i) cycle
 
-        new => self%new_cohort()
+        new => self%create_cohort()
         cc => new%cohort
         cc%species   = inputs%init_cohort(i)%init_cohort_species
         cc%density   = inputs%init_cohort(i)%init_cohort_density ! trees/m2

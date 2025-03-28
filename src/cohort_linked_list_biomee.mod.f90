@@ -80,7 +80,7 @@ contains
     !////////////////////////////////////////////////////////////////
     ! Clone this item.
     ! If same_uid is true, the uid is copied, if not a new uid is created
-    ! Note: to create a new cohort from scratch, use new_cohort() instead.
+    ! Note: to create a new cohort from scratch, use create_cohort() instead.
     !---------------------------------------------------------------
     class(cohort_stack_item), intent(in) :: self
     logical, intent(in) :: same_uid
