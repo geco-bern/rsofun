@@ -288,7 +288,7 @@ contains
       self%method_mortality = "bal"
     end select
 
-    self%steering_params%daily_reporting       = int(params_siml(11)) /= 0
+    self%steering_params%do_daily_reporting = int(params_siml(11)) /= 0
 
   end subroutine populate_params_siml
 

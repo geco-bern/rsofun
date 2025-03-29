@@ -67,8 +67,10 @@ module md_params_core
     logical :: spinup             ! is true during spinup
     logical :: init     = .true.  ! is true in first simulation year
     logical :: finalize = .false. ! is true in the last simulation year
-    logical :: daily_reporting    ! Whether daily reporting should be done
-    logical :: cohort_reporting   ! Whether cohort level reporting should be done
+    logical :: daily_reporting    ! whether daily reporting should be done in the current year
+    integer :: daily_report_idx   ! start_idx for output_annual_cohorts of current year
+    logical :: cohort_reporting   ! whether cohort level reporting should be done in the current year
+    integer :: cohort_report_idx  ! start_idx for output_daily_tile of current year
     ! Note: climateyear_idx == forcingyear_idx during transient phase. During spinup however, climateyear cycles, while forcing year is constant (= 1).
   end type outtype_steering
 
@@ -80,7 +82,7 @@ module md_params_core
     integer :: recycle          ! length of standard recycling period
     logical :: do_spinup        ! whether this simulation does spinup
     integer :: runyears         ! number of years of entire simulation (spinup+transient)
-    logical :: daily_reporting  ! Whether daily reporting should be done
+    logical :: do_daily_reporting ! whether this simulation reports daily values
 
   end type steering_parameters
 
@@ -137,10 +139,15 @@ contains
       curr_year_steering_state%daily_reporting  = .false.
       curr_year_steering_state%cohort_reporting = .false.
     else
-      curr_year_steering_state%daily_reporting  = steering_params%daily_reporting
+      curr_year_steering_state%daily_reporting  = steering_params%do_daily_reporting
       curr_year_steering_state%cohort_reporting = .true.
     end if
 
+    ! Indices for daily and cohort output
+    ! Spinup years are not stored, which is why we offset by - spinupyears
+    curr_year_steering_state%daily_report_idx = (curr_year_steering_state%year - steering_params%spinupyears - 1) * ndayyear + 1
+    curr_year_steering_state%cohort_report_idx = curr_year_steering_state%year - steering_params%spinupyears
+        
     if (year==1) then
       curr_year_steering_state%init = .true.
     else

@@ -165,19 +165,18 @@ contains
       ! Fill outputs
       ! We conditionally pass daily and cohorts arrays
       !----------------------------------------------------------------
-      call aggregat%populate_outarrays(output_annual_aggregated(steering_state%year,:), &
+      call aggregat%populate_outarrays( &
+          output_annual_aggregated(steering_state%year,:), &
           output_annual_tile(steering_state%year, :, :))
 
-      idx =  steering_state%year - inputs%params_siml%steering_params%spinupyears
-      if (steering_state%cohort_reporting) call aggregat%populate_outcohorts(output_annual_cohorts(:, idx,:, :))
-
+      if (steering_state%cohort_reporting) then
+        idx = steering_state%cohort_report_idx
+        call aggregat%populate_outcohorts(output_annual_cohorts(:, idx, :, :))
+      end if
       if (steering_state%daily_reporting) then
-        ! Indices for daily output
-        ! Spinup years are not stored, which is why we offset by -spinupyears
-        idx_daily_start = (steering_state%year - inputs%params_siml%steering_params%spinupyears - 1) * ndayyear + 1
+        idx_daily_start = steering_state%daily_report_idx
         idx_daily_end   = idx_daily_start + ndayyear - 1
         call aggregat%populate_outdaily(output_daily_tile(idx_daily_start:idx_daily_end, :, :))
-
       end if
 
     end do yearloop
