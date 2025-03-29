@@ -88,7 +88,7 @@ module md_params_core
 
 contains
 
-  pure function get_steering( year, steering_params ) result( curr_year_steering_state )
+  pure function get_steering( year, steering_input ) result( curr_year_steering_state )
     !////////////////////////////////////////////////////////////////
     ! Gets variables used for steering simulation for each
     ! simulation year (setting booleans for opening files, doing
@@ -97,7 +97,7 @@ contains
 
     ! arguments
     integer, intent(in) :: year ! simulation year, starts counting from 1, starting at the beginning of spinup
-    type(steering_parameters), intent(in) :: steering_params
+    type(steering_parameters), intent(in) :: steering_input
 
     ! function return variable
     type(outtype_steering) :: curr_year_steering_state
@@ -107,28 +107,28 @@ contains
 
     curr_year_steering_state%year = year
 
-    if (steering_params%do_spinup) then
-      if (year <= steering_params%spinupyears) then
+    if (steering_input%do_spinup) then
+      if (year <= steering_input%spinupyears) then
         ! during spinup
-        cycleyear = get_cycleyear( year, steering_params%spinupyears, steering_params%recycle )
+        cycleyear = get_cycleyear( year, steering_input%spinupyears, steering_input%recycle )
 
         curr_year_steering_state%spinup          = .true.
-        curr_year_steering_state%climateyear     = cycleyear + steering_params%firstyeartrend - 1
+        curr_year_steering_state%climateyear     = cycleyear + steering_input%firstyeartrend - 1
         curr_year_steering_state%climateyear_idx = cycleyear
-        curr_year_steering_state%forcingyear     = steering_params%firstyeartrend
+        curr_year_steering_state%forcingyear     = steering_input%firstyeartrend
         curr_year_steering_state%forcingyear_idx = 1
       else
         ! during transient simulation
         curr_year_steering_state%spinup          = .false.
-        curr_year_steering_state%climateyear_idx = year - steering_params%spinupyears
-        curr_year_steering_state%climateyear     = curr_year_steering_state%climateyear_idx + steering_params%firstyeartrend - 1
+        curr_year_steering_state%climateyear_idx = year - steering_input%spinupyears
+        curr_year_steering_state%climateyear     = curr_year_steering_state%climateyear_idx + steering_input%firstyeartrend - 1
         curr_year_steering_state%forcingyear     = curr_year_steering_state%climateyear
         curr_year_steering_state%forcingyear_idx = curr_year_steering_state%climateyear_idx
       endif
-      curr_year_steering_state%outyear           = year + steering_params%firstyeartrend - steering_params%spinupyears - 1
+      curr_year_steering_state%outyear           = year + steering_input%firstyeartrend - steering_input%spinupyears - 1
     else
       curr_year_steering_state%spinup          = .false.
-      curr_year_steering_state%climateyear     = year + steering_params%firstyeartrend - 1
+      curr_year_steering_state%climateyear     = year + steering_input%firstyeartrend - 1
       curr_year_steering_state%climateyear_idx = year
       curr_year_steering_state%forcingyear     = curr_year_steering_state%climateyear
       curr_year_steering_state%forcingyear_idx = curr_year_steering_state%climateyear_idx
@@ -139,14 +139,14 @@ contains
       curr_year_steering_state%daily_reporting  = .false.
       curr_year_steering_state%cohort_reporting = .false.
     else
-      curr_year_steering_state%daily_reporting  = steering_params%do_daily_reporting
+      curr_year_steering_state%daily_reporting  = steering_input%do_daily_reporting
       curr_year_steering_state%cohort_reporting = .true.
     end if
 
     ! Indices for daily and cohort output
     ! Spinup years are not stored, which is why we offset by - spinupyears
-    curr_year_steering_state%daily_report_idx = (curr_year_steering_state%year - steering_params%spinupyears - 1) * ndayyear + 1
-    curr_year_steering_state%cohort_report_idx = curr_year_steering_state%year - steering_params%spinupyears
+    curr_year_steering_state%daily_report_idx = (curr_year_steering_state%year - steering_input%spinupyears - 1) * ndayyear + 1
+    curr_year_steering_state%cohort_report_idx = curr_year_steering_state%year - steering_input%spinupyears
         
     if (year==1) then
       curr_year_steering_state%init = .true.
@@ -154,7 +154,7 @@ contains
       curr_year_steering_state%init = .false.
     endif
 
-    if (year==steering_params%runyears) then
+    if (year==steering_input%runyears) then
       curr_year_steering_state%finalize = .true.
     else
       curr_year_steering_state%finalize = .false.

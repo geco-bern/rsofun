@@ -118,11 +118,11 @@ contains
     !----------------------------------------------------------------
     ! Run simulation
     !----------------------------------------------------------------
-    yearloop: do yr=1, inputs%params_siml%steering_params%runyears
+    yearloop: do yr=1, inputs%params_siml%steering_input%runyears
       !----------------------------------------------------------------
       ! Define simulations "steering" variables (indices for forcing, but also output flags)
       !----------------------------------------------------------------
-      steering_state = get_steering( yr, inputs%params_siml%steering_params )
+      steering_state = get_steering( yr, inputs%params_siml%steering_input )
 
       !----------------------------------------------------------------
       ! Get external (environmental) forcing (for biomee, co2 is in inputs%climate)
