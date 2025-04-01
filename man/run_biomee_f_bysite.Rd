@@ -54,7 +54,7 @@ Model output is provided as a list, with elements:
     \describe{
       \item{year}{Year of the simulation.}
       \item{doy}{Day of the year.}
-      \item{Tc}{Air temperature (Kelvin).}
+      \item{Tk}{Air temperature (Kelvin).}
       \item{Prcp}{Precipitation (mm m\eqn{^{-2}}).}
       \item{totWs}{Soil water content in root zone (kg m\eqn{^{-2}}).}
       \item{Trsp}{Transpiration (mm m\eqn{^{2-}}).}
