@@ -267,8 +267,8 @@
 #'       \item{gamma_LN}{Leaf respiration coefficient per unit N.}
 #'       \item{gamma_SW}{Sapwood respiration rate, in kg C m\eqn{^{-2}} year\eqn{^{-1}}.}
 #'       \item{gamma_FR}{Fine root respiration rate, kg C kg C\eqn{^{-1}} year\eqn{^{-1}}.}
-#'       \item{tc_crit}{Critical temperature triggerng offset of phenology, in Kelvin.}
-#'       \item{tc_crit_on}{Critical temperature triggerng onset of phenology, in Kelvin.}
+#'       \item{tk_crit}{Critical temperature triggerng offset of phenology, in Kelvin.}
+#'       \item{tk_crit_on}{Critical temperature triggerng onset of phenology, in Kelvin.}
 #'       \item{gdd_crit}{Critical value of GDD5 for turning ON growth season.}
 #'       \item{betaON}{Critical soil moisture for phenology onset.}
 #'       \item{betaOFF}{Critical soil moisture for phenology offset.}

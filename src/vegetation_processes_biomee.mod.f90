@@ -411,7 +411,7 @@ contains
       TURN_ON_life = (sp%phenotype == 0 .and. &
         cc%status    == LEAF_OFF       .and. &
         cc%gdd        > sp%gdd_crit    .and. &
-        vegn%tk_pheno > sp%tc_crit_on) .and. & ! TODO: this should be renamed tk_crit_on since it is in Kelvin (and names in default input modified)
+        vegn%tk_pheno > sp%tk_crit_on) .and. &
         (sp%lifeform /= 0 .OR.(sp%lifeform == 0 .and. cc%layer == 1))
 
       cc_firstday = .false.
@@ -465,7 +465,7 @@ contains
       TURN_OFF_life = (sp%phenotype  == 0 .and.     &
       cc%status == LEAF_ON .and.     &
       cc%gdd > sp%gdd_crit+600. .and. &
-      vegn%tk_pheno < sp%tc_crit) ! TODO: this should be renamed tk_crit    since it is in Kelvin (and names in default input modified)
+      vegn%tk_pheno < sp%tk_crit)
       end associate
 
       if (TURN_OFF_life) then
