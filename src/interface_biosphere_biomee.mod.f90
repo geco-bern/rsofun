@@ -152,6 +152,7 @@ module md_interface_biomee
     integer                                               :: steps_per_day
     real                                                  :: dt_fast_yr
     real                                                  :: step_seconds
+    real                                                  :: tc_home 
   end type interfacetype_biosphere
 
   ! Data structure containing the parameters and forcing data.

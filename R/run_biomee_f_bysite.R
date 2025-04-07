@@ -261,6 +261,41 @@ run_biomee_f_bysite <- function(
   # base state, always execute the call
   continue <- TRUE
 
+  # Calculate tc_home: mean maximum temperature of the warmest month
+  if ('tc_home' %in% names(site_info)) {
+    stop("Unexpectedly received site_info$tc_home; it should be calculated internally.")
+  }
+
+  # Ensure date column is in Date format
+  forcing$date <- as.Date(forcing$date)
+
+  # Calculate tc_home from forcing data
+  site_info$tc_home <- forcing %>%
+    dplyr::mutate(
+      year = lubridate::year(date),
+      month = lubridate::month(date)
+    ) %>%
+    dplyr::group_by(year, month) %>%
+    dplyr::summarise(
+      monthly_tmax = max(temp, na.rm = TRUE), 
+      .groups = "drop"
+    ) %>%
+    dplyr::group_by(year) %>%
+    dplyr::summarise(
+      warmest_month_tmax = max(monthly_tmax, na.rm = TRUE),
+      .groups = "drop"
+    ) %>%
+    dplyr::summarise(
+      tc_home = mean(warmest_month_tmax, na.rm = TRUE)
+    ) %>%
+    dplyr::pull(tc_home)
+
+  # Validate calculation
+  if (is.na(site_info$tc_home) || length(site_info$tc_home) == 0) {
+    warning("Calculated tc_home is NA or missing; defaulting to 25°C.")
+    site_info$tc_home <- 25
+  }
+
   # record number of years in forcing data
   # frame to use as default values (unless provided othrwise as params_siml$nyeartrend)
   ndayyear <- 365
@@ -436,6 +471,7 @@ run_biomee_f_bysite <- function(
       longitude             = as.numeric(site_info$lon),
       latitude              = as.numeric(site_info$lat),
       altitude              = as.numeric(site_info$elv),
+      tc_home               = as.numeric(site_info$tc_home),
       
       ## Tile-level parameters
       soiltype     = as.integer(params_tile$soiltype),

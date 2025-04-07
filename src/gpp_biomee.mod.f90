@@ -37,7 +37,7 @@ module md_gpp_biomee
 
 contains
 
-  subroutine gpp( forcing, vegn, init )
+  subroutine gpp( forcing, vegn, init, tc_home)
     !//////////////////////////////////////////////////////////////////////
     ! GPP
     ! Calculates light availability and photosynthesis for each cohort 
@@ -59,7 +59,7 @@ contains
     type(climate_type), intent(in):: forcing
     type(vegn_tile_type), intent(inout) :: vegn
     logical, intent(in) :: init   ! is true on the very first simulation day (first subroutine call of each gridcell)
-
+    real, intent(in) :: tc_home
     ! local variables used for BiomeE-Allocation part
     type(cohort_type), pointer :: cc
     integer, parameter :: nlayers_max = 9                  ! maximum number of canopy layers to be considered 
@@ -264,7 +264,7 @@ contains
                                 tc             = temp_memory, &
                                 vpd            = vpd_memory, &
                                 patm           = patm_memory, &
-                                tc_home        = 25.0, &
+                                tc_home        = tc_home, &
                                 c4             = .false., &
                                 method_optci   = "prentice14", &
                                 method_jmaxlim = "wang17" &

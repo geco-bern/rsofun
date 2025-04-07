@@ -128,7 +128,8 @@ void F77_NAME(biomee_f)(
     int    *code_method_mortality,                   
     double *longitude,                  
     double *latitude,                  
-    double *altitude,                  
+    double *altitude,
+    double *tc_home,                  
     int    *soiltype,                   
     double *FLDCAP,                   
     double *WILTPT,                   
@@ -214,7 +215,8 @@ extern SEXP biomee_f_C(
     SEXP code_method_mortality,                
     SEXP longitude,                  
     SEXP latitude,                  
-    SEXP altitude,                 
+    SEXP altitude,
+    SEXP tc_home,                 
     SEXP soiltype,
     SEXP FLDCAP,
     SEXP WILTPT,
@@ -307,7 +309,8 @@ extern SEXP biomee_f_C(
         INTEGER(code_method_mortality),              
         REAL(longitude),                  
         REAL(latitude),                  
-        REAL(altitude),                  
+        REAL(altitude),
+        REAL(tc_home),                  
         INTEGER(soiltype),                   
         REAL(FLDCAP),                   
         REAL(WILTPT),                   
@@ -428,7 +431,7 @@ extern SEXP biomee_f_C(
 /////////////////////////////////////////////////////////////
 static const R_CallMethodDef CallEntries[] = {
   {"pmodel_f_C",   (DL_FUNC) &pmodel_f_C,   24},  // Specify number of arguments to C wrapper as the last number here
-  {"biomee_f_C",   (DL_FUNC) &biomee_f_C,   46},  // Number of arguments of the C wrapper function for biomee (the SEXP variables, not the output)
+  {"biomee_f_C",   (DL_FUNC) &biomee_f_C,   47},  // Number of arguments of the C wrapper function for biomee (the SEXP variables, not the output)
   {NULL,         NULL,                0}
 };
 
