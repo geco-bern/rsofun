@@ -60,6 +60,7 @@ contains
     type(vegn_tile_type), intent(inout) :: vegn
     logical, intent(in) :: init   ! is true on the very first simulation day (first subroutine call of each gridcell)
     real, intent(in) :: tc_home
+
     ! local variables used for BiomeE-Allocation part
     type(cohort_type), pointer :: cc
     integer, parameter :: nlayers_max = 9                  ! maximum number of canopy layers to be considered 
