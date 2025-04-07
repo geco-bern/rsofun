@@ -292,7 +292,7 @@ run_biomee_f_bysite <- function(
 
   # Validate calculation
   if (is.na(site_info$tc_home) || length(site_info$tc_home) == 0) {
-    warning("Calculated tc_home is NA or missing; defaulting to 25°C.")
+    warning("Calculated tc_home is NA or missing; defaulting to 25C.")
     site_info$tc_home <- 25
   }
 
