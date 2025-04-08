@@ -261,33 +261,34 @@ run_biomee_f_bysite <- function(
   # base state, always execute the call
   continue <- TRUE
 
-  # Calculate tc_home: mean maximum temperature of the warmest month
+  # Default value for tc_home
   if ('tc_home' %in% names(site_info)) {
     stop("Unexpectedly received site_info$tc_home; it should be calculated internally.")
   }
 
-  # Ensure date column is in Date format
-  forcing$date <- as.Date(forcing$date)
+  # Compute daily tmax and join back to forcing
+  daily_tmax <- forcing %>%
+    dplyr::group_by(date) %>%
+    dplyr::summarise(tmax = max(.data$temp, na.rm = TRUE), .groups = "drop")
 
-  # Calculate tc_home from forcing data
+  forcing <- forcing %>%
+    dplyr::left_join(daily_tmax, by = "date")
+
+  # Calculate tc_home (mean maximum temperature of the warmest month)
   site_info$tc_home <- forcing %>%
     dplyr::mutate(
-      year = lubridate::year(date),
-      month = lubridate::month(date)
+      year = format(.data$date, "%Y"), month = format(.data$date, "%m")
     ) %>%
     dplyr::group_by(.data$year, .data$month) %>%
     dplyr::summarise(
-      monthly_tmax = max(.data$temp, na.rm = TRUE),
-      .groups = "drop"
+      mean_tmax_month = mean(.data$tmax, na.rm = TRUE), .groups = "drop"
     ) %>%
     dplyr::group_by(.data$year) %>%
     dplyr::summarise(
-      warmest_month_tmax = max(.data$monthly_tmax, na.rm = TRUE),
+      warmest_month_tmax = max(.data$mean_tmax_month, na.rm = TRUE),
       .groups = "drop"
     ) %>%
-    dplyr::summarise(
-      tc_home = mean(.data$warmest_month_tmax, na.rm = TRUE)
-    ) %>%
+    dplyr::summarise(tc_home = mean(.data$warmest_month_tmax, na.rm = TRUE)) %>%
     dplyr::pull(.data$tc_home)
 
   # Validate calculation
