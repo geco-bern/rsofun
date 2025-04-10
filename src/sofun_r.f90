@@ -236,7 +236,8 @@ contains
     code_method_mortality,        &             
     longitude,                    &      
     latitude,                     &     
-    altitude,                     &             
+    altitude,                     &   
+    tc_home,                      &          
     soiltype,                     &      
     FLDCAP,                       &    
     WILTPT,                       &    
@@ -339,6 +340,7 @@ contains
     real(kind=c_double),  intent(in) :: longitude
     real(kind=c_double),  intent(in) :: latitude
     real(kind=c_double),  intent(in) :: altitude
+    real(kind=c_double),  intent(in) :: tc_home
 
     ! Tile parameters
     integer(kind=c_int), intent(in) :: soiltype
@@ -435,6 +437,11 @@ contains
     integer :: idx_daily_start
     integer :: idx_daily_end
 
+    !----------------------------------------------------------------
+    ! GET Home TEMPERATURE (tc_home)
+    !----------------------------------------------------------------
+    myinterface%tc_home = real( tc_home )
+    
     !----------------------------------------------------------------
     ! POPULATE MYINTERFACE WITH ARGUMENTS FROM R
     !----------------------------------------------------------------

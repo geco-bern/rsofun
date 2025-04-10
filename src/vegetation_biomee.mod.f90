@@ -25,7 +25,7 @@ contains
   !============= Carbon, nitrogen and water budget    =====================
   !========================================================================
 
-  subroutine vegn_CNW_budget( vegn, forcing, init, tsoil )
+  subroutine vegn_CNW_budget( vegn, forcing, init, tsoil, tc_home )
     !////////////////////////////////////////////////////////////////
     ! hourly carbon, nitrogen, and water dynamics, Weng 2016-11-25
     ! include Nitrogen uptake and carbon budget
@@ -39,13 +39,14 @@ contains
     ! is true on the very first simulation step (first subroutine call of each gridcell)
     logical, intent(in) :: init
     real, intent(in) :: tsoil  ! Soil temperature in K
+    real, intent(in) :: tc_home
 
     ! local variables
     type(cohort_type), pointer :: cc  
     integer:: i
 
     ! Photosynsthesis
-    call gpp( forcing, vegn, init )
+    call gpp( forcing, vegn, init, tc_home )
     
     ! Update soil water
     call SoilWaterDynamicsLayer( forcing, vegn )
