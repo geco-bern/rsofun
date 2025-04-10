@@ -5,6 +5,12 @@ available forcing data
 * Breaking change: biomee drivers' `init_cohort$init_n_cohorts` column has been phased out and must not be present in  
 drivers to protect against data corruption.
 
+# rsofun v5.0.1
+
+* This model version behaves exactly as the version before.
+* Update was necessary to include description of scripts and data used for the model documentation paper into archive on Zenodo
+
+
 # rsofun v5.0.0
 
 * new BiomeE forcing data matching that of P-model
