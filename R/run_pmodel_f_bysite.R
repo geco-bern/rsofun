@@ -156,35 +156,6 @@ run_pmodel_f_bysite <- function(
     as.integer() %>%
     abs()
   
-  # Default value for tc_home
-  if ('tc_home' %in% names(site_info)) {stop("Unexpectedly received site_info$tc_home for p-model.")}
-  # Calculate tc_home (mean maximum temperature of the warmest month)
-  site_info$tc_home <- forcing %>%
-    dplyr::mutate(
-      year = format(.data$date, "%Y"), month = format(.data$date, "%m")
-    ) %>%
-    dplyr::group_by(.data$year, .data$month) %>%
-    dplyr::summarise(
-      mean_tmax_month = mean(.data$tmax, na.rm = TRUE), .groups = "drop"
-    ) %>%
-    dplyr::group_by(.data$year) %>%
-    dplyr::summarise(
-      warmest_month_tmax = max(.data$mean_tmax_month, na.rm = TRUE),
-      .groups = "drop"
-    ) %>%
-    dplyr::summarise(tc_home = mean(.data$warmest_month_tmax, na.rm = TRUE)) %>%
-    dplyr::pull(.data$tc_home)
-
-  # Validation
-  if (is.na(site_info$tc_home) || length(site_info$tc_home) == 0) {
-    if (verbose) {
-      warning(
-        "Calculated tc_home is NA or missing; setting default to 25C."
-      )
-    }
-    site_info$tc_home <- 25
-  }
-
   # re-define units and naming of forcing dataframe
   # keep the order of columns - it's critical for Fortran (reading by column number)
   forcing_features <- c(
@@ -337,7 +308,6 @@ run_pmodel_f_bysite <- function(
       latitude                  = as.numeric(site_info$lat),
       altitude                  = as.numeric(site_info$elv),
       whc                       = as.numeric(site_info$whc),
-      tc_home                   = as.numeric(site_info$tc_home),
       n                         = as.integer(nrow(forcing)), # number of rows in matrix (pre-allocation of memory)
       par                       = c(as.numeric(params_modl$kphio), # model parameters as vector in order
                                     as.numeric(params_modl$kphio_par_a),

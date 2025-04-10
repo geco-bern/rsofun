@@ -28,6 +28,7 @@ module md_interface_pmodel
     real :: kc_jmax
   end type paramstype_calib  
 
+
   type interfacetype_biosphere
     integer                                 :: year
     real                                    :: pco2
@@ -40,7 +41,6 @@ module md_interface_pmodel
     type(paramstype_siml_pmodel)            :: params_siml
     real, dimension(npft)                   :: fpc_grid        ! allocatable because we don't know number of PFTs a priori
     type(paramstype_calib)                  :: params_calib    ! calibratable parameters
-    real                                    :: tc_home 
   end type interfacetype_biosphere
 
   type(interfacetype_biosphere) :: myinterface
