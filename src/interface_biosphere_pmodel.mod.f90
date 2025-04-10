@@ -37,7 +37,7 @@ module md_interface_pmodel
     type(climate_type), dimension(ndayyear) :: climate
     type(vegcover_type), dimension(ndayyear):: vegcover
     ! type(domaininfo_type)                 :: domaininfo
-    type(outtype_steering)                  :: steering
+    type(outtype_steering)                  :: steering_state
     type(paramstype_siml_pmodel)            :: params_siml
     real, dimension(npft)                   :: fpc_grid        ! allocatable because we don't know number of PFTs a priori
     type(paramstype_calib)                  :: params_calib    ! calibratable parameters
