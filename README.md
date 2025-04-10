@@ -118,17 +118,11 @@ pars <- calib_sofun(
   )
 ```
 
-## Data and code for model documentation paper
+## Data and code for model documentation paper (Paredes et al., in rev.)
 
-Scripts to reproduce the plots in the model documentation paper are located in the `analysis` subfolder (`01-sensitivity-analysis.R`, `02-bayesian-calibration.R`, and `03-uncertainty-estimation.R`) and the outputs
-are archived in the `analysis/paper_results_files` subfolder.
+Versioned releases of this repository are deposited on Zenodo (see badge at the top of the README file). Code to reproduce the analysis and plots presented here is contained in this repository (subdirectory `analysis/`) and is demonstrated on the model documentation website (https://geco-bern.github.io/rsofun/, article ‘Sensitivity analysis and calibration interpretation’).
 
-Data used in the model documentation paper is located in the `data` subfolder (`p_model_drivers.rda` and `p_model_validation.rda`).
-
-The data is based on the publicly available FLUXNET2015 data for the site FR-Pue containing years 2007 to 2012 (available as FluxDataKit v3.4.2 under DOI 10.5281/zenodo.14808331).
-It is generated with the script `data-raw/generate_pmodel_drivers.R`.
-
-Versions of {rsofun} (including the exact version used in the model documentation paper) are publicly archived on Zenodo (https://doi.org/10.5281/zenodo.3712928).
+The model forcing and evaluation data is based on the publicly available FLUXNET2015 data for the site FR-Pue, prepared by FluxDataKit v3.4.2 (10.5281/zenodo.14808331), taken here as a subset of the originally published data for years 2007-2012. It is accessible through the {rsofun} R package and contained as part of this repository (subdirectory `data/`) as CSV and as files. Outputs of the analysis presented here are archived in the `analysis/paper_results_files/` subfolder.
 
 The model documentation paper is currently under review.
 A preprint is available at: https://www.biorxiv.org/content/10.1101/2023.11.24.568574v3
