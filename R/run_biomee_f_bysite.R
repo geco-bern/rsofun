@@ -266,35 +266,32 @@ run_biomee_f_bysite <- function(
     stop("Unexpectedly received site_info$tc_home; it should be calculated internally.")
   }
 
-  # Compute daily tmax and join back to forcing
-  daily_tmax <- forcing %>%
-    dplyr::group_by(date) %>%
-    dplyr::summarise(tmax = max(.data$temp, na.rm = TRUE), .groups = "drop")
-
-  forcing <- forcing %>%
-    dplyr::left_join(daily_tmax, by = "date")
-
-  # Calculate tc_home (mean maximum temperature of the warmest month)
+  need_to_add_tmax <- !("tmax" %in% colnames(forcing))
   site_info$tc_home <- forcing %>%
-    dplyr::mutate(
-      year = format(.data$date, "%Y"), month = format(.data$date, "%m")
-    ) %>%
-    dplyr::group_by(.data$year, .data$month) %>%
-    dplyr::summarise(
-      mean_tmax_month = mean(.data$tmax, na.rm = TRUE), .groups = "drop"
-    ) %>%
-    dplyr::group_by(.data$year) %>%
-    dplyr::summarise(
-      warmest_month_tmax = max(.data$mean_tmax_month, na.rm = TRUE),
-      .groups = "drop"
-    ) %>%
-    dplyr::summarise(tc_home = mean(.data$warmest_month_tmax, na.rm = TRUE)) %>%
+    # conditionally add daily max temp (if needed, e.g. when running "gs_leuning" with hourly forcing)
+    {if(need_to_add_tmax) 
+      dplyr::group_by(., date) %>%
+        dplyr::summarise(daily_tmax = max(.data$temp, na.rm = TRUE)) %>%
+        dplyr::ungroup()
+      else dplyr::rename(., daily_tmax = .data$tmax)} %>%
+    # add grouping variables:
+    mutate(month = lubridate::month(.data$date), year  = lubridate::year(.data$date)) %>%
+    # monthly means of daily maximum:
+    group_by(.data$year, .data$month) %>%
+    summarise(monthly_avg_daily_tmax = mean(.data$daily_tmax, na.rm = TRUE), .groups = "drop") %>%
+    # warmest month of each year:
+    group_by(year) %>% 
+    summarise(t_warmest_month = max(.data$monthly_avg_daily_tmax)) %>%
+    # mean of yearly warmest months:
+    ungroup() %>% 
+    summarise(tc_home = mean(.data$t_warmest_month, na.rm = TRUE)) %>%
+    # extract scalar value
     dplyr::pull(.data$tc_home)
-
-  # Validate calculation
+    
+# Validate calculation
   if (is.na(site_info$tc_home) || length(site_info$tc_home) == 0) {
-    warning("Calculated tc_home is NA or missing; defaulting to 25C.")
-    site_info$tc_home <- 25
+      warning("Calculated tc_home is NA or missing; defaulting to 25C.")
+      site_info$tc_home <- 25
   }
 
   # record number of years in forcing data
