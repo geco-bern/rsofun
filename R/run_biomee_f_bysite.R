@@ -262,36 +262,40 @@ run_biomee_f_bysite <- function(
   continue <- TRUE
 
   # Default value for tc_home
-  if ('tc_home' %in% names(site_info)) {
+  if ("tc_home" %in% names(site_info)) {
     stop("Unexpectedly received site_info$tc_home; it should be calculated internally.")
   }
 
   need_to_add_tmax <- !("tmax" %in% colnames(forcing))
   site_info$tc_home <- forcing %>%
     # conditionally add daily max temp (if needed, e.g. when running "gs_leuning" with hourly forcing)
-    {if(need_to_add_tmax) 
-      dplyr::group_by(., date) %>%
-        dplyr::summarise(daily_tmax = max(.data$temp, na.rm = TRUE)) %>%
-        dplyr::ungroup()
-      else dplyr::rename(., daily_tmax = .data$tmax)} %>%
+    {
+      if (need_to_add_tmax) {
+        dplyr::group_by(., date) %>%
+          dplyr::summarise(daily_tmax = max(.data$temp, na.rm = TRUE)) %>%
+          dplyr::ungroup()
+      } else {
+        dplyr::rename(., daily_tmax = tmax)
+      }
+    } %>%
     # add grouping variables:
-    mutate(month = lubridate::month(.data$date), year  = lubridate::year(.data$date)) %>%
+    mutate(month = lubridate::month(.data$date), year = lubridate::year(.data$date)) %>%
     # monthly means of daily maximum:
     group_by(.data$year, .data$month) %>%
     summarise(monthly_avg_daily_tmax = mean(.data$daily_tmax, na.rm = TRUE), .groups = "drop") %>%
     # warmest month of each year:
-    group_by(year) %>% 
+    group_by(year) %>%
     summarise(t_warmest_month = max(.data$monthly_avg_daily_tmax)) %>%
     # mean of yearly warmest months:
-    ungroup() %>% 
+    ungroup() %>%
     summarise(tc_home = mean(.data$t_warmest_month, na.rm = TRUE)) %>%
     # extract scalar value
     dplyr::pull(.data$tc_home)
-    
-# Validate calculation
+
+  # Validate calculation
   if (is.na(site_info$tc_home) || length(site_info$tc_home) == 0) {
-      warning("Calculated tc_home is NA or missing; defaulting to 25C.")
-      site_info$tc_home <- 25
+    warning("Calculated tc_home is NA or missing; defaulting to 25C.")
+    site_info$tc_home <- 25
   }
 
   # record number of years in forcing data
