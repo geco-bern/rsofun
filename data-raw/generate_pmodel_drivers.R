@@ -60,7 +60,6 @@ p_model_validation$data <- lapply(p_model_validation$data,
                                       select(date, gpp) %>%
                                       mutate(gpp_unc = 0.0)
                                     )
-                                    # TODO: get The uncertainty of the GPP (in gC m\eqn{^{-2}} d\eqn{^{-1}}).
 
 save(p_model_drivers,
      file ="data/p_model_drivers2.rda",
