@@ -95,7 +95,7 @@ df_gpp_plot <- output |>
   tidyr::unnest(data) |>
   dplyr::select(date, gpp_mod = gpp) |>
   dplyr::left_join(
-    p_model_validation |>
+    p_model_validation |> dplyr::mutate(data = purrr::map(data, ~dplyr::mutate(., gpp = ifelse(gpp_qc >= 0.8, gpp, NA)))) |>
       tidyr::unnest(data) |>
       dplyr::select(date, gpp_obs = gpp),
     by = "date"
@@ -161,7 +161,7 @@ With all settings defined the optimization function `calib_sofun()` can be calle
 # calibrate the model and optimize free parameters
 pars <- calib_sofun(
   drivers = p_model_drivers,  
-  obs = p_model_validation,
+  obs = p_model_validation |> dplyr::mutate(data = purrr::map(data, ~dplyr::mutate(., gpp = ifelse(gpp_qc >= 0.8, gpp, NA)))),
   settings = settings,
   # extra arguments passed to the cost function:
   targets = "gpp",  # define target variable GPP

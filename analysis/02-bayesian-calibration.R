@@ -104,7 +104,7 @@ tic()
 
 par_calib <- calib_sofun(
   drivers = rsofun::p_model_drivers,
-  obs = rsofun::p_model_validation,
+  obs = rsofun::p_model_validation |> dplyr::mutate(data = purrr::map(data, ~dplyr::mutate(., gpp = ifelse(gpp_qc >= 0.8, gpp, NA)))),
   settings = settings_calib,
   par_fixed = list(
     beta_unitcostratio = 146.0,

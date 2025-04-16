@@ -5,7 +5,9 @@ test_that("p-model quantitative check", {
   
   # grab gpp data from the validation set
   # for FR-Pue
-  gpp <- p_model_validation$data[[1]]$gpp
+  gpp <- p_model_validation$data[[1]] |>
+    dplyr::mutate(gpp = ifelse(gpp_qc >= 0.8, gpp, NA))
+  gpp <- gpp$gpp
   
   # set model drivers to the NPHT paper
   # ones

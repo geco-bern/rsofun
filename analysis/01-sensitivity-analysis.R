@@ -17,7 +17,7 @@ ll_pmodel <- function(
 ){
   rsofun::cost_likelihood_pmodel(        # likelihood cost function from package
     par_v,
-    obs = rsofun::p_model_validation,    # example data from package
+    obs = rsofun::p_model_validation |> dplyr::mutate(data = purrr::map(data, ~dplyr::mutate(., gpp = ifelse(gpp_qc >= 0.8, gpp, NA)))),    # example data from package
     drivers = rsofun::p_model_drivers,
     targets = "gpp"
   )

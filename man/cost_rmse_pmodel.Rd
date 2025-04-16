@@ -77,7 +77,7 @@ trait value predicted on that date.
 # and example data
 cost_rmse_pmodel(
  par = c(0.05, -0.01, 0.5),  # kphio related parameters
- obs = p_model_validation,
+ obs = p_model_validation |> dplyr::mutate(data = purrr::map(data, ~dplyr::mutate(., gpp = ifelse(gpp_qc >= 0.8, gpp, NA)))),
  drivers = p_model_drivers,
  targets = c('gpp'),
  par_fixed = list(

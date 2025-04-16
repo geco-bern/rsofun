@@ -107,9 +107,13 @@ With all settings defined the optimization function `calib_sofun()` can be calle
 
 ``` r
 # calibrate the model and optimize free parameters
+obs_to_use <- p_model_validation |> 
+  # replace lower-quality data with NA:
+  dplyr::mutate(data = purrr::map(data, 
+    ~dplyr::mutate(., gpp = ifelse(gpp_qc >= 0.8, gpp, NA))))
 pars <- calib_sofun(
     drivers = p_model_drivers,  
-    obs = p_model_validation,
+    obs = obs_to_use,
     settings = settings,
     # extra arguments passed to the cost function:
     targets = "gpp",             # define target variable GPP

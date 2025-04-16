@@ -47,7 +47,7 @@ settings_rmse <- list(
 pars_calib_rmse <- calib_sofun(
   # calib_sofun arguments:
   drivers = p_model_drivers,  
-  obs = p_model_validation,
+  obs = p_model_validation |> dplyr::mutate(data = purrr::map(data, ~dplyr::mutate(., gpp = ifelse(gpp_qc >= 0.8, gpp, NA)))),
   settings = settings_rmse,
   # extra arguments passed to the cost function:
   par_fixed = list(         # fix all other parameters
@@ -96,7 +96,7 @@ settings_likelihood <- list(
 pars_calib_likelihood <- calib_sofun(
   # calib_sofun arguments:
   drivers = p_model_drivers,
-  obs = p_model_validation,
+  obs = p_model_validation |> dplyr::mutate(data = purrr::map(data, ~dplyr::mutate(., gpp = ifelse(gpp_qc >= 0.8, gpp, NA)))),
   settings = settings_likelihood,
   # extra arguments passed ot the cost function:
   par_fixed = list(         # fix all other parameters
@@ -137,7 +137,7 @@ settings_joint_likelihood <- list(
 par_calib_join <- calib_sofun(
   drivers = rbind(p_model_drivers,
                   p_model_drivers_vcmax25), 
-  obs = rbind(p_model_validation,
+  obs = rbind(p_model_validation |> dplyr::mutate(data = purrr::map(data, ~dplyr::mutate(., gpp = ifelse(gpp_qc >= 0.8, gpp, NA)))),
               p_model_validation_vcmax25), 
   settings = settings_joint_likelihood,
   # arguments for the cost function
@@ -272,7 +272,7 @@ settings_mae <- list(
 # Calibrate the model and optimize the free parameters
 pars_calib_mae <- calib_sofun(
   drivers = p_model_drivers,
-  obs = p_model_validation,
+  obs = p_model_validation |> dplyr::mutate(data = purrr::map(data, ~dplyr::mutate(., gpp = ifelse(gpp_qc >= 0.8, gpp, NA)))),
   settings = settings_mae
 )
 ```
