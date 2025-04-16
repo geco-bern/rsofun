@@ -18,7 +18,7 @@ params_modl <- list(
 # Run the model for these parameters and the example drivers
 p_model_output <- rsofun::runread_pmodel_f(
   drivers = rsofun::p_model_drivers,
-  par     = params_modl)
+  par = params_modl)
 
 p_model_output_vcmax25 <- rsofun::runread_pmodel_f(
   drivers = rsofun::p_model_drivers_vcmax25,
