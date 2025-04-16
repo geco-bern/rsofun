@@ -2,6 +2,14 @@
 
 library(rsofun)
 
+# load data currently in data/ directory (to prevent using potentially outdated 
+# data, from the currently loaded rsofun package):
+from_data_dir <- rlang::env()
+load("data/p_model_drivers.rda",         envir = from_data_dir)
+load("data/p_model_drivers_vcmax25.rda", envir = from_data_dir)
+# load("data/p_model_validation.rda",         envir = from_data_dir)
+# load("data/p_model_validation_vcmax25.rda", envir = from_data_dir)
+
 # Define model parameter values from previous work
 params_modl <- list(
   kphio              = 0.04998,    # setup ORG in Stocker et al. 2020 GMD
@@ -17,12 +25,12 @@ params_modl <- list(
 
 # Run the model for these parameters and the example drivers
 p_model_output <- rsofun::runread_pmodel_f(
-  drivers = rsofun::p_model_drivers,
-  par = params_modl)
+  drivers = from_data_dir[['p_model_drivers']],
+  par     = params_modl)
 
 p_model_output_vcmax25 <- rsofun::runread_pmodel_f(
-  drivers = rsofun::p_model_drivers_vcmax25,
-  par = params_modl)
+  drivers = from_data_dir[['p_model_drivers_vcmax25']],
+  par     = params_modl)
 
 save(p_model_output,
      file ="data/p_model_output.rda",
