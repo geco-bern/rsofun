@@ -2,7 +2,6 @@
 
 library(tidyverse)
 library(lubridate)
-library(rsofun)
 library(zen4R)
 
 # load script arguments
