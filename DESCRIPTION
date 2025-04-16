@@ -81,6 +81,8 @@ Suggests:
     rmarkdown,
     ggplot2,
     knitr,
-    sensitivity
+    sensitivity,
+    zen4R,
+    readr
 VignetteBuilder: knitr
 Encoding: UTF-8

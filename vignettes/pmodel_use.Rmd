@@ -164,9 +164,8 @@ pars <- calib_sofun(
   obs = p_model_validation,
   settings = settings,
   # extra arguments passed to the cost function:
-  targets = "gpp",             # define target variable GPP
-  par_fixed = params_modl[-1]  # fix non-calibrated parameters to previous 
-                               # values, removing kphio
+  targets = "gpp",  # define target variable GPP
+  par_fixed = params_modl[-which(names(params_modl) == "kphio")]  # specify non-calibrated parameters
   )
 ```
 
