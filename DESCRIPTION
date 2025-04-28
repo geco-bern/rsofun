@@ -83,6 +83,8 @@ Suggests:
     knitr,
     sensitivity,
     zen4R,
+    lubridate,
+    rlang,
     readr
 VignetteBuilder: knitr
 Encoding: UTF-8

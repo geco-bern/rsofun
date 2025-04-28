@@ -34,5 +34,5 @@ test_that("p-model quantitative check", {
     mean(abs(gpp), na.rm = TRUE)
   
   # test for correctly returned values
-  expect_equal(tolerance, 0.4201191, tolerance = 0.04)
+  expect_equal(tolerance, 0.464, tolerance = 0.04)
 })

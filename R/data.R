@@ -91,7 +91,9 @@
 #'       \item{date}{Date vector with format YYYY-MM-DD.}
 #'       \item{gpp}{The observed Gross Primary Productivity (GPP) for each time stamp 
 #'       (in gC m\eqn{^{-2}} d\eqn{^{-1}}).}
-#'       \item{gpp_unc}{The uncertainty of the GPP (in gC m\eqn{^{-2}} d\eqn{^{-1}}).}
+#'       \item{gpp_qc}{Quality check information of the GPP variable (expressed as 
+#'       fraction of gap-filled half-hourly data used to calculate daily aggregates). 
+#'       A user-specified cutoff (e.g. 0.8) can be used to set values of lower quality to NA.}
 #'     }
 #'   }
 #' }

@@ -24,6 +24,9 @@ p_model_drivers <- FDK_published_rsofun_driver_data |>
   
   # subset dates
   dplyr::mutate(forcing = purrr::map(forcing, ~dplyr::filter(., lubridate::year(date) %in% 2007:2012))) |> 
+
+  # backwards compatibility: TODO remove
+  dplyr::mutate(site_info = purrr::map(site_info, ~dplyr::mutate(., whc = 432.375))) |> 
   
   # select variables for P-model simulation  
   dplyr::mutate(forcing = purrr::map(forcing, ~dplyr::select(.,

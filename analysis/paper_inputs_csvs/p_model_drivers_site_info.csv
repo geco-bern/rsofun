@@ -1,2 +1,2 @@
-lon,lat,elv,whc
-3.5957,43.7413,270,432.375
+lon,lat,elv,whc,canopy_height,reference_height
+3.595829963684082,43.741390228271484,270,432.375,6.5,11
