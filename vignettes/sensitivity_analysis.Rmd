@@ -60,7 +60,7 @@ ll_pmodel <- function(
 ){
   rsofun::cost_likelihood_pmodel(        # reuse likelihood cost function
     par_v,
-    obs = rsofun::p_model_validation,
+    obs = rsofun::p_model_validation |> dplyr::mutate(data = purrr::map(data, ~dplyr::mutate(., gpp = ifelse(gpp_qc >= 0.8, gpp, NA)))),
     drivers = rsofun::p_model_drivers,
     targets = "gpp"
   )
@@ -277,7 +277,7 @@ par_fixed <- list(
 # Calibrate kphio-related parameters and err_gpp
 par_calib <- calib_sofun(
   drivers = p_model_drivers,
-  obs = p_model_validation,
+  obs = p_model_validation |> dplyr::mutate(data = purrr::map(data, ~dplyr::mutate(., gpp = ifelse(gpp_qc >= 0.8, gpp, NA)))),
   settings = settings_calib,
   par_fixed = par_fixed,
   targets = "gpp"
@@ -467,6 +467,7 @@ data_to_plot <- pmodel_runs |>
   dplyr::left_join(
     # Merge GPP validation data (first year)
     p_model_validation$data[[1]][1:365, ] |>
+      dplyr::mutate(gpp = ifelse(gpp_qc >= 0.8, gpp, NA)) |>
       dplyr::rename(gpp_obs = gpp),
     by = "date")
 
@@ -564,6 +565,7 @@ data_to_plot <- pmodel_run_map |>
   dplyr::left_join(
     # Merge GPP validation data (first year)
     p_model_validation$data[[1]][1:365, ] |>
+      dplyr::mutate(gpp = ifelse(gpp_qc >= 0.8, gpp, NA)) |>
       dplyr::rename(gpp_obs = gpp),
     by = "date")
 

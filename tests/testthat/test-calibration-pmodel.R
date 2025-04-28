@@ -4,7 +4,7 @@ set.seed(10)
 test_that("test GPP calibration routine p-model (BT, likelihood maximization)", {
   skip_on_cran()
   drivers <- rsofun::p_model_drivers
-  obs <- rsofun::p_model_validation
+  obs <- rsofun::p_model_validation |> dplyr::mutate(data = purrr::map(data, ~dplyr::mutate(., gpp = ifelse(gpp_qc >= 0.8, gpp, NA))))
   params_fix <- list(
     # kphio              = 0.04998, # setup ORG in Stocker et al. 2020 GMD
     kphio_par_a        = 0.01,  # set to zero to disable temperature-dependence of kphio, setup ORG in Stocker et al. 2020 GMD
@@ -54,7 +54,7 @@ test_that("test GPP calibration routine p-model (BT, likelihood maximization)", 
 test_that("test GPP calibration routine p-model (GenSA, rmse, all params)", {
   skip_on_cran()
   drivers <- rsofun::p_model_drivers
-  obs <- rsofun::p_model_validation
+  obs <- rsofun::p_model_validation |> dplyr::mutate(data = purrr::map(data, ~dplyr::mutate(., gpp = ifelse(gpp_qc >= 0.8, gpp, NA))))
   
   settings <- list(
     method              = "gensa",
@@ -179,7 +179,7 @@ test_that("test joint calibration routine p-model (BT, likelihood maximization)"
   skip_on_cran()
   drivers <- rbind(gpp = rsofun::p_model_drivers, 
                    vcmax25 = rsofun::p_model_drivers_vcmax25)
-  obs <- rbind(gpp = rsofun::p_model_validation,
+  obs <- rbind(gpp = rsofun::p_model_validation |> dplyr::mutate(data = purrr::map(data, ~dplyr::mutate(., gpp = ifelse(gpp_qc >= 0.8, gpp, NA)))),
                vcmax25 = rsofun::p_model_validation_vcmax25)
   params_fix <- list(
     # kphio              = 0.04998, # setup ORG in Stocker et al. 2020 GMD

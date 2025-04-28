@@ -99,6 +99,7 @@ data_to_plot <- pmodel_runs |>
   dplyr::left_join(
     # Merge GPP validation data (first year)
     p_model_validation$data[[1]][1:365, ] |>
+      dplyr::mutate(gpp = ifelse(gpp_qc >= 0.8, gpp, NA)) |>
       dplyr::rename(gpp_obs = gpp),
     by = "date") |> 
   dplyr::left_join(
