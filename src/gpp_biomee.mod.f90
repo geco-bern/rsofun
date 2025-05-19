@@ -64,7 +64,7 @@ contains
 
     ! local variables used for BiomeE-Allocation part
     type(cohort_type), pointer :: cc
-    type(cohort_item), pointer :: it
+    type(cohort_stack_item), pointer :: it
     integer :: i
     real   :: rad_top                                      ! downward radiation at the top of the canopy, W/m2
     real   :: rad_net                                      ! net radiation absorbed by the canopy, W/m2

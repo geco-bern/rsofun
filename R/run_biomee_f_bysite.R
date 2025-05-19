@@ -240,7 +240,7 @@ run_biomee_f_bysite <- function(
     warning(paste("Warning: 'luc_forcing' contains more data points than nyeartrend (", length(luc_forcing[1,1,]), ' vs ', params_siml$nyeartrend, '). Extra data points will be ignored.'))
 
   # Set up variables used by C wrapper to build output arrays
-  n_daily  <- ifelse(params_siml$daily_diagnostics, params_siml$nyeartrend * ndayyear, 0)
+  n_daily  <- ifelse(params_siml$do_daily_diagnostics, params_siml$nyeartrend * ndayyear, 0)
   n_annual <- ifelse(
     params_siml$spinup,
     (params_siml$spinupyears + params_siml$nyeartrend),
@@ -265,14 +265,14 @@ run_biomee_f_bysite <- function(
     n_annual_trans   = as.integer(n_annual_trans)
   )
 
-  out <- build_out(biomeeout, init_lu$name, sitename, params_siml$daily_diagnostics)
+  out <- build_out(biomeeout, init_lu$name, sitename, params_siml$do_daily_diagnostics)
 
   return(out)
 }
 
 # Build R output
-build_out <- function(biomeeout, lu_names, sitename, daily_diagnostics){
-  if (daily_diagnostics) {
+build_out <- function(biomeeout, lu_names, sitename, do_daily_diagnostics){
+  if (do_daily_diagnostics) {
     # If simulation is very long, output gets massive.
     # E.g., In a 3000 years-simulation 'biomeeout' is 11.5 GB.
     # In such cases (here, more than 5 GB), drop daily outputs
@@ -423,8 +423,8 @@ build_params_siml <- function(params_siml, forcing_years, makecheck){
     }
   }
 
-  if ('daily_diagnostics' %nin% names(params_siml)) {
-    params_siml$daily_diagnostics <- TRUE
+  if ('do_daily_diagnostics' %nin% names(params_siml)) {
+    params_siml$do_daily_diagnostics <- TRUE
   }
 
   return(params_siml)
@@ -442,7 +442,7 @@ prepare_params_siml <- function(params_siml){
     "do_closedN_run",
     "code_method_photosynth",
     "code_method_mortality",
-    "daily_diagnostics"
+    "do_daily_diagnostics"
   )
 
   return(params_siml)

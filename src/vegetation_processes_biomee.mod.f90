@@ -35,7 +35,7 @@ contains
 
     ! local variables
     type(cohort_type), pointer :: cc
-    type(cohort_item), pointer :: it
+    type(cohort_stack_item), pointer :: it
 
     ! Photosynsthesis
     call gpp( forcing, vegn )
@@ -180,7 +180,7 @@ contains
 
     ! local variables
     type(cohort_type), pointer :: cc
-    type(cohort_item), pointer :: it
+    type(cohort_stack_item), pointer :: it
     real :: CSAsw  ! Sapwood cross sectional area, m2
     real :: CSAwd  ! Heartwood cross sectional area, m2
     real :: DBHwd  ! diameter of heartwood at breast height, m
@@ -381,7 +381,7 @@ contains
 
     ! local variables
     type(cohort_type), pointer :: cc
-    type(cohort_item), pointer :: it
+    type(cohort_stack_item), pointer :: it
     real    :: ccNSC, ccNSN
     logical :: do_relayer ! flag to tell if we should call relayer_cohort()
     logical :: cc_firstday
@@ -545,7 +545,7 @@ contains
 
     ! ---- local vars
     type(cohort_type), pointer :: cc
-    type(cohort_item), pointer :: it
+    type(cohort_stack_item), pointer :: it
 
     real :: deathrate ! mortality rate, 1/year
 
@@ -684,7 +684,7 @@ contains
 
     ! local variables --------
     type(cohort_type), pointer :: cc
-    type(cohort_item), pointer :: it
+    type(cohort_stack_item), pointer :: it
 
     it => vegn%cohorts()
     do while (associated(it))
@@ -710,8 +710,8 @@ contains
 
     ! local variables
     type(cohort_type), pointer :: cc
-    type(cohort_item), pointer :: new ! new cohort
-    type(cohort_item), pointer :: it
+    type(cohort_stack_item), pointer :: new ! new cohort
+    type(cohort_stack_item), pointer :: it
     integer, dimension(NCohortMax) :: reproPFTs
     type(orgpool), dimension(NCohortMax) :: seed ! seed pool of productible PFTs
     integer :: nPFTs ! number of new cohorts to be created
@@ -755,7 +755,7 @@ contains
     ! We build new cohorts for seedlings
     do k = 1, nPFTs
 
-      new => vegn%new_cohort()
+      new => vegn%create_cohort()
       cc => new%cohort
 
       ! update child cohort parameters
@@ -881,7 +881,7 @@ contains
 
     ! local variables
     type(cohort_type), pointer :: cc
-    type(cohort_item), pointer :: it
+    type(cohort_stack_item), pointer :: it
     real :: alpha_L   ! turnover rate of leaves
     real :: alpha_S   ! turnover rate of stems
     real :: dBL, dBR, dBStem  ! leaf and fine root carbon tendencies
@@ -941,7 +941,7 @@ contains
 
     ! local variables
     type(cohort_type), pointer :: cc
-    type(cohort_item), pointer :: it
+    type(cohort_stack_item), pointer :: it
 
     real, parameter :: rho_N_up0 = 0.1 ! hourly N uptake rate, fraction of the total mineral N
     real, parameter :: N_roots0  = 0.4 ! root biomass at half max N-uptake rate, kg C m-2
@@ -1198,7 +1198,7 @@ contains
     ! ---- local vars
     logical :: OldGrass
     logical :: at_least_one_survivor
-    type(cohort_item), pointer :: it
+    type(cohort_stack_item), pointer :: it
 
     at_least_one_survivor = .FALSE.
 
