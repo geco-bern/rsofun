@@ -36,7 +36,7 @@ module md_orgpool
   end interface
 
   ! Note: * operator is NOT commutative.
-  ! Right: 'pool * 2.0'pool * (the scalar must come in second position)
+  ! Right: 'pool * 2.0' (the scalar must come in second position)
   ! Wrong: '2.0 * pool' (will not compile)
   interface operator (*)
     module procedure scale_mul

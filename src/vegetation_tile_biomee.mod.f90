@@ -945,6 +945,29 @@ contains
         loss_fine = (orgpool(- cc%leafarea(), cc%leafarea()) * sp%LNbase &
                 + cc%plabl + cc%pseed + cc%proot) * cc%density
 
+        ! Above appears to be containing an error.
+        ! Previous to luluc, it used to be:
+        ! lossC_coarse = cc%nindivs * (cc%pwood%c%c12 + cc%psapw%c%c12 + cc%pleaf%c%c12 - cc%leafarea() * myinterface%params_tile%LMAmin)
+        ! lossN_coarse = cc%nindivs * (cc%pwood%n%n14 + cc%psapw%n%n14 + cc%pleaf%n%n14 - cc%leafarea()*sp%LNbase)
+        ! lossC_fine   = cc%nindivs * (cc%plabl%c%c12 + cc%pseed%c%c12 + cc%proot%c%c12 + cc%leafarea() * myinterface%params_tile%LMAmin)
+        ! lossN_fine   = cc%nindivs * (cc%plabl%n%n14 + cc%pseed%n%n14 + cc%proot%n%n14 + cc%leafarea()*sp%LNbase)
+        !
+        ! Now, instead of multiplying leafarea with LNbase for nitrogen and with LMAmain for carbon, we use each 
+        ! factor for C AND N, i.e. on one hand LMAmin for coarse C and N and on the other hand LNbase for fine C and N.
+        ! Namely:
+        ! loss_coarse = orgpool(-cc%leafarea() * inputs%params_tile%LMAmin + cc%pwood%c12 + cc%psapw%c12 + cc%pleaf%c12, 
+        !                        cc%leafarea() * inputs%params_tile%LMAmin + cc%pwood%n14 + cc%psapw%n14 + cc%pleaf%n14) * cc%density
+        ! loss_fine =   orgpool(-cc%leafarea() * sp%LNbase                 + cc%plabl%c12 + cc%pseed%c12 + cc%proot%c12, 
+        !                        cc%leafarea() * sp%LNbase                 + cc%plabl%n14 + cc%pseed%n14 + cc%proot%n14) * cc%density
+        ! which is NOT what we want!
+
+        ! We want this:
+        ! the orgpool() defines the multiplicative factors for C,N (Note the sign: - for coarse, + for fine)
+        loss_coarse = (orgpool(- inputs%params_tile%LMAmin, - sp%LNbase) * cc%leafarea() & 
+                + cc%pwood + cc%psapw + cc%pleaf) * cc%density
+        loss_fine = (orgpool(+ inputs%params_tile%LMAmin, + sp%LNbase) * cc%leafarea()  &
+                + cc%plabl + cc%pseed + cc%proot) * cc%density
+
       end associate
 
       call self%plant2soil(loss_coarse, loss_fine)
