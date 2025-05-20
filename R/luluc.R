@@ -61,16 +61,16 @@ build_luc_matrix <- function(patterns, n_lu, n_years, out=vector()) {
 #'
 #' @return A list containing the intial states ('states_init') and transition matrix ('luc_matrix')
 #' @export
-#' @import ncdf4
 #' @importFrom utils head
 parse_luh2 <- function(state_file, trans_file, lon, lat, start=1, n=-1, simplified=FALSE){
 
   ### Open the ncdf files
 
+  requireNamespace("ncdf4", quietly = FALSE)
   # State[lon,lat,time]
-  nc_state <- nc_open(state_file)
+  nc_state <- ncdf4::nc_open(state_file)
   # Trans[lon,lat,time]
-  nc_trans <- nc_open(trans_file)
+  nc_trans <- ncdf4::nc_open(trans_file)
 
   ### Convert lon, lat into indices
   lon_idx <- which.min(abs(nc_state$dim$lon$vals - lon))
@@ -78,7 +78,7 @@ parse_luh2 <- function(state_file, trans_file, lon, lat, start=1, n=-1, simplifi
 
   ### Convenience function to extract one variable from ncdf
   get_var <- function(var_name, data, lon_idx, lat_idx, start=1, n=-1) {
-    ncvar_get(data, varid = var_name,
+    ncdf4::ncvar_get(data, varid = var_name,
               start= c(lon_idx,
                        lat_idx,
                        start
@@ -116,8 +116,8 @@ parse_luh2 <- function(state_file, trans_file, lon, lat, start=1, n=-1, simplifi
   trans <- sapply(trans_names, \(x) get_var(x, nc_trans, lon_idx, lat_idx, start, n))
 
   # Close all files
-  nc_close(nc_state)
-  nc_close(nc_trans)
+  ncdf4::nc_close(nc_state)
+  ncdf4::nc_close(nc_trans)
 
   # Convenience variables
   zero <- 113
