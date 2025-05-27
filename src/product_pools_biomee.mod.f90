@@ -8,13 +8,13 @@ module md_product_pools
     private
     public :: product_pools
 
-    integer, parameter :: n_poduct_pools = 2 ! Number of product pools
-    real, public, parameter ::  e_fold_pp(n_poduct_pools) = (/2, 20/)          ! e-folding rate of product pools (in years)
-    real, public, parameter ::  fraction_pp(n_poduct_pools) = (/0.375, 0.375/) ! fractions going to each product pool. The residual (1 - sum) is a direct loss going to the atmosphere
+    integer, parameter :: n_product_pools = 2 ! Number of product pools
+    real, public, parameter ::  e_fold_pp(n_product_pools) = (/2, 20/)          ! e-folding rate of product pools (in years)
+    real, public, parameter ::  fraction_pp(n_product_pools) = (/0.375, 0.375/) ! fractions going to each product pool. The residual (1 - sum) is a direct loss going to the atmosphere
 
     type product_pools
 
-        type(orgpool), private, dimension(n_poduct_pools) :: product_pool = orgpool()
+        type(orgpool), private, dimension(n_product_pools) :: product_pool = orgpool()
     
     contains
 
