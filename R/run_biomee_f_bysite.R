@@ -309,7 +309,7 @@ build_out <- function(biomeeout, lu_names, sitename, do_daily_diagnostics){
     out <- list("data"=build_lu_out(biomeeout, 1, trimmed_object))
   }
   else {
-    out <- list(aggregated_annual_tile_output(biomeeout[[4]]))
+    out <- list(annual_tile_output(biomeeout[[4]], aggregated_LU = TRUE))
     for (lu in 1:n_lu) {
       res <- build_lu_out(biomeeout, lu, trimmed_object)
       out <- append(out, list(res))
@@ -701,9 +701,9 @@ daily_tile_output <- function(raw_data){
   return(df)
 }
 
-annual_tile_output <- function(raw_data){
+annual_tile_output <- function(raw_data, aggregated_LU = FALSE){
   df <- as.data.frame(raw_data)
-  colnames(df) <- c(
+  col_names <- c(
     "year",
     "CAI",
     "LAI",
@@ -765,78 +765,14 @@ annual_tile_output <- function(raw_data){
     "c_turnover_time",
     "lu_fraction"
   )
-  return(df)
-}
-
-aggregated_annual_tile_output <- function(raw_data){
-  df <- as.data.frame(raw_data)
-  colnames(df) <- c(
-    "year",
-    "CAI",
-    "LAI",
-    "Density",
-    "DBH",
-    "Density12",
-    "DBH12",
-    "QMD12",
-    "NPP",
-    "GPP",
-    "Rauto",
-    "Rh",
-    "rain",
-    "SoilWater",
-    "Transp",
-    "Evap",
-    "Runoff",
-    "plantC",
-    "soilC",
-    "plantN",
-    "soilN",
-    "totN",
-    "NSC",
-    "SeedC",
-    "leafC",
-    "rootC",
-    "SapwoodC",
-    "WoodC",
-    "NSN",
-    "SeedN",
-    "leafN",
-    "rootN",
-    "SapwoodN",
-    "WoodN",
-    "McrbC",
-    "fastSOM",
-    "SlowSOM",
-    "McrbN",
-    "fastSoilN",
-    "slowSoilN",
-    "mineralN",
-    "N_fxed",
-    "N_uptk",
-    "N_yrMin",
-    "N_P2S",
-    "N_loss",
-    "totseedC",
-    "totseedN",
-    "Seedling_C",
-    "Seedling_N",
-    "MaxAge",
-    "MaxVolume",
-    "MaxDBH",
-    "NPPL",
-    "NPPW",
-    "n_deadtrees",
-    "c_deadtrees",
-    "m_turnover",
-    "c_turnover_time",
-    "lu_fraction",
-    "prod_pool_1_C",
-    "prod_pool_1_N",
-    "prod_pool_2_C",
-    "prod_pool_2_N"
-  )
-
+  if(aggregated_LU){
+    col_names <- c(col_names, 
+                   "prod_pool_1_C", 
+                   "prod_pool_1_N", 
+                   "prod_pool_2_C", 
+                   "prod_pool_2_N")
+  }
+  colnames(df) <- col_names
   return(df)
 }
 
