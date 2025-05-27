@@ -35,6 +35,9 @@ module md_product_pools
       ! Decay then add new products
       self%product_pool(1) = self%product_pool(1) * exp(-1.0 / e_fold_pp(1)) + products * fraction_pp(1)
       self%product_pool(2) = self%product_pool(2) * exp(-1.0 / e_fold_pp(2)) + products * fraction_pp(2)
+      ! TODO: Fix below issues: Here we are missing to account for:
+      !       a) the fraction going directly to the atmosphere, i.e. 1-(fraction_pp(1) + fraction_pp(2)) == 25% of LUC products
+      !       b) the fraction that goes from the product pools to the atmosphere, i.e. pool(1) * [1 - exp(-1.0 / e_fold_pp(1))] and  pool(2) * [1 - exp(-1.0 / e_fold_pp(2))]
 
     end subroutine update
 

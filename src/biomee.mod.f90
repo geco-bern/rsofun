@@ -39,7 +39,7 @@ contains
     !////////////////////////////////////////////////////////////////
     ! Entrypoint in Fortran for Biomee simulation
     ! Receives simulation parameters and forcing, run the simulation year by year (biosphere_annual()).
-    ! The C output arrays are being written on as a side effect in biosphere_annual()
+    ! The C output arrays are being written at the end of each yearly loop
     !----------------------------------------------------------------
     use md_forcing_biomee
     use md_interface_in_biomee
@@ -50,7 +50,7 @@ contains
 
     implicit none
 
-    ! mutble state keeping track of simulation steering and climate
+    ! mutable state keeping track of simulation steering and climate
     type(outtype_steering) :: steering_state
     type(climate_type), dimension(:), allocatable :: climate
 
@@ -140,6 +140,7 @@ contains
       !----------------------------------------------------------------
       if ((.not.steering_state%spinup) .and. (steering_state%forcingyear_idx <= n_lu_tr_years)) then
         export = aggregat%update_lu_fractions(real(luc_forcing(:,:,steering_state%forcingyear_idx)))
+        ! 'export' is kg C / m2 of grid cell (i.e landscape)
       else
         export = orgpool()
       end if

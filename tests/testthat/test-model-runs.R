@@ -1,6 +1,7 @@
 context("test models and their parameters")
 set.seed(10)
 
+# Output checks
 test_that("biomee output check (p-model)", {
   skip_on_cran()
 
@@ -62,7 +63,8 @@ test_that("biomeE output check (gs leuning)", {
   # Cf comment above
 })
 
-test_that("biomee parallel run check (gs leuning)", {
+# Parallel run checks
+test_that("biomee parallel run check (p-model)", {
   skip_on_cran()
 
   df_drivers <- biomee_p_model_drivers

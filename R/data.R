@@ -336,7 +336,7 @@
 #'   \item{init_lu}{A data.frame of initial land unit (LU) specifications, including
 #'     the following data:
 #'     \describe{
-#'       \item{fraction}{Initial cell fraction occupied by this LU, dimensionless (0 to 1).
+#'       \item{fraction}{Initial grid cell fraction occupied by this LU, dimensionless (0 to 1) or m\eqn{^{-2}} LU area per m\eqn{^{-2}} grid cell area.
 #'         The sum of all fractions is typically equal to 1, but may be less in which case the difference is the fraction of the grid cell occupied by ice/water.}
 #'       \item{preset}{Predefined land use type (optional). One of: 'unmanaged', 'urban', 'cropland', 'pasture'. See below for meaning of these presets. Leave empty to not use any preset.}
 #'       \item{vegetated}{Whether this LU accepts vegetation. Default for preset 'urban': False, default for other presets: True.}
@@ -349,12 +349,13 @@
 #'      During spinup, the initial land unit fractions are used (i.e. no transition).
 #'      If there are more transient years than provided LUC data, the last state is maintained until the end of the transient phase (i.e. no transition).
 #'      The array is a nxn square matrix, where n is the number of LU (i.e. dimension of init_lu).
-#'      Each cell f(i, j) expresses the fraction of LU i (row) being transfered to LU j (column).
-#'      Self transitions are allowed, meaning that a fraction of the land unit is clear cut, but the area remains in the same land use.
+#'      Each entry f(i, j) expresses the grid cell fraction of LU i (row) being transfered to LU j (column).
+#'      I.e. same units as \code{init_lu$fraction}.
+#'      Self transitions are allowed, meaning that a part of the land unit is clear cut, but the area remains in the same land use.
 #'      Note: must not be used if \code{luh2} is provided.}
 #'   \item{luh2}{A data.frame containing parameters for parsing LUH2 data instead of \code{lu_forcing} and set up \code{init_lu} if the latter is not provided.
 #'     LUH2 data can be downloaded at this address: https://luh.umd.edu/data.shtml.
-#'     The cell extracted is the closest cell from the coordinates provided in \code{site_info}.
+#'     The LUH2 cell extracted is the closest cell from the coordinates provided in \code{site_info}.
 #'     Includes the following data:
 #'     \describe{
 #'       \item{state_file}{Path to states.nc ncdf file}

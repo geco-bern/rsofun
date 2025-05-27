@@ -41,16 +41,24 @@ with one species per row. See examples \code{\link{biomee_gs_leuning_drivers}} o
 
 \item{luc_forcing}{An array of land use change (LUC) used during transient phase. Must not be provided if \code{luh2} is.}
 
-\item{luh2}{A data.frame containing parameters for parsing LUH2 data instead of \code{lu_forcing} and set up \code{init_lu} (if not provided).
+\item{luh2}{A data.frame containing parameters for parsing LUH2 data instead of \code{luc_forcing} and set up \code{init_lu} (if not provided).
 
-For further specifications of above inputs and examples see \code{\link{biomee_gs_leuning_drivers}} or \code{\link{biomee_p_model_drivers}}.}
+For further specifications of above inputs and examples see \code{\link{biomee_gs_leuning_drivers}}, \code{\link{biomee_p_model_drivers}}, or \code{\link{biomee_p_model_luluc_drivers}}.}
 
 \item{makecheck}{A logical specifying whether checks are performed to verify forcings and model parameters. \code{TRUE} by default.}
 }
 \value{
-Model output is provided as a list, with elements:
+A data.frame with columns containing model output for each land unit (LU). 
+See examples \code{\link{biomee_gs_leuning_output}}, \code{\link{biomee_p_model_output}}, or \code{\link{biomee_p_model_luluc_output}}. 
+If only one land unit (LU) is simulated, the column is named 'data'.
+If multiple land units (LU) are simulated, the columns are named according to the LU names.
+If multiple land units (LU) are simulated, an additional column 'aggregated' contains output aggregating all tiles as 
+well as product pools.
+Model output for each land unit (LU) is provided as a list. 
+Each list has elements: \code{output_daily_tile}, \code{output_annual_tile}, and \code{output_annual_cohorts}.
+Model output for the aggregated land units (LU) is provided as a list containing \code{output_daily_cell}.
 \describe{
-  \item{\code{output_daily_tile}}{A data.frame with daily outputs at a tile level.
+  \item{\code{output_daily_tile}}{A data.frame with daily outputs at tile level.
     \describe{
       \item{year}{Year of the simulation.}
       \item{doy}{Day of the year.}
@@ -139,16 +147,17 @@ Model output is provided as a list, with elements:
     \item{totseedC}{Total seed carbon (kg C m\eqn{^{-2}}).}
     \item{totseedN}{Total seed nitrogen (kg N m\eqn{^{-2}}).}
     \item{Seedling_C}{Total carbon from all compartments but seeds (kg C m\eqn{^{-2}}).}
-    \item{Seeling_N}{Total nitrogen from all compartments but seeds(kg N m\eqn{^{-2}}).}
+    \item{Seedling_N}{Total nitrogen from all compartments but seeds(kg N m\eqn{^{-2}}).}
     \item{MaxAge}{Age of the oldest tree in the tile (years).}
-    \item{MaxVolume}{Maximum volumne of a tree in the tile (m\eqn{^3}).}
+    \item{MaxVolume}{Maximum volume of a tree in the tile (m\eqn{^3}).}
     \item{MaxDBH}{Maximum DBH of a tree in the tile (m).}
     \item{NPPL}{Growth of a tree, including carbon allocated to leaves(kg C m\eqn{^{-2}} year\eqn{^{-1}}).}
     \item{NPPW}{Growth of a tree, including carbon allocated to sapwood(kg C m\eqn{^{-2}} year\eqn{^{-1}}).}
     \item{n_deadtrees}{Number of trees that died (trees m\eqn{^{-2}} year\eqn{^{-1}}).}
     \item{c_deadtrees}{Carbon biomass of trees that died (kg C m\eqn{^{-2}} year\eqn{^{-1}}).}
     \item{m_turnover}{Continuous biomass turnover (kg C m\eqn{^{-2}} year\eqn{^{-1}}).}
-    \item{c_turnover_time}{Carbon turnover rate, calculated as the ratiobetween plant biomass and NPP (year\eqn{^{-1}}).}
+    \item{c_turnover_time}{Carbon turnover rate, calculated as the ratio between plant biomass and NPP (year\eqn{^{-1}}).}
+    \item{lu_fraction}{Fraction of BiomeE grid cell that is occupied by this land unit (LU tile) tile (unitless, or m\eqn{^{-2}} LU area per m\eqn{^{-2}} grid cell area).}
   }}
   \item{\code{output_annual_cohorts}}{A data.frame of annual outputs at the cohort level.
   \describe{
@@ -178,9 +187,27 @@ Model output is provided as a list, with elements:
     \item{N_fix}{Nitrogen fixation (kg N tree\eqn{^{-1}} yr\eqn{^{-1}}).}
     \item{maxLAI}{Maximum leaf area index for a tree (m\eqn{^2} m\eqn{^{-2}}).}
     \item{Volume}{Tree volume (m\eqn{^3}).}
-    \item{n_deadtrees}{Plant to soil N flux due to mortality, including natural mortality, starvation and any other rprocesse causing a loss of individuals in general  (kg N yr\eqn{^{-1}} m\eqn{^{-2}}).}
-    \item{c_deadtrees}{Plant to soil C flux due to mortality, including natural mortality, starvation and any other rprocesse causing a loss of individuals in general  (kg C yr\eqn{^{-1}} m\eqn{^{-2}}).}
-    \item{deathrate}{Mortality rate of this cohort, including natural mortality, starvation and any other rprocesse causing a loss of individuals in general (yr\eqn{^{-1}}).}
+    \item{n_deadtrees}{Plant to soil N flux due to mortality, including natural mortality, starvation and any other processes causing a loss of individuals in general  (kg N yr\eqn{^{-1}} m\eqn{^{-2}}).}
+    \item{c_deadtrees}{Plant to soil C flux due to mortality, including natural mortality, starvation and any other processes causing a loss of individuals in general  (kg C yr\eqn{^{-1}} m\eqn{^{-2}}).}
+    \item{deathrate}{Mortality rate of this cohort, including natural mortality, starvation and any other processes causing a loss of individuals in general (yr\eqn{^{-1}}).}
+  }}
+}
+If there are multiple land units (LU) there will also be a column named `aggregated` containing a data.frame in the column
+`output_annual_cell` with annual outputs aggregating all tiles present in the simulation cell. Note that quantities per m2 refer to 
+m2 of grid cell area, i.e. the full area of the BiomeE simulation. 'lu_fraction' refers to the sum of all the tiles, 
+which must remain constant and which represents the fraction of the cell area that is not water/ice. 
+In most cases, it would be close to 1. It contains columns:
+\describe{
+  \item{\code{output_annual_cell}}{A data.frame with annual outputs aggregating all tiles present in the simulation cell. Note that quantities per m\eqn{^{2}} refer to m\eqn{^{2}} of grid cell 
+                                   area, i.e. the full area of the BiomeE simulation. 'lu_fraction' refers to the sum of all the tiles, which must remain constant and which represents the 
+                                   fraction of the cell area that is not water/ice. In most cases, it would be close to 1.
+    \describe{
+    \item{all columns from 'output_yearly_tile'}{See above for output_yearly_tile.}
+    \item{lu_fraction}{Fraction of BiomeE grid cell that is occupied by this land unit (LU tile) tile (unitless, or m\eqn{^{2}} LU area per m\eqn{^{2}} grid cell area).}
+    \item{prod_pool_1_C}{Carbon in product pool 1 (kg C m\eqn{^{-2}} grid cell).}
+    \item{prod_pool_1_N}{Nitrogen in product pool 1 (kg N m\eqn{^{-2}} grid cell).}
+    \item{prod_pool_2_C}{Carbon in product pool 2 (kg C m\eqn{^{-2}} grid cell).}
+    \item{prod_pool_2_N}{Nitrogen in product pool 2 (kg N m\eqn{^{-2}} grid cell).}
   }}
 }
 }

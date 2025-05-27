@@ -19,7 +19,7 @@ module md_cohort_linked_list
 
   type, abstract :: linked_list_abstract_item
     ! Abstract type at the heart of the linked list.
-    ! It contains a pointer to the next item and helper methods for iteration the linked list.
+    ! It contains a pointer to the next item and helper methods for iterating the linked list.
     type(cohort_stack_item), private, pointer :: next_ptr => null() ! Pointer to next cohort_stack_item. Important to nullify here!
 
     contains
@@ -324,7 +324,7 @@ contains
 
   function create_uid(self) result(res)
     !////////////////////////////////////////////////////////////////
-    ! Get the next unique ID
+    ! Get a new unique ID
     ! Private
     !---------------------------------------------------------------
     class(cohort_stack), intent(inout) :: self

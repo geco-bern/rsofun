@@ -250,8 +250,10 @@ n_lu <- length(lu_defs$name)
 # the following three numbers are the transitions from each LU to the second LU, and so on.
 initial_transition <- c(0, 0, 0, 0.4, 0, 0, 0, 0, 0)
 
-# Harvest pattern: clear-cut one fourth (0.4/4 = 0.1) of the tile every 40 years.
-# Clear-cuts are represented by self-transitions of LU 2.
+# Harvest pattern: clear-cut secondary forest every 40 years by an area 
+# corresponding to 10% of the tile (0.1). That corresponds to a fourth of the area 
+# of secondary forest (0.4/4 = 0.1).
+# Clear-cuts are represented by self-transitions of LU 2, of area 0.1.
 harvest_pattern <- c(
         rep(rep(0, 9), 39), # null pattern
         c(0, 0, 0, 0, 0.1, 0, 0, 0, 0)

@@ -125,7 +125,10 @@ contains
                           + (lu%vegn%psoil_fs + lu%vegn%proot + lu%vegn%pseed + lu%vegn%plabl + lu%vegn%pleaf) &
                           * delta * (1.0 - inputs%init_lu(i)%oxidized_litter_fraction)
           ! We export above ground pools (= products)
-          export = export + (lu%vegn%pwood + lu%vegn%psapw) * delta
+          ! NOTE: since 'pwood','psapw' are in kg C / m2 of tile
+          !       and 'delta' is in m2 tile per m2 of landscape (or cell)
+          !       'export' is kg C / m2 of landscape
+          export = export + (lu%vegn%pwood + lu%vegn%psapw) * delta 
           ! Water transfer
           transfer_water(j, :) = transfer_water(j, :) + lu%vegn%wcl(:) * delta
           ! We keep track of the deltas
