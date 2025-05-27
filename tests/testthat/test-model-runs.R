@@ -34,7 +34,7 @@ test_that("biomee output check (p-model) with LULUC", {
 
   expect_true(all.equal(colMeans(out$primary[[1]]$output_annual_tile), colMeans(biomee_p_model_luluc_output$primary[[1]]$output_annual_tile), tolerance = 1e-4))
   expect_true(all.equal(colMeans(out$secondary[[1]]$output_annual_tile), colMeans(biomee_p_model_luluc_output$secondary[[1]]$output_annual_tile), tolerance = 1e-4))
-  expect_true(all.equal(colMeans(out$aggregated[[1]]), colMeans(biomee_p_model_luluc_output$aggregated[[1]]), tolerance = 1e-4))
+  expect_true(all.equal(colMeans(out$aggregated[[1]]$output_annual_cell), colMeans(biomee_p_model_luluc_output$aggregated[[1]]$output_annual_cell), tolerance = 1e-4))
 
   # If this test fails it means that the output of the model is out of sync with the data in the data directory.
   # It could either mean that:
@@ -418,7 +418,7 @@ test_that("Regression tests run_biomee_f_bysite()", {
   expect_equal(tibble(mod_BiomeE_gsLeun$data$output_annual_tile   ), tibble(mod_BiomeE_gsLeun_2ndTry$data$output_annual_tile   ), tolerance = 1e-6)
   expect_equal(tibble(mod_BiomeE_gsLeun$data$output_annual_cohorts), tibble(mod_BiomeE_gsLeun_2ndTry$data$output_annual_cohorts), tolerance = 1e-6)
   
-  expect_equal(tibble(mod_BiomeE_PLULUC$aggregated),                       tibble(mod_BiomeE_PLULUC_2ndTry$aggregated),                      tolerance = 1e-6)
+  expect_equal(tibble(mod_BiomeE_PLULUC$aggregated$output_annual_cell),    tibble(mod_BiomeE_PLULUC_2ndTry$aggregated$output_annual_cell),   tolerance = 1e-6)
   expect_equal(tibble(mod_BiomeE_PLULUC$primary$output_daily_tile),        tibble(mod_BiomeE_PLULUC_2ndTry$primary$output_daily_tile),       tolerance = 1e-6)
   expect_equal(tibble(mod_BiomeE_PLULUC$primary$output_daily_tile),        tibble(mod_BiomeE_PLULUC_2ndTry$primary$output_daily_tile),       tolerance = 1e-6)
   expect_equal(tibble(mod_BiomeE_PLULUC$primary$output_annual_tile),       tibble(mod_BiomeE_PLULUC_2ndTry$primary$output_annual_tile),      tolerance = 1e-6)
@@ -957,7 +957,7 @@ test_that("Regression tests run_biomee_f_bysite()", {
   #       changed in the model.
   #       If this is expected, please update the hardcoded reference values below.
   #       To do so, simply use the commented code, making use of dput(). Thanks!
-  # mod_BiomeE_PLULUC$aggregated|>filter(                           year %in% c(1, 2, 8, 9, 16, 251)) |> dput()
+  # mod_BiomeE_PLULUC$aggregated$output_annual_cell|>filter(                           year %in% c(1, 2, 8, 9, 16, 251)) |> dput()
   # mod_BiomeE_PLULUC$primary$output_daily_tile|>filter(year==  1, doy %in% c(1, 2, 180, 364, 365)) |> dput()
   # mod_BiomeE_PLULUC$primary$output_daily_tile|>filter(year==251, doy %in% c(1, 2, 180, 364, 365)) |> dput()
   # mod_BiomeE_PLULUC$primary$output_annual_tile|>filter(           year %in% c(1, 2, 8, 9, 16, 251)) |> dput()
@@ -1517,7 +1517,7 @@ test_that("Regression tests run_biomee_f_bysite()", {
     deathrate       = c(0.0181079767644405,0.113263040781021,0.0839816629886627,0.152398928999901,0.266000509262085,0.351924955844879),
     n_deadtrees     = c(0.00199693441390991,0.0061703734099865,0.000313190830638632,0.00161577318795025,3.86895844712853e-05,0.00387696595862508),
     c_deadtrees     = c(0.0918554738163948,0.640294253826141,0.0292408317327499,0.0901062712073326,0.00168160616885871,0.0465278774499893))
-  expect_equal(tolerance = 5e-2, tibble(mod_BiomeE_PLULUC$aggregated|>filter(                           year %in% c(1, 2, 8, 9, 16, 251))),   ref_BiomeE_PLULUC_aggregated)
+  expect_equal(tolerance = 5e-2, tibble(mod_BiomeE_PLULUC$aggregated$output_annual_cell |>filter(       year %in% c(1, 2, 8, 9, 16, 251))),   ref_BiomeE_PLULUC_aggregated)
   expect_equal(tolerance = 5e-2, tibble(mod_BiomeE_PLULUC$primary$output_daily_tile|>filter(year==  1, doy %in% c(1, 2, 180, 364, 365))),     ref_BiomeE_PLULUC_primary_odt_yr1)
   expect_equal(tolerance = 5e-2, tibble(mod_BiomeE_PLULUC$primary$output_daily_tile|>filter(year==251, doy %in% c(1, 2, 180, 364, 365))),     ref_BiomeE_PLULUC_primary_odt_yr251)
   expect_equal(tolerance = 5e-2, tibble(mod_BiomeE_PLULUC$primary$output_annual_tile|>filter(           year %in% c(1, 2, 8, 9, 16, 251))),   ref_BiomeE_PLULUC_primary_oat)

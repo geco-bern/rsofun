@@ -309,7 +309,14 @@ build_out <- function(biomeeout, lu_names, sitename, do_daily_diagnostics){
     out <- list("data"=build_lu_out(biomeeout, 1, trimmed_object))
   }
   else {
-    out <- list(annual_tile_output(biomeeout[[4]], aggregated_LU = TRUE))
+    # first column for aggregated across all LU
+    out <- list("aggregated" = list(
+      output_annual_cell = annual_tile_output(biomeeout[[4]], aggregated_LU = TRUE)
+      # output_daily_tile = NA,
+      # output_daily_tile = NA,
+      # output_annual_cohorts = NA
+    ))
+    # following columns for each LU
     for (lu in 1:n_lu) {
       res <- build_lu_out(biomeeout, lu, trimmed_object)
       out <- append(out, list(res))

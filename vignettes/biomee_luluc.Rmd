@@ -129,8 +129,12 @@ library(purrr)
 
 plot1 <- function(lu_name, variable, out, y_limit=NA, yr_start=1, yr_label_offset=0) {
   tile <- out[[lu_name]][[1]]
-  if(lu_name != 'aggregated')
-          tile <- tile$output_annual_tile
+  if(lu_name != 'aggregated'){
+    tile <- tile$output_annual_tile
+  } else {
+    tile <- tile$output_annual_cell
+  }
+          
   if (variable != 'lu_fraction') {
     res <- tile %>%
           ggplot() +
@@ -155,7 +159,7 @@ plot1 <- function(lu_name, variable, out, y_limit=NA, yr_start=1, yr_label_offse
 }
 
 plot_variable <- function(variable, out, yr_start=1, yr_label_offset=0) {
-  agg <- out[['aggregated']][[1]]
+  agg <- out[['aggregated']][[1]]$output_annual_cell
   y_limit <- max(agg[variable] * agg$lu_fraction) * 1.01
 
   # We remove sitename and aggregated
@@ -192,13 +196,13 @@ Finally, as expected, the fraction of the aggregated tile remains constant throu
 To conclude this demonstration, let us plot the product pools:
 
 ```{r eval = TRUE, results = 'hide', fig.width=7, fig.height=3}
-p1 <- out_sim_1$aggregated[[1]] %>%
+p1 <- out_sim_1$aggregated[[1]]$output_annual_cell %>%
         ggplot() +
         geom_line(aes(x = year, y = prod_pool_1_C)) +
         theme_classic() +
         labs(x = "Year", y = paste("Prod. pools C (2 years)"))
 
-p2 <- out_sim_1$aggregated[[1]] %>%
+p2 <- out_sim_1$aggregated[[1]]$output_annual_cell %>%
         ggplot() +
         geom_line(aes(x = year, y = prod_pool_2_C)) +
         theme_classic() +
@@ -292,13 +296,13 @@ As expected GPP is null for the urban tile (no vegetation). Note that the litter
 As before, we can also look at the product pools:
 
 ```{r eval = TRUE, results = 'hide', fig.width=7, fig.height=3}
-p1 <- out_sim_2$aggregated[[1]] %>%
+p1 <- out_sim_2$aggregated[[1]]$output_annual_cell %>%
         ggplot() +
         geom_line(aes(x = year, y = prod_pool_1_C)) +
         theme_classic() +
         labs(x = "Year", y = paste("Prod. pools C (2 years)"))
 
-p2 <- out_sim_2$aggregated[[1]] %>%
+p2 <- out_sim_2$aggregated[[1]]$output_annual_cell %>%
         ggplot() +
         geom_line(aes(x = year, y = prod_pool_2_C)) +
         theme_classic() +
