@@ -51,7 +51,7 @@ contains
       cc%age = cc%age + inputs%dt_fast_yr
 
       ! Maintenance respiration
-      call plant_respiration( cc, forcing%tair ) ! get resp per tree per time step
+      call plant_respiration( cc, forcing%TairK ) ! get resp per tree per time step
 
       ! We add the growth respiration scaled from daily to timestap
       cc%fast_fluxes%resp = cc%fast_fluxes%resp + (cc%resg * inputs%step_seconds) / secs_per_day

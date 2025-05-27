@@ -89,7 +89,7 @@ contains
       real    :: Esoil      ! soil surface evaporation, kg m-2 s-1
       real    :: Rsoilabs   ! W/m2
       real    :: Hgrownd    ! Ground heat flux, W/m2
-      real    :: TairK,Tair      ! temperature, K and C, respectively
+      real    :: TairK,TairC! temperature, K and C, respectively
       real    :: RH         ! relative humidity, ratio to the saturated (0~1)
       real    :: Dair       ! VPD, pa
       real    :: rhocp !
@@ -134,13 +134,13 @@ contains
           Rsoilabs = forcing%radiation * exp(-kappa*LAI)
 
           Hgrownd = 0.0
-          TairK = forcing%Tair
-          Tair  = forcing%Tair - 273.16
+          TairK = forcing%TairK
+          TairC = forcing%TairK - 273.16
           rhocp = cp * 1.0e3 * forcing%P_air * kMa * 1e-3 / (kR * TairK)
-          H2OLv = H2oLv0 - 2.365e3 * Tair
+          H2OLv = H2oLv0 - 2.365e3 * TairC
           RH = forcing%RH  ! Check forcing's unit of humidity
-          Dair  = calc_esat(Tair)*(1.0 - RH)
-          slope = (calc_esat(Tair+0.1)-calc_esat(Tair))/0.1
+          Dair  = calc_esat(TairC)*(1.0 - RH)
+          slope = (calc_esat(TairC+0.1)-calc_esat(TairC))/0.1
           psyc = forcing%P_air * cp * 1.0e3 * kMa / (H2OLv * h2o_molmass)
           Cmolar = forcing%P_air/(kR * TairK) ! mole density of air (mol/m3)
           rsoil = exp(8.206-4.255*inputs%params_tile%FLDCAP) ! s m-1, Liu Yanlan et al. 2017, PNAS

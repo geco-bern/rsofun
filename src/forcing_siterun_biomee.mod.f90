@@ -18,7 +18,7 @@ module md_forcing_biomee
   type :: climate_type
     real    :: ppfd          ! mol m-2 s-1
     real    :: radiation     ! W m-2 (SW downwelling, computed from ppfd)
-    real    :: Tair          ! air temperature,  K
+    real    :: TairK         ! air temperature,  K
     real    :: vpd           ! vapor pressure deficit (Pa)
     real    :: rain          ! kgH2O m-2 s-1
     real    :: windU         ! wind velocity (m s-1)
@@ -58,7 +58,7 @@ contains
 
     ! This is to read from ORNL file
     out_climate%ppfd      = real(forcing(idx_start:idx_end, 1))
-    out_climate%Tair      = real(forcing(idx_start:idx_end, 2)) + kTkelvin
+    out_climate%TairK     = real(forcing(idx_start:idx_end, 2)) + kTkelvin
     out_climate%vpd       = real(forcing(idx_start:idx_end, 3))
     out_climate%rain      = real(forcing(idx_start:idx_end, 4))
     out_climate%windU     = real(forcing(idx_start:idx_end, 5))
@@ -68,7 +68,7 @@ contains
     out_climate%radiation = out_climate%ppfd / (kfFEC * 1.0e-6)
 
     do it=1,ntstepsyear
-      out_climate(it)%RH  = calc_rh_vpd( out_climate(it)%vpd, (out_climate(it)%Tair - kTkelvin) )
+      out_climate(it)%RH  = calc_rh_vpd( out_climate(it)%vpd, (out_climate(it)%TairK - kTkelvin) )
     end do
 
   end function getclimate

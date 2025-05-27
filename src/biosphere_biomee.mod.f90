@@ -41,7 +41,7 @@ contains
     real, dimension(ndayyear) :: daily_temp  ! Daily temperatures (average) in Kelvin
     real, dimension(size(climate)) :: tair
 
-    tair = climate(:)%Tair
+    tair = climate(:)%TairK
 
     !----------------------------------------------------------------
     ! INITIALISATIONS
