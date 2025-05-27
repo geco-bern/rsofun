@@ -837,9 +837,6 @@ contains
     real :: dAleaf ! leaf area decrease due to dBL
 
     associate ( sp => cc%sp() )
-
-      dAleaf = leaf_area_from_biomass(dL%c12, cc%species)
-
       ! Retranslocation to NSC and NSN
       dtot = dL + dR + dStem
       cc%plabl = cc%plabl + orgpool(dtot%c12 * inputs%params_tile%l_fract, dtot%n14 * inputs%params_tile%retransN)
@@ -854,17 +851,32 @@ contains
       cc%NPProot = cc%NPProot - inputs%params_tile%l_fract * dR%n14
       cc%NPPwood = cc%NPPwood - inputs%params_tile%l_fract * dStem%n14
 
+      ! express leaf biomass loss (dL) as leaf area loss in order to derive C and N balance:
+      !dAleaf = dL%c12/sp%LMA ! biomass of leaves / LMA, kg C/individual / kg C/m2 == m2/individual
+      !dAleaf_pool = orgpool(dAleaf * inputs%params_tile%LMAmin, dAleaf * sp%LNbase)
+      
       ! put C and N into soil pools
-      dAleaf_pool = orgpool(dAleaf * inputs%params_tile%LMAmin, &
-            dAleaf * sp%LNbase)
-      loss_coarse  = (dL - dAleaf_pool + dStem) * cc%density
-      loss_fine    = (dR + dAleaf_pool) * cc%density
+      !loss_coarse  = (dL - dAleaf_pool + dStem) * cc%density
+      !loss_fine    = (dR + dAleaf_pool) * cc%density
+      !loss_coarse = orgpool(loss_coarse%c12 * (1.0 - inputs%params_tile%l_fract), &
+      !        loss_coarse%n14 * (1.0 - inputs%params_tile%retransN))
+      !loss_fine = orgpool(loss_fine%c12 * (1.0 - inputs%params_tile%l_fract), &
+      !        loss_fine%n14 * (1.0 - inputs%params_tile%retransN))
 
-      loss_coarse = orgpool(loss_coarse%c12 * (1.0 - inputs%params_tile%l_fract), &
-              loss_coarse%n14 * (1.0 - inputs%params_tile%retransN))
-
-      loss_fine = orgpool(loss_fine%c12 * (1.0 - inputs%params_tile%l_fract), &
-              loss_fine%n14 * (1.0 - inputs%params_tile%retransN))
+      ! Alternative formulation: 
+      !    express leaf biomass loss (dL) as leaf area loss in order to derive C and N balance:
+      !    dAleaf = dL%c12/sp%LMA ! biomass of leaves / LMA, kg C/individual / kg C/m2 == m2/individual
+      !    dAleaf_pool = orgpool(dAleaf * inputs%params_tile%LMAmin, dAleaf * sp%LNbase)
+      !  dStem + dL - dAleaf_pool:
+      loss_coarse  = orgpool( &
+        (dStem%c12 + dL%c12 - dL%c12/sp%LMA * inputs%params_tile%LMAmin) * (1.0 - inputs%params_tile%l_fract), &
+        (dStem%n14 + dL%n14 - dL%c12/sp%LMA * sp%LNbase                ) * (1.0 - inputs%params_tile%retransN) &
+      ) * cc%density
+      !  dR + dAleaf_pool:
+      loss_fine    = orgpool( &
+        (dR%c12             + dL%c12/sp%LMA * inputs%params_tile%LMAmin) * (1.0 - inputs%params_tile%l_fract), &
+        (dR%n14             + dL%c12/sp%LMA * sp%LNbase                ) * (1.0 - inputs%params_tile%retransN) &
+      ) * cc%density
 
       call vegn%plant2soil(loss_coarse, loss_fine)
 
@@ -1230,18 +1242,5 @@ contains
     end if
 
   end subroutine kill_old_grass
-  
-
-  function leaf_area_from_biomass(bl,species) result (area)
-    !////////////////////////////////////////////////////////////////
-    ! Code from BiomeE-Allocation
-    !---------------------------------------------------------------
-    real :: area ! returned value
-    real,    intent(in) :: bl      ! biomass of leaves, kg C/individual
-    integer, intent(in) :: species ! species
-
-    area = bl/inputs%params_species(species)%LMA
-
-  end function
 
 end module md_vegetation_processes_biomee
