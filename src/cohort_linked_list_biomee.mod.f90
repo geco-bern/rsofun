@@ -24,7 +24,7 @@ module md_cohort_linked_list
 
     contains
 
-    procedure has_next
+    ! unused function: procedure has_next
     procedure next
 
   end type linked_list_abstract_item
@@ -348,14 +348,14 @@ contains
     next_item => self%next_ptr
   end function next
 
-  pure function has_next(self) result(res)
-    !////////////////////////////////////////////////////////////////
-    ! Returns true if this element is followed by another item
-    !---------------------------------------------------------------
-    class(linked_list_abstract_item), intent(in) :: self
-    logical :: res
-
-    res = associated(self%next_ptr)
-  end function has_next
+  ! unused function pure function has_next(self) result(res)
+  ! unused function   !////////////////////////////////////////////////////////////////
+  ! unused function   ! Returns true if this element is followed by another item
+  ! unused function   !---------------------------------------------------------------
+  ! unused function   class(linked_list_abstract_item), intent(in) :: self
+  ! unused function   logical :: res
+  ! unused function 
+  ! unused function   res = associated(self%next_ptr)
+  ! unused function end function has_next
 
 end module md_cohort_linked_list
