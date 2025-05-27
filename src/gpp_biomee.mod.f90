@@ -149,7 +149,7 @@ contains
           rad_net  = f_light(cc%layer) * forcing%radiation * 0.9 ! net radiation absorbed by the canopy, W/m2
           p_surf   = forcing%P_air  ! Pa
           TairK    = forcing%TairK ! K
-          TairC    = forcing%TairK - 273.16 ! degC
+          TairC    = forcing%TairC ! degC
           cana_q   = (calc_esat(TairC) * forcing%RH * h2o_molmass) / (p_surf * kMa)  ! air specific humidity, kg/kg
           cana_co2 = forcing%CO2 ! co2 concentration in canopy air space, mol CO2/mol dry air
 
@@ -185,7 +185,7 @@ contains
       !----------------------------------------------------------------
       if (.not. vegn%dampended_forcing%initialized) then
         vegn%dampended_forcing%co2  = forcing%CO2 * 1.0e6
-        vegn%dampended_forcing%temp = (forcing%TairK - kTkelvin)
+        vegn%dampended_forcing%temp = (forcing%TairC)
         vegn%dampended_forcing%vpd  = forcing%vpd
         vegn%dampended_forcing%patm = forcing%P_air
         vegn%dampended_forcing%par = forcing%radiation
@@ -193,7 +193,7 @@ contains
       else
         vegn%dampended_forcing%co2  = dampen_variability( forcing%CO2 * 1.0e6,        params_gpp%tau_acclim, &
                 vegn%dampended_forcing%co2 )
-        vegn%dampended_forcing%temp = dampen_variability( (forcing%TairK - kTkelvin),  params_gpp%tau_acclim, &
+        vegn%dampended_forcing%temp = dampen_variability( (forcing%TairC),  params_gpp%tau_acclim, &
                 vegn%dampended_forcing%temp)
         vegn%dampended_forcing%vpd  = dampen_variability( forcing%vpd,                &
                 params_gpp%tau_acclim, vegn%dampended_forcing%vpd )
@@ -206,7 +206,7 @@ contains
       !----------------------------------------------------------------
       ! Instantaneous temperature effect on quantum yield efficiency
       !----------------------------------------------------------------
-      kphio_temp = calc_kphio_temp( (forcing%TairK - kTkelvin), &
+      kphio_temp = calc_kphio_temp( (forcing%TairC), &
               .false., &    ! no C4
               params_gpp%kphio, &
               params_gpp%kphio_par_a, &
@@ -247,7 +247,7 @@ contains
 
           ! quantities per tree and cumulated over seconds in time step (kgC step-1 tree-1 )
           cc%fast_fluxes%gpp = par * fapar_tree(i) * out_pmodel%lue * cc%crownarea() * inputs%step_seconds * 1.0e-3
-          cc%resl = fapar_tree(i) * out_pmodel%vcmax25 * params_gpp%rd_to_vcmax * calc_ftemp_inst_rd( forcing%TairK - kTkelvin ) &
+          cc%resl = fapar_tree(i) * out_pmodel%vcmax25 * params_gpp%rd_to_vcmax * calc_ftemp_inst_rd( forcing%TairC ) &
             * cc%crownarea() * inputs%step_seconds * c_molmass * 1.0e-3
 
         endif

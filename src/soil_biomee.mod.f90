@@ -135,7 +135,7 @@ contains
 
           Hgrownd = 0.0
           TairK = forcing%TairK
-          TairC = forcing%TairK - 273.16
+          TairC = forcing%TairC
           rhocp = cp * 1.0e3 * forcing%P_air * kMa * 1e-3 / (kR * TairK)
           H2OLv = H2oLv0 - 2.365e3 * TairC
           RH = forcing%RH  ! Check forcing's unit of humidity
