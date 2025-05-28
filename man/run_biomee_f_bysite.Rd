@@ -202,12 +202,18 @@ In most cases, it would be close to 1. It contains columns:
                                    area, i.e. the full area of the BiomeE simulation. 'lu_fraction' refers to the sum of all the tiles, which must remain constant and which represents the 
                                    fraction of the cell area that is not water/ice. In most cases, it would be close to 1.
     \describe{
-    \item{all columns from 'output_yearly_tile'}{See above for output_yearly_tile.}
+    \item{all columns from 'output_yearly_tile'}{See above for output_yearly_tile, but now expressed per unit area of the BiomeE grid cell.}
     \item{lu_fraction}{Fraction of BiomeE grid cell that is occupied by this land unit (LU tile) tile (unitless, or m\eqn{^{2}} LU area per m\eqn{^{2}} grid cell area).}
     \item{prod_pool_1_C}{Carbon in product pool 1 (kg C m\eqn{^{-2}} grid cell).}
     \item{prod_pool_1_N}{Nitrogen in product pool 1 (kg N m\eqn{^{-2}} grid cell).}
     \item{prod_pool_2_C}{Carbon in product pool 2 (kg C m\eqn{^{-2}} grid cell).}
     \item{prod_pool_2_N}{Nitrogen in product pool 2 (kg N m\eqn{^{-2}} grid cell).}
+    \item{Rprod_0_C}{Carbon loss rate directly from land use change (LUC) (kg C m\eqn{^{-2}} grid cell yr\eqn{^{-1}}).}
+    \item{Rprod_0_N}{Nitrogen loss rate directly from land use change (LUC) (kg C m\eqn{^{-2}} grid cell yr\eqn{^{-1}}).}
+    \item{Rprod_1_C}{Carbon loss rate from product pool 1 (kg C m\eqn{^{-2}} grid cell yr\eqn{^{-1}}).}
+    \item{Rprod_1_N}{Nitrogen loss rate from product pool 1 (kg N m\eqn{^{-2}} grid cell yr\eqn{^{-1}}).}
+    \item{Rprod_2_C}{Carbon loss rate from product pool 2 (kg C m\eqn{^{-2}} grid cell yr\eqn{^{-1}}).}
+    \item{Rprod_2_N}{Nitrogen loss rate from product pool 2 (kg N m\eqn{^{-2}} grid cell yr\eqn{^{-1}}).}
   }}
 }
 }

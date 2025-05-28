@@ -205,6 +205,7 @@ contains
     real    :: tot_fraction, max_age, max_volume, max_dbh
     real, dimension(nvars_annual_tile)    :: agg_array
     type(orgpool) :: prod_pool
+    type(orgpool) :: prod_loss
 
     agg_array(:) = 0
     year = 0
@@ -299,12 +300,22 @@ contains
     output_annual_aggregated(ANNUAL_TILE_M_TURNOVER        ) = dble(agg_array(ANNUAL_TILE_M_TURNOVER     ))
     output_annual_aggregated(ANNUAL_TILE_C_TURNOVER_TIME   ) = dble(agg_array(ANNUAL_TILE_C_TURNOVER_TIME))
     output_annual_aggregated(ANNUAL_TILE_LU_FRACTION       ) = dble(tot_fraction)
+
     prod_pool = self%prod_pools%get_pool(1)
     output_annual_aggregated(AGGREGATED_TILE_PROD_POOL_1_C ) = dble(prod_pool%c12)
     output_annual_aggregated(AGGREGATED_TILE_PROD_POOL_1_N ) = dble(prod_pool%n14)
     prod_pool = self%prod_pools%get_pool(2)
     output_annual_aggregated(AGGREGATED_TILE_PROD_POOL_2_C ) = dble(prod_pool%c12)
     output_annual_aggregated(AGGREGATED_TILE_PROD_POOL_2_N ) = dble(prod_pool%n14)
+    prod_loss = self%prod_pools%get_direct_loss_rate()
+    output_annual_aggregated(AGGREGATED_TILE_ANNUAL_PROD_LOSS_0_C ) = dble(prod_loss%c12)
+    output_annual_aggregated(AGGREGATED_TILE_ANNUAL_PROD_LOSS_0_N ) = dble(prod_loss%n14)
+    prod_loss = self%prod_pools%get_loss_rates(1)
+    output_annual_aggregated(AGGREGATED_TILE_ANNUAL_PROD_LOSS_1_C ) = dble(prod_loss%c12)
+    output_annual_aggregated(AGGREGATED_TILE_ANNUAL_PROD_LOSS_1_N ) = dble(prod_loss%n14)
+    prod_loss = self%prod_pools%get_loss_rates(2)
+    output_annual_aggregated(AGGREGATED_TILE_ANNUAL_PROD_LOSS_2_C ) = dble(prod_loss%c12)
+    output_annual_aggregated(AGGREGATED_TILE_ANNUAL_PROD_LOSS_2_N ) = dble(prod_loss%n14)    
 
   end subroutine populate_outarrays
 

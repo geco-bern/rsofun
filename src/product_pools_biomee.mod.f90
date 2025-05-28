@@ -15,12 +15,15 @@ module md_product_pools
     type product_pools
 
         type(orgpool), private, dimension(n_product_pools) :: product_pool = orgpool()
+        type(orgpool), private, dimension(n_product_pools + 1) :: product_loss = orgpool()
     
     contains
 
         procedure update
         procedure get_pool
-        
+        procedure get_loss_rates
+        procedure get_direct_loss_rate
+
     end type product_pools
 
   contains
@@ -35,9 +38,13 @@ module md_product_pools
       ! Decay then add new products
       self%product_pool(1) = self%product_pool(1) * exp(-1.0 / e_fold_pp(1)) + products * fraction_pp(1)
       self%product_pool(2) = self%product_pool(2) * exp(-1.0 / e_fold_pp(2)) + products * fraction_pp(2)
-      ! TODO: Fix below issues: Here we are missing to account for:
-      !       a) the fraction going directly to the atmosphere, i.e. 1-(fraction_pp(1) + fraction_pp(2)) == 25% of LUC products
-      !       b) the fraction that goes from the product pools to the atmosphere, i.e. pool(1) * [1 - exp(-1.0 / e_fold_pp(1))] and  pool(2) * [1 - exp(-1.0 / e_fold_pp(2))]
+
+      ! Keep track of the decaying losses from product pools and direct losses due to LUC
+      ! These are yearly loss rates
+      self%product_loss(1) = self%product_pool(1) * (1.0 - exp(-1.0 / e_fold_pp(1)))
+      self%product_loss(2) = self%product_pool(2) * (1.0 - exp(-1.0 / e_fold_pp(2)))
+      self%product_loss(3) = products             * (1.0 - fraction_pp(1) - fraction_pp(1))
+      ! The last loss is the direct loss to the atmosphere, i.e the residual of what is not attributed to the product pools
 
     end subroutine update
 
@@ -51,5 +58,26 @@ module md_product_pools
 
         pool = self%product_pool(i)
     end function get_pool
+
+    pure function get_loss_rates(self, i) result(loss)
+        !////////////////////////////////////////////////////////////////
+        ! Retrieve losses from pool i
+        !----------------------------------------------------------------
+        class(product_pools), intent(in) :: self
+        integer, intent(in) :: i
+        type(orgpool) :: loss
+
+        loss = self%product_loss(i)
+    end function get_loss_rates
+
+    pure function get_direct_loss_rate(self) result(loss)
+      !////////////////////////////////////////////////////////////////
+      ! Retrieve direct losses never added to any product pool
+      !----------------------------------------------------------------
+      class(product_pools), intent(in) :: self
+      type(orgpool) :: loss
+
+      loss = self%product_loss(n_product_pools + 1) ! For direct losses we need the last element 
+    end function get_direct_loss_rate
 
 end module md_product_pools

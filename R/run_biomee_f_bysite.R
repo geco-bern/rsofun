@@ -178,6 +178,12 @@
 #'     \item{prod_pool_1_N}{Nitrogen in product pool 1 (kg N m\eqn{^{-2}} grid cell).}
 #'     \item{prod_pool_2_C}{Carbon in product pool 2 (kg C m\eqn{^{-2}} grid cell).}
 #'     \item{prod_pool_2_N}{Nitrogen in product pool 2 (kg N m\eqn{^{-2}} grid cell).}
+#'     \item{Rprod_0_C}{Carbon loss rate directly from land use change (LUC) (kg C m\eqn{^{-2}} grid cell yr\eqn{^{-1}}).}
+#'     \item{Rprod_0_N}{Nitrogen loss rate directly from land use change (LUC) (kg C m\eqn{^{-2}} grid cell yr\eqn{^{-1}}).}
+#'     \item{Rprod_1_C}{Carbon loss rate from product pool 1 (kg C m\eqn{^{-2}} grid cell yr\eqn{^{-1}}).}
+#'     \item{Rprod_1_N}{Nitrogen loss rate from product pool 1 (kg N m\eqn{^{-2}} grid cell yr\eqn{^{-1}}).}
+#'     \item{Rprod_2_C}{Carbon loss rate from product pool 2 (kg C m\eqn{^{-2}} grid cell yr\eqn{^{-1}}).}
+#'     \item{Rprod_2_N}{Nitrogen loss rate from product pool 2 (kg N m\eqn{^{-2}} grid cell yr\eqn{^{-1}}).}
 #'   }}
 #' }
 #' 
@@ -804,7 +810,13 @@ annual_tile_output <- function(raw_data, aggregated_LU = FALSE){
                    "prod_pool_1_C", 
                    "prod_pool_1_N", 
                    "prod_pool_2_C", 
-                   "prod_pool_2_N")
+                   "prod_pool_2_N",
+                   "Rprod_0_C", 
+                   "Rprod_0_N", 
+                   "Rprod_1_C", 
+                   "Rprod_1_N", 
+                   "Rprod_2_C", 
+                   "Rprod_2_N")
   }
   colnames(df) <- col_names
   return(df)

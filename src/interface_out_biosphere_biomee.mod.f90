@@ -161,11 +161,17 @@ module md_interface_out_biomee
 
   !=============== Aggregated tile
 
-  integer, public, parameter :: nvars_aggregated_out = nvars_annual_tile + 4
+  integer, public, parameter :: nvars_aggregated_out = nvars_annual_tile + 10
 
   integer, public, parameter :: AGGREGATED_TILE_PROD_POOL_1_C = nvars_annual_tile + 1
   integer, public, parameter :: AGGREGATED_TILE_PROD_POOL_1_N = nvars_annual_tile + 2
   integer, public, parameter :: AGGREGATED_TILE_PROD_POOL_2_C = nvars_annual_tile + 3
   integer, public, parameter :: AGGREGATED_TILE_PROD_POOL_2_N = nvars_annual_tile + 4
+  integer, public, parameter :: AGGREGATED_TILE_ANNUAL_PROD_LOSS_0_C = nvars_annual_tile + 5
+  integer, public, parameter :: AGGREGATED_TILE_ANNUAL_PROD_LOSS_0_N = nvars_annual_tile + 6
+  integer, public, parameter :: AGGREGATED_TILE_ANNUAL_PROD_LOSS_1_C = nvars_annual_tile + 7
+  integer, public, parameter :: AGGREGATED_TILE_ANNUAL_PROD_LOSS_1_N = nvars_annual_tile + 8
+  integer, public, parameter :: AGGREGATED_TILE_ANNUAL_PROD_LOSS_2_C = nvars_annual_tile + 9
+  integer, public, parameter :: AGGREGATED_TILE_ANNUAL_PROD_LOSS_2_N = nvars_annual_tile + 10
 
 end module md_interface_out_biomee
