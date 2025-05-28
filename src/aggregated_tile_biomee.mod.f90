@@ -103,7 +103,7 @@ contains
     transfer(:, :) = orgpool()
     transfer_water(:, :) = 0.0
     export = orgpool()
-    lu_fractions = self%tiles(:)%fraction
+    lu_fractions = self%tiles(:)%fraction ! units: m2 LU tile per m2 of grid cell
     old_lu_fractions = lu_fractions
     received = 0
     lost = 0
@@ -113,7 +113,16 @@ contains
     ! j is the receiving tile
     do i = 1, self%n_lu()
       do j = 1, self%n_lu()
-        delta = luc_forcing(i, j)
+        delta = luc_forcing(i, j) ! units: m2 land unit (LU) tile per m2 of grid cell
+                                  !        i.e. same units as lu_fractions
+                                  !        sum of lu_factions must <= 1.0,
+                                  !        could be smaller if there is ice/ocean
+                                  !
+                                  ! pools, fluxes, of lu%vegn () are relative to
+                                  ! the tile area, i.e. per m2 land unit (LU) tile
+                                  !
+                                  ! below we multiply these pools/fluxes by delta
+                                  ! thus `transfer` is per m2 of grid cell
         if (delta <= 0) cycle
         associate(lu => self%tiles(i))
           ! If there is a transition from i to j, we save the transfered pools in 'transfer'
@@ -126,14 +135,14 @@ contains
                           * delta * (1.0 - inputs%init_lu(i)%oxidized_litter_fraction)
           ! We export above ground pools (= products)
           ! NOTE: since 'pwood','psapw' are in kg C / m2 of tile
-          !       and 'delta' is in m2 tile per m2 of landscape (or cell)
-          !       'export' is kg C / m2 of landscape
+          !       and 'delta' is in m2 tile per m2 of grid cell (or landscape)
+          !       'export' is kg C / m2 of grid cell (or landscape)
           export = export + (lu%vegn%pwood + lu%vegn%psapw) * delta 
           ! Water transfer
-          transfer_water(j, :) = transfer_water(j, :) + lu%vegn%wcl(:) * delta
+          transfer_water(j, :) = transfer_water(j, :) + lu%vegn%wcl(:) * delta ! kg H2O m-2 grid cell
           ! We keep track of the deltas
-          received(j) = received(j) + delta
-          lost(i) = lost(i) + delta
+          received(j) = received(j) + delta   ! m2 tile / m2 grid cell
+          lost(i) = lost(i) + delta           ! m2 tile / m2 grid cell
 
         end associate
       end do
@@ -169,12 +178,14 @@ contains
         end if
 
         ! Subtract the lost quantities, add transfered ones, and normalize with the new fraction
+        ! kgC,N,H2O/m2tile = 
+        !                  (kgC,N,H2O/m2tile *      m2tile / m2gridcell        + kg C,N,H2O/m2gridcell) / m2tile/m2gridcell
         lu%vegn%pmicr    = (lu%vegn%pmicr    * (old_lu_fractions(j) - lost(j)) + transfer(j, PMICR))    / lu_fractions(j)
         lu%vegn%inorg    = (lu%vegn%inorg    * (old_lu_fractions(j) - lost(j)) + transfer(j, INORG))    / lu_fractions(j)
         lu%vegn%psoil_fs = (lu%vegn%psoil_fs * (old_lu_fractions(j) - lost(j)) + transfer(j, PSOIL_FS)) / lu_fractions(j)
         lu%vegn%psoil_sl = (lu%vegn%psoil_sl * (old_lu_fractions(j) - lost(j)) + transfer(j, PSOIL_SL)) / lu_fractions(j)
         lu%vegn%wcl(:)   = (lu%vegn%wcl(:)   * (old_lu_fractions(j) - lost(j)) + transfer_water(j, :))  / lu_fractions(j)
-        lu%fraction = lu_fractions(j)
+        lu%fraction = lu_fractions(j) ! m2tile/m2gridcell
 
       end associate
     end do

@@ -172,7 +172,7 @@
 #'                                    area, i.e. the full area of the BiomeE simulation. 'lu_fraction' refers to the sum of all the tiles, which must remain constant and which represents the 
 #'                                    fraction of the cell area that is not water/ice. In most cases, it would be close to 1.
 #'     \describe{
-#'     \item{all columns from 'output_yearly_tile'}{See above for output_yearly_tile.}
+#'     \item{all columns from 'output_yearly_tile'}{See above for output_yearly_tile, but now expressed per unit area of the BiomeE grid cell.}
 #'     \item{lu_fraction}{Fraction of BiomeE grid cell that is occupied by this land unit (LU tile) tile (unitless, or m\eqn{^{2}} LU area per m\eqn{^{2}} grid cell area).}
 #'     \item{prod_pool_1_C}{Carbon in product pool 1 (kg C m\eqn{^{-2}} grid cell).}
 #'     \item{prod_pool_1_N}{Nitrogen in product pool 1 (kg N m\eqn{^{-2}} grid cell).}
