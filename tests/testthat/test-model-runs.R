@@ -252,6 +252,150 @@ test_that("biomee parallel run check (gs leuning)", {
   
 })
 
+test_that("Check net C (and N) balances without/with land-use-change", {
+  skip_on_cran()
+  
+  # read in demo data
+  df_drivers_BiomeE_PLULUC <- rsofun::biomee_p_model_luluc_drivers
+  
+  # modify 
+  df_drivers_BiomeE_PLULUC$params_siml[[1]]$do_daily_diagnostics <- TRUE
+  df_drivers_BiomeE_PLULUC$params_siml[[1]]$spinupyears <- 1000
+  df_drivers_BiomeE_PLULUC$params_siml[[1]]$nyeartrend <- 251
+  df_drivers_BiomeE_PLULUC$forcing[[1]] <- df_drivers_BiomeE_PLULUC$forcing[[1]] |>
+    # repeat forcing and update dates
+    list() |> rep(251) |> bind_rows(.id = "repeatedyear") |> 
+    # # While we could change the date of each row with below code, 
+    # # it is actually not needed since it is not read by run_biomee_f_bysite()
+    # # mutate(date = date + lubridate::years(as.numeric(repeatedyear) - 1)) |> 
+    select(-repeatedyear)
+  
+  # A) First simulation without LUC:
+  # df_drivers_BiomeE_PLULUC$params_siml[[1]]$do_closedN_run <- FALSE # TODO: keep this FALSE?
+  df_drivers_BiomeE_PLULUC$luc_forcing[[1]] <- structure(c(0, 0, 0, 0), dim = c(2, 2, 1))
+  
+  # B) Second simulation with LUC:
+  df_drivers_BiomeE_PLULUC_2 <- df_drivers_BiomeE_PLULUC
+  df_drivers_BiomeE_PLULUC_2$luc_forcing[[1]] <- structure(c(0, 0, 0.5, 0), dim = c(2, 2, 1))
+  
+  # A/B) run simulations
+  mod_BiomeE_PLULUC_1 <- run_biomee_f_bysite(
+    sitename       = df_drivers_BiomeE_PLULUC$sitename[1],
+    params_siml    = df_drivers_BiomeE_PLULUC$params_siml[[1]],
+    site_info      = df_drivers_BiomeE_PLULUC$site_info[[1]],
+    forcing        = df_drivers_BiomeE_PLULUC$forcing[[1]],
+    params_tile    = df_drivers_BiomeE_PLULUC$params_tile[[1]],
+    params_species = df_drivers_BiomeE_PLULUC$params_species[[1]],
+    init_cohort    = df_drivers_BiomeE_PLULUC$init_cohort[[1]],
+    init_soil      = df_drivers_BiomeE_PLULUC$init_soil[[1]],
+    init_lu        = df_drivers_BiomeE_PLULUC$init_lu[[1]],
+    luc_forcing    = df_drivers_BiomeE_PLULUC$luc_forcing[[1]],
+    makecheck      = TRUE
+  )
+  mod_BiomeE_PLULUC_2 <- run_biomee_f_bysite(
+    sitename       = df_drivers_BiomeE_PLULUC_2$sitename[1],
+    params_siml    = df_drivers_BiomeE_PLULUC_2$params_siml[[1]],
+    site_info      = df_drivers_BiomeE_PLULUC_2$site_info[[1]],
+    forcing        = df_drivers_BiomeE_PLULUC_2$forcing[[1]],
+    params_tile    = df_drivers_BiomeE_PLULUC_2$params_tile[[1]],
+    params_species = df_drivers_BiomeE_PLULUC_2$params_species[[1]],
+    init_cohort    = df_drivers_BiomeE_PLULUC_2$init_cohort[[1]],
+    init_soil      = df_drivers_BiomeE_PLULUC_2$init_soil[[1]],
+    init_lu        = df_drivers_BiomeE_PLULUC_2$init_lu[[1]],
+    luc_forcing    = df_drivers_BiomeE_PLULUC_2$luc_forcing[[1]],
+    makecheck      = TRUE
+  )
+  
+  # A/B) postprocess (per LU) for test
+  df_balance1 <- bind_rows(.id = "LU",
+                           aggregated= mod_BiomeE_PLULUC_1$aggregated$output_annual_cell,
+                           primary   = mod_BiomeE_PLULUC_1$primary$output_annual_tile,
+                           secondary = mod_BiomeE_PLULUC_1$secondary$output_annual_tile) |> 
+    tibble() |>
+    tidyr::replace_na(replace = list(
+      Rprod_0_C = 0, Rprod_0_N = 0,
+      Rprod_1_C = 0, Rprod_1_N = 0,
+      Rprod_2_C = 0, Rprod_2_N = 0)) |>
+    # postprocess:
+    group_by(LU) |>                                 # * lu_fraction: scales values from per m2 tile to per m2 landscape
+    mutate(`C_balance_+Gpp-Rauto-Rh` = (GPP-Rauto-Rh) * lu_fraction, # kg C m-2 yr-1
+           `C_balance_+Npp-Rh`       = (NPP      -Rh) * lu_fraction, # kg C m-2 yr-1
+           `C_pool`                  = (plantC+soilC) * lu_fraction, # kg C m-2
+           `N_pool`                  = (plantN+soilN) * lu_fraction, # kg N m-2
+           `C_balance_PlantSoilPools`= c(0,diff(C_pool)),            # kg C m-2 yr-1
+           `N_balance_PlantSoilPools`= c(0,diff(N_pool)),            # kg C m-2 yr-1
+           `C_balance_+Gpp-Rauto-Rh-Prods` = `C_balance_+Gpp-Rauto-Rh` - Rprod_0_C - Rprod_1_C - Rprod_2_C # kg C yr-1 (m-2 grid cell)
+    )
+  df_balance2 <- bind_rows(.id = "LU",
+                           aggregated= mod_BiomeE_PLULUC_2$aggregated$output_annual_cell,
+                           primary   = mod_BiomeE_PLULUC_2$primary$output_annual_tile,
+                           secondary = mod_BiomeE_PLULUC_2$secondary$output_annual_tile) |> 
+    tibble() |>
+    tidyr::replace_na(replace = list(
+      Rprod_0_C = 0, Rprod_0_N = 0,
+      Rprod_1_C = 0, Rprod_1_N = 0,
+      Rprod_2_C = 0, Rprod_2_N = 0)) |>
+    # postprocess:
+    group_by(LU) |>                                 # * lu_fraction: scales values from per m2 tile to per m2 landscape
+    mutate(`C_balance_+Gpp-Rauto-Rh` = (GPP-Rauto-Rh) * lu_fraction, # kg C m-2 yr-1
+           `C_balance_+Npp-Rh`       = (NPP      -Rh) * lu_fraction, # kg C m-2 yr-1
+           `C_pool`                  = (plantC+soilC) * lu_fraction, # kg C m-2
+           `N_pool`                  = (plantN+soilN) * lu_fraction, # kg N m-2
+           `C_balance_PlantSoilPools`= c(0,diff(C_pool)),            # kg C m-2 yr-1
+           `N_balance_PlantSoilPools`= c(0,diff(N_pool)),            # kg C m-2 yr-1
+           `C_balance_+Gpp-Rauto-Rh-Prods` = `C_balance_+Gpp-Rauto-Rh` - Rprod_0_C - Rprod_1_C - Rprod_2_C # kg C yr-1 (m-2 grid cell)
+    )
+  
+  # A/B) prepare balances for tests
+  df_balance1_totest <- df_balance1 |> 
+    select(LU, year, C_pool, N_pool, `C_balance_+Gpp-Rauto-Rh-Prods`) |>
+    mutate(C__pooldiff = c(0, diff(C_pool)),
+           N__pooldiff = c(0, diff(N_pool))) |>
+    filter(LU != "secondary")
+  
+  year_of_LUC <- 1 + df_drivers_BiomeE_PLULUC$params_siml[[1]]$spinupyears
+  df_balance2_totest <- df_balance2 |> 
+    select(LU, year, C_pool, N_pool, `C_balance_+Gpp-Rauto-Rh-Prods`) |>
+    mutate(C__pooldiff = c(0, diff(C_pool)),
+           N__pooldiff = c(0, diff(N_pool))) |>
+    filter(year != year_of_LUC)
+  
+  # A/B) Plot the tests
+  # # A/B) test equivalence of net C fluxes and changes of C pools
+  # ggplot(df_balance1_totest, aes(x=year)) + facet_grid(~LU) +
+  #   geom_line(aes(y=C__pooldiff)) +
+  #   geom_line(aes(y=`C_balance_+Gpp-Rauto-Rh-Prods`), color = 'red', linetype="dashed") #+
+  #   # coord_cartesian(xlim = c(1000, NA))
+  # ggplot(df_balance2_totest, aes(x=year)) + facet_grid(~LU) +
+  #   geom_line(aes(y=C__pooldiff)) +
+  #   geom_line(aes(y=`C_balance_+Gpp-Rauto-Rh-Prods`), color = 'red', linetype="dashed")
+  # # A) test steady states in C and N pools
+  # ggplot(df_balance1_totest, aes(x=year)) + facet_grid(~LU) +
+  #   geom_line(aes(y=N__pooldiff))
+  # ggplot(df_balance2_totest, aes(x=year)) + facet_grid(~LU) +
+  #   geom_line(aes(y=N__pooldiff))
+
+  # A/B) test equivalence of net C fluxes and changes of C pools
+  testthat::expect_equal(tolerance = 0.03,
+                         df_balance1_totest$`C_balance_+Gpp-Rauto-Rh-Prods`,
+                         df_balance1_totest$C__pooldiff)
+  testthat::expect_equal(tolerance = 0.03,
+                         df_balance2_totest$`C_balance_+Gpp-Rauto-Rh-Prods`,
+                         df_balance2_totest$C__pooldiff)
+  
+  # A) test steady states in C and N pools 
+  #    in simulation A) (without LUC) 
+  #    across the spinup and transient years, i.e. from 990 to 1250
+  testthat::expect_true(
+    all(abs(filter(df_balance1_totest, year > 990)$N__pooldiff) < 1e-2)
+  )
+
+  testthat::expect_true(
+    all(abs(filter(df_balance1_totest, year > 990)$C__pooldiff) < 3e-2)
+  )
+  
+})
+
 
 test_that("Regression tests run_biomee_f_bysite()", {
   skip_on_cran()
