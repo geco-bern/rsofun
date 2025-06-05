@@ -140,19 +140,20 @@ plot1 <- function(lu_name, variable, out, y_limit=NA, yr_start=1, yr_label_offse
           ggplot() +
           geom_line(aes(x = year + yr_label_offset,
                         y = get(variable) * lu_fraction)) +
-          xlim(yr_start, NA) +
-          ylim(0, y_limit) +
+          coord_cartesian(xlim = c(yr_start, NA),
+                          ylim = c(0, y_limit)) +
           theme_classic() +
           labs(x = "Year", y = paste(variable, "(", lu_name, ")"))
   } else {
+    stopifnot(variable == 'lu_fraction')
     res <- tile %>%
-            ggplot() +
-            geom_line(aes(x = year + yr_label_offset,
-                          y = get(variable))) +
-            xlim(yr_start, NA) +
-            ylim(0, y_limit) +
-            theme_classic() +
-            labs(x = "Year", y = paste(variable, "(", lu_name, ")"))
+          ggplot() +
+          geom_line(aes(x = year + yr_label_offset,
+                        y = get(variable))) +
+          coord_cartesian(xlim = c(yr_start, NA),
+                          ylim = c(0, y_limit)) +
+          theme_classic() +
+          labs(x = "Year", y = paste(variable, "(", lu_name, ")"))
   }
 
   return(res)
