@@ -237,6 +237,7 @@ run_biomee_f_bysite <- function(
     init_lu     <- build_init_lu(init_lu)
     luc_forcing <- build_luc_forcing(luc_forcing, nrow(init_lu))
   } else {
+    require("luhrsofun")
     print('Parsing LUH2 data...')
     simplified <- ifelse(is.null(luh2$simplified), FALSE, luh2$simplified)
     parsed_luh2 <- parse_luh2(
@@ -250,22 +251,20 @@ run_biomee_f_bysite <- function(
     )
     print('Done.')
 
+    # If init_lu is provided, we use these
+    # If not, we use default LUH2 ones:
     if (is.null(init_lu)) {
-      # If init_lu is provided, we use these
-      if (simplified)
-        presets <- c(rep('unmanaged', 2), 'urban', 'cropland', 'pasture')
-      else
-        presets <- c(rep('unmanaged', 4), 'urban', rep('cropland', 5), rep('pasture', 2))
       init_lu <- tibble(
         name      = names(parsed_luh2$states_init),
         fraction  = parsed_luh2$states_init,
-        preset    = presets
+        preset    = ifelse(simplified, 
+                           c(rep('unmanaged', 2), 'urban', 'cropland', 'pasture'), 
+                           c(rep('unmanaged', 4), 'urban', rep('cropland', 5), rep('pasture', 2))
+                           )[[1]]
       )
-      init_lu     <- build_init_lu(init_lu)
-    } else {
-      # If not, we use default LUH2 ones
-      init_lu     <- build_init_lu(init_lu)
     }
+    
+    init_lu     <- build_init_lu(init_lu)
     luc_forcing <- build_luc_forcing(parsed_luh2$luc_matrix, nrow(init_lu))
   }
 

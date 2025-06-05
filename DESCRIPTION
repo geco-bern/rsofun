@@ -83,6 +83,6 @@ Suggests:
     knitr,
     sensitivity,
     gridExtra,
-    ncdf4
+    patchwork
 VignetteBuilder: knitr
 Encoding: UTF-8

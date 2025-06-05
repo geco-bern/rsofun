@@ -382,6 +382,8 @@ Notes:
 ## LUH2 integration
 
 BiomeE integrates seamlessly with LUH2 v2 data (https://luh.umd.edu/data.shtml).
+To preprocess the LUH2 data for use with BiomeE we can use the separate package `luhrsofun` that is available at
+(https://github.com/geco-bern/luhrsofun).
 
 ### Automatic configuration
 
@@ -429,54 +431,4 @@ Notes:
 
 The automatic configuration presented above is convenient but has some drawbacks, such as the need to parse LUH2 data each time a simulation is run.
 An alternative offering more flexibility is to parse LUH2 manually and set the necessary data in the driver before running BiomeE.
-This can easily be done using `parse_luh2()` function as illustrated below:
-
-```{r eval = FALSE}
-# We start from the example driver
-df_drivers_luh2 <- biomee_p_model_luluc_drivers
-
-# LUH2 v2f dataset contains 85 years (2015-2100)
-df_drivers_luh2$params_siml[[1]]$nyeartrend <- 85
-df_drivers_luh2$params_siml[[1]]$daily_diagnostics <- FALSE
-
-# Data v2f SSP1 RPC2.6 downloaded from https://luh.umd.edu/data.shtml)
-# These paths may be different on your machine.
-state_file <- '~/RPC2.6_SSP1/multiple-states_input4MIPs_landState_ScenarioMIP_UofMD-IMAGE-ssp126-2-1-f_gn_2015-2100.nc'
-trans_file <- '~/RPC2.6_SSP1/multiple-transitions_input4MIPs_landState_ScenarioMIP_UofMD-IMAGE-ssp126-2-1-f_gn_2015-2100.nc'
-
-# Parse LUH2 data
-parsed_luh2 <- parse_luh2(state_file, trans_file,
-                          df_drivers_luh2$site_info[[1]]$lon, df_drivers_luh2$site_info[[1]]$lat,
-                          start=1, n=df_drivers_luh2$params_siml[[1]]$nyeartrend, # We parse the whole dataset
-                          simplified=TRUE # simplified mode: 5 states only
-)
-
-# Create the init_lu config
-init_lu <- tibble(
-        # Keep these two lines
-        name      = names(parsed_luh2$states_init),
-        fraction  = parsed_luh2$states_init,
-        # The following line should be taylored to your application:
-        preset    = c(rep('unmanaged', 2), 'urban', 'cropland', 'pasture')
-        # In addition more fine-graind parameters could be set ('extra_N_input', 'extra_turnover_rate', 'oxidized_litter_fraction')
-)
-
-# Set init_lu and luc_forcing in driver
-df_drivers_luh2$init_lu[[1]] <- init_lu
-df_drivers_luh2$luc_forcing[[1]] <- parsed_luh2$luc_matrix
-
-# Note: in this example, we do not set df_drivers$init_cohort for brevity, but it should be done as well as demonstrated in the previous sections.
-```
-
-```{r load luluc driver, include = FALSE}
-# Since the LUH2 data is not stored in this repo, we load the driver from disk
-#saveRDS(df_drivers_luh2, "files/biomee_luluc.Rmd__biomee_p_model_luluc_driver.RDS")
-df_drivers_luh2 <- readRDS("files/biomee_luluc.Rmd__biomee_p_model_luluc_driver.RDS")
-```
-
-We can now simulate and display the plots as before:
-
-```{r eval = TRUE, results = 'hide', warning = FALSE, fig.width=7, fig.height=7}
-out_sim_3 <- runread_biomee_f(df_drivers_luh2)
-plot_variables(c('GPP', 'fastSOM', 'lu_fraction'), out_sim_3, 2015, 2015 - df_drivers_luh2$params_siml[[1]]$spinupyears - 1)
-```
+This can easily be done using `luhrsofun::parse_luh2()` function as illustrated in the vignettes of the `luhrsofun` package.
