@@ -238,12 +238,21 @@ biomee_p_model_calibratedOutput_annual_tile <- calibrated_out$data[[1]]$output_a
 Finally, we can visually compare the two model runs. We plot the original model run in black and the run using the calibrated parameters in grey. The dashed line represents the validation data, i.e. the observed GPP and Biomass.
 ```{r fig.width=7}
 # unnest model output for our single site
+GPP_target <- biomee_validation$data[[1]] |> 
+  dplyr::filter(variables=="GPP") |> 
+  magrittr::extract2("targets_obs")
+plantC_target <- biomee_validation$data[[1]] |> 
+  dplyr::filter(variables=="Biomass") |> 
+  magrittr::extract2("targets_obs")
 ggplot() +
   geom_line(data = biomee_p_model_output_annual_tile,
             aes(x = year, y = GPP)) +
   geom_line(data = biomee_p_model_calibratedOutput_annual_tile,
             aes(x = year, y = GPP),
             color = "grey50") +
+  geom_hline(yintercept = GPP_target, 
+             linetype = "dashed",
+             color = "grey50") +
   theme_classic() + 
   labs(x = "Year", y = "GPP")
 
@@ -253,6 +262,9 @@ ggplot() +
   geom_line(data = biomee_p_model_calibratedOutput_annual_tile,
             aes(x = year, y = plantC),
             color = "grey50") +
+  geom_hline(yintercept = plantC_target, 
+             linetype = "dashed", 
+             color = "grey50") +
   theme_classic() + 
   labs(x = "Year", y = "plantC")
 ```
