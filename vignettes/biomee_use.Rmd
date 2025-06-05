@@ -214,6 +214,8 @@ drivers$params_species[[1]]$LAI_light[]  <- pars$par[2]
 drivers$params_tile[[1]]$tf_base <- pars$par[3]
 drivers$params_tile[[1]]$par_mort <- pars$par[4]
 
+drivers$params_siml[[1]]$spinupyears <- 600
+
 # run the model with new parameter values
 calibrated_out <- runread_biomee_f(
      drivers,
