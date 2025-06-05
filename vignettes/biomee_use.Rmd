@@ -155,32 +155,34 @@ settings <- list(
   method = "GenSA",
   metric = cost_rmse_biomee,
   control = list(
-    maxit = 10
+    maxit = 10,
+    verbose = TRUE
   ),
   par = list(
-      phiRL = list(lower=0.5, upper=5, init=3.5),
-      LAI_light = list(lower=2, upper=5, init=3.5),
-      tf_base = list(lower=0.5, upper=1.5, init=1),
-      par_mort = list(lower=0.1, upper=2, init=1))
+      phiRL     = list(lower=0.5, upper=5,   init=3.5),
+      LAI_light = list(lower=2,   upper=8,   init=3.5),
+      tf_base   = list(lower=0.5, upper=1.5, init=1),
+      par_mort  = list(lower=0.005, upper=4,   init=0.5))
 )
 
 # Using BiomeEP (with P-model for photosynthesis)
-pars <- calib_sofun(
+pars_all <- calib_sofun(
   drivers = biomee_p_model_drivers,
   obs = biomee_validation,
   settings = settings
 )
+pars <- pars_all["par"]
 ```
 
 ```{r include = FALSE}
 # fake output since calibration isn't run
-# saveRDS(pars, "files/biomee_use.Rmd__biomee_p_model_output___pars.RDS")
-# pars <- readRDS("files/biomee_use.Rmd__biomee_p_model_output___pars.RDS")
+# saveRDS(pars_all, "files/biomee_use.Rmd__biomee_p_model_output___pars.RDS")
+# pars <- readRDS("files/biomee_use.Rmd__biomee_p_model_output___pars.RDS")["par"]
 pars <- list(
-  par = c(phiRL = 1.5597893,    #2.0492210,
-          LAI_light = 4.9657286,#4.5462360,
-          tf_base = 0.9885088,  #0.5006033,
-          par_mort = 0.1665635  #1.9317278)
+  par = c(phiRL     = 1.14732409800086,
+          LAI_light = 6.27111451155709,
+          tf_base   = 0.685873617014058,
+          par_mort  = 0.0889500145662122
 ))
 ```
 
@@ -215,6 +217,7 @@ GPP_target <- biomee_validation$data[[1]] |>
 plantC_target <- biomee_validation$data[[1]] |> 
   dplyr::filter(variables=="Biomass") |> 
   magrittr::extract2("targets_obs")
+
 ggplot() +
   geom_line(data = biomee_p_model_output_annual_tile,
             aes(x = year, y = GPP)) +
