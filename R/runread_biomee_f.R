@@ -59,24 +59,17 @@ runread_biomee_f <- function(
     "init_cohort",
     "init_soil",
     "init_lu",
-    "luc_forcing",
-    "luh2"
+    "luc_forcing"
   )
 
   # Add potentially missing columns using NULL
   `%nin%` <- Negate(`%in%`)
   empty_col <- vector("list", nrow(drivers))
 
-  if ('luh2' %in% colnames(drivers) & 'luc_forcing' %in% colnames(drivers)) {
-      stop("'luc_forcing' should not be provided if 'luh2' is.")
-  }
-
   if ('init_lu' %nin% colnames(drivers))
     drivers <- dplyr::mutate(drivers, 'init_lu'=empty_col)
   if ('luc_forcing' %nin% colnames(drivers))
     drivers <- dplyr::mutate(drivers, 'luc_forcing'=empty_col)
-  if ('luh2' %nin% colnames(drivers))
-    drivers <- dplyr::mutate(drivers, 'luh2'=empty_col)
 
   df <- drivers %>%
     dplyr::select(any_of(parameters))

@@ -255,24 +255,4 @@ save(biomee_p_model_luluc_drivers,
 
 
 
-# Update also drivers for luluc vignette:
-df_drivers_luh2 <- biomee_p_model_luluc_drivers
-df_drivers_luh2$params_siml[[1]]$nyeartrend <- 85
-df_drivers_luh2$params_siml[[1]]$daily_diagnostics <- FALSE
-# Data v2f SSP1 RPC2.6 downloaded from https://luh.umd.edu/data.shtml)
-state_file <- '~/RPC2.6_SSP1/multiple-states_input4MIPs_landState_ScenarioMIP_UofMD-IMAGE-ssp126-2-1-f_gn_2015-2100.nc'
-trans_file <- '~/RPC2.6_SSP1/multiple-transitions_input4MIPs_landState_ScenarioMIP_UofMD-IMAGE-ssp126-2-1-f_gn_2015-2100.nc'
-parsed_luh2 <- parse_luh2(state_file, trans_file,
-                          df_drivers_luh2$site_info[[1]]$lon, df_drivers_luh2$site_info[[1]]$lat,
-                          start=1, n=df_drivers_luh2$params_siml[[1]]$nyeartrend, # We parse the whole dataset
-                          simplified=TRUE # simplified mode: 5 states only
-)
-init_lu <- tibble(
-  name      = names(parsed_luh2$states_init),
-  fraction  = parsed_luh2$states_init,
-  preset    = c(rep('unmanaged', 2), 'urban', 'cropland', 'pasture')
-)
-df_drivers_luh2$init_lu[[1]] <- init_lu
-df_drivers_luh2$luc_forcing[[1]] <- parsed_luh2$luc_matrix
-# Since the LUH2 data is not stored in this repo, we load the driver from disk
-saveRDS(df_drivers_luh2, here::here("vignettes/files/biomee_luluc.Rmd__biomee_p_model_luluc_driver.RDS"))
+

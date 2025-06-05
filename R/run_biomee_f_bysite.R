@@ -13,8 +13,7 @@
 #' @param init_soil A data.frame of initial soil pools.
 #' @param makecheck A logical specifying whether checks are performed to verify forcings and model parameters. \code{TRUE} by default.
 #' @param init_lu A data.frame of initial land unit (LU) specifications.
-#' @param luc_forcing An array of land use change (LUC) used during transient phase. Must not be provided if \code{luh2} is.
-#' @param luh2 A data.frame containing parameters for parsing LUH2 data instead of \code{luc_forcing} and set up \code{init_lu} (if not provided).
+#' @param luc_forcing An array of land use change (LUC) used during transient phase.
 #'
 #' For further specifications of above inputs and examples see \code{\link{biomee_gs_leuning_drivers}}, \code{\link{biomee_p_model_drivers}}, or \code{\link{biomee_p_model_luluc_drivers}}.
 #' 
@@ -221,7 +220,6 @@ run_biomee_f_bysite <- function(
   init_soil,
   init_lu = NULL,
   luc_forcing = NULL,
-  luh2 = NULL,
   makecheck = TRUE
 ){
   ndayyear <- 365
@@ -233,40 +231,8 @@ run_biomee_f_bysite <- function(
   params_siml <- build_params_siml(params_siml, forcing_years, makecheck)
 
   # Build LULUC parameters
-  if (is.null(luh2)) {
-    init_lu     <- build_init_lu(init_lu)
-    luc_forcing <- build_luc_forcing(luc_forcing, nrow(init_lu))
-  } else {
-    require("luhrsofun")
-    print('Parsing LUH2 data...')
-    simplified <- ifelse(is.null(luh2$simplified), FALSE, luh2$simplified)
-    parsed_luh2 <- parse_luh2(
-                                luh2$state_file,
-                                luh2$trans_file,
-                                site_info$lon,
-                                site_info$lat,
-                                ifelse(is.null(luh2$start), 1, luh2$start),
-                                ifelse(is.null(luh2$n), params_siml$nyeartrend, luh2$n),
-                                simplified
-    )
-    print('Done.')
-
-    # If init_lu is provided, we use these
-    # If not, we use default LUH2 ones:
-    if (is.null(init_lu)) {
-      init_lu <- tibble(
-        name      = names(parsed_luh2$states_init),
-        fraction  = parsed_luh2$states_init,
-        preset    = ifelse(simplified, 
-                           c(rep('unmanaged', 2), 'urban', 'cropland', 'pasture'), 
-                           c(rep('unmanaged', 4), 'urban', rep('cropland', 5), rep('pasture', 2))
-                           )[[1]]
-      )
-    }
-    
-    init_lu     <- build_init_lu(init_lu)
-    luc_forcing <- build_luc_forcing(parsed_luh2$luc_matrix, nrow(init_lu))
-  }
+  init_lu     <- build_init_lu(init_lu)
+  luc_forcing <- build_luc_forcing(luc_forcing, nrow(init_lu))
 
   if (length(luc_forcing[1,1,]) > params_siml$nyeartrend)
     warning(paste("Warning: 'luc_forcing' contains more data points than nyeartrend (", length(luc_forcing[1,1,]), ' vs ', params_siml$nyeartrend, '). Extra data points will be ignored.'))

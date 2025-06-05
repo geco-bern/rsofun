@@ -385,50 +385,5 @@ BiomeE integrates seamlessly with LUH2 v2 data (https://luh.umd.edu/data.shtml).
 To preprocess the LUH2 data for use with BiomeE we can use the separate package `luhrsofun` that is available at
 (https://github.com/geco-bern/luhrsofun).
 
-### Automatic configuration
-
-Below is an example of minimal configuration:
-
-```{r eval = FALSE}
-df_drivers <- biomee_p_model_drivers
-# Disable daily diagnostics (optional)
-df_drivers$params_siml[[1]]$daily_diagnostics <- FALSE
-
-# Simulate for 10 years after the spinup period. By default the same number of years are extracted from LUH2 dtaa.
-df_drivers$params_siml[[1]]$nyeartrend <- 10
-# In order to extract a custom number of years, set the following:
-# df_drivers$luh2[[1]]$n <- ...
-# By default the extraction start at the first year in the ncdf files. To extract from a custom index:
-# df_drivers$luh2[[1]]$start <- ...
-
-# Setting the paths to LUH2 files. These may be different on your computer.
-df_drivers$luh2[[1]]$state_file <- 'path/to/states.nc'
-df_drivers$luh2[[1]]$trans_file <- 'path/to/transitions.nc'
-
-# Indicate whether to use simplified states.
-df_drivers$luh2[[1]]$simplified <- TRUE
-# By default all the states defined in LUH2 v2 are used (12 states)
-# In the simplified mode, only 5 states are used:
-# prim     <- primf + primn
-# secd     <- secdf + secdn
-# urban    <- urban
-# cropland <- cxxxx
-# pasture  <- pastr + range
-```
-
-Then, run the simulation as before.
-
-Notes:
-
-- Extracting data from LUH2 ncdf files may take some time.
-- The cell that is extracted from LUH2 data is the closest cell from the coordinates provided in `site_info`.
-- If no `init_lu` is present in the configuration, a default configuration is automatically generated. If you wish to provide your own, make sure to use the right state names.
-- When using LUH2 data, `luc_forcing` must not be provided in the driver.
-- The fraction of the aggregated tile should always remain constant. In most cases, it would be close to 1. But it may be less in cases where the cell contains a non-null water/ice fraction. This fraction is defined in `staticData_quarterdeg.nc/icwtr`.
-- BiomeE assumes a cell of arbitrary area (i.e. the cell has an area of 1). To convert densities into real units, all densities should be scaled by the area of the cell, which is available in `staticData_quarterdeg.nc/carea`.
-
-### Manual configuration
-
-The automatic configuration presented above is convenient but has some drawbacks, such as the need to parse LUH2 data each time a simulation is run.
-An alternative offering more flexibility is to parse LUH2 manually and set the necessary data in the driver before running BiomeE.
-This can easily be done using `luhrsofun::parse_luh2()` function as illustrated in the vignettes of the `luhrsofun` package.
+The function `luhrsofun::parse_luh2()` can be used to parse LUH2 manually and set the necessary data in the driver object before running BiomeE.
+This workflow is illustrated in the vignettes of the `luhrsofun` package.
