@@ -48,11 +48,11 @@ This data structure can be freely used for documenting the dataset, but must inc
       \item{soiltype}{Integer indicating the type of soil: Sand = 1, LoamySand = 2, SandyLoam = 3, SiltLoam = 4, FrittedClay = 5, Loam = 6, Clay = 7.}
       \item{FLDCAP}{Field capacity (vol/vol). Water remaining in a soil after it has been thoroughly saturated and allowed to drain freely.}
       \item{WILTPT}{Wilting point (vol/vol). Water content of a soil at which plants wilt and fail to recover.}
-      \item{K1}{Fast soil C decomposition rate (year\eqn{^{-1}}).}
-      \item{K2}{Slow soil C decomposition rate (year\eqn{^{-1}}).}
-      \item{K_nitrogen}{Mineral Nitrogen turnover rate (year\eqn{^{-1}}).}
+      \item{K1}{Fast soil C decomposition rate (yr\eqn{^{-1}}).}
+      \item{K2}{Slow soil C decomposition rate (yr\eqn{^{-1}}).}
+      \item{K_nitrogen}{Mineral Nitrogen turnover rate (yr\eqn{^{-1}}).}
       \item{MLmixRatio}{Ratio of C and N returned to litters from microbes.}
-      \item{etaN}{N loss rate through runoff (organic and mineral) (year\eqn{^{-1}}).}
+      \item{etaN}{N loss rate through runoff (organic and mineral) (yr\eqn{^{-1}}).}
       \item{LMAmin}{Minimum LMA, leaf mass per unit area, kg C m\eqn{^{-2}}.}
       \item{fsc_fine}{Fraction of fast turnover carbon in fine biomass.}
       \item{fsc_wood}{Fraction of fast turnover carbon in wood biomass.}
@@ -72,7 +72,7 @@ This data structure can be freely used for documenting the dataset, but must inc
       \item{phenotype}{Integer set to 0 for deciduous and 1 for evergreen.}
       \item{pt}{Integer indicating the type of plant according to photosynthesis: 0 for C3; 1 for C4}
     }}\item{The following columns pertaining to the \bold{root parameters}:}{\describe{
-      \item{alpha_FR}{Fine root turnover rate (year\eqn{^{-1}}).}
+      \item{alpha_FR}{Fine root turnover rate (yr\eqn{^{-1}}).}
       \item{rho_FR}{Material density of fine roots (kg C m\eqn{^{-3}}).}
       \item{root_r}{Radius of the fine roots, in m.}
       \item{root_zeta}{e-folding parameter of root vertical distribution, in m.}
@@ -84,10 +84,10 @@ This data structure can be freely used for documenting the dataset, but must inc
       \item{wet_leaf_dreg}{Wet leaf photosynthesis down-regulation.}
       \item{m_cond}{Factor of stomatal conductance.}
       \item{alpha_phot}{Photosynthesis efficiency.}
-      \item{gamma_L}{Leaf respiration coefficient, in year\eqn{^{-1}}.}
+      \item{gamma_L}{Leaf respiration coefficient, in yr\eqn{^{-1}}.}
       \item{gamma_LN}{Leaf respiration coefficient per unit N.}
-      \item{gamma_SW}{Sapwood respiration rate, in kg C m\eqn{^{-2}} year\eqn{^{-1}}.}
-      \item{gamma_FR}{Fine root respiration rate, kg C kg C\eqn{^{-1}} year\eqn{^{-1}}.}
+      \item{gamma_SW}{Sapwood respiration rate, in kg C m\eqn{^{-2}} yr\eqn{^{-1}}.}
+      \item{gamma_FR}{Fine root respiration rate, kg C kg C\eqn{^{-1}} yr\eqn{^{-1}}.}
       \item{tk_crit}{Critical temperature triggerng offset of phenology, in Kelvin.}
       \item{tk_crit_on}{Critical temperature triggerng onset of phenology, in Kelvin.}
       \item{gdd_crit}{Critical value of GDD5 for turning ON growth season.}
@@ -105,8 +105,8 @@ This data structure can be freely used for documenting the dataset, but must inc
       \item{maturalage}{Age at which trees can reproduce (years).}
       \item{v_seed}{Fraction of G_SF to G_F.}
     }}\item{The following columns pertaining to the \bold{mortality parameters}:}{\describe{
-      \item{mortrate_d_c}{Canopy tree mortality rate (year\eqn{^{-1}}).}
-      \item{mortrate_d_u}{Understory tree mortality rate (year\eqn{^{-1}}).}
+      \item{mortrate_d_c}{Canopy tree mortality rate (yr\eqn{^{-1}}).}
+      \item{mortrate_d_u}{Understory tree mortality rate (yr\eqn{^{-1}}).}
     }}\item{The following columns pertaining to the \bold{leaf parameters}:}{\describe{
       \item{LMA}{Leaf mass per unit area (kg C m\eqn{^{-2}}).}
       \item{leafLS}{TODO}
@@ -152,7 +152,7 @@ This data structure can be freely used for documenting the dataset, but must inc
       \item{init_fast_soil_C}{Initial fast soil carbon, in kg C m\eqn{^{-2}}.}
       \item{init_slow_soil_C}{Initial slow soil carbon, in kg C m\eqn{^{-2}}.}
       \item{init_Nmineral}{Mineral nitrogen pool, in kg N m\eqn{^{-2}}.}
-      \item{N_input}{Annual nitrogen input to soil N pool, in kg N m\eqn{^{-2}} year\eqn{^{-1}}.}
+      \item{N_input}{Annual nitrogen input to soil N pool, in kg N m\eqn{^{-2}} yr\eqn{^{-1}}.}
     }}
   \item{init_lu}{A data.frame of initial land unit (LU) specifications, including
     the following data:
