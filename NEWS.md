@@ -1,4 +1,4 @@
-# rsofun (development version v5.1.0)
+# rsofun 5.1.0
 
 ## New features
 
