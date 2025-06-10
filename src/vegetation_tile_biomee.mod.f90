@@ -126,6 +126,7 @@ module md_vegetation_tile_biomee
     type(orgpool)    :: totNewC           ! New cohort (all compartments but seed)
 
     !=====  N-related fluxes
+    real    :: totC
     real    :: totN
     real    :: annualN            ! annual available N in a year
     real    :: Nloss_yr           ! annual N loss
@@ -718,6 +719,7 @@ contains
       self%out_daily_tile(idoy, DAILY_TILE_WS2        ) = self%wcl(2)*thksl(2) * 1000
       self%out_daily_tile(idoy, DAILY_TILE_WS3        ) = self%wcl(3)*thksl(3) * 1000
       self%out_daily_tile(idoy, DAILY_TILE_LAI        ) = self%LAI
+      self%out_daily_tile(idoy, DAILY_TILE_NPP        ) = self%daily_fluxes%NPP()
       self%out_daily_tile(idoy, DAILY_TILE_GPP        ) = self%daily_fluxes%GPP
       self%out_daily_tile(idoy, DAILY_TILE_RESP       ) = self%daily_fluxes%Resp
       self%out_daily_tile(idoy, DAILY_TILE_RH         ) = self%dailyRh
@@ -824,8 +826,8 @@ contains
           self%out_annual_cohorts(i, ANNUAL_COHORTS_FLEAF      ) = fleaf
           self%out_annual_cohorts(i, ANNUAL_COHORTS_FROOT      ) = froot
           self%out_annual_cohorts(i, ANNUAL_COHORTS_FWOOD      ) = fwood
-          self%out_annual_cohorts(i, ANNUAL_COHORTS_GPP        ) = cc%annual_fluxes%GPP
           self%out_annual_cohorts(i, ANNUAL_COHORTS_NPP        ) = cc%annual_fluxes%NPP()
+          self%out_annual_cohorts(i, ANNUAL_COHORTS_GPP        ) = cc%annual_fluxes%GPP
           self%out_annual_cohorts(i, ANNUAL_COHORTS_RESP       ) = cc%annual_fluxes%Resp
           self%out_annual_cohorts(i, ANNUAL_COHORTS_N_UPTK     ) = cc%annual_fluxes%Nup
           self%out_annual_cohorts(i, ANNUAL_COHORTS_N_FIX      ) = cc%annual_fluxes%fixedN
@@ -871,6 +873,7 @@ contains
     self%out_annual_tile(ANNUAL_TILE_RUNOFF          ) = self%annualRoff
     self%out_annual_tile(ANNUAL_TILE_PLANT_C         ) = plantC
     self%out_annual_tile(ANNUAL_TILE_SOIL_C          ) = SoilC
+    self%out_annual_tile(ANNUAL_TILE_TOT_C           ) = self%totC
     self%out_annual_tile(ANNUAL_TILE_PLANT_N         ) = plantN
     self%out_annual_tile(ANNUAL_TILE_SOIL_N          ) = SoilN
     self%out_annual_tile(ANNUAL_TILE_TOT_N           ) = self%totN
@@ -1143,6 +1146,7 @@ contains
     call self%aggregate_pools()
 
     total_pool = self%pplant() + self%psoil()
+    self%totC = total_pool%c12
     self%totN = total_pool%n14
 
     it => self%cohorts()

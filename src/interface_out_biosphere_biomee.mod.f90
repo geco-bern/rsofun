@@ -13,7 +13,7 @@ module md_interface_out_biomee
 
   !=============== Daily
 
-  integer, public, parameter :: nvars_daily_tile     = 35
+  integer, public, parameter :: nvars_daily_tile     = 36
 
   integer, public, parameter :: DAILY_TILE_YEAR               =  1
   integer, public, parameter :: DAILY_TILE_DOY                =  2
@@ -27,29 +27,30 @@ module md_interface_out_biomee
   integer, public, parameter :: DAILY_TILE_WS2                = 10
   integer, public, parameter :: DAILY_TILE_WS3                = 11
   integer, public, parameter :: DAILY_TILE_LAI                = 12
-  integer, public, parameter :: DAILY_TILE_GPP                = 13
-  integer, public, parameter :: DAILY_TILE_RESP               = 14
-  integer, public, parameter :: DAILY_TILE_RH                 = 15
-  integer, public, parameter :: DAILY_TILE_NSC                = 16
-  integer, public, parameter :: DAILY_TILE_SEED_C             = 17
-  integer, public, parameter :: DAILY_TILE_LEAF_C             = 18
-  integer, public, parameter :: DAILY_TILE_ROOT_C             = 19
-  integer, public, parameter :: DAILY_TILE_SWC                = 20
-  integer, public, parameter :: DAILY_TILE_HWC                = 21
-  integer, public, parameter :: DAILY_TILE_NSN                = 22
-  integer, public, parameter :: DAILY_TILE_SEED_N             = 23
-  integer, public, parameter :: DAILY_TILE_LEAF_N             = 24
-  integer, public, parameter :: DAILY_TILE_ROOT_N             = 25
-  integer, public, parameter :: DAILY_TILE_SW_N               = 26
-  integer, public, parameter :: DAILY_TILE_HW_N               = 27
-  integer, public, parameter :: DAILY_TILE_MCRB_C             = 28
-  integer, public, parameter :: DAILY_TILE_FASTSOM            = 29
-  integer, public, parameter :: DAILY_TILE_SLOWSOM            = 30
-  integer, public, parameter :: DAILY_TILE_MCRB_N             = 31
-  integer, public, parameter :: DAILY_TILE_FS_N               = 32
-  integer, public, parameter :: DAILY_TILE_SL_N               = 33
-  integer, public, parameter :: DAILY_TILE_INORG_N            = 34
-  integer, public, parameter :: DAILY_TILE_N_UPTK             = 35
+  integer, public, parameter :: DAILY_TILE_NPP                = 13
+  integer, public, parameter :: DAILY_TILE_GPP                = 14
+  integer, public, parameter :: DAILY_TILE_RESP               = 15
+  integer, public, parameter :: DAILY_TILE_RH                 = 16
+  integer, public, parameter :: DAILY_TILE_NSC                = 17
+  integer, public, parameter :: DAILY_TILE_SEED_C             = 18
+  integer, public, parameter :: DAILY_TILE_LEAF_C             = 19
+  integer, public, parameter :: DAILY_TILE_ROOT_C             = 20
+  integer, public, parameter :: DAILY_TILE_SWC                = 21
+  integer, public, parameter :: DAILY_TILE_HWC                = 22
+  integer, public, parameter :: DAILY_TILE_NSN                = 23
+  integer, public, parameter :: DAILY_TILE_SEED_N             = 24
+  integer, public, parameter :: DAILY_TILE_LEAF_N             = 25
+  integer, public, parameter :: DAILY_TILE_ROOT_N             = 26
+  integer, public, parameter :: DAILY_TILE_SW_N               = 27
+  integer, public, parameter :: DAILY_TILE_HW_N               = 28
+  integer, public, parameter :: DAILY_TILE_MCRB_C             = 29
+  integer, public, parameter :: DAILY_TILE_FASTSOM            = 30
+  integer, public, parameter :: DAILY_TILE_SLOWSOM            = 31
+  integer, public, parameter :: DAILY_TILE_MCRB_N             = 32
+  integer, public, parameter :: DAILY_TILE_FS_N               = 33
+  integer, public, parameter :: DAILY_TILE_SL_N               = 34
+  integer, public, parameter :: DAILY_TILE_INORG_N            = 35
+  integer, public, parameter :: DAILY_TILE_N_UPTK             = 36
 
 
   !=============== Cohorts
@@ -83,8 +84,8 @@ module md_interface_out_biomee
   integer, public, parameter :: ANNUAL_COHORTS_FLEAF          = 25
   integer, public, parameter :: ANNUAL_COHORTS_FROOT          = 26
   integer, public, parameter :: ANNUAL_COHORTS_FWOOD          = 27
-  integer, public, parameter :: ANNUAL_COHORTS_GPP            = 28
-  integer, public, parameter :: ANNUAL_COHORTS_NPP            = 29
+  integer, public, parameter :: ANNUAL_COHORTS_NPP            = 28
+  integer, public, parameter :: ANNUAL_COHORTS_GPP            = 29
   integer, public, parameter :: ANNUAL_COHORTS_RESP           = 30
   integer, public, parameter :: ANNUAL_COHORTS_N_UPTK         = 31
   integer, public, parameter :: ANNUAL_COHORTS_N_FIX          = 32
@@ -95,7 +96,7 @@ module md_interface_out_biomee
 
   !=============== Annual tile
 
-  integer, public, parameter :: nvars_annual_tile    = 60
+  integer, public, parameter :: nvars_annual_tile    = 61
 
   integer, public, parameter :: ANNUAL_TILE_YEAR              =  1
   integer, public, parameter :: ANNUAL_TILE_CAI               =  2
@@ -116,47 +117,48 @@ module md_interface_out_biomee
   integer, public, parameter :: ANNUAL_TILE_RUNOFF            = 17
   integer, public, parameter :: ANNUAL_TILE_PLANT_C           = 18
   integer, public, parameter :: ANNUAL_TILE_SOIL_C            = 19
-  integer, public, parameter :: ANNUAL_TILE_PLANT_N           = 20
-  integer, public, parameter :: ANNUAL_TILE_SOIL_N            = 21
-  integer, public, parameter :: ANNUAL_TILE_TOT_N             = 22
-  integer, public, parameter :: ANNUAL_TILE_NS_C              = 23
-  integer, public, parameter :: ANNUAL_TILE_SEED_C            = 24
-  integer, public, parameter :: ANNUAL_TILE_LEAF_C            = 25
-  integer, public, parameter :: ANNUAL_TILE_ROOT_C            = 26
-  integer, public, parameter :: ANNUAL_TILE_SW_C              = 27
-  integer, public, parameter :: ANNUAL_TILE_HW_C              = 28
-  integer, public, parameter :: ANNUAL_TILE_NSN               = 29
-  integer, public, parameter :: ANNUAL_TILE_SEED_N            = 30
-  integer, public, parameter :: ANNUAL_TILE_LEAF_N            = 31
-  integer, public, parameter :: ANNUAL_TILE_ROOT_N            = 32
-  integer, public, parameter :: ANNUAL_TILE_SW_N              = 33
-  integer, public, parameter :: ANNUAL_TILE_HW_N              = 34
-  integer, public, parameter :: ANNUAL_TILE_MCRB_C            = 35
-  integer, public, parameter :: ANNUAL_TILE_FASTSOM           = 36
-  integer, public, parameter :: ANNUAL_TILE_SLOWSOM           = 37
-  integer, public, parameter :: ANNUAL_TILE_MCRB_N            = 38
-  integer, public, parameter :: ANNUAL_TILE_FS_N              = 39
-  integer, public, parameter :: ANNUAL_TILE_SL_N              = 40
-  integer, public, parameter :: ANNUAL_TILE_INORG_N           = 41
-  integer, public, parameter :: ANNUAL_TILE_N_FIX             = 42
-  integer, public, parameter :: ANNUAL_TILE_N_UPTK            = 43
-  integer, public, parameter :: ANNUAL_TILE_NYRMIN            = 44
-  integer, public, parameter :: ANNUAL_TILE_NP2S              = 45
-  integer, public, parameter :: ANNUAL_TILE_NLOSS             = 46
-  integer, public, parameter :: ANNUAL_TILE_TOTSEED_C         = 47
-  integer, public, parameter :: ANNUAL_TILE_TOTSEED_N         = 48
-  integer, public, parameter :: ANNUAL_TILE_SEEDLING_C        = 49
-  integer, public, parameter :: ANNUAL_TILE_SEEDLING_N        = 50
-  integer, public, parameter :: ANNUAL_TILE_MAX_AGE           = 51
-  integer, public, parameter :: ANNUAL_TILE_MAX_VOLUME        = 52
-  integer, public, parameter :: ANNUAL_TILE_MAX_DBH           = 53
-  integer, public, parameter :: ANNUAL_TILE_NPP_L             = 54
-  integer, public, parameter :: ANNUAL_TILE_NPP_W             = 55
-  integer, public, parameter :: ANNUAL_TILE_DEADTREES_N       = 56
-  integer, public, parameter :: ANNUAL_TILE_DEADTREES_C       = 57
-  integer, public, parameter :: ANNUAL_TILE_M_TURNOVER        = 58
-  integer, public, parameter :: ANNUAL_TILE_C_TURNOVER_TIME   = 59
-  integer, public, parameter :: ANNUAL_TILE_LU_FRACTION       = 60
+  integer, public, parameter :: ANNUAL_TILE_TOT_C             = 20
+  integer, public, parameter :: ANNUAL_TILE_PLANT_N           = 21
+  integer, public, parameter :: ANNUAL_TILE_SOIL_N            = 22
+  integer, public, parameter :: ANNUAL_TILE_TOT_N             = 23
+  integer, public, parameter :: ANNUAL_TILE_NS_C              = 24
+  integer, public, parameter :: ANNUAL_TILE_SEED_C            = 25
+  integer, public, parameter :: ANNUAL_TILE_LEAF_C            = 26
+  integer, public, parameter :: ANNUAL_TILE_ROOT_C            = 27
+  integer, public, parameter :: ANNUAL_TILE_SW_C              = 28
+  integer, public, parameter :: ANNUAL_TILE_HW_C              = 29
+  integer, public, parameter :: ANNUAL_TILE_NSN               = 30
+  integer, public, parameter :: ANNUAL_TILE_SEED_N            = 31
+  integer, public, parameter :: ANNUAL_TILE_LEAF_N            = 32
+  integer, public, parameter :: ANNUAL_TILE_ROOT_N            = 33
+  integer, public, parameter :: ANNUAL_TILE_SW_N              = 34
+  integer, public, parameter :: ANNUAL_TILE_HW_N              = 35
+  integer, public, parameter :: ANNUAL_TILE_MCRB_C            = 36
+  integer, public, parameter :: ANNUAL_TILE_FASTSOM           = 37
+  integer, public, parameter :: ANNUAL_TILE_SLOWSOM           = 38
+  integer, public, parameter :: ANNUAL_TILE_MCRB_N            = 39
+  integer, public, parameter :: ANNUAL_TILE_FS_N              = 40
+  integer, public, parameter :: ANNUAL_TILE_SL_N              = 41
+  integer, public, parameter :: ANNUAL_TILE_INORG_N           = 42
+  integer, public, parameter :: ANNUAL_TILE_N_FIX             = 43
+  integer, public, parameter :: ANNUAL_TILE_N_UPTK            = 44
+  integer, public, parameter :: ANNUAL_TILE_NYRMIN            = 45
+  integer, public, parameter :: ANNUAL_TILE_NP2S              = 46
+  integer, public, parameter :: ANNUAL_TILE_NLOSS             = 47
+  integer, public, parameter :: ANNUAL_TILE_TOTSEED_C         = 48
+  integer, public, parameter :: ANNUAL_TILE_TOTSEED_N         = 49
+  integer, public, parameter :: ANNUAL_TILE_SEEDLING_C        = 50
+  integer, public, parameter :: ANNUAL_TILE_SEEDLING_N        = 51
+  integer, public, parameter :: ANNUAL_TILE_MAX_AGE           = 52
+  integer, public, parameter :: ANNUAL_TILE_MAX_VOLUME        = 53
+  integer, public, parameter :: ANNUAL_TILE_MAX_DBH           = 54
+  integer, public, parameter :: ANNUAL_TILE_NPP_L             = 55
+  integer, public, parameter :: ANNUAL_TILE_NPP_W             = 56
+  integer, public, parameter :: ANNUAL_TILE_DEADTREES_N       = 57
+  integer, public, parameter :: ANNUAL_TILE_DEADTREES_C       = 58
+  integer, public, parameter :: ANNUAL_TILE_M_TURNOVER        = 59
+  integer, public, parameter :: ANNUAL_TILE_C_TURNOVER_TIME   = 60
+  integer, public, parameter :: ANNUAL_TILE_LU_FRACTION       = 61
 
 
   !=============== Aggregated tile

@@ -69,6 +69,7 @@ Model output for the aggregated land units (LU) is provided as a list containing
       \item{ws2}{Volumetric soil water content for layer 2.}
       \item{ws3}{Volumetric soil water content for layer 3.}
       \item{LAI}{Leaf area index (m\eqn{^2}/m\eqn{^2}).}
+      \item{NPP}{Net primary productivity (kg C m\eqn{^{-2}} day\eqn{^{-1}}).}
       \item{GPP}{Gross primary production (kg C m\eqn{^{-2}} day\eqn{^{-1}}).}
       \item{Rauto}{Plant autotrophic respiration (kg C m\eqn{^{-2}} day\eqn{^{-1}}).}
       \item{Rh}{Heterotrophic respiration (kg C m\eqn{^{-2}} day\eqn{^{-1}}).}
@@ -114,6 +115,7 @@ Model output for the aggregated land units (LU) is provided as a list containing
     \item{Runoff}{Water runoff (mm m\eqn{^{-2}} yr\eqn{^{-1}}).}
     \item{plantC}{Plant biomass (kg C m\eqn{^{-2}}).}
     \item{soilC}{Soil carbon (kg C m\eqn{^{-2}}).}
+    \item{totC}{Total carbon in plant and soil (kg C m\eqn{^{-2}}).}
     \item{plantN}{Plant nitrogen (kg N m\eqn{^{-2}}).}
     \item{soilN}{Soil nitrogen (kg N m\eqn{^{-2}}).}
     \item{totN}{Total nitrogen in plant and soil (kg N m\eqn{^{-2}}).}
@@ -185,8 +187,8 @@ Model output for the aggregated land units (LU) is provided as a list containing
     \item{fleaf}{Fraction of carbon allocated to leaves to total growth.}
     \item{froot}{Fraction of carbon allocated to fine roots to total growth.}
     \item{fwood}{Fraction of carbon allocated to sapwood to total growth.}
-    \item{GPP}{Gross primary productivity of a tree (kg C tree\eqn{^{-1}} yr\eqn{^{-1}}).}
     \item{NPP}{Net primary productivity of a tree (kg C tree\eqn{^{-1}} yr\eqn{^{-1}}).}
+    \item{GPP}{Gross primary productivity of a tree (kg C tree\eqn{^{-1}} yr\eqn{^{-1}}).}
     \item{Rauto}{Plant autotrophic respiration (kg C tree\eqn{^{-1}} yr\eqn{^{-1}}).}
     \item{N_uptk}{Nitrogen uptake (kg N tree\eqn{^{-1}} yr\eqn{^{-1}}).}
     \item{N_fxed}{Nitrogen fixation (kg N tree\eqn{^{-1}} yr\eqn{^{-1}}).}

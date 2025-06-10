@@ -174,8 +174,8 @@ extern SEXP biomee_f_C(
     SEXP out_list = PROTECT( allocVector(VECSXP, 4) );
 
     /******* Output sub-lists *******/
-    SEXP output_daily_tile             = PROTECT( alloc3DArray(REALSXP, nt_daily,  35, n_lu) );
-    SEXP output_annual_tile            = PROTECT( alloc3DArray(REALSXP, nt_annual, 60, n_lu) );
+    SEXP output_daily_tile             = PROTECT( alloc3DArray(REALSXP, nt_daily,  36, n_lu) );
+    SEXP output_annual_tile            = PROTECT( alloc3DArray(REALSXP, nt_annual, 61, n_lu) );
 
     // Dimensions
     int pDims[4] = {50, nt_annual_trans, 35, n_lu};
@@ -185,7 +185,7 @@ extern SEXP biomee_f_C(
     // Allocate 4D array
     SEXP output_annual_cohort_tile = PROTECT(allocArray(REALSXP, dims));
 
-    SEXP output_annual_aggregated  = PROTECT( allocMatrix(REALSXP, nt_annual, 70) );
+    SEXP output_annual_aggregated  = PROTECT( allocMatrix(REALSXP, nt_annual, 71) );
     /****************/
 
     // Fortran subroutine call
