@@ -60,11 +60,11 @@ Model output for the aggregated land units (LU) is provided as a list containing
       \item{year}{Year of the simulation.}
       \item{doy}{Day of the year.}
       \item{Tk}{Air temperature (Kelvin).}
-      \item{Prcp}{Precipitation (mm m\eqn{^{-2}}).}
+      \item{Prcp}{Precipitation (mm m\eqn{^{-2}} day\eqn{^{-1}}).}
       \item{totWs}{Soil water content in root zone (kg m\eqn{^{-2}}).}
-      \item{Trsp}{Transpiration (mm m\eqn{^{2-}}).}
-      \item{Evap}{Evaporation (mm m\eqn{^{-2}}).}
-      \item{Runoff}{Water runoff (mm m\eqn{^{-2}}).}
+      \item{Trsp}{Transpiration (mm m\eqn{^{2-}} day\eqn{^{-1}}).}
+      \item{Evap}{Evaporation (mm m\eqn{^{-2}} day\eqn{^{-1}}).}
+      \item{Runoff}{Water runoff (mm m\eqn{^{-2}} day\eqn{^{-1}}).}
       \item{ws1}{Volumetric soil water content for layer 1.}
       \item{ws2}{Volumetric soil water content for layer 2.}
       \item{ws3}{Volumetric soil water content for layer 3.}
@@ -91,7 +91,7 @@ Model output for the aggregated land units (LU) is provided as a list containing
       \item{fastSoilN}{Fast soil nitrogen pool (kg N m\eqn{^{-2}}).}
       \item{slowSoilN}{Slow soil nitrogen pool (kg N m\eqn{^{-2}}).}
       \item{mineralN}{Mineral nitrogen pool (kg N m\eqn{^{-2}}).}
-      \item{N_uptk}{Nitrogen uptake (kg N m\eqn{^{-2}}).}
+      \item{N_uptk}{Nitrogen uptake (kg N m\eqn{^{-2}} day\eqn{^{-1}}).}
     }}
   \item{\code{output_annual_tile}}{A data.frame with annual outputs at tile level.
   \describe{
