@@ -19,6 +19,31 @@ drivers to protect against data corruption.
     * Species 1 is now a C4 crop
     * `N_input` is set to 0.01 to limit N starvation.
 
+* Breaking changes in biomee output
+  * renamed the following column names in `output_daily_tile`:
+    * `totWs`=>`SoilWater`
+    * `Trsp`=>`Transp`
+    * `SW_C`=>`sapwoodC` and `SW_N`=>`sapwoodN`
+    * `HW_C`=>`heartwoodC` and `HW_N`=>`heartwoodN`
+    * `McrbC`=>`mcrbC` and `McrbN`=>`mcrbN`
+    * added `NPP`
+  * renamed the following column names in `output_annual_tile` and `output_annual_cell`:
+    * `rain`=>`Prcp`
+    * `SeedC`=>`seedC` (and for `N`)
+    * `SapwoodC`=>`sapwoodC` (and for `N`)
+    * `WoodC`=>`heartwoodC` (and for `N`)
+    * `SlowSOM`=>`slowSOM`
+    * `McrbC`=>`mcrbC` and `McrbN`=>`mcrbN`
+    * added `totC`
+  * renamed the following column names in `output_annual_cohorts`:
+    * `nsc`=>`NSC` and `nsn`=>`NSN` 
+    * `sapwC`=>`sapwoodC`
+    * `woodC`=>`heartwoodC`
+    * `Nupt`=>`N_uptk`
+    * `Nfix`=>`N_fxed`
+    * switched column positions of `NPP` and `GPP`
+
+
 # rsofun v5.0.1
 
 * This model version behaves exactly as the version before.
