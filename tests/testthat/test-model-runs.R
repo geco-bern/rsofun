@@ -236,7 +236,7 @@ test_that("biomee output check (p-model)", {
 
 test_that("biomee parallel run check (gs leuning)", {
   skip_on_cran()
-  
+
   df_drivers <- biomee_gs_leuning_drivers
   df_drivers$params_siml[[1]]$spinup <- FALSE
   
@@ -264,11 +264,11 @@ test_that("Check net C (and N) balances without/with land-use-change", {
   df_drivers_BiomeE_PLULUC$params_siml[[1]]$nyeartrend <- 251
   df_drivers_BiomeE_PLULUC$forcing[[1]] <- df_drivers_BiomeE_PLULUC$forcing[[1]] |>
     # repeat forcing and update dates
-    list() |> rep(251) |> bind_rows(.id = "repeatedyear") |> 
+    list() |> rep(251) |> dplyr::bind_rows(.id = "repeatedyear") |> 
     # # While we could change the date of each row with below code, 
     # # it is actually not needed since it is not read by run_biomee_f_bysite()
     # # mutate(date = date + lubridate::years(as.numeric(repeatedyear) - 1)) |> 
-    select(-repeatedyear)
+    dplyr::select(-repeatedyear)
   
   # A) First simulation without LUC:
   # df_drivers_BiomeE_PLULUC$params_siml[[1]]$do_closedN_run <- FALSE # TODO: keep this FALSE?
@@ -307,18 +307,19 @@ test_that("Check net C (and N) balances without/with land-use-change", {
   )
   
   # A/B) postprocess (per LU) for test
-  df_balance1 <- bind_rows(.id = "LU",
+  df_balance1 <- dplyr::bind_rows(.id = "LU",
                            aggregated= mod_BiomeE_PLULUC_1$aggregated$output_annual_cell,
                            primary   = mod_BiomeE_PLULUC_1$primary$output_annual_tile,
                            secondary = mod_BiomeE_PLULUC_1$secondary$output_annual_tile) |> 
-    tibble() |>
+    dplyr::tibble() |>
     tidyr::replace_na(replace = list(
       Rprod_0_C = 0, Rprod_0_N = 0,
       Rprod_1_C = 0, Rprod_1_N = 0,
       Rprod_2_C = 0, Rprod_2_N = 0)) |>
     # postprocess:
-    group_by(LU) |>                                 # * lu_fraction: scales values from per m2 tile to per m2 landscape
-    mutate(`C_balance_+Gpp-Rauto-Rh` = (GPP-Rauto-Rh) * lu_fraction, # kg C m-2 yr-1
+    dplyr::group_by(LU) |>
+    dplyr::mutate(                                  # * lu_fraction: scales values from per m2 tile to per m2 landscape
+           `C_balance_+Gpp-Rauto-Rh` = (GPP-Rauto-Rh) * lu_fraction, # kg C m-2 yr-1
            `C_balance_+Npp-Rh`       = (NPP      -Rh) * lu_fraction, # kg C m-2 yr-1
            `C_pool`                  = (plantC+soilC) * lu_fraction, # kg C m-2
            `N_pool`                  = (plantN+soilN) * lu_fraction, # kg N m-2
@@ -326,18 +327,19 @@ test_that("Check net C (and N) balances without/with land-use-change", {
            `N_balance_PlantSoilPools`= c(0,diff(N_pool)),            # kg C m-2 yr-1
            `C_balance_+Gpp-Rauto-Rh-Prods` = `C_balance_+Gpp-Rauto-Rh` - Rprod_0_C - Rprod_1_C - Rprod_2_C # kg C yr-1 (m-2 grid cell)
     )
-  df_balance2 <- bind_rows(.id = "LU",
+  df_balance2 <- dplyr::bind_rows(.id = "LU",
                            aggregated= mod_BiomeE_PLULUC_2$aggregated$output_annual_cell,
                            primary   = mod_BiomeE_PLULUC_2$primary$output_annual_tile,
                            secondary = mod_BiomeE_PLULUC_2$secondary$output_annual_tile) |> 
-    tibble() |>
+    dplyr::tibble() |>
     tidyr::replace_na(replace = list(
       Rprod_0_C = 0, Rprod_0_N = 0,
       Rprod_1_C = 0, Rprod_1_N = 0,
       Rprod_2_C = 0, Rprod_2_N = 0)) |>
     # postprocess:
-    group_by(LU) |>                                 # * lu_fraction: scales values from per m2 tile to per m2 landscape
-    mutate(`C_balance_+Gpp-Rauto-Rh` = (GPP-Rauto-Rh) * lu_fraction, # kg C m-2 yr-1
+    dplyr::group_by(LU) |>
+    dplyr::mutate(                                 # * lu_fraction: scales values from per m2 tile to per m2 landscape
+           `C_balance_+Gpp-Rauto-Rh` = (GPP-Rauto-Rh) * lu_fraction, # kg C m-2 yr-1
            `C_balance_+Npp-Rh`       = (NPP      -Rh) * lu_fraction, # kg C m-2 yr-1
            `C_pool`                  = (plantC+soilC) * lu_fraction, # kg C m-2
            `N_pool`                  = (plantN+soilN) * lu_fraction, # kg N m-2
@@ -348,32 +350,41 @@ test_that("Check net C (and N) balances without/with land-use-change", {
   
   # A/B) prepare balances for tests
   df_balance1_totest <- df_balance1 |> 
-    select(LU, year, C_pool, N_pool, `C_balance_+Gpp-Rauto-Rh-Prods`) |>
-    mutate(C__pooldiff = c(0, diff(C_pool)),
-           N__pooldiff = c(0, diff(N_pool))) |>
-    filter(LU != "secondary")
+    dplyr::select(LU, year, C_pool, N_pool, `C_balance_+Gpp-Rauto-Rh-Prods`) |>
+    dplyr::mutate(C__pooldiff = c(0, diff(C_pool)),
+                  N__pooldiff = c(0, diff(N_pool))) |>
+    dplyr::filter(LU != "secondary")
   
   year_of_LUC <- 1 + df_drivers_BiomeE_PLULUC$params_siml[[1]]$spinupyears
   df_balance2_totest <- df_balance2 |> 
-    select(LU, year, C_pool, N_pool, `C_balance_+Gpp-Rauto-Rh-Prods`) |>
-    mutate(C__pooldiff = c(0, diff(C_pool)),
-           N__pooldiff = c(0, diff(N_pool))) |>
-    filter(year != year_of_LUC)
+    dplyr::select(LU, year, C_pool, N_pool, `C_balance_+Gpp-Rauto-Rh-Prods`) |>
+    dplyr::mutate(C__pooldiff = c(0, diff(C_pool)),
+                  N__pooldiff = c(0, diff(N_pool))) |>
+    dplyr::filter(year != year_of_LUC)
   
   # A/B) Plot the tests
   # # A/B) test equivalence of net C fluxes and changes of C pools
-  # ggplot(df_balance1_totest, aes(x=year)) + facet_grid(~LU) +
-  #   geom_line(aes(y=C__pooldiff)) +
-  #   geom_line(aes(y=`C_balance_+Gpp-Rauto-Rh-Prods`), color = 'red', linetype="dashed") #+
-  #   # coord_cartesian(xlim = c(1000, NA))
-  # ggplot(df_balance2_totest, aes(x=year)) + facet_grid(~LU) +
-  #   geom_line(aes(y=C__pooldiff)) +
-  #   geom_line(aes(y=`C_balance_+Gpp-Rauto-Rh-Prods`), color = 'red', linetype="dashed")
+  # pl1 <- ggplot(df_balance1_totest, aes(x=year)) + facet_grid(~LU) +
+  #   geom_line(aes(y=C__pooldiff,                     color = "diff(C_pool)")) +
+  #   geom_line(aes(y=`C_balance_+Gpp-Rauto-Rh-Prods`, color = "+Gpp-Rauto-Rh-Prods"), linetype="dashed") +
+  #   scale_color_manual(values = c("diff(C_pool)" = "black", "+Gpp-Rauto-Rh-Prods" = "darkred")) +
+  #   theme_classic() + labs(x = "Year", y = "kg C m-2 year-1", linetype = NULL, color = NULL) +
+  #   # coord_cartesian(xlim = c(1000, NA)) +
+  #   theme(legend.position = c(0,1), legend.justification = c(-0.2,1))
+  # pl2 <- ggplot(df_balance2_totest, aes(x=year)) + facet_grid(~LU) +
+  #   geom_line(aes(y=C__pooldiff,                     color = "diff(C_pool)")) +
+  #   geom_line(aes(y=`C_balance_+Gpp-Rauto-Rh-Prods`, color = "+Gpp-Rauto-Rh-Prods"), linetype="dashed") +
+  #   scale_color_manual(values = c("diff(C_pool)" = "black", "+Gpp-Rauto-Rh-Prods" = "darkred")) +
+  #   theme_classic() + labs(x = "Year", y = "kg C m-2 year-1", linetype = NULL, color = NULL) +
+  #   theme(legend.position = c(0,1), legend.justification = c(-0.2,1))
   # # A) test steady states in C and N pools
-  # ggplot(df_balance1_totest, aes(x=year)) + facet_grid(~LU) +
-  #   geom_line(aes(y=N__pooldiff))
-  # ggplot(df_balance2_totest, aes(x=year)) + facet_grid(~LU) +
-  #   geom_line(aes(y=N__pooldiff))
+  # pl3 <- ggplot(df_balance1_totest, aes(x=year)) + facet_grid(~LU) +
+  #   geom_line(aes(y=N__pooldiff), color = "black") +
+  #   theme_classic() + labs(x = "Year", y = "kg N m-2 year-1", linetype = NULL, color = NULL)
+  # pl4 <- ggplot(df_balance2_totest, aes(x=year)) + facet_grid(~LU) +
+  #   geom_line(aes(y=N__pooldiff), color = "black") +
+  #   theme_classic() + labs(x = "Year", y = "kg N m-2 year-1", linetype = NULL, color = NULL)
+  # (pl1 + pl2) / (pl3 + pl4) + plot_annotation(tag_levels = 'a')# using patchwork
 
   # A/B) test equivalence of net C fluxes and changes of C pools
   testthat::expect_equal(tolerance = 0.03,
@@ -387,11 +398,11 @@ test_that("Check net C (and N) balances without/with land-use-change", {
   #    in simulation A) (without LUC) 
   #    across the spinup and transient years, i.e. from 990 to 1250
   testthat::expect_true(
-    all(abs(filter(df_balance1_totest, year > 990)$N__pooldiff) < 1e-2)
+    all(abs(dplyr::filter(df_balance1_totest, year > 990)$N__pooldiff) < 1e-2)
   )
 
   testthat::expect_true(
-    all(abs(filter(df_balance1_totest, year > 990)$C__pooldiff) < 3e-2)
+    all(abs(dplyr::filter(df_balance1_totest, year > 990)$C__pooldiff) < 3e-2)
   )
   
 })
@@ -416,21 +427,21 @@ test_that("Regression tests run_biomee_f_bysite()", {
   df_drivers_BiomeE_gsLeun$params_siml[[1]]$nyeartrend = 251
   df_drivers_BiomeE_Pmodel$forcing[[1]] <- df_drivers_BiomeE_Pmodel$forcing[[1]] |>
     # repeat forcing and update dates
-    list() |> rep(251) |> bind_rows(.id = "repeatedyear") |> 
+    list() |> rep(251) |> dplyr::bind_rows(.id = "repeatedyear") |> 
     # While we could change the date of each row with below code, 
     # it is actually not needed since it is not read by run_biomee_f_bysite()
     # mutate(date = date + lubridate::years(as.numeric(repeatedyear) - 1)) |> 
     select(-repeatedyear)
   df_drivers_BiomeE_PLULUC$forcing[[1]] <- df_drivers_BiomeE_PLULUC$forcing[[1]] |>
     # repeat forcing and update dates
-    list() |> rep(251) |> bind_rows(.id = "repeatedyear") |> 
+    list() |> rep(251) |> dplyr::bind_rows(.id = "repeatedyear") |> 
     # While we could change the date of each row with below code, 
     # it is actually not needed since it is not read by run_biomee_f_bysite()
     # mutate(date = date + lubridate::years(as.numeric(repeatedyear) - 1)) |> 
     select(-repeatedyear)
   df_drivers_BiomeE_gsLeun$forcing[[1]] <- df_drivers_BiomeE_gsLeun$forcing[[1]] |>
     # repeat forcing and update dates
-    list() |> rep(251) |> bind_rows(.id = "repeatedyear") |> 
+    list() |> rep(251) |> dplyr::bind_rows(.id = "repeatedyear") |> 
     # While we could change the date of each row with below code, 
     # it is actually not needed since it is not read by run_biomee_f_bysite()
     # mutate(date = date + lubridate::years(as.numeric(repeatedyear) - 1)) |> 
