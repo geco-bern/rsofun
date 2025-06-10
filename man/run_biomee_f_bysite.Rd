@@ -61,8 +61,8 @@ Model output for the aggregated land units (LU) is provided as a list containing
       \item{doy}{Day of the year.}
       \item{Tk}{Air temperature (Kelvin).}
       \item{Prcp}{Precipitation (mm m\eqn{^{-2}} day\eqn{^{-1}}).}
-      \item{totWs}{Soil water content in root zone (kg m\eqn{^{-2}}).}
-      \item{Trsp}{Transpiration (mm m\eqn{^{2-}} day\eqn{^{-1}}).}
+      \item{SoilWater}{Soil water content in root zone (kg m\eqn{^{-2}}).}
+      \item{Transp}{Transpiration (mm m\eqn{^{2-}} day\eqn{^{-1}}).}
       \item{Evap}{Evaporation (mm m\eqn{^{-2}} day\eqn{^{-1}}).}
       \item{Runoff}{Water runoff (mm m\eqn{^{-2}} day\eqn{^{-1}}).}
       \item{ws1}{Volumetric soil water content for layer 1.}
@@ -76,18 +76,18 @@ Model output for the aggregated land units (LU) is provided as a list containing
       \item{seedC}{Biomass of seeds (kg C m\eqn{^{-2}}).}
       \item{leafC}{Biomass of leaves (kg C m\eqn{^{-2}}).}
       \item{rootC}{Biomass of fine roots (kg C m\eqn{^{-2}}).}
-      \item{SW_C}{Biomass of sapwood (kg C m\eqn{^{-2}}).}
-      \item{HW_C}{biomass of heartwood (kg C m\eqn{^{-2}}).}
+      \item{sapwoodC}{Biomass of sapwood (kg C m\eqn{^{-2}}).}
+      \item{heartwoodC}{Biomass of heartwood (kg C m\eqn{^{-2}}).}
       \item{NSN}{Non-structural N pool (kg N m\eqn{^{-2}}).}
       \item{seedN}{Nitrogen of seeds (kg N m\eqn{^{-2}}).}
       \item{leafN}{Nitrogen of leaves (kg N m\eqn{^{-2}}).}
       \item{rootN}{Nitrogen of roots (kg N m\eqn{^{-2}}).}
-      \item{SW_N}{Nitrogen of sapwood (kg N m\eqn{^{-2}}).}
-      \item{HW_N}{Nitrogen of heartwood (kg N m\eqn{^{-2}}).}
-      \item{McrbC}{Microbial carbon (kg C m\eqn{^{-2}}).}
+      \item{sapwoodN}{Nitrogen of sapwood (kg N m\eqn{^{-2}}).}
+      \item{heartwoodN}{Nitrogen of heartwood (kg N m\eqn{^{-2}}).}
+      \item{mcrbC}{Microbial carbon (kg C m\eqn{^{-2}}).}
       \item{fastSOM}{Fast soil carbon pool (kg C m\eqn{^{-2}}).}
       \item{slowSOM}{Slow soil carbon pool (kg C m\eqn{^{-2}}).}
-      \item{McrbN}{Microbial nitrogen (kg N m\eqn{^{-2}}).}
+      \item{mcrbN}{Microbial nitrogen (kg N m\eqn{^{-2}}).}
       \item{fastSoilN}{Fast soil nitrogen pool (kg N m\eqn{^{-2}}).}
       \item{slowSoilN}{Slow soil nitrogen pool (kg N m\eqn{^{-2}}).}
       \item{mineralN}{Mineral nitrogen pool (kg N m\eqn{^{-2}}).}
@@ -107,7 +107,7 @@ Model output for the aggregated land units (LU) is provided as a list containing
     \item{GPP}{Gross primary productivity (kg C m\eqn{^{-2}} yr\eqn{^{-1}}).}
     \item{Rauto}{Plant autotrophic respiration (kg C m\eqn{^{-2}} yr\eqn{^{-1}}).}
     \item{Rh}{Heterotrophic respiration (kg C m\eqn{^{-2}} yr\eqn{^{-1}}).}
-    \item{rain}{Annual precipitation (mm m\eqn{^{-2}} yr\eqn{^{-1}}).}
+    \item{Prcp}{Annual precipitation (mm m\eqn{^{-2}} yr\eqn{^{-1}}).}
     \item{SoilWater}{Soil water content in root zone (kg m\eqn{^{-2}}).}
     \item{Transp}{Transpiration (mm m\eqn{^{-2}} yr\eqn{^{-1}}).}
     \item{Evap}{Evaporation (mm m\eqn{^{-2}} yr\eqn{^{-1}}).}
@@ -118,28 +118,28 @@ Model output for the aggregated land units (LU) is provided as a list containing
     \item{soilN}{Soil nitrogen (kg N m\eqn{^{-2}}).}
     \item{totN}{Total nitrogen in plant and soil (kg N m\eqn{^{-2}}).}
     \item{NSC}{Nonstructural carbohydrates (kg C m\eqn{^{-2}}).}
-    \item{SeedC}{Seed biomass (kg C m\eqn{^{-2}}).}
+    \item{seedC}{Seed biomass (kg C m\eqn{^{-2}}).}
     \item{leafC}{Leaf biomass (kg C m\eqn{^{-2}}).}
     \item{rootC}{Fine root biomass (kg C m\eqn{^{-2}}).}
-    \item{SapwoodC}{Sapwood biomass (kg C m\eqn{^{-2}}).}
-    \item{WoodC}{Heartwood biomass (kg C m\eqn{^{-2}}).}
+    \item{sapwoodC}{Sapwood biomass (kg C m\eqn{^{-2}}).}
+    \item{heartwoodC}{Heartwood biomass (kg C m\eqn{^{-2}}).}
     \item{NSN}{Nonstructural nitrogen (kg N m\eqn{^{-2}}).}
-    \item{SeedN}{Seed nitrogen (kg N m\eqn{^{-2}}).}
+    \item{seedN}{Seed nitrogen (kg N m\eqn{^{-2}}).}
     \item{leafN}{Leaf nitrogen (kg N m\eqn{^{-2}}).}
     \item{rootN}{Fine root nitrogen (kg N m\eqn{^{-2}}).}
-    \item{SapwoodN}{Sapwood nitrogen (kg N m\eqn{^{-2}}).}
-    \item{WoodN}{Heartwood nitrogen (kg N m\eqn{^{-2}}).}
-    \item{McrbC}{Microbial carbon (kg C m\eqn{^{-2}}).}
+    \item{sapwoodN}{Sapwood nitrogen (kg N m\eqn{^{-2}}).}
+    \item{heartwoodN}{Heartwood nitrogen (kg N m\eqn{^{-2}}).}
+    \item{mcrbC}{Microbial carbon (kg C m\eqn{^{-2}}).}
     \item{fastSOM}{Fast soil carbon pool (kg C m\eqn{^{-2}}).}
-    \item{SlowSOM}{Slow soil carbon pool (kg C m\eqn{^{-2}}).}
-    \item{McrbN}{Microbial nitrogen (kg N m\eqn{^{-2}}).}
+    \item{slowSOM}{Slow soil carbon pool (kg C m\eqn{^{-2}}).}
+    \item{mcrbN}{Microbial nitrogen (kg N m\eqn{^{-2}}).}
     \item{fastSoilN}{Fast soil nitrogen pool (kg N m\eqn{^{-2}}).}
     \item{slowsoilN}{Slow soil nitrogen pool (kg N m\eqn{^{-2}}).}
     \item{mineralN}{Mineral nitrogen pool (kg N m\eqn{^{-2}}).}
     \item{N_fxed}{Nitrogen fixation (kg N m\eqn{^{-2}}).}
     \item{N_uptk}{Nitrogen uptake (kg N m\eqn{^{-2}}).}
     \item{N_yrMin}{Annual available nitrogen (kg N m\eqn{^{-2}}).}
-    \item{N_P25}{Annual nitrogen from plants to soil (kg N m\eqn{^{-2}}).}
+    \item{N_P2S}{Annual nitrogen from plants to soil (kg N m\eqn{^{-2}}).}
     \item{N_loss}{Annual nitrogen loss (kg N m\eqn{^{-2}}).}
     \item{totseedC}{Total seed carbon (kg C m\eqn{^{-2}}).}
     \item{totseedN}{Total seed nitrogen (kg N m\eqn{^{-2}}).}
@@ -163,30 +163,36 @@ Model output for the aggregated land units (LU) is provided as a list containing
     \item{PFT}{An integer indicating the Plant Functional Type.}
     \item{layer}{An integer indicating the crown layer, numbered from top to bottom.}
     \item{density}{Number of trees per area (trees ha\eqn{^{-1}}).}
-    \item{f_layer}{Fraction of layer area occupied by this cohort.}
+    \item{flayer}{Fraction of layer area occupied by this cohort.}
+    \item{DBH}{Tree diameter (cm).}
     \item{dDBH}{Diameter growth of a tree in this cohort (cm yr\eqn{^{-1}}).}
-    \item{dbh}{Tree diameter (cm).}
     \item{height}{Tree height (m).}
     \item{age}{Age of the cohort (years).}
-    \item{Acrow}{Crown area of a tree in this cohort (m\eqn{^2}).}
+    \item{BA}{Basal area a tree in this cohort (m\eqn{^2} tree\eqn{^{-1}}).}         
+    \item{dBA}{Basal area increment of a tree in this cohort (m\eqn{^2} tree\eqn{^{-1}} yr\eqn{^{-1}}).}         
+    \item{Acrown}{Crown area of a tree in this cohort (m\eqn{^2} tree\eqn{^{-1}}).}
+    \item{Aleaf}{Total area of leaves (m\eqn{^2} tree\eqn{^{-1}}).}
     \item{wood}{Sum of sapwood and heartwood biomass of a tree in this cohort (kg C tree\eqn{^{-1}}).}
-    \item{nsc}{Nonstructural carbohydrates in a tree (kg C tree\eqn{^{-1}}).}
-    \item{NSN}{Nonstructural nitrogen of a tree (kg N tree\eqn{^{-1}}).}
-    \item{NPPtr}{Total growth of a tree, including carbon allocated to seeds, leaves, fine roots, and sapwood (kg C tree\eqn{^{-1}} yr\eqn{^{-1}}).}
-    \item{seed}{Fraction of carbon allocated to seeds to total growth.}
-    \item{NPPL}{Fraction of carbon allocated to leaves to total growth.}
-    \item{NPPR}{Fraction of carbon allocated to fine roots to total growth.}
-    \item{NPPW}{Fraction of carbon allocated to sapwood to total growth.}
-    \item{GPP_yr}{Gross primary productivity of a tree (kg C tree\eqn{^{-1}} yr\eqn{^{-1}}).}
-    \item{NPP_yr}{Net primary productivity of a tree (kg C tree\eqn{^{-1}} yr\eqn{^{-1}}).}
+    \item{NSC}{Non-structural carbon of a tree in this cohort (kg C tree\eqn{^{-1}}).}
+    \item{seedC}{Biomass of seeds of a tree in this cohort (kg C tree\eqn{^{-1}}).}
+    \item{leafC}{Biomass of leaves of a tree in this cohort (kg C tree\eqn{^{-1}}).}
+    \item{rootC}{Biomass of fine roots of a tree in this cohort (kg C tree\eqn{^{-1}}).}
+    \item{sapwoodC}{Biomass of sapwood of a tree in this cohort (kg C tree\eqn{^{-1}}).}
+    \item{heartwoodC}{Biomass of heartwood of a tree in this cohort (kg C tree\eqn{^{-1}}).}
+    \item{NSN}{Non-structural nitrogen of a tree in this cohort (kg N tree\eqn{^{-1}}).}
+    \item{treeG}{Total growth of a tree, including carbon allocated to seeds, leaves, fine roots, and sapwood (kg C tree\eqn{^{-1}} yr\eqn{^{-1}}).}
+    \item{fseed}{Fraction of carbon allocated to seeds to total growth.}
+    \item{fleaf}{Fraction of carbon allocated to leaves to total growth.}
+    \item{froot}{Fraction of carbon allocated to fine roots to total growth.}
+    \item{fwood}{Fraction of carbon allocated to sapwood to total growth.}
+    \item{GPP}{Gross primary productivity of a tree (kg C tree\eqn{^{-1}} yr\eqn{^{-1}}).}
+    \item{NPP}{Net primary productivity of a tree (kg C tree\eqn{^{-1}} yr\eqn{^{-1}}).}
     \item{Rauto}{Plant autotrophic respiration (kg C tree\eqn{^{-1}} yr\eqn{^{-1}}).}
     \item{N_uptk}{Nitrogen uptake (kg N tree\eqn{^{-1}} yr\eqn{^{-1}}).}
-    \item{N_fix}{Nitrogen fixation (kg N tree\eqn{^{-1}} yr\eqn{^{-1}}).}
-    \item{maxLAI}{Maximum leaf area index for a tree (m\eqn{^2} m\eqn{^{-2}}).}
-    \item{Volume}{Tree volume (m\eqn{^3}).}
+    \item{N_fxed}{Nitrogen fixation (kg N tree\eqn{^{-1}} yr\eqn{^{-1}}).}
+    \item{deathrate}{Mortality rate of this cohort, including natural mortality, starvation and any other processes causing a loss of individuals in general (yr\eqn{^{-1}}).}
     \item{n_deadtrees}{Plant to soil N flux due to mortality, including natural mortality, starvation and any other processes causing a loss of individuals in general  (kg N yr\eqn{^{-1}} m\eqn{^{-2}}).}
     \item{c_deadtrees}{Plant to soil C flux due to mortality, including natural mortality, starvation and any other processes causing a loss of individuals in general  (kg C yr\eqn{^{-1}} m\eqn{^{-2}}).}
-    \item{deathrate}{Mortality rate of this cohort, including natural mortality, starvation and any other processes causing a loss of individuals in general (yr\eqn{^{-1}}).}
   }}
 }
 If there are multiple land units (LU) there will also be a column named `aggregated` containing a data.frame in the column

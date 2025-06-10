@@ -134,10 +134,9 @@ biomee_p_model_output_annual_tile %>%
   labs(x = "Year", y = "plantC")
 
 biomee_p_model_output_annual_cohorts %>% 
-  group_by(cohort,year) %>%
+  group_by(cID,year) %>%
   summarise(dbh = mean(DBH), 
             npp_per_m2=sum(NPP*density/10000), .groups = "keep") %>% 
-  mutate(cohort=as.factor(cohort)) %>%
   ggplot(aes(x=dbh,y=npp_per_m2,fill=as.factor(year))) +
   geom_bar(stat="identity") +
   theme_classic()+labs(x = "Cohort DBH (cm)", y = "NPP (kg C m-2)", fill="Year") +
@@ -248,7 +247,7 @@ To ensure behavior of the calibrated model is as expected its output should be v
 One possible check is to ensure that it reached the expected steady state conditions and that no trend is present in total carbon.
 Note how the vegetation C pool reaches a steady state relatively fast, while the soil C pool takes more time:
 
-``` {r eval = TRUE}
+``` {r eval = TRUE, fig.width=7}
 library(patchwork)
 pl1 <- biomee_p_model_calibratedOutput_annual_tile %>%
   ggplot(aes(x = year)) +
@@ -294,7 +293,7 @@ Note that for the carbon cycle the steady state assumption appears to be good.
 However, for the nitrogen cycle we see that.
 If your analysis relies on nitrogen being in steady-state the spinupyears might need to be increased.
 
-``` {r eval = TRUE}
+``` {r eval = TRUE, fig.width=7}
 pl3 <- biomee_p_model_calibratedOutput_annual_tile %>%
   ggplot(aes(x = year)) +
   geom_line(aes(y = plantN+soilN, color = "total N", linetype = "total N")) +
