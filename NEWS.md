@@ -19,6 +19,12 @@ drivers to protect against data corruption.
     * Species 1 is now a C4 crop
     * `N_input` is set to 0.01 to limit N starvation.
 
+# rsofun v5.0.1
+
+* This model version behaves exactly as the version before.
+* Update was necessary to include description of scripts and data used for the model documentation paper into archive on Zenodo
+
+
 # rsofun v5.0.0
 
 * new BiomeE forcing data matching that of P-model

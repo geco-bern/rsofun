@@ -80,8 +80,8 @@ settings_calib <- list(
   control = list(
     sampler = "DEzs",
     settings = list(
-      burnin = 6000,
-      iterations = 18000,
+      burnin = 12000,
+      iterations = 24000,
       nrChains = 3,       # number of independent chains
       startValue = 3      # number of internal chains to be sampled
     )),
@@ -108,9 +108,9 @@ par_calib <- calib_sofun(
   settings = settings_calib,
   par_fixed = list(
     beta_unitcostratio = 146.0,
-    kc_jmax = 0.41,
-    rd_to_vcmax = 0.014,
-    tau_acclim  = 20.0
+    kc_jmax            = 0.41,
+    rd_to_vcmax        = 0.014,
+    tau_acclim         = 20.0
     ),
   targets = "gpp"
 )
@@ -158,16 +158,13 @@ get_settings_str <- function(par_calib) {# function(settings_calib){
   
   # create descriptive string of settings for filename
   return(sprintf(
-    "Sampler-%s-%siterations_ofwhich%sburnin_chains(%sx%s)",
+    "Sampler-%s-%siterations_ofwhich%sburnin_chains_%sx%s_",
     sampler_name, nrIterations, nrBurnin, nrChains,  nrInternalChains))
 }
 
 settings_string <- get_settings_str(par_calib)
 
-saveRDS(par_calib, file = paste0("./analysis/paper_results_files/",settings_string,"_prior_posterior.RDS"))
-
-# ggsave(paste0("./analysis/paper_results_files/",settings_string,"_prior_posterior.pdf"), plot = gg, width = 6, height = 5)
-# ggsave(paste0("./analysis/paper_results_files/",settings_string,"_prior_posterior.png"), plot = gg, width = 6, height = 5)
+saveRDS(par_calib, file = paste0("./analysis/paper_results_files/par_calib.rds"))
 
 ggsave("./analysis/paper_results_files/prior_posterior.pdf", plot = gg, width = 6, height = 5)
 ggsave("./analysis/paper_results_files/prior_posterior.png", plot = gg, width = 6, height = 5)
