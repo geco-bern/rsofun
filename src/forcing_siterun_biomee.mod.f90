@@ -3,17 +3,23 @@ module md_forcing_biomee
   ! Module containing treatment of forcing for BiomeE, linking
   ! what's obtained from R through SR biomee_f and what's needed by BiomeE.
   !----------------------------------------------------------------
-  use, intrinsic :: iso_fortran_env, dp=>real64, sp=>real32, in=>int32
-  use md_params_core, only: ntstepsyear, ndayyear, kTkelvin, kfFEC
+  use, intrinsic :: iso_fortran_env, dp=>real64
+  use md_params_core, only: ndayyear, kTkelvin, kfFEC
   implicit none
 
   private
-  public climate_type, getclimate
+  public climate_type
+
+  public getclimate
+
+  ! Number of parameters
+  integer, public, parameter :: nvars_forcing = 7
 
   type :: climate_type
     real    :: ppfd          ! mol m-2 s-1
     real    :: radiation     ! W m-2 (SW downwelling, computed from ppfd)
-    real    :: Tair          ! air temperature,  K
+    real    :: TairK         ! air temperature,  K
+    real    :: TairC         ! air temperature,  C
     real    :: vpd           ! vapor pressure deficit (Pa)
     real    :: rain          ! kgH2O m-2 s-1
     real    :: windU         ! wind velocity (m s-1)
@@ -53,7 +59,8 @@ contains
 
     ! This is to read from ORNL file
     out_climate%ppfd      = real(forcing(idx_start:idx_end, 1))
-    out_climate%Tair      = real(forcing(idx_start:idx_end, 2)) + kTkelvin
+    out_climate%TairC     = real(forcing(idx_start:idx_end, 2))
+    out_climate%TairK     = real(forcing(idx_start:idx_end, 2)) + kTkelvin
     out_climate%vpd       = real(forcing(idx_start:idx_end, 3))
     out_climate%rain      = real(forcing(idx_start:idx_end, 4))
     out_climate%windU     = real(forcing(idx_start:idx_end, 5))
@@ -63,7 +70,7 @@ contains
     out_climate%radiation = out_climate%ppfd / (kfFEC * 1.0e-6)
 
     do it=1,ntstepsyear
-      out_climate(it)%RH  = calc_rh_vpd( out_climate(it)%vpd, (out_climate(it)%Tair - kTkelvin) )
+      out_climate(it)%RH  = calc_rh_vpd( out_climate(it)%vpd, (out_climate(it)%TairC) )
     end do
 
   end function getclimate
