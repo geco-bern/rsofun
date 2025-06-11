@@ -1,6 +1,7 @@
 <urlset xmlns = 'http://www.sitemaps.org/schemas/sitemap/0.9'>
 <url><loc>/404.html</loc></url>
 <url><loc>/LICENSE.html</loc></url>
+<url><loc>/articles/biomee_luluc.html</loc></url>
 <url><loc>/articles/biomee_use.html</loc></url>
 <url><loc>/articles/data_format.html</loc></url>
 <url><loc>/articles/index.html</loc></url>
@@ -13,8 +14,11 @@
 <url><loc>/reference/biomee_gs_leuning_drivers.html</loc></url>
 <url><loc>/reference/biomee_gs_leuning_output.html</loc></url>
 <url><loc>/reference/biomee_p_model_drivers.html</loc></url>
+<url><loc>/reference/biomee_p_model_luluc_drivers.html</loc></url>
+<url><loc>/reference/biomee_p_model_luluc_output.html</loc></url>
 <url><loc>/reference/biomee_p_model_output.html</loc></url>
 <url><loc>/reference/biomee_validation.html</loc></url>
+<url><loc>/reference/build_luc_matrix.html</loc></url>
 <url><loc>/reference/calib_sofun.html</loc></url>
 <url><loc>/reference/cost_likelihood_biomee.html</loc></url>
 <url><loc>/reference/cost_likelihood_pmodel.html</loc></url>
