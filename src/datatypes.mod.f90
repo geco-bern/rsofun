@@ -936,7 +936,7 @@ contains
     ! Note: this leads to negative N pools...
     !------------------------------------------------------------------------
     type(vegn_tile_type), intent(inout) :: vegn
-    real :: delta, scaling_factor
+    real :: delta
 
     delta = vegn%totN - vegn%initialN0
 
