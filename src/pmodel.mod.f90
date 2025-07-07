@@ -7,7 +7,7 @@ module pmodel_mod
   implicit none
 
   private
-  public :: pmodel_f
+  public :: pmodel_f, pmodel_onestep_f
 
 contains
   subroutine pmodel_onestep_f( &
