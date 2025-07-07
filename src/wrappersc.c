@@ -40,14 +40,14 @@ void F77_NAME(pmodel_f)(
 
 // C wrapper function for P-model
 extern SEXP pmodel_f_C(
+    SEXP secs_per_tstep,
+    SEXP in_ppfd,
+    SEXP in_netrad,
     SEXP spinup,
     SEXP spinupyears,
     SEXP recycle,
     SEXP firstyeartrend,
     SEXP nyeartrend,
-    SEXP secs_per_tstep,
-    SEXP in_ppfd,
-    SEXP in_netrad,
     SEXP outdt,
     SEXP ltre,
     SEXP ltne,

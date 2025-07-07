@@ -217,6 +217,12 @@ run_pmodel_f_bysite <- function(
       continue <- FALSE
     }
     
+    if (nrow(forcing) %% ndayyear != 0){
+      # something weird more fundamentally -> don't run the model
+      warning(" Returning a dummy data frame. Forcing data does not
+              correspond to full years.")
+      continue <- FALSE
+    }
     # simulation parameters to check
     check_param <- c(
       "spinup",
@@ -244,14 +250,7 @@ run_pmodel_f_bysite <- function(
     if (suppressWarnings(!all(parameter_integrity))){
       continue <- FALSE
     }
-    
-    if (nrow(forcing) %% ndayyear != 0){
-      # something weird more fundamentally -> don't run the model
-      warning(" Returning a dummy data frame. Forcing data does not
-              correspond to full years.")
-      continue <- FALSE
-    }
-    
+
     # model parameters to check
     if ( sum( names(params_modl) %in% c('kphio', 'kphio_par_a', 'kphio_par_b',
                                         'soilm_thetastar', 'soilm_betao',
@@ -283,15 +282,15 @@ run_pmodel_f_bysite <- function(
     ## C wrapper call
     pmodelout <- .Call(
       'pmodel_f_C',
+      secs_per_tstep            = as.integer(secs_per_tstep),
+      in_ppfd                   = as.logical(in_ppfd),
+      in_netrad                 = as.logical(in_netrad),
       ## Simulation parameters
       spinup                    = as.logical(params_siml$spinup),
       spinupyears               = as.integer(params_siml$spinupyears),
       recycle                   = as.integer(params_siml$recycle),
       firstyeartrend            = as.integer(params_siml$firstyeartrend),
       nyeartrend                = as.integer(params_siml$nyeartrend),
-      secs_per_tstep            = as.integer(secs_per_tstep),
-      in_ppfd                   = as.logical(in_ppfd),
-      in_netrad                 = as.logical(in_netrad),
       outdt                     = as.integer(params_siml$outdt),
       ltre                      = as.logical(params_siml$ltre),
       ltne                      = as.logical(params_siml$ltne),
