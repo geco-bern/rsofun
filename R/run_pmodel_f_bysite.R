@@ -121,7 +121,7 @@ run_pmodel_f_bysite <- function(
 ){
   
   # predefine variables for CRAN check compliance
-  ccov <- fsun <- . <- NULL
+  ccov <- fsun <- NULL
   
   # base state, always execute the call
   continue <- TRUE
@@ -280,13 +280,9 @@ run_pmodel_f_bysite <- function(
   }
   
   if (continue){
-    
-    
     ## C wrapper call
-    out <- .Call(
-      
+    pmodelout <- .Call(
       'pmodel_f_C',
-      
       ## Simulation parameters
       spinup                    = as.logical(params_siml$spinup),
       spinupyears               = as.integer(params_siml$spinupyears),
@@ -320,66 +316,168 @@ run_pmodel_f_bysite <- function(
                                     as.numeric(params_modl$kc_jmax)),
       forcing                   = as.matrix(forcing)
     )
-    
-    # Prepare output to be a nice looking tidy data frame (tibble)
-    ddf <- init_dates_dataframe(
-      yrstart = params_siml$firstyeartrend,
-      yrend = params_siml$firstyeartrend + params_siml$nyeartrend - 1,
-      noleap = TRUE)
-    
-    out <- out %>%
-      as.matrix() %>% 
-      as.data.frame() %>% 
-      stats::setNames(
-        c("fapar", 
-          "gpp", 
-          "aet", 
-          "le", 
-          "pet", 
-          "vcmax",
-          "jmax", 
-          "vcmax25", 
-          "jmax25", 
-          "gs_accl", 
-          "wscal", 
-          "chi", 
-          "iwue", 
-          "rd",
-          "tsoil", 
-          "netrad", 
-          "wcont", 
-          "snow",
-          "cond")
-      ) %>%
-      as_tibble(.name_repair = "check_unique") %>%
-      dplyr::bind_cols(ddf,.)
-    
   } else {
-    out <- tibble(date = as.Date("2000-01-01"),
-                  fapar = NA, 
-                  gpp = NA, 
-                  transp = NA, 
-                  latenth = NA, 
-                  pet = NA, 
-                  vcmax = NA, 
-                  jmax = NA, 
-                  vcmax25 = NA, 
-                  jmax25 = NA, 
-                  gs_accl = NA, 
-                  wscal = NA, 
-                  chi = NA, 
-                  iwue = NA, 
-                  rd = NA, 
-                  tsoil = NA, 
-                  netrad = NA,
-                  wcont = NA, 
-                  snow = NA,
-                  cond = NA)
+    pmodelout <- array(dim = c(1,19))
+  }
+
+  out <- build_out_pmodel(pmodelout, params_siml$firstyeartrend, params_siml$nyeartrend)
+
+  return(out)
+}
+
+
+# Build R output
+build_out_pmodel <- function(pmodelout, firstyeartrend, nyeartrend){
+  # predefine variables for CRAN check compliance
+  . <- NULL
+
+  # Prepare output to be a nice looking tidy data frame (tibble)
+  ddf <- init_dates_dataframe(
+    yrstart = firstyeartrend,
+    yrend = firstyeartrend + nyeartrend - 1,
+    noleap = TRUE)
+  
+  out <- pmodelout %>%
+    as.matrix() %>% 
+    as.data.frame() %>% 
+    stats::setNames(
+      c("fapar", 
+        "gpp", 
+        "aet", 
+        "le", 
+        "pet", 
+        "vcmax",
+        "jmax", 
+        "vcmax25", 
+        "jmax25", 
+        "gs_accl", 
+        "wscal", 
+        "chi", 
+        "iwue", 
+        "rd",
+        "tsoil", 
+        "netrad", 
+        "wcont", 
+        "snow",
+        "cond")
+    ) %>%
+    as_tibble(.name_repair = "check_unique") %>%
+    dplyr::bind_cols(ddf, .)
+  
+  if (all(is.na(pmodelout))){
+    # return single row output
+    out <- out[1,]
+    out$date <- as.Date("2000-01-01")
+    out$year_dec <- 2000.000
+  } else {
+    # return full output
   }
   
   return(out)
-  
 }
+
+#' Initialises a tibble with dates
+#'
+#' Creates a tibble with rows for each date from \code{'yrstart'} to \code{'yrend'}
+#' in \code{'yyyy-mm-dd'} format. Intervals of dates are specified by argument 
+#'\code{'freq'}. 
+#'  ddf <- init_dates_dataframe(2000, 2003, startmoy=1, startdoy=1,
+#'                              freq="days", endmoy=12, enddom=31, noleap=FALSE)
+#'
+#' @param yrstart An integer defining the start year
+#'  of dates covered by the dataframe.
+#' @param yrend An integer defining the end year of dates
+#'  covered by the dataframe.
+#' @param startmoy An integer defining the start month-of-year of dates
+#'  covered by the dataframe. Defaults to 1.
+#' @param startdoy An integer defining the start day-of-year of
+#'  dates covered by the dataframe. Defaults to 1.
+#' @param freq A character string specifying the time steps of dates
+#'  (in rows). Defaults to \code{"days"}. Any of \code{"days", "months", "years"}. If
+#'  \code{freq = "months"} the 15\eqn{^{th}} day of the months is used as date,
+#'  and if \code{freq = "years"} the 1\eqn{^{st}} of January of each year is returned.
+#' @param endmoy An integer defining the end month-of-year of dates covered
+#'  by the dataframe. Defaults to 12.
+#' @param enddom An integer defining the end day-of-year of dates
+#'  covered by the dataframe. Defaults to 31.
+#' @param noleap Whether leap years are ignored, that is, whether the 29\eqn{^{th}} 
+#' of February is removed. Defaults to \code{FALSE}.
+#' 
+#' @return A tibble with dates.
+#'
+
+init_dates_dataframe <- function(
+    yrstart,
+    yrend,
+    startmoy=1,
+    startdoy=1,
+    freq="days",
+    endmoy=12,
+    enddom=31,
+    noleap=FALSE ){
+  
+  if (freq=="days"){
+    
+    start_date <- as.Date(
+      sprintf("%04d-%02d-01",
+              yrstart, startmoy)) + (startdoy - 1)
+    
+    end_date   <- as.Date(
+      sprintf("%04d-%02d-%02d",
+              yrend, endmoy, enddom))
+    
+  } else if (freq=="months"){
+    
+    start_date <- as.Date(
+      sprintf("%04d-%02d-15",
+              yrstart, startmoy))
+    
+    end_date   <- as.Date(
+      sprintf("%04d-%02d-15",
+              yrend, endmoy))
+    
+  } else if (freq=="years"){
+    
+    start_date <- as.Date(
+      sprintf("%04d-%02d-01",
+              yrstart, 1))
+    
+    end_date   <- as.Date(
+      sprintf("%04d-%02d-01",
+              yrend, 7))    
+  }
+  
+  # define date range
+  date_range <- data.frame(
+    date = seq.Date(
+      from = start_date,
+      to = end_date,
+      by = freq
+    ))
+  
+  # convert to decimal date
+  numeric_year <- function(x){
+    y <- as.numeric(format(x, format="%Y"))
+    doy <- as.numeric(format(x, format="%j")) - 1
+    
+    ifelse(y %% 4 == 0, 
+          round(y + doy/366, 3), 
+          round(y + doy/365, 3)
+    )
+  }
+  date_range$year_dec <- numeric_year(date_range$date)
+  
+  # leap year filter
+  if (noleap) {
+    date_range <- dplyr::filter(date_range,
+                                !(format(date, "%m-%d") == "02-29")
+    )
+    
+  }
+  
+  return(date_range)
+}
+
 
 .onUnload <- function(libpath) {
   library.dynam.unload("rsofun", libpath)

@@ -271,13 +271,13 @@ run_biomee_f_bysite <- function(
     n_annual_trans   = as.integer(n_annual_trans)
   )
 
-  out <- build_out(biomeeout, init_lu$name, sitename, params_siml$do_daily_diagnostics)
+  out <- build_out_biomee(biomeeout, init_lu$name, sitename, params_siml$do_daily_diagnostics)
 
   return(out)
 }
 
 # Build R output
-build_out <- function(biomeeout, lu_names, sitename, do_daily_diagnostics){
+build_out_biomee <- function(biomeeout, lu_names, sitename, do_daily_diagnostics){
   if (do_daily_diagnostics) {
     # If simulation is very long, output gets massive.
     # E.g., In a 3000 years-simulation 'biomeeout' is 11.5 GB.
