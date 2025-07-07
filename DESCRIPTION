@@ -82,6 +82,7 @@ Suggests:
     ggplot2,
     knitr,
     sensitivity,
+    rpmodel,
     gridExtra,
     patchwork
 VignetteBuilder: knitr

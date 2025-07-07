@@ -1,6 +1,6 @@
-#' Run P-model (R wrapper)
+#' Run P-model (time series)
 #' 
-#' Run P-model Fortran model on single site.
+#' Run P-model on a single site for a forcing time series.
 #'
 #' @param sitename Site name.
 #' @param params_siml Simulation parameters.
@@ -231,10 +231,10 @@ run_pmodel_f_bysite <- function(
       "lgr4"
     )
     
-    parameter_integrity <- lapply(check_param, function(check_var){
-      if (any(is.nanull(params_siml[check_var]))){
+    parameter_integrity <- lapply(check_param, function(check_par){
+      if (any(is.nanull(params_siml[check_par]))){
         warning(sprintf("Error: Missing value in %s for %s",
-                        check_var, sitename))
+                        check_par, sitename))
         return(FALSE)
       } else {
         return(TRUE)
@@ -253,10 +253,10 @@ run_pmodel_f_bysite <- function(
     }
     
     # model parameters to check
-    if( sum( names(params_modl) %in% c('kphio', 'kphio_par_a', 'kphio_par_b',
-                                       'soilm_thetastar', 'soilm_betao',
-                                       'beta_unitcostratio', 'rd_to_vcmax', 
-                                       'tau_acclim', 'kc_jmax')
+    if ( sum( names(params_modl) %in% c('kphio', 'kphio_par_a', 'kphio_par_b',
+                                        'soilm_thetastar', 'soilm_betao',
+                                        'beta_unitcostratio', 'rd_to_vcmax', 
+                                        'tau_acclim', 'kc_jmax')
     ) != 9){
       warning(" Returning a dummy data frame. Incorrect model parameters.")
       continue <- FALSE
@@ -273,13 +273,13 @@ run_pmodel_f_bysite <- function(
     in_netrad <- FALSE  # net radiation is currently ignored as a model forcing, but is internally simulated by SPLASH.
     
     # Check if fsun is available
-    if(! (in_ppfd & in_netrad)){
+    if (! (in_ppfd & in_netrad)){
       # fsun must be available when one of ppfd or netrad is missing
-      if(any(is.na(forcing$fsun))) continue <- FALSE
+      if (any(is.na(forcing$fsun))) continue <- FALSE
     }
   }
   
-  if(continue){
+  if (continue){
     
     
     ## C wrapper call

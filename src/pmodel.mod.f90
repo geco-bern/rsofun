@@ -10,6 +10,113 @@ module pmodel_mod
   public :: pmodel_f
 
 contains
+  subroutine pmodel_onestep_f( &
+    lc4,                       &
+    par,                       &
+    forcing,                   &
+    output                     &
+    ) bind(C, name = "pmodel_onestep_f_")
+
+    !////////////////////////////////////////////////////////////////
+    ! Main subroutine to handle I/O with C and R. 
+    ! Receives simulation parameters, site parameters. Forcing is for 
+    ! one step.
+    !----------------------------------------------------------------
+    use md_params_core, only: eps, c_molmass
+    use md_photosynth
+
+    implicit none
+
+    ! arguments
+    integer(kind=c_int),  intent(in) :: lc4         ! logical type is not supported in the C interface (LTO)
+    real(kind=c_double),  dimension(6), intent(in) :: par  ! free (calibratable) model parameters
+    real(kind=c_double),  dimension(1,5), intent(in) :: forcing  ! 1-row array containing forcing data (rows: time steps; columns: 1=air temperature, 2=vpd, 3=ppfd, 4=co2, 5=patm) 
+    real(kind=c_double),  dimension(9), intent(out) :: output
+
+    ! local variables
+    real :: kphio, kphio_par_a, kphio_par_b, beta_unitcostratio, rd_to_vcmax, kc_jmax, &
+      temp, vpd, ppfd, co2, patm, kphio_temp, vcmax, jmax, rd
+    logical :: c4
+    type(outtype_pmodel) :: out_pmodel  ! list of P-model output variables
+
+    ! convert integer to logcial
+    c4 = lc4 /= 0
+
+    !----------------------------------------------------------------
+    ! GET CALIBRATABLE MODEL PARAMETERS (so far a small list)
+    !----------------------------------------------------------------
+    kphio              = real(par(1))
+    kphio_par_a        = real(par(2))
+    kphio_par_b        = real(par(3))
+    beta_unitcostratio = real(par(4))
+    rd_to_vcmax        = real(par(5))
+    kc_jmax            = real(par(6))
+
+    !----------------------------------------------------------------
+    ! GET FORCING
+    !----------------------------------------------------------------
+    temp = real(forcing(1,1))
+    vpd  = real(forcing(1,2))
+    ppfd = real(forcing(1,3))
+    co2  = real(forcing(1,4))
+    patm = real(forcing(1,5))
+
+    !----------------------------------------------------------------
+    ! Low-temperature effect on quantum yield efficiency 
+    !----------------------------------------------------------------
+    ! take the instananeously varying temperature for governing quantum yield variations
+    if (abs(kphio_par_a) < eps) then
+      
+      kphio_temp = kphio
+    
+    else
+      
+      kphio_temp = calc_kphio_temp( &
+        temp, &
+        c4,           &
+        kphio,         &
+        kphio_par_a,   &
+        kphio_par_b    &
+        )
+
+    end if
+
+    !================================================================
+    ! P-model call to get acclimated quantities as a function of the
+    ! damped climate forcing.
+    !----------------------------------------------------------------
+    out_pmodel = pmodel(  &
+      kphio          = kphio_temp, &
+      beta           = beta_unitcostratio, &
+      kc_jmax        = kc_jmax, &
+      ppfd           = ppfd, &
+      co2            = co2, &
+      tc             = temp, &
+      vpd            = vpd, &
+      patm           = patm, &
+      c4             = c4, &
+      method_optci   = "prentice14", &
+      method_jmaxlim = "wang17" &
+      )
+
+    ! quantities with instantaneous temperature response
+    vcmax = calc_ftemp_inst_vcmax( temp, temp, tcref = 25.0 ) * out_pmodel%vcmax25
+    jmax  = calc_ftemp_inst_jmax(  temp, temp, tcref = 25.0 ) * out_pmodel%jmax25
+    rd    = out_pmodel%vcmax25 * rd_to_vcmax * calc_ftemp_inst_rd( temp ) * c_molmass
+
+    !----------------------------------------------------------------
+    ! Populate Fortran output array which is passed back to C/R
+    !----------------------------------------------------------------
+    output(1) = dble(vcmax)  
+    output(2) = dble(jmax)    
+    output(3) = dble(out_pmodel%vcmax25) 
+    output(4) = dble(out_pmodel%jmax25)
+    output(5) = dble(out_pmodel%gs_setpoint)
+    output(7) = dble(out_pmodel%chi)
+    output(8) = dble(out_pmodel%iwue)
+    output(9) = dble(rd)
+
+  end subroutine pmodel_onestep_f
 
   subroutine pmodel_f(         &
     spinup,                    &   

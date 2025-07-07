@@ -2,7 +2,7 @@
 % Please edit documentation in R/run_pmodel_f_bysite.R
 \name{run_pmodel_f_bysite}
 \alias{run_pmodel_f_bysite}
-\title{Run P-model (R wrapper)}
+\title{Run P-model (time series)}
 \usage{
 run_pmodel_f_bysite(
   sitename,
@@ -69,7 +69,7 @@ Model output is provided as a tidy dataframe, with columns:
   }
 }
 \description{
-Run P-model Fortran model on single site.
+Run P-model on a single site for a forcing time series.
 }
 \details{
 Depending on the input model parameters, it's possible to run the 
