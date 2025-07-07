@@ -151,7 +151,7 @@ extern SEXP pmodel_onestep_f_C(
 // biomee
 /////////////////////////////////////////////////////////////
 void F77_NAME(biomee_f)(
-    double *params_sim,
+    double *params_siml,
     double *site_info,
     double *params_tile,
     int    *n_params_species,
