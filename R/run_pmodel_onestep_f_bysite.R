@@ -124,15 +124,7 @@ run_pmodel_onestep_f_bysite <- function(
     if (suppressWarnings(!all(data_integrity))){
       continue <- FALSE
     }
-    
-    # simulation parameters to check
-    if (any(is.nanull(lc4))){
-      sitename <- "undefined site"
-      check_par <- "lc4"
-      warning(sprintf("Error: Missing value in %s for %s",
-                      check_par, sitename))
-      continue <- FALSE
-    }
+
      
     # model parameters to check
     if ( sum( names(params_modl) %in% c('kphio', 'kphio_par_a', 'kphio_par_b',
@@ -144,12 +136,9 @@ run_pmodel_onestep_f_bysite <- function(
   }
   
   if (continue){
-    
     ## C wrapper call
-    out <- .Call(
-      
+    pmodelonestep_out <- .Call(
       'pmodel_onestep_f_C',
-      
       ## Simulation parameters
       lc4       = as.logical(lc4),
       par       = c(as.numeric(params_modl$kphio), # model parameters as vector in order
@@ -160,8 +149,20 @@ run_pmodel_onestep_f_bysite <- function(
                     as.numeric(params_modl$kc_jmax)),
       forcing   = as.matrix(forcing)
     )
-        
-    out <- t(out) %>%
+    pmodelonestep_out <- t(pmodelonestep_out)
+
+  } else {
+    pmodelonestep_out <- array(dim = c(1,9))
+  }
+
+  out <- build_out_pmodel_onestep(pmodelonestep_out)
+
+  return(out)
+}
+
+# Build R output
+build_out_pmodel_onestep <- function(pmodelonestep_out){
+  out <- pmodelonestep_out %>%
       as.matrix() %>% 
       as.data.frame() %>% 
       stats::setNames(
@@ -176,21 +177,8 @@ run_pmodel_onestep_f_bysite <- function(
           "rd")
       ) %>%
       as_tibble(.name_repair = "check_unique")
-    
-  } else {
-    out <- tibble(vcmax = NA, 
-                  jmax = NA, 
-                  vcmax25 = NA, 
-                  jmax25 = NA, 
-                  gs_accl = NA, 
-                  wscal = NA, 
-                  chi = NA, 
-                  iwue = NA, 
-                  rd = NA)
-  }
   
   return(out)
-  
 }
 
 .onUnload <- function(libpath) {
