@@ -195,6 +195,79 @@ test_that("p-model run check Vcmax25", {
   expect_type(df_output_p, "list")
 })
 
+test_that("p-model onestep output check (run_pmodel_onestep_f_bysite())", {
+  skip_on_cran()
+  
+  # Define simulation inputs
+  inputs <- list(
+    # for forcing:
+    temp  = 20,           # temperature, deg C
+    vpd   = 1000,         # Pa,
+    ppfd  = 300,          # mol/m2/d,
+    co2   = 400,          # ppm,
+    patm  = 101325,        # Pa
+    # for params_modl
+    kphio              = 0.04998,    # setup ORG in Stocker et al. 2020 GMD
+    kphio_par_a        = 0.0,        # disable temperature-dependence of kphio
+    kphio_par_b        = 1.0,
+    beta_unitcostratio = 146.0,
+    rd_to_vcmax        = 0.014,      # from Atkin et al. 2015 for C3 herbaceous
+    kc_jmax            = 0.41
+    )
+  
+  # compute reference value:
+  library(rpmodel)
+  out_rpmodel <- rpmodel(
+    tc=inputs$temp, vpd=inputs$vpd, co2=inputs$co2, ppfd=inputs$ppfd, 
+    patm=inputs$patm, kphio=inputs$kphio, beta=inputs$beta_unitcostratio, 
+    # NOTE: unused inputs: kphio_par_a, kphio_par_b, rd_to_vcmax, kc_jmax
+    fapar          = 1,            # fraction  ,
+    c4             = FALSE,
+    method_jmaxlim = "none",
+    do_ftemp_kphio = FALSE,        # corresponding to setup ORG
+    do_soilmstress = FALSE,        # corresponding to setup ORG
+    verbose        = TRUE
+  ) |> 
+    tidyr::as_tibble() |> 
+    dplyr::select(vcmax, jmax, vcmax25, jmax25, gs, chi, iwue, rd, everything())
+  
+  # compute value with run_pmodel_onestep_f_bysite:
+  out_run_pmodel_onestep <- run_pmodel_onestep_f_bysite(
+    lc4 = FALSE,
+    forcing = data.frame(temp = inputs$temp, vpd = inputs$vpd, ppfd = inputs$ppfd, 
+                         co2 = inputs$co2, patm = inputs$patm),
+    params_modl = list(
+      kphio              = inputs$kphio,
+      kphio_par_a        = inputs$kphio_par_a,
+      kphio_par_b        = inputs$kphio_par_b,
+      beta_unitcostratio = inputs$beta_unitcostratio,
+      rd_to_vcmax        = inputs$rd_to_vcmax,
+      kc_jmax            = inputs$kc_jmax
+    ),
+    makecheck = TRUE
+  )
+  
+  expect_equal(out_run_pmodel_onestep, out_rpmodel)
+  # If this test fails it means that the output of the model is incompatible with
+  # the package {rpmodel}.
+  # It could either mean that:
+  # - the model was accidentally altered and should be fixed to deliver the expected output
+  # - the package {rpmodel} has been altered
+  
+  # TODO: fix this test. Current output
+  # > out_run_pmodel_onestep
+  # # A tibble: 1 × 9
+  #   vcmax  jmax vcmax25 jmax25 gs_accl     wscal   chi      iwue    rd
+  #   <dbl> <dbl>   <dbl>  <dbl>   <dbl>     <dbl> <dbl>     <dbl> <dbl>
+  # 1  17.7  40.0    27.9   54.7 0.00158 2.71e-314 0.694 0.0000764  3.16
+  # > out_rpmodel
+  # # A tibble: 1 × 17
+  #   vcmax  jmax vcmax25 jmax25    gs   chi  iwue    rd   gpp    ca gammastar   kmm ns_star    xi    mj    mc    ci
+  #   <dbl> <dbl>   <dbl>  <dbl> <dbl> <dbl> <dbl> <dbl> <dbl> <dbl>     <dbl> <dbl>   <dbl> <dbl> <dbl> <dbl> <dbl>
+  # 1  32.0   NaN    50.2    NaN 0.862 0.694  7.74 0.508  128.  40.5      3.34  46.1    1.13  63.3 0.712 0.334  28.1
+})
+
+
 test_that("biomeE output check (gs leuning)", {
   skip_on_cran()
   
