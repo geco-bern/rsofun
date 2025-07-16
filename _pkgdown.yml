@@ -7,6 +7,7 @@ articles:
     contents:
       - pmodel_use
       - biomee_use
+      - biomee_luluc
       - data_format
       - new_cost_function
       - sensitivity_analysis
