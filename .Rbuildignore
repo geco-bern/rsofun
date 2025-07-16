@@ -28,6 +28,3 @@
 ^.*-logo\..*$
 ^codemeta\.json$
 ^CRAN-SUBMISSION$
-
-# Debugging
-^\.vscode$
