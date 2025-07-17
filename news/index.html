@@ -21,7 +21,7 @@
         <a class="external-link hidden-md hidden-lg" href="https://geco-group.org/">
           <img src="https://raw.githubusercontent.com/computationales/GECO_template/main/geco_logo_white_small.png" id="hexlogo" alt="GECO"></a>
         <a class="navbar-brand" href="../index.html">
-           <i>rsofun <small>v5.1.0</small></i>
+           <i>rsofun <small>v5.0.1</small></i>
         </a>
       </div>
     </div>
@@ -56,96 +56,11 @@
     </div>
 
     <div class="section level2">
-<h2 class="page-header" data-toc-text="5.1.0" id="rsofun-510">rsofun 5.1.0<a class="anchor" aria-label="anchor" href="#rsofun-510"></a></h2>
-<div class="section level3">
-<h3 id="new-features-5-1-0">New features<a class="anchor" aria-label="anchor" href="#new-features-5-1-0"></a></h3>
-<ul><li>Added support for LULUC (land use, land-use change) in BiomeE. See vignette <code>biome_luluc</code> for details.</li>
-<li>New BiomeE behavior to recycle last year of forcing if requested simulation time span (<code>nyeartrend</code>) is longer than available forcing data.</li>
-</ul></div>
-<div class="section level3">
-<h3 id="breaking-changes-5-1-0">Breaking changes<a class="anchor" aria-label="anchor" href="#breaking-changes-5-1-0"></a></h3>
-<ul><li>Breaking changes in biomee drivers:
-<ul><li>
-<code>init_cohort$init_n_cohorts</code> column has been phased out and must not be present in<br>
+<h2 class="page-header" data-toc-text="5.1.0" id="rsofun-development-version-v510">rsofun (development version v5.1.0)<a class="anchor" aria-label="anchor" href="#rsofun-development-version-v510"></a></h2>
+<ul><li>new BiomeE behavior to recycle last year of forcing if requested simulation time span (<code>nyeartrend</code>) is longer than available forcing data</li>
+<li>Breaking change: biomee drivers’ <code>init_cohort$init_n_cohorts</code> column has been phased out and must not be present in<br>
 drivers to protect against data corruption.</li>
-<li>
-<code>update_annualLAImax</code> flag was removed and the behavior is now slightly altered since <code>LAImax</code> and <code>underLAImax</code> are set and kept constant at the start of the simulation:
-<ul><li>
-<code>LAImax</code> takes value <code>max(LAI_light, 0.5)</code>
-</li>
-<li>
-<code>underLAImax</code> takes value <code>min(LAImax, 1.2)</code>
-</li>
-</ul></li>
-<li>
-<code>do_closedN_run</code> flag now uses initial inorganic N setting rather than arbitrary value and is false by default.</li>
-<li>Modified drivers to use more sensibles values
-<ul><li>Species 1 is now a C4 crop</li>
-<li>
-<code>N_input</code> is set to 0.01 to limit N starvation.</li>
-</ul></li>
-</ul></li>
-<li>Breaking changes in biomee output
-<ul><li>renamed the following column names in <code>output_daily_tile</code>:
-<ul><li>
-<code>totWs</code>=&gt;<code>SoilWater</code>
-</li>
-<li>
-<code>Trsp</code>=&gt;<code>Transp</code>
-</li>
-<li>
-<code>SW_C</code>=&gt;<code>sapwoodC</code> and <code>SW_N</code>=&gt;<code>sapwoodN</code>
-</li>
-<li>
-<code>HW_C</code>=&gt;<code>heartwoodC</code> and <code>HW_N</code>=&gt;<code>heartwoodN</code>
-</li>
-<li>
-<code>McrbC</code>=&gt;<code>mcrbC</code> and <code>McrbN</code>=&gt;<code>mcrbN</code>
-</li>
-<li>added <code>NPP</code>
-</li>
-</ul></li>
-<li>renamed the following column names in <code>output_annual_tile</code> and <code>output_annual_cell</code>:
-<ul><li>
-<code>rain</code>=&gt;<code>Prcp</code>
-</li>
-<li>
-<code>SeedC</code>=&gt;<code>seedC</code> (and for <code>N</code>)</li>
-<li>
-<code>SapwoodC</code>=&gt;<code>sapwoodC</code> (and for <code>N</code>)</li>
-<li>
-<code>WoodC</code>=&gt;<code>heartwoodC</code> (and for <code>N</code>)</li>
-<li>
-<code>SlowSOM</code>=&gt;<code>slowSOM</code>
-</li>
-<li>
-<code>McrbC</code>=&gt;<code>mcrbC</code> and <code>McrbN</code>=&gt;<code>mcrbN</code>
-</li>
-<li>added <code>totC</code>
-</li>
-</ul></li>
-<li>renamed the following column names in <code>output_annual_cohorts</code>:
-<ul><li>
-<code>nsc</code>=&gt;<code>NSC</code> and <code>nsn</code>=&gt;<code>NSN</code>
-</li>
-<li>
-<code>sapwC</code>=&gt;<code>sapwoodC</code>
-</li>
-<li>
-<code>woodC</code>=&gt;<code>heartwoodC</code>
-</li>
-<li>
-<code>Nupt</code>=&gt;<code>N_uptk</code>
-</li>
-<li>
-<code>Nfix</code>=&gt;<code>N_fxed</code>
-</li>
-<li>switched column positions of <code>NPP</code> and <code>GPP</code>
-</li>
-</ul></li>
-</ul></li>
 </ul></div>
-</div>
     <div class="section level2">
 <h2 class="page-header" data-toc-text="5.0.1" id="rsofun-v501">rsofun v5.0.1<a class="anchor" aria-label="anchor" href="#rsofun-v501"></a></h2>
 <ul><li>This model version behaves exactly as the version before.</li>
