@@ -21,7 +21,7 @@
         <a class="external-link hidden-md hidden-lg" href="https://geco-group.org/">
           <img src="https://raw.githubusercontent.com/computationales/GECO_template/main/geco_logo_white_small.png" id="hexlogo" alt="GECO"></a>
         <a class="navbar-brand" href="../index.html">
-           <i>rsofun <small>v5.0.1</small></i>
+           <i>rsofun <small>v5.1.0</small></i>
         </a>
       </div>
     </div>
@@ -70,6 +70,8 @@
 <span>  <span class="va">params_species</span>,</span>
 <span>  <span class="va">init_cohort</span>,</span>
 <span>  <span class="va">init_soil</span>,</span>
+<span>  init_lu <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  luc_forcing <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  makecheck <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -91,7 +93,7 @@
 
 
 <dt id="arg-forcing">forcing<a class="anchor" aria-label="anchor" href="#arg-forcing"></a></dt>
-<dd><p>A data frame of forcing climate data, used as input.</p></dd>
+<dd><p>A data.frame of forcing climate data, used as input.</p></dd>
 
 
 <dt id="arg-params-tile">params_tile<a class="anchor" aria-label="anchor" href="#arg-params-tile"></a></dt>
@@ -111,89 +113,53 @@ with one species per row. See examples <code><a href="biomee_gs_leuning_drivers.
 <dd><p>A data.frame of initial soil pools.</p></dd>
 
 
+<dt id="arg-init-lu">init_lu<a class="anchor" aria-label="anchor" href="#arg-init-lu"></a></dt>
+<dd><p>A data.frame of initial land unit (LU) specifications.</p></dd>
+
+
+<dt id="arg-luc-forcing">luc_forcing<a class="anchor" aria-label="anchor" href="#arg-luc-forcing"></a></dt>
+<dd><p>An array of land use change (LUC) used during transient phase.</p>
+<p>For further specifications of above inputs and examples see <code><a href="biomee_gs_leuning_drivers.html">biomee_gs_leuning_drivers</a></code>, <code><a href="biomee_p_model_drivers.html">biomee_p_model_drivers</a></code>, or <code><a href="biomee_p_model_luluc_drivers.html">biomee_p_model_luluc_drivers</a></code>.</p></dd>
+
+
 <dt id="arg-makecheck">makecheck<a class="anchor" aria-label="anchor" href="#arg-makecheck"></a></dt>
-<dd><p>A logical specifying whether checks are performed
- to verify forcings and model parameters. <code>TRUE</code> by default.</p>
-<p>For further specifications of above inputs and examples see <code><a href="biomee_gs_leuning_drivers.html">biomee_gs_leuning_drivers</a></code> or <code><a href="biomee_p_model_drivers.html">biomee_p_model_drivers</a></code></p></dd>
+<dd><p>A logical specifying whether checks are performed to verify forcings and model parameters. <code>TRUE</code> by default.</p></dd>
 
 </dl></div>
     <div id="value">
     <h2>Value</h2>
-    <p>Model output is provided as a list, with elements:</p><dl><dt><code>output_hourly_tile</code></dt>
-<dd><p>A data.frame containing hourly predictions
-    .</p><dl><dt>year</dt>
+    <p>A data.frame with columns containing model output for each land unit (LU).
+See examples <code><a href="biomee_gs_leuning_output.html">biomee_gs_leuning_output</a></code>, <code><a href="biomee_p_model_output.html">biomee_p_model_output</a></code>, or <code><a href="biomee_p_model_luluc_output.html">biomee_p_model_luluc_output</a></code>.
+If only one land unit (LU) is simulated, the column is named 'data'.
+If multiple land units (LU) are simulated, the columns are named according to the LU names.
+If multiple land units (LU) are simulated, an additional column 'aggregated' contains output aggregating all tiles as
+well as product pools.
+Model output for each land unit (LU) is provided as a list.
+Each list has elements: <code>output_daily_tile</code>, <code>output_annual_tile</code>, and <code>output_annual_cohorts</code>.
+Model output for the aggregated land units (LU) is provided as a list containing <code>output_daily_cell</code>.</p><dl><dt><code>output_daily_tile</code></dt>
+<dd><p>A data.frame with daily outputs at tile level.</p><dl><dt>year</dt>
 <dd><p>Year of the simulation.</p></dd>
 
       <dt>doy</dt>
 <dd><p>Day of the year.</p></dd>
 
-      <dt>hour</dt>
-<dd><p>Hour of the day.</p></dd>
-
-      <dt>rad</dt>
-<dd><p>Radiation, in W m\(^{-2}\).</p></dd>
-
-      <dt>Tair</dt>
-<dd><p>Air temperature, in Kelvin.</p></dd>
-
-      <dt>Prcp</dt>
-<dd><p>Precipitation, in mm m\(^{-2}\).</p></dd>
-
-      <dt>GPP</dt>
-<dd><p>Gross primary production (kg C m\(^{-2}\) hour\(^{-1}\)).</p></dd>
-
-      <dt>Resp</dt>
-<dd><p>Plant respiration (kg C m\(^{-2}\) hour\(^{-1}\)).</p></dd>
-
-      <dt>Transp</dt>
-<dd><p>Transpiration (mm m\(^{-2}\)).</p></dd>
-
-      <dt>Evap</dt>
-<dd><p>Evaporation (mm m\(^{-2}\)).</p></dd>
-
-      <dt>Runoff</dt>
-<dd><p>Water runoff (mm m\(^{-2}\)).</p></dd>
-
-      <dt>Soilwater</dt>
-<dd><p>Soil water content in root zone (kg m\(^{-2}\)).</p></dd>
-
-      <dt>wcl</dt>
-<dd><p>Volumetric soil water content for each layer (vol/vol).</p></dd>
-
-      <dt>FLDCAP</dt>
-<dd><p>Field capacity (vol/vol).</p></dd>
-
-      <dt>WILTPT</dt>
-<dd><p>Wilting point (vol/vol).</p></dd>
-
-
-</dl></dd>
-
-  <dt><code>output_daily_tile</code></dt>
-<dd><p>A data.frame with daily outputs at a tile
-    level.</p><dl><dt>year</dt>
-<dd><p>Year of the simulation.</p></dd>
-
-      <dt>doy</dt>
-<dd><p>Day of the year.</p></dd>
-
-      <dt>Tc</dt>
+      <dt>Tk</dt>
 <dd><p>Air temperature (Kelvin).</p></dd>
 
       <dt>Prcp</dt>
-<dd><p>Precipitation (mm m\(^{-2}\)).</p></dd>
+<dd><p>Precipitation (mm m\(^{-2}\) day\(^{-1}\)).</p></dd>
 
-      <dt>totWs</dt>
+      <dt>SoilWater</dt>
 <dd><p>Soil water content in root zone (kg m\(^{-2}\)).</p></dd>
 
-      <dt>Trsp</dt>
-<dd><p>Transpiration (mm m\(^{2-}\)).</p></dd>
+      <dt>Transp</dt>
+<dd><p>Transpiration (mm m\(^{2-}\) day\(^{-1}\)).</p></dd>
 
       <dt>Evap</dt>
-<dd><p>Evaporation (mm m\(^{-2}\)).</p></dd>
+<dd><p>Evaporation (mm m\(^{-2}\) day\(^{-1}\)).</p></dd>
 
       <dt>Runoff</dt>
-<dd><p>Water runoff (mm m\(^{-2}\)).</p></dd>
+<dd><p>Water runoff (mm m\(^{-2}\) day\(^{-1}\)).</p></dd>
 
       <dt>ws1</dt>
 <dd><p>Volumetric soil water content for layer 1.</p></dd>
@@ -206,6 +172,9 @@ with one species per row. See examples <code><a href="biomee_gs_leuning_drivers.
 
       <dt>LAI</dt>
 <dd><p>Leaf area index (m\(^2\)/m\(^2\)).</p></dd>
+
+      <dt>NPP</dt>
+<dd><p>Net primary productivity (kg C m\(^{-2}\) day\(^{-1}\)).</p></dd>
 
       <dt>GPP</dt>
 <dd><p>Gross primary production (kg C m\(^{-2}\) day\(^{-1}\)).</p></dd>
@@ -228,11 +197,11 @@ with one species per row. See examples <code><a href="biomee_gs_leuning_drivers.
       <dt>rootC</dt>
 <dd><p>Biomass of fine roots (kg C m\(^{-2}\)).</p></dd>
 
-      <dt>SW_C</dt>
+      <dt>sapwoodC</dt>
 <dd><p>Biomass of sapwood (kg C m\(^{-2}\)).</p></dd>
 
-      <dt>HW_C</dt>
-<dd><p>biomass of heartwood (kg C m\(^{-2}\)).</p></dd>
+      <dt>heartwoodC</dt>
+<dd><p>Biomass of heartwood (kg C m\(^{-2}\)).</p></dd>
 
       <dt>NSN</dt>
 <dd><p>Non-structural N pool (kg N m\(^{-2}\)).</p></dd>
@@ -246,13 +215,13 @@ with one species per row. See examples <code><a href="biomee_gs_leuning_drivers.
       <dt>rootN</dt>
 <dd><p>Nitrogen of roots (kg N m\(^{-2}\)).</p></dd>
 
-      <dt>SW_N</dt>
+      <dt>sapwoodN</dt>
 <dd><p>Nitrogen of sapwood (kg N m\(^{-2}\)).</p></dd>
 
-      <dt>HW_N</dt>
+      <dt>heartwoodN</dt>
 <dd><p>Nitrogen of heartwood (kg N m\(^{-2}\)).</p></dd>
 
-      <dt>McrbC</dt>
+      <dt>mcrbC</dt>
 <dd><p>Microbial carbon (kg C m\(^{-2}\)).</p></dd>
 
       <dt>fastSOM</dt>
@@ -261,7 +230,7 @@ with one species per row. See examples <code><a href="biomee_gs_leuning_drivers.
       <dt>slowSOM</dt>
 <dd><p>Slow soil carbon pool (kg C m\(^{-2}\)).</p></dd>
 
-      <dt>McrbN</dt>
+      <dt>mcrbN</dt>
 <dd><p>Microbial nitrogen (kg N m\(^{-2}\)).</p></dd>
 
       <dt>fastSoilN</dt>
@@ -274,95 +243,7 @@ with one species per row. See examples <code><a href="biomee_gs_leuning_drivers.
 <dd><p>Mineral nitrogen pool (kg N m\(^{-2}\)).</p></dd>
 
       <dt>N_uptk</dt>
-<dd><p>Nitrogen uptake (kg N m\(^{-2}\)).</p></dd>
-
-
-</dl></dd>
-
-  <dt><code>output_daily_cohorts</code></dt>
-<dd><p>A data.frame with daily predictions
-    for each canopy cohort.</p><dl><dt>year</dt>
-<dd><p>Year of the simulation.</p></dd>
-
-      <dt>doy</dt>
-<dd><p>Day of the year.</p></dd>
-
-      <dt>hour</dt>
-<dd><p>Hour of the day.</p></dd>
-
-      <dt>cID</dt>
-<dd><p>An integer indicating the cohort identity.</p></dd>
-
-      <dt>PFT</dt>
-<dd><p>An integer indicating the Plant Functional Type.</p></dd>
-
-      <dt>layer</dt>
-<dd><p>An integer indicating the crown layer, numbered from top
-        to bottom.</p></dd>
-
-      <dt>density</dt>
-<dd><p>Number of trees per area (trees ha\(^{-1}\)).</p></dd>
-
-      <dt>f_layer</dt>
-<dd><p>Fraction of layer area occupied by this cohort.</p></dd>
-
-      <dt>LAI</dt>
-<dd><p>Leaf area index (m\(^2\)/m\(^2\)).</p></dd>
-
-      <dt>gpp</dt>
-<dd><p>Gross primary productivity (kg C tree\(^{-1}\) day\(^{-1}\)).</p></dd>
-
-      <dt>resp</dt>
-<dd><p>Plant autotrophic respiration (kg C tree\(^{-1}\) day\(^{-1}\)).</p></dd>
-
-      <dt>transp</dt>
-<dd><p>Transpiration (mm tree\(^{-1}\) day\(^{-1}\)).</p></dd>
-
-      <dt>NPPleaf</dt>
-<dd><p>Carbon allocated to leaves (kg C tree\(^{-1}\) day\(^{-1}\)).</p></dd>
-
-      <dt>NPProot</dt>
-<dd><p>Carbon allocated to fine roots (kg C tree\(^{-1}\) day\(^{-1}\)).</p></dd>
-
-      <dt>NPPwood</dt>
-<dd><p>Carbon allocated to wood (kg C tree\(^{-1}\) day\(^{-1}\)).</p></dd>
-
-      <dt>NSC</dt>
-<dd><p>Nonstructural carbohydrates of a tree in this cohort (kg C
-        tree\(^{-1}\)).</p></dd>
-
-      <dt>seedC</dt>
-<dd><p>Seed biomass of a tree in this cohort (kg C tree\(^{-1}\)).</p></dd>
-
-      <dt>leafC</dt>
-<dd><p>Leaf biomass of a tree in this cohort (kg C tree\(^{-1}\)).</p></dd>
-
-      <dt>rootC</dt>
-<dd><p>Fine root biomass of a tree in this cohort (kg C tree\(^{-1}\)).</p></dd>
-
-      <dt>SW_C</dt>
-<dd><p>Sapwood biomass of a tree in this cohort (kg C tree\(^{-1}\)).</p></dd>
-
-      <dt>HW_C</dt>
-<dd><p>Heartwood biomass of a tree in this cohort (kg C tree\(^{-1}\)).</p></dd>
-
-      <dt>NSN</dt>
-<dd><p>Nonstructural nitrogen of a tree in this cohort (kg N tree\(^{-1}\)).</p></dd>
-
-      <dt>seedN</dt>
-<dd><p>Seed nitrogen of a tree in this cohort (kg N tree\(^{-1}\)).</p></dd>
-
-      <dt>leafN</dt>
-<dd><p>Leaf nitrogen of a tree in this cohort (kg N tree\(^{-1}\)).</p></dd>
-
-      <dt>rootN</dt>
-<dd><p>Fine root nitrogen of a tree in this cohort (kg N tree\(^{-1}\)).</p></dd>
-
-      <dt>SW_N</dt>
-<dd><p>Sapwood nitrogen of a tree in this cohort (kg N tree\(^{-1}\)).</p></dd>
-
-      <dt>HW_N</dt>
-<dd><p>Heartwood nitrogen of a tree in this cohort (kg N tree\(^{-1}\)).</p></dd>
+<dd><p>Nitrogen uptake (kg N m\(^{-2}\) day\(^{-1}\)).</p></dd>
 
 
 </dl></dd>
@@ -384,16 +265,13 @@ with one species per row. See examples <code><a href="biomee_gs_leuning_drivers.
 <dd><p>Diameter at tile level (cm).</p></dd>
 
     <dt>Density12</dt>
-<dd><p>Tree density for trees with DBH &gt; 12 cm (individuals
-      ha\(^{-1}\)).</p></dd>
+<dd><p>Tree density for trees with DBH &gt; 12 cm (individuals ha\(^{-1}\)).</p></dd>
 
     <dt>DBH12</dt>
-<dd><p>Diameter at tile level considering trees with DBH &gt; 12 cm
-      (cm).</p></dd>
+<dd><p>Diameter at tile level considering trees with DBH &gt; 12 cm(cm).</p></dd>
 
     <dt>QMD12</dt>
-<dd><p>Quadratic mean diameter at tile level considering trees with
-      DBH &gt; 12 cm (cm).</p></dd>
+<dd><p>Quadratic mean diameter at tile level considering trees withDBH &gt; 12 cm (cm).</p></dd>
 
     <dt>NPP</dt>
 <dd><p>Net primary productivity (kg C m\(^{-2}\) yr\(^{-1}\)).</p></dd>
@@ -407,7 +285,7 @@ with one species per row. See examples <code><a href="biomee_gs_leuning_drivers.
     <dt>Rh</dt>
 <dd><p>Heterotrophic respiration (kg C m\(^{-2}\) yr\(^{-1}\)).</p></dd>
 
-    <dt>rain</dt>
+    <dt>Prcp</dt>
 <dd><p>Annual precipitation (mm m\(^{-2}\) yr\(^{-1}\)).</p></dd>
 
     <dt>SoilWater</dt>
@@ -428,6 +306,9 @@ with one species per row. See examples <code><a href="biomee_gs_leuning_drivers.
     <dt>soilC</dt>
 <dd><p>Soil carbon (kg C m\(^{-2}\)).</p></dd>
 
+    <dt>totC</dt>
+<dd><p>Total carbon in plant and soil (kg C m\(^{-2}\)).</p></dd>
+
     <dt>plantN</dt>
 <dd><p>Plant nitrogen (kg N m\(^{-2}\)).</p></dd>
 
@@ -440,7 +321,7 @@ with one species per row. See examples <code><a href="biomee_gs_leuning_drivers.
     <dt>NSC</dt>
 <dd><p>Nonstructural carbohydrates (kg C m\(^{-2}\)).</p></dd>
 
-    <dt>SeedC</dt>
+    <dt>seedC</dt>
 <dd><p>Seed biomass (kg C m\(^{-2}\)).</p></dd>
 
     <dt>leafC</dt>
@@ -449,16 +330,16 @@ with one species per row. See examples <code><a href="biomee_gs_leuning_drivers.
     <dt>rootC</dt>
 <dd><p>Fine root biomass (kg C m\(^{-2}\)).</p></dd>
 
-    <dt>SapwoodC</dt>
+    <dt>sapwoodC</dt>
 <dd><p>Sapwood biomass (kg C m\(^{-2}\)).</p></dd>
 
-    <dt>WoodC</dt>
+    <dt>heartwoodC</dt>
 <dd><p>Heartwood biomass (kg C m\(^{-2}\)).</p></dd>
 
     <dt>NSN</dt>
 <dd><p>Nonstructural nitrogen (kg N m\(^{-2}\)).</p></dd>
 
-    <dt>SeedN</dt>
+    <dt>seedN</dt>
 <dd><p>Seed nitrogen (kg N m\(^{-2}\)).</p></dd>
 
     <dt>leafN</dt>
@@ -467,22 +348,22 @@ with one species per row. See examples <code><a href="biomee_gs_leuning_drivers.
     <dt>rootN</dt>
 <dd><p>Fine root nitrogen (kg N m\(^{-2}\)).</p></dd>
 
-    <dt>SapwoodN</dt>
+    <dt>sapwoodN</dt>
 <dd><p>Sapwood nitrogen (kg N m\(^{-2}\)).</p></dd>
 
-    <dt>WoodN</dt>
+    <dt>heartwoodN</dt>
 <dd><p>Heartwood nitrogen (kg N m\(^{-2}\)).</p></dd>
 
-    <dt>McrbC</dt>
+    <dt>mcrbC</dt>
 <dd><p>Microbial carbon (kg C m\(^{-2}\)).</p></dd>
 
     <dt>fastSOM</dt>
 <dd><p>Fast soil carbon pool (kg C m\(^{-2}\)).</p></dd>
 
-    <dt>SlowSOM</dt>
+    <dt>slowSOM</dt>
 <dd><p>Slow soil carbon pool (kg C m\(^{-2}\)).</p></dd>
 
-    <dt>McrbN</dt>
+    <dt>mcrbN</dt>
 <dd><p>Microbial nitrogen (kg N m\(^{-2}\)).</p></dd>
 
     <dt>fastSoilN</dt>
@@ -503,7 +384,7 @@ with one species per row. See examples <code><a href="biomee_gs_leuning_drivers.
     <dt>N_yrMin</dt>
 <dd><p>Annual available nitrogen (kg N m\(^{-2}\)).</p></dd>
 
-    <dt>N_P25</dt>
+    <dt>N_P2S</dt>
 <dd><p>Annual nitrogen from plants to soil (kg N m\(^{-2}\)).</p></dd>
 
     <dt>N_loss</dt>
@@ -516,50 +397,46 @@ with one species per row. See examples <code><a href="biomee_gs_leuning_drivers.
 <dd><p>Total seed nitrogen (kg N m\(^{-2}\)).</p></dd>
 
     <dt>Seedling_C</dt>
-<dd><p>Total carbon from all compartments but seeds
-      (kg C m\(^{-2}\)).</p></dd>
+<dd><p>Total carbon from all compartments but seeds (kg C m\(^{-2}\)).</p></dd>
 
-    <dt>Seeling_N</dt>
-<dd><p>Total nitrogen from all compartments but seeds
-      (kg N m\(^{-2}\)).</p></dd>
+    <dt>Seedling_N</dt>
+<dd><p>Total nitrogen from all compartments but seeds(kg N m\(^{-2}\)).</p></dd>
 
     <dt>MaxAge</dt>
 <dd><p>Age of the oldest tree in the tile (years).</p></dd>
 
     <dt>MaxVolume</dt>
-<dd><p>Maximum volumne of a tree in the tile (m\(^3\)).</p></dd>
+<dd><p>Maximum volume of a tree in the tile (m\(^3\)).</p></dd>
 
     <dt>MaxDBH</dt>
 <dd><p>Maximum DBH of a tree in the tile (m).</p></dd>
 
     <dt>NPPL</dt>
-<dd><p>Growth of a tree, including carbon allocated to leaves
-      (kg C m\(^{-2}\) year\(^{-1}\)).</p></dd>
+<dd><p>Growth of a tree, including carbon allocated to leaves(kg C m\(^{-2}\) yr\(^{-1}\)).</p></dd>
 
     <dt>NPPW</dt>
-<dd><p>Growth of a tree, including carbon allocated to sapwood
-      (kg C m\(^{-2}\) year\(^{-1}\)).</p></dd>
+<dd><p>Growth of a tree, including carbon allocated to sapwood(kg C m\(^{-2}\) yr\(^{-1}\)).</p></dd>
 
     <dt>n_deadtrees</dt>
-<dd><p>Number of trees that died (trees m\(^{-2}\) year\(^{-1}\)).</p></dd>
+<dd><p>Number of trees that died (trees m\(^{-2}\) yr\(^{-1}\)).</p></dd>
 
     <dt>c_deadtrees</dt>
-<dd><p>Carbon biomass of trees that died (kg C
-      m\(^{-2}\) year\(^{-1}\)).</p></dd>
+<dd><p>Carbon biomass of trees that died (kg C m\(^{-2}\) yr\(^{-1}\)).</p></dd>
 
     <dt>m_turnover</dt>
-<dd><p>Continuous biomass turnover (kg C m\(^{-2}\) year\(^{-1}\)).</p></dd>
+<dd><p>Continuous biomass turnover (kg C m\(^{-2}\) yr\(^{-1}\)).</p></dd>
 
     <dt>c_turnover_time</dt>
-<dd><p>Carbon turnover rate, calculated as the ratio
-      between plant biomass and NPP (year\(^{-1}\)).</p></dd>
+<dd><p>Carbon turnover rate, calculated as the ratio between plant biomass and NPP (yr\(^{-1}\)).</p></dd>
+
+    <dt>lu_fraction</dt>
+<dd><p>Fraction of BiomeE grid cell that is occupied by this land unit (LU tile) tile (unitless, or m\(^{-2}\) LU area per m\(^{-2}\) grid cell area).</p></dd>
 
 
 </dl></dd>
 
   <dt><code>output_annual_cohorts</code></dt>
-<dd><p>A data.frame of annual outputs at the
-    cohort level.</p><dl><dt>year</dt>
+<dd><p>A data.frame of annual outputs at the cohort level.</p><dl><dt>year</dt>
 <dd><p>Year of the simulation.</p></dd>
 
     <dt>cID</dt>
@@ -569,20 +446,19 @@ with one species per row. See examples <code><a href="biomee_gs_leuning_drivers.
 <dd><p>An integer indicating the Plant Functional Type.</p></dd>
 
     <dt>layer</dt>
-<dd><p>An integer indicating the crown layer, numbered from top to
-      bottom.</p></dd>
+<dd><p>An integer indicating the crown layer, numbered from top to bottom.</p></dd>
 
     <dt>density</dt>
 <dd><p>Number of trees per area (trees ha\(^{-1}\)).</p></dd>
 
-    <dt>f_layer</dt>
+    <dt>flayer</dt>
 <dd><p>Fraction of layer area occupied by this cohort.</p></dd>
 
-    <dt>dDBH</dt>
-<dd><p>Diameter growth of a tree in this cohort (cm year\(^{-1}\)).</p></dd>
-
-    <dt>dbh</dt>
+    <dt>DBH</dt>
 <dd><p>Tree diameter (cm).</p></dd>
+
+    <dt>dDBH</dt>
+<dd><p>Diameter growth of a tree in this cohort (cm yr\(^{-1}\)).</p></dd>
 
     <dt>height</dt>
 <dd><p>Tree height (m).</p></dd>
@@ -590,42 +466,62 @@ with one species per row. See examples <code><a href="biomee_gs_leuning_drivers.
     <dt>age</dt>
 <dd><p>Age of the cohort (years).</p></dd>
 
-    <dt>Acrow</dt>
-<dd><p>Crown area of a tree in this cohort (m\(^2\)).</p></dd>
+    <dt>BA</dt>
+<dd><p>Basal area a tree in this cohort (m\(^2\) tree\(^{-1}\)).</p></dd>
+
+    <dt>dBA</dt>
+<dd><p>Basal area increment of a tree in this cohort (m\(^2\) tree\(^{-1}\) yr\(^{-1}\)).</p></dd>
+
+    <dt>Acrown</dt>
+<dd><p>Crown area of a tree in this cohort (m\(^2\) tree\(^{-1}\)).</p></dd>
+
+    <dt>Aleaf</dt>
+<dd><p>Total area of leaves (m\(^2\) tree\(^{-1}\)).</p></dd>
 
     <dt>wood</dt>
-<dd><p>Sum of sapwood and heartwood biomass of a tree in this cohort
-     (kg C tree\(^{-1}\)).</p></dd>
+<dd><p>Sum of sapwood and heartwood biomass of a tree in this cohort (kg C tree\(^{-1}\)).</p></dd>
 
-    <dt>nsc</dt>
-<dd><p>Nonstructural carbohydrates in a tree (kg C tree\(^{-1}\)).</p></dd>
+    <dt>NSC</dt>
+<dd><p>Non-structural carbon of a tree in this cohort (kg C tree\(^{-1}\)).</p></dd>
+
+    <dt>seedC</dt>
+<dd><p>Biomass of seeds of a tree in this cohort (kg C tree\(^{-1}\)).</p></dd>
+
+    <dt>leafC</dt>
+<dd><p>Biomass of leaves of a tree in this cohort (kg C tree\(^{-1}\)).</p></dd>
+
+    <dt>rootC</dt>
+<dd><p>Biomass of fine roots of a tree in this cohort (kg C tree\(^{-1}\)).</p></dd>
+
+    <dt>sapwoodC</dt>
+<dd><p>Biomass of sapwood of a tree in this cohort (kg C tree\(^{-1}\)).</p></dd>
+
+    <dt>heartwoodC</dt>
+<dd><p>Biomass of heartwood of a tree in this cohort (kg C tree\(^{-1}\)).</p></dd>
 
     <dt>NSN</dt>
-<dd><p>Nonstructural nitrogen of a tree (kg N tree\(^{-1}\)).</p></dd>
+<dd><p>Non-structural nitrogen of a tree in this cohort (kg N tree\(^{-1}\)).</p></dd>
 
-    <dt>NPPtr</dt>
-<dd><p>Total growth of a tree, including carbon allocated to seeds,
-      leaves, fine roots, and sapwood (kg C tree\(^{-1}\) year\(^{-1}\)).</p></dd>
+    <dt>treeG</dt>
+<dd><p>Total growth of a tree, including carbon allocated to seeds, leaves, fine roots, and sapwood (kg C tree\(^{-1}\) yr\(^{-1}\)).</p></dd>
 
-    <dt>seed</dt>
+    <dt>fseed</dt>
 <dd><p>Fraction of carbon allocated to seeds to total growth.</p></dd>
 
-    <dt>NPPL</dt>
+    <dt>fleaf</dt>
 <dd><p>Fraction of carbon allocated to leaves to total growth.</p></dd>
 
-    <dt>NPPR</dt>
+    <dt>froot</dt>
 <dd><p>Fraction of carbon allocated to fine roots to total growth.</p></dd>
 
-    <dt>NPPW</dt>
+    <dt>fwood</dt>
 <dd><p>Fraction of carbon allocated to sapwood to total growth.</p></dd>
 
-    <dt>GPP_yr</dt>
-<dd><p>Gross primary productivity of a tree (kg C tree\(^{-1}\)
-      year\(^{-1}\)).</p></dd>
+    <dt>NPP</dt>
+<dd><p>Net primary productivity of a tree (kg C tree\(^{-1}\) yr\(^{-1}\)).</p></dd>
 
-    <dt>NPP_yr</dt>
-<dd><p>Net primary productivity of a tree (kg C tree\(^{-1}\)
-      year\(^{-1}\)).</p></dd>
+    <dt>GPP</dt>
+<dd><p>Gross primary productivity of a tree (kg C tree\(^{-1}\) yr\(^{-1}\)).</p></dd>
 
     <dt>Rauto</dt>
 <dd><p>Plant autotrophic respiration (kg C tree\(^{-1}\) yr\(^{-1}\)).</p></dd>
@@ -633,23 +529,64 @@ with one species per row. See examples <code><a href="biomee_gs_leuning_drivers.
     <dt>N_uptk</dt>
 <dd><p>Nitrogen uptake (kg N tree\(^{-1}\) yr\(^{-1}\)).</p></dd>
 
-    <dt>N_fix</dt>
+    <dt>N_fxed</dt>
 <dd><p>Nitrogen fixation (kg N tree\(^{-1}\) yr\(^{-1}\)).</p></dd>
 
-    <dt>maxLAI</dt>
-<dd><p>Maximum leaf area index for a tree (m\(^2\) m\(^{-2}\)).</p></dd>
-
-    <dt>Volume</dt>
-<dd><p>Tree volume (m\(^3\)).</p></dd>
+    <dt>deathrate</dt>
+<dd><p>Mortality rate of this cohort, including natural mortality, starvation and any other processes causing a loss of individuals in general (yr\(^{-1}\)).</p></dd>
 
     <dt>n_deadtrees</dt>
-<dd><p>Number of trees that died (trees yr\(^{-1}\)).</p></dd>
+<dd><p>Plant to soil N flux due to mortality, including natural mortality, starvation and any other processes causing a loss of individuals in general  (kg N yr\(^{-1}\) m\(^{-2}\)).</p></dd>
 
     <dt>c_deadtrees</dt>
-<dd><p>Carbon biomass of trees that died (kg C yr\(^{-1}\)).</p></dd>
+<dd><p>Plant to soil C flux due to mortality, including natural mortality, starvation and any other processes causing a loss of individuals in general  (kg C yr\(^{-1}\) m\(^{-2}\)).</p></dd>
 
-    <dt>deathrate</dt>
-<dd><p>Mortality rate of this cohort (yr\(^{-1}\)).</p></dd>
+
+</dl></dd>
+
+
+</dl><p>If there are multiple land units (LU) there will also be a column named `aggregated` containing a data.frame in the column
+`output_annual_cell` with annual outputs aggregating all tiles present in the simulation cell. Note that quantities per m2 refer to
+m2 of grid cell area, i.e. the full area of the BiomeE simulation. 'lu_fraction' refers to the sum of all the tiles,
+which must remain constant and which represents the fraction of the cell area that is not water/ice.
+In most cases, it would be close to 1. It contains columns:</p><dl><dt><code>output_annual_cell</code></dt>
+<dd><p>A data.frame with annual outputs aggregating all tiles present in the simulation cell. Note that quantities per m\(^{2}\) refer to m\(^{2}\) of grid cell
+                                   area, i.e. the full area of the BiomeE simulation. 'lu_fraction' refers to the sum of all the tiles, which must remain constant and which represents the
+                                   fraction of the cell area that is not water/ice. In most cases, it would be close to 1.</p><dl><dt>all columns from 'output_yearly_tile'</dt>
+<dd><p>See above for output_yearly_tile, but now expressed per unit area of the BiomeE grid cell.</p></dd>
+
+    <dt>lu_fraction</dt>
+<dd><p>Fraction of BiomeE grid cell that is occupied by this land unit (LU tile) tile (unitless, or m\(^{2}\) LU area per m\(^{2}\) grid cell area).</p></dd>
+
+    <dt>prod_pool_1_C</dt>
+<dd><p>Carbon in product pool 1 (kg C m\(^{-2}\) grid cell).</p></dd>
+
+    <dt>prod_pool_1_N</dt>
+<dd><p>Nitrogen in product pool 1 (kg N m\(^{-2}\) grid cell).</p></dd>
+
+    <dt>prod_pool_2_C</dt>
+<dd><p>Carbon in product pool 2 (kg C m\(^{-2}\) grid cell).</p></dd>
+
+    <dt>prod_pool_2_N</dt>
+<dd><p>Nitrogen in product pool 2 (kg N m\(^{-2}\) grid cell).</p></dd>
+
+    <dt>Rprod_0_C</dt>
+<dd><p>Carbon loss rate directly from land use change (LUC) (kg C m\(^{-2}\) grid cell yr\(^{-1}\)).</p></dd>
+
+    <dt>Rprod_0_N</dt>
+<dd><p>Nitrogen loss rate directly from land use change (LUC) (kg C m\(^{-2}\) grid cell yr\(^{-1}\)).</p></dd>
+
+    <dt>Rprod_1_C</dt>
+<dd><p>Carbon loss rate from product pool 1 (kg C m\(^{-2}\) grid cell yr\(^{-1}\)).</p></dd>
+
+    <dt>Rprod_1_N</dt>
+<dd><p>Nitrogen loss rate from product pool 1 (kg N m\(^{-2}\) grid cell yr\(^{-1}\)).</p></dd>
+
+    <dt>Rprod_2_C</dt>
+<dd><p>Carbon loss rate from product pool 2 (kg C m\(^{-2}\) grid cell yr\(^{-1}\)).</p></dd>
+
+    <dt>Rprod_2_N</dt>
+<dd><p>Nitrogen loss rate from product pool 2 (kg N m\(^{-2}\) grid cell yr\(^{-1}\)).</p></dd>
 
 
 </dl></dd>

@@ -21,7 +21,7 @@
         <a class="external-link hidden-md hidden-lg" href="https://geco-group.org/">
           <img src="https://raw.githubusercontent.com/computationales/GECO_template/main/geco_logo_white_small.png" id="hexlogo" alt="GECO"></a>
         <a class="navbar-brand" href="../index.html">
-           <i>rsofun <small>v5.0.1</small></i>
+           <i>rsofun <small>v5.1.0</small></i>
         </a>
       </div>
     </div>
@@ -61,7 +61,7 @@
     </div>
 
     <div id="ref-usage">
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">runread_biomee_f</span><span class="op">(</span><span class="va">drivers</span>, makecheck <span class="op">=</span> <span class="cn">TRUE</span>, parallel <span class="op">=</span> <span class="cn">FALSE</span>, ncores <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">runread_biomee_f</span><span class="op">(</span><span class="va">drivers</span>, makecheck <span class="op">=</span> <span class="cn">TRUE</span>, parallel <span class="op">=</span> <span class="cn">FALSE</span>, ncores <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div id="arguments">
@@ -71,7 +71,8 @@
 <dl><dt id="arg-drivers">drivers<a class="anchor" aria-label="anchor" href="#arg-drivers"></a></dt>
 <dd><p>A nested data frame with one row for each site and columns
 named according to the arguments of function <code><a href="run_biomee_f_bysite.html">run_biomee_f_bysite</a></code>.
-Namely <code>sitename, params_siml, site_info</code> and <code>forcing</code>.</p></dd>
+Namely <code>sitename, params_siml, site_info, forcing, params_tile,
+params_species, init_cohort</code> and <code>init_soil</code>.</p></dd>
 
 
 <dt id="arg-makecheck">makecheck<a class="anchor" aria-label="anchor" href="#arg-makecheck"></a></dt>
@@ -80,24 +81,22 @@ to verify forcings and model parameters. <code>TRUE</code> by default.</p></dd>
 
 
 <dt id="arg-parallel">parallel<a class="anchor" aria-label="anchor" href="#arg-parallel"></a></dt>
-<dd><p>Flag specifying whether simulations are to be
-parallelised (sending data from a certain number of sites to each core).
-Defaults to <code>FALSE</code>.</p></dd>
+<dd><p>Deprecated. Use ncores instead.</p></dd>
 
 
 <dt id="arg-ncores">ncores<a class="anchor" aria-label="anchor" href="#arg-ncores"></a></dt>
 <dd><p>An integer specifying the number of cores used for parallel
-computing. Defaults to 2.</p></dd>
+computing (sites processed in parallel). Default: 1 (no parallel execution).</p></dd>
 
 </dl></div>
     <div id="value">
     <h2>Value</h2>
-    <p>A data frame (tibble) with one row for each site, site information
-stored in the nested column <code>site_info</code> and model outputs stored in the
-nested  column <code>data</code>. See <code><a href="run_biomee_f_bysite.html">run_biomee_f_bysite</a></code> for a detailed
-description of the outputs.
-Example outputs are provided as <code><a href="p_model_output.html">p_model_output</a></code> and
-<code><a href="p_model_output_vcmax25.html">p_model_output_vcmax25</a></code>.</p>
+    <p>A data frame (tibble) with one row for each site.
+The columns are the site information <code>site_info</code> and one column per land unit (LU) in addition to an aggregated output <code>aggregated</code>.
+By default, the only LU is named <code>data</code> and <code>aggregated</code> is not present since aggregating one LU is not useful.
+When multiple LU are configured (using <code>init_lu</code>), the columns are named using the LU name provided in <code>init_lu</code>.
+See <code><a href="run_biomee_f_bysite.html">run_biomee_f_bysite</a></code> for a detailed description of the outputs.
+Example outputs are provided as <code><a href="biomee_p_model_output.html">biomee_p_model_output</a></code> and <code><a href="biomee_p_model_luluc_output.html">biomee_p_model_luluc_output</a></code>.</p>
     </div>
 
     <div id="ref-examples">
