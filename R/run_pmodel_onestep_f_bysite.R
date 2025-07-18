@@ -17,11 +17,11 @@
 #' @returns Model output is provided as a tidy dataframe, with columns:
 #' \describe{
 #'   \item{\code{vcmax}}{Maximum rate of RuBisCO carboxylation 
-#'       (Vcmax) (in mol C m\eqn{^{-2}} d\eqn{^{-1}}).}
+#'       (Vcmax) (in mol C m\eqn{^{-2}} s\eqn{^{-1}}).}
 #'   \item{\code{jmax}}{Maximum rate of electron transport for RuBP regeneration
 #'       (in mol CO\eqn{_2} m\eqn{^{-2}} s\eqn{^{-1}}).}
 #'   \item{\code{vcmax25}}{Maximum rate of carboxylation (Vcmax), 
-#'       normalised to 25\eqn{^o}C (in mol C m\eqn{^{-2}} d\eqn{^{-1}}).}
+#'       normalised to 25\eqn{^o}C (in mol C m\eqn{^{-2}} s\eqn{^{-1}}).}
 #'   \item{\code{jmax25}}{Maximum rate of electron transport, normalised to 
 #'       25\eqn{^o}C (in mol C m\eqn{^{-2}} s\eqn{^{-1}}).}
 #'   \item{\code{gs_accl}}{Acclimated stomatal conductance (in 
@@ -30,7 +30,7 @@
 #'       point, PWP) and 1 (field capacity, FC).}
 #'   \item{\code{chi}}{Ratio of leaf-internal to ambient CO\eqn{_{2}}, ci:ca (unitless).}
 #'   \item{\code{iwue}}{Intrinsic water use efficiency (iWUE) (in Pa).}
-#'   \item{\code{rd}}{Dark respiration (Rd) in gC m\eqn{^{-2}} d\eqn{^{-1}}.}
+#'   \item{\code{rd}}{Dark respiration (Rd) in gC m\eqn{^{-2}} s\eqn{^{-1}}.}
 #'   } 
 #'   
 #' @details TBC
@@ -55,7 +55,7 @@
 #'   forcing = data.frame(
 #'     temp  = 20,           # temperature, deg C
 #'     vpd   = 1000,         # Pa,
-#'     ppfd  = 300,          # mol/m2/d,
+#'     ppfd  = 300/10^6,     # mol/m2/s
 #'     co2   = 400,          # ppm,
 #'     patm  = 101325        # Pa
 #'   ),

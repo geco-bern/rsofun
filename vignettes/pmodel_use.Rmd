@@ -248,7 +248,7 @@ run_pmodel_onestep_f_bysite(
   forcing = data.frame(
     temp  = 20,           # temperature, deg C
     vpd   = 1000,         # Pa,
-    ppfd  = 300,          # mol/m2/d,
+    ppfd  = 300/10^6,     # mol/m2/s
     co2   = 400,          # ppm,
     patm  = 101325        # Pa
   ),

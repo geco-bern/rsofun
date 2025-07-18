@@ -47,11 +47,11 @@ Model output is provided as a tidy dataframe, with columns:
   \item{\code{le}}{Latent heat flux (in J m\eqn{^{-2}} d\eqn{^{-1}}).}
   \item{\code{pet}}{Potential evapotranspiration (PET), calculated by SPLASH following Priestly-Taylor (in mm d\eqn{^{-1}}).}
   \item{\code{vcmax}}{Maximum rate of RuBisCO carboxylation 
-      (Vcmax) (in mol C m\eqn{^{-2}} d\eqn{^{-1}}).}
+      (Vcmax) (in mol C m\eqn{^{-2}} s\eqn{^{-1}}).}
   \item{\code{jmax}}{Maximum rate of electron transport for RuBP regeneration
       (in mol CO\eqn{_2} m\eqn{^{-2}} s\eqn{^{-1}}).}
   \item{\code{vcmax25}}{Maximum rate of carboxylation (Vcmax), 
-      normalised to 25\eqn{^o}C (in mol C m\eqn{^{-2}} d\eqn{^{-1}}).}
+      normalised to 25\eqn{^o}C (in mol C m\eqn{^{-2}} s\eqn{^{-1}}).} 
   \item{\code{jmax25}}{Maximum rate of electron transport, normalised to 
       25\eqn{^o}C (in mol C m\eqn{^{-2}} s\eqn{^{-1}}).}
   \item{\code{gs_accl}}{Acclimated stomatal conductance (in 
