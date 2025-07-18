@@ -1,6 +1,6 @@
 Package: rsofun
 Title: The P-Model and BiomeE Modelling Framework
-Version: 5.1.0
+Version: 5.1.0.9000
 Authors@R: c(
             person(
               family = "Stocker",
@@ -82,6 +82,7 @@ Suggests:
     ggplot2,
     knitr,
     sensitivity,
+    rpmodel,
     gridExtra,
     patchwork
 VignetteBuilder: knitr

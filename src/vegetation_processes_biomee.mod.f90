@@ -833,8 +833,8 @@ contains
     type(orgpool), intent(in) :: dL, dR, dStem  ! leaf and fine root pool tendencies
 
     ! local variables
-    type(orgpool) :: loss_coarse, loss_fine, dtot, dAleaf_pool
-    real :: dAleaf ! leaf area decrease due to dBL
+    type(orgpool) :: loss_coarse, loss_fine, dtot !, dAleaf_pool
+    ! real :: dAleaf ! leaf area decrease due to dBL
 
     associate ( sp => cc%sp() )
       ! Retranslocation to NSC and NSN

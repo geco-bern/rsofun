@@ -35,7 +35,7 @@ contains
       type(cohort_type),pointer :: cc
       real :: fWup(MAX_LEVELS)      ! fraction to the actual soil water
       real :: freewater(MAX_LEVELS)
-      real :: totWsup(MAX_LEVELS) ! potential water uptake, mol s-1 m-2
+      real :: totWsup(MAX_LEVELS) ! potential water uptake, mol m-2 s-1
       real :: thetaS(MAX_LEVELS) ! soil moisture index (0~1)
       real :: dpsiSR(MAX_LEVELS) ! pressure difference between soil water and root water, Pa
       integer :: i

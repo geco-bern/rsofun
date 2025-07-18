@@ -95,18 +95,18 @@ calib_sofun <- function(
   lower <- upper <- out_optim <- NULL
   
   # check input variables
-  if(missing(obs) | missing(drivers) | missing(settings)){
+  if (missing(obs) | missing(drivers) | missing(settings)){
     stop("missing input arguments, please check all parameters")
   }
   
   # check data structure
-  if(is.data.frame(obs)){
+  if (is.data.frame(obs)){
     if (nrow(obs) == 0){
       warning("no validation data available, returning NA parameters")
       return(lapply(settings$par,
                     function(x) NA))
     }
-  }else{
+  } else {
     stop("obs must be a (nested) data.frame")
   }
   
@@ -131,9 +131,10 @@ calib_sofun <- function(
       drivers = drivers,
       ...
     )
-    if(optim_out){
+
+    if (optim_out){
       out_optim <- list(par = out$par, mod = out)
-    }else{
+    } else {
       out_optim <- list(par = out$par)
     }
     
@@ -163,14 +164,15 @@ calib_sofun <- function(
     # setup the bayes run, no message forwarding is provided
     # so wrap the function in a do.call
     setup <- BayesianTools::createBayesianSetup(
-      likelihood = function(
-    random_par) {
-        do.call("cost",
-                list(
-                  par = random_par,
-                  obs = obs,
-                  drivers = drivers
-                ))
+      likelihood = function(random_par){
+        do.call(
+          "cost",
+          list(
+            par = random_par,
+            obs = obs,
+            drivers = drivers
+          )
+        )
       },
     prior = priors,
     names = names(settings$par)
@@ -189,9 +191,10 @@ calib_sofun <- function(
     # drop last value
     bt_par <- BayesianTools::MAP(out)$parametersMAP
     bt_par <- bt_par[1:(length(bt_par))]
-    if(optim_out){
+
+    if (optim_out){
       out_optim <- list(par = bt_par, mod = out)
-    }else{
+    } else {
       out_optim <- list(par = bt_par)
     }
     

@@ -8,7 +8,7 @@
 // See https://www.stat.berkeley.edu/~spector/s243/calling.pdf for more details
 
 /////////////////////////////////////////////////////////////
-// P-model
+// P-model for time series
 /////////////////////////////////////////////////////////////
 
 void F77_NAME(pmodel_f)(
@@ -40,14 +40,14 @@ void F77_NAME(pmodel_f)(
 
 // C wrapper function for P-model
 extern SEXP pmodel_f_C(
+    SEXP secs_per_tstep,
+    SEXP in_ppfd,
+    SEXP in_netrad,
     SEXP spinup,
     SEXP spinupyears,
     SEXP recycle,
     SEXP firstyeartrend,
     SEXP nyeartrend,
-    SEXP secs_per_tstep,
-    SEXP in_ppfd,
-    SEXP in_netrad,
     SEXP outdt,
     SEXP ltre,
     SEXP ltne,
@@ -105,11 +105,53 @@ extern SEXP pmodel_f_C(
     return output;
 }
 
+
+/////////////////////////////////////////////////////////////
+// P-model for one step
+/////////////////////////////////////////////////////////////
+
+void F77_NAME(pmodel_onestep_f)(
+    int    *lc4, // LOGICAL
+    double *par,
+    double *forcing,
+    double *output
+    );
+
+// C wrapper function for P-model
+extern SEXP pmodel_onestep_f_C(
+    SEXP lc4,
+    SEXP par,
+    SEXP forcing
+    ){
+
+    // Specify output
+    // 2nd agument to allocVector is number of rows, 3rd is number of columns
+    SEXP output = PROTECT( allocVector(REALSXP, 9) );
+
+    // Fortran subroutine call
+    F77_CALL(pmodel_onestep_f)(
+        INTEGER(lc4),
+        REAL(par),
+        REAL(forcing),
+        REAL(output)
+        );
+
+    // // Output as list
+    // SEXP out_full = PROTECT( allocVector(VECSXP, 1) );
+    // SET_VECTOR_ELT(out_full, 0, output);
+
+    UNPROTECT(1);
+
+    return output;
+}
+
+
+
 /////////////////////////////////////////////////////////////
 // biomee
 /////////////////////////////////////////////////////////////
 void F77_NAME(biomee_f)(
-    double *params_sim,
+    double *params_siml,
     double *site_info,
     double *params_tile,
     int    *n_params_species,
@@ -228,6 +270,7 @@ extern SEXP biomee_f_C(
 /////////////////////////////////////////////////////////////
 static const R_CallMethodDef CallEntries[] = {
   {"pmodel_f_C",   (DL_FUNC) &pmodel_f_C,   23},  // Specify number of arguments to C wrapper as the last number here
+  {"pmodel_onestep_f_C",   (DL_FUNC) &pmodel_onestep_f_C,   3},  // Specify number of arguments to C wrapper as the last number here
   {"biomee_f_C",   (DL_FUNC) &biomee_f_C,   12},  // Number of arguments of the C wrapper function for biomee (the SEXP variables, not the output)
   { NULL,          NULL,                    0 }
 };
@@ -238,5 +281,6 @@ void R_init_rsofun(DllInfo *dll)
     R_useDynamicSymbols(dll, FALSE);
 
     R_RegisterCCallable("rsofun", "pmodel_f_C",  (DL_FUNC) &pmodel_f_C);
+    R_RegisterCCallable("rsofun", "pmodel_onestep_f_C",  (DL_FUNC) &pmodel_onestep_f_C);
     R_RegisterCCallable("rsofun", "biomee_f_C",  (DL_FUNC) &biomee_f_C);
 }

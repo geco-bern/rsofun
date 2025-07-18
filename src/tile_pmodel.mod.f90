@@ -88,8 +88,8 @@ module md_tile_pmodel
     real :: dro             ! daily runoff (mm d-1)
     real :: dfleach         ! daily fraction of soil water going to runoff (used for calculating leaching)
     real :: dwbal           ! daily water balance as precipitation and snow melt minus runoff and evapotranspiration (mm d-1)
-    real :: econ            ! water-to-energy conversion factor (m^3/J)
-    real :: drn             ! daily total net radiation (J/m2/d)
+    real :: econ            ! water-to-energy conversion factor (m3 J-1)
+    real :: drn             ! daily total net radiation (J m-2 d-1)
     real :: drnn            ! nighttime total net radiation (J m-1 d-1)
     real :: rnl             ! net longwave radiation (W m-2)
     real :: dcn             ! daily total condensation (mm d-1)
@@ -130,7 +130,7 @@ module md_tile_pmodel
 
     ! radiation
     real :: ppfd_splash
-    real :: dra              ! daily top-of-atmosphere solar radiation (J/m^2/d)
+    real :: dra              ! daily top-of-atmosphere solar radiation (J m-2 d-1)
 
     ! ! annual
     ! !----------------------------------------------------------------
@@ -139,7 +139,7 @@ module md_tile_pmodel
     ! real :: avcmax25_mean         ! annual Vcmax, normalised to 25 deg C, GPP-weighted mean
     ! real :: avcmax25_max          ! annual Vcmax, normalised to 25 deg C, annual maximum
 
-    ! real, dimension(ndayyear) :: dra                ! daily TOA solar irradiation (J/m2)
+    ! real, dimension(ndayyear) :: dra                ! daily TOA solar irradiation (J m-2)
     ! real, dimension(ndayyear) :: dppfd_splash       ! daily total PPFD (mol m-2 d-1)
     ! real, dimension(nmonth)   :: mppfd_splash       ! monthly total PPFD (mol m-2 month-1)
     ! real, dimension(nmonth)   :: meanmppfd_splash   ! monthly mean PPFD, averaged over daylight seconds (mol m-2 s-1)
