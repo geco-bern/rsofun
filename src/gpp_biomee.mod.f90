@@ -30,7 +30,7 @@ module md_gpp_biomee
     real :: kc_jmax = 0.41      ! Jmax cost ratio
 
     ! these should be species-specific, temporary solution to put them here
-    real :: kphio = 0.05        ! quantum yield efficiency at optimal temperature, phi_0 (Stocker et al., 2020 GMD Eq. 10)
+    real :: kphio = 0.05        ! quantum yield efficiency at optimal temperature, phi_0 (Stocker et al., 2020 GMD Eq. 10 and Eq. 20)
     real :: kphio_par_a = 0.0   ! shape parameter of temperature-dependency of quantum yield efficiency
     real :: kphio_par_b = 25.0  ! optimal temperature of quantum yield efficiency (deg C)
 

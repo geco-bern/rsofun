@@ -33,7 +33,7 @@ module md_cohort
     integer :: species    = 1            ! vegetation species
 
     !===== Population structure
-    real :: density       = 0.0          ! density of vegetation, tree/m2
+    real :: density       = 0.0          ! density of vegetation, tree m-2
     real :: deathrate     = 0.0          ! Deathrate (0 to 1) of the original cohort. Only set for cohorts in the killed list.
     real :: age           = 0.0          ! age of cohort, years
     real :: topyear       = 0.0          ! number of years the cohort is in top layer
