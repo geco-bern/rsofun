@@ -45,21 +45,21 @@ contains
     !----------------------------------------------------------------
     ! GET CALIBRATABLE MODEL PARAMETERS (so far a small list)
     !----------------------------------------------------------------
-    kphio              = real(par(1))
-    kphio_par_a        = real(par(2))
-    kphio_par_b        = real(par(3))
-    beta_unitcostratio = real(par(4))
-    rd_to_vcmax        = real(par(5))
-    kc_jmax            = real(par(6))
+    kphio              = real(par(1)) ! (mol mol-1)
+    kphio_par_a        = real(par(2)) ! ((deg C)-2)
+    kphio_par_b        = real(par(3)) ! (deg C)
+    beta_unitcostratio = real(par(4)) ! (-)
+    rd_to_vcmax        = real(par(5)) ! (-/-), ratio of rd to Vcmax
+    kc_jmax            = real(par(6)) ! (-), jmax cost ratio, a.k.a c*
 
     !----------------------------------------------------------------
     ! GET FORCING
     !----------------------------------------------------------------
-    temp = real(forcing(1,1))
-    vpd  = real(forcing(1,2))
-    ppfd = real(forcing(1,3))
-    co2  = real(forcing(1,4))
-    patm = real(forcing(1,5))
+    temp = real(forcing(1,1)) ! (deg C)
+    vpd  = real(forcing(1,2)) ! (Pa)
+    ppfd = real(forcing(1,3)) ! (mol m-2 s-1) (while netrad is W m-2)
+    co2  = real(forcing(1,4)) ! (ppm)
+    patm = real(forcing(1,5)) ! (Pa)
 
     !----------------------------------------------------------------
     ! Low-temperature effect on quantum yield efficiency 
@@ -231,16 +231,16 @@ contains
     !----------------------------------------------------------------
     ! GET CALIBRATABLE MODEL PARAMETERS (so far a small list)
     !----------------------------------------------------------------
-    myinterface%params_calib%kphio              = real(par(1))
-    myinterface%params_calib%kphio_par_a        = real(par(2))
-    myinterface%params_calib%kphio_par_b        = real(par(3))
+    myinterface%params_calib%kphio              = real(par(1)) ! (mol mol-1)
+    myinterface%params_calib%kphio_par_a        = real(par(2)) ! ((deg C)-2)
+    myinterface%params_calib%kphio_par_b        = real(par(3)) ! (deg C)
     myinterface%params_calib%soilm_thetastar    = real(par(4))
     myinterface%params_calib%soilm_betao        = real(par(5))
-    myinterface%params_calib%beta_unitcostratio = real(par(6))
-    myinterface%params_calib%rd_to_vcmax        = real(par(7))
+    myinterface%params_calib%beta_unitcostratio = real(par(6)) ! (-)
+    myinterface%params_calib%rd_to_vcmax        = real(par(7)) ! (-/-), ratio of rd to Vcmax
     myinterface%params_calib%tau_acclim         = real(par(8))
-    myinterface%params_calib%kc_jmax            = real(par(9))
-
+    myinterface%params_calib%kc_jmax            = real(par(9)) ! (-), jmax cost ratio, a.k.a c*
+    
     !----------------------------------------------------------------
     ! GET VEGETATION COVER (fractional projective cover by PFT)
     !----------------------------------------------------------------
