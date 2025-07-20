@@ -214,13 +214,13 @@
 #'     }}
 #'   \item{forcing}{Forcing data.frame used as input
 #'     \describe{
-#'       \item{ppfd}{Photosynthetic photon flux density (mol s-1 m-2)}
+#'       \item{ppfd}{Photosynthetic photon flux density (mol m-2 s-1)}
 #'       \item{tair}{Air temperature (deg C)}
 #'       \item{vpd}{Vapor pressure deficit (Pa)}
 #'       \item{rain}{Precipitation (kgH2O m-2 s-1 == mm s-1)}
 #'       \item{wind}{Wind velocity (m s-1)}
-#'       \item{pair}{Atmospheric pressure (pa)}
-#'       \item{co2}{CO2 atmospheric concentration (ppm)}
+#'       \item{pair}{Atmospheric pressure (Pa)}
+#'       \item{co2}{Atmospheric CO\eqn{_2} concentration in ppm.}
 #'     }}
 #'   \item{params_tile}{Tile-level model parameters, into a single row data.frame, including the following data:
 #'     \describe{
