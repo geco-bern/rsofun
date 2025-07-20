@@ -25,12 +25,16 @@
 #'   \item{\code{jmax25}}{Maximum rate of electron transport, normalised to 
 #'       25\eqn{^o}C (in mol C m\eqn{^{-2}} s\eqn{^{-1}}).}
 #'   \item{\code{gs_accl}}{Acclimated stomatal conductance (in 
-#'       mol C m\eqn{^{-2}} d\eqn{^{-1}} Pa\eqn{^{-1}}).}
+#'       mol C (mol photons)\eqn{^{-1}} Pa\eqn{^{-1}}. (Multiply by 
+#'       ppfd (mol photons m\eqn{^{-2}} d\eqn{^{-1}}) and fapar 
+#'       to express per unit ground area and time.)}
 #'   \item{\code{wscal}}{Relative soil water content, between 0 (permanent wilting 
 #'       point, PWP) and 1 (field capacity, FC).}
 #'   \item{\code{chi}}{Ratio of leaf-internal to ambient CO\eqn{_{2}}, ci:ca (unitless).}
-#'   \item{\code{iwue}}{Intrinsic water use efficiency (iWUE) (in Pa).}
-#'   \item{\code{rd}}{Dark respiration (Rd) in gC m\eqn{^{-2}} s\eqn{^{-1}}.}
+#'   \item{\code{iwue}}{Intrinsic water use efficiency (iWUE) (unitless, 
+#'       multiply with patm (Pa) to get iWUE in Pa).}
+#'   \item{\code{rd}}{Dark respiration (Rd) in gC m\eqn{^{-2}} s\eqn{^{-1}}. 
+#'       (Multiply by 1/12 (mol C / gC) to convert to mol C m\eqn{^{-2}} s\eqn{^{-1}}.)}
 #'   } 
 #'   
 #' @details TBC

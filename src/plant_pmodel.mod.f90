@@ -81,7 +81,7 @@ module md_plant_pmodel
     real :: jmax25            ! acclimated Jmax, normalised to 25 deg C (mol CO2 m-2 s-1)
     real :: vcmax             ! daily varying Vcmax (mol CO2 m-2 s-1)
     real :: jmax              ! daily varying Jmax (mol CO2 m-2 s-1)
-    real :: gs_accl           ! acclimated stomatal conductance (xxx)
+    real :: gs_accl           ! acclimated stomatal conductance (mol CO2 Pa-1 (mol photons)-1)
     real :: chi               ! ci:ca ratio (unitless)
     real :: iwue              ! intrinsic water use efficiency (A/gs = ca*(1-chi))
 

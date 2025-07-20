@@ -255,20 +255,22 @@ test_that("p-model onestep output check (run_pmodel_onestep_f_bysite())", {
   resR_units_fixed <- resR |> 
     dplyr::mutate(
       gs   = gs,                 # NOTE: keep units as-is: (mol C m-2 Pa-1)      (computed as A/(ca-ci))
-      iwue = iwue,               # NOTE: keep units as-is: (Pa)                  (computed as (ca-ci)/1.6)
-      rd   = rd) |>              # NOTE: keep units as-is: 2.82e-7 mol C m-2     (computed as 0.015*Vcmax*(fr/fv))
+      iwue = iwue / inputs$patm, # NOTE: was initially: (Pa)                     (computed as (ca-ci)/1.6)
+                                 # NOTE: is now: (unitless)
+      rd   = rd * 12.0107) |>    # NOTE: was initially: 2.82e-7 mol C m-2 s-1    (computed as 0.015*Vcmax*(fr/fv))
+                                 # NOTE: is now: (3.39e-6 g C m-2 s-1) # still slightly different from 3.16e-6, but remains within tolerance
     dplyr::select(-ns_star, -xi, -mj, -mc, -ci,
                   -gpp, -ca, -gammastar, -kmm) |>
     dplyr::select(vcmax, jmax, vcmax25, jmax25, chi, gs, iwue, rd)
+
   resF_units_fixed <- resF |> 
     dplyr::mutate(
       gs   = gs_accl * inputs$ppfd*inputs$fapar,    
-                                 # NOTE: was initially: mol C / mol Photons Pa-1 (computed as lue/molmass / (ca-ci+0.1))
+                                 # NOTE: was initially: mol C / mol photons Pa-1 (computed as lue/molmass / (ca-ci+0.1))
                                  # NOTE: is now: mol C m-2 Pa-1 s-1              (computed as lue/molmass*iabs / (ca-ci+0.1))
                                  # NOTE: is now:gs with 4.75e-7 still slightly different from 4.79e-7, but remains within tolerance
-      iwue = iwue * inputs$patm, # NOTE: was initially: (-)                      (computed as (ca-ci)/1.6/patm)
-      rd   = rd/12.0107) |>      # NOTE: was initially: 3.16e-6 g C m-2          (computed as rd_to_vcmax*vcmax25*calc_ftemp_inst_rd(Temp)*c_molmass
-                                 # NOTE: is now:rd with 2.6e-7 still slightly different from 2.82e-7, but remains within tolerance
+      iwue = iwue,               # NOTE: keep units as-is: (-)                   (computed as (ca-ci)/1.6/patm)
+      rd   = rd) |>              # NOTE: keep units as-is: 3.16e-6 g C m-2 s-1   (computed as rd_to_vcmax*vcmax25*calc_ftemp_inst_rd(Temp)*c_molmass
     dplyr::select(-wscal, -gs_accl) |>
     dplyr::select(vcmax, jmax, vcmax25, jmax25, chi, gs, iwue, rd)
   
