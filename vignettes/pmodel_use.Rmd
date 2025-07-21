@@ -262,32 +262,43 @@ run_pmodel_onestep_f_bysite(
   ),
   makecheck = TRUE
 )
+#
+#
+# make sure to check ?run_pmodel_onestep_f_bysite for units of output quantities.
 ```
 
-`run_pmodel_onestep_f_bysite()` uses the same low-level code module as `run_pmodel_f_bysite()` (`photosynth_pmodel.mod.f90`) and therefore provides fully consistent outputs with the latter. Using `run_pmodel_onestep_f_bysite()` instead of `rpmodel::rpmodel()` guarantees consistency of the implementation across time-series and one-step model applications within the same package. However, it should yield identical outputs. 
-
-NOTE: THIS IS NOT CURRENTLY THE CASE
+`run_pmodel_onestep_f_bysite()` uses the same low-level code module as `run_pmodel_f_bysite()` (`photosynth_pmodel.mod.f90`) and therefore provides fully consistent outputs with the latter. Using `run_pmodel_onestep_f_bysite()` instead of `rpmodel::rpmodel()` guarantees consistency of the implementation across time-series and one-step model applications within the same package. Note that unit transformations as shown below is needed to obtain identical outputs.
 
 ```{r}
 library(rpmodel)
-out_rpmodel <- rpmodel( 
+out_rpmodel <- rpmodel(
   tc             = 20,           # temperature, deg C
   vpd            = 1000,         # Pa,
   co2            = 400,          # ppm,
-  fapar          = 1,            # fraction  ,
-  ppfd           = 300,          # mol/m2/d,
+  fapar          = 1,            # fraction,
+  ppfd           = 300/10^6,     # ~~mol/m2/d~~ or mol/m2/s
+                                 # rpmodel docs state that units of ppfd define 
+                                 # output units of: lue, gpp, vcmax, rd 
+                                 # (as well as vcmax25, gs)
   patm           = 101325,       # Pa
-  kphio          = 0.04998,      # quantum yield efficiency as calibrated for setup ORG by Stocker et al. 2020 GMD,
+  kphio          = 0.04998,      # quantum yield efficiency as calibrated 
+                                 # for setup ORG by Stocker et al. 2020 GMD,
   beta           = 146.0,        # unit cost ratio a/b,
   c4             = FALSE,
-  method_jmaxlim = "none",
+  method_jmaxlim = "wang17",
   do_ftemp_kphio = FALSE,        # corresponding to setup ORG
   do_soilmstress = FALSE,        # corresponding to setup ORG
   verbose        = TRUE
   )
-
+  
 # out_rpmodel
-tidyr::as_tibble(out_rpmodel) |> dplyr::select(vcmax, jmax, vcmax25, jmax25, gs, chi, iwue, rd, everything())
+tidyr::as_tibble(out_rpmodel) |> 
+  dplyr::select(vcmax, jmax, vcmax25, jmax25, gs, chi, iwue, rd) |>
+  # bring units to same as output of run_pmodel_onestep_f_bysite()
+  dplyr::mutate(gs   = gs/1/(300/10^6), # divide by fapar (-) and by ppfd (mol/m2/s)
+                iwue = iwue/101325,     # divide by patm (Pa)
+                rd   = rd*12            # mutliply by c_molmass (gC/mol)
+  )
 ```
 
 
