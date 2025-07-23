@@ -351,7 +351,7 @@ contains
   !   real, intent(in) :: meanmppfd
 
   !   ! function return variable
-  !   real :: my_vcmax    ! canopy-level Vcmax [gCO2/m2-ground/s]
+  !   real :: my_vcmax    ! canopy-level Vcmax (gCO2/m2-ground/s)
 
   !   ! Calculate leafy-scale Rubisco-N as a function of LAI and current LUE
   !   my_vcmax = fapar * meanmppfd * vcmax_unitiabs

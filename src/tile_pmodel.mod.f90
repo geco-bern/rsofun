@@ -15,10 +15,10 @@ module md_tile_pmodel
   ! physical soil state variables with memory from year to year (~pools)
   !----------------------------------------------------------------
   type psoilphystype
-    real :: temp        ! soil temperature [deg C]
-    real :: wcont       ! liquid soil water mass [mm = kg/m2]
+    real :: temp        ! soil temperature (deg C)
+    real :: wcont       ! liquid soil water mass (mm = kg m-2)
     real :: wscal       ! relative soil water content, between 0 (PWP) and 1 (FC)
-    real :: snow        ! snow depth in liquid-water-equivalents [mm = kg/m2]
+    real :: snow        ! snow depth in liquid-water-equivalents (mm = kg m-2)
     ! real :: rlmalpha    ! rolling mean of annual mean alpha (AET/PET)
   end type psoilphystype
 
