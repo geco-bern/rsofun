@@ -116,9 +116,9 @@ module md_tile_pmodel
     ! real :: rho_water       ! density of water (g m-3)
 
     ! carbon 
-    real :: dgpp
-    real :: drd
-    real :: assim             ! leaf-level assimilation rate
+    real :: dgpp              ! daily gross primary production (gC m-2 d-1)
+    real :: drd               ! daily dark respiration (gC m-2 d-1)
+    real :: assim             ! leaf-level assimilation rate (mol CO2 m-2 s-1)
 
     real :: vcmax25           ! acclimated Vcmax, normalised to 25 deg C (mol CO2 m-2 s-1)
     real :: jmax25            ! acclimated Jmax, normalised to 25 deg C (mol CO2 m-2 s-1)
@@ -129,7 +129,7 @@ module md_tile_pmodel
     real :: iwue              ! intrinsic water use efficiency (A/gs = ca*(1-chi))
 
     ! radiation
-    real :: ppfd_splash
+    real :: ppfd_splash      ! daily photosynthetic photon flux density (mol m-2 d-1, Note that this differs from ppfd input 'dppfd', which is mol m-2 s-1.)
     real :: dra              ! daily top-of-atmosphere solar radiation (J m-2 d-1)
 
     ! ! annual
