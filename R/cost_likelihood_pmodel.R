@@ -95,7 +95,7 @@ cost_likelihood_pmodel <- function(
                          'beta_unitcostratio', 'rd_to_vcmax', 
                          'tau_acclim', 'kc_jmax')
   
-  if(!is.null(par_fixed)){
+  if(!is.null(par_fixed) && length(par)>0){
     params_modl <- list()
     # complete with calibrated values
     i <- 1 # start counter
@@ -107,9 +107,12 @@ cost_likelihood_pmodel <- function(
         params_modl[[par_name]] <- par_fixed[[par_name]]  # use fixed par value
       }
     }
+  }else if(length(par)==0){                # no parameters calibrated
+    params_modl <- as.list(par_fixed[calib_param_names])
+    par <- par_fixed[grepl("err_",names(par_fixed))]
   }else{
     params_modl <- as.list(par[1:9])       # all parameters calibrated
-    names(params_modl) <- calib_param_names
+    names(params_modl) <- calib_param_names# TODO: problematic, since it assumes they are in the right order
   }
   
   ## run the model
