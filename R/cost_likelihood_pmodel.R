@@ -6,7 +6,7 @@
 #' observed values and with standard deviation given as an input parameter 
 #' (calibratable).
 #' 
-#' @param par A vector of values for the parameters to be calibrated, including
+#' @param par A named vector of values for the parameters to be calibrated, including
 #' a subset of model parameters (described in \code{\link{runread_pmodel_f}}),
 #' in order, and error terms
 #' for each target variable (for example \code{'gpp_err'}), in the same order as
@@ -56,8 +56,10 @@
 #' # temperature dependence of kphio 
 #' # and example data
 #' cost_likelihood_pmodel(
-#'  par = c(0.05, -0.01, 1,     # model parameters
-#'          2),                # err_gpp
+#' par = c(kphio       = 0.05, 
+#'         kphio_par_a = -0.01, 
+#'         kphio_par_b = 1,     # model parameters
+#'         err_gpp     = 2),    # err_gpp
 #'  obs = p_model_validation,
 #'  drivers = p_model_drivers,
 #'  targets = c('gpp'),
@@ -82,6 +84,7 @@ cost_likelihood_pmodel <- function(
 ){
   # predefine variables for CRAN check compliance
   sitename <- data <- gpp_mod <- NULL
+  par <- unname(par) # ensure this is as before the change to named parameters
   
   ## check input parameters
   if( (length(par) + length(par_fixed)) != (9 + length(targets)) ){

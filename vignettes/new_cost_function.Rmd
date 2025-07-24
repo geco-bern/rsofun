@@ -163,13 +163,17 @@ If the RMSE or normal log-likelihood (for one or several targets) cost functions
 
 All cost functions must take at least three arguments:
 
-* `par`: A vector of calibratable model parameters. In each iteration of the optimization, a new set of values of `par` is used to run the model and compute the cost.
+* `par`: A named vector of calibratable model parameters. In each iteration of the optimization, a new set of values of `par` is used to run the model and compute the cost.
 
 * `obs`: A data frame of observations, against which to compare the simulation results.
 
 * `drivers`: A data frame of driver data, used to run the simulations.
 
-* Additional optional arguments can be used, like for example the model parameter values that should be fixed across simulations, etc.
+* Additional optional arguments can be used, An example would be model parameter values that should be fixed across simulations, etc.
+
+Below we'll walk you through the definition of a custom cost function.
+In this example, we'll calibrate the soil moisture stress parameters and use the 
+mean absolute error (MAE) as custom cost function.
 
 Since we are calibrating the parameters based on model outputs, the cost function runs the P-model and compare its output to observed validation data.
 ```{r, eval = FALSE}
@@ -187,8 +191,8 @@ function(par, obs, drivers){
     kphio              = 0.09423773,
     kphio_par_a        = 0.0,
     kphio_par_b        = 25,
-    soilm_thetastar    = par[1],
-    soilm_betao        = par[2],
+    soilm_thetastar    = par[["soilm_thetastar"]],
+    soilm_betao        = par[["soilm_betao"]],
     beta_unitcostratio = 146.0,
     rd_to_vcmax        = 0.014,
     tau_acclim         = 30.0,
@@ -216,8 +220,8 @@ cost_mae <- function(par, obs, drivers){
     kphio              = 0.09423773,
     kphio_par_a        = 0.0,
     kphio_par_b        = 25,
-    soilm_thetastar    = par[1],
-    soilm_betao        = par[2],
+    soilm_thetastar    = par[["soilm_thetastar"]],
+    soilm_betao        = par[["soilm_betao"]],
     beta_unitcostratio = 146.0,
     rd_to_vcmax        = 0.014,
     tau_acclim         = 30.0,

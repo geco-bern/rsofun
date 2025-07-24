@@ -4,7 +4,7 @@
 #' computes the log-likelihood for the biomee model fitting several target 
 #' variables for a given set of parameters.
 #' 
-#' @param par A vector containing parameter values for \code{'phiRL',
+#' @param par A named vector containing parameter values for \code{'phiRL',
 #' 'LAI_light', 'tf_base', 'par_mort'} in that order, and for the error terms
 #' corresponding to the target variables, e.g. \code{'err_GPP'} if GPP is a target. 
 #' Make sure that
@@ -34,8 +34,11 @@
 #' # BiomeE model parameter values
 #' # and the example data
 #' cost_likelihood_biomee(
-#'  par = c(3.5, 3.5, 1, 1,    # model params
-#'          0.5),              # err_GPP
+#'  par = c(phiRL = 3.5, 
+#'          LAI_light = 3.5, 
+#'          tf_base = 1, 
+#'          par_mort = 1,    # model params
+#'          err_GPP = 0.5),  # err_GPP
 #'  obs = biomee_validation,
 #'  drivers = biomee_gs_leuning_drivers,
 #'  targets = c("GPP")
@@ -52,6 +55,7 @@ cost_likelihood_biomee <- function(
   # predefine variables for CRAN check compliance
   GPP <- LAI <- Density12 <- plantC <- NULL
   
+  par <- unname(par) # ensure this is as before the change to named parameters
   # Add changed model parameters to drivers, overwriting where necessary.
   drivers$params_species[[1]]$phiRL[]  <- par[1]
   drivers$params_species[[1]]$LAI_light[]  <- par[2]

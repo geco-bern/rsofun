@@ -1,6 +1,10 @@
 # rsofun (development version)
 
 * New `run_pmodel_onestep_f_bysite()` adds single-step leaf-level simulations of the P-model.
+* `calib_sofun()` now passes parameters as named vector to cost-functions for 
+  easier processing within cost-functions. Default cost-functions were updated,
+  but currently ignore the names. This is fully backward compatible, but allows
+  to use the names in user-created cost functions.
 
 # rsofun 5.1.0
 

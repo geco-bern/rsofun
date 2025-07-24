@@ -41,6 +41,7 @@
 #' and \link[GenSA]{GenSA}.
 #' @export
 #' @importFrom magrittr %>%
+#' @importFrom stats setNames
 #' @import GenSA BayesianTools
 #' 
 #' @examples
@@ -153,12 +154,16 @@ calib_sofun <- function(
     }
     
     # reformat parameters
-    pars <- as.data.frame(do.call("rbind", settings$par), row.names = FALSE)
+    pars <- as.data.frame(do.call("rbind", settings$par)) 
+         # NOTE: This keeps parameters as row names. 
+         # This does not change anything to previous behavior.
+         # But this agrees better with the example data 
+         # `dput(BayesianTools::VSEMgetDefaults())`
     
     priors  <- BayesianTools::createUniformPrior(
-      unlist(pars$lower),
-      unlist(pars$upper),
-      unlist(pars$init)
+      lower = unlist(pars$lower),
+      upper = unlist(pars$upper),
+      best  = unlist(pars$init)
     )
     
     # setup the bayes run, no message forwarding is provided
@@ -168,14 +173,18 @@ calib_sofun <- function(
         do.call(
           "cost",
           list(
-            par = random_par,
+            par = setNames(random_par, rownames(pars)),
+            # NOTE: if we could make use of setup$names from within the cost
+            # function then we wouldn't need this closure (using `pars`), but it
+            # appears that BayesianTools does not pass the names into the
+            # likelihood.
             obs = obs,
             drivers = drivers
           )
         )
       },
     prior = priors,
-    names = names(settings$par)
+    names = names(settings$par) # alternatively use rownames(pars)
     )    
     
     # set bt control parameters

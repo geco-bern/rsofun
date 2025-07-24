@@ -78,8 +78,10 @@ trait value predicted on that date.
 # temperature dependence of kphio 
 # and example data
 cost_likelihood_pmodel(
- par = c(0.05, -0.01, 1,     # model parameters
-         2),                # err_gpp
+par = c(kphio       = 0.05, 
+        kphio_par_a = -0.01, 
+        kphio_par_b = 1,     # model parameters
+        err_gpp     = 2),    # err_gpp
  obs = p_model_validation,
  drivers = p_model_drivers,
  targets = c('gpp'),
