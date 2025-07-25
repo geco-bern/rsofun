@@ -19,22 +19,21 @@ library(dplyr)
 library(ggplot2)
 ```
 
-The `rsofun` package allows to calibrate parameters of the `pmodel` and `biomee` models via the `calib_sofun()` function. The implementation of the calibration is fairly flexible and can be adapted to a specific use-case via a cost function (used as metrics for the optimization routines in `calib_sofun()`). The package provides a set of standard cost functions named `cost_*`, which can be used for a variety of calibrations (different sets of model parameters, using various target variables, etc.). Alternatively, it's possible to write a more specific new cost function to be used together with `calib_sofun()`.
+The `rsofun` package allows to calibrate parameters of the `pmodel` and `biomee` models via the `calib_sofun()` function. The implementation of the calibration is fairly flexible and can be adapted to a specific use-case via a tailor-made cost function (used as metrics for the optimization routines in `calib_sofun()`). The package provides a set of standard cost functions named `cost_*`, which can be used for a variety of calibrations (different sets of model parameters, using various target variables, etc.). Alternatively, it's possible to write a more specific new cost function to be used together with `calib_sofun()`.
 
-In this vignette, we go over some examples on how to use the `rsofun` cost functions for parameter calibration and how to write your own custom one from scratch.
+In this vignette, we go over some examples on how to use the `rsofun` cost functions for parameter calibration with `calib_sofun()` and how to write your own custom one from scratch.
 
 ### Calibration to GPP using RMSE and GenSA optimizer
 
 A simple approach to parameter calibration is to find the parameter values that lead to the best prediction performance, in terms of the RMSE (root mean squared error). The function `cost_rmse_pmodel()` runs the P-model internally to calculate the RMSE between predicted target values (in this case GPP) and the corresponding observations.
 
-The implementation of `cost_rmse_pmodel()` allows flexibility in various ways. We can simultaneously calibrate a subset of model parameters and also replicate the different calibration setups in Stocker et al., 2020 GMD. For example, following the `ORG` setup, only parameter `kphio` is calibrated. Furthermore, the standard cost functions allow to calibrate to several targets (fluxes and leaf traits predicted by the P-model) simultaneously and to parallelize the simulations. Since the P-model is run internally to make predictions, we must always specify which values the model parameters should take, i.e. the parameters that aren't calibrated (via argument `par_fixed`). 
+The implementations of `cost_rmse_pmodel()` and `calib_sofun()` allows flexibility in various ways. We can simultaneously calibrate a subset of model parameters and also replicate the different calibration setups in Stocker et al., 2020 GMD, simply by providing the appropriate inputs as `settings`, `par_fixed` and `targets` to `calib_sofun()`. Since the P-model is run internally to make predictions, we must always specify the values of the model parameters that aren't calibrated (via argument `par_fixed`). For example, following the `ORG` setup, only parameter `kphio` is calibrated with below code:
 
-The syntax to run the calibration routine is as follows:
-```{r eval = FALSE}
+```{r run GenSA calibration, eval = TRUE}
 # Define calibration settings and parameter ranges from previous work
 settings_rmse <- list(
   method = 'GenSA',                   # minimizes the RMSE
-  metric = cost_rmse_pmodel,          # our cost function
+  metric = cost_rmse_pmodel,          # our cost function returning the RMSE
   control = list(                     # control parameters for optimizer GenSA
     maxit = 100),                     
   par = list(                         # bounds for the parameter space
@@ -63,16 +62,20 @@ pars_calib_rmse <- calib_sofun(
   ),
   targets = "gpp"           # define target variable GPP
 )
+
+pars_calib_rmse
 ```
 
-The output of `calib_sofun()` is a list containing the calibrated parameter values and the raw optimization output from the optimizer (here from `GenSA` or, as we see next, from `BayesianTools::runMCMC`).
+The output of `calib_sofun()` is a list containing the calibrated parameter values (element `par`) and the raw optimization output from the optimizer (element `mod`; here from `GenSA` or, as we see next, from `BayesianTools::runMCMC`).
+
+Note that the standard cost functions allow to calibrate to several targets (fluxes and leaf traits predicted by the P-model) simultaneously and to parallelize the simulations. 
 
 ### Calibration to GPP using a simple likelihood function and BayesianTools
 
-Let's calibrate the parameters involved in the temperature dependency of the quantum yield efficiency, `kphio`, `kphio_par_a` and `kphio_par_b`, taking a Bayesian calibration approach. We assume that the target variable (`'gpp'`) follows a normal distribution centered at the observations and with its standard deviation being a new calibratable parameter (`'err_gpp'`). We also assume a uniform prior distribution for all calibratable parameters.
-By maximizing the normal log-likelihood, the MAP (maximum a posteriori) estimators for all 4 parameters are computed. With the function `cost_likelihood_pmodel()`, we can easily perform this calibration, as follows:
+Let's calibrate the parameters involved in the temperature dependency of the quantum yield efficiency, `kphio`, `kphio_par_a` and `kphio_par_b`. Taking a Bayesian calibration approach, we need to define a likelihood as cost function (we'll use `cost_likelihood_pmodel()`). We assume that the target variable (`'gpp'`) follows a normal distribution centered at the observations and with its _unknown_ standard deviation (`'err_gpp'`), that we need to add to the calibratable parameters. We also assume a uniform prior distribution for all calibratable parameters.
+By maximizing the log-likelihood, the MAP (maximum a posteriori) estimators for all 4 parameters are computed. With the functions `cost_likelihood_pmodel()` and `calib_sofun()`, we can easily perform this type of calibration:
 
-```{r eval = FALSE}
+```{r run Bayesian calibration, eval = TRUE}
 # Define calibration settings
 settings_likelihood <- list(
   method = 'BayesianTools',
@@ -109,15 +112,17 @@ pars_calib_likelihood <- calib_sofun(
   ),
   targets = "gpp"
 )
+
+pars_calib_likelihood
 ```
 
 Furthermore, there are equivalent cost functions available for the BiomeE model. Check out the reference pages for more details on how to use `cost_likelihood_biomee()` and `cost_rmse_biomee()`.
 
 ### Calibration to GPP and Vcmax25 using the joint log-likelihood and BayesianTools
 
-You may be interested in calibrating the model to different target variables simultaneously, like flux and leaf trait measurements. Here we present an example, where we use `cost_likelihood_pmodel()` to compute the joint normal likelihood of all the targets specified (that is, by summing the log-likelihoods of GPP and Vcmax25) and ultimately calibrate the `kc_jmax` parameter. It would be possible to follow this workflow for several-target calibration also with RMSE as the optimization metric, using `cost_rmse_pmodel()` and `GenSA` optimization.
+You may be interested in calibrating the model to different target variables simultaneously, like flux and leaf trait measurements. Here we present an example, where we use `cost_likelihood_pmodel()` to compute the joint likelihood of all the targets specified (that is, by summing the log-likelihoods of GPP and Vcmax25) and ultimately calibrate the `kc_jmax` parameter. It would be possible to follow this workflow for several-target calibration also with RMSE as the optimization metric, using `cost_rmse_pmodel()` and `GenSA` optimization.
 
-```{r eval = FALSE}
+```{r run concatenated calibration, eval = FALSE}
 # Define calibration settings for two targets
 settings_joint_likelihood <- list(
   method = "BayesianTools",
@@ -153,13 +158,31 @@ par_calib_join <- calib_sofun(
   ),    
   targets = c('gpp', 'vcmax25')
 )
+par_calib_join
 ```
 
-Note that GPP predictions are directly compared to GPP observations on that day, but Vcmax25 predicted by the P-model (being a leaf trait) is averaged over the growing season and compared to a single Vcmax25 observation taken per site. The cost functions provided in the package tell apart fluxes and leaf traits by the presence of a `"date"` column in the nested validation data frames `p_model_validation` and `p_model_validation_vcmax25`.
+Note that GPP predictions are directly compared to GPP observations on that day, but Vcmax25 predicted by the P-model (being a leaf trait) is averaged over the growing season and compared to a single Vcmax25 observation taken per site. 
+
+The cost functions provided in the package tell apart fluxes and leaf traits by the presence of a `"date"` column in the nested validation data frames `p_model_validation` and `p_model_validation_vcmax25`.
 
 ### Write your custom cost function 
 
-If the RMSE or normal log-likelihood (for one or several targets) cost functions that we provide do not fit your use case, you can easily write a custom one. In this section, we drive you through the main ideas with an example.
+If the RMSE or log-likelihood (for one or several targets) cost functions that we provide do not fit your use case, you can easily write a custom one. In this section, we drive you through the main ideas with an example.
+To run the calibration, you can still use `calib_sofun()` in combination with 
+your custom cost function. 
+
+The routine `calib_sofun()` requires `drivers`, `obs` 
+and `settings` as mandatory arguments. These provide data.frames with driver and
+observational data, as well as settings for the calibration.
+The optional argument `optim_out` defines if the raw optimization output should 
+be returned.
+All other (optional) arguments to `calib_sofun()` are passed through to the cost 
+function (e.g. `par_fixed` in above example). 
+They can be used freely inside of your custom cost function, e.g. to control 
+the simulation setup or the processing. On top of these optional arguments, it 
+is also possible to extend the `drivers` and `obs` data.frames with additional 
+columns that can be used freely for fine-grained control within your custom cost 
+function.
 
 All cost functions must take at least three arguments:
 
@@ -175,16 +198,50 @@ Below we'll walk you through the definition of a custom cost function.
 In this example, we'll calibrate the soil moisture stress parameters and use the 
 mean absolute error (MAE) as custom cost function.
 
-Since we are calibrating the parameters based on model outputs, the cost function runs the P-model and compare its output to observed validation data.
-```{r, eval = FALSE}
-function(par, obs, drivers){
+Since we are calibrating the parameters based on model outputs, the cost 
+function will eventually need to run the P-model and compare its output to 
+observed validation data. 
+
+To get started we suggest to write a dummy cost function and use it together 
+with `calib_sofun()` as shown below. Note that one way of developing the cost
+function would be to use a `browser()` statement during the development. It 
+allows you to explore the variables that you have access to from within the cost
+function.
+```{r eval = FALSE}
+# Define the custom cost function to be used
+cost_mae <- function(par, obs, drivers, my_own_message){
   # Your code
+  browser() # can facilitate the development, remove afterwards
 }
+
+# Define calibration settings and parameter ranges
+settings_mae <- list(
+  method = 'GenSA',
+  metric = cost_mae, # directly uses the custom cost function
+  control = list(
+    maxit = 100
+  ),
+  par = list(
+    soilm_thetastar = list(lower=0.0, upper=3000, init=0.6*240),
+    soilm_betao = list(lower=0, upper=1, init=0.2)
+  )
+)
+
+# Calibrate the model and optimize the free parameters
+pars_calib_mae <- calib_sofun(
+  drivers = p_model_drivers,
+  obs = p_model_validation,
+  settings = settings_mae,
+  # optional arguments if needed in the cost function
+  my_own_message = "Hi from inside the cost_mae function."
+)
+
+pars_calib_mae
 ```
 
-In the optimization procedure, the cost function only takes as argument the parameters `par` that are fed to `calib_sofun()` via `settings$par` (see previous sections). Nevertheless, within the cost function we call `runread_pmodel_f()` and this function needs a full set of model parameters. Therefore, the parameters that aren't being calibrated must be hard coded inside the cost function (or passed as an argument like the `rsofun` cost functions). In this example, we only want to calibrate the soil moisture stress parameters.
+During the optimization procedure, the cost function receives as argument a suggestion of the parameters `par`. This might be just a subset of all needed parameters (defined via `settings$par`). Thus to call `runread_pmodel_f()` within the cost function, a full set of model parameters is needed. Here, we'll hardcode the parameters that aren't being calibrated inside the cost function. (Note, that in above examples they were passed as an additional argument `par_fixed`).
 ```{r, eval = FALSE}
-function(par, obs, drivers){
+cost_mae <- function(par, obs, drivers, my_own_message){
   
   # Set values for the list of calibrated and non-calibrated model parameters
   params_modl <- list(
@@ -208,11 +265,13 @@ function(par, obs, drivers){
   )
   
   # Your code to compute the cost
+  print(my_own_message) # useless, but showcases how to use additional arguments
+  browser() # can facilitate the development, remove afterwards
 }
 ``` 
 
-The following chunk defines the final function. We clean the observations and model output and align the data according to site and date, to compute the mean absolute error (MAE) on GPP. Finally, the function should return a scalar value, in this case the MAE, which we want to minimize. Keep in mind that the GenSA optimization will minimize the cost, but with the BayesianTools method the cost is always maximized.
-```{r}
+The following chunk defines the final function. We clean the observations and model output and align the data according to site and date, to compute the mean absolute error (MAE) on GPP. Finally, the function should return a scalar value, in this case the MAE, which we want to minimize. Keep in mind that the GenSA optimization will minimize the cost, but with the BayesianTools method the cost (i.e. the likelihood) is always maximized.
+```{r define custom cost function, eval = TRUE}
 cost_mae <- function(par, obs, drivers){
 
   # Set values for the list of calibrated and non-calibrated model parameters
@@ -233,7 +292,7 @@ cost_mae <- function(par, obs, drivers){
   df <- runread_pmodel_f(
     drivers = drivers,
     par = params_modl,
-    makecheck = TRUE,
+    makecheck = FALSE,
     parallel = FALSE
   )
   
@@ -256,11 +315,12 @@ cost_mae <- function(par, obs, drivers){
   
   # Return the computed cost
   return(cost)
+  # browser() # can facilitate the development, remove afterwards
 }
 ``` 
 
 As a last step, let's verify that the calibration procedure runs using this cost function.
-```{r eval = FALSE}
+```{r run custom calibration, eval=TRUE}
 # Define calibration settings and parameter ranges
 settings_mae <- list(
   method = 'GenSA',
@@ -279,4 +339,7 @@ pars_calib_mae <- calib_sofun(
   obs = p_model_validation,
   settings = settings_mae
 )
+
+pars_calib_mae
 ```
+
