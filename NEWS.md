@@ -1,3 +1,7 @@
+# rsofun (development version)
+
+* New `run_pmodel_onestep_f_bysite()` adds single-step leaf-level simulations of the P-model.
+
 # rsofun 5.1.0
 
 ## New features

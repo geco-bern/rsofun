@@ -59,8 +59,8 @@ module md_plant_pmodel
     real :: lma                 ! leaf mass per area (gC m-2)
     real :: sla                 ! specific leaf area (m2 gC-1)
     real :: nmass               ! leaf N per unit leaf mass, g N / g-dry mass
-    real :: r_cton_leaf         ! leaf C:N ratio [gC/gN] 
-    real :: r_ntoc_leaf         ! leaf N:C ratio [gN/gC]
+    real :: r_cton_leaf         ! leaf C:N ratio (gC/gN)
+    real :: r_ntoc_leaf         ! leaf N:C ratio (gN/gC)
 
   end type plant_type
 
@@ -71,22 +71,22 @@ module md_plant_pmodel
   type plant_fluxes_type
 
     ! daily updated variables
-    real :: dgpp              ! daily gross primary production [gC/m2/d]           
-    real :: drd               ! daily dark respiration [gC/m2/d]
+    real :: dgpp              ! daily gross primary production (gC m-2 d-1)
+    real :: drd               ! daily dark respiration (gC m-2 d-1)
     real :: assim             ! daily assimilation (mol CO2 m-2 s-1)
-    real :: dtransp           ! daily transpiration [mm]
-    real :: dlatenth          ! daily latent heat flux [J m-2 d-1]
+    real :: dtransp           ! daily transpiration (mm)
+    real :: dlatenth          ! daily latent heat flux (J m-2 d-1)
     
     real :: vcmax25           ! acclimated Vcmax, normalised to 25 deg C (mol CO2 m-2 s-1)
     real :: jmax25            ! acclimated Jmax, normalised to 25 deg C (mol CO2 m-2 s-1)
     real :: vcmax             ! daily varying Vcmax (mol CO2 m-2 s-1)
     real :: jmax              ! daily varying Jmax (mol CO2 m-2 s-1)
-    real :: gs_accl           ! acclimated stomatal conductance (xxx)
+    real :: gs_accl           ! acclimated stomatal conductance (mol CO2 Pa-1 (mol photons)-1)
     real :: chi               ! ci:ca ratio (unitless)
     real :: iwue              ! intrinsic water use efficiency (A/gs = ca*(1-chi))
 
     ! ! annual variables
-    ! real :: agpp             ! annual total gross primary production [gC/m2/yr]           
+    ! real :: agpp             ! annual total gross primary production (gC m-2 yr-1)
     ! real :: avcmax25_mean    ! annual Vcmax, normalised to 25 deg C, GPP-weighted mean
     ! real :: avcmax25_max     ! annual Vcmax, normalised to 25 deg C, annual maximum
 

@@ -237,3 +237,68 @@ ggplot(data = df_gpp_plot) +
 ```
 
 For details on the optimization settings we refer to the manuals of [GenSA](https://cran.r-project.org/package=GenSA) and [BayesianTools](https://github.com/florianhartig/BayesianTools).
+
+## One-step P-model call
+
+For certain applications, the core theory of the P-model, predicting the acclimation of photosynthesis at the leaf-level, may be all that's needed for simulations. {rsofun} also provides a stripped-down version of "one-step" P-model call. That is, without considering forcing (and output) time series, delayed acclimation, ecosystem-level up-scaled quantities, and the coupling with the water balance and related water limitation on photosynthesis. Applications of the stripped-down version may include simulations of leaf-level photosynthetic traits. The function `run_pmodel_onestep_f_bysite()` provides this functionality and further improves computational efficiency over a call to `run_pmodel_f_bysite()`. This is particularly useful when calibrating the model to photosynthetic traits data. 
+
+```{r}
+run_pmodel_onestep_f_bysite(
+  lc4 = FALSE,
+  forcing = data.frame(
+    temp  = 20,           # temperature, deg C
+    vpd   = 1000,         # Pa,
+    ppfd  = 300/10^6,     # mol/m2/s
+    co2   = 400,          # ppm,
+    patm  = 101325        # Pa
+  ),
+  params_modl = list(
+    kphio              = 0.04998,    # setup ORG in Stocker et al. 2020 GMD
+    kphio_par_a        = 0.0,        # disable temperature-dependence of kphio
+    kphio_par_b        = 1.0,
+    beta_unitcostratio = 146.0,
+    rd_to_vcmax        = 0.014,      # from Atkin et al. 2015 for C3 herbaceous
+    kc_jmax            = 0.41
+  ),
+  makecheck = TRUE
+)
+#
+#
+# make sure to check ?run_pmodel_onestep_f_bysite for units of output quantities.
+```
+
+`run_pmodel_onestep_f_bysite()` uses the same low-level code module as `run_pmodel_f_bysite()` (`photosynth_pmodel.mod.f90`) and therefore provides fully consistent outputs with the latter. Using `run_pmodel_onestep_f_bysite()` instead of `rpmodel::rpmodel()` guarantees consistency of the implementation across time-series and one-step model applications within the same package. Note that unit transformations as shown below is needed to obtain identical outputs.
+
+```{r}
+library(rpmodel)
+out_rpmodel <- rpmodel(
+  tc             = 20,           # temperature, deg C
+  vpd            = 1000,         # Pa,
+  co2            = 400,          # ppm,
+  fapar          = 1,            # fraction,
+  ppfd           = 300/10^6,     # ~~mol/m2/d~~ or mol/m2/s
+                                 # rpmodel docs state that units of ppfd define 
+                                 # output units of: lue, gpp, vcmax, rd 
+                                 # (as well as vcmax25, gs)
+  patm           = 101325,       # Pa
+  kphio          = 0.04998,      # quantum yield efficiency as calibrated 
+                                 # for setup ORG by Stocker et al. 2020 GMD,
+  beta           = 146.0,        # unit cost ratio a/b,
+  c4             = FALSE,
+  method_jmaxlim = "wang17",
+  do_ftemp_kphio = FALSE,        # corresponding to setup ORG
+  do_soilmstress = FALSE,        # corresponding to setup ORG
+  verbose        = TRUE
+  )
+  
+# out_rpmodel
+tidyr::as_tibble(out_rpmodel) |> 
+  dplyr::select(vcmax, jmax, vcmax25, jmax25, gs, chi, iwue, rd) |>
+  # bring units to same as output of run_pmodel_onestep_f_bysite()
+  dplyr::mutate(gs   = gs/1/(300/10^6), # divide by fapar (-) and by ppfd (mol/m2/s)
+                iwue = iwue/101325,     # divide by patm (Pa)
+                rd   = rd*12            # mutliply by c_molmass (gC/mol)
+  )
+```
+
+

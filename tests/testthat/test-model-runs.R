@@ -195,6 +195,97 @@ test_that("p-model run check Vcmax25", {
   expect_type(df_output_p, "list")
 })
 
+test_that("p-model onestep output check (run_pmodel_onestep_f_bysite())", {
+  skip_on_cran()
+  
+  # Define simulation inputs
+  inputs <- list(
+    # for forcing:
+    temp  = 20,           # temperature, deg C
+    vpd   = 1000,         # Pa,
+    ppfd  = 300/10^6,     # mol/m2/s
+    co2   = 400,          # ppm,
+    patm  = 101325,       # Pa
+    fapar = 1,            # -
+    # for params_modl
+    kphio              = 0.04998,    # setup ORG in Stocker et al. 2020 GMD
+    kphio_par_a        = 0.0,        # disable temperature-dependence of kphio
+    kphio_par_b        = 1.0,
+    beta_unitcostratio = 146.0,
+    rd_to_vcmax        = 0.014,      # from Atkin et al. 2015 for C3 herbaceous
+    kc_jmax            = 0.41
+    )
+  
+  # compute reference value:
+  library(rpmodel)
+  resR <- rpmodel(
+    tc=inputs$temp, vpd=inputs$vpd, co2=inputs$co2, 
+    patm=inputs$patm, kphio=inputs$kphio, beta=inputs$beta_unitcostratio, 
+    ppfd=inputs$ppfd, # rpmodel docs state that units of ppfd define output units of: lue,gpp,vcmax,rd
+                      # this also affects: vcmax25,gs
+    # NOTE: unused inputs: kphio_par_a, kphio_par_b, rd_to_vcmax, kc_jmax
+    fapar          = inputs$fapar,            # fraction  ,
+    c4             = FALSE,
+    method_jmaxlim = "wang17",
+    do_ftemp_kphio = FALSE,        # corresponding to setup ORG
+    do_soilmstress = FALSE,        # corresponding to setup ORG
+    verbose        = TRUE
+  ) |> 
+    tidyr::as_tibble()
+  
+  # compute value with run_pmodel_onestep_f_bysite:
+  resF <- run_pmodel_onestep_f_bysite(
+    lc4 = FALSE,
+    forcing = data.frame(temp = inputs$temp, vpd = inputs$vpd, ppfd = inputs$ppfd, 
+                         co2 = inputs$co2, patm = inputs$patm),
+    params_modl = list(
+      kphio              = inputs$kphio,
+      kphio_par_a        = inputs$kphio_par_a,
+      kphio_par_b        = inputs$kphio_par_b,
+      beta_unitcostratio = inputs$beta_unitcostratio,
+      rd_to_vcmax        = inputs$rd_to_vcmax,
+      kc_jmax            = inputs$kc_jmax
+    ),
+    makecheck = TRUE
+  )
+  # testthat::expect_equal(resF, resR) 
+  # NOTE: this fails because of different units.
+  
+  # Fix units for comparison
+  resR_units_fixed <- resR |> 
+    dplyr::mutate(
+      gs   = gs,                 # NOTE: keep units as-is: (mol C m-2 Pa-1)      (computed as A/(ca-ci))
+      iwue = iwue / inputs$patm, # NOTE: was initially: (Pa)                     (computed as (ca-ci)/1.6)
+                                 # NOTE: is now: (unitless)
+      rd   = rd * 12.0107) |>    # NOTE: was initially: 2.82e-7 mol C m-2 s-1    (computed as 0.015*Vcmax*(fr/fv))
+                                 # NOTE: is now: (3.39e-6 g C m-2 s-1) # still slightly different from 3.16e-6, but remains within tolerance
+    dplyr::select(-ns_star, -xi, -mj, -mc, -ci,
+                  -gpp, -ca, -gammastar, -kmm) |>
+    dplyr::select(vcmax, jmax, vcmax25, jmax25, chi, gs, iwue, rd)
+
+  resF_units_fixed <- resF |> 
+    dplyr::mutate(
+      gs   = gs_accl * inputs$ppfd*inputs$fapar,    
+                                 # NOTE: was initially: mol C / mol photons Pa-1 (computed as lue/molmass / (ca-ci+0.1))
+                                 # NOTE: is now: mol C m-2 Pa-1 s-1              (computed as lue/molmass*iabs / (ca-ci+0.1))
+                                 # NOTE: is now:gs with 4.75e-7 still slightly different from 4.79e-7, but remains within tolerance
+      iwue = iwue,               # NOTE: keep units as-is: (-)                   (computed as (ca-ci)/1.6/patm)
+      rd   = rd) |>              # NOTE: keep units as-is: 3.16e-6 g C m-2 s-1   (computed as rd_to_vcmax*vcmax25*calc_ftemp_inst_rd(Temp)*c_molmass
+    dplyr::select(-wscal, -gs_accl) |>
+    dplyr::select(vcmax, jmax, vcmax25, jmax25, chi, gs, iwue, rd)
+  
+
+  # Now comparison must pass
+  testthat::expect_equal(resR_units_fixed, resF_units_fixed, tolerance = 1e-5)
+  # If this test fails it means that the output of the model is incompatible with
+  # the package {rpmodel}.
+  # It could either mean that:
+  # - the model was accidentally altered and should be fixed to deliver the expected output
+  # - the package {rpmodel} has been altered
+ 
+})
+
+
 test_that("biomeE output check (gs leuning)", {
   skip_on_cran()
   

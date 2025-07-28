@@ -282,7 +282,7 @@ par_calib <- calib_sofun(
   par_fixed = par_fixed,
   targets = "gpp"
 )
-saveRDS(par_calib, "files/sensitivity_analysis.Rmd__par_calib.RDS")
+saveRDS(par_calib, "files/sensitivity_analysis.Rmd__par_calib.RDS", compress = "xz")
 
 # This code takes 15 minutes to run
 ```
