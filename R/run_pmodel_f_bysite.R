@@ -320,7 +320,7 @@ run_pmodel_f_bysite <- function(
       forcing                   = as.matrix(forcing)
     )
   } else {
-    pmodelout <- array(dim = c(1,19))
+    pmodelout <- array(dim = c(1,19), data = NA_real_)
   }
 
   out <- build_out_pmodel(pmodelout, params_siml$firstyeartrend, params_siml$nyeartrend)
