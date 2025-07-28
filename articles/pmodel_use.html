@@ -43,7 +43,7 @@
         <a class="external-link hidden-md hidden-lg" href="https://geco-group.org/">
           <img src="https://raw.githubusercontent.com/computationales/GECO_template/main/geco_logo_white_small.png" id="hexlogo" alt="GECO"></a>
         <a class="navbar-brand" href="../index.html">
-           <i>rsofun <small>v5.1.0</small></i>
+           <i>rsofun <small>v5.1.0.9000</small></i>
         </a>
       </div>
     </div>
@@ -363,6 +363,92 @@ fit over a more global parameter set.</p>
 <p><img src="pmodel_use_files/figure-html/unnamed-chunk-7-1.png" width="672" style="display: block; margin: auto;"></p>
 <p>For details on the optimization settings we refer to the manuals of
 <a href="https://cran.r-project.org/package=GenSA" class="external-link">GenSA</a> and <a href="https://github.com/florianhartig/BayesianTools" class="external-link">BayesianTools</a>.</p>
+</div>
+<div class="section level2">
+<h2 id="one-step-p-model-call">One-step P-model call<a class="anchor" aria-label="anchor" href="#one-step-p-model-call"></a>
+</h2>
+<p>For certain applications, the core theory of the P-model, predicting
+the acclimation of photosynthesis at the leaf-level, may be all that’s
+needed for simulations. {rsofun} also provides a stripped-down version
+of “one-step” P-model call. That is, without considering forcing (and
+output) time series, delayed acclimation, ecosystem-level up-scaled
+quantities, and the coupling with the water balance and related water
+limitation on photosynthesis. Applications of the stripped-down version
+may include simulations of leaf-level photosynthetic traits. The
+function <code><a href="../reference/run_pmodel_onestep_f_bysite.html">run_pmodel_onestep_f_bysite()</a></code> provides this
+functionality and further improves computational efficiency over a call
+to <code><a href="../reference/run_pmodel_f_bysite.html">run_pmodel_f_bysite()</a></code>. This is particularly useful when
+calibrating the model to photosynthetic traits data.</p>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/run_pmodel_onestep_f_bysite.html">run_pmodel_onestep_f_bysite</a></span><span class="op">(</span></span>
+<span>  lc4 <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  forcing <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
+<span>    temp  <span class="op">=</span> <span class="fl">20</span>,           <span class="co"># temperature, deg C</span></span>
+<span>    vpd   <span class="op">=</span> <span class="fl">1000</span>,         <span class="co"># Pa,</span></span>
+<span>    ppfd  <span class="op">=</span> <span class="fl">300</span><span class="op">/</span><span class="fl">10</span><span class="op">^</span><span class="fl">6</span>,     <span class="co"># mol/m2/s</span></span>
+<span>    co2   <span class="op">=</span> <span class="fl">400</span>,          <span class="co"># ppm,</span></span>
+<span>    patm  <span class="op">=</span> <span class="fl">101325</span>        <span class="co"># Pa</span></span>
+<span>  <span class="op">)</span>,</span>
+<span>  params_modl <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
+<span>    kphio              <span class="op">=</span> <span class="fl">0.04998</span>,    <span class="co"># setup ORG in Stocker et al. 2020 GMD</span></span>
+<span>    kphio_par_a        <span class="op">=</span> <span class="fl">0.0</span>,        <span class="co"># disable temperature-dependence of kphio</span></span>
+<span>    kphio_par_b        <span class="op">=</span> <span class="fl">1.0</span>,</span>
+<span>    beta_unitcostratio <span class="op">=</span> <span class="fl">146.0</span>,</span>
+<span>    rd_to_vcmax        <span class="op">=</span> <span class="fl">0.014</span>,      <span class="co"># from Atkin et al. 2015 for C3 herbaceous</span></span>
+<span>    kc_jmax            <span class="op">=</span> <span class="fl">0.41</span></span>
+<span>  <span class="op">)</span>,</span>
+<span>  makecheck <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span><span class="op">)</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 1 × 9</span></span></span>
+<span><span class="co">#&gt;       vcmax      jmax   vcmax25    jmax25 gs_accl wscal   chi      iwue       rd</span></span>
+<span><span class="co">#&gt;       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> 0.000<span style="text-decoration: underline;">017</span>7 0.000<span style="text-decoration: underline;">040</span>0 0.000<span style="text-decoration: underline;">027</span>9 0.000<span style="text-decoration: underline;">054</span>7 0.001<span style="text-decoration: underline;">58</span>   <span style="color: #BB0000;">NaN</span> 0.694 0.000<span style="text-decoration: underline;">076</span>4  3.16<span style="color: #949494;">e</span><span style="color: #BB0000;">-6</span></span></span>
+<span><span class="co">#</span></span>
+<span><span class="co">#</span></span>
+<span><span class="co"># make sure to check ?run_pmodel_onestep_f_bysite for units of output quantities.</span></span></code></pre></div>
+<p><code><a href="../reference/run_pmodel_onestep_f_bysite.html">run_pmodel_onestep_f_bysite()</a></code> uses the same low-level
+code module as <code><a href="../reference/run_pmodel_f_bysite.html">run_pmodel_f_bysite()</a></code>
+(<code>photosynth_pmodel.mod.f90</code>) and therefore provides fully
+consistent outputs with the latter. Using
+<code><a href="../reference/run_pmodel_onestep_f_bysite.html">run_pmodel_onestep_f_bysite()</a></code> instead of
+<code><a href="https://rdrr.io/pkg/rpmodel/man/rpmodel.html" class="external-link">rpmodel::rpmodel()</a></code> guarantees consistency of the
+implementation across time-series and one-step model applications within
+the same package. Note that unit transformations as shown below is
+needed to obtain identical outputs.</p>
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/geco-bern/rpmodel" class="external-link">rpmodel</a></span><span class="op">)</span></span>
+<span><span class="va">out_rpmodel</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/rpmodel/man/rpmodel.html" class="external-link">rpmodel</a></span><span class="op">(</span></span>
+<span>  tc             <span class="op">=</span> <span class="fl">20</span>,           <span class="co"># temperature, deg C</span></span>
+<span>  vpd            <span class="op">=</span> <span class="fl">1000</span>,         <span class="co"># Pa,</span></span>
+<span>  co2            <span class="op">=</span> <span class="fl">400</span>,          <span class="co"># ppm,</span></span>
+<span>  fapar          <span class="op">=</span> <span class="fl">1</span>,            <span class="co"># fraction,</span></span>
+<span>  ppfd           <span class="op">=</span> <span class="fl">300</span><span class="op">/</span><span class="fl">10</span><span class="op">^</span><span class="fl">6</span>,     <span class="co"># ~~mol/m2/d~~ or mol/m2/s</span></span>
+<span>                                 <span class="co"># rpmodel docs state that units of ppfd define </span></span>
+<span>                                 <span class="co"># output units of: lue, gpp, vcmax, rd </span></span>
+<span>                                 <span class="co"># (as well as vcmax25, gs)</span></span>
+<span>  patm           <span class="op">=</span> <span class="fl">101325</span>,       <span class="co"># Pa</span></span>
+<span>  kphio          <span class="op">=</span> <span class="fl">0.04998</span>,      <span class="co"># quantum yield efficiency as calibrated </span></span>
+<span>                                 <span class="co"># for setup ORG by Stocker et al. 2020 GMD,</span></span>
+<span>  beta           <span class="op">=</span> <span class="fl">146.0</span>,        <span class="co"># unit cost ratio a/b,</span></span>
+<span>  c4             <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  method_jmaxlim <span class="op">=</span> <span class="st">"wang17"</span>,</span>
+<span>  do_ftemp_kphio <span class="op">=</span> <span class="cn">FALSE</span>,        <span class="co"># corresponding to setup ORG</span></span>
+<span>  do_soilmstress <span class="op">=</span> <span class="cn">FALSE</span>,        <span class="co"># corresponding to setup ORG</span></span>
+<span>  verbose        <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span>  <span class="op">)</span></span>
+<span>  </span>
+<span><span class="co"># out_rpmodel</span></span>
+<span><span class="fu">tidyr</span><span class="fu">::</span><span class="fu"><a href="https://tibble.tidyverse.org/reference/as_tibble.html" class="external-link">as_tibble</a></span><span class="op">(</span><span class="va">out_rpmodel</span><span class="op">)</span> <span class="op">|&gt;</span> </span>
+<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">vcmax</span>, <span class="va">jmax</span>, <span class="va">vcmax25</span>, <span class="va">jmax25</span>, <span class="va">gs</span>, <span class="va">chi</span>, <span class="va">iwue</span>, <span class="va">rd</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="co"># bring units to same as output of run_pmodel_onestep_f_bysite()</span></span>
+<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>gs   <span class="op">=</span> <span class="va">gs</span><span class="op">/</span><span class="fl">1</span><span class="op">/</span><span class="op">(</span><span class="fl">300</span><span class="op">/</span><span class="fl">10</span><span class="op">^</span><span class="fl">6</span><span class="op">)</span>, <span class="co"># divide by fapar (-) and by ppfd (mol/m2/s)</span></span>
+<span>                iwue <span class="op">=</span> <span class="va">iwue</span><span class="op">/</span><span class="fl">101325</span>,     <span class="co"># divide by patm (Pa)</span></span>
+<span>                rd   <span class="op">=</span> <span class="va">rd</span><span class="op">*</span><span class="fl">12</span>            <span class="co"># mutliply by c_molmass (gC/mol)</span></span>
+<span>  <span class="op">)</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 1 × 8</span></span></span>
+<span><span class="co">#&gt;       vcmax      jmax   vcmax25    jmax25      gs   chi      iwue         rd</span></span>
+<span><span class="co">#&gt;       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> 0.000<span style="text-decoration: underline;">017</span>7 0.000<span style="text-decoration: underline;">040</span>0 0.000<span style="text-decoration: underline;">027</span>9 0.000<span style="text-decoration: underline;">054</span>7 0.001<span style="text-decoration: underline;">60</span> 0.694 0.000<span style="text-decoration: underline;">076</span>4 0.000<span style="text-decoration: underline;">003</span>38</span></span></code></pre></div>
 </div>
   </div>
 

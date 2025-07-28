@@ -43,7 +43,7 @@
         <a class="external-link hidden-md hidden-lg" href="https://geco-group.org/">
           <img src="https://raw.githubusercontent.com/computationales/GECO_template/main/geco_logo_white_small.png" id="hexlogo" alt="GECO"></a>
         <a class="navbar-brand" href="../index.html">
-           <i>rsofun <small>v5.1.0</small></i>
+           <i>rsofun <small>v5.1.0.9000</small></i>
         </a>
       </div>
     </div>
@@ -360,7 +360,7 @@ a high impact on the model fit. Let’s run the calibration:</p>
 <span>  par_fixed <span class="op">=</span> <span class="va">par_fixed</span>,</span>
 <span>  targets <span class="op">=</span> <span class="st">"gpp"</span></span>
 <span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">saveRDS</a></span><span class="op">(</span><span class="va">par_calib</span>, <span class="st">"files/sensitivity_analysis.Rmd__par_calib.RDS"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">saveRDS</a></span><span class="op">(</span><span class="va">par_calib</span>, <span class="st">"files/sensitivity_analysis.Rmd__par_calib.RDS"</span>, compress <span class="op">=</span> <span class="st">"xz"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># This code takes 15 minutes to run</span></span></code></pre></div>
 <p><code>BayesianTools</code> makes it easy to produce the trace plot of
