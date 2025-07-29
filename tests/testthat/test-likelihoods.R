@@ -71,6 +71,17 @@ test_that("test likelihood/RMSE calculations with pmodel", {
       targets = c('gpp'),
       par_fixed = NULL)
   })
+  testthat::expect_equal(
+    tolerance = 1e-4,
+    object = ll_values, 
+    # expected was generated with dput(ll_values)
+    expected = c(
+      -13706.5058738304,
+      -4109.97422397591,
+      -11148.2269071033,
+      -2255167.68663634,
+      -3846.02937529864)
+  )
   
   # Test rsofun::cost_rmse_pmodel()
   rmse_values <- apply(dplyr::select(test_params_pmodel,-err_gpp, -err_vcmax25), 1, function(par_v) { # par_v is a named vector
@@ -206,7 +217,7 @@ test_that("test likelihood/RMSE calculations with BiomeE", {
     rsofun::cost_likelihood_biomee(    # likelihood cost function from package
       par = par_v,                     # par: should be a named vector
       obs = rsofun::biomee_validation, # obs: example data from package
-      drivers = rsofun::biomee_gs_leuning_drivers,
+      drivers = rsofun::biomee_p_model_drivers,
       targets = c('GPP')) # TODO: in BiomeE output is uppercase GPP, but in p-model it is lowercase
   })
   testthat::expect_equal(
@@ -214,10 +225,10 @@ test_that("test likelihood/RMSE calculations with BiomeE", {
     object = ll_values_BiomeE, 
     # expected was generated with dput(ll_values_BiomeE)
     expected = c(
-      -2.18839631317202,
-      -2.23393400214613,
-      -1.33443292160123,
-      -44.8188591514482
+      -2.02016968026715,
+      -2.23968996093749,
+      -1.24162843355044,
+      -0.383538022003261
     )
   )
   
@@ -227,7 +238,7 @@ test_that("test likelihood/RMSE calculations with BiomeE", {
     rsofun::cost_rmse_biomee(          # cost function for RMSE (actually relative error) from package
       par = par_v,                     # par: should be a named vector
       obs = rsofun::biomee_validation, # obs: example data from package
-      drivers = rsofun::biomee_gs_leuning_drivers)
+      drivers = rsofun::biomee_p_model_drivers)
   })
   testthat::expect_equal(
     tolerance = 1e-4,
@@ -235,10 +246,10 @@ test_that("test likelihood/RMSE calculations with BiomeE", {
     # expected was generated with dput(relError_values_BiomeE)
     # NOTE: these errors are relative Errors, not RMSE:
     expected = c(
-      0.978087100879279, 
-      0.355348213666544, 
-      0.414369511754263, 
-      0.999681272608117
+      0.435809001728683, 
+      0.174141992595677, 
+      0.152546040596932, 
+      0.316161901910987
     )
   )
 })
