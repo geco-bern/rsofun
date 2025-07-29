@@ -36,6 +36,7 @@ contains
     ! local variables
     real :: kphio, kphio_par_a, kphio_par_b, beta_unitcostratio, rd_to_vcmax, kc_jmax, &
       temp, vpd, ppfd, co2, patm, kphio_temp, vcmax, jmax, rd
+    real :: tc_home
     logical :: c4
     type(outtype_pmodel) :: out_pmodel  ! list of P-model output variables
 
@@ -61,7 +62,7 @@ contains
     co2  = real(forcing(1,4)) ! (ppm)
     patm = real(forcing(1,5)) ! (Pa)
     
-    tc_home = temp ! 
+    tc_home = temp            ! Long-term mean maximum temperature of the warmest month (deg C)
     
     !----------------------------------------------------------------
     ! Low-temperature effect on quantum yield efficiency 
@@ -103,8 +104,8 @@ contains
       )
 
     ! quantities with instantaneous temperature response
-    vcmax = calc_ftemp_inst_vcmax( temp, temp, tcref = 25.0 ) * out_pmodel%vcmax25
-    jmax  = calc_ftemp_inst_jmax(  temp, temp, tcref = 25.0 ) * out_pmodel%jmax25
+    vcmax = calc_ftemp_inst_vcmax( temp, temp, tc_home ) * out_pmodel%vcmax25
+    jmax  = calc_ftemp_inst_jmax(  temp, temp, tc_home ) * out_pmodel%jmax25
     rd    = out_pmodel%vcmax25 * rd_to_vcmax * calc_ftemp_inst_rd( temp ) * c_molmass
 
     !----------------------------------------------------------------

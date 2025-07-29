@@ -80,7 +80,7 @@ contains
 
         simu_steps   = simu_steps + 1
 
-        call vegn_CNW_budget( vegn, climate(simu_steps), tc_home)
+        call vegn_CNW_budget( vegn, climate(simu_steps))
 
         call vegn%hourly_diagnostics()
 

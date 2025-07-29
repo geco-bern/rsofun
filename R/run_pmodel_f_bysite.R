@@ -166,7 +166,7 @@ run_pmodel_f_bysite <- function(
   }
 
   need_to_add_tmax <- !("tmax" %in% colnames(forcing))
-  site_info$tc_home <- forcing %>%
+  tc_home <- forcing %>%
     # conditionally add daily max temp (if needed, e.g. when running "gs_leuning" with hourly forcing)
     {
       if (need_to_add_tmax) {
@@ -191,6 +191,7 @@ run_pmodel_f_bysite <- function(
     # extract scalar value
     dplyr::pull(.data$tc_home)
 
+    site_info$tc_home <- tc_home
   # Validate calculation
   if (is.na(site_info$tc_home) || length(site_info$tc_home) == 0) {
     warning("Calculated tc_home is NA or missing; defaulting to 25C.")
