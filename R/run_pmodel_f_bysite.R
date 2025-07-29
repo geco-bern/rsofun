@@ -15,6 +15,7 @@
 #' For further specifications of above inputs and examples see \code{\link{p_model_drivers}} or \code{\link{p_model_drivers_vcmax25}}
 
 #' @import dplyr
+#' @import lubridate
 #' 
 #' @returns Model output is provided as a tidy dataframe, with columns:
 #' \describe{
