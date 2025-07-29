@@ -203,6 +203,7 @@ module md_interface_in_biomee
     real :: lon
     real :: lat
     real :: elv ! elevation
+    real :: tc_home
 
   contains
 
@@ -407,9 +408,10 @@ contains
     real(kind=c_double), dimension(nvars_site_info),   intent(in)  :: site_info
 
     ! Site info
-    self%lon = real( site_info(1) )
-    self%lat = real( site_info(2) )
-    self%elv = real( site_info(3) )
+    self%lon     = real( site_info(1) )
+    self%lat     = real( site_info(2) )
+    self%elv     = real( site_info(3) )
+    !self%tc_home = real( site_info(4) )
   end subroutine populate_site_info
   
   subroutine populate_spec_data(self, params_species)
