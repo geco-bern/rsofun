@@ -73,7 +73,7 @@ variables for a given set of parameters.</p>
 
 
 <dl><dt id="arg-par">par<a class="anchor" aria-label="anchor" href="#arg-par"></a></dt>
-<dd><p>A vector containing parameter values for <code>'phiRL',
+<dd><p>A named vector containing parameter values for <code>'phiRL',
 'LAI_light', 'tf_base', 'par_mort'</code> in that order, and for the error terms
 corresponding to the target variables, e.g. <code>'err_GPP'</code> if GPP is a target.
 Make sure that
@@ -117,8 +117,11 @@ should be run using <code>BayesianTools</code>, so the likelihood is maximized.<
 <span class="r-in"><span><span class="co"># BiomeE model parameter values</span></span></span>
 <span class="r-in"><span><span class="co"># and the example data</span></span></span>
 <span class="r-in"><span><span class="fu">cost_likelihood_biomee</span><span class="op">(</span></span></span>
-<span class="r-in"><span> par <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">3.5</span>, <span class="fl">3.5</span>, <span class="fl">1</span>, <span class="fl">1</span>,    <span class="co"># model params</span></span></span>
-<span class="r-in"><span>         <span class="fl">0.5</span><span class="op">)</span>,              <span class="co"># err_GPP</span></span></span>
+<span class="r-in"><span> par <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>phiRL <span class="op">=</span> <span class="fl">3.5</span>, </span></span>
+<span class="r-in"><span>         LAI_light <span class="op">=</span> <span class="fl">3.5</span>, </span></span>
+<span class="r-in"><span>         tf_base <span class="op">=</span> <span class="fl">1</span>, </span></span>
+<span class="r-in"><span>         par_mort <span class="op">=</span> <span class="fl">1</span>,    <span class="co"># model params</span></span></span>
+<span class="r-in"><span>         err_GPP <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span>,  <span class="co"># err_GPP</span></span></span>
 <span class="r-in"><span> obs <span class="op">=</span> <span class="va">biomee_validation</span>,</span></span>
 <span class="r-in"><span> drivers <span class="op">=</span> <span class="va">biomee_gs_leuning_drivers</span>,</span></span>
 <span class="r-in"><span> targets <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"GPP"</span><span class="op">)</span></span></span>

@@ -83,7 +83,7 @@ observed values and with standard deviation given as an input parameter
 
 
 <dl><dt id="arg-par">par<a class="anchor" aria-label="anchor" href="#arg-par"></a></dt>
-<dd><p>A vector of values for the parameters to be calibrated, including
+<dd><p>A named vector of values for the parameters to be calibrated, including
 a subset of model parameters (described in <code><a href="runread_pmodel_f.html">runread_pmodel_f</a></code>),
 in order, and error terms
 for each target variable (for example <code>'gpp_err'</code>), in the same order as
@@ -155,8 +155,10 @@ trait value predicted on that date.</p>
 <span class="r-in"><span><span class="co"># temperature dependence of kphio </span></span></span>
 <span class="r-in"><span><span class="co"># and example data</span></span></span>
 <span class="r-in"><span><span class="fu">cost_likelihood_pmodel</span><span class="op">(</span></span></span>
-<span class="r-in"><span> par <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.05</span>, <span class="op">-</span><span class="fl">0.01</span>, <span class="fl">1</span>,     <span class="co"># model parameters</span></span></span>
-<span class="r-in"><span>         <span class="fl">2</span><span class="op">)</span>,                <span class="co"># err_gpp</span></span></span>
+<span class="r-in"><span>par <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>kphio       <span class="op">=</span> <span class="fl">0.05</span>, </span></span>
+<span class="r-in"><span>        kphio_par_a <span class="op">=</span> <span class="op">-</span><span class="fl">0.01</span>, </span></span>
+<span class="r-in"><span>        kphio_par_b <span class="op">=</span> <span class="fl">1</span>,     <span class="co"># model parameters</span></span></span>
+<span class="r-in"><span>        err_gpp     <span class="op">=</span> <span class="fl">2</span><span class="op">)</span>,    <span class="co"># err_gpp</span></span></span>
 <span class="r-in"><span> obs <span class="op">=</span> <span class="va">p_model_validation</span>,</span></span>
 <span class="r-in"><span> drivers <span class="op">=</span> <span class="va">p_model_drivers</span>,</span></span>
 <span class="r-in"><span> targets <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">'gpp'</span><span class="op">)</span>,</span></span>

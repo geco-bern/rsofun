@@ -124,7 +124,7 @@ the parameter values.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Define log-likelihood function</span></span>
 <span><span class="va">ll_pmodel</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span></span>
-<span>    <span class="va">par_v</span>                 <span class="co"># a vector of all calibratable parameters including errors</span></span>
+<span>    <span class="va">par_v</span>                 <span class="co"># a named vector of all calibratable parameters including errors</span></span>
 <span><span class="op">)</span><span class="op">{</span></span>
 <span>  <span class="fu">rsofun</span><span class="fu">::</span><span class="fu"><a href="../reference/cost_likelihood_pmodel.html">cost_likelihood_pmodel</a></span><span class="op">(</span>        <span class="co"># reuse likelihood cost function</span></span>
 <span>    <span class="va">par_v</span>,</span>
