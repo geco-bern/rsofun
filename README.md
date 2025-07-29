@@ -118,6 +118,16 @@ pars <- calib_sofun(
   )
 ```
 
+## Data and code for model documentation paper (Paredes et al., in rev.)
+
+Versioned releases of this repository are deposited on Zenodo (see badge at the top of the README file). Code to reproduce the analysis and plots presented here is contained in this repository (subdirectory `analysis/`) and is demonstrated on the model documentation website (https://geco-bern.github.io/rsofun/, article ‘Sensitivity analysis and calibration interpretation’).
+
+The model forcing and evaluation data is based on the publicly available FLUXNET2015 data for the site FR-Pue, prepared by FluxDataKit v3.4.2 (10.5281/zenodo.14808331), taken here as a subset of the originally published data for years 2007-2012. It is accessible through the {rsofun} R package and contained as part of this repository (subdirectory `data/`) as CSV and as files. Outputs of the analysis presented here are archived in the `analysis/paper_results_files/` subfolder.
+
+The model documentation paper is currently under review.
+A preprint is available at: https://www.biorxiv.org/content/10.1101/2023.11.24.568574v3
+
+
 ## References
 
 Stocker, B. D., Wang, H., Smith, N. G., Harrison, S. P., Keenan, T. F., Sandoval, D., Davis, T., and Prentice, I. C.: P-model v1.0: an optimality-based light use efficiency model for simulating ecosystem gross primary production, Geosci. Model Dev., 13, 1545–1581, https://doi.org/10.5194/gmd-13-1545-2020, 2020.

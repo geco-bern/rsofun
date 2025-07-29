@@ -27,10 +27,10 @@ module md_photosynth
     real :: iwue                ! intrinsic water use efficiency = A / gs = ca - ci = ca ( 1 - chi ) , unitless
     real :: lue                 ! light use efficiency (mol CO2 / mol photon)
     ! real :: assim               ! leaf-level assimilation rate (mol CO2 m-2 s-1)
-    real :: gs_setpoint         ! stomatal conductance to CO2 (mol C Pa-1 m-2 s-1)
+    real :: gs_setpoint         ! stomatal conductance to CO2 (mol CO2 Pa-1 (mol photons)-1)
     ! real :: gs_unitfapar        ! stomatal conductance to CO2 per unit fapar (mol C Pa-1 m-2 s-1)
-    ! real :: gs_unitiabs         ! stomatal conductance to CO2 per unit absorbed light (mol C Pa-1 m-2 s-1)
-    ! real :: gpp                 ! gross primary productivity (g CO2 m-2 d-1)
+    ! real :: gs_unitiabs         ! stomatal conductance to CO2 per unit absorbed light (mol CO2 Pa-1 (mol photons)-1)
+    ! real :: gpp                 ! gross primary productivity (g CO2 m-2 s-1)
     ! real :: vcmax               ! canopy-level maximum carboxylation capacity per unit ground area (mol CO2 m-2 s-1)
     real :: jmax25              ! canopy-level maximum rate of electron transport, normalized to 25 deg C (mol m-2 s-1)
     real :: vcmax25             ! canopy-level Vcmax25 (Vcmax normalized to 25 deg C) (mol CO2 m-2 s-1)
@@ -38,9 +38,9 @@ module md_photosynth
     ! real :: vcmax_unitiabs      ! Vcmax per unit absorbed light (mol CO2 m-2 s-1 mol-1)
     ! real :: ftemp_inst_vcmax    ! Instantaneous temperature response factor of Vcmax (unitless)
     ! real :: ftemp_inst_rd       ! Instantaneous temperature response factor of Rd (unitless)
-    ! real :: rd                  ! Dark respiration (mol CO2 m-2 s-1)
-    ! real :: rd_unitfapar        ! Dark respiration per unit fAPAR (mol CO2 m-2 s-1)
-    ! real :: rd_unitiabs         ! Dark respiration per unit absorbed light (mol CO2 m-2 s-1)
+    ! real :: rd                  ! Dark respiration (g C m-2 s-1)
+    ! real :: rd_unitfapar        ! Dark respiration per unit fAPAR (g C m-2 s-1)
+    ! real :: rd_unitiabs         ! Dark respiration per unit absorbed light (g C (mol photons)-1)
     real :: actnv               ! Canopy-level total metabolic leaf N per unit ground area (g N m-2)
     real :: actnv_unitfapar     ! Metabolic leaf N per unit fAPAR (g N m-2)
     real :: actnv_unitiabs      ! Metabolic leaf N per unit absorbed light (g N m-2 mol-1)
@@ -70,8 +70,7 @@ module md_photosynth
 
 contains
 
-  function pmodel( kphio, beta, kc_jmax, ppfd, co2, tc, vpd, patm, tc_home, c4, &
-                 method_optci, method_jmaxlim ) result( out_pmodel )
+  function pmodel( kphio, beta, kc_jmax, ppfd, co2, tc, vpd, patm, c4, method_optci, method_jmaxlim ) result( out_pmodel )
     !//////////////////////////////////////////////////////////////////
     ! Implements the P-model, providing predictions for ci, Vcmax, and 
     ! light use efficiency, etc. 
@@ -79,16 +78,15 @@ contains
     ! function calc_dgpp().
     !------------------------------------------------------------------
     ! arguments
-    real, intent(in) :: kphio        ! apparent quantum yield efficiency       
-    real, intent(in) :: beta         ! parameter for the unit cost ratio (corresponding to beta in Prentice et al., 2014)    
-    real, intent(in) :: kc_jmax      ! parameter Jmax cost ratio (corresponding to c in Prentice et al., 2014)    
+    real, intent(in) :: kphio        ! apparent quantum yield efficiency (mol mol-1)
+    real, intent(in) :: beta         ! parameter for the unit cost ratio (-) (corresponding to beta in Prentice et al., 2014)    
+    real, intent(in) :: kc_jmax      ! parameter Jmax cost ratio (-) (corresponding to c in Prentice et al., 2014)    
     ! real, intent(in) :: fapar        ! fraction of absorbed photosynthetically active radiation (unitless) 
     real, intent(in) :: ppfd         ! photosynthetic photon flux density (mol m-2 s-1), relevant for acclimated response
     real, intent(in) :: co2          ! atmospheric CO2 concentration (ppm), relevant for acclimated response
     real, intent(in) :: tc           ! air temperature (deg C), relevant for acclimated response
     real, intent(in) :: vpd          ! vapor pressure (Pa), relevant for acclimated response
     real, intent(in) :: patm         ! atmospheric pressure (Pa), relevant for acclimated response
-    real, intent(in) :: tc_home       ! long-term mean max temperature of warmest month 
     logical, intent(in) :: c4        ! whether or not C4 photosynthesis pathway is followed. If .false., it's C3.
     character(len=*), intent(in) :: method_optci    ! Method used for deriving optimal ci:ca
     character(len=*), intent(in) :: method_jmaxlim  ! Method used for accounting for Jmax limitation
@@ -101,9 +99,9 @@ contains
     real :: kmm                 ! Michaelis-Menten coefficient (Pa)
     real :: gammastar           ! photorespiratory compensation point - Gamma-star (Pa)
     real :: ca                  ! ambient CO2 partial pressure, (Pa)
-    real :: gs_setpoint         ! stomatal conductance to CO2 (mol CO2 Pa-1 m-2 s-1)
+    real :: gs_setpoint         ! stomatal conductance to CO2 (mol CO2 Pa-1 (mol photons)-1)
     ! real :: gs_unitfapar        ! stomatal conductance to CO2 (mol CO2 Pa-1 m-2 s-1)
-    ! real :: gs_unitiabs         ! stomatal conductance to CO2 (mol CO2 Pa-1 m-2 s-1)
+    ! real :: gs_unitiabs         ! stomatal conductance to CO2 (mol CO2 Pa-1 (mol photons)-1)
     real :: ci                  ! leaf-internal partial pressure, (Pa)
     real :: chi                 ! = ci/ca, leaf-internal to ambient CO2 partial pressure, ci/ca (unitless)
     real :: ns                  ! viscosity of H2O at ambient temperatures (Pa s)
@@ -112,7 +110,7 @@ contains
     real :: mprime              ! factor in light use model with Jmax limitation
     real :: iwue                ! intrinsic water use efficiency = A / gs = ca - ci = ca ( 1 - chi ) , unitless
     real :: lue                 ! light use efficiency (mol CO2 / mol photon)
-    ! real :: gpp                 ! gross primary productivity (g CO2 m-2 d-1)
+    ! real :: gpp                 ! gross primary productivity (g CO2 m-2 s-1)
     real :: jmax                ! canopy-level maximum rate of electron transport (XXX)
     real :: jmax25              ! canopy-level maximum rate of electron transport (XXX)
     real :: vcmax               ! canopy-level maximum carboxylation capacity per unit ground area (mol CO2 m-2 s-1)
@@ -124,9 +122,9 @@ contains
     ! real :: vcmax25_unitiabs    ! Vcmax25 per unit absorbed light (mol CO2 m-2 s-1 mol-1)
     real :: ftemp_inst_vcmax    ! Instantaneous temperature response factor of Vcmax (unitless)
     real :: ftemp_inst_jmax     ! Instantaneous temperature response factor of Jmax (unitless)
-    ! real :: rd                  ! Dark respiration (mol CO2 m-2 s-1)
-    ! real :: rd_unitfapar        ! Dark respiration per unit fAPAR (mol CO2 m-2 s-1)
-    ! real :: rd_unitiabs         ! Dark respiration per unit absorbed light (mol CO2 m-2 s-1)
+    ! real :: rd                  ! Dark respiration (g C m-2 s-1)
+    ! real :: rd_unitfapar        ! Dark respiration per unit fAPAR (g C m-2 s-1)
+    ! real :: rd_unitiabs         ! Dark respiration per unit absorbed light (g C (mol photons)-1)
     real :: actnv               ! Canopy-level total metabolic leaf N per unit ground area (g N m-2)
     ! real :: actnv_unitfapar     ! Metabolic leaf N per unit fAPAR (g N m-2)
     ! real :: actnv_unitiabs      ! Metabolic leaf N per unit absorbed light (g N m-2 mol-1)
@@ -241,7 +239,8 @@ contains
       lue = kphio * mprime * c_molmass  ! in g CO2 m-2 s-1 / (mol light m-2 s-1)
       
       ! Vcmax after accounting for Jmax limitation
-      vcmax = kphio * ppfd * out_optchi%mjoc * mprime / out_optchi%mj
+      vcmax = kphio * ppfd * out_optchi%mjoc * mprime / out_optchi%mj ! mol m-2 s-1
+      !       (-)   * (mol m-2 s-1) *    (-) * (-)    / (-)
 
       ! xxx test
       ! print*,'out_optchi%mjoc : ', out_optchi%mjoc 
@@ -271,7 +270,7 @@ contains
       tcref = 0.44 * tc + 24.92
 
       ! calculated acclimated Vcmax at prevailing growth temperatures
-      ftemp_inst_vcmax = calc_ftemp_inst_vcmax(tc, tc, tc_home)
+      ftemp_inst_vcmax = calc_ftemp_inst_vcmax( tc, tc, tcref = tcref )
       vcmax = vcmax_star * ftemp_inst_vcmax   ! Eq. 20
       
       ! calculate Jmax
@@ -279,7 +278,8 @@ contains
       jmax_prime = jmax_over_vcmax * vcmax 
 
       ! light use efficiency
-      lue = c_molmass * kphio * out_optchi%mj * omega_star / (8.0 * theta)
+      lue = c_molmass * kphio * out_optchi%mj * omega_star / (8.0 * theta) ! * calc_ftemp_inst_vcmax( tc, tc, tcref = tcref )     ! treat theta as a calibratable parameter
+
 
     else if (method_jmaxlim=="none") then
 
@@ -307,7 +307,7 @@ contains
     ! Corrolary preditions (This is prelimirary!)
     !-----------------------------------------------------------------------
     ! Vcmax25 (vcmax normalized to 25 deg C)
-    ftemp_inst_vcmax  = calc_ftemp_inst_vcmax(tc, tc, tc_home)
+    ftemp_inst_vcmax  = calc_ftemp_inst_vcmax( tc, tc, tcref = 25.0 )
     vcmax25  = vcmax / ftemp_inst_vcmax
 
     ! ! Dark respiration at growth temperature
@@ -328,10 +328,11 @@ contains
       if (fact_jmaxlim >= 1 .or. fact_jmaxlim <= 0) then
         jmax = dummy
       else
-        jmax = 4.0 * kphio * ppfd / sqrt( (1.0/fact_jmaxlim)**2 - 1.0 )
+        jmax = 4.0 * kphio * ppfd / sqrt( (1.0/fact_jmaxlim)**2 - 1.0 ) ! mol m-2 s-1
+        !      (-) * (-)   * (mol m-2 s-1) / (-)
       end if
       ! for normalization using temperature response from Duursma et al., 2015, implemented in plantecophys R package
-      ftemp_inst_jmax  = calc_ftemp_inst_jmax(tc, tc, tc_home)
+      ftemp_inst_jmax  = calc_ftemp_inst_jmax( tc, tc, tcref = 25.0 )
       jmax25  = jmax  / ftemp_inst_jmax
     end if
 
@@ -839,9 +840,9 @@ contains
     ! arguments
     real, intent(in) :: dtemp    ! (leaf) temperature in degrees celsius
     logical, intent(in) :: c4
-    real, intent(in) :: kphio
-    real, intent(in) :: kphio_par_a
-    real, intent(in) :: kphio_par_b
+    real, intent(in) :: kphio        ! (mol mol-1)
+    real, intent(in) :: kphio_par_a  ! ((deg C)-2)
+    real, intent(in) :: kphio_par_b  ! (deg C)
 
     ! function return variable
     real :: kphio_temp
@@ -895,167 +896,138 @@ contains
   end function calc_ftemp_inst_rd
 
 
-  function calc_ftemp_inst_vcmax( tc_leaf, tc_growth, tc_home ) result( fv )
+  function calc_ftemp_inst_vcmax( tcleaf, tcgrowth, tcref ) result( fv )
     !-----------------------------------------------------------------------
-    ! Calculates the instantaneous temperature response factor for Vcmax.
-    ! Based on Kumarathunge et al., 2019 (Eq. 7).
+    ! arguments
+    ! tcleaf: temperature (degrees C)
+    ! tref: is 'to' in Nick's set it to 25 C (=298.15 K in other cals)
     !
-    ! Arguments:
-    !   tc_leaf:    Instantaneous leaf temperature (°C)
-    !   tc_growth:  Growth temperature, 30-day mean damped temperature (°C)
-    !   tc_home:    Long-term mean maximum temperature of the warmest month (°C)
+    ! function return variable
+    ! fv: temperature response factor, relative to 25 deg C.
     !
-    ! Returns:
-    !   fv:        Instantaneous temperature response factor (unitless)
+    ! Output:   Factor fv to correct for instantaneous temperature response
+    !           of Vcmax for:
+    !
+    !               Vcmax(temp) = fv * Vcmax(25 deg C) 
+    !
+    ! Ref:      Wang Han et al. (in prep.)
     !-----------------------------------------------------------------------
+    ! arguments
+    real, intent(in) :: tcleaf
+    real, intent(in) :: tcgrowth
+    real, intent(in), optional :: tcref
 
-    ! Function arguments
-    real, intent(in) :: tc_leaf, tc_growth, tc_home
-
-    ! Local variables
-    real :: tk, ea, hd, deltas, kR, numerator, denominator, fva, fvb
-
-    ! Output variable
+    ! function return variable
     real :: fv
 
-    ! Constants
-    kR   = 8.314          ! universal gas constant (J/mol/K), Allen (1973)
-    hd   = 200000.0       ! deactivation energy (J/mol)
+    ! loal parameters
+    real, parameter :: Ha    = 71513  ! activation energy (J/mol)
+    real, parameter :: Hd    = 200000 ! deactivation energy (J/mol)
+    real, parameter :: a_ent = 668.39 ! offset of entropy vs. temperature relationship from Kattge & Knorr (2007) (J/mol/K)
+    real, parameter :: b_ent = 1.07   ! slope of entropy vs. temperature relationship from Kattge & Knorr (2007) (J/mol/K^2)
+    
+    ! local variables
+    real :: tkref, tkleaf, dent, fva, fvb, mytcref
 
-    ! Convert Celsius temperatures to Kelvin
-    tk = tc_leaf + 273.15
+    if (present(tcref)) then
+      mytcref = tcref
+    else
+      mytcref = 298.15
+    end if
 
-    ! Calculate Ea and Delta S based on Kumarathunge et al. (2019) for Vcmax
-    ea = (42.6 + 1.14 * tc_growth) * 1.0e3  ! convert from kJ to J/mol
-    deltas = 645.13 - 0.38 * tc_growth      ! J/mol/K
+    tkref = mytcref + 273.15  ! to Kelvin
 
-    ! Calculate numerator and denominator for thermal inhibition
-    numerator   = 1.0 + exp((298.15 * deltas - hd) / (298.15 * kR))
-    denominator = 1.0 + exp((tk * deltas - hd) / (tk * kR))
+    ! conversion of temperature to Kelvin, tcleaf is the instantaneous leaf temperature in degrees C. 
+    tkleaf = tcleaf + 273.15
 
-    ! Final temperature response factor kt using Arrhenius function
-     fva = calc_ftemp_arrhenius(tk, ea) 
-     fvb = numerator / denominator
-     fv  = fva * fvb
+    ! calculate entropy following Kattge & Knorr (2007), negative slope and y-axis intersect is when expressed as a function of temperature in degrees Celsius, not Kelvin !!!
+    dent = a_ent - b_ent * tcgrowth   ! 'tcgrowth' corresponds to 'tmean' in Nicks, 'tc25' is 'to' in Nick's
+    fva = calc_ftemp_arrhenius( tkleaf, Ha, tkref )
+    fvb = (1.0 + exp( (tkref * dent - Hd)/(kR * tkref) ) ) / (1.0 + exp( (tkleaf * dent - Hd)/(kR * tkleaf) ) )
+    fv  = fva * fvb
 
   end function calc_ftemp_inst_vcmax
 
 
-  function calc_ftemp_inst_jmax( tc_leaf, tc_growth, tc_home ) result( fv )
+  function calc_ftemp_inst_jmax( tcleaf, tcgrowth, tcref ) result( fv )
     !-----------------------------------------------------------------------
-    ! Calculates the instantaneous temperature response factor for Jmax.
-    ! Based on Kumarathunge et al., 2019 (Eq. 7).
+    ! Calculates the instantaneous temperature response of Jmax
+    ! 
+    ! Given Jmax at a reference temperature (argument tcref)
+    ! this function calculates its temperature-scaling factor following modified Arrhenius
+    ! kinetics based on Kattge & Knorr (2007).
     !
-    ! Arguments:
-    !   tc_leaf:    Instantaneous leaf temperature (°C)
-    !   tc_growth:  Growth temperature, 30-day mean damped temperature (°C)
-    !   tc_home:    Long-term mean maximum temperature of the warmest month (°C)
-    !
-    ! Returns:
-    !   fv:        Instantaneous temperature response factor (unitless)
+    ! Reference:
+    ! Kattge, J. and Knorr, W.: Temperature acclimation in a biochemical model of 
+    ! photosynthesis: a reanalysis of data from 36 species, Plant, Cell and Environment, 
+    ! 30,1176â1190, 2007.
     !-----------------------------------------------------------------------
+    ! arguments
+    real, intent(in) :: tcleaf
+    real, intent(in) :: tcgrowth
+    real, intent(in), optional :: tcref
 
-    ! Function arguments
-    real, intent(in) :: tc_leaf, tc_growth, tc_home
-
-    ! Local variables
-    real :: tk, ea, hd, deltas, kR, numerator, denominator, fva, fvb
-
-    ! Output variable
+    ! function return variable
     real :: fv
 
-    ! Constants
-    kR   = 8.314          ! universal gas constant (J/mol/K), Allen (1973)
-    hd   = 200000.0       ! deactivation energy (J/mol)
+    ! loal parameters
+    real, parameter :: Ha    = 49884  ! activation energy (J/mol)
+    real, parameter :: Hd    = 200000 ! deactivation energy (J/mol)
+    real, parameter :: a_ent = 659.70 ! offset of entropy vs. temperature relationship from Kattge & Knorr (2007) (J/mol/K)
+    real, parameter :: b_ent = 0.75   ! slope of entropy vs. temperature relationship from Kattge & Knorr (2007) (J/mol/K^2)
+    
+    ! local variables
+    real :: tkref, tkleaf, dent, fva, fvb, mytcref
 
-    ! Convert Celsius temperatures to Kelvin
-    tk = tc_leaf + 273.15
+    if (present(tcref)) then
+      mytcref = tcref
+    else
+      mytcref = 298.15
+    end if
 
-    ! Calculate Ea and Delta S based on Kumarathunge et al. (2019) for Jmax
-    ea = 40.71 * 1.0e3                                           ! J/mol (constant activation energy for Jmax)
-    deltas = 658.77 - 0.84 * tc_home - 0.52 * (tc_growth - tc_home)  ! J/mol/K
+    tkref = mytcref + 273.15  ! to Kelvin
 
-    ! Calculate numerator and denominator for thermal inhibition
-    numerator   = 1.0 + exp((298.15 * deltas - hd) / (298.15 * kR))
-    denominator = 1.0 + exp((tk * deltas - hd) / (tk * kR))
+    ! conversion of temperature to Kelvin, tcleaf is the instantaneous leaf temperature in degrees C. 
+    tkleaf = tcleaf + 273.15
 
-    ! Final temperature response factor kt using Arrhenius function
-     fva = calc_ftemp_arrhenius(tk, ea) 
-     fvb = numerator / denominator
-     fv  = fva * fvb
+    ! calculate entropy following Kattge & Knorr (2007), negative slope and y-axis intersect is when expressed as a function of temperature in degrees Celsius, not Kelvin !!!
+    dent = a_ent - b_ent * tcgrowth   ! 'tcgrowth' corresponds to 'tmean' in Nicks, 'tc25' is 'to' in Nick's
+    fva = calc_ftemp_arrhenius( tkleaf, Ha, tkref )
+    fvb = (1.0 + exp( (tkref * dent - Hd)/(kR * tkref) ) ) / (1.0 + exp( (tkleaf * dent - Hd)/(kR * tkleaf) ) )
+    fv  = fva * fvb
 
-  end function calc_ftemp_inst_jmax
+  end function calc_ftemp_inst_jmax  
 
 
   function calc_ftemp_arrhenius( tk, dha, tkref ) result( ftemp )
     !-----------------------------------------------------------------------
-    ! Computes the Arrhenius temperature response factor.
-    ! var(T) = ftemp * var(T_ref)
+    ! Calculates the factor to account for the temperature response following 
+    ! Arrhenius: 
     !
-    ! Arguments:
-    !   tk:    Temperature (K)
-    !   dha:   Activation energy (J mol⁻¹)
-    !   tkref: (Optional) Reference temperature (K). Defaults to 298.15 K (25°C)
+    !               var(T) = ftemp * var(T=T_ref)
     !
-    ! Returns:
-    !   ftemp: Arrhenius temperature response factor (unitless)
+    ! T_ref is 25 deg C (=298.13 K) per default.
     !-----------------------------------------------------------------------
-    ! Arguments
-    real, intent(in) :: tk, dha
-    real, intent(in), optional :: tkref   ! Reference temperature (Kelvin)
+    ! arguments
+    real, intent(in) :: tk                 ! temperature (Kelvin)
+    real, intent(in) :: dha                ! activation energy (J/mol)
+    real, intent(in), optional :: tkref    ! reference temperature 
 
-    ! Local variables
-    real :: mytkref, kR
+    ! local variables
+    real :: mytkref                        ! reference temperature 
 
-    ! Output variable
+    ! function return variable
     real :: ftemp
 
-    ! Define constants
-    kR = 8.314      ! universal gas constant (J/mol/K), Allen (1973)
-
-    ! Set reference temperature (default 298.15 K if not provided)
     if (present(tkref)) then
       mytkref = tkref
     else
       mytkref = 298.15
     end if
 
-    ! Calculate Arrhenius temperature response
     ftemp = exp( dha * (tk - mytkref) / (mytkref * kR * tk) )
 
   end function calc_ftemp_arrhenius
-
-
-  ! XXX REMOVED BECAUSE IT'S NOW IN SOFUNUTILS
-  ! function calc_patm( elv ) result( patm )
-  !   !-----------------------------------------------------------------------
-  !   ! Features: Returns the atmospheric pressure as a function of elevation
-  !   !           and standard atmosphere (1013.25 hPa)
-  !   ! Depends:  - connect_sql
-  !   !           - flux_to_grid
-  !   !           - get_data_point
-  !   !           - get_msvidx
-  !   ! Ref:      Allen et al. (1998)
-  !   !-----------------------------------------------------------------------
-  !   ! argument
-  !   real, intent(in) :: elv           ! elevation above sea level, m
-
-  !   ! local variables
-  !   real, parameter :: kPo = 101325   ! standard atmosphere, Pa (Allen, 1973)
-  !   real, parameter :: kTo = 298.15   ! base temperature, K (Prentice, unpublished)
-  !   real, parameter :: kL  = 0.0065   ! temperature lapse rate, K/m (Allen, 1973)
-  !   real, parameter :: kG  = 9.80665  ! gravitational acceleration, m/s**2 (Allen, 1973)
-  !   real, parameter :: kR  = 8.3145   ! universal gas constant, J/mol/K (Allen, 1973)
-  !   real, parameter :: kMa = 0.028963 ! molecular weight of dry air, kg/mol (Tsilingiris, 2008)
-
-  !   ! function return variable
-  !   real :: patm    ! atmospheric pressure at elevation 'elv', Pa 
-
-  !   ! Convert elevation to pressure, Pa:
-  !   patm = kPo*(1.0 - kL*elv/kTo)**(kG*kMa/(kR*kL))
-    
-  ! end function calc_patm
-
 
   function calc_density_h2o( tc, patm ) result( density_h2o )
     !-----------------------------------------------------------------------

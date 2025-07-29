@@ -2,7 +2,7 @@
 % Please edit documentation in R/run_pmodel_f_bysite.R
 \name{run_pmodel_f_bysite}
 \alias{run_pmodel_f_bysite}
-\title{Run P-model (R wrapper)}
+\title{Run P-model (time series)}
 \usage{
 run_pmodel_f_bysite(
   sitename,
@@ -47,20 +47,24 @@ Model output is provided as a tidy dataframe, with columns:
   \item{\code{le}}{Latent heat flux (in J m\eqn{^{-2}} d\eqn{^{-1}}).}
   \item{\code{pet}}{Potential evapotranspiration (PET), calculated by SPLASH following Priestly-Taylor (in mm d\eqn{^{-1}}).}
   \item{\code{vcmax}}{Maximum rate of RuBisCO carboxylation 
-      (Vcmax) (in mol C m\eqn{^{-2}} d\eqn{^{-1}}).}
+      (Vcmax) (in mol C m\eqn{^{-2}} s\eqn{^{-1}}).}
   \item{\code{jmax}}{Maximum rate of electron transport for RuBP regeneration
       (in mol CO\eqn{_2} m\eqn{^{-2}} s\eqn{^{-1}}).}
   \item{\code{vcmax25}}{Maximum rate of carboxylation (Vcmax), 
-      normalised to 25\eqn{^o}C (in mol C m\eqn{^{-2}} d\eqn{^{-1}}).}
+      normalised to 25\eqn{^o}C (in mol C m\eqn{^{-2}} s\eqn{^{-1}}).} 
   \item{\code{jmax25}}{Maximum rate of electron transport, normalised to 
       25\eqn{^o}C (in mol C m\eqn{^{-2}} s\eqn{^{-1}}).}
   \item{\code{gs_accl}}{Acclimated stomatal conductance (in 
-      mol C m\eqn{^{-2}} d\eqn{^{-1}} Pa\eqn{^{-1}}).}
+      mol C (mol photons)\eqn{^{-1}} Pa\eqn{^{-1}}. (Multiply by 
+      ppfd (mol photons m\eqn{^{-2}} d\eqn{^{-1}}) and fapar 
+      to express per unit ground area and time.)}
   \item{\code{wscal}}{Relative soil water content, between 0 (permanent wilting 
       point, PWP) and 1 (field capacity, FC).}
   \item{\code{chi}}{Ratio of leaf-internal to ambient CO\eqn{_{2}}, ci:ca (unitless).}
-  \item{\code{iwue}}{Intrinsic water use efficiency (iWUE) (in Pa).}
-  \item{\code{rd}}{Dark respiration (Rd) in gC m\eqn{^{-2}} d\eqn{^{-1}}.}
+  \item{\code{iwue}}{Intrinsic water use efficiency (iWUE) (unitless, 
+      multiply with patm (Pa) to get iWUE in Pa).}
+  \item{\code{rd}}{Dark respiration (Rd) in gC m\eqn{^{-2}} s\eqn{^{-1}}. 
+      (Multiply by 1/12 (mol C / gC) to convert to mol C m\eqn{^{-2}} s\eqn{^{-1}}.)}
   \item{\code{tsoil}}{Soil temperature, in \eqn{^{o}}C.}
   \item{\code{netrad}}{Net radiation, in W m\eqn{^{-2}}. WARNING: this is currently ignored as a model forcing. Instead, net radiation is internally calculated by SPLASH.}
   \item{\code{wcont}}{Soil water content, in mm.}
@@ -69,7 +73,7 @@ Model output is provided as a tidy dataframe, with columns:
   }
 }
 \description{
-Run P-model Fortran model on single site.
+Run P-model on a single site for a forcing time series.
 }
 \details{
 Depending on the input model parameters, it's possible to run the 

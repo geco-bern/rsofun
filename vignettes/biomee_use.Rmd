@@ -55,7 +55,7 @@ biomee_gs_leuning_drivers$params_siml
 head(biomee_gs_leuning_drivers$forcing)
 ```
 
-```{r eval = FALSE}
+```{r eval = TRUE}
 set.seed(2023)
 
 # run the model
@@ -66,15 +66,6 @@ out <- runread_biomee_f(
      )
 
 # split out the annual data
-biomee_gs_leuning_output_annual_tile <- out$data[[1]]$output_annual_tile
-biomee_gs_leuning_output_annual_cohorts <- out$data[[1]]$output_annual_cohorts
-```
-
-```{r simulate_biomee_gs_leuning_run, include = FALSE}
-# TODO: get rid of this and always fully run the vignettes
-# fake output since model isn't run
-# saveRDS(out, "files/biomee_use.Rmd__biomee_gs_leuning_output___out.RDS")
-out <- readRDS("files/biomee_use.Rmd__biomee_gs_leuning_output___out.RDS")
 biomee_gs_leuning_output_annual_tile <- out$data[[1]]$output_annual_tile
 biomee_gs_leuning_output_annual_cohorts <- out$data[[1]]$output_annual_cohorts
 ```
@@ -96,12 +87,6 @@ biomee_gs_leuning_output_annual_tile |>
   geom_line(aes(x = year, y = plantC)) +
   theme_classic()+labs(x = "Year", y = "plantC")
 
-biomee_gs_leuning_output_annual_cohorts %>% group_by(cohort,year) %>%
-  summarise(npp=sum(NPP*density/10000)) %>% mutate(cohort=as.factor(cohort)) %>%
-  ggplot(aes(x=cohort,y=npp,fill=year)) +
-  geom_bar(stat="identity") +
-  theme_classic()+labs(x = "Cohort", y = "NPP")
-
 ```
 
 ## Running the BiomeEP model
@@ -116,7 +101,7 @@ biomee_p_model_drivers$params_siml
 head(biomee_p_model_drivers$forcing)
 ```
 
-```{r eval = FALSE}
+```{r eval = TRUE}
 # run the model
 out <- runread_biomee_f(
      biomee_p_model_drivers,
@@ -125,15 +110,6 @@ out <- runread_biomee_f(
      )
 
 # split out the annual data for visuals
-biomee_p_model_output_annual_tile <- out$data[[1]]$output_annual_tile
-biomee_p_model_output_annual_cohorts <- out$data[[1]]$output_annual_cohorts
-```
-
-```{r simulate_biomee_p_model_run, include = FALSE}
-# TODO: get rid of this and always fully run the vignettes
-# fake output since model isn't run
-# saveRDS(out, "files/biomee_use.Rmd__biomee_p_model_output___out.RDS")
-out <- readRDS("files/biomee_use.Rmd__biomee_p_model_output___out.RDS")
 biomee_p_model_output_annual_tile <- out$data[[1]]$output_annual_tile
 biomee_p_model_output_annual_cohorts <- out$data[[1]]$output_annual_cohorts
 ```
@@ -157,12 +133,15 @@ biomee_p_model_output_annual_tile %>%
   theme_classic() +
   labs(x = "Year", y = "plantC")
 
-biomee_p_model_output_annual_cohorts %>% group_by(cohort,year) %>%
-  summarise(npp=sum(NPP*density/10000)) %>% mutate(cohort=as.factor(cohort)) %>%
-  ggplot(aes(x=cohort,y=npp,fill=year)) +
+biomee_p_model_output_annual_cohorts %>% 
+  group_by(cID,year) %>%
+  summarise(dbh = mean(DBH), 
+            npp_per_m2=sum(NPP*density/10000), .groups = "keep") %>% 
+  ggplot(aes(x=dbh,y=npp_per_m2,fill=as.factor(year))) +
   geom_bar(stat="identity") +
-  theme_classic()+labs(x = "Cohort", y = "NPP")
-
+  theme_classic()+labs(x = "Cohort DBH (cm)", y = "NPP (kg C m-2)", fill="Year") +
+  scale_fill_manual(values = c("grey50")) +
+  theme(legend.position = c(1.0,1.0), legend.justification = c(1.0,1.0))
 ```
 
 ## Calibrating model parameters
@@ -175,44 +154,47 @@ settings <- list(
   method = "GenSA",
   metric = cost_rmse_biomee,
   control = list(
-    maxit = 10
+    maxit = 10,
+    verbose = TRUE
   ),
   par = list(
-      phiRL = list(lower=0.5, upper=5, init=3.5),
-      LAI_light = list(lower=2, upper=5, init=3.5),
-      tf_base = list(lower=0.5, upper=1.5, init=1),
-      par_mort = list(lower=0.1, upper=2, init=1))
+      phiRL     = list(lower=0.5, upper=5,   init=3.5),
+      LAI_light = list(lower=2,   upper=8,   init=3.5),
+      tf_base   = list(lower=0.5, upper=1.5, init=1),
+      par_mort  = list(lower=0.005, upper=4,   init=0.5))
 )
 
 # Using BiomeEP (with P-model for photosynthesis)
-pars <- calib_sofun(
+pars_all <- calib_sofun(
   drivers = biomee_p_model_drivers,
   obs = biomee_validation,
   settings = settings
 )
+pars <- pars_all["par"]
 ```
 
 ```{r include = FALSE}
-# TODO: get rid of this and always fully run the vignettes
 # fake output since calibration isn't run
-# saveRDS(pars, "files/biomee_use.Rmd__biomee_p_model_output___pars.RDS")
-# pars <- readRDS("files/biomee_use.Rmd__biomee_p_model_output___pars.RDS")
+# saveRDS(pars_all, "files/biomee_use.Rmd__biomee_p_model_output___pars.RDS")
+# pars <- readRDS("files/biomee_use.Rmd__biomee_p_model_output___pars.RDS")["par"]
 pars <- list(
-  par = c(phiRL = 1.5597893,    #2.0492210,
-          LAI_light = 4.9657286,#4.5462360,
-          tf_base = 0.9885088,  #0.5006033,
-          par_mort = 0.1665635  #1.9317278)
+  par = c(phiRL     = 1.14732409800086,
+          LAI_light = 6.27111451155709,
+          tf_base   = 0.685873617014058,
+          par_mort  = 0.0889500145662122
 ))
 ```
 
 Using the calibrated parameter values, we can run again the BiomeE simulations.
-```{r eval = FALSE}
+```{r eval = TRUE}
 # replace parameter values by calibration output
 drivers <- biomee_p_model_drivers
 drivers$params_species[[1]]$phiRL[]  <- pars$par[1]
 drivers$params_species[[1]]$LAI_light[]  <- pars$par[2]
 drivers$params_tile[[1]]$tf_base <- pars$par[3]
 drivers$params_tile[[1]]$par_mort <- pars$par[4]
+
+drivers$params_siml[[1]]$spinupyears <- 600
 
 # run the model with new parameter values
 calibrated_out <- runread_biomee_f(
@@ -225,23 +207,25 @@ calibrated_out <- runread_biomee_f(
 biomee_p_model_calibratedOutput_annual_tile <- calibrated_out$data[[1]]$output_annual_tile
 ```
 
-```{r simulate_biomee_p_model_calibration, include = FALSE}
-# TODO: get rid of this and always fully run the vignettes
-# fake output since calibrated simulation isn't run
-# saveRDS(calibrated_out, "files/biomee_use.Rmd__biomee_p_model_output___calibrated_out.RDS")
-calibrated_out <- readRDS("files/biomee_use.Rmd__biomee_p_model_output___calibrated_out.RDS")
-biomee_p_model_calibratedOutput_annual_tile <- calibrated_out$data[[1]]$output_annual_tile
-```
-
 Finally, we can visually compare the two model runs. We plot the original model run in black and the run using the calibrated parameters in grey. The dashed line represents the validation data, i.e. the observed GPP and Biomass.
 ```{r fig.width=7}
 # unnest model output for our single site
+GPP_target <- biomee_validation$data[[1]] |> 
+  dplyr::filter(variables=="GPP") |> 
+  magrittr::extract2("targets_obs")
+plantC_target <- biomee_validation$data[[1]] |> 
+  dplyr::filter(variables=="Biomass") |> 
+  magrittr::extract2("targets_obs")
+
 ggplot() +
   geom_line(data = biomee_p_model_output_annual_tile,
             aes(x = year, y = GPP)) +
   geom_line(data = biomee_p_model_calibratedOutput_annual_tile,
             aes(x = year, y = GPP),
             color = "grey50") +
+  geom_hline(yintercept = GPP_target, 
+             linetype = "dashed",
+             color = "grey50") +
   theme_classic() + 
   labs(x = "Year", y = "GPP")
 
@@ -251,6 +235,79 @@ ggplot() +
   geom_line(data = biomee_p_model_calibratedOutput_annual_tile,
             aes(x = year, y = plantC),
             color = "grey50") +
+  geom_hline(yintercept = plantC_target, 
+             linetype = "dashed", 
+             color = "grey50") +
   theme_classic() + 
   labs(x = "Year", y = "plantC")
+```
+## Validating model output
+
+To ensure behavior of the calibrated model is as expected its output should be validated with different consistency checks. 
+One possible check is to ensure that it reached the expected steady state conditions and that no trend is present in total carbon.
+Note how the vegetation C pool reaches a steady state relatively fast, while the soil C pool takes more time:
+
+``` {r eval = TRUE, fig.width=7}
+library(patchwork)
+pl1 <- biomee_p_model_calibratedOutput_annual_tile %>%
+  ggplot(aes(x = year)) +
+  geom_line(aes(y = plantC+soilC, color = "total C", linetype = "total C")) +
+  geom_line(aes(y = soilC,        color = "soil C",  linetype = "soil C")) +
+  geom_line(aes(y = plantC,       color = "plant C", linetype = "plant C")) +
+  # geom_hline(yintercept = plantC_target, linetype = "solid", color = "grey50") +
+  theme_classic() +
+  scale_color_manual(values = c("total C"="black",
+                                "soil C" ="darkred",
+                                "plant C"="darkgreen")) +
+  scale_linetype_manual(values = c("total C"=3,
+                                   "soil C" =2,
+                                   "plant C"=1)) +
+  labs(x = "Year", y = "kg C m-2", linetype = NULL, color = NULL) + 
+  theme(legend.position = c(1,0.5), legend.justification = c(1,0.5))
+
+pl2 <- biomee_p_model_calibratedOutput_annual_tile %>%
+  ggplot(aes(x = year)) +
+  # geom_line(aes(y = NPP,          color = "plant: NPP", linetype = "plant: NPP")) +
+  geom_line(aes(y = GPP,          color = "plant: GPP",           linetype = "plant: GPP")) +
+  geom_line(aes(y = GPP-Rauto,    color = "plant: NPP=GPP-Rauto", linetype = "plant: NPP=GPP-Rauto")) +
+  geom_line(aes(y = Rh,           color = "soil: Rh",             linetype = "soil: Rh")) +
+  geom_line(aes(y = NPP-Rh,       color = "total: NEE=NPP-Rh",    linetype = "total: NEE=NPP-Rh")) +
+  # geom_hline(yintercept = GPP_target, linetype = "solid", color = "grey50") +
+  theme_classic() +
+  scale_color_manual(values = c("total: NEE=NPP-Rh"   ="black",
+                                "soil: Rh"           ="darkred",
+                                "plant: GPP"          ="darkgreen",
+                                "plant: NPP"          ="darkgreen",
+                                "plant: NPP=GPP-Rauto"="darkgreen")) +
+    scale_linetype_manual(values = c("total: NEE=NPP-Rh"   =3,
+                                     "soil: Rh"           =2,
+                                     "plant: GPP"          =1,
+                                     "plant: NPP"          =2,
+                                     "plant: NPP=GPP-Rauto"=2)) +
+  labs(x = "Year", y = "kg C m-2 yr-1", linetype = NULL, color = NULL) + 
+  theme(legend.position = c(1,0.5), legend.justification = c(1,0.5))
+pl1 / pl2 # patchwork
+```
+
+Note that for the carbon cycle the steady state assumption appears to be good. 
+However, for the nitrogen cycle we see that.
+If your analysis relies on nitrogen being in steady-state the spinupyears might need to be increased.
+
+``` {r eval = TRUE, fig.width=7}
+pl3 <- biomee_p_model_calibratedOutput_annual_tile %>%
+  ggplot(aes(x = year)) +
+  geom_line(aes(y = plantN+soilN, color = "total N", linetype = "total N")) +
+  geom_line(aes(y = soilN,        color = "soil N",  linetype = "soil N")) +
+  geom_line(aes(y = plantN,       color = "plant N", linetype = "plant N")) +
+  theme_classic() +
+  scale_color_manual(values = c("total N"="black",
+                                "soil N" ="darkred",
+                                "plant N"="darkgreen")) +
+  scale_linetype_manual(values = c("total N"=3,
+                                   "soil N" =2,
+                                   "plant N"=1)) +
+  labs(x = "Year", y = "kg N m-2", linetype = NULL, color = NULL) + 
+  theme(legend.position = c(1,0.5), legend.justification = c(1,0.5))
+
+pl3
 ```

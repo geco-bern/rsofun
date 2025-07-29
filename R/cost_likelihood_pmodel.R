@@ -6,7 +6,7 @@
 #' observed values and with standard deviation given as an input parameter 
 #' (calibratable).
 #' 
-#' @param par A vector of values for the parameters to be calibrated, including
+#' @param par A named vector of values for the parameters to be calibrated, including
 #' a subset of model parameters (described in \code{\link{runread_pmodel_f}}),
 #' in order, and error terms
 #' for each target variable (for example \code{'gpp_err'}), in the same order as
@@ -56,8 +56,10 @@
 #' # temperature dependence of kphio 
 #' # and example data
 #' cost_likelihood_pmodel(
-#'  par = c(0.05, -0.01, 1,     # model parameters
-#'          2),                # err_gpp
+#' par = c(kphio       = 0.05, 
+#'         kphio_par_a = -0.01, 
+#'         kphio_par_b = 1,     # model parameters
+#'         err_gpp     = 2),    # err_gpp
 #'  obs = p_model_validation,
 #'  drivers = p_model_drivers,
 #'  targets = c('gpp'),
@@ -82,6 +84,7 @@ cost_likelihood_pmodel <- function(
 ){
   # predefine variables for CRAN check compliance
   sitename <- data <- gpp_mod <- NULL
+  par <- unname(par) # reproduces previous behavior, when par was unnamed
   
   ## check input parameters
   if( (length(par) + length(par_fixed)) != (9 + length(targets)) ){
@@ -95,7 +98,7 @@ cost_likelihood_pmodel <- function(
                          'beta_unitcostratio', 'rd_to_vcmax', 
                          'tau_acclim', 'kc_jmax')
   
-  if(!is.null(par_fixed)){
+  if(!is.null(par_fixed) && length(par)>0){
     params_modl <- list()
     # complete with calibrated values
     i <- 1 # start counter
@@ -107,9 +110,12 @@ cost_likelihood_pmodel <- function(
         params_modl[[par_name]] <- par_fixed[[par_name]]  # use fixed par value
       }
     }
+  }else if(length(par)==0){                # no parameters calibrated
+    params_modl <- as.list(par_fixed[calib_param_names])
+    par <- par_fixed[grepl("err_",names(par_fixed))]
   }else{
     params_modl <- as.list(par[1:9])       # all parameters calibrated
-    names(params_modl) <- calib_param_names
+    names(params_modl) <- calib_param_names# TODO: problematic, since it assumes they are in the right order
   }
   
   ## run the model

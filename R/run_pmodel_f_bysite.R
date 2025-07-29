@@ -1,6 +1,6 @@
-#' Run P-model (R wrapper)
+#' Run P-model (time series)
 #' 
-#' Run P-model Fortran model on single site.
+#' Run P-model on a single site for a forcing time series.
 #'
 #' @param sitename Site name.
 #' @param params_siml Simulation parameters.
@@ -29,27 +29,31 @@
 #'   \item{\code{le}}{Latent heat flux (in J m\eqn{^{-2}} d\eqn{^{-1}}).}
 #'   \item{\code{pet}}{Potential evapotranspiration (PET), calculated by SPLASH following Priestly-Taylor (in mm d\eqn{^{-1}}).}
 #'   \item{\code{vcmax}}{Maximum rate of RuBisCO carboxylation 
-#'       (Vcmax) (in mol C m\eqn{^{-2}} d\eqn{^{-1}}).}
+#'       (Vcmax) (in mol C m\eqn{^{-2}} s\eqn{^{-1}}).}
 #'   \item{\code{jmax}}{Maximum rate of electron transport for RuBP regeneration
 #'       (in mol CO\eqn{_2} m\eqn{^{-2}} s\eqn{^{-1}}).}
 #'   \item{\code{vcmax25}}{Maximum rate of carboxylation (Vcmax), 
-#'       normalised to 25\eqn{^o}C (in mol C m\eqn{^{-2}} d\eqn{^{-1}}).}
+#'       normalised to 25\eqn{^o}C (in mol C m\eqn{^{-2}} s\eqn{^{-1}}).} 
 #'   \item{\code{jmax25}}{Maximum rate of electron transport, normalised to 
 #'       25\eqn{^o}C (in mol C m\eqn{^{-2}} s\eqn{^{-1}}).}
 #'   \item{\code{gs_accl}}{Acclimated stomatal conductance (in 
-#'       mol C m\eqn{^{-2}} d\eqn{^{-1}} Pa\eqn{^{-1}}).}
+#'       mol C (mol photons)\eqn{^{-1}} Pa\eqn{^{-1}}. (Multiply by 
+#'       ppfd (mol photons m\eqn{^{-2}} d\eqn{^{-1}}) and fapar 
+#'       to express per unit ground area and time.)}
 #'   \item{\code{wscal}}{Relative soil water content, between 0 (permanent wilting 
 #'       point, PWP) and 1 (field capacity, FC).}
 #'   \item{\code{chi}}{Ratio of leaf-internal to ambient CO\eqn{_{2}}, ci:ca (unitless).}
-#'   \item{\code{iwue}}{Intrinsic water use efficiency (iWUE) (in Pa).}
-#'   \item{\code{rd}}{Dark respiration (Rd) in gC m\eqn{^{-2}} d\eqn{^{-1}}.}
+#'   \item{\code{iwue}}{Intrinsic water use efficiency (iWUE) (unitless, 
+#'       multiply with patm (Pa) to get iWUE in Pa).}
+#'   \item{\code{rd}}{Dark respiration (Rd) in gC m\eqn{^{-2}} s\eqn{^{-1}}. 
+#'       (Multiply by 1/12 (mol C / gC) to convert to mol C m\eqn{^{-2}} s\eqn{^{-1}}.)}
 #'   \item{\code{tsoil}}{Soil temperature, in \eqn{^{o}}C.}
 #'   \item{\code{netrad}}{Net radiation, in W m\eqn{^{-2}}. WARNING: this is currently ignored as a model forcing. Instead, net radiation is internally calculated by SPLASH.}
 #'   \item{\code{wcont}}{Soil water content, in mm.}
 #'   \item{\code{snow}}{Snow water equivalents, in mm.}
 #'   \item{\code{cond}}{Water input by condensation, in mm d\eqn{^{-1}}}
-#'   } 
-#'   
+#'   }
+#' 
 #' @details Depending on the input model parameters, it's possible to run the 
 #' different P-model setups presented in Stocker et al. 2020 GMD. The P-model
 #' version implemented in this package allows more flexibility than the one
@@ -121,7 +125,7 @@ run_pmodel_f_bysite <- function(
 ){
   
   # predefine variables for CRAN check compliance
-  ccov <- fsun <- . <- NULL
+  ccov <- fsun <- NULL
   
   # base state, always execute the call
   continue <- TRUE
@@ -254,6 +258,12 @@ run_pmodel_f_bysite <- function(
       continue <- FALSE
     }
     
+    if (nrow(forcing) %% ndayyear != 0){
+      # something weird more fundamentally -> don't run the model
+      warning(" Returning a dummy data frame. Forcing data does not
+              correspond to full years.")
+      continue <- FALSE
+    }
     # simulation parameters to check
     check_param <- c(
       "spinup",
@@ -268,10 +278,10 @@ run_pmodel_f_bysite <- function(
       "lgr4"
     )
     
-    parameter_integrity <- lapply(check_param, function(check_var){
-      if (any(is.nanull(params_siml[check_var]))){
+    parameter_integrity <- lapply(check_param, function(check_par){
+      if (any(is.nanull(params_siml[check_par]))){
         warning(sprintf("Error: Missing value in %s for %s",
-                        check_var, sitename))
+                        check_par, sitename))
         return(FALSE)
       } else {
         return(TRUE)
@@ -281,19 +291,12 @@ run_pmodel_f_bysite <- function(
     if (suppressWarnings(!all(parameter_integrity))){
       continue <- FALSE
     }
-    
-    if (nrow(forcing) %% ndayyear != 0){
-      # something weird more fundamentally -> don't run the model
-      warning(" Returning a dummy data frame. Forcing data does not
-              correspond to full years.")
-      continue <- FALSE
-    }
-    
+
     # model parameters to check
-    if( sum( names(params_modl) %in% c('kphio', 'kphio_par_a', 'kphio_par_b',
-                                       'soilm_thetastar', 'soilm_betao',
-                                       'beta_unitcostratio', 'rd_to_vcmax', 
-                                       'tau_acclim', 'kc_jmax')
+    if ( sum( names(params_modl) %in% c('kphio', 'kphio_par_a', 'kphio_par_b',
+                                        'soilm_thetastar', 'soilm_betao',
+                                        'beta_unitcostratio', 'rd_to_vcmax', 
+                                        'tau_acclim', 'kc_jmax')
     ) != 9){
       warning(" Returning a dummy data frame. Incorrect model parameters.")
       continue <- FALSE
@@ -310,29 +313,25 @@ run_pmodel_f_bysite <- function(
     in_netrad <- FALSE  # net radiation is currently ignored as a model forcing, but is internally simulated by SPLASH.
     
     # Check if fsun is available
-    if(! (in_ppfd & in_netrad)){
+    if (! (in_ppfd & in_netrad)){
       # fsun must be available when one of ppfd or netrad is missing
-      if(any(is.na(forcing$fsun))) continue <- FALSE
+      if (any(is.na(forcing$fsun))) continue <- FALSE
     }
   }
   
-  if(continue){
-    
-    
+  if (continue){
     ## C wrapper call
-    out <- .Call(
-      
+    pmodelout <- .Call(
       'pmodel_f_C',
-      
+      secs_per_tstep            = as.integer(secs_per_tstep),
+      in_ppfd                   = as.logical(in_ppfd),
+      in_netrad                 = as.logical(in_netrad),
       ## Simulation parameters
       spinup                    = as.logical(params_siml$spinup),
       spinupyears               = as.integer(params_siml$spinupyears),
       recycle                   = as.integer(params_siml$recycle),
       firstyeartrend            = as.integer(params_siml$firstyeartrend),
       nyeartrend                = as.integer(params_siml$nyeartrend),
-      secs_per_tstep            = as.integer(secs_per_tstep),
-      in_ppfd                   = as.logical(in_ppfd),
-      in_netrad                 = as.logical(in_netrad),
       outdt                     = as.integer(params_siml$outdt),
       ltre                      = as.logical(params_siml$ltre),
       ltne                      = as.logical(params_siml$ltne),
@@ -345,7 +344,6 @@ run_pmodel_f_bysite <- function(
       latitude                  = as.numeric(site_info$lat),
       altitude                  = as.numeric(site_info$elv),
       whc                       = as.numeric(site_info$whc),
-      tc_home                   = as.numeric(site_info$tc_home),
       n                         = as.integer(nrow(forcing)), # number of rows in matrix (pre-allocation of memory)
       par                       = c(as.numeric(params_modl$kphio), # model parameters as vector in order
                                     as.numeric(params_modl$kphio_par_a),
@@ -358,66 +356,168 @@ run_pmodel_f_bysite <- function(
                                     as.numeric(params_modl$kc_jmax)),
       forcing                   = as.matrix(forcing)
     )
-    
-    # Prepare output to be a nice looking tidy data frame (tibble)
-    ddf <- init_dates_dataframe(
-      yrstart = params_siml$firstyeartrend,
-      yrend = params_siml$firstyeartrend + params_siml$nyeartrend - 1,
-      noleap = TRUE)
-    
-    out <- out %>%
-      as.matrix() %>% 
-      as.data.frame() %>% 
-      stats::setNames(
-        c("fapar", 
-          "gpp", 
-          "aet", 
-          "le", 
-          "pet", 
-          "vcmax",
-          "jmax", 
-          "vcmax25", 
-          "jmax25", 
-          "gs_accl", 
-          "wscal", 
-          "chi", 
-          "iwue", 
-          "rd",
-          "tsoil", 
-          "netrad", 
-          "wcont", 
-          "snow",
-          "cond")
-      ) %>%
-      as_tibble(.name_repair = "check_unique") %>%
-      dplyr::bind_cols(ddf,.)
-    
   } else {
-    out <- tibble(date = as.Date("2000-01-01"),
-                  fapar = NA, 
-                  gpp = NA, 
-                  transp = NA, 
-                  latenth = NA, 
-                  pet = NA, 
-                  vcmax = NA, 
-                  jmax = NA, 
-                  vcmax25 = NA, 
-                  jmax25 = NA, 
-                  gs_accl = NA, 
-                  wscal = NA, 
-                  chi = NA, 
-                  iwue = NA, 
-                  rd = NA, 
-                  tsoil = NA, 
-                  netrad = NA,
-                  wcont = NA, 
-                  snow = NA,
-                  cond = NA)
+    pmodelout <- array(dim = c(1,19), data = NA_real_)
+  }
+
+  out <- build_out_pmodel(pmodelout, params_siml$firstyeartrend, params_siml$nyeartrend)
+
+  return(out)
+}
+
+
+# Build R output
+build_out_pmodel <- function(pmodelout, firstyeartrend, nyeartrend){
+  # predefine variables for CRAN check compliance
+  . <- NULL
+
+  # Prepare output to be a nice looking tidy data frame (tibble)
+  ddf <- init_dates_dataframe(
+    yrstart = firstyeartrend,
+    yrend = firstyeartrend + nyeartrend - 1,
+    noleap = TRUE)
+  
+  out <- pmodelout %>%
+    as.matrix() %>% 
+    as.data.frame() %>% 
+    stats::setNames(
+      c("fapar", 
+        "gpp", 
+        "aet", 
+        "le", 
+        "pet", 
+        "vcmax",
+        "jmax", 
+        "vcmax25", 
+        "jmax25", 
+        "gs_accl", 
+        "wscal", 
+        "chi", 
+        "iwue", 
+        "rd",
+        "tsoil", 
+        "netrad", 
+        "wcont", 
+        "snow",
+        "cond")
+    ) %>%
+    as_tibble(.name_repair = "check_unique") %>%
+    dplyr::bind_cols(ddf, .)
+  
+  if (all(is.na(pmodelout))){
+    # return single row output
+    out <- out[1,]
+    out$date <- as.Date("2000-01-01")
+    out$year_dec <- 2000.000
+  } else {
+    # return full output
   }
   
   return(out)
-  
 }
+
+#' Initialises a tibble with dates
+#'
+#' Creates a tibble with rows for each date from \code{'yrstart'} to \code{'yrend'}
+#' in \code{'yyyy-mm-dd'} format. Intervals of dates are specified by argument 
+#'\code{'freq'}. 
+#'  ddf <- init_dates_dataframe(2000, 2003, startmoy=1, startdoy=1,
+#'                              freq="days", endmoy=12, enddom=31, noleap=FALSE)
+#'
+#' @param yrstart An integer defining the start year
+#'  of dates covered by the dataframe.
+#' @param yrend An integer defining the end year of dates
+#'  covered by the dataframe.
+#' @param startmoy An integer defining the start month-of-year of dates
+#'  covered by the dataframe. Defaults to 1.
+#' @param startdoy An integer defining the start day-of-year of
+#'  dates covered by the dataframe. Defaults to 1.
+#' @param freq A character string specifying the time steps of dates
+#'  (in rows). Defaults to \code{"days"}. Any of \code{"days", "months", "years"}. If
+#'  \code{freq = "months"} the 15\eqn{^{th}} day of the months is used as date,
+#'  and if \code{freq = "years"} the 1\eqn{^{st}} of January of each year is returned.
+#' @param endmoy An integer defining the end month-of-year of dates covered
+#'  by the dataframe. Defaults to 12.
+#' @param enddom An integer defining the end day-of-year of dates
+#'  covered by the dataframe. Defaults to 31.
+#' @param noleap Whether leap years are ignored, that is, whether the 29\eqn{^{th}} 
+#' of February is removed. Defaults to \code{FALSE}.
+#' 
+#' @return A tibble with dates.
+#'
+
+init_dates_dataframe <- function(
+    yrstart,
+    yrend,
+    startmoy=1,
+    startdoy=1,
+    freq="days",
+    endmoy=12,
+    enddom=31,
+    noleap=FALSE ){
+  
+  if (freq=="days"){
+    
+    start_date <- as.Date(
+      sprintf("%04d-%02d-01",
+              yrstart, startmoy)) + (startdoy - 1)
+    
+    end_date   <- as.Date(
+      sprintf("%04d-%02d-%02d",
+              yrend, endmoy, enddom))
+    
+  } else if (freq=="months"){
+    
+    start_date <- as.Date(
+      sprintf("%04d-%02d-15",
+              yrstart, startmoy))
+    
+    end_date   <- as.Date(
+      sprintf("%04d-%02d-15",
+              yrend, endmoy))
+    
+  } else if (freq=="years"){
+    
+    start_date <- as.Date(
+      sprintf("%04d-%02d-01",
+              yrstart, 1))
+    
+    end_date   <- as.Date(
+      sprintf("%04d-%02d-01",
+              yrend, 7))    
+  }
+  
+  # define date range
+  date_range <- data.frame(
+    date = seq.Date(
+      from = start_date,
+      to = end_date,
+      by = freq
+    ))
+  
+  # convert to decimal date
+  numeric_year <- function(x){
+    y <- as.numeric(format(x, format="%Y"))
+    doy <- as.numeric(format(x, format="%j")) - 1
+    
+    ifelse(y %% 4 == 0, 
+          round(y + doy/366, 3), 
+          round(y + doy/365, 3)
+    )
+  }
+  date_range$year_dec <- numeric_year(date_range$date)
+  
+  # leap year filter
+  if (noleap) {
+    date_range <- dplyr::filter(date_range,
+                                !(format(date, "%m-%d") == "02-29")
+    )
+    
+  }
+  
+  return(date_range)
+}
+
 
 .onUnload <- function(libpath) {
   library.dynam.unload("rsofun", libpath)
