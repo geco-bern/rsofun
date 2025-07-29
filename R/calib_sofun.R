@@ -186,7 +186,7 @@ calib_sofun <- function(
         )
       },
     prior = priors,
-    names = names(settings$par) # alternatively use rownames(pars)
+    names = rownames(pars)
     )    
     
     # set bt control parameters

@@ -61,8 +61,9 @@ test_that("test likelihood/RMSE calculations with pmodel", {
   
   
   # Test rsofun::cost_likelihood_pmodel()
-  # TODO: activate more difficult check to ignore unneded error parameter ll_values_with_unneeded_err_vcmax25 <- apply(test_params_pmodel, 1, function(par_v) {...})
   ll_values <- apply(test_params_pmodel |> dplyr::select(-err_vcmax25), 1, function(par_v) { # par_v is a named vector
+    # TODO: when rewriting cost_likelihood_pmodel: activate more difficult check to ignore unneded error parameter 'err_vcmax25'
+    #       ll_values <- apply(test_params_pmodel, 1, function(par_v) {...})
     rsofun::cost_likelihood_pmodel(     # likelihood cost function from package
       par = par_v,                      # par: should be a named vector
       obs = rsofun::p_model_validation, # obs: example data from package
@@ -95,8 +96,9 @@ test_that("test likelihood/RMSE calculations with pmodel", {
   )
   
   # Also test vcmax25 target and multi-target loglikelihoods:
-  # ll_values2 <- apply(test_params_pmodel, 1, function(par_v) { # par_v is a named vector # TODO: activate this check to ignore unneded error parameter
   ll_values2 <- apply(dplyr::select(test_params_pmodel, -err_gpp), 1, function(par_v) { # par_v is a named vector
+    # TODO: when rewriting cost_likelihood_pmodel: activate more difficult check to ignore unneded error parameter 'err_gpp'
+    #       ll_values2 <- apply(test_params_pmodel, 1, function(par_v) {...})
     rsofun::cost_likelihood_pmodel(         # likelihood cost function from package
       par     = par_v,                      # par: should be a named vector
       obs     = p_model_validation_vcmax25, # obs: example data from package
@@ -110,6 +112,7 @@ test_that("test likelihood/RMSE calculations with pmodel", {
       drivers = rbind(p_model_drivers, p_model_drivers_vcmax25),       # drivers: example data from package
       targets = c('gpp', 'vcmax25'))
   })
+  
   testthat::expect_equal(ll_values3, ll_values + ll_values2) # loglikelihood of multiple targets is additive
   testthat::expect_equal(
     tolerance = 0.5, #tolerance = 1e-4,

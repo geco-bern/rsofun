@@ -55,7 +55,7 @@ cost_likelihood_biomee <- function(
   # predefine variables for CRAN check compliance
   GPP <- LAI <- Density12 <- plantC <- NULL
   
-  par <- unname(par) # ensure this is as before the change to named parameters
+  par <- unname(par) # reproduces previous behavior, when par was unnamed
   # Add changed model parameters to drivers, overwriting where necessary.
   drivers$params_species[[1]]$phiRL[]  <- par[1]
   drivers$params_species[[1]]$LAI_light[]  <- par[2]

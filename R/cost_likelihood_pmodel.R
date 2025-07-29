@@ -84,7 +84,7 @@ cost_likelihood_pmodel <- function(
 ){
   # predefine variables for CRAN check compliance
   sitename <- data <- gpp_mod <- NULL
-  par <- unname(par) # ensure this is as before the change to named parameters
+  par <- unname(par) # reproduces previous behavior, when par was unnamed
   
   ## check input parameters
   if( (length(par) + length(par_fixed)) != (9 + length(targets)) ){
