@@ -8,11 +8,14 @@ calib_sofun(drivers, obs, settings, optim_out = TRUE, ...)
 }
 \arguments{
 \item{drivers}{A data frame with driver data. See \code{\link{p_model_drivers}}
-for a description of the data structure.}
+for a description of the data structure. Additional columns can optionally be 
+provided to \code{drivers} to control e.g. the processing within a 
+personalized cost function.}
 
 \item{obs}{A data frame containing observational data used for model
 calibration. See \code{\link{p_model_validation}} for a description of the data
-structure.}
+structure. Additional columns can optionally be provided to \code{obs} to 
+control e.g. the processing within a personalized cost function.}
 
 \item{settings}{A list containing model calibration settings. 
 See the 'P-model usage' vignette for more information and examples.
@@ -39,9 +42,7 @@ See the 'P-model usage' vignette for more information and examples.
 \item{optim_out}{A logical indicating whether the function returns the raw
 output of the optimization functions (defaults to TRUE).}
 
-\item{...}{Optional arguments passed on to the cost function specified as
-\code{settings$metric}. 
-.}
+\item{...}{Optional arguments, simply passed on to the cost function.}
 }
 \value{
 A named list containing the calibrated parameter vector `par` and

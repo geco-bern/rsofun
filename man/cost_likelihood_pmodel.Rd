@@ -16,7 +16,7 @@ cost_likelihood_pmodel(
 )
 }
 \arguments{
-\item{par}{A vector of values for the parameters to be calibrated, including
+\item{par}{A named vector of values for the parameters to be calibrated, including
 a subset of model parameters (described in \code{\link{runread_pmodel_f}}),
 in order, and error terms
 for each target variable (for example \code{'gpp_err'}), in the same order as

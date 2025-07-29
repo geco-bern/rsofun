@@ -4,14 +4,13 @@
 #' calibration of SOFUN model parameters. 
 #' 
 #' @param drivers A data frame with driver data. See \code{\link{p_model_drivers}}
-#' for a description of the data structure. Within \code{calib_sofun}, additional 
-#' columns can optionally be added to \code{drivers} to control e.g. the 
-#' processing within a personalized cost function.
+#' for a description of the data structure. Additional columns can optionally be 
+#' provided to \code{drivers} to control e.g. the processing within a 
+#' personalized cost function.
 #' @param obs A data frame containing observational data used for model
 #'  calibration. See \code{\link{p_model_validation}} for a description of the data
-#'  structure. Within \code{calib_sofun}, additional columns can optionally be 
-#'  added to \code{obs} to control e.g. the processing within a personalized cost 
-#'  function.
+#'  structure. Additional columns can optionally be provided to \code{obs} to 
+#'  control e.g. the processing within a personalized cost function.
 #' @param settings A list containing model calibration settings. 
 #'  See the 'P-model usage' vignette for more information and examples.
 #'  \describe{
@@ -35,8 +34,8 @@
 #'  }
 #' @param optim_out A logical indicating whether the function returns the raw
 #'  output of the optimization functions (defaults to TRUE).
-#' @param ... Optional arguments passed on to the cost function. 
-#'  . 
+#' @param ... Optional arguments, simply passed on to the cost function. 
+#' 
 #' @return A named list containing the calibrated parameter vector `par` and
 #' the output object from the optimization `mod`. For more details on this
 #' output and how to evaluate it, see \link[BayesianTools:runMCMC]{runMCMC} (also

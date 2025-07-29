@@ -7,7 +7,7 @@
 cost_likelihood_biomee(par, obs, drivers, targets)
 }
 \arguments{
-\item{par}{A vector containing parameter values for \code{'phiRL',
+\item{par}{A named vector containing parameter values for \code{'phiRL',
 'LAI_light', 'tf_base', 'par_mort'} in that order, and for the error terms
 corresponding to the target variables, e.g. \code{'err_GPP'} if GPP is a target. 
 Make sure that
