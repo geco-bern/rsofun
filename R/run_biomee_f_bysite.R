@@ -16,6 +16,8 @@
 #' @param luc_forcing An array of land use change (LUC) used during transient phase.
 #'
 #' For further specifications of above inputs and examples see \code{\link{biomee_gs_leuning_drivers}}, \code{\link{biomee_p_model_drivers}}, or \code{\link{biomee_p_model_luluc_drivers}}.
+
+#' @import lubridate 
 #' 
 #' @returns A data.frame with columns containing model output for each land unit (LU). 
 #' See examples \code{\link{biomee_gs_leuning_output}}, \code{\link{biomee_p_model_output}}, or \code{\link{biomee_p_model_luluc_output}}. 
