@@ -911,32 +911,25 @@ contains
 
     ! Local variables
     real :: tc_ref, tk_ref, tk_leaf, dent, fva, fvb
-    real :: Ha, Hd, numerator, denominator
+    real :: Ha, Hd
 
     ! Output variable
     real :: fv
 
     ! Constants (defined here or globally)
-    ! kR                ! kR is universal gas constant (J/mol/K)
-    tc_ref = 25.0       ! reference temperature (deg C)
-    Ha = (42.6 + 1.14 * tc_growth) * 1.0e3  ! convert from kJ to J/mol
-    Hd = 200000.0       ! deactivation energy (J/mol)
+    Ha = (42.6 + 1.14 * tc_growth) * 1.0e3  ! activation energy (J/mol)
+    Hd = 200000.0                           ! deactivation energy (J/mol)
+    ! kR                                    ! kR is universal gas constant (J/mol/K)
+    tc_ref = 25.0                           ! reference temperature (deg C)
     
-    ! Convert Celsius temperatures to Kelvin
-    tk_ref  = tc_ref  + 273.15
-    tk_leaf = tc_leaf + 273.15
+    tk_ref  = tc_ref  + 273.15 ! to Kelvin
+    tk_leaf = tc_leaf + 273.15 ! to Kelvin
     
     ! Calculate Ha ("Ea") and Delta S based on Kumarathunge et al. (2019) for Vcmax
     dent = 645.13 - 0.38 * tc_growth      ! J/mol/K
-
-    ! Calculate numerator and denominator for thermal inhibition
-    numerator   = 1.0 + exp((tk_ref  * dent - Hd) / (tk_ref  * kR))
-    denominator = 1.0 + exp((tk_leaf * dent - Hd) / (tk_leaf * kR))
-
-    ! Final temperature response factor kt using Arrhenius function
-     fva = calc_ftemp_arrhenius(tk_leaf, Ha) 
-     fvb = numerator / denominator
-     fv  = fva * fvb
+    fva = calc_ftemp_arrhenius( tk_leaf, Ha, tk_ref ) 
+    fvb = ( 1.0 + exp((tk_ref * dent - Hd)/(kR * tk_ref)) ) / ( 1.0 + exp((tk_leaf * dent - Hd)/(kR * tk_leaf)) )
+    fv  = fva * fvb
 
   end function calc_ftemp_inst_vcmax
 
@@ -963,29 +956,22 @@ contains
 
     ! Local variables
     real :: tc_ref, tk_ref, tk_leaf, dent, fva, fvb
-    real :: Hd, Ha, numerator, denominator
+    real :: Hd, Ha
 
     ! Constants (defined here or globally)
-    ! kR                ! kR is universal gas constant (J/mol/K)
-    tc_ref = 25.0       ! reference temperature (deg C)
-    Ha = 40.71 * 1.0e3  ! J/mol (constant activation energy for Jmax)
-    Hd = 200000.0       ! deactivation energy (J/mol)
-
-    ! Convert Celsius temperatures to Kelvin
-    tk_ref  = tc_ref  + 273.15
-    tk_leaf = tc_leaf + 273.15
+    Ha = 40710.0   ! J/mol (constant activation energy for Jmax)
+    Hd = 200000.0  ! deactivation energy (J/mol)
+    ! kR           ! kR is universal gas constant (J/mol/K)
+    tc_ref = 25.0  ! reference temperature (deg C)
+    
+    tk_ref  = tc_ref  + 273.15 ! to Kelvin
+    tk_leaf = tc_leaf + 273.15 ! to Kelvin
     
     ! Calculate Ha ("Ea") and Delta S based on Kumarathunge et al. (2019) for Jmax
     dent = 658.77 - 0.84 * tc_home - 0.52 * (tc_growth - tc_home)  ! J/mol/K
-    
-    ! Calculate numerator and denominator for thermal inhibition
-    numerator   = 1.0 + exp((tk_ref  * dent - Hd) / (tk_ref  * kR))
-    denominator = 1.0 + exp((tk_leaf * dent - Hd) / (tk_leaf * kR))
-
-    ! Final temperature response factor kt using Arrhenius function
-     fva = calc_ftemp_arrhenius(tk_leaf, Ha) 
-     fvb = numerator / denominator
-     fv  = fva * fvb
+    fva = calc_ftemp_arrhenius( tk_leaf, Ha, tk_ref ) 
+    fvb = ( 1.0 + exp((tk_ref * dent - Hd)/(kR * tk_ref)) ) / ( 1.0 + exp((tk_leaf * dent - Hd)/(kR * tk_leaf)) )
+    fv  = fva * fvb
 
   end function calc_ftemp_inst_jmax
 
