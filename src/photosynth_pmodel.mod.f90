@@ -267,7 +267,7 @@ contains
       vcmax_star  = kphio * ppfd * out_optchi%mjoc * omega_star / (8.0 * theta)               ! Eq. 19
       
       ! calculated acclimated Vcmax at prevailing growth temperatures
-      ftemp_inst_vcmax = calc_ftemp_inst_vcmax(tc, tc, tc_home)
+      ftemp_inst_vcmax = calc_ftemp_inst_vcmax(tc, tc)
       vcmax = vcmax_star * ftemp_inst_vcmax   ! Eq. 20
       
       ! calculate Jmax
@@ -303,7 +303,7 @@ contains
     ! Corrolary preditions (This is prelimirary!)
     !-----------------------------------------------------------------------
     ! Vcmax25 (vcmax normalized to 25 deg C)
-    ftemp_inst_vcmax  = calc_ftemp_inst_vcmax(tc, tc, tc_home)
+    ftemp_inst_vcmax  = calc_ftemp_inst_vcmax(tc, tc)
     vcmax25  = vcmax / ftemp_inst_vcmax
 
     ! ! Dark respiration at growth temperature
@@ -892,7 +892,7 @@ contains
   end function calc_ftemp_inst_rd
 
 
-  function calc_ftemp_inst_vcmax( tc_leaf, tc_growth, tc_home ) result( fv )
+  function calc_ftemp_inst_vcmax( tc_leaf, tc_growth ) result( fv )
     !-----------------------------------------------------------------------
     ! Calculates the instantaneous temperature response factor for Vcmax.
     ! Based on Kumarathunge et al., 2019 (Eq. 7).
@@ -907,31 +907,34 @@ contains
     !-----------------------------------------------------------------------
 
     ! Function arguments
-    real, intent(in) :: tc_leaf, tc_growth, tc_home
+    real, intent(in) :: tc_leaf, tc_growth
 
     ! Local variables
-    real :: tk, ea, hd, deltas, kR, numerator, denominator, fva, fvb
+    real :: tc_ref, tk_ref, tk_leaf, dent, fva, fvb
+    real :: Ha, Hd, numerator, denominator
 
     ! Output variable
     real :: fv
 
-    ! Constants
-    kR   = 8.314          ! universal gas constant (J/mol/K), Allen (1973)
-    hd   = 200000.0       ! deactivation energy (J/mol)
-
+    ! Constants (defined here or globally)
+    ! kR                ! kR is universal gas constant (J/mol/K)
+    tc_ref = 25.0       ! reference temperature (deg C)
+    Ha = (42.6 + 1.14 * tc_growth) * 1.0e3  ! convert from kJ to J/mol
+    Hd = 200000.0       ! deactivation energy (J/mol)
+    
     ! Convert Celsius temperatures to Kelvin
-    tk = tc_leaf + 273.15
-
-    ! Calculate Ea and Delta S based on Kumarathunge et al. (2019) for Vcmax
-    ea = (42.6 + 1.14 * tc_growth) * 1.0e3  ! convert from kJ to J/mol
-    deltas = 645.13 - 0.38 * tc_growth      ! J/mol/K
+    tk_ref  = tc_ref  + 273.15
+    tk_leaf = tc_leaf + 273.15
+    
+    ! Calculate Ha ("Ea") and Delta S based on Kumarathunge et al. (2019) for Vcmax
+    dent = 645.13 - 0.38 * tc_growth      ! J/mol/K
 
     ! Calculate numerator and denominator for thermal inhibition
-    numerator   = 1.0 + exp((298.15 * deltas - hd) / (298.15 * kR))
-    denominator = 1.0 + exp((tk * deltas - hd) / (tk * kR))
+    numerator   = 1.0 + exp((tk_ref  * dent - Hd) / (tk_ref  * kR))
+    denominator = 1.0 + exp((tk_leaf * dent - Hd) / (tk_leaf * kR))
 
     ! Final temperature response factor kt using Arrhenius function
-     fva = calc_ftemp_arrhenius(tk, ea) 
+     fva = calc_ftemp_arrhenius(tk_leaf, Ha) 
      fvb = numerator / denominator
      fv  = fva * fvb
 
@@ -955,29 +958,32 @@ contains
     ! Function arguments
     real, intent(in) :: tc_leaf, tc_growth, tc_home
 
-    ! Local variables
-    real :: tk, ea, hd, deltas, kR, numerator, denominator, fva, fvb
-
     ! Output variable
     real :: fv
 
-    ! Constants
-    kR   = 8.314          ! universal gas constant (J/mol/K), Allen (1973)
-    hd   = 200000.0       ! deactivation energy (J/mol)
+    ! Local variables
+    real :: tc_ref, tk_ref, tk_leaf, dent, fva, fvb
+    real :: Hd, Ha, numerator, denominator
+
+    ! Constants (defined here or globally)
+    ! kR                ! kR is universal gas constant (J/mol/K)
+    tc_ref = 25.0       ! reference temperature (deg C)
+    Ha = 40.71 * 1.0e3  ! J/mol (constant activation energy for Jmax)
+    Hd = 200000.0       ! deactivation energy (J/mol)
 
     ! Convert Celsius temperatures to Kelvin
-    tk = tc_leaf + 273.15
-
-    ! Calculate Ea and Delta S based on Kumarathunge et al. (2019) for Jmax
-    ea = 40.71 * 1.0e3                                           ! J/mol (constant activation energy for Jmax)
-    deltas = 658.77 - 0.84 * tc_home - 0.52 * (tc_growth - tc_home)  ! J/mol/K
-
+    tk_ref  = tc_ref  + 273.15
+    tk_leaf = tc_leaf + 273.15
+    
+    ! Calculate Ha ("Ea") and Delta S based on Kumarathunge et al. (2019) for Jmax
+    dent = 658.77 - 0.84 * tc_home - 0.52 * (tc_growth - tc_home)  ! J/mol/K
+    
     ! Calculate numerator and denominator for thermal inhibition
-    numerator   = 1.0 + exp((298.15 * deltas - hd) / (298.15 * kR))
-    denominator = 1.0 + exp((tk * deltas - hd) / (tk * kR))
+    numerator   = 1.0 + exp((tk_ref  * dent - Hd) / (tk_ref  * kR))
+    denominator = 1.0 + exp((tk_leaf * dent - Hd) / (tk_leaf * kR))
 
     ! Final temperature response factor kt using Arrhenius function
-     fva = calc_ftemp_arrhenius(tk, ea) 
+     fva = calc_ftemp_arrhenius(tk_leaf, Ha) 
      fvb = numerator / denominator
      fv  = fva * fvb
 
@@ -986,38 +992,33 @@ contains
 
   function calc_ftemp_arrhenius( tk, dha, tkref ) result( ftemp )
     !-----------------------------------------------------------------------
-    ! Computes the Arrhenius temperature response factor.
-    ! var(T) = ftemp * var(T_ref)
+    ! Calculates the factor to account for the temperature response following 
+    ! Arrhenius: 
     !
-    ! Arguments:
-    !   tk:    Temperature (K)
-    !   dha:   Activation energy (J mol⁻¹)
-    !   tkref: (Optional) Reference temperature (K). Defaults to 298.15 K (25°C)
+    !               var(T) = ftemp * var(T=T_ref)
     !
-    ! Returns:
-    !   ftemp: Arrhenius temperature response factor (unitless)
+    ! T_ref is 25 deg C (=298.13 K) per default.
     !-----------------------------------------------------------------------
-    ! Arguments
-    real, intent(in) :: tk, dha
-    real, intent(in), optional :: tkref   ! Reference temperature (Kelvin)
+    ! arguments
+    real, intent(in) :: tk                 ! temperature (Kelvin)
+    real, intent(in) :: dha                ! activation energy (J/mol)
+    real, intent(in), optional :: tkref    ! reference temperature 
 
-    ! Local variables
-    real :: mytkref, kR
+    ! local variables
+    real :: mytkref                        ! reference temperature 
 
-    ! Output variable
+    ! function return variable
     real :: ftemp
 
-    ! Define constants
-    kR = 8.314      ! universal gas constant (J/mol/K), Allen (1973)
+    ! Constants (defined here or globally)
+    ! kR                ! kR is universal gas constant (J/mol/K)
 
-    ! Set reference temperature (default 298.15 K if not provided)
     if (present(tkref)) then
       mytkref = tkref
     else
       mytkref = 298.15
     end if
 
-    ! Calculate Arrhenius temperature response
     ftemp = exp( dha * (tk - mytkref) / (mytkref * kR * tk) )
 
   end function calc_ftemp_arrhenius

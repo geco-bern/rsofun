@@ -211,8 +211,7 @@ contains
       ! quantities with instantaneous temperature response
       tile_fluxes(lu)%plant(pft)%vcmax = calc_ftemp_inst_vcmax( &
           tc_leaf   = climate%dtemp, &
-          tc_growth = temp_memory, &
-          tc_home   = tc_home ) * out_pmodel%vcmax25
+          tc_growth = temp_memory) * out_pmodel%vcmax25
 
       tile_fluxes(lu)%plant(pft)%jmax = calc_ftemp_inst_jmax( &
           tc_leaf   = climate%dtemp, &
