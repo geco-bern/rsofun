@@ -4,10 +4,13 @@
 #' calibration of SOFUN model parameters. 
 #' 
 #' @param drivers A data frame with driver data. See \code{\link{p_model_drivers}}
-#' for a description of the data structure.
+#' for a description of the data structure. Additional columns can optionally be 
+#' provided to \code{drivers} to control e.g. the processing within a 
+#' personalized cost function.
 #' @param obs A data frame containing observational data used for model
 #'  calibration. See \code{\link{p_model_validation}} for a description of the data
-#'  structure.
+#'  structure. Additional columns can optionally be provided to \code{obs} to 
+#'  control e.g. the processing within a personalized cost function.
 #' @param settings A list containing model calibration settings. 
 #'  See the 'P-model usage' vignette for more information and examples.
 #'  \describe{
@@ -31,9 +34,8 @@
 #'  }
 #' @param optim_out A logical indicating whether the function returns the raw
 #'  output of the optimization functions (defaults to TRUE).
-#' @param ... Optional arguments passed on to the cost function specified as
-#'  \code{settings$metric}. 
-#'  . 
+#' @param ... Optional arguments, simply passed on to the cost function. 
+#' 
 #' @return A named list containing the calibrated parameter vector `par` and
 #' the output object from the optimization `mod`. For more details on this
 #' output and how to evaluate it, see \link[BayesianTools:runMCMC]{runMCMC} (also
@@ -41,6 +43,7 @@
 #' and \link[GenSA]{GenSA}.
 #' @export
 #' @importFrom magrittr %>%
+#' @importFrom stats setNames
 #' @import GenSA BayesianTools
 #' 
 #' @examples
@@ -153,12 +156,16 @@ calib_sofun <- function(
     }
     
     # reformat parameters
-    pars <- as.data.frame(do.call("rbind", settings$par), row.names = FALSE)
+    pars <- as.data.frame(do.call("rbind", settings$par)) 
+         # NOTE: This keeps parameters as row names. 
+         # This does not change anything to previous behavior.
+         # But this agrees better with the example data 
+         # `dput(BayesianTools::VSEMgetDefaults())`
     
     priors  <- BayesianTools::createUniformPrior(
-      unlist(pars$lower),
-      unlist(pars$upper),
-      unlist(pars$init)
+      lower = unlist(pars$lower),
+      upper = unlist(pars$upper),
+      best  = unlist(pars$init)
     )
     
     # setup the bayes run, no message forwarding is provided
@@ -168,14 +175,18 @@ calib_sofun <- function(
         do.call(
           "cost",
           list(
-            par = random_par,
+            par = setNames(random_par, rownames(pars)),
+            # NOTE: if we could make use of setup$names from within the cost
+            # function then we wouldn't need this closure (using `pars`), but it
+            # appears that BayesianTools does not pass the names into the
+            # likelihood.
             obs = obs,
             drivers = drivers
           )
         )
       },
     prior = priors,
-    names = names(settings$par)
+    names = rownames(pars)
     )    
     
     # set bt control parameters

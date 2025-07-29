@@ -56,7 +56,7 @@ We want to see how sensitive this function is to changes in the parameter values
 ```{r}
 # Define log-likelihood function
 ll_pmodel <- function(
-    par_v                 # a vector of all calibratable parameters including errors
+    par_v                 # a named vector of all calibratable parameters including errors
 ){
   rsofun::cost_likelihood_pmodel(        # reuse likelihood cost function
     par_v,
