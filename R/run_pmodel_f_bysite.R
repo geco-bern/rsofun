@@ -344,6 +344,7 @@ run_pmodel_f_bysite <- function(
       latitude                  = as.numeric(site_info$lat),
       altitude                  = as.numeric(site_info$elv),
       whc                       = as.numeric(site_info$whc),
+      tc_home                   = as.numeric(site_info$tc_home),
       n                         = as.integer(nrow(forcing)), # number of rows in matrix (pre-allocation of memory)
       par                       = c(as.numeric(params_modl$kphio), # model parameters as vector in order
                                     as.numeric(params_modl$kphio_par_a),
