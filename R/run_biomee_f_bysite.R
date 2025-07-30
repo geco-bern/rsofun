@@ -16,6 +16,8 @@
 #' @param luc_forcing An array of land use change (LUC) used during transient phase.
 #'
 #' For further specifications of above inputs and examples see \code{\link{biomee_gs_leuning_drivers}}, \code{\link{biomee_p_model_drivers}}, or \code{\link{biomee_p_model_luluc_drivers}}.
+
+#' @import lubridate 
 #' 
 #' @returns A data.frame with columns containing model output for each land unit (LU). 
 #' See examples \code{\link{biomee_gs_leuning_output}}, \code{\link{biomee_p_model_output}}, or \code{\link{biomee_p_model_luluc_output}}. 
@@ -231,6 +233,48 @@ run_biomee_f_bysite <- function(
   makecheck = TRUE
 ){
   ndayyear <- 365
+
+  # Default value for tc_home
+  if ("tc_home" %in% names(site_info)) {
+    stop("Unexpectedly received site_info$tc_home; it should be calculated internally.")
+  }
+
+  conditionally_add_tmax <- function(df){
+    need_to_add_tmax <- !("tmax" %in% colnames(df))
+    if (need_to_add_tmax) {
+      df %>% dplyr::group_by(.data$date) %>%
+        dplyr::summarise(daily_tmax = max(.data$temp, na.rm = TRUE)) %>%
+        dplyr::ungroup()
+    } else {
+      df %>% dplyr::rename(daily_tmax = "tmax")
+    }
+  }
+  tc_home <- forcing %>%
+    # conditionally add daily max temp (if needed, e.g. when running "gs_leuning" with hourly forcing)
+    conditionally_add_tmax() %>%
+    # add grouping variables:
+    mutate(month = lubridate::month(.data$date), year = lubridate::year(.data$date)) %>%
+    # monthly means of daily maximum:
+    group_by(.data$year, .data$month) %>%
+    summarise(monthly_avg_daily_tmax = mean(.data$daily_tmax, na.rm = TRUE), .groups = "drop") %>%
+    # warmest month of each year:
+    group_by(year) %>%
+    summarise(t_warmest_month = max(.data$monthly_avg_daily_tmax)) %>%
+    # mean of yearly warmest months:
+    ungroup() %>%
+    summarise(tc_home = mean(.data$t_warmest_month, na.rm = TRUE)) %>%
+    # extract scalar value
+    dplyr::pull(.data$tc_home)
+
+    site_info$tc_home <- tc_home     # TODO: rather in site_info or in params_tile?
+    # params_tile$tc_home <- tc_home # TODO: rather in site_info or in params_tile?
+    
+  # Validate calculation
+  if (is.na(site_info$tc_home) || length(site_info$tc_home) == 0) {
+    warning("Calculated tc_home is NA or missing; defaulting to 25C.")
+    site_info$tc_home <- 25
+  }
+
   # record number of years in forcing data
   # frame to use as default values (unless provided othrwise as params_siml$nyeartrend)
   forcing_years <- nrow(forcing)/(ndayyear * params_siml$steps_per_day)
@@ -548,7 +592,8 @@ prepare_site_info <- function(site_info){
   site_info <- site_info %>% select(
     "lon",
     "lat",
-    "elv"
+    "elv",
+    "tc_home"
   )
   return(site_info)
 }

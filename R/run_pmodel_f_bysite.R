@@ -15,6 +15,7 @@
 #' For further specifications of above inputs and examples see \code{\link{p_model_drivers}} or \code{\link{p_model_drivers_vcmax25}}
 
 #' @import dplyr
+#' @import lubridate
 #' 
 #' @returns Model output is provided as a tidy dataframe, with columns:
 #' \describe{
@@ -159,7 +160,46 @@ run_pmodel_f_bysite <- function(
   secs_per_tstep <- difftime(times[1], times[2], units = "secs") %>%
     as.integer() %>%
     abs()
-  
+
+  # Default value for tc_home
+  if ("tc_home" %in% names(site_info)) {
+    stop("Unexpectedly received site_info$tc_home; it should be calculated internally.")
+  }
+
+  conditionally_add_tmax <- function(df){
+    need_to_add_tmax <- !("tmax" %in% colnames(df))
+    if (need_to_add_tmax) {
+      df %>% dplyr::group_by(.data$date) %>%
+        dplyr::summarise(daily_tmax = max(.data$temp, na.rm = TRUE)) %>%
+        dplyr::ungroup()
+    } else {
+      df %>% dplyr::rename(daily_tmax = "tmax")
+    }
+  }
+  tc_home <- forcing %>%
+    # conditionally add daily max temp (if needed, e.g. when running "gs_leuning" with hourly forcing)
+    conditionally_add_tmax() %>%
+    # add grouping variables:
+    mutate(month = lubridate::month(.data$date), year = lubridate::year(.data$date)) %>%
+    # monthly means of daily maximum:
+    group_by(.data$year, .data$month) %>%
+    summarise(monthly_avg_daily_tmax = mean(.data$daily_tmax, na.rm = TRUE), .groups = "drop") %>%
+    # warmest month of each year:
+    group_by(year) %>%
+    summarise(t_warmest_month = max(.data$monthly_avg_daily_tmax)) %>%
+    # mean of yearly warmest months:
+    ungroup() %>%
+    summarise(tc_home = mean(.data$t_warmest_month, na.rm = TRUE)) %>%
+    # extract scalar value
+    dplyr::pull(.data$tc_home)
+
+    site_info$tc_home <- tc_home
+  # Validate calculation
+  if (is.na(site_info$tc_home) || length(site_info$tc_home) == 0) {
+    warning("Calculated tc_home is NA or missing; defaulting to 25C.")
+    site_info$tc_home <- 25
+  }
+
   # re-define units and naming of forcing dataframe
   # keep the order of columns - it's critical for Fortran (reading by column number)
   forcing_features <- c(
@@ -307,6 +347,7 @@ run_pmodel_f_bysite <- function(
       latitude                  = as.numeric(site_info$lat),
       altitude                  = as.numeric(site_info$elv),
       whc                       = as.numeric(site_info$whc),
+      tc_home                   = as.numeric(site_info$tc_home),
       n                         = as.integer(nrow(forcing)), # number of rows in matrix (pre-allocation of memory)
       par                       = c(as.numeric(params_modl$kphio), # model parameters as vector in order
                                     as.numeric(params_modl$kphio_par_a),

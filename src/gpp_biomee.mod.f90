@@ -68,7 +68,7 @@ contains
     integer :: i
     real   :: rad_top                                      ! downward radiation at the top of the canopy, W/m2
     real   :: rad_net                                      ! net radiation absorbed by the canopy, W/m2
-    real   :: TairC, TairK                                 ! air temperature, degC and degK
+    real   :: TairC, TairK                                 ! air temperature, deg C and deg K
     real   :: cana_q                                       ! specific humidity in canopy air space, kg/kg
     real   :: cana_co2                                     ! co2 concentration in canopy air space, mol CO2/mol dry air
     real   :: p_surf                                       ! surface pressure, Pa
@@ -240,6 +240,7 @@ contains
                                 tc             = vegn%dampended_forcing%temp, &
                                 vpd            = vegn%dampended_forcing%vpd, &
                                 patm           = vegn%dampended_forcing%patm, &
+                                tc_home        = inputs%site_info%tc_home, &
                                 c4             = .false., &
                                 method_optci   = "prentice14", &
                                 method_jmaxlim = "wang17" &
@@ -270,7 +271,7 @@ contains
 
     real,    intent(in)    :: rad_top ! PAR dn on top of the canopy, w/m2
     real,    intent(in)    :: rad_net ! PAR net on top of the canopy, w/m2
-    real,    intent(in)    :: tl   ! leaf temperature, degK
+    real,    intent(in)    :: tl   ! leaf temperature, K
     real,    intent(in)    :: ea   ! specific humidity in the canopy air, kg/kg
     real,    intent(in)    :: lai  ! leaf area index
     !real,    intent(in)    :: leaf_age ! age of leaf since budburst (deciduos), days
