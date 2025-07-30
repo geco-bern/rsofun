@@ -20,7 +20,7 @@ module md_interface_in_biomee
 
   !===== Number of parameters
   integer, public, parameter :: nvars_params_siml    = 11
-  integer, public, parameter :: nvars_site_info      = 3
+  integer, public, parameter :: nvars_site_info      = 4
   integer, public, parameter :: nvars_params_tile    = 19
   integer, public, parameter :: nvars_init_soil      = 4
   integer, public, parameter :: nvars_init_cohorts   = 9
@@ -411,7 +411,7 @@ contains
     self%lon     = real( site_info(1) )
     self%lat     = real( site_info(2) )
     self%elv     = real( site_info(3) )
-    !self%tc_home = real( site_info(4) )
+    self%tc_home = real( site_info(4) )
   end subroutine populate_site_info
   
   subroutine populate_spec_data(self, params_species)
