@@ -66,6 +66,7 @@ Imports:
     magrittr,
     GenSA,
     BayesianTools,
+    lubridate,
     multidplyr,
     stats,
     utils
