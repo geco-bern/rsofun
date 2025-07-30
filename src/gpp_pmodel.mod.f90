@@ -156,6 +156,7 @@ contains
                               method_optci   = "prentice14", &
                               method_jmaxlim = "wang17" &
                               )
+
       else
 
         ! PFT is not present 
