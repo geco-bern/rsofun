@@ -166,18 +166,19 @@ run_pmodel_f_bysite <- function(
     stop("Unexpectedly received site_info$tc_home; it should be calculated internally.")
   }
 
-  need_to_add_tmax <- !("tmax" %in% colnames(forcing))
+  conditionally_add_tmax <- function(df){
+    need_to_add_tmax <- !("tmax" %in% colnames(df))
+    if (need_to_add_tmax) {
+      df %>% dplyr::group_by(.data$date) %>%
+        dplyr::summarise(daily_tmax = max(.data$temp, na.rm = TRUE)) %>%
+        dplyr::ungroup()
+    } else {
+      df %>% dplyr::rename(daily_tmax = "tmax")
+    }
+  }
   tc_home <- forcing %>%
     # conditionally add daily max temp (if needed, e.g. when running "gs_leuning" with hourly forcing)
-    {
-      if (need_to_add_tmax) {
-        dplyr::group_by(.data$date) %>%
-          dplyr::summarise(daily_tmax = max(.data$temp, na.rm = TRUE)) %>%
-          dplyr::ungroup()
-      } else {
-        dplyr::rename(daily_tmax = "tmax")
-      }
-    } %>%
+    conditionally_add_tmax() %>%
     # add grouping variables:
     mutate(month = lubridate::month(.data$date), year = lubridate::year(.data$date)) %>%
     # monthly means of daily maximum:
