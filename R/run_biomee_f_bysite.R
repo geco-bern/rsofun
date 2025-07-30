@@ -232,12 +232,7 @@ run_biomee_f_bysite <- function(
   luc_forcing = NULL,
   makecheck = TRUE
 ){
-  
-  # predefine variables for CRAN check compliance
-  type <- NULL
-
-  # base state, always execute the call
-  continue <- TRUE
+  ndayyear <- 365
 
   # Default value for tc_home
   if ("tc_home" %in% names(site_info)) {
@@ -249,11 +244,11 @@ run_biomee_f_bysite <- function(
     # conditionally add daily max temp (if needed, e.g. when running "gs_leuning" with hourly forcing)
     {
       if (need_to_add_tmax) {
-        dplyr::group_by(., date) %>%
+        dplyr::group_by(.data$date) %>%
           dplyr::summarise(daily_tmax = max(.data$temp, na.rm = TRUE)) %>%
           dplyr::ungroup()
       } else {
-        dplyr::rename(., daily_tmax = tmax)
+        dplyr::rename(daily_tmax = "tmax")
       }
     } %>%
     # add grouping variables:
@@ -281,7 +276,6 @@ run_biomee_f_bysite <- function(
 
   # record number of years in forcing data
   # frame to use as default values (unless provided othrwise as params_siml$nyeartrend)
-  ndayyear <- 365
   forcing_years <- nrow(forcing)/(ndayyear * params_siml$steps_per_day)
 
   # Add default parameters (backward compatibility layer)

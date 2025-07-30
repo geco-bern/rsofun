@@ -91,7 +91,7 @@ contains
     logical, intent(in) :: c4        ! whether or not C4 photosynthesis pathway is followed. If .false., it's C3.
     character(len=*), intent(in) :: method_optci    ! Method used for deriving optimal ci:ca
     character(len=*), intent(in) :: method_jmaxlim  ! Method used for accounting for Jmax limitation
-    
+
     ! function return value
     type(outtype_pmodel) :: out_pmodel
 
@@ -265,9 +265,9 @@ contains
       
       ! calculate Vcmax-star, which corresponds to Vcmax at a reference temperature 'tc_home'
       vcmax_star  = kphio * ppfd * out_optchi%mjoc * omega_star / (8.0 * theta)               ! Eq. 19
-      
+
       ! calculated acclimated Vcmax at prevailing growth temperatures
-      ftemp_inst_vcmax = calc_ftemp_inst_vcmax(tc, tc)
+      ftemp_inst_vcmax = calc_ftemp_inst_vcmax( tc, tc )
       vcmax = vcmax_star * ftemp_inst_vcmax   ! Eq. 20
       
       ! calculate Jmax
@@ -895,7 +895,6 @@ contains
   function calc_ftemp_inst_vcmax( tc_leaf, tc_growth ) result( fv )
     !-----------------------------------------------------------------------
     ! Calculates the instantaneous temperature response factor for Vcmax.
-    ! Based on Kumarathunge et al., 2019 (Eq. 7).
     !
     ! Arguments:
     !   tc_leaf:    Instantaneous leaf temperature (°C)
@@ -904,10 +903,14 @@ contains
     !
     ! Returns:
     !   fv:        Instantaneous temperature response factor (unitless)
+    
+    ! Reference:   
+    !   Kumarathunge et al. (2019), Eq. 7
     !-----------------------------------------------------------------------
 
     ! Function arguments
-    real, intent(in) :: tc_leaf, tc_growth
+    real, intent(in) :: tc_leaf
+    real, intent(in) :: tc_growth
 
     ! Local variables
     real :: tc_ref, tk_ref, tk_leaf, dent, fva, fvb
@@ -922,13 +925,13 @@ contains
     ! kR                                    ! kR is universal gas constant (J/mol/K)
     tc_ref = 25.0                           ! reference temperature (deg C)
     
-    tk_ref  = tc_ref  + 273.15 ! to Kelvin
-    tk_leaf = tc_leaf + 273.15 ! to Kelvin
+    tk_ref  = tc_ref  + 273.15  ! to Kelvin
+    tk_leaf = tc_leaf + 273.15  ! to Kelvin
     
     ! Calculate Ha ("Ea") and Delta S based on Kumarathunge et al. (2019) for Vcmax
     dent = 645.13 - 0.38 * tc_growth      ! J/mol/K
     fva = calc_ftemp_arrhenius( tk_leaf, Ha, tk_ref ) 
-    fvb = ( 1.0 + exp((tk_ref * dent - Hd)/(kR * tk_ref)) ) / ( 1.0 + exp((tk_leaf * dent - Hd)/(kR * tk_leaf)) )
+    fvb = (1.0 + exp( (tk_ref * dent - Hd)/(kR * tk_ref) )) / (1.0 + exp( (tk_leaf * dent - Hd)/(kR * tk_leaf) ))
     fv  = fva * fvb
 
   end function calc_ftemp_inst_vcmax
@@ -937,8 +940,7 @@ contains
   function calc_ftemp_inst_jmax( tc_leaf, tc_growth, tc_home ) result( fv )
     !-----------------------------------------------------------------------
     ! Calculates the instantaneous temperature response factor for Jmax.
-    ! Based on Kumarathunge et al., 2019 (Eq. 7).
-    !
+    ! 
     ! Arguments:
     !   tc_leaf:    Instantaneous leaf temperature (°C)
     !   tc_growth:  Growth temperature, 30-day mean damped temperature (°C)
@@ -946,17 +948,22 @@ contains
     !
     ! Returns:
     !   fv:        Instantaneous temperature response factor (unitless)
+    
+    ! Reference:   
+    !   Kumarathunge et al. (2019), Eq. 7
     !-----------------------------------------------------------------------
 
     ! Function arguments
-    real, intent(in) :: tc_leaf, tc_growth, tc_home
-
-    ! Output variable
-    real :: fv
+    real, intent(in) :: tc_leaf
+    real, intent(in) :: tc_growth
+    real, intent(in) :: tc_home
 
     ! Local variables
     real :: tc_ref, tk_ref, tk_leaf, dent, fva, fvb
     real :: Hd, Ha
+
+    ! Output variable
+    real :: fv
 
     ! Constants (defined here or globally)
     Ha = 40710.0   ! J/mol (constant activation energy for Jmax)
@@ -964,13 +971,13 @@ contains
     ! kR           ! kR is universal gas constant (J/mol/K)
     tc_ref = 25.0  ! reference temperature (deg C)
     
-    tk_ref  = tc_ref  + 273.15 ! to Kelvin
-    tk_leaf = tc_leaf + 273.15 ! to Kelvin
-    
+    tk_ref  = tc_ref  + 273.15  ! to Kelvin
+    tk_leaf = tc_leaf + 273.15  ! to Kelvin
+
     ! Calculate Ha ("Ea") and Delta S based on Kumarathunge et al. (2019) for Jmax
     dent = 658.77 - 0.84 * tc_home - 0.52 * (tc_growth - tc_home)  ! J/mol/K
     fva = calc_ftemp_arrhenius( tk_leaf, Ha, tk_ref ) 
-    fvb = ( 1.0 + exp((tk_ref * dent - Hd)/(kR * tk_ref)) ) / ( 1.0 + exp((tk_leaf * dent - Hd)/(kR * tk_leaf)) )
+    fvb = (1.0 + exp( (tk_ref * dent - Hd)/(kR * tk_ref) )) / (1.0 + exp( (tk_leaf * dent - Hd)/(kR * tk_leaf) ))
     fv  = fva * fvb
 
   end function calc_ftemp_inst_jmax
