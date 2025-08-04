@@ -75,6 +75,7 @@ ByteCompile: true
 NeedsCompilation: yes
 RoxygenNote: 7.3.2
 Suggests:
+    constructive,
     covr,
     rcmdcheck,
     testthat,
@@ -84,6 +85,7 @@ Suggests:
     sensitivity,
     rpmodel,
     gridExtra,
-    patchwork
+    patchwork,
+    rlang
 VignetteBuilder: knitr
 Encoding: UTF-8
