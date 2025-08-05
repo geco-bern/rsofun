@@ -933,7 +933,7 @@ contains
     tk_ref  = tc_ref  + 273.15  ! to Kelvin
     tk_leaf = tc_leaf + 273.15  ! to Kelvin
     
-    ! Calculate Ha ("Ea") and Delta S based on Kumarathunge et al. (2019) for Vcmax
+    ! Calculate Ha ("Ea") and dent ("Delta S") based on Kumarathunge et al. (2019) for Vcmax
     dent = 645.13 - 0.38 * tc_growth      ! J/mol/K
     fva = calc_ftemp_arrhenius( tk_leaf, Ha, tk_ref ) 
     fvb = (1.0 + exp( (tk_ref * dent - Hd)/(kR * tk_ref) )) / (1.0 + exp( (tk_leaf * dent - Hd)/(kR * tk_leaf) ))
@@ -980,7 +980,7 @@ contains
     tk_ref  = tc_ref  + 273.15  ! to Kelvin
     tk_leaf = tc_leaf + 273.15  ! to Kelvin
 
-    ! Calculate Ha ("Ea") and Delta S based on Kumarathunge et al. (2019) for Jmax
+    ! Calculate Ha ("Ea") and dent ("Delta S") based on Kumarathunge et al. (2019) for Jmax
     dent = 658.77 - 0.84 * tc_home - 0.52 * (tc_growth - tc_home)  ! J/mol/K
     fva = calc_ftemp_arrhenius( tk_leaf, Ha, tk_ref ) 
     fvb = (1.0 + exp( (tk_ref * dent - Hd)/(kR * tk_ref) )) / (1.0 + exp( (tk_leaf * dent - Hd)/(kR * tk_leaf) ))
