@@ -1,4 +1,4 @@
-context("BiomeE: test model outputs, repeatability and agreement with reference values from subfolder ./_snaps/")
+# BiomeE: test model outputs, repeatability and agreement with reference values from subfolder ./_snaps/
 set.seed(10)
 
 test_that("Snapshot tests run_biomee_f_bysite()", {
@@ -226,7 +226,6 @@ test_that("Snapshot tests run_biomee_f_bysite()", {
   mod_BiomeE_PLULUC_secondary_oac_yr251 <- tibble(mod_BiomeE_PLULUC$secondary$output_annual_cohorts|>filter(year==251))
   
 
-  testthat::local_edition(3)
   expect_snapshot_value_fmt(mod_BiomeE_Pmodel_odt_yr1,   tolerance = 0.01, cran = TRUE)
   expect_snapshot_value_fmt(mod_BiomeE_Pmodel_odt_yr251, tolerance = 0.01, cran = TRUE)
   expect_snapshot_value_fmt(mod_BiomeE_Pmodel_oat,       tolerance = 0.04, cran = TRUE)  # Higher than 0.01 for N_uptk on Windows

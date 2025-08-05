@@ -1,4 +1,3 @@
-context("test P-model and BiomeE likelihood frameworks")
 set.seed(10)
 
 test_that("test likelihood/RMSE calculations with pmodel", {

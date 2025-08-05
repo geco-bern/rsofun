@@ -1,4 +1,3 @@
-context("test models and their parameters")
 set.seed(10)
 
 # Output checks
@@ -138,7 +137,6 @@ test_that("p-model run check GPP", {
   expect_type(df_output_p, "list")
   
   # also check for correctly returned _values_, not only types
-  testthat::local_edition(3)
   mod_pmodel_bysite           <- head_tail(tibble(mod), n=30)
   mod_pmodel_runread_serial   <- head_tail(tibble(df_output$data[[1]]), n=30)
   mod_pmodel_runread_parallel <- head_tail(tibble(df_output_p$data[[1]]), n=30)
@@ -205,7 +203,6 @@ test_that("p-model run check Vcmax25", {
   expect_type(df_output_p, "list")
   
   # also check for correctly returned _values_, not only types
-  testthat::local_edition(3)
   mod_pmodel_vcmax_bysite           <- head_tail(tibble(mod), n=30)
   mod_pmodel_vcmax_runread_serial   <- head_tail(tibble(df_output$data[[1]]), n=30)
   mod_pmodel_vcmax_runread_parallel <- head_tail(tibble(df_output_p$data[[1]]), n=30)
