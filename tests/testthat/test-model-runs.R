@@ -48,7 +48,7 @@ test_that("biomee output check (p-model) with LULUC", {
   # These changes do not imply any meaningful alteration of the code functions and are simply artefacts.
 })
 
-test_that("biomeE output check (gs leuning)", {
+test_that("biomee output check (gs leuning)", {
   skip_on_cran()
 
   out <- runread_biomee_f(
@@ -77,7 +77,7 @@ test_that("biomee parallel run check (p-model)", {
     ncores = 2
   )
 
-  # test for correctly returned values
+  # test for correctly returned types
   expect_type(df_output, "list")
 
 })
@@ -111,7 +111,7 @@ test_that("p-model run check GPP", {
     makecheck = FALSE
   )
 
-  # test if the returned values
+  # test if the returned types
   # are in a list (don't error / warning)
   expect_type(mod, "list")
 
@@ -123,7 +123,7 @@ test_that("p-model run check GPP", {
     parallel = FALSE
   )
 
-  # test for correctly returned values
+  # test for correctly returned types
   expect_type(df_output, "list")
 
   # test runread_pmodel_f
@@ -134,8 +134,18 @@ test_that("p-model run check GPP", {
     parallel = TRUE
   )
 
-  # test for correctly returned values
+  # test for correctly returned types
   expect_type(df_output_p, "list")
+  
+  # also check for correctly returned _values_, not only types
+  testthat::local_edition(3)
+  mod_pmodel_bysite           <- head_tail(tibble(mod), n=30)
+  mod_pmodel_runread_serial   <- head_tail(tibble(df_output$data[[1]]), n=30)
+  mod_pmodel_runread_parallel <- head_tail(tibble(df_output_p$data[[1]]), n=30)
+  
+  expect_snapshot_value_fmt(mod_pmodel_bysite,           tolerance = 0.01, cran = TRUE)
+  expect_snapshot_value_fmt(mod_pmodel_runread_serial,   tolerance = 0.01, cran = TRUE)
+  expect_snapshot_value_fmt(mod_pmodel_runread_parallel, tolerance = 0.01, cran = TRUE)
 })
 
 test_that("p-model run check Vcmax25", {
@@ -167,7 +177,7 @@ test_that("p-model run check Vcmax25", {
     makecheck = FALSE
   )
 
-  # test if the returned values
+  # test if the returned types
   # are in a list (don't error / warning)
   expect_type(mod, "list")
 
@@ -179,7 +189,7 @@ test_that("p-model run check Vcmax25", {
     parallel = FALSE
   )
 
-  # test for correctly returned values
+  # test for correctly returned types
   expect_type(df_output, "list")
 
   # test runread_pmodel_f
@@ -191,8 +201,18 @@ test_that("p-model run check Vcmax25", {
     ncores = 1
   )
 
-  # test for correctly returned values
+  # test for correctly returned types
   expect_type(df_output_p, "list")
+  
+  # also check for correctly returned _values_, not only types
+  testthat::local_edition(3)
+  mod_pmodel_vcmax_bysite           <- head_tail(tibble(mod), n=30)
+  mod_pmodel_vcmax_runread_serial   <- head_tail(tibble(df_output$data[[1]]), n=30)
+  mod_pmodel_vcmax_runread_parallel <- head_tail(tibble(df_output_p$data[[1]]), n=30)
+  
+  expect_snapshot_value_fmt(mod_pmodel_vcmax_bysite,           tolerance = 0.01, cran = TRUE)
+  expect_snapshot_value_fmt(mod_pmodel_vcmax_runread_serial,   tolerance = 0.01, cran = TRUE)
+  expect_snapshot_value_fmt(mod_pmodel_vcmax_runread_parallel, tolerance = 0.01, cran = TRUE)
 })
 
 test_that("p-model onestep output check (run_pmodel_onestep_f_bysite())", {
@@ -338,7 +358,7 @@ test_that("biomee parallel run check (gs leuning)", {
     ncores = 2
   )
   
-  # test for correctly returned values
+  # test for correctly returned types
   expect_type(df_output, "list")
   
 })
