@@ -5,8 +5,10 @@
   easier processing within cost-functions. Default cost-functions were updated,
   but currently ignore the names. This is fully backward compatible, but allows
   to use the names in user-created cost functions.
-* P-model was updated internally to use jmax and vcmax temperature dependencies 
-  from Kumarathunge et al. (2019) instead of Kattge & Knorr (2007)
+* Internally, P-model now computes temperature dependencies of jmax and vcmax
+  with Kumarathunge et al. (2019) instead of Kattge & Knorr (2007), effectively 
+  using a dampened signal for tc_growth and long-term averages for tc_home. This 
+  alters the simulation results. Formattting of inputs remains unchanged.
 
 # rsofun 5.1.0
 
