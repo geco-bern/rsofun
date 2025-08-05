@@ -141,9 +141,9 @@ test_that("p-model run check GPP", {
   mod_pmodel_runread_serial   <- head_tail(tibble(df_output$data[[1]]), n=30)
   mod_pmodel_runread_parallel <- head_tail(tibble(df_output_p$data[[1]]), n=30)
   
-  expect_snapshot_value_fmt(mod_pmodel_bysite,           tolerance = 0.01, cran = TRUE)
-  expect_snapshot_value_fmt(mod_pmodel_runread_serial,   tolerance = 0.01, cran = TRUE)
-  expect_snapshot_value_fmt(mod_pmodel_runread_parallel, tolerance = 0.01, cran = TRUE)
+  expect_equal(mod_pmodel_bysite, mod_pmodel_runread_serial)
+  expect_equal(mod_pmodel_bysite, mod_pmodel_runread_parallel)
+  expect_snapshot_value_fmt(mod_pmodel_bysite, tolerance = 0.01, cran = TRUE)
 })
 
 test_that("p-model run check Vcmax25", {
@@ -207,9 +207,9 @@ test_that("p-model run check Vcmax25", {
   mod_pmodel_vcmax_runread_serial   <- head_tail(tibble(df_output$data[[1]]), n=30)
   mod_pmodel_vcmax_runread_parallel <- head_tail(tibble(df_output_p$data[[1]]), n=30)
   
-  expect_snapshot_value_fmt(mod_pmodel_vcmax_bysite,           tolerance = 0.01, cran = TRUE)
-  expect_snapshot_value_fmt(mod_pmodel_vcmax_runread_serial,   tolerance = 0.01, cran = TRUE)
-  expect_snapshot_value_fmt(mod_pmodel_vcmax_runread_parallel, tolerance = 0.01, cran = TRUE)
+  expect_equal(mod_pmodel_vcmax_bysite, mod_pmodel_vcmax_runread_serial)
+  expect_equal(mod_pmodel_vcmax_bysite, mod_pmodel_vcmax_runread_parallel)
+  expect_snapshot_value_fmt(mod_pmodel_vcmax_bysite, tolerance = 0.01, cran = TRUE)
 })
 
 test_that("p-model onestep output check (run_pmodel_onestep_f_bysite())", {
