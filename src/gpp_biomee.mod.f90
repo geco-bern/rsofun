@@ -149,7 +149,7 @@ contains
           rad_net  = f_light(cc%layer) * forcing%radiation * 0.9 ! net radiation absorbed by the canopy, W/m2
           p_surf   = forcing%P_air  ! Pa
           TairK    = forcing%TairK ! K
-          TairC    = forcing%TairC ! degC
+          TairC    = forcing%TairC ! deg C
           cana_q   = (calc_esat(TairC) * forcing%RH * h2o_molmass) / (p_surf * kMa)  ! air specific humidity, kg/kg
           cana_co2 = forcing%CO2 ! co2 concentration in canopy air space, mol CO2/mol dry air
 
@@ -520,14 +520,14 @@ contains
     !--------Output
     real :: qsat ! Output type: saturated specific humidity, kg/kg
     !--------Inputs
-    real :: T    ! temperature, degK
+    real :: T    ! temperature, K
     real :: p    ! pressure, Pa
     !--------local var
     real :: myesat ! sat. water vapor pressure
-    real :: Temp ! degC
+    real :: Temp ! deg C
 
     ! calculate saturated specific humidity
-    Temp = T - 273.16 ! degC
+    Temp = T - 273.16 ! deg C
     myesat=MIN(610.78*exp(17.27*Temp/(Temp+237.3)), p) ! Pa
     qsat = 0.622*myesat /(p - 0.378*myesat )
 

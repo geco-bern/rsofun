@@ -81,7 +81,7 @@ contains
     ! Adopted from BiomeE-Allcation.
     !----------------------------------------------------------------------
     type(cohort_type), intent(inout) :: cc
-    real, intent(in) :: tairK ! degK
+    real, intent(in) :: tairK ! K
     real :: tf, tfs ! thermal inhibition factors for above- and below-ground biomass
     real :: r_stem, r_root
     real :: Acambium  ! cambium area, m2/tree

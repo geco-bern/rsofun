@@ -164,7 +164,7 @@ contains
     ! XXX PMODEL_TEST: ok
     ! print*,'kmm:       ', kmm
 
-    ! viscosity correction factor = viscosity( temp, press )/viscosity( 25 degC, 1013.25 Pa) 
+    ! viscosity correction factor = viscosity( temp, press )/viscosity( 25 deg C, 1013.25 Pa) 
     ns      = calc_viscosity_h2o( tc, patm )  ! Pa s 
     ns25    = calc_viscosity_h2o( 25.0, kPo )  ! Pa s 
     ns_star = ns / ns25                       ! (unitless)
