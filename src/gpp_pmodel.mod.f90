@@ -212,12 +212,15 @@ contains
       ! quantities with instantaneous temperature response
       tile_fluxes(lu)%plant(pft)%vcmax = calc_ftemp_inst_vcmax( &
           tc_leaf   = climate%dtemp, &
-          tc_growth = temp_memory) * out_pmodel%vcmax25
+          tc_growth = temp_memory, &
+          ! no tc_home needed for calc_ftemp_inst_vcmax
+          tc_ref    = 25.0 ) * out_pmodel%vcmax25
 
       tile_fluxes(lu)%plant(pft)%jmax = calc_ftemp_inst_jmax( &
           tc_leaf   = climate%dtemp, &
           tc_growth = temp_memory, &
-          tc_home   = tc_home ) * out_pmodel%jmax25
+          tc_home   = tc_home, &
+          tc_ref    = 25.0 ) * out_pmodel%jmax25
 
       !----------------------------------------------------------------
       ! Stomatal conductance

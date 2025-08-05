@@ -133,7 +133,7 @@ contains
     real :: fact_jmaxlim        ! Jmax limitation factor (unitless)
 
     ! local variables for Jmax limitation following Nick Smith's method
-    real :: omega, omega_star, jmax_over_vcmax, jmax_prime
+    real :: omega, omega_star, tc_ref, jmax_over_vcmax, jmax_prime
 
     real, parameter :: theta = 0.85          ! used only for smith19 setup
     real, parameter :: c_cost = 0.05336251   ! used only for smith19 setup
@@ -263,11 +263,15 @@ contains
       omega = calc_omega( theta = theta, c_cost = c_cost, m = out_optchi%mj )             ! Eq. S4
       omega_star = 1.0 + omega - sqrt( (1.0 + omega)**2 - (4.0 * theta * omega) )       ! Eq. 18
       
-      ! calculate Vcmax-star, which corresponds to Vcmax at a reference temperature 'tc_home'
+      ! calculate Vcmax-star, which corresponds to Vcmax at a reference temperature 'tc_ref'
       vcmax_star  = kphio * ppfd * out_optchi%mjoc * omega_star / (8.0 * theta)               ! Eq. 19
+      
+      ! tc_ref is the optimum temperature in K, assumed to be the temperature at which Vcmax* is operating. 
+      ! tc_ref is estimated based on its relationship to growth temperature following Kattge & Knorr 2007
+      tc_ref = 0.44 * tc + 24.92
 
       ! calculated acclimated Vcmax at prevailing growth temperatures
-      ftemp_inst_vcmax = calc_ftemp_inst_vcmax( tc, tc )
+      ftemp_inst_vcmax = calc_ftemp_inst_vcmax( tc, tc, tc_ref = tc_ref )
       vcmax = vcmax_star * ftemp_inst_vcmax   ! Eq. 20
       
       ! calculate Jmax
@@ -275,7 +279,7 @@ contains
       jmax_prime = jmax_over_vcmax * vcmax 
 
       ! light use efficiency
-      lue = c_molmass * kphio * out_optchi%mj * omega_star / (8.0 * theta)
+      lue = c_molmass * kphio * out_optchi%mj * omega_star / (8.0 * theta) ! treat theta as a calibratable parameter
 
     else if (method_jmaxlim=="none") then
 
@@ -303,7 +307,7 @@ contains
     ! Corrolary preditions (This is prelimirary!)
     !-----------------------------------------------------------------------
     ! Vcmax25 (vcmax normalized to 25 deg C)
-    ftemp_inst_vcmax  = calc_ftemp_inst_vcmax(tc, tc)
+    ftemp_inst_vcmax  = calc_ftemp_inst_vcmax( tc, tc, tc_ref = 25.0 )
     vcmax25  = vcmax / ftemp_inst_vcmax
 
     ! ! Dark respiration at growth temperature
@@ -328,7 +332,7 @@ contains
         !      (-) * (-)   * (mol m-2 s-1) / (-)
       end if
       ! for normalization using temperature response from Duursma et al., 2015, implemented in plantecophys R package
-      ftemp_inst_jmax  = calc_ftemp_inst_jmax(tc, tc, tc_home)
+      ftemp_inst_jmax  = calc_ftemp_inst_jmax(tc, tc, tc_home, tc_ref = 25.0 )
       jmax25  = jmax  / ftemp_inst_jmax
     end if
 
@@ -892,7 +896,7 @@ contains
   end function calc_ftemp_inst_rd
 
 
-  function calc_ftemp_inst_vcmax( tc_leaf, tc_growth ) result( fv )
+  function calc_ftemp_inst_vcmax( tc_leaf, tc_growth, tc_ref ) result( fv )
     !-----------------------------------------------------------------------
     ! Calculates the instantaneous temperature response factor for Vcmax.
     !
@@ -900,6 +904,7 @@ contains
     !   tc_leaf:    Instantaneous leaf temperature (°C)
     !   tc_growth:  Growth temperature, 30-day mean damped temperature (°C)
     !   tc_home:    Long-term mean maximum temperature of the warmest month (°C)
+    !   tc_ref:     Reference temperature (°C), is 'to' in Nick's set it to 25 °C (=298.15 K in other cals)
     !
     ! Returns:
     !   fv:        Instantaneous temperature response factor (unitless)
@@ -911,9 +916,10 @@ contains
     ! Function arguments
     real, intent(in) :: tc_leaf
     real, intent(in) :: tc_growth
+    real, intent(in) :: tc_ref
 
     ! Local variables
-    real :: tc_ref, tk_ref, tk_leaf, dent, fva, fvb
+    real :: tk_ref, tk_leaf, dent, fva, fvb
     real :: Ha, Hd
 
     ! Output variable
@@ -923,7 +929,6 @@ contains
     Ha = (42.6 + 1.14 * tc_growth) * 1.0e3  ! activation energy (J/mol)
     Hd = 200000.0                           ! deactivation energy (J/mol)
     ! kR                                    ! kR is universal gas constant (J/mol/K)
-    tc_ref = 25.0                           ! reference temperature (deg C)
     
     tk_ref  = tc_ref  + 273.15  ! to Kelvin
     tk_leaf = tc_leaf + 273.15  ! to Kelvin
@@ -937,7 +942,7 @@ contains
   end function calc_ftemp_inst_vcmax
 
 
-  function calc_ftemp_inst_jmax( tc_leaf, tc_growth, tc_home ) result( fv )
+  function calc_ftemp_inst_jmax( tc_leaf, tc_growth, tc_home, tc_ref ) result( fv )
     !-----------------------------------------------------------------------
     ! Calculates the instantaneous temperature response factor for Jmax.
     ! 
@@ -945,6 +950,7 @@ contains
     !   tc_leaf:    Instantaneous leaf temperature (°C)
     !   tc_growth:  Growth temperature, 30-day mean damped temperature (°C)
     !   tc_home:    Long-term mean maximum temperature of the warmest month (°C)
+    !   tc_ref:     Reference temperature (°C), is 'to' in Nick's set it to 25 °C (=298.15 K in other cals)
     !
     ! Returns:
     !   fv:        Instantaneous temperature response factor (unitless)
@@ -957,9 +963,10 @@ contains
     real, intent(in) :: tc_leaf
     real, intent(in) :: tc_growth
     real, intent(in) :: tc_home
+    real, intent(in) :: tc_ref
 
     ! Local variables
-    real :: tc_ref, tk_ref, tk_leaf, dent, fva, fvb
+    real :: tk_ref, tk_leaf, dent, fva, fvb
     real :: Hd, Ha
 
     ! Output variable
@@ -969,7 +976,6 @@ contains
     Ha = 40710.0   ! J/mol (constant activation energy for Jmax)
     Hd = 200000.0  ! deactivation energy (J/mol)
     ! kR           ! kR is universal gas constant (J/mol/K)
-    tc_ref = 25.0  ! reference temperature (deg C)
     
     tk_ref  = tc_ref  + 273.15  ! to Kelvin
     tk_leaf = tc_leaf + 273.15  ! to Kelvin

@@ -104,8 +104,8 @@ contains
       )
 
     ! quantities with instantaneous temperature response
-    vcmax = calc_ftemp_inst_vcmax( temp, temp          ) * out_pmodel%vcmax25
-    jmax  = calc_ftemp_inst_jmax(  temp, temp, tc_home ) * out_pmodel%jmax25
+    vcmax = calc_ftemp_inst_vcmax( temp, temp,          tc_ref = 25.0 ) * out_pmodel%vcmax25
+    jmax  = calc_ftemp_inst_jmax(  temp, temp, tc_home, tc_ref = 25.0 ) * out_pmodel%jmax25
     rd    = out_pmodel%vcmax25 * rd_to_vcmax * calc_ftemp_inst_rd( temp ) * c_molmass
 
     !----------------------------------------------------------------
