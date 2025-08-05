@@ -1,4 +1,3 @@
-context("test P-model calibration framework and its parameters")
 set.seed(10)
 
 test_that("test GPP calibration routine p-model (BT, likelihood maximization)", {

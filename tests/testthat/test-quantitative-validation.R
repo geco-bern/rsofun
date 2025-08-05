@@ -1,4 +1,4 @@
-context("Test model output (values)")
+set.seed(10)
 
 test_that("p-model quantitative check", {
   skip_on_cran()

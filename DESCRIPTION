@@ -75,15 +75,18 @@ ByteCompile: true
 NeedsCompilation: yes
 RoxygenNote: 7.3.2
 Suggests:
+    constructive,
     covr,
     rcmdcheck,
-    testthat,
+    testthat (>= 3.0.0),
     rmarkdown,
     ggplot2,
     knitr,
     sensitivity,
     rpmodel,
     gridExtra,
-    patchwork
+    patchwork,
+    rlang
 VignetteBuilder: knitr
 Encoding: UTF-8
+Config/testthat/edition: 3
