@@ -10,9 +10,9 @@ expect_snapshot_value_fmt <- function(
   lab <- rlang::quo_label(enquo(x))
   
   # Define formatting
-  tmplate_at <- opts_atomic(compress = FALSE, one_liner = TRUE)
-  tmplate_df <- opts_tbl_df(constructor = "tibble",   trailing_comma = TRUE, recycle = FALSE)
-  tmplate_df2 <- opts_tbl_df(constructor = "tribble", trailing_comma = TRUE, recycle = FALSE)
+  tmplate_at <- constructive::opts_atomic(compress = FALSE, one_liner = TRUE)
+  tmplate_df <- constructive::opts_tbl_df(constructor = "tibble",   trailing_comma = TRUE, recycle = FALSE)
+  tmplate_df2 <- constructive::opts_tbl_df(constructor = "tribble", trailing_comma = TRUE, recycle = FALSE)
   save <- function(x) {
     paste0(sprintf("# %s:\n", lab),
            paste0(as.character(constructive::construct(x, tmplate_df2, tmplate_at)$code),  # row-wise  (tribble)
