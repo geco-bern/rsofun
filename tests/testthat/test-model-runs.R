@@ -278,7 +278,8 @@ test_that("p-model onestep output check (run_pmodel_onestep_f_bysite())", {
                                  # NOTE: is now: (3.39e-6 g C m-2 s-1) # still slightly different from 3.16e-6, but remains within tolerance
     dplyr::select(-ns_star, -xi, -mj, -mc, -ci,
                   -gpp, -ca, -gammastar, -kmm) |>
-    dplyr::select(vcmax, jmax, vcmax25, jmax25, chi, gs, iwue, rd)
+    dplyr::select(vcmax, jmax, vcmax25, jmax25, chi, gs, iwue, rd) |>
+    dplyr::select(-vcmax25, -jmax25) # NOTE: as long as rpmodel is not updated with Kumarathunge T-dependency, we can only compare vcmax and jmax
 
   resF_units_fixed <- resF |> 
     dplyr::mutate(
@@ -289,7 +290,8 @@ test_that("p-model onestep output check (run_pmodel_onestep_f_bysite())", {
       iwue = iwue,               # NOTE: keep units as-is: (-)                   (computed as (ca-ci)/1.6/patm)
       rd   = rd) |>              # NOTE: keep units as-is: 3.16e-6 g C m-2 s-1   (computed as rd_to_vcmax*vcmax25*calc_ftemp_inst_rd(Temp)*c_molmass
     dplyr::select(-wscal, -gs_accl) |>
-    dplyr::select(vcmax, jmax, vcmax25, jmax25, chi, gs, iwue, rd)
+    dplyr::select(vcmax, jmax, vcmax25, jmax25, chi, gs, iwue, rd) |>
+    dplyr::select(-vcmax25, -jmax25) # NOTE: as long as rpmodel is not updated with Kumarathunge T-dependency, we can only compare vcmax and jmax
   
 
   # Now comparison must pass
