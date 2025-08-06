@@ -141,8 +141,8 @@ contains
     ! 'evap', adopted from the evap() function in GePiSaT (Python version). 
     ! This subroutine ('get_solar') is called before the daily loop.
     ! Output:
-    ! - daily extraterrestrial solar radiation (dra), J/m^2
-    ! - daily PPFD (dppfd), mol/m^2
+    ! - daily extraterrestrial solar radiation (dra), J m-2 d-1
+    ! - daily PPFD (ppfd_splash), mol m-2 d-1
     !-------------------------------------------------------------------------  
     ! arguments
     type(tile_fluxes_type), dimension(nlu), intent(inout) :: tile_fluxes
@@ -190,7 +190,7 @@ contains
     grid%dayl = 24.0 * 60 * 60 * hs / 180.0  ! hs is in degrees (pi = 180 deg)
 
     !---------------------------------------------------------
-    ! 7. Calculate daily extraterrestrial solar radiation (dra), J/m^2/d
+    ! 7. Calculate daily extraterrestrial solar radiation (dra), J m-2 d-1
     !---------------------------------------------------------
     ! Eq. 1.10.3, Duffy & Beckman (1993)
     tile_fluxes(:)%canopy%dra = ( secs_per_day / pi ) * kGsc * dr * ( radians(ru) * hs + rv * dgsin(hs) )
@@ -201,7 +201,7 @@ contains
     tau = calc_tau( climate%dfsun, grid%elv )
 
     !---------------------------------------------------------
-    ! 9. Calculate daily PPFD (dppfd), mol/m^2
+    ! 9. Calculate daily PPFD (ppfd_splash), mol m-2 d-1
     !---------------------------------------------------------
     ! Eq. 57, SPLASH 2.0 Documentation
     tile_fluxes(:)%canopy%ppfd_splash = (1.0e-6) * kfFEC * ( 1.0 - kalb_vis ) * tau * tile_fluxes(:)%canopy%dra

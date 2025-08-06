@@ -1,6 +1,6 @@
 Package: rsofun
 Title: The P-Model and BiomeE Modelling Framework
-Version: 5.1.0
+Version: 5.1.0.9000
 Authors@R: c(
             person(
               family = "Stocker",
@@ -75,14 +75,18 @@ ByteCompile: true
 NeedsCompilation: yes
 RoxygenNote: 7.3.2
 Suggests:
+    constructive,
     covr,
     rcmdcheck,
-    testthat,
+    testthat (>= 3.0.0),
     rmarkdown,
     ggplot2,
     knitr,
     sensitivity,
+    rpmodel,
     gridExtra,
-    patchwork
+    patchwork,
+    rlang
 VignetteBuilder: knitr
 Encoding: UTF-8
+Config/testthat/edition: 3

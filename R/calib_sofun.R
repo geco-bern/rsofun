@@ -4,10 +4,13 @@
 #' calibration of SOFUN model parameters. 
 #' 
 #' @param drivers A data frame with driver data. See \code{\link{p_model_drivers}}
-#' for a description of the data structure.
+#' for a description of the data structure. Additional columns can optionally be 
+#' provided to \code{drivers} to control e.g. the processing within a 
+#' personalized cost function.
 #' @param obs A data frame containing observational data used for model
 #'  calibration. See \code{\link{p_model_validation}} for a description of the data
-#'  structure.
+#'  structure. Additional columns can optionally be provided to \code{obs} to 
+#'  control e.g. the processing within a personalized cost function.
 #' @param settings A list containing model calibration settings. 
 #'  See the 'P-model usage' vignette for more information and examples.
 #'  \describe{
@@ -31,9 +34,8 @@
 #'  }
 #' @param optim_out A logical indicating whether the function returns the raw
 #'  output of the optimization functions (defaults to TRUE).
-#' @param ... Optional arguments passed on to the cost function specified as
-#'  \code{settings$metric}. 
-#'  . 
+#' @param ... Optional arguments, simply passed on to the cost function. 
+#' 
 #' @return A named list containing the calibrated parameter vector `par` and
 #' the output object from the optimization `mod`. For more details on this
 #' output and how to evaluate it, see \link[BayesianTools:runMCMC]{runMCMC} (also
@@ -41,6 +43,7 @@
 #' and \link[GenSA]{GenSA}.
 #' @export
 #' @importFrom magrittr %>%
+#' @importFrom stats setNames
 #' @import GenSA BayesianTools
 #' 
 #' @examples
@@ -95,18 +98,18 @@ calib_sofun <- function(
   lower <- upper <- out_optim <- NULL
   
   # check input variables
-  if(missing(obs) | missing(drivers) | missing(settings)){
+  if (missing(obs) | missing(drivers) | missing(settings)){
     stop("missing input arguments, please check all parameters")
   }
   
   # check data structure
-  if(is.data.frame(obs)){
+  if (is.data.frame(obs)){
     if (nrow(obs) == 0){
       warning("no validation data available, returning NA parameters")
       return(lapply(settings$par,
                     function(x) NA))
     }
-  }else{
+  } else {
     stop("obs must be a (nested) data.frame")
   }
   
@@ -131,9 +134,10 @@ calib_sofun <- function(
       drivers = drivers,
       ...
     )
-    if(optim_out){
+
+    if (optim_out){
       out_optim <- list(par = out$par, mod = out)
-    }else{
+    } else {
       out_optim <- list(par = out$par)
     }
     
@@ -152,28 +156,37 @@ calib_sofun <- function(
     }
     
     # reformat parameters
-    pars <- as.data.frame(do.call("rbind", settings$par), row.names = FALSE)
+    pars <- as.data.frame(do.call("rbind", settings$par)) 
+         # NOTE: This keeps parameters as row names. 
+         # This does not change anything to previous behavior.
+         # But this agrees better with the example data 
+         # `dput(BayesianTools::VSEMgetDefaults())`
     
     priors  <- BayesianTools::createUniformPrior(
-      unlist(pars$lower),
-      unlist(pars$upper),
-      unlist(pars$init)
+      lower = unlist(pars$lower),
+      upper = unlist(pars$upper),
+      best  = unlist(pars$init)
     )
     
     # setup the bayes run, no message forwarding is provided
     # so wrap the function in a do.call
     setup <- BayesianTools::createBayesianSetup(
-      likelihood = function(
-    random_par) {
-        do.call("cost",
-                list(
-                  par = random_par,
-                  obs = obs,
-                  drivers = drivers
-                ))
+      likelihood = function(random_par){
+        do.call(
+          "cost",
+          list(
+            par = setNames(random_par, rownames(pars)),
+            # NOTE: if we could make use of setup$names from within the cost
+            # function then we wouldn't need this closure (using `pars`), but it
+            # appears that BayesianTools does not pass the names into the
+            # likelihood.
+            obs = obs,
+            drivers = drivers
+          )
+        )
       },
     prior = priors,
-    names = names(settings$par)
+    names = rownames(pars)
     )    
     
     # set bt control parameters
@@ -189,9 +202,10 @@ calib_sofun <- function(
     # drop last value
     bt_par <- BayesianTools::MAP(out)$parametersMAP
     bt_par <- bt_par[1:(length(bt_par))]
-    if(optim_out){
+
+    if (optim_out){
       out_optim <- list(par = bt_par, mod = out)
-    }else{
+    } else {
       out_optim <- list(par = bt_par)
     }
     

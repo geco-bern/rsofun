@@ -27,10 +27,10 @@ module md_photosynth
     real :: iwue                ! intrinsic water use efficiency = A / gs = ca - ci = ca ( 1 - chi ) , unitless
     real :: lue                 ! light use efficiency (mol CO2 / mol photon)
     ! real :: assim               ! leaf-level assimilation rate (mol CO2 m-2 s-1)
-    real :: gs_setpoint         ! stomatal conductance to CO2 (mol C Pa-1 m-2 s-1)
+    real :: gs_setpoint         ! stomatal conductance to CO2 (mol CO2 Pa-1 (mol photons)-1)
     ! real :: gs_unitfapar        ! stomatal conductance to CO2 per unit fapar (mol C Pa-1 m-2 s-1)
-    ! real :: gs_unitiabs         ! stomatal conductance to CO2 per unit absorbed light (mol C Pa-1 m-2 s-1)
-    ! real :: gpp                 ! gross primary productivity (g CO2 m-2 d-1)
+    ! real :: gs_unitiabs         ! stomatal conductance to CO2 per unit absorbed light (mol CO2 Pa-1 (mol photons)-1)
+    ! real :: gpp                 ! gross primary productivity (g CO2 m-2 s-1)
     ! real :: vcmax               ! canopy-level maximum carboxylation capacity per unit ground area (mol CO2 m-2 s-1)
     real :: jmax25              ! canopy-level maximum rate of electron transport, normalized to 25 deg C (mol m-2 s-1)
     real :: vcmax25             ! canopy-level Vcmax25 (Vcmax normalized to 25 deg C) (mol CO2 m-2 s-1)
@@ -38,9 +38,9 @@ module md_photosynth
     ! real :: vcmax_unitiabs      ! Vcmax per unit absorbed light (mol CO2 m-2 s-1 mol-1)
     ! real :: ftemp_inst_vcmax    ! Instantaneous temperature response factor of Vcmax (unitless)
     ! real :: ftemp_inst_rd       ! Instantaneous temperature response factor of Rd (unitless)
-    ! real :: rd                  ! Dark respiration (mol CO2 m-2 s-1)
-    ! real :: rd_unitfapar        ! Dark respiration per unit fAPAR (mol CO2 m-2 s-1)
-    ! real :: rd_unitiabs         ! Dark respiration per unit absorbed light (mol CO2 m-2 s-1)
+    ! real :: rd                  ! Dark respiration (g C m-2 s-1)
+    ! real :: rd_unitfapar        ! Dark respiration per unit fAPAR (g C m-2 s-1)
+    ! real :: rd_unitiabs         ! Dark respiration per unit absorbed light (g C (mol photons)-1)
     real :: actnv               ! Canopy-level total metabolic leaf N per unit ground area (g N m-2)
     real :: actnv_unitfapar     ! Metabolic leaf N per unit fAPAR (g N m-2)
     real :: actnv_unitiabs      ! Metabolic leaf N per unit absorbed light (g N m-2 mol-1)
@@ -78,9 +78,9 @@ contains
     ! function calc_dgpp().
     !------------------------------------------------------------------
     ! arguments
-    real, intent(in) :: kphio        ! apparent quantum yield efficiency       
-    real, intent(in) :: beta         ! parameter for the unit cost ratio (corresponding to beta in Prentice et al., 2014)    
-    real, intent(in) :: kc_jmax      ! parameter Jmax cost ratio (corresponding to c in Prentice et al., 2014)    
+    real, intent(in) :: kphio        ! apparent quantum yield efficiency (mol mol-1)
+    real, intent(in) :: beta         ! parameter for the unit cost ratio (-) (corresponding to beta in Prentice et al., 2014)    
+    real, intent(in) :: kc_jmax      ! parameter Jmax cost ratio (-) (corresponding to c in Prentice et al., 2014)    
     ! real, intent(in) :: fapar        ! fraction of absorbed photosynthetically active radiation (unitless) 
     real, intent(in) :: ppfd         ! photosynthetic photon flux density (mol m-2 s-1), relevant for acclimated response
     real, intent(in) :: co2          ! atmospheric CO2 concentration (ppm), relevant for acclimated response
@@ -99,9 +99,9 @@ contains
     real :: kmm                 ! Michaelis-Menten coefficient (Pa)
     real :: gammastar           ! photorespiratory compensation point - Gamma-star (Pa)
     real :: ca                  ! ambient CO2 partial pressure, (Pa)
-    real :: gs_setpoint         ! stomatal conductance to CO2 (mol CO2 Pa-1 m-2 s-1)
+    real :: gs_setpoint         ! stomatal conductance to CO2 (mol CO2 Pa-1 (mol photons)-1)
     ! real :: gs_unitfapar        ! stomatal conductance to CO2 (mol CO2 Pa-1 m-2 s-1)
-    ! real :: gs_unitiabs         ! stomatal conductance to CO2 (mol CO2 Pa-1 m-2 s-1)
+    ! real :: gs_unitiabs         ! stomatal conductance to CO2 (mol CO2 Pa-1 (mol photons)-1)
     real :: ci                  ! leaf-internal partial pressure, (Pa)
     real :: chi                 ! = ci/ca, leaf-internal to ambient CO2 partial pressure, ci/ca (unitless)
     real :: ns                  ! viscosity of H2O at ambient temperatures (Pa s)
@@ -110,7 +110,7 @@ contains
     real :: mprime              ! factor in light use model with Jmax limitation
     real :: iwue                ! intrinsic water use efficiency = A / gs = ca - ci = ca ( 1 - chi ) , unitless
     real :: lue                 ! light use efficiency (mol CO2 / mol photon)
-    ! real :: gpp                 ! gross primary productivity (g CO2 m-2 d-1)
+    ! real :: gpp                 ! gross primary productivity (g CO2 m-2 s-1)
     real :: jmax                ! canopy-level maximum rate of electron transport (XXX)
     real :: jmax25              ! canopy-level maximum rate of electron transport (XXX)
     real :: vcmax               ! canopy-level maximum carboxylation capacity per unit ground area (mol CO2 m-2 s-1)
@@ -122,9 +122,9 @@ contains
     ! real :: vcmax25_unitiabs    ! Vcmax25 per unit absorbed light (mol CO2 m-2 s-1 mol-1)
     real :: ftemp_inst_vcmax    ! Instantaneous temperature response factor of Vcmax (unitless)
     real :: ftemp_inst_jmax     ! Instantaneous temperature response factor of Jmax (unitless)
-    ! real :: rd                  ! Dark respiration (mol CO2 m-2 s-1)
-    ! real :: rd_unitfapar        ! Dark respiration per unit fAPAR (mol CO2 m-2 s-1)
-    ! real :: rd_unitiabs         ! Dark respiration per unit absorbed light (mol CO2 m-2 s-1)
+    ! real :: rd                  ! Dark respiration (g C m-2 s-1)
+    ! real :: rd_unitfapar        ! Dark respiration per unit fAPAR (g C m-2 s-1)
+    ! real :: rd_unitiabs         ! Dark respiration per unit absorbed light (g C (mol photons)-1)
     real :: actnv               ! Canopy-level total metabolic leaf N per unit ground area (g N m-2)
     ! real :: actnv_unitfapar     ! Metabolic leaf N per unit fAPAR (g N m-2)
     ! real :: actnv_unitiabs      ! Metabolic leaf N per unit absorbed light (g N m-2 mol-1)
@@ -239,7 +239,8 @@ contains
       lue = kphio * mprime * c_molmass  ! in g CO2 m-2 s-1 / (mol light m-2 s-1)
       
       ! Vcmax after accounting for Jmax limitation
-      vcmax = kphio * ppfd * out_optchi%mjoc * mprime / out_optchi%mj
+      vcmax = kphio * ppfd * out_optchi%mjoc * mprime / out_optchi%mj ! mol m-2 s-1
+      !       (-)   * (mol m-2 s-1) *    (-) * (-)    / (-)
 
       ! xxx test
       ! print*,'out_optchi%mjoc : ', out_optchi%mjoc 
@@ -327,7 +328,8 @@ contains
       if (fact_jmaxlim >= 1 .or. fact_jmaxlim <= 0) then
         jmax = dummy
       else
-        jmax = 4.0 * kphio * ppfd / sqrt( (1.0/fact_jmaxlim)**2 - 1.0 )
+        jmax = 4.0 * kphio * ppfd / sqrt( (1.0/fact_jmaxlim)**2 - 1.0 ) ! mol m-2 s-1
+        !      (-) * (-)   * (mol m-2 s-1) / (-)
       end if
       ! for normalization using temperature response from Duursma et al., 2015, implemented in plantecophys R package
       ftemp_inst_jmax  = calc_ftemp_inst_jmax( tc, tc, tcref = 25.0 )
@@ -838,9 +840,9 @@ contains
     ! arguments
     real, intent(in) :: dtemp    ! (leaf) temperature in degrees celsius
     logical, intent(in) :: c4
-    real, intent(in) :: kphio
-    real, intent(in) :: kphio_par_a
-    real, intent(in) :: kphio_par_b
+    real, intent(in) :: kphio        ! (mol mol-1)
+    real, intent(in) :: kphio_par_a  ! ((deg C)-2)
+    real, intent(in) :: kphio_par_b  ! (deg C)
 
     ! function return variable
     real :: kphio_temp

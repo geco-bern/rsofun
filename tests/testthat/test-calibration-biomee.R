@@ -1,4 +1,3 @@
-context("test BiomeE calibration framework and its parameters")
 set.seed(10)
 
 test_that("test calibration routine biomee (likelihood cost + Bayesiantools)", {

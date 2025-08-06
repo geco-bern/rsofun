@@ -7,7 +7,7 @@
 cost_likelihood_biomee(par, obs, drivers, targets)
 }
 \arguments{
-\item{par}{A vector containing parameter values for \code{'phiRL',
+\item{par}{A named vector containing parameter values for \code{'phiRL',
 'LAI_light', 'tf_base', 'par_mort'} in that order, and for the error terms
 corresponding to the target variables, e.g. \code{'err_GPP'} if GPP is a target. 
 Make sure that
@@ -45,8 +45,11 @@ should be run using \code{BayesianTools}, so the likelihood is maximized.
 # BiomeE model parameter values
 # and the example data
 cost_likelihood_biomee(
- par = c(3.5, 3.5, 1, 1,    # model params
-         0.5),              # err_GPP
+ par = c(phiRL = 3.5, 
+         LAI_light = 3.5, 
+         tf_base = 1, 
+         par_mort = 1,    # model params
+         err_GPP = 0.5),  # err_GPP
  obs = biomee_validation,
  drivers = biomee_gs_leuning_drivers,
  targets = c("GPP")

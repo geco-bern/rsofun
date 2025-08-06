@@ -15,10 +15,10 @@ module md_tile_pmodel
   ! physical soil state variables with memory from year to year (~pools)
   !----------------------------------------------------------------
   type psoilphystype
-    real :: temp        ! soil temperature [deg C]
-    real :: wcont       ! liquid soil water mass [mm = kg/m2]
+    real :: temp        ! soil temperature (deg C)
+    real :: wcont       ! liquid soil water mass (mm = kg m-2)
     real :: wscal       ! relative soil water content, between 0 (PWP) and 1 (FC)
-    real :: snow        ! snow depth in liquid-water-equivalents [mm = kg/m2]
+    real :: snow        ! snow depth in liquid-water-equivalents (mm = kg m-2)
     ! real :: rlmalpha    ! rolling mean of annual mean alpha (AET/PET)
   end type psoilphystype
 
@@ -88,8 +88,8 @@ module md_tile_pmodel
     real :: dro             ! daily runoff (mm d-1)
     real :: dfleach         ! daily fraction of soil water going to runoff (used for calculating leaching)
     real :: dwbal           ! daily water balance as precipitation and snow melt minus runoff and evapotranspiration (mm d-1)
-    real :: econ            ! water-to-energy conversion factor (m^3/J)
-    real :: drn             ! daily total net radiation (J/m2/d)
+    real :: econ            ! water-to-energy conversion factor (m3 J-1)
+    real :: drn             ! daily total net radiation (J m-2 d-1)
     real :: drnn            ! nighttime total net radiation (J m-1 d-1)
     real :: rnl             ! net longwave radiation (W m-2)
     real :: dcn             ! daily total condensation (mm d-1)
@@ -116,21 +116,21 @@ module md_tile_pmodel
     ! real :: rho_water       ! density of water (g m-3)
 
     ! carbon 
-    real :: dgpp
-    real :: drd
-    real :: assim             ! leaf-level assimilation rate
+    real :: dgpp              ! daily gross primary production (gC m-2 d-1)
+    real :: drd               ! daily dark respiration (gC m-2 d-1)
+    real :: assim             ! leaf-level assimilation rate (mol CO2 m-2 s-1)
 
     real :: vcmax25           ! acclimated Vcmax, normalised to 25 deg C (mol CO2 m-2 s-1)
     real :: jmax25            ! acclimated Jmax, normalised to 25 deg C (mol CO2 m-2 s-1)
     real :: vcmax             ! daily varying Vcmax (mol CO2 m-2 s-1)
     real :: jmax              ! daily varying Jmax (mol CO2 m-2 s-1)
-    real :: gs_accl           ! acclimated stomatal conductance (xxx)
+    real :: gs_accl           ! acclimated stomatal conductance (mol CO2 Pa-1 (mol photons)-1)
     real :: chi               ! ci:ca ratio (unitless)
     real :: iwue              ! intrinsic water use efficiency (A/gs = ca*(1-chi))
 
     ! radiation
-    real :: ppfd_splash
-    real :: dra              ! daily top-of-atmosphere solar radiation (J/m^2/d)
+    real :: ppfd_splash      ! daily photosynthetic photon flux density (mol m-2 d-1, Note that this differs from ppfd input 'dppfd', which is mol m-2 s-1.)
+    real :: dra              ! daily top-of-atmosphere solar radiation (J m-2 d-1)
 
     ! ! annual
     ! !----------------------------------------------------------------
@@ -139,7 +139,7 @@ module md_tile_pmodel
     ! real :: avcmax25_mean         ! annual Vcmax, normalised to 25 deg C, GPP-weighted mean
     ! real :: avcmax25_max          ! annual Vcmax, normalised to 25 deg C, annual maximum
 
-    ! real, dimension(ndayyear) :: dra                ! daily TOA solar irradiation (J/m2)
+    ! real, dimension(ndayyear) :: dra                ! daily TOA solar irradiation (J m-2)
     ! real, dimension(ndayyear) :: dppfd_splash       ! daily total PPFD (mol m-2 d-1)
     ! real, dimension(nmonth)   :: mppfd_splash       ! monthly total PPFD (mol m-2 month-1)
     ! real, dimension(nmonth)   :: meanmppfd_splash   ! monthly mean PPFD, averaged over daylight seconds (mol m-2 s-1)

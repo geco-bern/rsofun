@@ -56,7 +56,7 @@ We want to see how sensitive this function is to changes in the parameter values
 ```{r}
 # Define log-likelihood function
 ll_pmodel <- function(
-    par_v                 # a vector of all calibratable parameters including errors
+    par_v                 # a named vector of all calibratable parameters including errors
 ){
   rsofun::cost_likelihood_pmodel(        # reuse likelihood cost function
     par_v,
@@ -282,7 +282,7 @@ par_calib <- calib_sofun(
   par_fixed = par_fixed,
   targets = "gpp"
 )
-saveRDS(par_calib, "files/sensitivity_analysis.Rmd__par_calib.RDS")
+saveRDS(par_calib, "files/sensitivity_analysis.Rmd__par_calib.RDS", compress = "xz")
 
 # This code takes 15 minutes to run
 ```
