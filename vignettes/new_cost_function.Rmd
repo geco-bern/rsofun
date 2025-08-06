@@ -139,6 +139,7 @@ par_calib_join <- calib_sofun(
                   p_model_drivers_vcmax25), 
   obs = rbind(p_model_validation,
               p_model_validation_vcmax25), 
+  
   settings = settings_joint_likelihood,
   # arguments for the cost function
   par_fixed = list(         # fix parameter value from previous calibration
