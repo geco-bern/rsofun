@@ -60,6 +60,7 @@
 <ul><li>New <code><a href="../reference/run_pmodel_onestep_f_bysite.html">run_pmodel_onestep_f_bysite()</a></code> adds single-step leaf-level simulations of the P-model.</li>
 <li>
 <code><a href="../reference/calib_sofun.html">calib_sofun()</a></code> now passes parameters as a <em>named</em> vector to cost-functions for easier processing within cost-functions. Default cost-functions were updated, but currently ignore the names. This is fully backward compatible, but allows to use the names in user-created cost functions.</li>
+<li>Internally, P-model now computes temperature dependencies of jmax and vcmax with Kumarathunge et al. (2019) instead of Kattge &amp; Knorr (2007), effectively using a dampened signal for tc_growth and long-term averages for tc_home. This alters the simulation results. Formattting of inputs remains unchanged.</li>
 </ul></div>
     <div class="section level2">
 <h2 class="page-header" data-toc-text="5.1.0" id="rsofun-510">rsofun 5.1.0<a class="anchor" aria-label="anchor" href="#rsofun-510"></a></h2>
