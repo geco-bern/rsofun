@@ -11,7 +11,7 @@ module md_gpp_pmodel
   use md_sofunutils, only: radians
   use md_grid, only: gridtype
   use md_photosynth, only: pmodel, zero_pmodel, outtype_pmodel, calc_ftemp_inst_vcmax, calc_ftemp_inst_jmax, &
-    calc_ftemp_inst_rd, calc_kphio_temp, calc_soilmstress
+    calc_ftemp_inst_rd, calc_kphio_temp, calc_soilmstress, calc_bigdelta
 
   implicit none
 
@@ -216,6 +216,11 @@ contains
       ! Stomatal conductance
       !----------------------------------------------------------------
       tile_fluxes(lu)%plant(pft)%gs_accl = out_pmodel%gs_setpoint
+
+      !----------------------------------------------------------------
+      ! C isotope fractionation
+      !----------------------------------------------------------------
+      tile_fluxes(lu)%plant(pft)%bigdelta = calc_bigdelta( out_pmodel%chi, out_pmodel%ca, out_pmodel%gammastar )
 
     end do pftloop
 

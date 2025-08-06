@@ -175,10 +175,11 @@ build_out_pmodel_onestep <- function(pmodelonestep_out){
           "vcmax25", 
           "jmax25", 
           "gs_accl", 
-          "wscal", 
           "chi", 
           "iwue", 
-          "rd")
+          "rd",
+          "bigdelta"
+          )
       ) %>%
       as_tibble(.name_repair = "check_unique")
   

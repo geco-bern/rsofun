@@ -11,7 +11,7 @@ module md_photosynth
 
   private
   public pmodel, zero_pmodel, outtype_pmodel, calc_ftemp_inst_jmax, calc_ftemp_inst_vcmax, &
-    calc_ftemp_inst_rd, calc_kphio_temp, calc_soilmstress
+    calc_ftemp_inst_rd, calc_kphio_temp, calc_soilmstress, calc_bigdelta
 
   !----------------------------------------------------------------
   ! MODULE-SPECIFIC, PRIVATE VARIABLES
@@ -665,6 +665,29 @@ contains
     end if
     
   end function calc_omega
+
+
+  function calc_bigdelta( chi, ca, gammastar ) result( bigdelta )
+    !-------------------------------------------------------------
+    ! Calculates isotopic discrimination (Delta) against 13C
+    !-------------------------------------------------------------
+    ! arguments
+    real, intent(in) :: chi        ! = ci/ca, leaf-internal to ambient CO2 partial pressure, ci/ca (unitless)
+    real, intent(in) :: ca         ! leaf-external (ambient) partial pressure, (Pa)
+    real, intent(in) :: gammastar  ! temperature-dependent photorespiratory compensation point (Pa)
+
+    ! local variables
+    real, parameter :: a_par = 4.4   ! isotope fractionation from CO2 diffusion in air (4.4 permil; Craig, 1953)
+    real, parameter :: b_par = 27.0  ! isotope fractionation from effective Rubisco carboxylation (26–30 permil)
+    real, parameter :: f_par = 8.0   ! isotope fractionation from photorespiration (8–16 permil; Ubierna & Farquhar, 2014)
+
+    ! function return variable
+    real :: bigdelta
+
+    bigdelta = chi * (b_par - a_par) + a_par - f_par * gammastar / ca
+
+  end function calc_bigdelta
+
 
 
   ! function findroot_quadratic( aquad, bquad, cquad, return_smallroot ) result( root )

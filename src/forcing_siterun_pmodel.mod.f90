@@ -15,7 +15,7 @@ module md_forcing_pmodel
     getclimate, getco2, getfapar, get_fpc_grid, vegcover_type
 
   type climate_type
-    real(kind=sp) :: dtemp  ! daily mean air temperature, deg C
+    real(kind=sp) :: dtemp  ! daytime mean air temperature, deg C
     real(kind=sp) :: dtmin  ! daily minimum air temperature, deg C
     real(kind=sp) :: dtmax  ! daily maximum air temperature, deg C
     real(kind=sp) :: dprec  ! mm s-1

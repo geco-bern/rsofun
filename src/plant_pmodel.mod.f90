@@ -84,6 +84,7 @@ module md_plant_pmodel
     real :: gs_accl           ! acclimated stomatal conductance (mol CO2 Pa-1 (mol photons)-1)
     real :: chi               ! ci:ca ratio (unitless)
     real :: iwue              ! intrinsic water use efficiency (A/gs = ca*(1-chi))
+    real :: bigdelta          ! 13C discrimination by photosynthesis, expressed as the difference to the atmospheric signature (permil)
 
     ! ! annual variables
     ! real :: agpp             ! annual total gross primary production (gC m-2 yr-1)
