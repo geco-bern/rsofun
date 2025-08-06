@@ -36,6 +36,7 @@ contains
     ! local variables
     real :: kphio, kphio_par_a, kphio_par_b, beta_unitcostratio, rd_to_vcmax, kc_jmax, &
       temp, vpd, ppfd, co2, patm, kphio_temp, vcmax, jmax, rd
+    real :: tc_home
     logical :: c4
     type(outtype_pmodel) :: out_pmodel  ! list of P-model output variables
 
@@ -60,7 +61,9 @@ contains
     ppfd = real(forcing(1,3)) ! (mol m-2 s-1) (while netrad is W m-2)
     co2  = real(forcing(1,4)) ! (ppm)
     patm = real(forcing(1,5)) ! (Pa)
-
+    
+    tc_home = temp            ! Long-term mean maximum temperature of the warmest month (deg C)
+    
     !----------------------------------------------------------------
     ! Low-temperature effect on quantum yield efficiency 
     !----------------------------------------------------------------
@@ -94,14 +97,15 @@ contains
       tc             = temp, &
       vpd            = vpd, &
       patm           = patm, &
+      tc_home        = tc_home, &
       c4             = c4, &
       method_optci   = "prentice14", &
       method_jmaxlim = "wang17" &
       )
 
     ! quantities with instantaneous temperature response
-    vcmax = calc_ftemp_inst_vcmax( temp, temp, tcref = 25.0 ) * out_pmodel%vcmax25
-    jmax  = calc_ftemp_inst_jmax(  temp, temp, tcref = 25.0 ) * out_pmodel%jmax25
+    vcmax = calc_ftemp_inst_vcmax( temp, temp,          tc_ref = 25.0 ) * out_pmodel%vcmax25
+    jmax  = calc_ftemp_inst_jmax(  temp, temp, tc_home, tc_ref = 25.0 ) * out_pmodel%jmax25
     rd    = out_pmodel%vcmax25 * rd_to_vcmax * calc_ftemp_inst_rd( temp ) * c_molmass
 
     !----------------------------------------------------------------
@@ -139,6 +143,7 @@ contains
     latitude,                  &     
     altitude,                  &   
     whc,                       &
+    tc_home,                   &
     nt,                        &
     par,                       &
     forcing,                   &
@@ -178,6 +183,7 @@ contains
     real(kind=c_double),  intent(in) :: latitude
     real(kind=c_double),  intent(in) :: altitude
     real(kind=c_double),  intent(in) :: whc
+    real(kind=c_double),  intent(in) :: tc_home
     integer(kind=c_int),  intent(in) :: nt ! number of time steps
     real(kind=c_double),  dimension(9), intent(in) :: par  ! free (calibratable) model parameters
     real(kind=c_double),  dimension(nt,12), intent(in) :: forcing  ! array containing all temporally varying forcing data (rows: time steps; columns: 1=air temperature, 2=rainfall, 3=vpd, 4=ppfd, 5=net radiation, 6=sunshine fraction, 7=snowfall, 8=co2, 9=fapar, 10=patm, 11=tmin, 12=tmax) 
@@ -227,6 +233,11 @@ contains
     ! GET SOIL PARAMETERS
     !----------------------------------------------------------------
     myinterface%whc_prescr = real( whc )
+    
+    !----------------------------------------------------------------
+    ! GET Home TEMPERATURE (tc_home)
+    !----------------------------------------------------------------
+    myinterface%tc_home = real( tc_home )
     
     !----------------------------------------------------------------
     ! GET CALIBRATABLE MODEL PARAMETERS (so far a small list)
