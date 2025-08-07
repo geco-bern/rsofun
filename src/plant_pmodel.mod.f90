@@ -227,7 +227,7 @@ contains
     character(len=*), intent(in) :: pftname
 
     ! local variables
-    integer, parameter :: lu_category_prov = 0   ! land use category associated with PFT (provisional)
+    integer, parameter :: lu_category_prov = 1   ! land use category associated with PFT (provisional)
 
     ! function return variable
     type( params_pft_plant_type ) :: out_getpftparams
