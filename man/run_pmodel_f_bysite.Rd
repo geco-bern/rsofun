@@ -71,7 +71,7 @@ Model output is provided as a tidy dataframe, with columns:
   \item{\code{snow}}{Snow water equivalents, in mm.}
   \item{\code{cond}}{Water input by condensation, in mm d\eqn{^{-1}}}
   \item{\code{cleaf}}{C mass of a virtual leaf carbon pool to keep track of isotopic composition, in gC m\eqn{^{-2}}}
-  \item{\code{cond}}{13C isotopic signature (delta) of \code{cleaf}, in permill}
+  \item{\code{cond}}{13C isotopic signature (delta) of \code{cleaf}, in permil}
   }
 }
 \description{
