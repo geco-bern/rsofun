@@ -66,7 +66,9 @@ contains
 
   pure function sub(p1, p2) result(res)
     ! Returns a pool containing the difference of two pools.
-    ! Isotopic signature unchanged (no discrimination by subtraction) ! TODO: XXX, this should discriminate if p2 has a different signature
+    ! Isotopic signature unchanged (no discrimination by subtraction). 
+    ! Note: this assumes that the subtraction does not discriminate, 
+    ! therefore signature remains unchanged.
     ! Use operator -: 'p1 - p2'
     type(orgpool), intent(in) :: p1, p2
     type(orgpool) :: res
@@ -112,7 +114,7 @@ contains
 
   end function scale_div
 
-  subroutine add_c12(self, delta) ! TODO: XXX, we need to define if c12 is only C12 or any C (i.e. C12 and C13 (and C14))
+  subroutine add_c12(self, delta)
     ! Add c12 amount to this pool
     class(orgpool), intent(inout) :: self
     real, intent(in) :: delta
