@@ -36,7 +36,8 @@ contains
 
     pftloop: do pft=1,npft
 
-      lu = params_pft_plant(pft)%lu_category
+      lu = params_pft_plant(pft)%lu_category ! FB: this is never initialized
+      lu = 1 ! xxx: Fix this
 
       ! Calculate isotopic 13C signature of recent assimilates, given atmospheric 13C signature and discrimination (bigdelta)
       ! Discrimination is calculated as a function of ci:ca (chi) in gpp().
@@ -47,7 +48,7 @@ contains
       ! d13c_gpp = d13c_atmosphere - tile_fluxes(lu)%plant(pft)%bigdelta 
 
       ! get biomass turnover of virtual leaf biomass, no change in isotopic signature
-      decay_pleaf = tile(lu)%plant(pft)%pleaf * f_decay_leaf
+      decay_pleaf = tile(lu)%plant(pft)%pleaf * f_decay_leaf ! NOTE: multiplication keeps isotopic signatures
 
       ! subtract biomass turnover from pool, no isotopic discrimination
       tile(lu)%plant(pft)%pleaf = tile(lu)%plant(pft)%pleaf - decay_pleaf

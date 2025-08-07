@@ -20,8 +20,8 @@ module md_common_fluxes
     real    :: Resp          = 0.0
     real    :: Nup           = 0.0
     real    :: fixedN        = 0.0
-    real    :: bigdelta      = -20.0   ! 13C isotope discrimination against atmospheric signature (permill)
-    real    :: d13_gpp       = -28.0   ! delta-13C isotopic signature, small delta (permill)
+    real    :: bigdelta      = -20.0   ! 13C isotope discrimination against atmospheric signature (permil)
+    real    :: d13_gpp       = -28.0   ! delta-13C isotopic signature, small delta (permil)
 
     contains
 

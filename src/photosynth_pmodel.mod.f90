@@ -20,8 +20,8 @@ module md_photosynth
   type outtype_pmodel
     real :: gammastar           ! temperature-dependent photorespiratory compensation point (Pa)
     real :: kmm                 ! Michaelis-Menten coefficient (Pa)
-    real :: ca                  ! leaf-external (ambient) partial pressure, (Pa)
-    real :: ci                  ! leaf-internal partial pressure, (Pa)
+    real :: ca                  ! leaf-external (ambient) CO2 partial pressure, (Pa)
+    real :: ci                  ! leaf-internal CO2 partial pressure, (Pa)
     real :: chi                 ! = ci/ca, leaf-internal to ambient CO2 partial pressure, ci/ca (unitless)
     real :: xi                  ! relative cost parameter, Eq. 9 in Stocker et al., 2019 GMD
     real :: iwue                ! intrinsic water use efficiency = A / gs = ca - ci = ca ( 1 - chi ) , unitless
@@ -538,7 +538,7 @@ contains
     !-------------------------------------------------------------
     ! arguments
     real, intent(in) :: chi        ! = ci/ca, leaf-internal to ambient CO2 partial pressure, ci/ca (unitless)
-    real, intent(in) :: ca         ! leaf-external (ambient) partial pressure, (Pa)
+    real, intent(in) :: ca         ! leaf-external (ambient) CO2 partial pressure, (Pa)
     real, intent(in) :: gammastar  ! temperature-dependent photorespiratory compensation point (Pa)
 
     ! local variables
