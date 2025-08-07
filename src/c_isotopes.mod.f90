@@ -53,14 +53,12 @@ contains
       tile(lu)%plant(pft)%pleaf = tile(lu)%plant(pft)%pleaf - decay_pleaf
 
       ! add GPP to virtual leaf biomass (no respiration), keeping track of isotopic signature
-      print*,'pleaf A:', tile(lu)%plant(pft)%pleaf
       tile(lu)%plant(pft)%pleaf = tile(lu)%plant(pft)%pleaf + &
         orgpool( &
           tile_fluxes(lu)%plant(pft)%dgpp, &
           d13c_gpp, &
           tile_fluxes(lu)%plant(pft)%dgpp * ntoc_leaf &
           )
-      print*,'pleaf B:', tile(lu)%plant(pft)%pleaf
 
     end do pftloop
 
