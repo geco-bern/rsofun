@@ -667,7 +667,7 @@ contains
   end function calc_omega
 
 
-  function calc_bigdelta( chi, ca, gammastar ) result( bigdelta )
+  pure function calc_bigdelta( chi, ca, gammastar ) result( bigdelta )
     !-------------------------------------------------------------
     ! Calculates isotopic discrimination (Delta) against 13C
     !-------------------------------------------------------------

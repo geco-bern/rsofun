@@ -5,14 +5,13 @@ module md_plant_pmodel
   !----------------------------------------------------------------
   use md_params_core, only: ndayyear, npft, nlu, lunat
   use md_interface_pmodel, only: myinterface
+  use md_orgpool
 
   implicit none
 
   private
   public plant_type, plant_fluxes_type, getpar_modl_plant, &
-    initglobal_plant, &
-    params_pft_plant
-    ! get_leaftraits, 
+    init_plant, params_pft_plant
 
   !----------------------------------------------------------------
   ! Public, module-specific state variables
@@ -50,9 +49,6 @@ module md_plant_pmodel
     real :: acrown              ! crown area
 
     ! leaf traits
-    ! real :: vcmax25             ! canopy-level Vcmax25 (Vcmax normalized to 25 deg C) (mol CO2 m-2 s-1)
-    ! real :: jmax25              ! total leaf N per unit leaf area (gN m-2)
-    
     real :: narea               ! total leaf N per unit leaf area (gN m-2)
     real :: narea_metabolic     ! metabolic leaf N per unit leaf area (gN m-2)
     real :: narea_structural    ! structural leaf N per unit leaf area (gN m-2)
@@ -62,8 +58,10 @@ module md_plant_pmodel
     real :: r_cton_leaf         ! leaf C:N ratio (gC/gN)
     real :: r_ntoc_leaf         ! leaf N:C ratio (gN/gC)
 
-  end type plant_type
+    ! pools
+    type(orgpool) :: pleaf      ! leaf biomass
 
+  end type plant_type
 
   !----------------------------------------------------------------
   ! Fluxes and other variables with no memory
@@ -85,11 +83,6 @@ module md_plant_pmodel
     real :: chi               ! ci:ca ratio (unitless)
     real :: iwue              ! intrinsic water use efficiency (A/gs = ca*(1-chi))
     real :: bigdelta          ! 13C discrimination by photosynthesis, expressed as the difference to the atmospheric signature (permil)
-
-    ! ! annual variables
-    ! real :: agpp             ! annual total gross primary production (gC m-2 yr-1)
-    ! real :: avcmax25_mean    ! annual Vcmax, normalised to 25 deg C, GPP-weighted mean
-    ! real :: avcmax25_max     ! annual Vcmax, normalised to 25 deg C, annual maximum
 
   end type plant_fluxes_type
 
@@ -294,7 +287,7 @@ contains
   end function getpftparams
 
 
-  subroutine initglobal_plant( plant )
+  subroutine init_plant( plant )
     !////////////////////////////////////////////////////////////////
     !  Initialisation of all _pools on all gridcells at the beginning
     !  of the simulation.
@@ -305,42 +298,27 @@ contains
     ! local variables
     integer :: pft
 
-    !-----------------------------------------------------------------------------
-    ! derive which PFTs are present from fpc_grid (which is prescribed)
-    !-----------------------------------------------------------------------------
-    do pft=1,npft
-      call initpft( plant(pft) )
-      plant(pft)%pftno = pft
-    end do
-
-  end subroutine initglobal_plant
-
-
-  subroutine initpft( plant )
-    !////////////////////////////////////////////////////////////////
-    !  Initialisation of specified PFT on specified gridcell
-    !----------------------------------------------------------------
-    ! argument
-    type( plant_type ), intent(inout) :: plant
-
-    plant%fpc_grid  = 0.0
-    plant%lai_ind   = 0.0
-    plant%fapar_ind = 0.0
-    plant%acrown    = 0.0
+    plant(:)%fpc_grid  = 0.0
+    plant(:)%lai_ind   = 0.0
+    plant(:)%fapar_ind = 0.0
+    plant(:)%acrown    = 0.0
 
     ! canpopy state variables
-    ! plant%vcmax25          = 0.0
-    ! plant%jmax25           = 0.0
-    plant%narea            = 0.0
-    plant%narea_metabolic  = 0.0
-    plant%narea_structural = 0.0
-    plant%lma              = 0.0
-    plant%sla              = 0.0
-    plant%nmass            = 0.0
-    plant%r_cton_leaf      = 0.0
-    plant%r_ntoc_leaf      = 0.0
+    plant(:)%narea            = 0.0
+    plant(:)%narea_metabolic  = 0.0
+    plant(:)%narea_structural = 0.0
+    plant(:)%lma              = 0.0
+    plant(:)%sla              = 0.0
+    plant(:)%nmass            = 0.0
+    plant(:)%r_cton_leaf      = 0.0
+    plant(:)%r_ntoc_leaf      = 0.0
 
-  end subroutine initpft
+    do pft=1,npft
+      plant(pft)%pftno = pft
+      plant(pft)%pleaf = orgpool()
+    end do
+
+  end subroutine init_plant
 
 
   ! subroutine initdaily_plant( plant_fluxes )

@@ -54,7 +54,7 @@ contains
     ! Subroutines from BiomeE-Allocation
     !------------------------------------------------------------------------
     use md_forcing_biomee, only: climate_type
-    use md_photosynth, only: pmodel, zero_pmodel, outtype_pmodel, calc_ftemp_inst_rd
+    use md_photosynth, only: pmodel, zero_pmodel, outtype_pmodel, calc_ftemp_inst_rd, calc_bigdelta
     use md_photosynth, only: calc_kphio_temp, calc_soilmstress
     use md_params_core, only: kTkelvin, kfFEC, c_molmass
     use md_sofunutils, only: dampen_variability
@@ -170,6 +170,11 @@ contains
           cc%resl = -resp * c_molmass * 1e-3 * cc%leafarea() * inputs%step_seconds ! kgC tree-1 step-1
           cc%fast_fluxes%gpp = (psyn - resp) * c_molmass * 1e-3 * cc%leafarea() * inputs%step_seconds ! kgC step-1 tree-1
 
+          ! Calculate isotopic 13C signature of recent assimilates, given atmospheric 13C signature and discrimination (bigdelta)
+          ! Discrimination is calculated as a function of ci:ca (chi) in gpp().
+          cc%fast_fluxes%bigdelta = 20.0 ! permil, hold fixed for demo implementation of d13C
+          cc%fast_fluxes%d13_gpp = (forcing%d13_atm - cc%fast_fluxes%bigdelta) / (cc%fast_fluxes%bigdelta / 1000.0 + 1.0)
+
           endif
         end associate
 
@@ -250,6 +255,11 @@ contains
           cc%resl = fapar_tree(i) * out_pmodel%vcmax25 * params_gpp%rd_to_vcmax * calc_ftemp_inst_rd( forcing%TairC ) &
             * cc%crownarea() * inputs%step_seconds * c_molmass * 1.0e-3
 
+          ! Calculate isotopic 13C signature of recent assimilates, given atmospheric 13C signature and discrimination (bigdelta)
+          ! Discrimination is calculated as a function of ci:ca (chi) in gpp().
+          cc%fast_fluxes%bigdelta = calc_bigdelta( out_pmodel%chi, out_pmodel%ca, out_pmodel%gammastar )
+          cc%fast_fluxes%d13_gpp = (forcing%d13_atm - cc%fast_fluxes%bigdelta) / (cc%fast_fluxes%bigdelta / 1000.0 + 1.0)
+
         endif
 
         it => it%next()
@@ -262,7 +272,7 @@ contains
 
   subroutine gs_leuning( rad_top, rad_net, tl, ea, lai, &
     p_surf, ws, species, pt, ca, kappa, leaf_wet, &
-    apot, acl,w_scale2, transp )
+    apot, acl, w_scale2, transp )
 
     ! taking from params_core (SOFUN)
     use md_params_core, only: kR, kTkelvin

@@ -8,11 +8,12 @@ module md_biosphere_pmodel
   use md_waterbal, only: waterbal, solar, getpar_modl_waterbal
   use md_gpp_pmodel, only: getpar_modl_gpp, gpp
   use md_vegdynamics_pmodel, only: vegdynamics
-  use md_tile_pmodel, only: tile_type, tile_fluxes_type, initglobal_tile, initdaily_tile_fluxes, &
+  use md_tile_pmodel, only: tile_type, tile_fluxes_type, init_tile, initdaily_tile_fluxes, &
     getpar_modl_tile, diag_daily
   use md_plant_pmodel, only: getpar_modl_plant
   use md_sofunutils, only: calc_patm
   use md_soiltemp, only: soiltemp
+  use md_c_isotopes, only: c_isotopes
 
   implicit none
 
@@ -64,8 +65,8 @@ contains
       !----------------------------------------------------------------
       ! Initialise pool variables and/or read from restart file (not implemented)
       !----------------------------------------------------------------
-      ! if (verbose) print*, 'initglobal_() ...'
-      call initglobal_tile( tile(:) )
+      ! if (verbose) print*, 'init_() ...'
+      call init_tile( tile(:) )
       ! if (verbose) print*, '... done'
 
     endif 
@@ -139,6 +140,15 @@ contains
                   myinterface%params_siml%in_ppfd &
                   )
         ! if (verbose) print*,'... done'
+
+        !----------------------------------------------------------------
+        ! keep track of 13C isotopic signature in "virtual leaf biomass"
+        !----------------------------------------------------------------
+        call c_isotopes( &
+          tile(:), &
+          tile_fluxes(:), &
+          -8.4 &  ! to be taken from forcing as time-varying input
+          )
 
         !----------------------------------------------------------------
         ! get soil moisture, and runoff

@@ -920,9 +920,11 @@ contains
 
   end subroutine annual_diagnostics
 
+
   subroutine annual_diagnostics_post_mortality(self, cohort_reporting)
     !////////////////////////////////////////////////////////////////
-    ! Updates tile-level variables and populates annual output after reproduction and mortality processes
+    ! Updates tile-level variables and populates annual output after 
+    ! reproduction and mortality processes
     !---------------------------------------------------------------
     class(vegn_tile_type), intent(inout) :: self
     logical, intent(in) :: cohort_reporting
@@ -931,7 +933,7 @@ contains
     type(cohort_type), pointer :: cc
     type(cohort_stack_item), pointer :: it
     integer :: i
-    type(orgpool) :: loss_fine,loss_coarse, loss_total
+    type(orgpool) :: loss_fine, loss_coarse, loss_total
 
     ! We go through each killed fraction of cohort and we map the fraction to the cohort
     ! it originated from (they have the same uid).
@@ -942,12 +944,23 @@ contains
       associate (sp => cc%sp())
 
         ! Carbon and Nitrogen from plants to soil pools
-        ! the orgpool() defines the multiplicative factors for C,N respectively. 
+        ! the orgpool() defines the multiplicative factors for C, N respectively. 
         ! (Note the sign of the leafarea transfer: - for coarse, + for fine)
-        loss_coarse = (orgpool(- inputs%params_tile%LMAmin, - sp%LNbase) * cc%leafarea() & 
-                + cc%pwood + cc%psapw + cc%pleaf) * cc%density
-        loss_fine = (orgpool(+ inputs%params_tile%LMAmin, + sp%LNbase) * cc%leafarea()  &
-                + cc%plabl + cc%pseed + cc%proot) * cc%density
+        loss_coarse = (orgpool( &
+            - inputs%params_tile%LMAmin, &
+            cc%pleaf%d13, &  ! XXX to check with Mayeul
+            - sp%LNbase &
+            ) * cc%leafarea() &
+          + cc%pwood + cc%psapw + cc%pleaf) &
+          * cc%density
+
+        loss_fine = (orgpool(&
+            + inputs%params_tile%LMAmin, &
+            cc%pleaf%d13, &  ! XXX to check with Mayeul
+            + sp%LNbase &
+            ) * cc%leafarea() &
+          + cc%plabl + cc%pseed + cc%proot) &
+          * cc%density
 
       end associate
 

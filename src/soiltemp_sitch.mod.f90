@@ -129,7 +129,7 @@ contains
     !-------------------------------------------------------------------------
     use md_params_core, only: ndayyear, pi
     use md_sofunutils, only: running
-    use md_tile_pmodel, only: paramtype_soil, initglobal_soil_params
+    use md_tile_pmodel, only: paramtype_soil, init_soil_params
 
     ! arguments
     real, intent(in) :: thetaS
@@ -149,7 +149,7 @@ contains
     ! local variables
     type(paramtype_soil) :: soil_params
 
-    call initglobal_soil_params( soil_params )
+    call init_soil_params( soil_params )
 
     ! If first year, use this years air temperature (available for all days in this year)
     if (.not. allocated(dtemp_pvy)) then
