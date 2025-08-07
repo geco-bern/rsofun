@@ -203,6 +203,8 @@ contains
         out_biosphere%wcont(doy)   = tile(1)%soil%phy%wcont
         out_biosphere%snow(doy)    = tile(1)%soil%phy%snow
         out_biosphere%cond(doy)    = tile_fluxes(1)%canopy%dcn
+        out_biosphere%cleaf(doy)   = tile(1)%plant(1)%pleaf%c12
+        out_biosphere%cleaf13(doy) = tile(1)%plant(1)%pleaf%d13
 
         init_daily = .false.
 

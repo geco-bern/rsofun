@@ -1,6 +1,6 @@
 ---
 title: "BiomeE usage"
-author: "Koen Hufkens, Josefa Arán"
+author: "Koen Hufkens, Josefa Arán, Fabian Bernhard"
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{BiomeE usage}
@@ -86,7 +86,6 @@ biomee_gs_leuning_output_annual_tile |>
   ggplot() +
   geom_line(aes(x = year, y = plantC)) +
   theme_classic()+labs(x = "Year", y = "plantC")
-
 ```
 
 ## Running the BiomeEP model
@@ -241,6 +240,7 @@ ggplot() +
   theme_classic() + 
   labs(x = "Year", y = "plantC")
 ```
+
 ## Validating model output
 
 To ensure behavior of the calibrated model is as expected its output should be validated with different consistency checks. 

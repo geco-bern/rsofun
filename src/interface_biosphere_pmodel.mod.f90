@@ -69,6 +69,8 @@ module md_interface_pmodel
     real, dimension(ndayyear) :: wcont
     real, dimension(ndayyear) :: snow
     real, dimension(ndayyear) :: cond
+    real, dimension(ndayyear) :: cleaf
+    real, dimension(ndayyear) :: cleaf13
   end type outtype_biosphere
 
 end module md_interface_pmodel

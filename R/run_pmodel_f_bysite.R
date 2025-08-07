@@ -52,6 +52,8 @@
 #'   \item{\code{wcont}}{Soil water content, in mm.}
 #'   \item{\code{snow}}{Snow water equivalents, in mm.}
 #'   \item{\code{cond}}{Water input by condensation, in mm d\eqn{^{-1}}}
+#'   \item{\code{cleaf}}{C mass of a virtual leaf carbon pool to keep track of isotopic composition, in gC m\eqn{^{-2}}}
+#'   \item{\code{cond}}{13C isotopic signature (delta) of \code{cleaf}, in permill}
 #'   }
 #' 
 #' @details Depending on the input model parameters, it's possible to run the 
@@ -362,7 +364,10 @@ build_out_pmodel <- function(pmodelout, firstyeartrend, nyeartrend){
         "netrad", 
         "wcont", 
         "snow",
-        "cond")
+        "cond",
+        "cleaf",
+        "cleaf13"
+        )
     ) %>%
     as_tibble(.name_repair = "check_unique") %>%
     dplyr::bind_cols(ddf, .)
