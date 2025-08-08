@@ -5,6 +5,7 @@
   easier processing within cost-functions. Default cost-functions were updated,
   but currently ignore the names. This is fully backward compatible, but allows
   to use the names in user-created cost functions.
+* `run_pmodel_f_bysite()` and `runread_pmodel()` additionally return `cleaf` and `cleaf13`
 
 # rsofun 5.1.0
 
