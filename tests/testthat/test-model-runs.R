@@ -13,7 +13,9 @@ test_that("biomee output check (p-model)", {
   expect_true(all.equal(colMeans(out$data[[1]]$output_annual_tile), colMeans(biomee_p_model_output$data[[1]]$output_annual_tile), tolerance = 1e-4))
   expect_true(all.equal(colMeans(out$data[[1]]$output_annual_cohorts), colMeans(biomee_p_model_output$data[[1]]$output_annual_cohorts), tolerance = 1e-4))
 
-  # If this test fails it means that the output of the model is out of sync with the data in the data directory.
+  expect_equal(out, rsofun::biomee_p_model_output, tolerance = 0.01)
+  
+  # If these tests fail it means that the output of the model is out of sync with the data in the data directory.
   # It could either mean that:
   # - the model was accidentally altered and should be fixed to deliver the expected output
   # - the model, drivers, or parameters was changed and the output data needs to be re-generetaed using the scripts in
@@ -36,7 +38,9 @@ test_that("biomee output check (p-model) with LULUC", {
   expect_true(all.equal(colMeans(out$secondary[[1]]$output_annual_tile), colMeans(biomee_p_model_luluc_output$secondary[[1]]$output_annual_tile), tolerance = 1e-4))
   expect_true(all.equal(colMeans(out$aggregated[[1]]$output_annual_cell), colMeans(biomee_p_model_luluc_output$aggregated[[1]]$output_annual_cell), tolerance = 1e-4))
 
-  # If this test fails it means that the output of the model is out of sync with the data in the data directory.
+  expect_equal(out, rsofun::biomee_p_model_luluc_output, tolerance = 0.01)
+  
+  # If these tests fail it means that the output of the model is out of sync with the data in the data directory.
   # It could either mean that:
   # - the model was accidentally altered and should be fixed to deliver the expected output
   # - the model, drivers, or parameters was changed and the output data needs to be re-generetaed using the scripts in
@@ -59,6 +63,8 @@ test_that("biomee output check (gs leuning)", {
   expect_true(all.equal(colMeans(out$data[[1]]$output_annual_tile), colMeans(biomee_gs_leuning_output$data[[1]]$output_annual_tile), tolerance = 1e-4))
   expect_true(all.equal(colMeans(out$data[[1]]$output_annual_cohorts), colMeans(biomee_gs_leuning_output$data[[1]]$output_annual_cohorts), tolerance = 1e-4))
 
+  expect_equal(out, rsofun::biomee_gs_leuning_output, tolerance = 0.01)
+  
   # Cf comment above
 })
 
@@ -144,6 +150,10 @@ test_that("p-model run check GPP", {
   expect_equal(mod_pmodel_bysite, mod_pmodel_runread_serial)
   expect_equal(mod_pmodel_bysite, mod_pmodel_runread_parallel)
   expect_snapshot_value_fmt(mod_pmodel_bysite, tolerance = 0.01, cran = TRUE)
+  
+  # also check that reference data sets are up-to-date
+  expect_equal(df_output, rsofun::p_model_output, tolerance = 0.01)
+  
 })
 
 test_that("p-model run check Vcmax25", {
@@ -210,6 +220,10 @@ test_that("p-model run check Vcmax25", {
   expect_equal(mod_pmodel_vcmax_bysite, mod_pmodel_vcmax_runread_serial)
   expect_equal(mod_pmodel_vcmax_bysite, mod_pmodel_vcmax_runread_parallel)
   expect_snapshot_value_fmt(mod_pmodel_vcmax_bysite, tolerance = 0.01, cran = TRUE)
+  
+  # also check that reference data sets are up-to-date
+  expect_equal(df_output, rsofun::p_model_output_vcmax25, tolerance = 0.01)
+  
 })
 
 test_that("p-model onestep output check (run_pmodel_onestep_f_bysite())", {
