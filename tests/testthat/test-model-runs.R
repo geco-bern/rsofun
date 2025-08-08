@@ -154,6 +154,35 @@ test_that("p-model run check GPP", {
   # also check that reference data sets are up-to-date
   expect_equal(df_output, rsofun::p_model_output, tolerance = 0.01)
   
+  
+  # Rerun again (inverse order) to test memory leakage:
+  df_output_p_rerun <- runread_pmodel_f(
+    df_drivers,
+    par = params_modl,
+    makecheck = TRUE,
+    parallel = TRUE, 
+    ncores = 2
+  )
+  df_output_rerun <- runread_pmodel_f(
+    df_drivers,
+    par = params_modl,
+    makecheck = FALSE,
+    parallel = FALSE
+  )
+  mod_rerun <- run_pmodel_f_bysite(
+    df_drivers$sitename[1],
+    df_drivers$params_siml[[1]],
+    df_drivers$site_info[[1]],
+    df_drivers$forcing[[1]],
+    params_modl = params_modl,
+    makecheck = FALSE
+  )
+  expect_equal(mod,
+               mod_rerun)
+  expect_equal(df_output,
+               df_output_rerun)
+  expect_equal(df_output_p,
+               df_output_p_rerun)
 })
 
 test_that("p-model run check Vcmax25", {
@@ -224,6 +253,34 @@ test_that("p-model run check Vcmax25", {
   # also check that reference data sets are up-to-date
   expect_equal(df_output, rsofun::p_model_output_vcmax25, tolerance = 0.01)
   
+  # Rerun again (inverse order) to test memory leakage:
+  df_output_p_rerun <- runread_pmodel_f(
+    df_drivers,
+    par = params_modl,
+    makecheck = TRUE,
+    parallel = TRUE,
+    ncores = 2
+  )
+  df_output_rerun <- runread_pmodel_f(
+    df_drivers,
+    par = params_modl,
+    makecheck = FALSE,
+    parallel = FALSE
+  )
+  mod_rerun <- run_pmodel_f_bysite(
+    df_drivers$sitename[1],
+    df_drivers$params_siml[[1]],
+    df_drivers$site_info[[1]],
+    df_drivers$forcing[[1]],
+    params_modl = params_modl,
+    makecheck = FALSE
+  )
+  expect_equal(mod, 
+               mod_rerun)
+  expect_equal(df_output, 
+               df_output_rerun)
+  expect_equal(df_output_p |> arrange(sitename), 
+               df_output_p_rerun |> arrange(sitename))
 })
 
 test_that("p-model onestep output check (run_pmodel_onestep_f_bysite())", {
@@ -316,6 +373,24 @@ test_that("p-model onestep output check (run_pmodel_onestep_f_bysite())", {
   # - the model was accidentally altered and should be fixed to deliver the expected output
   # - the package {rpmodel} has been altered
  
+  
+  # Rerun again (inverse order) to test memory leakage:
+  resF_rerun <- run_pmodel_onestep_f_bysite(
+    lc4 = FALSE,
+    forcing = data.frame(temp = inputs$temp, vpd = inputs$vpd, ppfd = inputs$ppfd, 
+                         co2 = inputs$co2, patm = inputs$patm),
+    params_modl = list(
+      kphio              = inputs$kphio,
+      kphio_par_a        = inputs$kphio_par_a,
+      kphio_par_b        = inputs$kphio_par_b,
+      beta_unitcostratio = inputs$beta_unitcostratio,
+      rd_to_vcmax        = inputs$rd_to_vcmax,
+      kc_jmax            = inputs$kc_jmax
+    ),
+    makecheck = TRUE
+  )
+  expect_equal(resF, 
+               resF_rerun)
 })
 
 
