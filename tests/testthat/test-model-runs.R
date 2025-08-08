@@ -136,7 +136,8 @@ test_that("p-model run check GPP", {
     df_drivers,
     par = params_modl,
     makecheck = TRUE,
-    parallel = TRUE
+    parallel = TRUE, 
+    ncores = 2
   )
 
   # test for correctly returned types
@@ -235,7 +236,7 @@ test_that("p-model run check Vcmax25", {
     par = params_modl,
     makecheck = TRUE,
     parallel = TRUE,
-    ncores = 1
+    ncores = 2
   )
 
   # test for correctly returned types
