@@ -13,7 +13,9 @@ test_that("biomee output check (p-model)", {
   expect_true(all.equal(colMeans(out$data[[1]]$output_annual_tile), colMeans(biomee_p_model_output$data[[1]]$output_annual_tile), tolerance = 1e-4))
   expect_true(all.equal(colMeans(out$data[[1]]$output_annual_cohorts), colMeans(biomee_p_model_output$data[[1]]$output_annual_cohorts), tolerance = 1e-4))
 
-  # If this test fails it means that the output of the model is out of sync with the data in the data directory.
+  expect_equal(out, rsofun::biomee_p_model_output, tolerance = 0.08) # NOTE: since Biomee is sensitive, feel free to deactivate this line if it does not pass
+  
+  # If these tests fail it means that the output of the model is out of sync with the data in the data directory.
   # It could either mean that:
   # - the model was accidentally altered and should be fixed to deliver the expected output
   # - the model, drivers, or parameters was changed and the output data needs to be re-generetaed using the scripts in
@@ -36,7 +38,9 @@ test_that("biomee output check (p-model) with LULUC", {
   expect_true(all.equal(colMeans(out$secondary[[1]]$output_annual_tile), colMeans(biomee_p_model_luluc_output$secondary[[1]]$output_annual_tile), tolerance = 1e-4))
   expect_true(all.equal(colMeans(out$aggregated[[1]]$output_annual_cell), colMeans(biomee_p_model_luluc_output$aggregated[[1]]$output_annual_cell), tolerance = 1e-4))
 
-  # If this test fails it means that the output of the model is out of sync with the data in the data directory.
+  expect_equal(out, rsofun::biomee_p_model_luluc_output, tolerance = 0.08) # NOTE: since Biomee is sensitive, feel free to deactivate this line if it does not pass
+  
+  # If these tests fail it means that the output of the model is out of sync with the data in the data directory.
   # It could either mean that:
   # - the model was accidentally altered and should be fixed to deliver the expected output
   # - the model, drivers, or parameters was changed and the output data needs to be re-generetaed using the scripts in
@@ -59,6 +63,8 @@ test_that("biomee output check (gs leuning)", {
   expect_true(all.equal(colMeans(out$data[[1]]$output_annual_tile), colMeans(biomee_gs_leuning_output$data[[1]]$output_annual_tile), tolerance = 1e-4))
   expect_true(all.equal(colMeans(out$data[[1]]$output_annual_cohorts), colMeans(biomee_gs_leuning_output$data[[1]]$output_annual_cohorts), tolerance = 1e-4))
 
+  expect_equal(out, rsofun::biomee_gs_leuning_output, tolerance = 0.08) # NOTE: since Biomee is sensitive, feel free to deactivate this line if it does not pass
+  
   # Cf comment above
 })
 
@@ -130,7 +136,8 @@ test_that("p-model run check GPP", {
     df_drivers,
     par = params_modl,
     makecheck = TRUE,
-    parallel = TRUE
+    parallel = TRUE, 
+    ncores = 2
   )
 
   # test for correctly returned types
@@ -144,6 +151,39 @@ test_that("p-model run check GPP", {
   expect_equal(mod_pmodel_bysite, mod_pmodel_runread_serial)
   expect_equal(mod_pmodel_bysite, mod_pmodel_runread_parallel)
   expect_snapshot_value_fmt(mod_pmodel_bysite, tolerance = 0.01, cran = TRUE)
+  
+  # also check that reference data sets are up-to-date
+  expect_equal(df_output, rsofun::p_model_output, tolerance = 0.01)
+  
+  
+  # Rerun again (inverse order) to test memory leakage:
+  df_output_p_rerun <- runread_pmodel_f(
+    df_drivers,
+    par = params_modl,
+    makecheck = TRUE,
+    parallel = TRUE, 
+    ncores = 2
+  )
+  df_output_rerun <- runread_pmodel_f(
+    df_drivers,
+    par = params_modl,
+    makecheck = FALSE,
+    parallel = FALSE
+  )
+  mod_rerun <- run_pmodel_f_bysite(
+    df_drivers$sitename[1],
+    df_drivers$params_siml[[1]],
+    df_drivers$site_info[[1]],
+    df_drivers$forcing[[1]],
+    params_modl = params_modl,
+    makecheck = FALSE
+  )
+  expect_equal(mod,
+               mod_rerun)
+  expect_equal(df_output,
+               df_output_rerun)
+  expect_equal(df_output_p,
+               df_output_p_rerun)
 })
 
 test_that("p-model run check Vcmax25", {
@@ -196,7 +236,7 @@ test_that("p-model run check Vcmax25", {
     par = params_modl,
     makecheck = TRUE,
     parallel = TRUE,
-    ncores = 1
+    ncores = 2
   )
 
   # test for correctly returned types
@@ -210,6 +250,38 @@ test_that("p-model run check Vcmax25", {
   expect_equal(mod_pmodel_vcmax_bysite, mod_pmodel_vcmax_runread_serial)
   expect_equal(mod_pmodel_vcmax_bysite, mod_pmodel_vcmax_runread_parallel)
   expect_snapshot_value_fmt(mod_pmodel_vcmax_bysite, tolerance = 0.01, cran = TRUE)
+  
+  # also check that reference data sets are up-to-date
+  expect_equal(df_output, rsofun::p_model_output_vcmax25, tolerance = 0.01)
+  
+  # Rerun again (inverse order) to test memory leakage:
+  df_output_p_rerun <- runread_pmodel_f(
+    df_drivers,
+    par = params_modl,
+    makecheck = TRUE,
+    parallel = TRUE,
+    ncores = 2
+  )
+  df_output_rerun <- runread_pmodel_f(
+    df_drivers,
+    par = params_modl,
+    makecheck = FALSE,
+    parallel = FALSE
+  )
+  mod_rerun <- run_pmodel_f_bysite(
+    df_drivers$sitename[1],
+    df_drivers$params_siml[[1]],
+    df_drivers$site_info[[1]],
+    df_drivers$forcing[[1]],
+    params_modl = params_modl,
+    makecheck = FALSE
+  )
+  expect_equal(mod, 
+               mod_rerun)
+  expect_equal(df_output, 
+               df_output_rerun)
+  expect_equal(df_output_p |> arrange(sitename), 
+               df_output_p_rerun |> arrange(sitename))
 })
 
 test_that("p-model onestep output check (run_pmodel_onestep_f_bysite())", {
@@ -278,7 +350,8 @@ test_that("p-model onestep output check (run_pmodel_onestep_f_bysite())", {
                                  # NOTE: is now: (3.39e-6 g C m-2 s-1) # still slightly different from 3.16e-6, but remains within tolerance
     dplyr::select(-ns_star, -xi, -mj, -mc, -ci,
                   -gpp, -ca, -gammastar, -kmm) |>
-    dplyr::select(vcmax, jmax, vcmax25, jmax25, chi, gs, iwue, rd)
+    dplyr::select(vcmax, jmax, vcmax25, jmax25, chi, gs, iwue, rd) |>
+    dplyr::select(-vcmax25, -jmax25) # NOTE: as long as rpmodel is not updated with Kumarathunge T-dependency, we can only compare vcmax and jmax
 
   resF_units_fixed <- resF |> 
     dplyr::mutate(
@@ -289,7 +362,8 @@ test_that("p-model onestep output check (run_pmodel_onestep_f_bysite())", {
       iwue = iwue,               # NOTE: keep units as-is: (-)                   (computed as (ca-ci)/1.6/patm)
       rd   = rd) |>              # NOTE: keep units as-is: 3.16e-6 g C m-2 s-1   (computed as rd_to_vcmax*vcmax25*calc_ftemp_inst_rd(Temp)*c_molmass
     dplyr::select(-gs_accl) |>
-    dplyr::select(vcmax, jmax, vcmax25, jmax25, chi, gs, iwue, rd)
+    dplyr::select(vcmax, jmax, vcmax25, jmax25, chi, gs, iwue, rd) |>
+    dplyr::select(-vcmax25, -jmax25) # NOTE: as long as rpmodel is not updated with Kumarathunge T-dependency, we can only compare vcmax and jmax
   
 
   # Now comparison must pass
@@ -300,6 +374,24 @@ test_that("p-model onestep output check (run_pmodel_onestep_f_bysite())", {
   # - the model was accidentally altered and should be fixed to deliver the expected output
   # - the package {rpmodel} has been altered
  
+  
+  # Rerun again (inverse order) to test memory leakage:
+  resF_rerun <- run_pmodel_onestep_f_bysite(
+    lc4 = FALSE,
+    forcing = data.frame(temp = inputs$temp, vpd = inputs$vpd, ppfd = inputs$ppfd, 
+                         co2 = inputs$co2, patm = inputs$patm),
+    params_modl = list(
+      kphio              = inputs$kphio,
+      kphio_par_a        = inputs$kphio_par_a,
+      kphio_par_b        = inputs$kphio_par_b,
+      beta_unitcostratio = inputs$beta_unitcostratio,
+      rd_to_vcmax        = inputs$rd_to_vcmax,
+      kc_jmax            = inputs$kc_jmax
+    ),
+    makecheck = TRUE
+  )
+  expect_equal(resF, 
+               resF_rerun)
 })
 
 
