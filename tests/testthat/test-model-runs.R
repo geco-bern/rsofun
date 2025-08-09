@@ -13,7 +13,7 @@ test_that("biomee output check (p-model)", {
   expect_true(all.equal(colMeans(out$data[[1]]$output_annual_tile), colMeans(biomee_p_model_output$data[[1]]$output_annual_tile), tolerance = 1e-4))
   expect_true(all.equal(colMeans(out$data[[1]]$output_annual_cohorts), colMeans(biomee_p_model_output$data[[1]]$output_annual_cohorts), tolerance = 1e-4))
 
-  expect_equal(out, rsofun::biomee_p_model_output, tolerance = 0.08)
+  expect_equal(out, rsofun::biomee_p_model_output, tolerance = 0.08) # NOTE: since Biomee is sensitive, feel free to deactivate this line if it does not pass
   
   # If these tests fail it means that the output of the model is out of sync with the data in the data directory.
   # It could either mean that:
@@ -38,7 +38,7 @@ test_that("biomee output check (p-model) with LULUC", {
   expect_true(all.equal(colMeans(out$secondary[[1]]$output_annual_tile), colMeans(biomee_p_model_luluc_output$secondary[[1]]$output_annual_tile), tolerance = 1e-4))
   expect_true(all.equal(colMeans(out$aggregated[[1]]$output_annual_cell), colMeans(biomee_p_model_luluc_output$aggregated[[1]]$output_annual_cell), tolerance = 1e-4))
 
-  expect_equal(out, rsofun::biomee_p_model_luluc_output, tolerance = 0.08)
+  expect_equal(out, rsofun::biomee_p_model_luluc_output, tolerance = 0.08) # NOTE: since Biomee is sensitive, feel free to deactivate this line if it does not pass
   
   # If these tests fail it means that the output of the model is out of sync with the data in the data directory.
   # It could either mean that:
@@ -63,7 +63,7 @@ test_that("biomee output check (gs leuning)", {
   expect_true(all.equal(colMeans(out$data[[1]]$output_annual_tile), colMeans(biomee_gs_leuning_output$data[[1]]$output_annual_tile), tolerance = 1e-4))
   expect_true(all.equal(colMeans(out$data[[1]]$output_annual_cohorts), colMeans(biomee_gs_leuning_output$data[[1]]$output_annual_cohorts), tolerance = 1e-4))
 
-  expect_equal(out, rsofun::biomee_gs_leuning_output, tolerance = 0.08)
+  expect_equal(out, rsofun::biomee_gs_leuning_output, tolerance = 0.08) # NOTE: since Biomee is sensitive, feel free to deactivate this line if it does not pass
   
   # Cf comment above
 })
