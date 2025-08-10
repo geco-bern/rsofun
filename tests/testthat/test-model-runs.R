@@ -392,6 +392,8 @@ test_that("p-model onestep output check (run_pmodel_onestep_f_bysite())", {
   )
   expect_equal(resF, 
                resF_rerun)
+  
+  expect_snapshot_value_fmt(resF, tolerance = 0.01, cran = TRUE)
 })
 
 
