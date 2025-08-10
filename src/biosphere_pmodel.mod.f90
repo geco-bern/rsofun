@@ -148,7 +148,7 @@ contains
         call c_isotopes( &
           tile(:), &
           tile_fluxes(:), &
-          -8.4 &  ! to be taken from forcing as time-varying input
+          -8.4 &  ! ! xxx demo: hold constant. should be taken from forcing as time-varying input
           )
 
         !----------------------------------------------------------------
