@@ -26,7 +26,7 @@ soiltemp_sitch.mod.o: params_core.mod.o sofunutils.mod.o tile_pmodel.mod.o inter
 plant_pmodel.mod.o: params_core.mod.o sofunutils.mod.o interface_biosphere_pmodel.mod.o
 vegdynamics_pmodel.mod.o: params_core.mod.o tile_pmodel.mod.o plant_pmodel.mod.o gpp_pmodel.mod.o waterbal_splash.mod.o
 biosphere_pmodel.mod.o: params_core.mod.o sofunutils.mod.o plant_pmodel.mod.o waterbal_splash.mod.o \
-    gpp_pmodel.mod.o vegdynamics_pmodel.mod.o tile_pmodel.mod.o interface_biosphere_pmodel.mod.o soiltemp_sitch.mod.o vegdynamics_pmodel.mod.o c_isotopes.mod.o
+    gpp_pmodel.mod.o vegdynamics_pmodel.mod.o tile_pmodel.mod.o interface_biosphere_pmodel.mod.o soiltemp_sitch.mod.o vegdynamics_pmodel.mod.o
 biosphere_biomee.mod.o: interface_in_biosphere_biomee.mod.o vegetation_tile_biomee.mod.o soil_biomee.mod.o vegetation_processes_biomee.mod.o \
     soiltemp_sitch.mod.o sofunutils.mod.o
 soil_biomee.mod.o: vegetation_tile_biomee.mod.o sofunutils.mod.o forcing_siterun_biomee.mod.o
@@ -39,7 +39,6 @@ params_siml_pmodel.mod.o: params_core.mod.o
 product_pools_biomee.mod.o: orgpool.mod.o
 lu_tile_biomee.mod.o: vegetation_tile_biomee.mod.o
 aggregated_tile_biomee.mod.o: lu_tile_biomee.mod.o product_pools_biomee.mod.o orgpool.mod.o params_core.mod.o interface_in_biosphere_biomee.mod.o cohort_biomee.mod.o cohort_linked_list_biomee.mod.o interface_out_biosphere_biomee.mod.o
-c_isotopes.mod.o: params_core.mod.o orgpool.mod.o plant_pmodel.mod.o tile_pmodel.mod.o 
 common_fluxes.mod.o: params_core.mod.o
 
 # Dependency of the C wrapper

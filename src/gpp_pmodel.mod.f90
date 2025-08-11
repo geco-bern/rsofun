@@ -236,8 +236,6 @@ contains
       ! Calculate isotopic 13C signature of recent assimilates, given atmospheric 13C signature and discrimination (bigdelta)
       ! Discrimination is calculated as a function of ci:ca (chi) in gpp().
       tile_fluxes(lu)%plant(pft)%d13c_gpp = (climate%d13c_atm - tile_fluxes(lu)%plant(pft)%bigdelta) / (tile_fluxes(lu)%plant(pft)%bigdelta / 1000.0 + 1.0) !(e.g. eq 2; Brüggemann, 10.5194/bg-8-3457-2011)
-      ! TODO: change outside of gpp(): update tile(lu)%plant(pft)%pleaf = pleaf * exp( -k_decay_leaf ) + orgpool(x,y,z)
-      ! or actually even better if instead of using d13c_gpp as a real, we define gpp as an orgpool() itself...
 
     end do pftloop
 
