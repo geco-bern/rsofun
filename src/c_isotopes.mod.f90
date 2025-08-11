@@ -27,7 +27,6 @@ contains
     real, parameter :: k_decay_leaf = 2.0 / ndayyear
     integer :: pft, lu
     real :: f_decay_leaf  ! pool turnover fraction
-    real :: d13c_gpp      ! delta-13C isotopic signature from GPP (permil)
     type(orgpool) :: decay_pleaf
 
     ! avoid numerical instability
@@ -40,10 +39,10 @@ contains
       ! Calculate isotopic 13C signature of recent assimilates, given atmospheric 13C signature and discrimination (bigdelta)
       ! Discrimination is calculated as a function of ci:ca (chi) in gpp().
       ! Exact equation:
-      d13c_gpp = (d13c_atmosphere - tile_fluxes(lu)%plant(pft)%bigdelta) / (tile_fluxes(lu)%plant(pft)%bigdelta / 1000.0 + 1.0)
+      tile_fluxes(lu)%plant(pft)%d13_gpp = (d13c_atmosphere - tile_fluxes(lu)%plant(pft)%bigdelta) / (tile_fluxes(lu)%plant(pft)%bigdelta / 1000.0 + 1.0)
 
       ! Approximative equation:
-      ! d13c_gpp = d13c_atmosphere - tile_fluxes(lu)%plant(pft)%bigdelta 
+      ! tile_fluxes(lu)%plant(pft)%d13_gpp = d13c_atmosphere - tile_fluxes(lu)%plant(pft)%bigdelta 
 
       ! get biomass turnover of virtual leaf biomass, no change in isotopic signature
       decay_pleaf = tile(lu)%plant(pft)%pleaf * f_decay_leaf ! NOTE: multiplication keeps isotopic signatures
@@ -55,7 +54,7 @@ contains
       tile(lu)%plant(pft)%pleaf = tile(lu)%plant(pft)%pleaf + &
         orgpool( &
           tile_fluxes(lu)%plant(pft)%dgpp, &
-          d13c_gpp, &
+          tile_fluxes(lu)%plant(pft)%d13_gpp, &
           tile_fluxes(lu)%plant(pft)%dgpp * tile(lu)%plant(pft)%r_ntoc_leaf &
           )
 
