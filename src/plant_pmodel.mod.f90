@@ -84,7 +84,7 @@ module md_plant_pmodel
     real :: iwue              ! intrinsic water use efficiency (A/gs = ca*(1-chi))
     real :: bigdelta          ! 13C discrimination by photosynthesis, expressed as the difference to the atmospheric signature (permil)
 
-  end type plant_fluxes_type
+  end type plant_fluxes_type ! if type is changed, change initialization, too: initdaily_tile_fluxes()
 
 
 contains
