@@ -344,7 +344,7 @@ contains
         output(idx_start:idx_end,18) = dble(out_biosphere%snow(:))
         output(idx_start:idx_end,19) = dble(out_biosphere%cond(:))
         output(idx_start:idx_end,20) = dble(out_biosphere%cleaf(:))
-        output(idx_start:idx_end,21) = dble(out_biosphere%cleaf13(:))
+        output(idx_start:idx_end,21) = dble(out_biosphere%cleafd13c(:))
 
       end if
 

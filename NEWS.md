@@ -9,7 +9,8 @@
   with Kumarathunge et al. (2019) instead of Kattge & Knorr (2007), effectively 
   using a dampened signal for tc_growth and long-term averages for tc_home. This 
   alters the simulation results. Formattting of inputs remains unchanged.
-* `run_pmodel_f_bysite()` and `runread_pmodel()` additionally return `cleaf` and `cleaf13`
+* `run_pmodel_f_bysite()` and `runread_pmodel()` additionally return `cleaf` and `cleafd13c`
+* Internally, now also BiomeE computes (`d13_gpp`)
 
 # rsofun 5.1.0
 
