@@ -549,7 +549,7 @@ contains
     ! function return variable
     real :: bigdelta
 
-    bigdelta = chi * (b_par - a_par) + a_par - f_par * gammastar / ca
+    bigdelta = chi * (b_par - a_par) + a_par - f_par * gammastar / ca !(e.g. eq 4; Brüggemann, 10.5194/bg-8-3457-2011)
 
   end function calc_bigdelta
 
