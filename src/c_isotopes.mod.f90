@@ -14,49 +14,38 @@ module md_c_isotopes
 
 contains
 
-  subroutine c_isotopes( tile, tile_fluxes, d13c_atmosphere )
+  subroutine c_isotopes( tile, tile_fluxes )
     !/////////////////////////////////////////////////////////////////////////
     ! Keeps track of 13C isotopic signature in "virtual leaf biomass"
     !-------------------------------------------------------------------------
     ! arguments
     type(tile_type), dimension(nlu), intent(inout) :: tile
     type(tile_fluxes_type), dimension(nlu), intent(in) :: tile_fluxes
-    real :: d13c_atmosphere
 
     ! local variables
     real, parameter :: k_decay_leaf = 2.0 / ndayyear
     integer :: pft, lu
-    real :: f_decay_leaf  ! pool turnover fraction
-    type(orgpool) :: decay_pleaf
+    type(orgpool) :: gpp_as_pool
 
-    ! avoid numerical instability
-    f_decay_leaf = 1.0 - exp( -k_decay_leaf )
 
     pftloop: do pft=1,npft
 
       lu = params_pft_plant(pft)%lu_category
 
-      ! Calculate isotopic 13C signature of recent assimilates, given atmospheric 13C signature and discrimination (bigdelta)
-      ! Discrimination is calculated as a function of ci:ca (chi) in gpp().
-      ! Exact equation:
-      tile_fluxes(lu)%plant(pft)%d13_gpp = (d13c_atmosphere - tile_fluxes(lu)%plant(pft)%bigdelta) / (tile_fluxes(lu)%plant(pft)%bigdelta / 1000.0 + 1.0)
+      gpp_as_pool = orgpool( &
+        tile_fluxes(lu)%plant(pft)%dgpp, &
+        tile_fluxes(lu)%plant(pft)%d13_gpp, &
+        tile_fluxes(lu)%plant(pft)%dgpp * tile(lu)%plant(pft)%r_ntoc_leaf &
+      ) ! NOTE: TODO: this could be used to define dgpp::orgpool instead of dgpp::Real
 
-      ! Approximative equation:
-      ! tile_fluxes(lu)%plant(pft)%d13_gpp = d13c_atmosphere - tile_fluxes(lu)%plant(pft)%bigdelta 
+      ! define biomass turnover of virtual leaf biomass (using k_decay_leaf), no change in isotopic signature
 
-      ! get biomass turnover of virtual leaf biomass, no change in isotopic signature
-      decay_pleaf = tile(lu)%plant(pft)%pleaf * f_decay_leaf ! NOTE: multiplication keeps isotopic signatures
-
-      ! subtract biomass turnover from pool, no isotopic discrimination
-      tile(lu)%plant(pft)%pleaf = tile(lu)%plant(pft)%pleaf - decay_pleaf
-
-      ! add GPP to virtual leaf biomass (no respiration), keeping track of isotopic signature
-      tile(lu)%plant(pft)%pleaf = tile(lu)%plant(pft)%pleaf + &
-        orgpool( &
-          tile_fluxes(lu)%plant(pft)%dgpp, &
-          tile_fluxes(lu)%plant(pft)%d13_gpp, &
-          tile_fluxes(lu)%plant(pft)%dgpp * tile(lu)%plant(pft)%r_ntoc_leaf &
-          )
+      ! Update pleaf mass and isotopic signature
+      tile(lu)%plant(pft)%pleaf = &
+        ! subtract biomass turnover from pool
+        tile(lu)%plant(pft)%pleaf * exp( -k_decay_leaf ) + & ! no isotopic discr.
+        ! add GPP to virtual leaf biomass (no respiration), keeping track of isotopic signature
+        gpp_as_pool
 
     end do pftloop
 

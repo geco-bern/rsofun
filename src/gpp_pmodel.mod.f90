@@ -44,7 +44,7 @@ module md_gpp_pmodel
 
 contains
 
-  subroutine gpp( tile, tile_fluxes, co2, climate, grid, init, in_ppfd, tc_home)
+  subroutine gpp( tile, tile_fluxes, co2, climate, grid, init, in_ppfd, tc_home, d13c_atmosphere) ! TODO: make d13c_atmosphere part of climate%d13catmosphere
     !//////////////////////////////////////////////////////////////////
     ! Wrapper function to call to P-model. 
     ! Calculates meteorological conditions with memory based on daily
@@ -64,6 +64,8 @@ contains
     logical, intent(in) :: init                              ! is true on the very first simulation day (first subroutine call of each gridcell)
     logical, intent(in) :: in_ppfd                           ! whether to use PPFD from forcing or from SPLASH output
     real, intent(in)    :: tc_home                           ! long-term mean max temp of the warmest month (deg C)
+    real, intent(in)    :: d13c_atmosphere                   ! atmospheric delta-13C isotopic signature (permil)
+
     ! local variables
     type(outtype_pmodel) :: out_pmodel              ! list of P-model output variables
     type(climate_type)   :: climate_acclimation     ! list of climate variables to which P-model calculates acclimated traits
@@ -231,6 +233,10 @@ contains
       ! C isotope fractionation
       !----------------------------------------------------------------
       tile_fluxes(lu)%plant(pft)%bigdelta = calc_bigdelta( out_pmodel%chi, out_pmodel%ca, out_pmodel%gammastar )
+
+      ! Calculate isotopic 13C signature of recent assimilates, given atmospheric 13C signature and discrimination (bigdelta)
+      ! Discrimination is calculated as a function of ci:ca (chi) in gpp().
+      tile_fluxes(lu)%plant(pft)%d13_gpp = (d13c_atmosphere - tile_fluxes(lu)%plant(pft)%bigdelta) / (tile_fluxes(lu)%plant(pft)%bigdelta / 1000.0 + 1.0) !(e.g. eq 2; Brüggemann, 10.5194/bg-8-3457-2011)
 
     end do pftloop
 

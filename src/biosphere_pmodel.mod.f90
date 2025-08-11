@@ -138,7 +138,8 @@ contains
                   myinterface%grid, &
                   init_daily, &
                   myinterface%params_siml%in_ppfd, &
-                  myinterface%tc_home &
+                  myinterface%tc_home, &
+                  -8.4 &  ! ! xxx demo: hold constant. should be taken from forcing as time-varying input
                   )
         ! if (verbose) print*,'... done'
 
@@ -147,8 +148,7 @@ contains
         !----------------------------------------------------------------
         call c_isotopes( &
           tile(:), &
-          tile_fluxes(:), &
-          -8.4 &  ! ! xxx demo: hold constant. should be taken from forcing as time-varying input
+          tile_fluxes(:) &
           )
 
         !----------------------------------------------------------------
