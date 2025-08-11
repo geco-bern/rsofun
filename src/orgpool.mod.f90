@@ -15,7 +15,7 @@ module md_orgpool
   ! Organic pools, contain carbon (c12) and nitrogen (n14)
   type orgpool
    real :: c12 = 0.0
-   real :: d13 = -28.0  ! arbitrary starting value for delta-13C, permil
+   real :: d13 = -9999.0  ! arbitrary starting value for delta-13C, permil
    real :: n14 = 0.0
 
   contains
