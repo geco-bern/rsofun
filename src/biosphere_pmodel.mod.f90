@@ -13,7 +13,7 @@ module md_biosphere_pmodel
   use md_plant_pmodel, only: getpar_modl_plant
   use md_sofunutils, only: calc_patm
   use md_soiltemp, only: soiltemp
-  use md_orgpool
+  use md_track_vegetation_d13c, only: track_vegetation_d13c
 
   implicit none
 
@@ -39,10 +39,9 @@ contains
     type(outtype_biosphere) :: out_biosphere
 
     ! local variables
-    integer :: dm, moy, doy, pft, lu
+    integer :: dm, moy, doy
     logical, save           :: init_daily            ! is true only on the first day of the simulation 
     ! logical, parameter      :: verbose = .false.     ! change by hand for debugging etc.
-    real, parameter :: k_decay_leaf = 2.0 / ndayyear ! biomass turnover of virtual leaf biomass (for d13c)
 
     !----------------------------------------------------------------
     ! INITIALISATIONS
@@ -146,23 +145,7 @@ contains
         !----------------------------------------------------------------
         ! keep track of 13C isotopic signature in "virtual leaf biomass"
         !----------------------------------------------------------------
-        ! Update pleaf mass and isotopic signature, allocate all GPP to leaves, no respiration
-        pftloop: do pft=1,npft
-          
-          lu = 1 !lu = params_pft_plant(pft)%lu_category ! get correct index
-
-          ! subtract biomass turnover from pool, no change in isotopic signature
-          tile(lu)%plant(pft)%pleaf = tile(lu)%plant(pft)%pleaf * exp( -k_decay_leaf )
-
-          ! add NPP to virtual leaf biomass (no respiration), keeping track of isotopic signature
-          tile(lu)%plant(pft)%pleaf = tile(lu)%plant(pft)%pleaf + &
-            orgpool( &
-              tile_fluxes(lu)%plant(pft)%dgpp, & ! no respiration, so only GPP considered
-              tile_fluxes(lu)%plant(pft)%d13c_gpp, &
-              tile_fluxes(lu)%plant(pft)%dgpp * tile(lu)%plant(pft)%r_ntoc_leaf &
-            ) ! NOTE: TODO: this could be used to define dgpp::orgpool instead of dgpp::Real
-
-        end do pftloop
+        call track_vegetation_d13c( tile(:), tile_fluxes(:) )
 
         !----------------------------------------------------------------
         ! get soil moisture, and runoff
@@ -191,7 +174,7 @@ contains
         !----------------------------------------------------------------
         ! daily diagnostics (e.g., sum over plant within canopy)
         !----------------------------------------------------------------
-        call diag_daily(tile(:), tile_fluxes(:))
+        call diag_daily( tile(:), tile_fluxes(:) )
 
         !----------------------------------------------------------------
         ! populate function return variable
