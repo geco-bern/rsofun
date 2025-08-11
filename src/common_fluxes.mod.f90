@@ -24,7 +24,7 @@ module md_common_fluxes
     real    :: Nup           = 0.0
     real    :: fixedN        = 0.0
     real    :: bigdelta      = dummy ! 13C isotope discrimination against atmospheric signature (permil)
-    real    :: d13_gpp       = dummy ! delta-13C isotopic signature, small delta (permil)
+    real    :: d13c_gpp      = dummy ! delta-13C isotopic signature, small delta (permil)
 
     ! initializing cumuative fluxes to 0.0
     ! initializing concentrations and fractionation factors to nonsense values)
@@ -67,7 +67,7 @@ contains
     self%fixedN = self%fixedN + delta%fixedN * scale_opt
 
     self%bigdelta = ieee_value(0.0, ieee_quiet_nan) ! xxx: undefined behavior
-    self%d13_gpp  = ieee_value(0.0, ieee_quiet_nan) ! xxx: undefined behavior
+    self%d13c_gpp = ieee_value(0.0, ieee_quiet_nan) ! xxx: undefined behavior
 
 
   end subroutine add

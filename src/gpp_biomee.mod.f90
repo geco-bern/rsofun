@@ -173,7 +173,7 @@ contains
           ! Calculate isotopic 13C signature of recent assimilates, given atmospheric 13C signature and discrimination (bigdelta)
           ! Discrimination is calculated as a function of ci:ca (chi) in gpp().
           cc%fast_fluxes%bigdelta = 20.0 ! permil, hold fixed for demo implementation of d13C in method_photosynth == "gs_leuning"
-          cc%fast_fluxes%d13_gpp = (forcing%d13_atm - cc%fast_fluxes%bigdelta) / (cc%fast_fluxes%bigdelta / 1000.0 + 1.0) !(e.g. eq 2; Brüggemann, 10.5194/bg-8-3457-2011)
+          cc%fast_fluxes%d13c_gpp = (forcing%d13c_atm - cc%fast_fluxes%bigdelta) / (cc%fast_fluxes%bigdelta / 1000.0 + 1.0) !(e.g. eq 2; Brüggemann, 10.5194/bg-8-3457-2011)
 
           endif
         end associate
@@ -259,7 +259,7 @@ contains
           ! Calculate isotopic 13C signature of recent assimilates, given atmospheric 13C signature and discrimination (bigdelta)
           ! Discrimination is calculated as a function of ci:ca (chi) in gpp().
           cc%fast_fluxes%bigdelta = calc_bigdelta( out_pmodel%chi, out_pmodel%ca, out_pmodel%gammastar )
-          cc%fast_fluxes%d13_gpp = (forcing%d13_atm - cc%fast_fluxes%bigdelta) / (cc%fast_fluxes%bigdelta / 1000.0 + 1.0) !(e.g. eq 2; Brüggemann, 10.5194/bg-8-3457-2011)
+          cc%fast_fluxes%d13c_gpp = (forcing%d13c_atm - cc%fast_fluxes%bigdelta) / (cc%fast_fluxes%bigdelta / 1000.0 + 1.0) !(e.g. eq 2; Brüggemann, 10.5194/bg-8-3457-2011)
 
         endif
 

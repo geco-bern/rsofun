@@ -34,7 +34,7 @@ contains
 
       gpp_as_pool = orgpool( &
         tile_fluxes(lu)%plant(pft)%dgpp, &
-        tile_fluxes(lu)%plant(pft)%d13_gpp, &
+        tile_fluxes(lu)%plant(pft)%d13c_gpp, &
         tile_fluxes(lu)%plant(pft)%dgpp * tile(lu)%plant(pft)%r_ntoc_leaf &
       ) ! NOTE: TODO: this could be used to define dgpp::orgpool instead of dgpp::Real
 

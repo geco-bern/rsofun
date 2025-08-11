@@ -58,7 +58,7 @@ contains
       cc%fast_fluxes%resp = cc%fast_fluxes%resp * inputs%params_tile%tf_base          ! scaling for calibration
 
       ! detach photosynthesis model from plant growth
-      cc%plabl = cc%plabl + orgpool(cc%fast_fluxes%npp(), cc%fast_fluxes%d13_gpp, cc%fast_fluxes%fixedN)
+      cc%plabl = cc%plabl + orgpool(cc%fast_fluxes%npp(), cc%fast_fluxes%d13c_gpp, cc%fast_fluxes%fixedN)
 
       it => it%next()
     end do ! all cohorts

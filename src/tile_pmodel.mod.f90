@@ -458,7 +458,7 @@ contains
       tile_fluxes(:)%plant(npft)%chi        = 0.0
       tile_fluxes(:)%plant(npft)%iwue       = 0.0
       tile_fluxes(:)%plant(npft)%bigdelta   = dummy
-      tile_fluxes(:)%plant(npft)%d13_gpp    = dummy
+      tile_fluxes(:)%plant(npft)%d13c_gpp   = dummy
     end do
 
     ! call initdaily_plant( tile_fluxes(:)%plant(:) )
