@@ -138,8 +138,7 @@ contains
                   myinterface%grid, &
                   init_daily, &
                   myinterface%params_siml%in_ppfd, &
-                  myinterface%tc_home, &
-                  -8.4 &  ! ! xxx demo: hold constant. should be taken from forcing as time-varying input
+                  myinterface%tc_home &
                   )
         ! if (verbose) print*,'... done'
 
