@@ -25,7 +25,6 @@ contains
 
     ! local variables
     real, parameter :: k_decay_leaf = 2.0 / ndayyear
-    real, parameter :: ntoc_leaf = 1.0 / 30.0  ! not used, but required to construct an orgpool
     integer :: pft, lu
     real :: f_decay_leaf  ! pool turnover fraction
     real :: d13c_gpp      ! delta-13C isotopic signature from GPP (permil)
@@ -57,7 +56,7 @@ contains
         orgpool( &
           tile_fluxes(lu)%plant(pft)%dgpp, &
           d13c_gpp, &
-          tile_fluxes(lu)%plant(pft)%dgpp * ntoc_leaf &
+          tile_fluxes(lu)%plant(pft)%dgpp * tile(lu)%plant(pft)%r_ntoc_leaf &
           )
 
     end do pftloop
