@@ -29,7 +29,7 @@ contains
     ! Update pleaf mass and isotopic signature, allocate all GPP to leaves, no respiration
     pftloop: do pft=1,npft
 
-      lu = 1      !lu = params_pft_plant(pft)%lu_category    ! get correct index
+      lu = params_pft_plant(pft)%lu_category    ! get correct index
 
       ! define biomass turnover of virtual leaf biomass (using k_decay_leaf), no change in isotopic signature
 
@@ -42,7 +42,7 @@ contains
           tile_fluxes(lu)%plant(pft)%dgpp,     & ! no respiration, so only GPP considered
           tile_fluxes(lu)%plant(pft)%d13c_gpp, &
           tile_fluxes(lu)%plant(pft)%dgpp * tile(lu)%plant(pft)%r_ntoc_leaf &
-        ) ! NOTE: TODO: this could be used to define dgpp::orgpool instead of dgpp::Real
+        )
 
     end do pftloop
 
