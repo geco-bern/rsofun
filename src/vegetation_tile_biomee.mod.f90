@@ -933,7 +933,8 @@ contains
     type(cohort_type), pointer :: cc
     type(cohort_stack_item), pointer :: it
     integer :: i
-    type(orgpool) :: loss_fine, loss_coarse, loss_total
+    type(orgpool) :: loss_fine, loss_coarse, dtot, dL, dL_fine, dL_coarse
+    real :: dAleaf
 
     ! We go through each killed fraction of cohort and we map the fraction to the cohort
     ! it originated from (they have the same uid).
@@ -943,34 +944,34 @@ contains
 
       associate (sp => cc%sp())
 
-        ! Carbon and Nitrogen from plants to soil pools
-        ! the orgpool() defines the multiplicative factors for C, N respectively. 
-        ! (Note the sign of the leafarea transfer: - for coarse, + for fine)
-        loss_coarse = (orgpool( &
-            - inputs%params_tile%LMAmin, &
-            cc%pleaf%d13, &  ! XXX to check with Mayeul
-            - sp%LNbase &
-            ) * cc%leafarea() &
-          + cc%pwood + cc%psapw + cc%pleaf) &
-          * cc%density
+        ! Carbon and Nitrogen from plants to soil pools        
+        ! partition leaves into: dL = dL_fine+dL_coarse
+        !    express leaf biomass loss (dL) as leaf area loss in order to define fraction
+        !    of C,N that belongs to fine litter (metabolic) or coarse litter (structural):
+        dAleaf = cc%leafarea() ! = cc%pleaf%c12/sp%LMA ! biomass of leaves / LMA == kg C/individual / kg C/m2leaf == m2leaf/individual
+        dL     = cc%pleaf ! kg C,N per individual
 
-        loss_fine = (orgpool(&
-            + inputs%params_tile%LMAmin, &
-            cc%pleaf%d13, &  ! XXX to check with Mayeul
-            + sp%LNbase &
-            ) * cc%leafarea() &
-          + cc%plabl + cc%pseed + cc%proot) &
-          * cc%density
+        dL_fine = orgpool(&
+          inputs%params_tile%LMAmin * dAleaf, &
+          cc%pleaf%d13, &
+          sp%LNbase * dAleaf &
+        ) ! kg C,N per individual
+        dL_coarse = dL - dL_fine  ! kg C,N per individual
+
+        loss_coarse = dL_coarse + cc%pwood + cc%psapw            ! kg C,N per individual
+        loss_fine   = dL_fine + cc%plabl + cc%pseed + cc%proot ! kg C,N per individual
 
       end associate
 
-      call self%plant2soil(loss_coarse, loss_fine)
+      ! transform these losses to litter pools directly into soil organic matter
+      ! (multiply by density to have per ground area)
+      call self%plant2soil(loss_coarse * cc%density, loss_fine * cc%density)
 
-      loss_total = loss_coarse + loss_fine
+      dtot = (loss_coarse + loss_fine) * cc%density  ! kg C,N per m2 ground
 
-      self%m_turnover   = self%m_turnover    + loss_total%c12 ! We add C from dead trees to get the total turnover
-      self%c_deadtrees  = self%c_deadtrees   + loss_total%c12
-      self%n_deadtrees  = self%n_deadtrees   + loss_total%n14
+      self%m_turnover   = self%m_turnover    + dtot%c12 ! We add C from dead trees to get the total turnover
+      self%c_deadtrees  = self%c_deadtrees   + dtot%c12
+      self%n_deadtrees  = self%n_deadtrees   + dtot%n14
 
       if (cohort_reporting) then
         do i = 1, NCohortMax
@@ -979,9 +980,9 @@ contains
             self%out_annual_cohorts(i, ANNUAL_COHORTS_DEATHRATE) = self%out_annual_cohorts(i, ANNUAL_COHORTS_DEATHRATE) &
                     + cc%deathrate
             self%out_annual_cohorts(i, ANNUAL_COHORTS_N_LOSS)    = self%out_annual_cohorts(i, ANNUAL_COHORTS_N_LOSS) &
-                    + loss_total%n14
+                    + dtot%n14
             self%out_annual_cohorts(i, ANNUAL_COHORTS_C_LOSS)    = self%out_annual_cohorts(i, ANNUAL_COHORTS_C_LOSS) &
-                    + loss_total%c12
+                    + dtot%c12
 
             exit
           end if
@@ -1008,7 +1009,7 @@ contains
 
   subroutine plant2soil(self, loss_coarse, loss_fine)
     !////////////////////////////////////////////////////////////////
-    ! Redistribute C and N from dead plants to vegetation soil pools
+    ! Redistribute C and N from plants to vegetation soil pools
     !---------------------------------------------------------------
     class(vegn_tile_type), intent(inout) :: self
     type(orgpool), intent(in) :: loss_coarse, loss_fine
@@ -1075,7 +1076,7 @@ contains
     end if
 
     ! Initial Soil pools and environmental conditions
-    self%psoil_fs%c12 = inputs%init_soil%init_fast_soil_C  ! kgC m-2
+    self%psoil_fs%c12 = inputs%init_soil%init_fast_soil_C  ! fast soil carbon pool, (kg C/m2)
     self%psoil_sl%c12 = inputs%init_soil%init_slow_soil_C  ! slow soil carbon pool, (kg C/m2)
     self%psoil_fs%n14 = self%psoil_fs%c12 / CN0metabolicL  ! fast soil nitrogen pool, (kg N/m2)
     self%psoil_sl%n14 = self%psoil_sl%c12 / CN0structuralL ! slow soil nitrogen pool, (kg N/m2)
