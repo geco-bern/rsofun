@@ -855,7 +855,7 @@ contains
 
     ! local variables
     type(orgpool) :: loss_coarse, loss_fine, dtot
-    real :: dleaf_c12
+    real :: dleaf_c12, dleaf_n14
 
     associate ( sp => cc%sp() )
       ! Retranslocation to NSC and NSN
@@ -896,18 +896,20 @@ contains
       !    dAleaf_pool = orgpool(dAleaf * inputs%params_tile%LMAmin, dAleaf * sp%LNbase)
       !  dStem + dL - dAleaf_pool:
       dleaf_c12 = dL%c12 - dL%c12/sp%LMA * inputs%params_tile%LMAmin
+      dleaf_n14 = dL%n14 - dL%c12/sp%LMA * sp%LNbase
       loss_coarse  = orgpool( &
-        (dStem%c12 + dleaf_c12) * (1.0 - inputs%params_tile%l_fract), &
-        (dleaf_c12 * dL%d12 + dStem%c12 * dStem%d13) / (dleaf_c12 + dStem%c12), &
-        (dStem%n14 + dL%n14 - dL%c12/sp%LMA * sp%LNbase                ) * (1.0 - inputs%params_tile%retransN) &
+        (dStem%c12             + dleaf_c12         ) * (1.0 - inputs%params_tile%l_fract), &
+        (dStem%c12 * dStem%d13 + dleaf_c12 * dL%d13) / (dleaf_c12 + dStem%c12), &
+        (dStem%n14             + dleaf_n14         ) * (1.0 - inputs%params_tile%retransN) &
       ) * cc%density
 
       !  dR + dAleaf_pool:
       dleaf_c12 = dL%c12/sp%LMA * inputs%params_tile%LMAmin
+      dleaf_n14 = dL%c12/sp%LMA * sp%LNbase
       loss_fine    = orgpool( &
-        (dR%c12 + dleaf_c12) * (1.0 - inputs%params_tile%l_fract), &
-        (dleaf_c12 * dL%d13 + dR%c12 * dR%d13) / (dleaf_c12 + dR%c12), &
-        (dR%n14 + dL%c12/sp%LMA * sp%LNbase) * (1.0 - inputs%params_tile%retransN) &
+        (dR%c12          + dleaf_c12         ) * (1.0 - inputs%params_tile%l_fract), &
+        (dR%c12 * dR%d13 + dleaf_c12 * dL%d13) / (dleaf_c12 + dR%c12), &
+        (dR%n14          + dleaf_n14         ) * (1.0 - inputs%params_tile%retransN) &
       ) * cc%density
 
       call vegn%plant2soil(loss_coarse, loss_fine)
