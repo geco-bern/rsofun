@@ -870,9 +870,9 @@ contains
       cc%psapw = cc%psapw - dStem
 
       ! update NPP for leaves, fine roots, and wood
-      cc%NPPleaf = cc%NPPleaf - inputs%params_tile%l_fract * dL%n14    ! TODO: why are we multiplying l_fract with n14? It should be c12.
-      cc%NPProot = cc%NPProot - inputs%params_tile%l_fract * dR%n14    ! TODO: why are we multiplying l_fract with n14? It should be c12.
-      cc%NPPwood = cc%NPPwood - inputs%params_tile%l_fract * dStem%n14 ! TODO: why are we multiplying l_fract with n14? It should be c12.
+      cc%NPPleaf = cc%NPPleaf - inputs%params_tile%l_fract * dL%c12
+      cc%NPProot = cc%NPProot - inputs%params_tile%l_fract * dR%c12
+      cc%NPPwood = cc%NPPwood - inputs%params_tile%l_fract * dStem%c12
 
       ! TO (fate): either labile pool or soil as fine litter (metabolic) or coarse litter (structural)
       ! a) labile pool:
