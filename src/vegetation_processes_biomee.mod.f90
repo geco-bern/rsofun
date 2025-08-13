@@ -856,64 +856,66 @@ contains
 
     ! local variables
     type(orgpool) :: loss_coarse, loss_fine, dtot
-    real :: dleaf_c12, dleaf_n14
-
+    real :: dAleaf, dL_fine_c12, dL_fine_n14, dL_coarse_c12, dL_coarse_n14
+    
     associate ( sp => cc%sp() )
-      ! Retranslocation to NSC and NSN
+
+      ! Total reduction in leaf, root, stem pools
       dtot = dL + dR + dStem
-
-      cc%plabl = cc%plabl + &
-        orgpool( &
-          dtot%c12 * inputs%params_tile%l_fract, &
-          dtot%d13, &
-          dtot%n14 * inputs%params_tile%retransN &
-          )
-
-      ! update plant pools
+      
+      ! FROM (origin):
+      ! update plant pools (remove it from leaf, root, sapwood)
       cc%pleaf = cc%pleaf - dL
       cc%proot = cc%proot - dR
       cc%psapw = cc%psapw - dStem
 
       ! update NPP for leaves, fine roots, and wood
-      cc%NPPleaf = cc%NPPleaf - inputs%params_tile%l_fract * dL%n14
-      cc%NPProot = cc%NPProot - inputs%params_tile%l_fract * dR%n14
-      cc%NPPwood = cc%NPPwood - inputs%params_tile%l_fract * dStem%n14
+      cc%NPPleaf = cc%NPPleaf - inputs%params_tile%l_fract * dL%n14    ! TODO: why are we multiplying l_fract with n14? It should be c12.
+      cc%NPProot = cc%NPProot - inputs%params_tile%l_fract * dR%n14    ! TODO: why are we multiplying l_fract with n14? It should be c12.
+      cc%NPPwood = cc%NPPwood - inputs%params_tile%l_fract * dStem%n14 ! TODO: why are we multiplying l_fract with n14? It should be c12.
 
-      ! express leaf biomass loss (dL) as leaf area loss in order to derive C and N balance:
-      !dAleaf = dL%c12/sp%LMA ! biomass of leaves / LMA, kg C/individual / kg C/m2 == m2/individual
-      !dAleaf_pool = orgpool(dAleaf * inputs%params_tile%LMAmin, dAleaf * sp%LNbase)
+      ! TO (fate): either labile pool or soil as fine litter (metabolic) or coarse litter (structural)
+      ! a) labile pool:
+      ! Retranslocation to non-structural (NSC, NSN, ...), labile pool: plabl
+      cc%plabl = cc%plabl + &
+        orgpool( &
+          dtot%c12 * inputs%params_tile%l_fract, & ! fraction recovered
+          dtot%d13, &
+          dtot%n14 * inputs%params_tile%retransN & ! fraction recovered
+          )
+
+      ! b) + c) soil litter pool (fine and coarse litter)
       
-      ! put C and N into soil pools
-      !loss_coarse  = (dL - dAleaf_pool + dStem) * cc%density
-      !loss_fine    = (dR + dAleaf_pool) * cc%density
-      !loss_coarse = orgpool(loss_coarse%c12 * (1.0 - inputs%params_tile%l_fract), &
-      !        loss_coarse%n14 * (1.0 - inputs%params_tile%retransN))
-      !loss_fine = orgpool(loss_fine%c12 * (1.0 - inputs%params_tile%l_fract), &
-      !        loss_fine%n14 * (1.0 - inputs%params_tile%retransN))
-
-      ! Alternative formulation: 
-      !    express leaf biomass loss (dL) as leaf area loss in order to derive C and N balance:
-      !    dAleaf = dL%c12/sp%LMA ! biomass of leaves / LMA, kg C/individual / kg C/m2 == m2/individual
-      !    dAleaf_pool = orgpool(dAleaf * inputs%params_tile%LMAmin, dAleaf * sp%LNbase)
-      !  dStem + dL - dAleaf_pool:
-      dleaf_c12 = dL%c12 - dL%c12/sp%LMA * inputs%params_tile%LMAmin
-      dleaf_n14 = dL%n14 - dL%c12/sp%LMA * sp%LNbase
-      loss_coarse  = orgpool( &
-        (dStem%c12             + dleaf_c12         ) * (1.0 - inputs%params_tile%l_fract), &
-        (dStem%c12 * dStem%d13 + dleaf_c12 * dL%d13) / (dleaf_c12 + dStem%c12), &
-        (dStem%n14             + dleaf_n14         ) * (1.0 - inputs%params_tile%retransN) &
-      ) * cc%density
-
-      !  dR + dAleaf_pool:
-      dleaf_c12 = dL%c12/sp%LMA * inputs%params_tile%LMAmin
-      dleaf_n14 = dL%c12/sp%LMA * sp%LNbase
+      ! partition dL = dL_fine+dL_coarse
+      !    express leaf biomass loss (dL) as leaf area loss in order to define fraction
+      !    of C,N that belongs to fine litter (metabolic) or coarse litter (structural):
+      dAleaf        = dL%c12/sp%LMA ! biomass of leaves / LMA == kg C/individual / kg C/m2leaf == m2leaf/individual
+      dL_fine_c12 = dAleaf * inputs%params_tile%LMAmin ! kg C/individual
+      dL_fine_n14 = dAleaf * sp%LNbase                 ! m2leaf/individual * kg N m-2leaf = kg N/individual
+      dL_coarse_c12 = dL%c12 - dL_fine_c12 ! NOTE: no safeguard for negative values, i.e. in case sp%LMA < LMAmin
+      dL_coarse_n14 = dL%n14 - dL_fine_n14 ! NOTE: no safeguard for negative values
+      ! NOTE that a fraction (l_fract, retransN) of dL (and also of above dL_fine and dL_coarse) was recoverd into plabl.
+      !      yet a remaining fraction is still unaccounted for. This is accounted for in b) and c).
+      !      Because of the distinct fractions we cannot simply do:   loss_fine   = dR    + dL_fine
+      !      Because of the distinct fractions we cannot simply do:   loss_coarse = dStem + dL_coarse
+      
+      ! b) soil (fine litter):  fate of roots and dL_fine
       loss_fine    = orgpool( &
-        (dR%c12          + dleaf_c12         ) * (1.0 - inputs%params_tile%l_fract), &
-        (dR%c12 * dR%d13 + dleaf_c12 * dL%d13) / (dleaf_c12 + dR%c12), &
-        (dR%n14          + dleaf_n14         ) * (1.0 - inputs%params_tile%retransN) &
-      ) * cc%density
+        (dR%c12          + dL_fine_c12         ) * (1.0 - inputs%params_tile%l_fract), & ! fraction lost (metabolic L)
+        (dR%c12 * dR%d13 + dL_fine_c12 * dL%d13) / (dL_fine_c12 + dR%c12),             &
+        (dR%n14          + dL_fine_n14         ) * (1.0 - inputs%params_tile%retransN) & ! fraction lost (metabolic L)
+      ) ! kg C,N per individual
 
-      call vegn%plant2soil(loss_coarse, loss_fine)
+      ! c) soil (coarse litter): fate of stem and dL_coarse
+      loss_coarse  = orgpool( &
+        (dStem%c12             + dL_coarse_c12         ) * (1.0 - inputs%params_tile%l_fract), & ! fraction lost (structural L)
+        (dStem%c12 * dStem%d13 + dL_coarse_c12 * dL%d13) / (dL_coarse_c12 + dStem%c12),        &
+        (dStem%n14             + dL_coarse_n14         ) * (1.0 - inputs%params_tile%retransN) & ! fraction lost (structural L)
+      ) ! kg C,N per individual
+
+      ! transform these losses to litter pools directly into soil organic matter
+      ! (multiply by density to have per ground area)
+      call vegn%plant2soil(loss_coarse * cc%density, loss_fine * cc%density)
 
     end associate
 
