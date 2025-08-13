@@ -477,10 +477,11 @@ contains
       cc => it%cohort
 
       associate (sp => cc%sp())
-      TURN_OFF_life = (sp%phenotype  == 0 .and.     &
-      cc%status == LEAF_ON .and.     &
-      cc%gdd > sp%gdd_crit+600. .and. &
-      vegn%tk_pheno < sp%tk_crit)
+        TURN_OFF_life = (sp%phenotype  == 0 .and. &
+          cc%status == LEAF_ON .and. &
+          cc%gdd > sp%gdd_crit+600. .and. &
+          vegn%tk_pheno < sp%tk_crit &
+          )
       end associate
 
       if (TURN_OFF_life) then
@@ -949,7 +950,7 @@ contains
       endif
 
       ! Stem turnover
-      if (sp%lifeform == 0) then
+      if (sp%lifeform == 0) then  ! grasses
         alpha_S = alpha_L
       else
         alpha_S = 0.0

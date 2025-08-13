@@ -1013,13 +1013,17 @@ contains
     class(vegn_tile_type), intent(inout) :: self
     type(orgpool), intent(in) :: loss_coarse, loss_fine
 
-    self%psoil_fs = self%psoil_fs + loss_fine * inputs%params_tile%fsc_fine + &
+    self%psoil_fs = self%psoil_fs + & 
+            loss_fine   * inputs%params_tile%fsc_fine + &
             loss_coarse * inputs%params_tile%fsc_wood
-    self%psoil_sl = self%psoil_sl + loss_fine * (1.0 - inputs%params_tile%fsc_fine) + &
+    self%psoil_sl = self%psoil_sl + & 
+            loss_fine   * (1.0 - inputs%params_tile%fsc_fine) + &
             loss_coarse * (1.0 - inputs%params_tile%fsc_wood)
 
     ! annual N from plants to soil and C turnover
-    self%N_P2S_yr = self%N_P2S_yr + loss_coarse%n14 + loss_fine%n14
+    self%N_P2S_yr = self%N_P2S_yr + &
+            loss_fine%n14 + &
+            loss_coarse%n14
 
   end subroutine
 
