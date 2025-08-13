@@ -2,7 +2,7 @@ module md_tile_pmodel
   !////////////////////////////////////////////////////////////////
   ! Defines how a tile looks like for P-model simulations.
   !---------------------------------------------------------------
-  use md_params_core, only: npft, nlu
+  use md_params_core, only: npft, nlu, dummy
   use md_plant_pmodel, only: plant_type, plant_fluxes_type, init_plant
 
   implicit none
@@ -132,12 +132,12 @@ module md_tile_pmodel
     real :: ppfd_splash      ! daily photosynthetic photon flux density (mol m-2 d-1, Note that this differs from ppfd input 'dppfd', which is mol m-2 s-1.)
     real :: dra              ! daily top-of-atmosphere solar radiation (J m-2 d-1)
 
-  end type canopy_fluxes_type
+  end type canopy_fluxes_type ! if type is changed, change initialization, too: initdaily_tile_fluxes()
 
   type tile_fluxes_type
     type(canopy_fluxes_type) :: canopy
     type(plant_fluxes_type), dimension(npft) :: plant
-  end type tile_fluxes_type
+  end type tile_fluxes_type ! if type is changed, change initialization, too: initdaily_tile_fluxes()
 
 contains
 
@@ -431,7 +431,7 @@ contains
     tile_fluxes(:)%canopy%drnn = 0.0             
     tile_fluxes(:)%canopy%rnl = 0.0             
     tile_fluxes(:)%canopy%dcn = 0.0              
-    tile_fluxes(:)%canopy%daet = 0.0            
+    tile_fluxes(:)%canopy%daet = 0.0              
     tile_fluxes(:)%canopy%daet_e = 0.0          
     tile_fluxes(:)%canopy%daet_soil = 0.0       
     tile_fluxes(:)%canopy%daet_e_soil = 0.0     
@@ -447,8 +447,18 @@ contains
     do pft = 1,npft
       tile_fluxes(:)%plant(npft)%dgpp     = 0.0
       tile_fluxes(:)%plant(npft)%drd      = 0.0
+      tile_fluxes(:)%plant(npft)%assim    = 0.0
       tile_fluxes(:)%plant(npft)%dtransp  = 0.0
       tile_fluxes(:)%plant(npft)%dlatenth = 0.0
+      tile_fluxes(:)%plant(npft)%vcmax25    = 0.0
+      tile_fluxes(:)%plant(npft)%jmax25     = 0.0
+      tile_fluxes(:)%plant(npft)%vcmax      = 0.0
+      tile_fluxes(:)%plant(npft)%jmax       = 0.0
+      tile_fluxes(:)%plant(npft)%gs_accl    = 0.0
+      tile_fluxes(:)%plant(npft)%chi        = 0.0
+      tile_fluxes(:)%plant(npft)%iwue       = 0.0
+      tile_fluxes(:)%plant(npft)%bigdelta   = dummy
+      tile_fluxes(:)%plant(npft)%d13c_gpp   = dummy
     end do
 
     ! call initdaily_plant( tile_fluxes(:)%plant(:) )

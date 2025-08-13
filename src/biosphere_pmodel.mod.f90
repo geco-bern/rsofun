@@ -13,7 +13,7 @@ module md_biosphere_pmodel
   use md_plant_pmodel, only: getpar_modl_plant
   use md_sofunutils, only: calc_patm
   use md_soiltemp, only: soiltemp
-  use md_c_isotopes, only: c_isotopes
+  use md_track_vegetation_d13c, only: track_vegetation_d13c
 
   implicit none
 
@@ -137,18 +137,15 @@ contains
                   myinterface%climate(doy), &
                   myinterface%grid, &
                   init_daily, &
-                  myinterface%params_siml%in_ppfd &
+                  myinterface%params_siml%in_ppfd, &
+                  myinterface%tc_home &
                   )
         ! if (verbose) print*,'... done'
 
         !----------------------------------------------------------------
         ! keep track of 13C isotopic signature in "virtual leaf biomass"
         !----------------------------------------------------------------
-        call c_isotopes( &
-          tile(:), &
-          tile_fluxes(:), &
-          -8.4 &  ! to be taken from forcing as time-varying input
-          )
+        call track_vegetation_d13c( tile(:), tile_fluxes(:) )
 
         !----------------------------------------------------------------
         ! get soil moisture, and runoff
@@ -177,7 +174,7 @@ contains
         !----------------------------------------------------------------
         ! daily diagnostics (e.g., sum over plant within canopy)
         !----------------------------------------------------------------
-        call diag_daily(tile(:), tile_fluxes(:))
+        call diag_daily( tile(:), tile_fluxes(:) )
 
         !----------------------------------------------------------------
         ! populate function return variable
@@ -204,7 +201,7 @@ contains
         out_biosphere%snow(doy)    = tile(1)%soil%phy%snow
         out_biosphere%cond(doy)    = tile_fluxes(1)%canopy%dcn
         out_biosphere%cleaf(doy)   = tile(1)%plant(1)%pleaf%c12
-        out_biosphere%cleaf13(doy) = tile(1)%plant(1)%pleaf%d13
+        out_biosphere%cleafd13c(doy) = tile(1)%plant(1)%pleaf%d13
 
         init_daily = .false.
 

@@ -58,7 +58,12 @@ contains
       cc%fast_fluxes%resp = cc%fast_fluxes%resp * inputs%params_tile%tf_base          ! scaling for calibration
 
       ! detach photosynthesis model from plant growth
-      cc%plabl = cc%plabl + orgpool(cc%fast_fluxes%npp(), cc%fast_fluxes%d13_gpp, cc%fast_fluxes%fixedN)
+      cc%plabl = cc%plabl +        & 
+        orgpool(                   &
+          cc%fast_fluxes%npp(),    &
+          cc%fast_fluxes%d13c_gpp, &
+          cc%fast_fluxes%fixedN    &
+        )
 
       it => it%next()
     end do ! all cohorts
@@ -81,7 +86,7 @@ contains
     ! Adopted from BiomeE-Allcation.
     !----------------------------------------------------------------------
     type(cohort_type), intent(inout) :: cc
-    real, intent(in) :: tairK ! degK
+    real, intent(in) :: tairK ! K
     real :: tf, tfs ! thermal inhibition factors for above- and below-ground biomass
     real :: r_stem, r_root
     real :: Acambium  ! cambium area, m2/tree

@@ -83,8 +83,9 @@ module md_plant_pmodel
     real :: chi               ! ci:ca ratio (unitless)
     real :: iwue              ! intrinsic water use efficiency (A/gs = ca*(1-chi))
     real :: bigdelta          ! 13C discrimination by photosynthesis, expressed as the difference to the atmospheric signature (permil)
+    real :: d13c_gpp          ! delta-13C isotopic signature, small delta (permil) ! NOTE: instead of d13c_gpp as real, we could define dgpp as orgpool()
 
-  end type plant_fluxes_type
+  end type plant_fluxes_type ! if type is changed, change initialization, too: initdaily_tile_fluxes()
 
 
 contains

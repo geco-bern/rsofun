@@ -34,6 +34,7 @@ module md_interface_pmodel
     real                                    :: pco2
     type(gridtype)                          :: grid
     real                                    :: whc_prescr
+    real                                    :: tc_home
     type(climate_type), dimension(ndayyear) :: climate
     type(vegcover_type), dimension(ndayyear):: vegcover
     type(outtype_steering)                  :: steering_state
@@ -70,7 +71,7 @@ module md_interface_pmodel
     real, dimension(ndayyear) :: snow
     real, dimension(ndayyear) :: cond
     real, dimension(ndayyear) :: cleaf
-    real, dimension(ndayyear) :: cleaf13
+    real, dimension(ndayyear) :: cleafd13c
   end type outtype_biosphere
 
 end module md_interface_pmodel

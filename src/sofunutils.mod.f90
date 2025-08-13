@@ -144,7 +144,7 @@ contains
   pure function calc_esat(T) result( out_esat ) ! pressure, Pa
     implicit none
     real :: out_esat
-    real, intent(in) :: T ! degC
+    real, intent(in) :: T ! deg C
 
     out_esat=610.78*exp(17.27*T/(T+237.3))
 

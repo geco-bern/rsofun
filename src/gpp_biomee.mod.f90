@@ -68,7 +68,7 @@ contains
     integer :: i
     real   :: rad_top                                      ! downward radiation at the top of the canopy, W/m2
     real   :: rad_net                                      ! net radiation absorbed by the canopy, W/m2
-    real   :: TairC, TairK                                 ! air temperature, degC and degK
+    real   :: TairC, TairK                                 ! air temperature, deg C and deg K
     real   :: cana_q                                       ! specific humidity in canopy air space, kg/kg
     real   :: cana_co2                                     ! co2 concentration in canopy air space, mol CO2/mol dry air
     real   :: p_surf                                       ! surface pressure, Pa
@@ -149,7 +149,7 @@ contains
           rad_net  = f_light(cc%layer) * forcing%radiation * 0.9 ! net radiation absorbed by the canopy, W/m2
           p_surf   = forcing%P_air  ! Pa
           TairK    = forcing%TairK ! K
-          TairC    = forcing%TairC ! degC
+          TairC    = forcing%TairC ! deg C
           cana_q   = (calc_esat(TairC) * forcing%RH * h2o_molmass) / (p_surf * kMa)  ! air specific humidity, kg/kg
           cana_co2 = forcing%CO2 ! co2 concentration in canopy air space, mol CO2/mol dry air
 
@@ -172,9 +172,10 @@ contains
 
           ! Calculate isotopic 13C signature of recent assimilates, given atmospheric 13C signature and discrimination (bigdelta)
           ! Discrimination is calculated as a function of ci:ca (chi) in gpp().
-          cc%fast_fluxes%bigdelta = 20.0 ! permil, hold fixed for demo implementation of d13C
-          cc%fast_fluxes%d13_gpp = (forcing%d13_atm - cc%fast_fluxes%bigdelta) / (cc%fast_fluxes%bigdelta / 1000.0 + 1.0)
-
+          cc%fast_fluxes%bigdelta = 20.0 ! permil, hold fixed for demo implementation of d13C in method_photosynth == "gs_leuning"
+          cc%fast_fluxes%d13c_gpp = &
+            ( forcing%d13c_atm - cc%fast_fluxes%bigdelta ) / &
+            ( cc%fast_fluxes%bigdelta / 1000.0 + 1.0 ) !(e.g. eq 2; Brüggemann, 10.5194/bg-8-3457-2011)
           endif
         end associate
 
@@ -245,6 +246,7 @@ contains
                                 tc             = vegn%dampended_forcing%temp, &
                                 vpd            = vegn%dampended_forcing%vpd, &
                                 patm           = vegn%dampended_forcing%patm, &
+                                tc_home        = inputs%site_info%tc_home, &
                                 c4             = .false., &
                                 method_optci   = "prentice14", &
                                 method_jmaxlim = "wang17" &
@@ -258,7 +260,9 @@ contains
           ! Calculate isotopic 13C signature of recent assimilates, given atmospheric 13C signature and discrimination (bigdelta)
           ! Discrimination is calculated as a function of ci:ca (chi) in gpp().
           cc%fast_fluxes%bigdelta = calc_bigdelta( out_pmodel%chi, out_pmodel%ca, out_pmodel%gammastar )
-          cc%fast_fluxes%d13_gpp = (forcing%d13_atm - cc%fast_fluxes%bigdelta) / (cc%fast_fluxes%bigdelta / 1000.0 + 1.0)
+          cc%fast_fluxes%d13c_gpp = &
+            ( forcing%d13c_atm - cc%fast_fluxes%bigdelta ) / &
+            ( cc%fast_fluxes%bigdelta / 1000.0 + 1.0 ) !(e.g. eq 2; Brüggemann, 10.5194/bg-8-3457-2011)
 
         endif
 
@@ -280,7 +284,7 @@ contains
 
     real,    intent(in)    :: rad_top ! PAR dn on top of the canopy, w/m2
     real,    intent(in)    :: rad_net ! PAR net on top of the canopy, w/m2
-    real,    intent(in)    :: tl   ! leaf temperature, degK
+    real,    intent(in)    :: tl   ! leaf temperature, K
     real,    intent(in)    :: ea   ! specific humidity in the canopy air, kg/kg
     real,    intent(in)    :: lai  ! leaf area index
     !real,    intent(in)    :: leaf_age ! age of leaf since budburst (deciduos), days
@@ -529,14 +533,14 @@ contains
     !--------Output
     real :: qsat ! Output type: saturated specific humidity, kg/kg
     !--------Inputs
-    real :: T    ! temperature, degK
+    real :: T    ! temperature, K
     real :: p    ! pressure, Pa
     !--------local var
     real :: myesat ! sat. water vapor pressure
-    real :: Temp ! degC
+    real :: Temp ! deg C
 
     ! calculate saturated specific humidity
-    Temp = T - 273.16 ! degC
+    Temp = T - 273.16 ! deg C
     myesat=MIN(610.78*exp(17.27*Temp/(Temp+237.3)), p) ! Pa
     qsat = 0.622*myesat /(p - 0.378*myesat )
 
