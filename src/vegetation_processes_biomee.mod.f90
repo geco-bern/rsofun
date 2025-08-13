@@ -898,7 +898,7 @@ contains
       dleaf_c12 = dL%c12 - dL%c12/sp%LMA * inputs%params_tile%LMAmin
       loss_coarse  = orgpool( &
         (dStem%c12 + dleaf_c12) * (1.0 - inputs%params_tile%l_fract), &
-        (dleaf_c12 * dL%c12 + dStem%c12 * dStem%d13) / (dleaf_c12 + dStem%c12), &
+        (dleaf_c12 * dL%d12 + dStem%c12 * dStem%d13) / (dleaf_c12 + dStem%c12), &
         (dStem%n14 + dL%n14 - dL%c12/sp%LMA * sp%LNbase                ) * (1.0 - inputs%params_tile%retransN) &
       ) * cc%density
 
