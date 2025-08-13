@@ -288,10 +288,10 @@ contains
         endif
 
         ! update carbon pools
-        call cc%pleaf%add_c12(dBL)
-        call cc%proot%add_c12(dBR)
-        call cc%psapw%add_c12(dBSW)
-        call cc%pseed%add_c12(dSeed)
+        call cc%pleaf%add_carbon(dBL, cc%plabl%d13)
+        call cc%proot%add_carbon(dBR, cc%plabl%d13)
+        call cc%psapw%add_carbon(dBSW, cc%plabl%d13)
+        call cc%pseed%add_carbon(dSeed, cc%plabl%d13)
         call cc%plabl%add_c12(- dBR - dBL - dSeed - dBSW)
         cc%leaf_age = (1.0 - dBL/cc%pleaf%c12) * cc%leaf_age !NEW
         cc%resg = 0.5 * (dBR + dBL + dSeed + dBSW) !  daily
@@ -358,7 +358,7 @@ contains
         endif ! for grasses
 
       elseif (cc%status == LEAF_OFF .and. cc%C_growth > 0.0) then
-        call cc%plabl%add_c12(cc%C_growth)
+        call cc%plabl%add_carbon(cc%C_growth, cc%plabl%d13)
         cc%resg = 0.0
       endif
 
@@ -430,7 +430,8 @@ contains
         ccNSN   = (cc%plabl%n14 + cc%pleaf%n14 + cc%psapw%n14 + &
           cc%pwood%n14 + cc%proot%n14 + cc%pseed%n14) * cc%density
         ccNSC_d13 = (cc%plabl%c12 * cc%plabl%d13 + cc%pleaf%c12 * cc%pleaf%d13 + cc%psapw%c12 * cc%psapw%d13 + &
-          cc%pwood%c12 * cc%pwood%d13 + cc%proot%c12 * cc%proot%d13 + cc%pseed%c12 * cc%pseed%d13)
+          cc%pwood%c12 * cc%pwood%d13 + cc%proot%c12 * cc%proot%d13 + cc%pseed%c12 * cc%pseed%d13) / &
+          (cc%plabl%c12 + cc%pleaf%c12 + cc%psapw%c12 + cc%pwood%c12 + cc%proot%c12 + cc%pseed%c12)
         
         ! reset - WARNING: conservation of 13C not tested
         cc%density = MIN(ccNSC / sp%seedlingsize, ccNSN/(sp%seedlingsize/sp%CNroot0))
@@ -454,7 +455,6 @@ contains
         cc%NPPleaf = cc%NPPleaf + cc%pleaf%c12
         cc%NPProot = cc%NPProot + cc%proot%c12
         cc%NPPwood = cc%NPPwood + cc%psapw%c12 + cc%pwood%c12
-
 
         call cc%init_bl_br()
 

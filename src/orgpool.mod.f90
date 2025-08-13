@@ -20,6 +20,7 @@ module md_orgpool
 
   contains
 
+    procedure add_carbon
     procedure add_c12
     procedure add_n14
 
@@ -113,6 +114,16 @@ contains
       )
 
   end function scale_div
+
+  subroutine add_carbon(self, delta, signature)
+    ! Add c12 amount to this pool
+    class(orgpool), intent(inout) :: self
+    real, intent(in) :: delta, signature
+
+    self%c12 = self%c12 + delta
+    self%d13 = (self%d13 * self%c12 + signature * delta) / (self%c12 + delta)
+
+  end subroutine add_carbon
 
   subroutine add_c12(self, delta)
     ! Add c12 amount to this pool
