@@ -14,7 +14,7 @@
     assuming a constant atmospheric signature `d13c_atm = -8.4 permil`. In a future 
     version daily valeus of d13c_atm could/should be included in the input forcing.
   * `run_pmodel_onestep_f_bysite()` returns `bigdelta`, i.e. the carbon 
-    fractionation of fresh assimilate relative to `d13c_atm`, thereby avoding any
+    fractionation of fresh assimilate `cleafd13c` relative to `d13c_atm`, thereby avoding any
     assumptions for `d13c_atm`.
   * `run_biomee_f_bysite()` and `runread_biomee()` do track carbon isitopes internally, 
     currently without output. Note that when `method_photosynth == "gs_leuning"`, then

@@ -576,6 +576,7 @@ prepare_luc_forcing <- function(luc_forcing){
 
 prepare_forcing <- function(forcing){
   forcing <- forcing %>%
+    dplyr::mutate(d13c_atm = -8.4) %>% # xxx demo: hold constant. should be provided by user
     select(
       "ppfd",
       "temp",
@@ -583,7 +584,8 @@ prepare_forcing <- function(forcing){
       "rain",
       "wind",
       "patm",
-      "co2"
+      "co2",
+      "d13c_atm"
     )
   return(forcing)
 }

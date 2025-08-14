@@ -74,7 +74,7 @@ contains
       out_climate(it)%RH  = calc_rh_vpd( out_climate(it)%vpd, (out_climate(it)%TairC) )
     end do
 
-    out_climate%d13c_atm = -8.4 ! TODO: xxx demo: hold constant. should be read from forcing
+    out_climate%d13c_atm = real(forcing(idx_start:idx_end, 8))
 
   end function getclimate
 

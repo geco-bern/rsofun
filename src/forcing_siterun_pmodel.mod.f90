@@ -100,7 +100,7 @@ contains
     out_climate(:)%dtmin   = real(forcing(idx_start:idx_end, 11))
     out_climate(:)%dtmax   = real(forcing(idx_start:idx_end, 12))
     
-    out_climate(:)%d13c_atm   = -8.4 ! TODO: xxx demo: hold constant. should be read from forcing
+    out_climate(:)%d13c_atm = real(forcing(idx_start:idx_end, 13))
 
   end function getclimate
 

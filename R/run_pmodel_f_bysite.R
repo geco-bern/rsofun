@@ -216,10 +216,12 @@ run_pmodel_f_bysite <- function(
       'fapar',
       'patm',
       'tmin',
-      'tmax'
+      'tmax',
+      'd13c_atm'
   )
   forcing <- forcing %>% 
     dplyr::mutate(fsun = (100-ccov)/100) %>% 
+    dplyr::mutate(d13c_atm = -8.4) %>% # xxx demo: hold constant. should be provided by user
     dplyr::select(
         all_of(forcing_features)
     )
