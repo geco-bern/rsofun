@@ -361,7 +361,7 @@ test_that("p-model onestep output check (run_pmodel_onestep_f_bysite())", {
                                  # NOTE: is now:gs with 4.75e-7 still slightly different from 4.79e-7, but remains within tolerance
       iwue = iwue,               # NOTE: keep units as-is: (-)                   (computed as (ca-ci)/1.6/patm)
       rd   = rd) |>              # NOTE: keep units as-is: 3.16e-6 g C m-2 s-1   (computed as rd_to_vcmax*vcmax25*calc_ftemp_inst_rd(Temp)*c_molmass
-    dplyr::select(-wscal, -gs_accl) |>
+    dplyr::select(-gs_accl) |>
     dplyr::select(vcmax, jmax, vcmax25, jmax25, chi, gs, iwue, rd) |>
     dplyr::select(-vcmax25, -jmax25) # NOTE: as long as rpmodel is not updated with Kumarathunge T-dependency, we can only compare vcmax and jmax
   
@@ -392,6 +392,8 @@ test_that("p-model onestep output check (run_pmodel_onestep_f_bysite())", {
   )
   expect_equal(resF, 
                resF_rerun)
+  
+  expect_snapshot_value_fmt(resF, tolerance = 0.01, cran = TRUE)
 })
 
 

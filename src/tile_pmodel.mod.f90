@@ -2,14 +2,14 @@ module md_tile_pmodel
   !////////////////////////////////////////////////////////////////
   ! Defines how a tile looks like for P-model simulations.
   !---------------------------------------------------------------
-  use md_params_core, only: npft, nlu
-  use md_plant_pmodel, only: plant_type, plant_fluxes_type, initglobal_plant
+  use md_params_core, only: npft, nlu, dummy
+  use md_plant_pmodel, only: plant_type, plant_fluxes_type, init_plant
 
   implicit none
 
   private
-  public tile_type, tile_fluxes_type, initglobal_tile, psoilphystype, soil_type, &
-    initdaily_tile_fluxes, getpar_modl_tile, diag_daily, initglobal_soil, initglobal_soil_params, paramtype_soil !, init_annual, diag_annual
+  public tile_type, tile_fluxes_type, init_tile, psoilphystype, soil_type, &
+    initdaily_tile_fluxes, getpar_modl_tile, diag_daily, init_soil, init_soil_params, paramtype_soil !, init_annual, diag_annual
 
   !----------------------------------------------------------------
   ! physical soil state variables with memory from year to year (~pools)
@@ -132,24 +132,12 @@ module md_tile_pmodel
     real :: ppfd_splash      ! daily photosynthetic photon flux density (mol m-2 d-1, Note that this differs from ppfd input 'dppfd', which is mol m-2 s-1.)
     real :: dra              ! daily top-of-atmosphere solar radiation (J m-2 d-1)
 
-    ! ! annual
-    ! !----------------------------------------------------------------
-    ! ! carbon 
-    ! real :: agpp
-    ! real :: avcmax25_mean         ! annual Vcmax, normalised to 25 deg C, GPP-weighted mean
-    ! real :: avcmax25_max          ! annual Vcmax, normalised to 25 deg C, annual maximum
-
-    ! real, dimension(ndayyear) :: dra                ! daily TOA solar irradiation (J m-2)
-    ! real, dimension(ndayyear) :: dppfd_splash       ! daily total PPFD (mol m-2 d-1)
-    ! real, dimension(nmonth)   :: mppfd_splash       ! monthly total PPFD (mol m-2 month-1)
-    ! real, dimension(nmonth)   :: meanmppfd_splash   ! monthly mean PPFD, averaged over daylight seconds (mol m-2 s-1)
-
-  end type canopy_fluxes_type
+  end type canopy_fluxes_type ! if type is changed, change initialization, too: initdaily_tile_fluxes()
 
   type tile_fluxes_type
     type(canopy_fluxes_type) :: canopy
     type(plant_fluxes_type), dimension(npft) :: plant
-  end type tile_fluxes_type
+  end type tile_fluxes_type ! if type is changed, change initialization, too: initdaily_tile_fluxes()
 
 contains
 
@@ -172,7 +160,7 @@ contains
   ! end function get_fapar
 
 
-  subroutine initglobal_tile( tile )
+  subroutine init_tile( tile )
     !////////////////////////////////////////////////////////////////
     !  Initialisation of all _pools on all gridcells at the beginning
     !  of the simulation.
@@ -193,20 +181,20 @@ contains
       tile(lu)%luno = lu
 
       ! initialise soil variables
-      call initglobal_soil( tile(lu)%soil )
+      call init_soil( tile(lu)%soil )
 
       ! initialise canopy variables
-      call initglobal_canopy( tile(lu)%canopy )
+      call init_canopy( tile(lu)%canopy )
 
       ! initialise plant variables
-      call initglobal_plant( tile(lu)%plant(:) )
+      call init_plant( tile(lu)%plant(:) )
 
     end do
 
-  end subroutine initglobal_tile
+  end subroutine init_tile
 
 
-  subroutine initglobal_canopy( canopy )
+  subroutine init_canopy( canopy )
     !////////////////////////////////////////////////////////////////
     !  Initialisation of specified PFT on specified gridcell
     !----------------------------------------------------------------
@@ -219,26 +207,26 @@ contains
     canopy%dgc         = 0.0
     canopy%fpc_grid    = 0.0
 
-  end subroutine initglobal_canopy
+  end subroutine init_canopy
 
 
-  subroutine initglobal_soil( soil )
+  subroutine init_soil( soil )
     !////////////////////////////////////////////////////////////////
     ! initialise soil variables globally
     !----------------------------------------------------------------
     ! argument
     type(soil_type), intent(inout) :: soil
 
-    call initglobal_soil_phy( soil%phy )
-    call initglobal_soil_params( soil%params )
+    call init_soil_phy( soil%phy )
+    call init_soil_params( soil%params )
 
     soil%phy%wscal = soil%phy%wcont / soil%params%whc
 
 
-  end subroutine initglobal_soil
+  end subroutine init_soil
 
 
-  subroutine initglobal_soil_phy( phy )
+  subroutine init_soil_phy( phy )
     !////////////////////////////////////////////////////////////////
     ! initialise physical soil variables globally
     !----------------------------------------------------------------
@@ -251,10 +239,10 @@ contains
     phy%snow  = 0.0
     ! phy%rlmalpha = 0.0
 
-  end subroutine initglobal_soil_phy
+  end subroutine init_soil_phy
 
 
-  subroutine initglobal_soil_params( params )
+  subroutine init_soil_params( params )
     !////////////////////////////////////////////////////////////////
     ! Function to calculate soil parameters from texture info.
     !----------------------------------------------------------------
@@ -422,7 +410,7 @@ contains
 
     ! end do
 
-  end subroutine initglobal_soil_params  
+  end subroutine init_soil_params  
 
 
   subroutine initdaily_tile_fluxes( tile_fluxes )
@@ -443,7 +431,7 @@ contains
     tile_fluxes(:)%canopy%drnn = 0.0             
     tile_fluxes(:)%canopy%rnl = 0.0             
     tile_fluxes(:)%canopy%dcn = 0.0              
-    tile_fluxes(:)%canopy%daet = 0.0            
+    tile_fluxes(:)%canopy%daet = 0.0              
     tile_fluxes(:)%canopy%daet_e = 0.0          
     tile_fluxes(:)%canopy%daet_soil = 0.0       
     tile_fluxes(:)%canopy%daet_e_soil = 0.0     
@@ -459,8 +447,18 @@ contains
     do pft = 1,npft
       tile_fluxes(:)%plant(npft)%dgpp     = 0.0
       tile_fluxes(:)%plant(npft)%drd      = 0.0
+      tile_fluxes(:)%plant(npft)%assim    = 0.0
       tile_fluxes(:)%plant(npft)%dtransp  = 0.0
       tile_fluxes(:)%plant(npft)%dlatenth = 0.0
+      tile_fluxes(:)%plant(npft)%vcmax25    = 0.0
+      tile_fluxes(:)%plant(npft)%jmax25     = 0.0
+      tile_fluxes(:)%plant(npft)%vcmax      = 0.0
+      tile_fluxes(:)%plant(npft)%jmax       = 0.0
+      tile_fluxes(:)%plant(npft)%gs_accl    = 0.0
+      tile_fluxes(:)%plant(npft)%chi        = 0.0
+      tile_fluxes(:)%plant(npft)%iwue       = 0.0
+      tile_fluxes(:)%plant(npft)%bigdelta   = dummy
+      tile_fluxes(:)%plant(npft)%d13c_gpp   = dummy
     end do
 
     ! call initdaily_plant( tile_fluxes(:)%plant(:) )

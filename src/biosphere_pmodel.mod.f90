@@ -8,11 +8,12 @@ module md_biosphere_pmodel
   use md_waterbal, only: waterbal, solar, getpar_modl_waterbal
   use md_gpp_pmodel, only: getpar_modl_gpp, gpp
   use md_vegdynamics_pmodel, only: vegdynamics
-  use md_tile_pmodel, only: tile_type, tile_fluxes_type, initglobal_tile, initdaily_tile_fluxes, &
+  use md_tile_pmodel, only: tile_type, tile_fluxes_type, init_tile, initdaily_tile_fluxes, &
     getpar_modl_tile, diag_daily
   use md_plant_pmodel, only: getpar_modl_plant
   use md_sofunutils, only: calc_patm
   use md_soiltemp, only: soiltemp
+  use md_track_vegetation_d13c, only: track_vegetation_d13c
 
   implicit none
 
@@ -64,8 +65,8 @@ contains
       !----------------------------------------------------------------
       ! Initialise pool variables and/or read from restart file (not implemented)
       !----------------------------------------------------------------
-      ! if (verbose) print*, 'initglobal_() ...'
-      call initglobal_tile( tile(:) )
+      ! if (verbose) print*, 'init_() ...'
+      call init_tile( tile(:) )
       ! if (verbose) print*, '... done'
 
     endif 
@@ -142,6 +143,11 @@ contains
         ! if (verbose) print*,'... done'
 
         !----------------------------------------------------------------
+        ! keep track of 13C isotopic signature in "virtual leaf biomass"
+        !----------------------------------------------------------------
+        call track_vegetation_d13c( tile(:), tile_fluxes(:) )
+
+        !----------------------------------------------------------------
         ! get soil moisture, and runoff
         !----------------------------------------------------------------
         ! if (verbose) print*,'calling waterbal() ... '
@@ -168,7 +174,7 @@ contains
         !----------------------------------------------------------------
         ! daily diagnostics (e.g., sum over plant within canopy)
         !----------------------------------------------------------------
-        call diag_daily(tile(:), tile_fluxes(:))
+        call diag_daily( tile(:), tile_fluxes(:) )
 
         !----------------------------------------------------------------
         ! populate function return variable
@@ -194,6 +200,8 @@ contains
         out_biosphere%wcont(doy)   = tile(1)%soil%phy%wcont
         out_biosphere%snow(doy)    = tile(1)%soil%phy%snow
         out_biosphere%cond(doy)    = tile_fluxes(1)%canopy%dcn
+        out_biosphere%cleaf(doy)   = tile(1)%plant(1)%pleaf%c12
+        out_biosphere%cleafd13c(doy) = tile(1)%plant(1)%pleaf%d13
 
         init_daily = .false.
 

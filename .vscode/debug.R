@@ -19,6 +19,22 @@ devtools::load_all()
 # library(rsofun)
 # library(dplyr)
 # library(purrr)
+check_c13_bug <- function(){
+
+  library(tidyr)
+  runread_pmodel_f(
+    rsofun::p_model_drivers |> unnest(forcing) |> slice(1:365) |> nest(forcing = c(date:ccov)),
+    par = list(kphio = 0.04998, kphio_par_a = 0.01, kphio_par_b = 1, soilm_thetastar = 144, 
+              soilm_betao = 0.01, beta_unitcostratio = 146, rd_to_vcmax = 0.014, 
+              tau_acclim = 30, kc_jmax = 0.41),
+    makecheck = TRUE,
+    parallel = FALSE,
+    ncores = 2
+  )
+
+}
+check_c13_bug()
+
 
 check_NA_output <- function(){
   # THIS YIELDS OUTPUT UNDER ALL CONDITIONS

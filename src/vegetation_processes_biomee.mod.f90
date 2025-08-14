@@ -58,7 +58,12 @@ contains
       cc%fast_fluxes%resp = cc%fast_fluxes%resp * inputs%params_tile%tf_base          ! scaling for calibration
 
       ! detach photosynthesis model from plant growth
-      cc%plabl = cc%plabl + orgpool(cc%fast_fluxes%npp(), cc%fast_fluxes%fixedN)
+      cc%plabl = cc%plabl +        & 
+        orgpool(                   &
+          cc%fast_fluxes%npp(),    &
+          cc%fast_fluxes%d13c_gpp, &
+          cc%fast_fluxes%fixedN    &
+        )
 
       it => it%next()
     end do ! all cohorts
@@ -288,10 +293,10 @@ contains
         endif
 
         ! update carbon pools
-        call cc%pleaf%add_c12(dBL)
-        call cc%proot%add_c12(dBR)
-        call cc%psapw%add_c12(dBSW)
-        call cc%pseed%add_c12(dSeed)
+        call cc%pleaf%add_carbon(dBL, cc%plabl%d13)
+        call cc%proot%add_carbon(dBR, cc%plabl%d13)
+        call cc%psapw%add_carbon(dBSW, cc%plabl%d13)
+        call cc%pseed%add_carbon(dSeed, cc%plabl%d13)
         call cc%plabl%add_c12(- dBR - dBL - dSeed - dBSW)
         cc%leaf_age = (1.0 - dBL/cc%pleaf%c12) * cc%leaf_age !NEW
         cc%resg = 0.5 * (dBR + dBL + dSeed + dBSW) !  daily
@@ -323,7 +328,7 @@ contains
           dNS    = dBHW / cc%psapw%c12 * cc%psapw%n14
 
           ! update C and N of sapwood and wood
-          dHW_pool = orgpool(dBHW, dNS)
+          dHW_pool = orgpool(dBHW, cc%psapw%d13, dNS)
           cc%pwood = cc%pwood + dHW_pool
           cc%psapw = cc%psapw - dHW_pool
 
@@ -358,7 +363,7 @@ contains
         endif ! for grasses
 
       elseif (cc%status == LEAF_OFF .and. cc%C_growth > 0.0) then
-        call cc%plabl%add_c12(cc%C_growth)
+        call cc%plabl%add_carbon(cc%C_growth, cc%plabl%d13)
         cc%resg = 0.0
       endif
 
@@ -382,7 +387,7 @@ contains
     ! local variables
     type(cohort_type), pointer :: cc
     type(cohort_stack_item), pointer :: it
-    real    :: ccNSC, ccNSN
+    real    :: ccNSC, ccNSN, ccNSC_d13
     logical :: do_relayer ! flag to tell if we should call relayer_cohort()
     logical :: cc_firstday
     logical :: TURN_ON_life
@@ -429,22 +434,32 @@ contains
           cc%pwood%c12 + cc%proot%c12 + cc%pseed%c12) * cc%density
         ccNSN   = (cc%plabl%n14 + cc%pleaf%n14 + cc%psapw%n14 + &
           cc%pwood%n14 + cc%proot%n14 + cc%pseed%n14) * cc%density
+        ccNSC_d13 = (cc%plabl%c12 * cc%plabl%d13 + cc%pleaf%c12 * cc%pleaf%d13 + cc%psapw%c12 * cc%psapw%d13 + &
+          cc%pwood%c12 * cc%pwood%d13 + cc%proot%c12 * cc%proot%d13 + cc%pseed%c12 * cc%pseed%d13) / &
+          (cc%plabl%c12 + cc%pleaf%c12 + cc%psapw%c12 + cc%pwood%c12 + cc%proot%c12 + cc%pseed%c12)
         
-        ! reset
-        cc%density = MIN(ccNSC /sp%seedlingsize, ccNSN/(sp%seedlingsize/sp%CNroot0))
-        cc%psapw = orgpool(inputs%params_tile%f_initialBSW * sp%seedlingsize, cc%psapw%c12 / sp%CNsw0)  ! for setting up a initial size
-        cc%proot = orgpool(0.25 * cc%psapw%c12, cc%proot%c12 / sp%CNroot0)
+        ! reset - WARNING: conservation of 13C not tested
+        cc%density = MIN(ccNSC / sp%seedlingsize, ccNSN/(sp%seedlingsize/sp%CNroot0))
+        cc%psapw = orgpool( &
+          inputs%params_tile%f_initialBSW * sp%seedlingsize, &
+          ccNSC_d13, &
+          cc%psapw%c12 / sp%CNsw0 &
+          )  ! for setting up a initial size
+        cc%proot = orgpool( &
+          0.25 * cc%psapw%c12, &
+          ccNSC_d13, &
+          cc%proot%c12 / sp%CNroot0 &
+          )
         cc%pleaf = orgpool()
         cc%pwood = orgpool()
         cc%pseed = orgpool()
-        cc%plabl = orgpool(ccNSC, ccNSN) / cc%density - &
+        cc%plabl = orgpool(ccNSC, ccNSC_d13, ccNSN) / cc%density - &
           (cc%pleaf + cc%psapw + cc%pwood + cc%proot + cc%pseed)
 
         ! beni: added NPP accounting (for output)
         cc%NPPleaf = cc%NPPleaf + cc%pleaf%c12
         cc%NPProot = cc%NPProot + cc%proot%c12
         cc%NPPwood = cc%NPPwood + cc%psapw%c12 + cc%pwood%c12
-
 
         call cc%init_bl_br()
 
@@ -462,10 +477,11 @@ contains
       cc => it%cohort
 
       associate (sp => cc%sp())
-      TURN_OFF_life = (sp%phenotype  == 0 .and.     &
-      cc%status == LEAF_ON .and.     &
-      cc%gdd > sp%gdd_crit+600. .and. &
-      vegn%tk_pheno < sp%tk_crit)
+        TURN_OFF_life = (sp%phenotype  == 0 .and. &
+          cc%status == LEAF_ON .and. &
+          cc%gdd > sp%gdd_crit+600. .and. &
+          vegn%tk_pheno < sp%tk_crit &
+          )
       end associate
 
       if (TURN_OFF_life) then
@@ -526,7 +542,13 @@ contains
         dNR = 0.0
       endif
 
-      call update_plant_pools(cc, vegn, orgpool(dBL, dNL), orgpool(dBR, dNR), orgpool(dBStem, dNStem))
+      call update_plant_pools(&
+        cc, &
+        vegn, &
+        orgpool(dBL, cc%pleaf%d13, dNL), &
+        orgpool(dBR, cc%proot%d13, dNR), &
+        orgpool(dBStem, cc%psapw%d13, dNStem) &
+        )
 
     endif
     end associate
@@ -833,52 +855,67 @@ contains
     type(orgpool), intent(in) :: dL, dR, dStem  ! leaf and fine root pool tendencies
 
     ! local variables
-    type(orgpool) :: loss_coarse, loss_fine, dtot !, dAleaf_pool
-    ! real :: dAleaf ! leaf area decrease due to dBL
-
+    type(orgpool) :: loss_coarse, loss_fine, dtot
+    real :: dAleaf, dL_fine_c12, dL_fine_n14, dL_coarse_c12, dL_coarse_n14
+    
     associate ( sp => cc%sp() )
-      ! Retranslocation to NSC and NSN
-      dtot = dL + dR + dStem
-      cc%plabl = cc%plabl + orgpool(dtot%c12 * inputs%params_tile%l_fract, dtot%n14 * inputs%params_tile%retransN)
 
-      ! update plant pools
+      ! Total reduction in leaf, root, stem pools
+      dtot = dL + dR + dStem
+      
+      ! FROM (origin):
+      ! update plant pools (remove it from leaf, root, sapwood)
       cc%pleaf = cc%pleaf - dL
       cc%proot = cc%proot - dR
       cc%psapw = cc%psapw - dStem
 
       ! update NPP for leaves, fine roots, and wood
-      cc%NPPleaf = cc%NPPleaf - inputs%params_tile%l_fract * dL%n14
-      cc%NPProot = cc%NPProot - inputs%params_tile%l_fract * dR%n14
-      cc%NPPwood = cc%NPPwood - inputs%params_tile%l_fract * dStem%n14
+      cc%NPPleaf = cc%NPPleaf - inputs%params_tile%l_fract * dL%c12
+      cc%NPProot = cc%NPProot - inputs%params_tile%l_fract * dR%c12
+      cc%NPPwood = cc%NPPwood - inputs%params_tile%l_fract * dStem%c12
 
-      ! express leaf biomass loss (dL) as leaf area loss in order to derive C and N balance:
-      !dAleaf = dL%c12/sp%LMA ! biomass of leaves / LMA, kg C/individual / kg C/m2 == m2/individual
-      !dAleaf_pool = orgpool(dAleaf * inputs%params_tile%LMAmin, dAleaf * sp%LNbase)
+      ! TO (fate): either labile pool or soil as fine litter (metabolic) or coarse litter (structural)
+      ! a) labile pool:
+      ! Retranslocation to non-structural (NSC, NSN, ...), labile pool: plabl
+      cc%plabl = cc%plabl + &
+        orgpool( &
+          dtot%c12 * inputs%params_tile%l_fract, & ! fraction recovered
+          dtot%d13, &
+          dtot%n14 * inputs%params_tile%retransN & ! fraction recovered
+          )
+
+      ! b) + c) soil litter pool (fine and coarse litter)
       
-      ! put C and N into soil pools
-      !loss_coarse  = (dL - dAleaf_pool + dStem) * cc%density
-      !loss_fine    = (dR + dAleaf_pool) * cc%density
-      !loss_coarse = orgpool(loss_coarse%c12 * (1.0 - inputs%params_tile%l_fract), &
-      !        loss_coarse%n14 * (1.0 - inputs%params_tile%retransN))
-      !loss_fine = orgpool(loss_fine%c12 * (1.0 - inputs%params_tile%l_fract), &
-      !        loss_fine%n14 * (1.0 - inputs%params_tile%retransN))
-
-      ! Alternative formulation: 
-      !    express leaf biomass loss (dL) as leaf area loss in order to derive C and N balance:
-      !    dAleaf = dL%c12/sp%LMA ! biomass of leaves / LMA, kg C/individual / kg C/m2 == m2/individual
-      !    dAleaf_pool = orgpool(dAleaf * inputs%params_tile%LMAmin, dAleaf * sp%LNbase)
-      !  dStem + dL - dAleaf_pool:
-      loss_coarse  = orgpool( &
-        (dStem%c12 + dL%c12 - dL%c12/sp%LMA * inputs%params_tile%LMAmin) * (1.0 - inputs%params_tile%l_fract), &
-        (dStem%n14 + dL%n14 - dL%c12/sp%LMA * sp%LNbase                ) * (1.0 - inputs%params_tile%retransN) &
-      ) * cc%density
-      !  dR + dAleaf_pool:
+      ! partition dL = dL_fine+dL_coarse
+      !    express leaf biomass loss (dL) as leaf area loss in order to define fraction
+      !    of C,N that belongs to fine litter (metabolic) or coarse litter (structural):
+      dAleaf        = dL%c12/sp%LMA ! biomass of leaves / LMA == kg C/individual / kg C/m2leaf == m2leaf/individual
+      dL_fine_c12 = dAleaf * inputs%params_tile%LMAmin ! kg C/individual
+      dL_fine_n14 = dAleaf * sp%LNbase                 ! m2leaf/individual * kg N m-2leaf = kg N/individual
+      dL_coarse_c12 = dL%c12 - dL_fine_c12 ! NOTE: no safeguard for negative values, i.e. in case sp%LMA < LMAmin
+      dL_coarse_n14 = dL%n14 - dL_fine_n14 ! NOTE: no safeguard for negative values
+      ! NOTE that a fraction (l_fract, retransN) of dL (and also of above dL_fine and dL_coarse) was recoverd into plabl.
+      !      yet a remaining fraction is still unaccounted for. This is accounted for in b) and c).
+      !      Because of the distinct fractions we cannot simply do:   loss_fine   = dR    + dL_fine
+      !      Because of the distinct fractions we cannot simply do:   loss_coarse = dStem + dL_coarse
+      
+      ! b) soil (fine litter):  fate of roots and dL_fine
       loss_fine    = orgpool( &
-        (dR%c12             + dL%c12/sp%LMA * inputs%params_tile%LMAmin) * (1.0 - inputs%params_tile%l_fract), &
-        (dR%n14             + dL%c12/sp%LMA * sp%LNbase                ) * (1.0 - inputs%params_tile%retransN) &
-      ) * cc%density
+        (dR%c12          + dL_fine_c12         ) * (1.0 - inputs%params_tile%l_fract), & ! fraction lost (metabolic L)
+        (dR%c12 * dR%d13 + dL_fine_c12 * dL%d13) / (dL_fine_c12 + dR%c12),             &
+        (dR%n14          + dL_fine_n14         ) * (1.0 - inputs%params_tile%retransN) & ! fraction lost (metabolic L)
+      ) ! kg C,N per individual
 
-      call vegn%plant2soil(loss_coarse, loss_fine)
+      ! c) soil (coarse litter): fate of stem and dL_coarse
+      loss_coarse  = orgpool( &
+        (dStem%c12             + dL_coarse_c12         ) * (1.0 - inputs%params_tile%l_fract), & ! fraction lost (structural L)
+        (dStem%c12 * dStem%d13 + dL_coarse_c12 * dL%d13) / (dL_coarse_c12 + dStem%c12),        &
+        (dStem%n14             + dL_coarse_n14         ) * (1.0 - inputs%params_tile%retransN) & ! fraction lost (structural L)
+      ) ! kg C,N per individual
+
+      ! transform these losses to litter pools directly into soil organic matter
+      ! (multiply by density to have per ground area)
+      call vegn%plant2soil(loss_coarse * cc%density, loss_fine * cc%density)
 
     end associate
 
@@ -915,7 +952,7 @@ contains
       endif
 
       ! Stem turnover
-      if (sp%lifeform == 0) then
+      if (sp%lifeform == 0) then  ! grasses
         alpha_S = alpha_L
       else
         alpha_S = 0.0
@@ -930,7 +967,13 @@ contains
       dBR    = cc%proot%c12 * sp%alpha_FR / ndayyear
       dNR    = cc%proot%n14 * sp%alpha_FR / ndayyear
 
-      call update_plant_pools(cc, vegn, orgpool(dBL, dNL), orgpool(dBR, dNR), orgpool(dBStem, dNStem))
+      call update_plant_pools( &
+        cc, &
+        vegn, &
+        orgpool(dBL, cc%pleaf%d13, dNL), &
+        orgpool(dBR, cc%proot%d13, dNR), &
+        orgpool(dBStem, cc%psapw%d13, dNStem) &
+        )
 
       ! record continuous biomass turnover (not linked to mortality)
       ! cc%m_turnover = cc%m_turnover + loss_coarse + loss_fine

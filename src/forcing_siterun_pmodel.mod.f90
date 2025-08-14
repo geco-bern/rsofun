@@ -15,7 +15,7 @@ module md_forcing_pmodel
     getclimate, getco2, getfapar, get_fpc_grid, vegcover_type
 
   type climate_type
-    real(kind=sp) :: dtemp  ! daily mean air temperature, deg C
+    real(kind=sp) :: dtemp  ! daytime mean air temperature, deg C
     real(kind=sp) :: dtmin  ! daily minimum air temperature, deg C
     real(kind=sp) :: dtmax  ! daily maximum air temperature, deg C
     real(kind=sp) :: dprec  ! mm s-1
@@ -25,6 +25,7 @@ module md_forcing_pmodel
     real(kind=sp) :: dppfd  ! mol m-2 s-1
     real(kind=sp) :: dnetrad! W m-2
     real(kind=sp) :: dpatm  ! Pa
+    real(kind=sp) :: d13c_atm ! atmospheric delta-13C isotopic signature, permil
   end type climate_type
 
   type vegcover_type
@@ -98,6 +99,8 @@ contains
     out_climate(:)%dpatm   = real(forcing(idx_start:idx_end, 10))
     out_climate(:)%dtmin   = real(forcing(idx_start:idx_end, 11))
     out_climate(:)%dtmax   = real(forcing(idx_start:idx_end, 12))
+    
+    out_climate(:)%d13c_atm   = -8.4 ! TODO: xxx demo: hold constant. should be read from forcing
 
   end function getclimate
 

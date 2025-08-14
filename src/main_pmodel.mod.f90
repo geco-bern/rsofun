@@ -10,15 +10,16 @@ module pmodel_mod
   public :: pmodel_f, pmodel_onestep_f
 
 contains
+
   subroutine pmodel_onestep_f( &
     lc4,                       &
     par,                       &
     forcing,                   &
     output                     &
     ) bind(C, name = "pmodel_onestep_f_")
-
     !////////////////////////////////////////////////////////////////
-    ! Main subroutine to handle I/O with C and R. 
+    ! Main subroutine to handle I/O with C and R for a run with one
+    ! "time" step.
     ! Receives simulation parameters, site parameters. Forcing is for 
     ! one step.
     !----------------------------------------------------------------
@@ -33,10 +34,25 @@ contains
     real(kind=c_double),  dimension(1,5), intent(in) :: forcing  ! 1-row array containing forcing data (rows: time steps; columns: 1=air temperature, 2=vpd, 3=ppfd, 4=co2, 5=patm) 
     real(kind=c_double),  dimension(9), intent(out) :: output
 
-    ! local variables
-    real :: kphio, kphio_par_a, kphio_par_b, beta_unitcostratio, rd_to_vcmax, kc_jmax, &
-      temp, vpd, ppfd, co2, patm, kphio_temp, vcmax, jmax, rd
+    ! local variables: model parameters
+    real :: kphio, kphio_par_a, kphio_par_b, beta_unitcostratio, rd_to_vcmax, kc_jmax
+
+    ! local variables: forcing
+    real :: temp   ! temperature (deg C), relevant for photosynthesis
+    real :: vpd    ! vapour pressure deficit (Pa)
+    real :: ppfd   ! photosynthetic photon flux density (mol m-2 s-1)
+    real :: co2    ! (ambient) atmospheric CO2 concentration (ppm) 
+    real :: patm   ! atmospheric pressure (Pa)
     real :: tc_home
+
+    ! local variables: derived quantities to output
+    real :: kphio_temp  ! quantum yield, modified by temperature 
+    real :: vcmax       ! maximum rate of Rubisco carboxylation (mol m-2 s-1)
+    real :: jmax        ! maximum rate of electron transport (mol m-2 s-1)
+    real :: rd          ! dark respiration rate (mol m-2 s-1)
+    real :: bigdelta    ! 13C discrimination by photosynthesis, expressed as the difference to the atmospheric signature (permil)
+
+    ! other local variables
     logical :: c4
     type(outtype_pmodel) :: out_pmodel  ! list of P-model output variables
 
@@ -103,10 +119,11 @@ contains
       method_jmaxlim = "wang17" &
       )
 
-    ! quantities with instantaneous temperature response
-    vcmax = calc_ftemp_inst_vcmax( temp, temp,          tc_ref = 25.0 ) * out_pmodel%vcmax25
-    jmax  = calc_ftemp_inst_jmax(  temp, temp, tc_home, tc_ref = 25.0 ) * out_pmodel%jmax25
-    rd    = out_pmodel%vcmax25 * rd_to_vcmax * calc_ftemp_inst_rd( temp ) * c_molmass
+    ! derived quantities
+    vcmax    = calc_ftemp_inst_vcmax( temp, temp,          tc_ref = 25.0 ) * out_pmodel%vcmax25
+    jmax     = calc_ftemp_inst_jmax(  temp, temp, tc_home, tc_ref = 25.0 ) * out_pmodel%jmax25
+    rd       = out_pmodel%vcmax25 * rd_to_vcmax * calc_ftemp_inst_rd( temp ) * c_molmass
+    bigdelta = calc_bigdelta( out_pmodel%chi, out_pmodel%ca, out_pmodel%gammastar )
 
     !----------------------------------------------------------------
     ! Populate Fortran output array which is passed back to C/R
@@ -116,11 +133,13 @@ contains
     output(3) = dble(out_pmodel%vcmax25) 
     output(4) = dble(out_pmodel%jmax25)
     output(5) = dble(out_pmodel%gs_setpoint)
-    output(7) = dble(out_pmodel%chi)
-    output(8) = dble(out_pmodel%iwue)
-    output(9) = dble(rd)
+    output(6) = dble(out_pmodel%chi)
+    output(7) = dble(out_pmodel%iwue)
+    output(8) = dble(rd)
+    output(9) = dble(bigdelta)
 
   end subroutine pmodel_onestep_f
+
 
   subroutine pmodel_f(         &
     spinup,                    &   
@@ -149,9 +168,9 @@ contains
     forcing,                   &
     output                     &
     ) bind(C, name = "pmodel_f_")
-
     !////////////////////////////////////////////////////////////////
-    ! Main subroutine to handle I/O with C and R. 
+    ! Main subroutine to handle I/O with C and R for a time series
+    ! simulation with dynamic acclimation of photosynthesis. 
     ! Receives simulation parameters, site parameters, and the full 
     ! simulation's forcing as time series
     !----------------------------------------------------------------
@@ -187,7 +206,7 @@ contains
     integer(kind=c_int),  intent(in) :: nt ! number of time steps
     real(kind=c_double),  dimension(9), intent(in) :: par  ! free (calibratable) model parameters
     real(kind=c_double),  dimension(nt,12), intent(in) :: forcing  ! array containing all temporally varying forcing data (rows: time steps; columns: 1=air temperature, 2=rainfall, 3=vpd, 4=ppfd, 5=net radiation, 6=sunshine fraction, 7=snowfall, 8=co2, 9=fapar, 10=patm, 11=tmin, 12=tmax) 
-    real(kind=c_double),  dimension(nt,19), intent(out) :: output
+    real(kind=c_double),  dimension(nt,21), intent(out) :: output
 
     ! local variables
     type(outtype_biosphere) :: out_biosphere  ! holds all the output used for calculating the cost or maximum likelihood function 
@@ -324,6 +343,8 @@ contains
         output(idx_start:idx_end,17) = dble(out_biosphere%wcont(:))
         output(idx_start:idx_end,18) = dble(out_biosphere%snow(:))
         output(idx_start:idx_end,19) = dble(out_biosphere%cond(:))
+        output(idx_start:idx_end,20) = dble(out_biosphere%cleaf(:))
+        output(idx_start:idx_end,21) = dble(out_biosphere%cleafd13c(:))
 
       end if
 

@@ -26,6 +26,7 @@ module md_forcing_biomee
     real    :: P_air         ! pa
     real    :: CO2           ! mol CO2/mol dry air
     real    :: RH            ! relative humidity (fraction < 1, computed from vpd and Tair)
+    real    :: d13c_atm      ! atmospheric delta-13C isotopic signature, permil
   end type climate_type
 
 contains
@@ -72,6 +73,8 @@ contains
     do it=1,ntstepsyear
       out_climate(it)%RH  = calc_rh_vpd( out_climate(it)%vpd, (out_climate(it)%TairC) )
     end do
+
+    out_climate%d13c_atm = -8.4 ! TODO: xxx demo: hold constant. should be read from forcing
 
   end function getclimate
 

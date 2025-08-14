@@ -11,7 +11,7 @@ module md_photosynth
 
   private
   public pmodel, zero_pmodel, outtype_pmodel, calc_ftemp_inst_jmax, calc_ftemp_inst_vcmax, &
-    calc_ftemp_inst_rd, calc_kphio_temp, calc_soilmstress
+    calc_ftemp_inst_rd, calc_kphio_temp, calc_soilmstress, calc_bigdelta
 
   !----------------------------------------------------------------
   ! MODULE-SPECIFIC, PRIVATE VARIABLES
@@ -20,8 +20,8 @@ module md_photosynth
   type outtype_pmodel
     real :: gammastar           ! temperature-dependent photorespiratory compensation point (Pa)
     real :: kmm                 ! Michaelis-Menten coefficient (Pa)
-    real :: ca                  ! leaf-external (ambient) partial pressure, (Pa)
-    real :: ci                  ! leaf-internal partial pressure, (Pa)
+    real :: ca                  ! leaf-external (ambient) CO2 partial pressure, (Pa)
+    real :: ci                  ! leaf-internal CO2 partial pressure, (Pa)
     real :: chi                 ! = ci/ca, leaf-internal to ambient CO2 partial pressure, ci/ca (unitless)
     real :: xi                  ! relative cost parameter, Eq. 9 in Stocker et al., 2019 GMD
     real :: iwue                ! intrinsic water use efficiency = A / gs = ca - ci = ca ( 1 - chi ) , unitless
@@ -101,8 +101,6 @@ contains
     real :: gammastar           ! photorespiratory compensation point - Gamma-star (Pa)
     real :: ca                  ! ambient CO2 partial pressure, (Pa)
     real :: gs_setpoint         ! stomatal conductance to CO2 (mol CO2 Pa-1 (mol photons)-1)
-    ! real :: gs_unitfapar        ! stomatal conductance to CO2 (mol CO2 Pa-1 m-2 s-1)
-    ! real :: gs_unitiabs         ! stomatal conductance to CO2 (mol CO2 Pa-1 (mol photons)-1)
     real :: ci                  ! leaf-internal partial pressure, (Pa)
     real :: chi                 ! = ci/ca, leaf-internal to ambient CO2 partial pressure, ci/ca (unitless)
     real :: ns                  ! viscosity of H2O at ambient temperatures (Pa s)
@@ -111,25 +109,14 @@ contains
     real :: mprime              ! factor in light use model with Jmax limitation
     real :: iwue                ! intrinsic water use efficiency = A / gs = ca - ci = ca ( 1 - chi ) , unitless
     real :: lue                 ! light use efficiency (mol CO2 / mol photon)
-    ! real :: gpp                 ! gross primary productivity (g CO2 m-2 s-1)
     real :: jmax                ! canopy-level maximum rate of electron transport (XXX)
     real :: jmax25              ! canopy-level maximum rate of electron transport (XXX)
     real :: vcmax               ! canopy-level maximum carboxylation capacity per unit ground area (mol CO2 m-2 s-1)
     real :: vcmax25             ! canopy-level Vcmax25 (Vcmax normalized to 25 deg C) (mol CO2 m-2 s-1)
     real :: vcmax_star          ! 
-    ! real :: vcmax_unitfapar     ! Vcmax per unit fAPAR (mol CO2 m-2 s-1)
-    ! real :: vcmax25_unitfapar   ! Vcmax25 per unit fAPAR (mol CO2 m-2 s-1)
-    ! real :: vcmax_unitiabs      ! Vcmax per unit absorbed light (mol CO2 m-2 s-1 mol-1)
-    ! real :: vcmax25_unitiabs    ! Vcmax25 per unit absorbed light (mol CO2 m-2 s-1 mol-1)
     real :: ftemp_inst_vcmax    ! Instantaneous temperature response factor of Vcmax (unitless)
     real :: ftemp_inst_jmax     ! Instantaneous temperature response factor of Jmax (unitless)
-    ! real :: rd                  ! Dark respiration (g C m-2 s-1)
-    ! real :: rd_unitfapar        ! Dark respiration per unit fAPAR (g C m-2 s-1)
-    ! real :: rd_unitiabs         ! Dark respiration per unit absorbed light (g C (mol photons)-1)
     real :: actnv               ! Canopy-level total metabolic leaf N per unit ground area (g N m-2)
-    ! real :: actnv_unitfapar     ! Metabolic leaf N per unit fAPAR (g N m-2)
-    ! real :: actnv_unitiabs      ! Metabolic leaf N per unit absorbed light (g N m-2 mol-1)
-    ! real :: transp              ! Canopy-level total transpiration rate (g H2O (mol photons)-1)
     real :: fact_jmaxlim        ! Jmax limitation factor (unitless)
 
     ! local variables for Jmax limitation following Nick Smith's method
@@ -310,10 +297,6 @@ contains
     ftemp_inst_vcmax  = calc_ftemp_inst_vcmax( tc, tc, tc_ref = 25.0 )
     vcmax25  = vcmax / ftemp_inst_vcmax
 
-    ! ! Dark respiration at growth temperature
-    ! ftemp_inst_rd = calc_ftemp_inst_rd( tc )
-    ! rd  = params_gpp%rd_to_vcmax * (ftemp_inst_rd / ftemp_inst_vcmax) * vcmax 
-
     ! active metabolic leaf N (canopy-level), mol N/m2-ground (same equations as for nitrogen content per unit leaf area, gN/m2-leaf)
     actnv  = vcmax25 * n_v
 
@@ -345,110 +328,6 @@ contains
     end if
 
 
-    ! if (ppfd /= dummy) then
-    !   !-----------------------------------------------------------------------
-    !   ! Calculate quantities scaling with light assuming fAPAR = 1
-    !   ! representing leaf-level at the top of the canopy.
-    !   !-----------------------------------------------------------------------
-    !   ! ! leaf-level assimilation rate
-    !   ! assim = lue * ppfd
-
-    !   ! ! Transpiration (E)
-    !   ! transp = 1.6 * gs * vpd
-
-    !   ! Vcmax normalised per unit fAPAR (assuming fAPAR=1)
-    !   vcmax_unitfapar = ppfd * vcmax_unitiabs
-
-    !   ! Vcmax25 (vcmax normalized to 25 deg C)
-    !   vcmax25_unitfapar = ppfd * vcmax25_unitiabs
-
-    !   ! ! Dark respiration per unit fAPAR (assuming fAPAR=1)
-    !   ! rd_unitfapar = ppfd * rd_unitiabs
-
-    !   ! active metabolic leaf N (canopy-level), mol N/m2-ground (same equations as for nitrogen content per unit leaf area, gN/m2-leaf)
-    !   actnv_unitfapar = ppfd * actnv_unitiabs
-
-    !   ! stomatal conductance to CO2, expressed per unit absorbed fAPAR
-    !   gs_unitfapar = ppfd * gs_unitiabs
-
-
-    !   if (fapar /= dummy) then
-    !     !-----------------------------------------------------------------------
-    !     ! Calculate quantities scaling with absorbed light
-    !     !-----------------------------------------------------------------------
-    !     ! absorbed photosynthetically active radiation (mol/m2)
-    !     iabs = fapar * ppfd 
-
-    !     ! XXX PMODEL_TEST: ok
-    !     ! print*,'iabs ', iabs
-
-    !     ! Canopy-level quantities 
-    !     ! Defined per unit ground level -> scaling with aborbed light (iabs)
-    !     !-----------------------------------------------------------------------
-    !     ! Gross primary productivity
-    !     gpp = iabs * lue ! in g C m-2 s-1
-
-    !     ! ! XXX PMODEL_TEST: ok
-    !     ! print*,'gpp ', gpp
-
-    !     ! Vcmax per unit ground area is the product of the intrinsic quantum 
-    !     ! efficiency, the absorbed PAR, and 'n'
-    !     vcmax = iabs * vcmax_unitiabs  ! = iabs * kphio * n 
-
-    !     ! ! XXX PMODEL_TEST: ok
-    !     ! print*,'vcmax ', vcmax
-
-    !     ! (vcmax normalized to 25 deg C)
-    !     vcmax25 = iabs * vcmax25_unitiabs  ! = factor25_vcmax * vcmax
-
-    !     ! ! XXX PMODEL_TEST: ok
-    !     !print*,'vcmax25 ', vcmax25
-    !     !print*,'vcmax25 ', vcmax25_unitiabs
-    !     ! Dark respiration
-    !     ! rd = iabs * rd_unitiabs ! = rd_to_vcmax * vcmax
-
-    !     ! ! XXX PMODEL_TEST: ok
-    !     ! print*,'rd ', rd
-
-    !     ! active metabolic leaf N (canopy-level), mol N/m2-ground (same equations as for nitrogen content per unit leaf area, gN/m2-leaf)
-    !     actnv = iabs * actnv_unitiabs ! = vcmax25 * n_v
-
-    !     ! stomatal conductance to CO2
-    !     gs = iabs * gs_unitiabs
-
-    !     ! xxx text here we have ignored gs_test, otherwise it will cause FPE
-    !     !gs_test = (gpp / c_molmass) / (ca - ci)
-    !     ! print*,'pmodel(): gs, gs_test ', gs, gs_test
-
-
-
-    !   else
-
-    !     ! gpp     = dummy
-    !     ! vcmax   = dummy
-    !     vcmax25 = dummy
-    !     ! rd      = dummy
-    !     ! actnv   = dummy
-    !     jmax    = dummy
-
-    !   end if
-
-    ! else
-
-    !   ! vcmax_unitfapar   = dummy
-    !   vcmax25_unitfapar = dummy
-    !   ! rd_unitfapar      = dummy
-    !   ! actnv_unitfapar   = dummy
-      
-    !   ! gpp               = dummy
-    !   vcmax             = dummy
-    !   vcmax25           = dummy
-    !   ! rd                = dummy
-    !   ! actnv             = dummy
-    !   jmax              = dummy
-
-    ! end if
-
     ! construct list for output
     out_pmodel%gammastar        = gammastar
     out_pmodel%kmm              = kmm
@@ -458,23 +337,9 @@ contains
     out_pmodel%xi               = out_optchi%xi
     out_pmodel%iwue             = iwue
     out_pmodel%lue              = lue
-    ! out_pmodel%gpp              = gpp
-    ! out_pmodel%vcmax            = vcmax
-    ! out_pmodel%jmax             = jmax
     out_pmodel%vcmax25          = vcmax25
     out_pmodel%jmax25           = jmax25
-    ! out_pmodel%vcmax_unitfapar  = vcmax_unitfapar
-    ! out_pmodel%vcmax_unitiabs   = vcmax_unitiabs
-    ! out_pmodel%ftemp_inst_vcmax = ftemp_inst_vcmax
-    ! out_pmodel%ftemp_inst_jmax    = ftemp_inst_jmax
-    ! out_pmodel%rd               = rd
-    ! out_pmodel%rd_unitfapar     = rd_unitfapar
-    ! out_pmodel%rd_unitiabs      = rd_unitiabs
     out_pmodel%actnv            = actnv
-    ! out_pmodel%actnv_unitfapar  = actnv_unitfapar
-    ! out_pmodel%actnv_unitiabs   = actnv_unitiabs
-    ! out_pmodel%gs_unitiabs      = gs_unitiabs
-    ! out_pmodel%gs_unitfapar     = gs_unitfapar
     out_pmodel%gs_setpoint      = gs_setpoint
 
   end function pmodel
@@ -665,6 +530,28 @@ contains
     end if
     
   end function calc_omega
+
+
+  pure function calc_bigdelta( chi, ca, gammastar ) result( bigdelta )
+    !-------------------------------------------------------------
+    ! Calculates isotopic discrimination (Delta) against 13C
+    !-------------------------------------------------------------
+    ! arguments
+    real, intent(in) :: chi        ! = ci/ca, leaf-internal to ambient CO2 partial pressure, ci/ca (unitless)
+    real, intent(in) :: ca         ! leaf-external (ambient) CO2 partial pressure, (Pa)
+    real, intent(in) :: gammastar  ! temperature-dependent photorespiratory compensation point (Pa)
+
+    ! local variables
+    real, parameter :: a_par = 4.4   ! isotope fractionation from CO2 diffusion in air (4.4 permil; Craig, 1953)
+    real, parameter :: b_par = 27.0  ! isotope fractionation from effective Rubisco carboxylation (26–30 permil)
+    real, parameter :: f_par = 8.0   ! isotope fractionation from photorespiration (8–16 permil; Ubierna & Farquhar, 2014)
+
+    ! function return variable
+    real :: bigdelta
+
+    bigdelta = chi * (b_par - a_par) + a_par - f_par * gammastar / ca !(e.g. eq 4; Brüggemann, 10.5194/bg-8-3457-2011)
+
+  end function calc_bigdelta
 
 
   ! function findroot_quadratic( aquad, bquad, cquad, return_smallroot ) result( root )
