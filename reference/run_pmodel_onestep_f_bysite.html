@@ -114,10 +114,6 @@ acclimation of photosynthesis.</p>
       ppfd (mol photons m\(^{-2}\) d\(^{-1}\)) and fapar
       to express per unit ground area and time.)</p></dd>
 
-  <dt><code>wscal</code></dt>
-<dd><p>Relative soil water content, between 0 (permanent wilting
-      point, PWP) and 1 (field capacity, FC).</p></dd>
-
   <dt><code>chi</code></dt>
 <dd><p>Ratio of leaf-internal to ambient CO\(_{2}\), ci:ca (unitless).</p></dd>
 
@@ -128,6 +124,10 @@ acclimation of photosynthesis.</p>
   <dt><code>rd</code></dt>
 <dd><p>Dark respiration (Rd) in gC m\(^{-2}\) s\(^{-1}\).
       (Multiply by 1/12 (mol C / gC) to convert to mol C m\(^{-2}\) s\(^{-1}\).)</p></dd>
+
+  <dt><code>bigdelta</code></dt>
+<dd><p>13C isotope discrimination of leaf assimilates
+       against atmospheric signature (permil).</p></dd>
 
 
 </dl></div>
@@ -169,9 +169,9 @@ acclimation of photosynthesis.</p>
 <span class="r-in"><span>  makecheck <span class="op">=</span> <span class="cn">TRUE</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 1 × 9</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       vcmax      jmax   vcmax25    jmax25 gs_accl wscal   chi      iwue       rd</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> 0.000<span style="text-decoration: underline;">017</span>7 0.000<span style="text-decoration: underline;">040</span>0 0.000<span style="text-decoration: underline;">027</span>5 0.000<span style="text-decoration: underline;">051</span>8 0.001<span style="text-decoration: underline;">58</span>   <span style="color: #BB0000;">NaN</span> 0.694 0.000<span style="text-decoration: underline;">076</span>4  3.11<span style="color: #949494;">e</span><span style="color: #BB0000;">-6</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       vcmax      jmax   vcmax25    jmax25 gs_accl   chi    iwue      rd bigdelta</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> 0.000<span style="text-decoration: underline;">017</span>7 0.000<span style="text-decoration: underline;">040</span>0 0.000<span style="text-decoration: underline;">027</span>5 0.000<span style="text-decoration: underline;">051</span>8 0.001<span style="text-decoration: underline;">58</span> 0.694 7.64<span style="color: #949494;">e</span><span style="color: #BB0000;">-5</span> 3.11<span style="color: #949494;">e</span><span style="color: #BB0000;">-6</span>     19.4</span>
 </code></pre></div>
     </div>
   </div>
