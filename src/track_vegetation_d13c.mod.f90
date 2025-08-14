@@ -39,7 +39,7 @@ contains
       ! add NPP to virtual leaf biomass (no respiration), keeping track of isotopic signature
       tile(lu)%plant(pft)%pleaf = tile(lu)%plant(pft)%pleaf + &
         orgpool(                               &
-          tile_fluxes(lu)%plant(pft)%dgpp,     & ! no respiration, so only GPP considered
+          tile_fluxes(lu)%plant(pft)%dgpp,     & ! no respiration, so only GPP considered, xxx: we could use plant(pft)%drd
           tile_fluxes(lu)%plant(pft)%d13c_gpp, &
           tile_fluxes(lu)%plant(pft)%dgpp * tile(lu)%plant(pft)%r_ntoc_leaf &
         )
