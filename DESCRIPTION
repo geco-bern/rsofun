@@ -76,7 +76,6 @@ ByteCompile: true
 NeedsCompilation: yes
 RoxygenNote: 7.3.2
 Suggests:
-    constructive,
     covr,
     rcmdcheck,
     testthat (>= 3.0.0),

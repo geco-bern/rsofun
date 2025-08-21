@@ -13,7 +13,7 @@ module md_forcing_biomee
   public getclimate
 
   ! Number of parameters
-  integer, public, parameter :: nvars_forcing = 7
+  integer, public, parameter :: nvars_forcing = 8
 
   type :: climate_type
     real    :: ppfd          ! mol m-2 s-1
@@ -41,7 +41,7 @@ contains
     ! arguments
     integer, intent(in) :: nt ! number of time steps
     integer, intent(in) :: ntstepsyear   ! number of time steps per year of model
-    real(kind=dp),  dimension(nt,7), intent(in)  :: forcing  ! array containing all temporally varying forcing data
+    real(kind=dp),  dimension(nt,nvars_forcing), intent(in)  :: forcing  ! array containing all temporally varying forcing data
     integer, intent(in) :: climateyear_idx
 
     ! local variables
