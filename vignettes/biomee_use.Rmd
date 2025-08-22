@@ -248,7 +248,6 @@ One possible check is to ensure that it reached the expected steady state condit
 Note how the vegetation C pool reaches a steady state relatively fast, while the soil C pool takes more time:
 
 ``` {r eval = TRUE, fig.width=7}
-library(patchwork)
 pl1 <- biomee_p_model_calibratedOutput_annual_tile %>%
   ggplot(aes(x = year)) +
   geom_line(aes(y = plantC+soilC, color = "total C", linetype = "total C")) +
@@ -286,7 +285,8 @@ pl2 <- biomee_p_model_calibratedOutput_annual_tile %>%
                                      "plant: NPP=GPP-Rauto"=2)) +
   labs(x = "Year", y = "kg C m-2 yr-1", linetype = NULL, color = NULL) + 
   theme(legend.position = c(1,0.5), legend.justification = c(1,0.5))
-pl1 / pl2 # patchwork
+pl1
+pl2
 ```
 
 Note that for the carbon cycle the steady state assumption appears to be good. 

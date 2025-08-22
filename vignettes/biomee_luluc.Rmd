@@ -124,7 +124,7 @@ out_sim_1 <- runread_biomee_f(df_drivers)
 Next, we define some convenience functions for displaying plots:
 
 ```{r eval = TRUE, results = 'hide'}
-library(gridExtra)
+library(cowplot)
 library(purrr)
 
 plot1 <- function(lu_name, variable, out, y_limit=NA, yr_start=1, yr_label_offset=0) {
@@ -174,7 +174,7 @@ plot_variable <- function(variable, out, yr_start=1, yr_label_offset=0) {
 plot_variables <- function(variables, out, yr_start=1, yr_label_offset=0) {
 
   plots <- variables |> lmap(\(x) plot_variable(x, out, yr_start, yr_label_offset))
-  grid.arrange(grobs=plots, nrow = length(variables))
+  cowplot::plot_grid(plotlist = plots, ncol = length(variables))
 }
 ```
 
@@ -208,8 +208,7 @@ p2 <- out_sim_1$aggregated[[1]]$output_annual_cell %>%
         geom_line(aes(x = year, y = prod_pool_2_C)) +
         theme_classic() +
         labs(x = "Year", y = paste("Prod. pools C (20 years)"))
-
-grid.arrange(p1, p2, nrow = 1)
+cowplot::plot_grid(p1, p2, nrow = 1)
 ```
 
 As expected, the product pools get filled with the wood harvest and decay with their respective e-folding times.
@@ -311,7 +310,7 @@ p2 <- out_sim_2$aggregated[[1]]$output_annual_cell %>%
         theme_classic() +
         labs(x = "Year", y = paste("Prod. pools C (20 years)"))
 
-grid.arrange(p1, p2, nrow = 1)
+cowplot::plot_grid(p1, p2, nrow = 1)
 ```
 
 ## Crop rotation and land management

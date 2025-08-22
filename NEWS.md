@@ -8,13 +8,13 @@
 * Internally, P-model now computes temperature dependencies of jmax and vcmax
   with Kumarathunge et al. (2019) instead of Kattge & Knorr (2007), effectively 
   using a dampened signal for tc_growth and long-term averages for tc_home. This 
-  alters the simulation results. Formattting of inputs remains unchanged.
+  alters the simulation results. Formatting of inputs remains unchanged.
 * Carbon isotope tracking is now included:
   * `run_pmodel_f_bysite()` and `runread_pmodel()` newly return `cleaf` and `cleafd13c`,
     assuming a constant atmospheric signature `d13c_atm = -8.4 permil`. In a future 
     version daily valeus of d13c_atm could/should be included in the input forcing.
   * `run_pmodel_onestep_f_bysite()` returns `bigdelta`, i.e. the carbon 
-    fractionation of fresh assimilate `cleafd13c` relative to `d13c_atm`, thereby avoding any
+    fractionation of fresh assimilate `cleafd13c` relative to `d13c_atm`, thereby avoiding any
     assumptions for `d13c_atm`.
   * `run_biomee_f_bysite()` and `runread_biomee()` do track carbon isitopes internally, 
     currently without output. Note that when `method_photosynth == "gs_leuning"`, then

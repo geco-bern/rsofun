@@ -30,7 +30,6 @@ expect_snapshot_value_fmt <- function(
 
 
 head_tail <- function(df, n = 5) {
-  require("dplyr")
   dplyr::bind_rows(
     head(df, n), 
     tail(df, n)
