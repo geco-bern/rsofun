@@ -78,6 +78,7 @@ RoxygenNote: 7.3.2
 Suggests:
     covr,
     constructive,
+    cowplot,
     rcmdcheck,
     testthat (>= 3.0.0),
     rmarkdown,
@@ -85,7 +86,6 @@ Suggests:
     knitr,
     sensitivity,
     rpmodel,
-    gridExtra,
     rlang
 VignetteBuilder: knitr
 Encoding: UTF-8
