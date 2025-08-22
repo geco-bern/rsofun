@@ -60,12 +60,12 @@
 <ul><li>New <code><a href="../reference/run_pmodel_onestep_f_bysite.html">run_pmodel_onestep_f_bysite()</a></code> adds single-step leaf-level simulations of the P-model.</li>
 <li>
 <code><a href="../reference/calib_sofun.html">calib_sofun()</a></code> now passes parameters as a <em>named</em> vector to cost-functions for easier processing within cost-functions. Default cost-functions were updated, but currently ignore the names. This is fully backward compatible, but allows to use the names in user-created cost functions.</li>
-<li>Internally, P-model now computes temperature dependencies of jmax and vcmax with Kumarathunge et al. (2019) instead of Kattge &amp; Knorr (2007), effectively using a dampened signal for tc_growth and long-term averages for tc_home. This alters the simulation results. Formattting of inputs remains unchanged.</li>
+<li>Internally, P-model now computes temperature dependencies of jmax and vcmax with Kumarathunge et al. (2019) instead of Kattge &amp; Knorr (2007), effectively using a dampened signal for tc_growth and long-term averages for tc_home. This alters the simulation results. Formatting of inputs remains unchanged.</li>
 <li>Carbon isotope tracking is now included:
 <ul><li>
 <code><a href="../reference/run_pmodel_f_bysite.html">run_pmodel_f_bysite()</a></code> and <code>runread_pmodel()</code> newly return <code>cleaf</code> and <code>cleafd13c</code>, assuming a constant atmospheric signature <code>d13c_atm = -8.4 permil</code>. In a future version daily valeus of d13c_atm could/should be included in the input forcing.</li>
 <li>
-<code><a href="../reference/run_pmodel_onestep_f_bysite.html">run_pmodel_onestep_f_bysite()</a></code> returns <code>bigdelta</code>, i.e. the carbon fractionation of fresh assimilate <code>cleafd13c</code> relative to <code>d13c_atm</code>, thereby avoding any assumptions for <code>d13c_atm</code>.</li>
+<code><a href="../reference/run_pmodel_onestep_f_bysite.html">run_pmodel_onestep_f_bysite()</a></code> returns <code>bigdelta</code>, i.e. the carbon fractionation of fresh assimilate <code>cleafd13c</code> relative to <code>d13c_atm</code>, thereby avoiding any assumptions for <code>d13c_atm</code>.</li>
 <li>
 <code><a href="../reference/run_biomee_f_bysite.html">run_biomee_f_bysite()</a></code> and <code>runread_biomee()</code> do track carbon isitopes internally, currently without output. Note that when <code>method_photosynth == "gs_leuning"</code>, then <code>bigdelta = 20</code>, whereas when <code>method_photosynth == "pmodel"</code> then <code>bigdelta</code> is computed based on the <code>pmodel</code>-derived <code>chi</code>.</li>
 </ul></li>
