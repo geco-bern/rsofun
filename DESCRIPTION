@@ -86,7 +86,6 @@ Suggests:
     sensitivity,
     rpmodel,
     gridExtra,
-    patchwork,
     rlang
 VignetteBuilder: knitr
 Encoding: UTF-8
