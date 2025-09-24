@@ -104,7 +104,7 @@ contains
 
     ! xxx test
     real :: a_c, a_j, a_returned, fact_jmaxlim
-    integer, save :: count
+    integer, save :: count ! TODO: THIS APPEARS NOT TO BE NEEDED. (But since it corresponds to doy, it is useful for conditional breakpoints to debug the NaN issue.)
 
     !----------------------------------------------------------------
     ! Convert daily mean environmental conditions to conditions to
