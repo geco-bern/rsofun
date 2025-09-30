@@ -59,8 +59,9 @@
 <h2 class="page-header" data-toc-text="5.1.0" id="rsofun-510">rsofun 5.1.0<a class="anchor" aria-label="anchor" href="#rsofun-510"></a></h2>
 <div class="section level3">
 <h3 id="new-features-5-1-0">New features<a class="anchor" aria-label="anchor" href="#new-features-5-1-0"></a></h3>
-<ul><li>rsofun:
+<ul><li>P-model:
 <ul><li>New <code><a href="../reference/run_pmodel_onestep_f_bysite.html">run_pmodel_onestep_f_bysite()</a></code> adds single-step leaf-level simulations of the P-model</li>
+<li>Changed temperature dependencies of Vcmax and Jmax (see breaking changes below)</li>
 <li>Added support for carbon isotope tracking
 <ul><li>
 <code><a href="../reference/run_pmodel_onestep_f_bysite.html">run_pmodel_onestep_f_bysite()</a></code> returns <code>bigdelta</code>, i.e. the carbon fractionation of fresh assimilate <code>cleafd13c</code> relative to <code>d13c_atm</code>, thereby avoiding any assumptions for <code>d13c_atm</code>.</li>
