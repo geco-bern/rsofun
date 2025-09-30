@@ -345,7 +345,7 @@ contains
     self%deathrate     = 0.0
   end subroutine reset_cohort
 
-  pure function can_be_merged_with(self, other) result(res)
+  function can_be_merged_with(self, other) result(res)
     !////////////////////////////////////////////////////////////////
     ! Check if the conditions for merging this cohort with cohort 'other' are met.
     ! To cohorts can be merged if they belong to the same species and layer, and have roughly the same size.
