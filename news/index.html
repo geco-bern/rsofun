@@ -21,7 +21,7 @@
         <a class="external-link hidden-md hidden-lg" href="https://geco-group.org/">
           <img src="https://raw.githubusercontent.com/computationales/GECO_template/main/geco_logo_white_small.png" id="hexlogo" alt="GECO"></a>
         <a class="navbar-brand" href="../index.html">
-           <i>rsofun <small>v5.1.0.9000</small></i>
+           <i>rsofun <small>v5.1.0</small></i>
         </a>
       </div>
     </div>
@@ -56,30 +56,34 @@
     </div>
 
     <div class="section level2">
-<h2 class="page-header" data-toc-text="development version" id="rsofun-development-version">rsofun (development version)<a class="anchor" aria-label="anchor" href="#rsofun-development-version"></a></h2>
-<ul><li>New <code><a href="../reference/run_pmodel_onestep_f_bysite.html">run_pmodel_onestep_f_bysite()</a></code> adds single-step leaf-level simulations of the P-model.</li>
-<li>
-<code><a href="../reference/calib_sofun.html">calib_sofun()</a></code> now passes parameters as a <em>named</em> vector to cost-functions for easier processing within cost-functions. Default cost-functions were updated, but currently ignore the names. This is fully backward compatible, but allows to use the names in user-created cost functions.</li>
-<li>Internally, P-model now computes temperature dependencies of jmax and vcmax with Kumarathunge et al. (2019) instead of Kattge &amp; Knorr (2007), effectively using a dampened signal for tc_growth and long-term averages for tc_home. This alters the simulation results. Formatting of inputs remains unchanged.</li>
-<li>Carbon isotope tracking is now included:
-<ul><li>
-<code><a href="../reference/run_pmodel_f_bysite.html">run_pmodel_f_bysite()</a></code> and <code>runread_pmodel()</code> newly return <code>cleaf</code> and <code>cleafd13c</code>, assuming a constant atmospheric signature <code>d13c_atm = -8.4 permil</code>. In a future version daily valeus of d13c_atm could/should be included in the input forcing.</li>
-<li>
-<code><a href="../reference/run_pmodel_onestep_f_bysite.html">run_pmodel_onestep_f_bysite()</a></code> returns <code>bigdelta</code>, i.e. the carbon fractionation of fresh assimilate <code>cleafd13c</code> relative to <code>d13c_atm</code>, thereby avoiding any assumptions for <code>d13c_atm</code>.</li>
-<li>
-<code><a href="../reference/run_biomee_f_bysite.html">run_biomee_f_bysite()</a></code> and <code>runread_biomee()</code> do track carbon isitopes internally, currently without output. Note that when <code>method_photosynth == "gs_leuning"</code>, then <code>bigdelta = 20</code>, whereas when <code>method_photosynth == "pmodel"</code> then <code>bigdelta</code> is computed based on the <code>pmodel</code>-derived <code>chi</code>.</li>
-</ul></li>
-</ul></div>
-    <div class="section level2">
 <h2 class="page-header" data-toc-text="5.1.0" id="rsofun-510">rsofun 5.1.0<a class="anchor" aria-label="anchor" href="#rsofun-510"></a></h2>
 <div class="section level3">
 <h3 id="new-features-5-1-0">New features<a class="anchor" aria-label="anchor" href="#new-features-5-1-0"></a></h3>
+<ul><li>rsofun:
+<ul><li>New <code><a href="../reference/run_pmodel_onestep_f_bysite.html">run_pmodel_onestep_f_bysite()</a></code> adds single-step leaf-level simulations of the P-model</li>
+<li>Added support for carbon isotope tracking
+<ul><li>
+<code><a href="../reference/run_pmodel_onestep_f_bysite.html">run_pmodel_onestep_f_bysite()</a></code> returns <code>bigdelta</code>, i.e. the carbon fractionation of fresh assimilate <code>cleafd13c</code> relative to <code>d13c_atm</code>, thereby avoiding any assumptions for <code>d13c_atm</code>.</li>
+<li>
+<code><a href="../reference/run_pmodel_f_bysite.html">run_pmodel_f_bysite()</a></code> and <code>runread_pmodel()</code> newly return <code>cleaf</code> and <code>cleafd13c</code>, assuming a constant atmospheric signature <code>d13c_atm = -8.4 permil</code>. In a future version daily values of d13c_atm could/should be included in the input forcing.</li>
+</ul></li>
+</ul></li>
+<li>BiomeE:
 <ul><li>Added support for LULUC (land use, land-use change) in BiomeE. See vignette <code>biome_luluc</code> for details.</li>
 <li>New BiomeE behavior to recycle last year of forcing if requested simulation time span (<code>nyeartrend</code>) is longer than available forcing data.</li>
+<li>Prepared support for carbon isotope tracking
+<ul><li>
+<code><a href="../reference/run_biomee_f_bysite.html">run_biomee_f_bysite()</a></code> and <code>runread_biomee()</code> do track carbon isotopes internally, currently without output. Note that when <code>method_photosynth == "gs_leuning"</code>, then <code>bigdelta = 20</code>, whereas when <code>method_photosynth == "pmodel"</code> then <code>bigdelta</code> is computed based on the <code>pmodel</code>-derived <code>chi</code>.</li>
+</ul></li>
+</ul></li>
+<li>
+<code><a href="../reference/calib_sofun.html">calib_sofun()</a></code> now passes parameters as a <em>named</em> vector to cost-functions for easier processing within cost-functions. Default cost-functions were updated, but currently ignore the names. This is fully backward compatible, but allows to use the names in user-created cost functions.</li>
 </ul></div>
 <div class="section level3">
 <h3 id="breaking-changes-5-1-0">Breaking changes<a class="anchor" aria-label="anchor" href="#breaking-changes-5-1-0"></a></h3>
-<ul><li>Breaking changes in biomee drivers:
+<ul><li><p>P-model now computes temperature dependencies of jmax and vcmax with Kumarathunge et al. (2019) instead of Kattge &amp; Knorr (2007), effectively using a dampened signal for tc_growth and long-term averages for tc_home. This alters the simulation results. Formatting of inputs remains unchanged.</p></li>
+<li>
+<p>Breaking changes in BiomeE drivers:</p>
 <ul><li>
 <code>init_cohort$init_n_cohorts</code> column has been phased out and must not be present in<br>
 drivers to protect against data corruption.</li>
@@ -100,7 +104,8 @@ drivers to protect against data corruption.</li>
 <code>N_input</code> is set to 0.01 to limit N starvation.</li>
 </ul></li>
 </ul></li>
-<li>Breaking changes in biomee output
+<li>
+<p>Breaking changes in BiomeE output</p>
 <ul><li>renamed the following column names in <code>output_daily_tile</code>:
 <ul><li>
 <code>totWs</code>=&gt;<code>SoilWater</code>
