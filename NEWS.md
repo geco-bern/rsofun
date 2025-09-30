@@ -2,13 +2,14 @@
 
 ## New features
 
-* rsofun:
+* P-model:
   * New `run_pmodel_onestep_f_bysite()` adds single-step leaf-level simulations 
   of the P-model
+  * Changed temperature dependencies of Vcmax and Jmax (see breaking changes below)
   * Added support for carbon isotope tracking
     * `run_pmodel_onestep_f_bysite()` returns `bigdelta`, i.e. the carbon 
-      fractionation of fresh assimilate `cleafd13c` relative to `d13c_atm`, thereby avoiding any
-      assumptions for `d13c_atm`.
+      fractionation of fresh assimilate `cleafd13c` relative to `d13c_atm`, 
+      thereby avoiding any assumptions for `d13c_atm`.
     * `run_pmodel_f_bysite()` and `runread_pmodel()` newly return `cleaf` and `cleafd13c`,
       assuming a constant atmospheric signature `d13c_atm = -8.4 permil`. In a future 
       version daily values of d13c_atm could/should be included in the input forcing.
@@ -78,7 +79,8 @@ drivers to protect against data corruption.
 # rsofun v5.0.1
 
 * This model version behaves exactly as the version before.
-* Update was necessary to include description of scripts and data used for the model documentation paper into archive on Zenodo
+* Update was necessary to include description of scripts and data used for the 
+model documentation paper into archive on Zenodo
 
 
 # rsofun v5.0.0
