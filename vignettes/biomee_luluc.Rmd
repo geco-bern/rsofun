@@ -168,7 +168,7 @@ plot_variable <- function(variable, out, yr_start=1, yr_label_offset=0) {
 
   names <- c(tile_names, 'aggregated')
 
-  names |> lmap(\(x) plot1(x, variable, out, y_limit, yr_start, yr_label_offset))
+  names |> lmap(\(x) list(plot1(x, variable, out, y_limit, yr_start, yr_label_offset)))
 }
 
 plot_variables <- function(variables, out, yr_start=1, yr_label_offset=0) {
