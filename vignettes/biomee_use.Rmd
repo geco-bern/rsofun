@@ -177,10 +177,10 @@ pars <- pars_all["par"]
 # saveRDS(pars_all, "files/biomee_use.Rmd__biomee_p_model_output___pars.RDS")
 # pars <- readRDS("files/biomee_use.Rmd__biomee_p_model_output___pars.RDS")["par"]
 pars <- list(
-  par = c(phiRL     = 1.14732409800086,
-          LAI_light = 6.27111451155709,
-          tf_base   = 0.685873617014058,
-          par_mort  = 0.0889500145662122
+  par = c(phiRL     = 1.27705864862701, 
+          LAI_light = 5.62385280630643, 
+          tf_base   = 0.504099730241379, 
+          par_mort  = 0.0220552311561793
 ))
 ```
 
