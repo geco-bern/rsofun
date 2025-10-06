@@ -1,5 +1,7 @@
 all: $(SHLIB)
 
+# Source (object) of Fortran modules
+# <modulename.mod>: <filename.o>
 md_interface_pmodel.mod: interface_biosphere_pmodel.mod.o
 md_interface_in_biomee.mod: interface_in_biosphere_biomee.mod.o
 md_interface_out_biomee.mod: interface_out_biosphere_biomee.mod.o
@@ -30,11 +32,13 @@ md_common_fluxes.mod: common_fluxes.mod.o
 md_orgpool.mod: orgpool.mod.o
 md_params_core.mod: params_core.mod.o
 md_grid.mod: grid_siterun.mod.o
-# Source (object) of Fortran modules
-# <name.o>: <modulename.o>
 procedure.mod: orgpool.mod.o
 pmodel_mod.mod: main_pmodel.mod.o
 biomee_mod.mod: main_biomee.mod.o
+
+# Define all module interdependencies
+# Source (object) of Fortran modules
+# <name.o>: <modulename.mod>
 interface_biosphere_pmodel.mod.o: md_forcing_pmodel.mod md_params_siml_pmodel.mod md_params_core.mod md_grid.mod
 interface_in_biosphere_biomee.mod.o: md_params_core.mod
 forcing_siterun_pmodel.mod.o: md_params_core.mod md_grid.mod md_sofunutils.mod md_params_siml_pmodel.mod md_params_core.mod
