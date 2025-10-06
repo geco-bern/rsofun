@@ -381,7 +381,7 @@ Notes:
 
 ## LUH2 integration
 
-BiomeE integrates seamlessly with LUH2 v2 data (https://luh.umd.edu/data.shtml).
+BiomeE integrates seamlessly with LUH2 v2 data (https://web.archive.org/web/20250101000000/https://luh.umd.edu/data.shtml).
 To preprocess the LUH2 data for use with BiomeE we can use the separate package `luhrsofun` that is available at
 (https://github.com/geco-bern/luhrsofun).
 
