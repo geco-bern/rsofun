@@ -364,7 +364,7 @@ run_pmodel_f_bysite <- function(
       forcing                   = as.matrix(forcing)
     )
   } else {
-    pmodelout <- array(dim = c(1,19), data = NA_real_)
+    pmodelout <- NA_real_
   }
 
   out <- build_out_pmodel(pmodelout, params_siml$firstyeartrend, params_siml$nyeartrend)
@@ -383,7 +383,11 @@ build_out_pmodel <- function(pmodelout, firstyeartrend, nyeartrend){
     yrstart = firstyeartrend,
     yrend = firstyeartrend + nyeartrend - 1,
     noleap = TRUE)
+
+  # create NA output if continue == FALSE (ensure 21 corresponds to column names below)
+  if (all(is.na(pmodelout))) { pmodelout <- array(dim = c(1,21), data = NA_real_) }
   
+  # Prepare output
   out <- pmodelout %>%
     as.matrix() %>% 
     as.data.frame() %>% 
