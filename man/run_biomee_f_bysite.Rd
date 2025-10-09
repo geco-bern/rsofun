@@ -226,11 +226,10 @@ In most cases, it would be close to 1. It contains columns:
 Run BiomeE Fortran model on single site.
 }
 \examples{
-\donttest{
 # Example BiomeE model run
 
 # Use example drivers data
-drivers <- biomee_gs_leuning_drivers
+drivers <- biomee_p_model_drivers
 
 # Run BiomeE for the first site
 mod_output <- run_biomee_f_bysite(
@@ -243,5 +242,4 @@ mod_output <- run_biomee_f_bysite(
  init_cohort = drivers$init_cohort[[1]],
  init_soil = drivers$init_soil[[1]]
 )
-}
 }
