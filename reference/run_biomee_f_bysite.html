@@ -596,11 +596,10 @@ In most cases, it would be close to 1. It contains columns:</p><dl><dt><code>out
 
     <div id="ref-examples">
     <h2>Examples</h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># \donttest{</span></span></span>
-<span class="r-in"><span><span class="co"># Example BiomeE model run</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># Example BiomeE model run</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Use example drivers data</span></span></span>
-<span class="r-in"><span><span class="va">drivers</span> <span class="op">&lt;-</span> <span class="va">biomee_gs_leuning_drivers</span></span></span>
+<span class="r-in"><span><span class="va">drivers</span> <span class="op">&lt;-</span> <span class="va">biomee_p_model_drivers</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Run BiomeE for the first site</span></span></span>
 <span class="r-in"><span><span class="va">mod_output</span> <span class="op">&lt;-</span> <span class="fu">run_biomee_f_bysite</span><span class="op">(</span></span></span>
@@ -613,7 +612,6 @@ In most cases, it would be close to 1. It contains columns:</p><dl><dt><code>out
 <span class="r-in"><span> init_cohort <span class="op">=</span> <span class="va">drivers</span><span class="op">$</span><span class="va">init_cohort</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span>,</span></span>
 <span class="r-in"><span> init_soil <span class="op">=</span> <span class="va">drivers</span><span class="op">$</span><span class="va">init_soil</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="co"># }</span></span></span>
 </code></pre></div>
     </div>
   </div>

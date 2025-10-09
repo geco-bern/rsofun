@@ -94,18 +94,17 @@ If the sequence contains more years than <code>n_years</code>, it will be trunca
 
     <div id="ref-examples">
     <h2>Examples</h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># \donttest{</span></span></span>
-<span class="r-in"><span>  <span class="co"># Example of building a 6 year-long transition matix consisting of 6 times 2x2 matrices</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># Example of building a 6 year-long transition matix consisting of 6 times 2x2 matrices</span></span></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span>  <span class="co"># A one time transfer of 0.5 of the total cell fraction from LU 2 to LU 1</span></span></span>
-<span class="r-in"><span>  <span class="va">pattern1</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0.5</span>, <span class="fl">0</span><span class="op">)</span></span></span>
-<span class="r-in"><span>  <span class="co"># The null pattern (no transition)</span></span></span>
-<span class="r-in"><span>  <span class="va">null_pattern</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">4</span><span class="op">)</span></span></span>
-<span class="r-in"><span>  <span class="co"># A repeated self-transition of 0.1 of the total cell fraction from LU 2 to LU 2 every other year</span></span></span>
-<span class="r-in"><span>  <span class="va">pattern2</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0.1</span><span class="op">)</span>, <span class="va">null_pattern</span><span class="op">)</span>, <span class="fl">3</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="co"># A one time transfer of 0.5 of the total cell fraction from LU 2 to LU 1</span></span></span>
+<span class="r-in"><span><span class="va">pattern1</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0.5</span>, <span class="fl">0</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="co"># The null pattern (no transition)</span></span></span>
+<span class="r-in"><span><span class="va">null_pattern</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">4</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="co"># A repeated self-transition of 0.1 of the total cell fraction from LU 2 to LU 2 every other year</span></span></span>
+<span class="r-in"><span><span class="va">pattern2</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0.1</span><span class="op">)</span>, <span class="va">null_pattern</span><span class="op">)</span>, <span class="fl">3</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span>  <span class="co"># Building the transition matrix</span></span></span>
-<span class="r-in"><span>  <span class="fu">build_luc_matrix</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">pattern1</span>, <span class="va">pattern2</span><span class="op">)</span>, <span class="fl">2</span>, <span class="fl">6</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="co"># Building the transition matrix</span></span></span>
+<span class="r-in"><span><span class="fu">build_luc_matrix</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">pattern1</span>, <span class="va">pattern2</span><span class="op">)</span>, <span class="fl">2</span>, <span class="fl">6</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> , , 1</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>      [,1] [,2]</span>
@@ -142,7 +141,6 @@ If the sequence contains more years than <code>n_years</code>, it will be trunca
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1,]    0    0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [2,]    0    0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-in"><span><span class="co"># }</span></span></span>
 </code></pre></div>
     </div>
   </div>
