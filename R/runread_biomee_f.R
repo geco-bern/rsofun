@@ -22,14 +22,15 @@
 #' 
 #' @examples 
 #' # Example BiomeE model run
-#' 
+#' \donttest{ # do not run long-running simulations
 #' runread_biomee_f(
 #'   drivers = biomee_p_model_drivers
 #' )
-#' \dontrun{ # do not run long-running simulations
+#' \dontrun{ # do not run this long-running example at all, only *show* example
 #' runread_biomee_f(
 #'   drivers = biomee_gs_leuning_drivers
 #' )
+#' }
 #' }
 
 runread_biomee_f <- function(

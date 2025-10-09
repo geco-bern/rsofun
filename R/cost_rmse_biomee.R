@@ -24,6 +24,7 @@
 #' @export
 #' 
 #' @examples
+#' \donttest{ # do not run long-running simulations
 #' # Compute RMSE for a set of
 #' # model parameter values
 #' # and example data
@@ -32,6 +33,7 @@
 #'  obs = biomee_validation,
 #'  drivers = biomee_p_model_drivers
 #' )
+#' }
 
 cost_rmse_biomee <- function(
     par,
