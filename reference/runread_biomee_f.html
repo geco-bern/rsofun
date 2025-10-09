@@ -102,7 +102,7 @@ Example outputs are provided as <code><a href="biomee_p_model_output.html">biome
     <div id="ref-examples">
     <h2>Examples</h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># Example BiomeE model run</span></span></span>
-<span class="r-in"><span></span></span>
+<span class="r-in"><span> <span class="co"># do not run long-running simulations</span></span></span>
 <span class="r-in"><span><span class="fu">runread_biomee_f</span><span class="op">(</span></span></span>
 <span class="r-in"><span>  drivers <span class="op">=</span> <span class="va">biomee_p_model_drivers</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
@@ -110,11 +110,12 @@ Example outputs are provided as <code><a href="biomee_p_model_output.html">biome
 <span class="r-out co"><span class="r-pr">#&gt;</span>   sitename data            </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;list&gt;</span>          </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> CH-Lae   <span style="color: #949494;">&lt;named list [3]&gt;</span></span>
-<span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span>  <span class="co"># do not run long-running simulations</span></span></span>
+<span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span>  <span class="co"># do not run this long-running example at all, only *show* example</span></span></span>
 <span class="r-in"><span><span class="fu">runread_biomee_f</span><span class="op">(</span></span></span>
 <span class="r-in"><span>  drivers <span class="op">=</span> <span class="va">biomee_gs_leuning_drivers</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span> <span class="co"># \dontrun{}</span></span></span>
+<span class="r-in"><span></span></span>
 </code></pre></div>
     </div>
   </div>
