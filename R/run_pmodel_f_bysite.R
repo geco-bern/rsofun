@@ -315,13 +315,12 @@ run_pmodel_f_bysite <- function(
     # determine whether to read PPFD from forcing or to calculate internally
     in_ppfd <- ifelse(any(is.na(forcing$ppfd)), FALSE, TRUE)  
     
-    # determine whether to read PPFD from forcing or to calculate internally
     # in_netrad <- ifelse(any(is.na(forcing$netrad)), FALSE, TRUE)  
     in_netrad <- FALSE  # net radiation is currently ignored as a model forcing, but is internally simulated by SPLASH.
     
-    # Check if fsun is available
-    if (! (in_ppfd & in_netrad)){
-      # fsun must be available when one of ppfd or netrad is missing
+    # Check if fsun is available in the case we do NOT provide ppfd
+    if (! (in_ppfd)){
+      # fsun must be available when ppfd is missing # TODO: actually also with ppfd provided, it must be available for computation of tau and rnl inside of solar() (waterbal_splash.mod.f90:201/213)
       if (any(is.na(forcing$fsun))) continue <- FALSE
     }
   }
@@ -365,7 +364,7 @@ run_pmodel_f_bysite <- function(
       forcing                   = as.matrix(forcing)
     )
   } else {
-    pmodelout <- array(dim = c(1,19), data = NA_real_)
+    pmodelout <- NA_real_
   }
 
   out <- build_out_pmodel(pmodelout, params_siml$firstyeartrend, params_siml$nyeartrend)
@@ -384,7 +383,11 @@ build_out_pmodel <- function(pmodelout, firstyeartrend, nyeartrend){
     yrstart = firstyeartrend,
     yrend = firstyeartrend + nyeartrend - 1,
     noleap = TRUE)
+
+  # create NA output if continue == FALSE (ensure 21 corresponds to column names below)
+  if (all(is.na(pmodelout))) { pmodelout <- array(dim = c(1,21), data = NA_real_) }
   
+  # Prepare output
   out <- pmodelout %>%
     as.matrix() %>% 
     as.data.frame() %>% 
