@@ -33,11 +33,10 @@ Runs BiomeE model for multiple sites.
 }
 \examples{
 # Example BiomeE model run
-
+\donttest{ # do not run long-running simulations
 runread_biomee_f(
   drivers = biomee_p_model_drivers
 )
-\dontrun{ # do not run long-running simulations
 runread_biomee_f(
   drivers = biomee_gs_leuning_drivers
 )
