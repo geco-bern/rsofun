@@ -32,14 +32,14 @@ Example outputs are provided as \code{\link{biomee_p_model_output}} and \code{\l
 Runs BiomeE model for multiple sites.
 }
 \examples{
-\donttest{
 # Example BiomeE model run
 
 runread_biomee_f(
-  drivers = biomee_gs_leuning_drivers
-)
-runread_biomee_f(
   drivers = biomee_p_model_drivers
+)
+\dontrun{ # do not run long-running simulations
+runread_biomee_f(
+  drivers = biomee_gs_leuning_drivers
 )
 }
 }
