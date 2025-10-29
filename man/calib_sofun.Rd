@@ -64,7 +64,7 @@ params_fix <- list(
   rd_to_vcmax        = 0.014,
   tau_acclim         = 30,
   kc_jmax            = 0.41,
-  whc                = 432
+  gw_calib           = 2.0
 )
 
 # Define calibration settings

@@ -154,6 +154,7 @@ contains
         ! get soil moisture, and runoff
         !----------------------------------------------------------------
         ! if (verbose) print*,'calling waterbal() ... '
+        ! bal1 = wcont + snow
         call waterbal(  tile(:), &
                         tile_fluxes(:), &
                         myinterface%grid, &
@@ -163,6 +164,8 @@ contains
                         myinterface%params_siml%use_gs, &
                         myinterface%params_siml%use_pml &
                         )
+        ! bal2 = wcont + snow + precip - AET
+        ! if (abs(bal2 - bal1) > eps) stop 'water balance violated'
         ! if (verbose) print*,'... done'
 
         !----------------------------------------------------------------

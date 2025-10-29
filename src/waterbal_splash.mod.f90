@@ -6,7 +6,7 @@ module md_waterbal
   ! Tyler Davis (under GPL2.1).
   !----------------------------------------------------------------
   use md_params_core
-  use md_tile_pmodel, only: tile_type, tile_fluxes_type
+  use md_tile_pmodel, only: tile_type, tile_fluxes_type, tile_type
   use md_forcing_pmodel, only: climate_type
   use md_grid, only: gridtype
   use md_interface_pmodel, only: myinterface
@@ -19,6 +19,7 @@ module md_waterbal
   public waterbal, solar, getpar_modl_waterbal
 
   integer, parameter :: int4=SELECTED_INT_KIND(4)
+  real, parameter :: eps_wcont = 0.01  ! water content retained before soil moisture stress function is zero (avoiding water balance violation). In mm.
 
   !-----------------------------------------------------------------------
   ! Uncertain (unknown) parameters. Runtime read-in
@@ -88,7 +89,7 @@ contains
       !---------------------------------------------------------
       ! Canopy transpiration and soil evaporation
       !---------------------------------------------------------
-      call calc_et( tile_fluxes(lu), grid, climate, sw, fapar(lu), using_phydro, using_gs, using_pml, params_gpp%gw_calib )
+      call calc_et( tile_fluxes(lu), grid, climate, sw, fapar(lu), using_phydro, using_gs, using_pml, params_gpp%gw_calib, tile(lu) )
 
       !---------------------------------------------------------
       ! Update soil moisture and snow pack
@@ -297,7 +298,7 @@ contains
   end subroutine solar
 
 
-  subroutine calc_et( tile_fluxes, grid, climate, sw, fapar, using_phydro, using_gs, using_pml, gw_calib )
+  subroutine calc_et( tile_fluxes, grid, climate, sw, fapar, using_phydro, using_gs, using_pml, gw_calib, tile )
     !/////////////////////////////////////////////////////////////////////////
     !
     !-------------------------------------------------------------------------  
@@ -314,6 +315,10 @@ contains
     logical, intent(in)                   :: using_phydro
     logical, intent(in)                   :: using_gs   ! Should Pmodel/Phydro gs be used in ET calc? (otherwise, PT formulation will be used)
     logical, intent(in)                   :: using_pml  ! If using Pmodel/Phydro gs, should ET be calculated using PM equation (otherwise, diffusion equation will be used)
+
+    ! xxx test
+    type(tile_type), intent(in) :: tile
+    real :: tmp
 
     ! local variables
     real :: gamma                           ! psychrometric constant (Pa K-1) ! xxx Zhang et al. use it in units of (kPa K-1), probably they use sat_slope in kPa/K, too.
@@ -456,7 +461,7 @@ contains
       !---------------------------------------------------------
       ! Actual soil evaporation (mm d-1 and J d-1)
       !---------------------------------------------------------
-      tile_fluxes%canopy%daet_soil = f_soil_aet * dpet_soil
+      tile_fluxes%canopy%daet_soil = max(min(f_soil_aet * dpet_soil, tile%soil%phy%wcont - eps_wcont), 0.0)  ! avoid soil evaporation being greater than wcont
       tile_fluxes%canopy%daet_e_soil = tile_fluxes%canopy%daet_soil / energy_to_mm
 
       !---------------------------------------------------------
@@ -483,7 +488,13 @@ contains
         ! print*,'in waterbal: gs_accl ', tile_fluxes%canopy%gs_accl
         ! introduced scaling with LAI
         lai_fapar = -1.0 / k_beer * log(1.0 - fapar)
-        gw = max(gw_calib * lai_fapar * tile_fluxes%canopy%gs_accl * 1.6 * kR * (climate%dtemp + kTkelvin), eps)
+
+        ! for numerical stability, use an if here (avoid dividing by zero in PM equation) 
+        if (tile_fluxes%canopy%gs_accl == 0) then
+          gw = 0.0
+        else 
+          gw = gw_calib * lai_fapar * tile_fluxes%canopy%gs_accl * 1.6 * kR * (climate%dtemp + kTkelvin)
+        end if
         
         ! latent energy flux from canopy (W m-2) 
         ! See also calc_transpiration_pm() in photosynth_phydro.mod.f90
@@ -491,7 +502,7 @@ contains
           * ga * climate%dvpd) / (epsilon + 1.0 + ga / gw) 
 
         ! canopy conductance assuming gw = infinite
-        tile_fluxes%canopy%dpet_e   =(epsilon * fapar * tile_fluxes%canopy%drn + (rho_water * cp / gamma) &
+        tile_fluxes%canopy%dpet_e   = (epsilon * fapar * tile_fluxes%canopy%drn + (rho_water * cp / gamma) &
           * ga * climate%dvpd) / (epsilon + 1.0) 
         tile_fluxes%canopy%dpet = dpet_soil + tile_fluxes%canopy%dpet_e * energy_to_mm 
 
@@ -538,6 +549,14 @@ contains
 
       ! print*,'waterbal: tile_fluxes%canopy%daet_canop, tile_fluxes%canopy%daet_soil ', tile_fluxes%canopy%daet_canop, tile_fluxes%canopy%daet_soil
 
+      ! ! xxx test:
+      ! if (tile_fluxes%canopy%daet > tile%soil%phy%wcont) then
+      !   print*,'water balance violation'
+      !   print*,'gs, gw, T, E', tile_fluxes%canopy%gs_accl, gw, tile_fluxes%canopy%daet_canop, tile_fluxes%canopy%daet_soil
+      !   print*,'AET, wcont', tile_fluxes%canopy%daet, tile%soil%phy%wcont
+      !   print*,'--------------'
+      ! end if        
+
     end if
     
     ! xxx debug
@@ -558,7 +577,7 @@ contains
     !---------------------------------------------------------
     ! Calculate Cramer-Prentice-Alpha, (unitless)
     !---------------------------------------------------------
-    if (tile_fluxes%canopy%deet>0.0) then 
+    if (tile_fluxes%canopy%deet > 0.0) then 
       tile_fluxes%canopy%cpa = tile_fluxes%canopy%daet / tile_fluxes%canopy%deet
     else
       tile_fluxes%canopy%cpa = 1.0 + kw

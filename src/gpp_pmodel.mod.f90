@@ -82,6 +82,7 @@ contains
     real       :: tk
     real       :: lv, rho_water       ! latent heat of vap and density of water, needed by phydro for unit conversions
 
+    real, parameter :: eps_wcont = 3.0  ! water content retained before soil moisture stress function is zero (avoiding water balance violation). In mm.
     real, save :: co2_memory
     real, save :: vpd_memory
     real, save :: temp_memory
@@ -128,7 +129,6 @@ contains
       swp(pft) = max(swp(pft), pxx_plant) ! clamp -ve values to a minimum of pxx
       !          ^ this clamping is for numerical stability only 
     end do
-
 
     !----------------------------------------------------------------
     ! Calculate environmental conditions with memory, time scale 
@@ -177,11 +177,13 @@ contains
       if (abs(params_pft_gpp(pft)%kphio_par_a) < eps) then
         kphio_temp = params_pft_gpp(pft)%kphio
       else
-        kphio_temp = calc_kphio_temp( climate%dtemp, &
-                                      params_pft_plant(pft)%c4, &
-                                      params_pft_gpp(pft)%kphio, &
-                                      params_pft_gpp(pft)%kphio_par_a, &
-                                      params_pft_gpp(pft)%kphio_par_b )
+        kphio_temp = calc_kphio_temp( &
+          climate%dtemp, &
+          params_pft_plant(pft)%c4, &
+          params_pft_gpp(pft)%kphio, &
+          params_pft_gpp(pft)%kphio_par_a, &
+          params_pft_gpp(pft)%kphio_par_b &
+          )
       end if
 
       !----------------------------------------------------------------
@@ -199,18 +201,18 @@ contains
         !----------------------------------------------------------------
         if (.not. use_phydro) then
           out_pmodel = pmodel(  &
-                              kphio          = kphio_temp, &
-                              beta           = params_gpp%beta, &
-                              kc_jmax        = params_gpp%kc_jmax, &
-                              ppfd           = ppfd_memory, &
-                              co2            = co2_memory, &
-                              tc             = temp_memory, &
-                              vpd            = vpd_memory, &
-                              patm           = patm_memory, &
-                              c4             = params_pft_plant(pft)%c4, &
-                              method_optci   = "prentice14", &
-                              method_jmaxlim = "wang17" &
-                              )
+            kphio          = kphio_temp, &
+            beta           = params_gpp%beta, &
+            kc_jmax        = params_gpp%kc_jmax, &
+            ppfd           = ppfd_memory, &
+            co2            = co2_memory, &
+            tc             = temp_memory, &
+            vpd            = vpd_memory, &
+            patm           = patm_memory, &
+            c4             = params_pft_plant(pft)%c4, &
+            method_optci   = "prentice14", &
+            method_jmaxlim = "wang17" &
+            )
 
           ! print*,'kphio', kphio_temp 
           ! print*,'beta', params_gpp%beta 
@@ -224,32 +226,36 @@ contains
           ! print*,'-------------------------------'
 
         else
-          par_cost = par_cost_type(tile(lu)%plant(pft)%phydro_alpha, &
-                                   tile(lu)%plant(pft)%phydro_gamma)
-          par_plant = par_plant_type(tile(lu)%plant(pft)%phydro_K_plant, &
-                                     tile(lu)%plant(pft)%phydro_p50_plant, &
-                                     tile(lu)%plant(pft)%phydro_b_plant)
+          par_cost = par_cost_type( &
+            tile(lu)%plant(pft)%phydro_alpha, &
+            tile(lu)%plant(pft)%phydro_gamma &
+            )
+          par_plant = par_plant_type( &
+            tile(lu)%plant(pft)%phydro_K_plant, &
+            tile(lu)%plant(pft)%phydro_p50_plant, &
+            tile(lu)%plant(pft)%phydro_b_plant &
+            )
           par_plant%h_canopy = myinterface%canopy_height
           par_plant%h_wind_measurement = myinterface%reference_height
       
           ! print *, "Using P-hydro"
           out_phydro_acclim = phydro_analytical( &
-                            tc = dble(temp_memory), &
-                            tg = dble(temp_memory), &
-                            ppfd = dble(ppfd_memory)*1e6, &
-                            netrad = dble(netrad_memory), &
-                            vpd = dble(vpd_memory), &
-                            co2 = dble(co2_memory), &
-                            pa = dble(patm_memory), &
-                            fapar = dble(tile(lu)%canopy%fapar), &
-                            kphio = dble(kphio_temp), &
-                            psi_soil = dble(swp_memory(pft)), & !0.d0, &
-                            rdark = dble(params_gpp%rd_to_vcmax), &
-                            vwind = 3.0d0, &            ! NOTE: this is hardcoded as 3.0, while other places use v_wind (that used to have a default of 2.0)
-                            par_plant = par_plant, &
-                            par_cost = par_cost, &
-                            par_control = options &
-                       )
+            tc = dble(temp_memory), &
+            tg = dble(temp_memory), &
+            ppfd = dble(ppfd_memory)*1e6, &
+            netrad = dble(netrad_memory), &
+            vpd = dble(vpd_memory), &
+            co2 = dble(co2_memory), &
+            pa = dble(patm_memory), &
+            fapar = dble(tile(lu)%canopy%fapar), &
+            kphio = dble(kphio_temp), &
+            psi_soil = dble(swp_memory(pft)), & !0.d0, &
+            rdark = dble(params_gpp%rd_to_vcmax), &
+            vwind = 3.0d0, &            ! NOTE: this is hardcoded as 3.0, while other places use v_wind (that used to have a default of 2.0)
+            par_plant = par_plant, &
+            par_cost = par_cost, &
+            par_control = options &
+            )
           
         end if
       else
@@ -269,9 +275,11 @@ contains
       !----------------------------------------------------------------
       ! Calculate soil moisture stress as a function of soil moisture, mean alpha and vegetation type (grass or not)
       !----------------------------------------------------------------
-      soilmstress = calc_soilmstress( tile(1)%soil%phy%wcont, &
-                                      params_gpp%soilm_thetastar, &
-                                      tile(lu)%soil%params%whc )
+      soilmstress = calc_soilmstress( &
+        tile(lu)%soil%phy%wcont - eps_wcont, &
+        params_gpp%soilm_thetastar, &
+        tile(lu)%soil%params%whc &
+        )
 
       !----------------------------------------------------------------
       ! GPP
