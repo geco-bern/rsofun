@@ -402,9 +402,6 @@ $$
 Run the model.
 
 ```{r}
-# xxx test
-p_model_drivers$site_info[[1]]$whc <- 100
-
 drivers_tmp <- p_model_drivers |> 
   mutate(
     params_siml = purrr::map(
