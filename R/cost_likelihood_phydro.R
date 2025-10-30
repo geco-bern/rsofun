@@ -71,14 +71,14 @@
 #'     phydro_alpha       = 0.08,
 #'     bsoil              = 3,
 #'     Ssoil              = 113,
-#'     whc                = 253,
+#'     gw_calib           = 2.0,
 #'     # kphio              = 0.09423773, # setup ORG in Stocker et al. 2020 GMD
 #'     # kphio_par_a        = 0.0,        # set to zero to disable temperature-dependence of kphio
 #'     # kphio_par_b        = 1.0,
 #'     err_gpp            = 0.9         # value from previous simulations
 #'   ),                          # must be a named list
 #'   obs     = p_model_validation,   # example data from package
-#'   drivers = p_model_drivers_format2024_08 %>%
+#'   drivers = p_model_drivers_formatPhydro %>%
 #'     ungroup() %>% dplyr::mutate(params_siml = purrr::map(params_siml, ~mutate(.x, use_phydro = TRUE, use_pml = TRUE, use_gs = TRUE))),
 #'   targets = "gpp",
 #'   par_fixed = list()

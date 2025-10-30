@@ -203,29 +203,29 @@ The package includes two demo datasets to run and validate pmodel output using G
 #     ))
 #
 # Save to subfolder data/ and export it to make it available for package users:
-# p_model_drivers_format2024_08 <- p_model_drivers
-# usethis::use_data(p_model_drivers_format2024_08)  # TODO: NOT YET UPDATED FOR PHYDRO (still add default phydro_* parameters)
-# p_model_validation_format2024_08 <- p_model_validation
-# usethis::use_data(p_model_validation_format2024_08) 
+# p_model_drivers_formatPhydro <- p_model_drivers
+# usethis::use_data(p_model_drivers_formatPhydro)  # TODO: NOT YET UPDATED FOR PHYDRO (still add default phydro_* parameters)
+# p_model_validation_formatPhydro <- p_model_validation
+# usethis::use_data(p_model_validation_formatPhydro) 
 ```
 
 ### Read drivers
 
 ```{r}
-# p_model_drivers <- rsofun::p_model_drivers_format2024_08 # TODO: NOT YET UPDATED FOR PHYDRO (still add default phydro_* parameters)
+# p_model_drivers <- rsofun::p_model_drivers_formatPhydro # TODO: NOT YET UPDATED FOR PHYDRO (still add default phydro_* parameters)
 
-# p_model_validation <- rsofun::p_model_validation_format2024_08
+# p_model_validation <- rsofun::p_model_validation_formatPhydro
 ```
 
 ### Visualize drivers
 
 ```{r eval=FALSE}
-rsofun::p_model_drivers_format2024_08$forcing[[1]] |>
+rsofun::p_model_drivers_formatPhydro$forcing[[1]] |>
     # dplyr::filter(year(date) >= ystart & year(date) <= yend) |>
     dplyr::select(date, co2, ppfd, netrad, temp, vpd, fapar, rain, ccov) |>
     tidyr::pivot_longer(-date) |>
     dplyr::mutate(type="24-hr mean") |>
-    rbind(rsofun::p_model_validation_format2024_08$data[[1]] |>
+    rbind(rsofun::p_model_validation_formatPhydro$data[[1]] |>
             # dplyr::filter(year(date) >= ystart & year(date) <= yend) |>
             dplyr::select(date, gpp) |>
             tidyr::pivot_longer(-date) |>
@@ -236,7 +236,7 @@ rsofun::p_model_drivers_format2024_08$forcing[[1]] |>
     theme_classic() +
     theme(strip.background = element_rect(color = "white", linewidth = 1))+
     facet_wrap(~name, scales = "free")+
-    ggtitle(rsofun::p_model_drivers_format2024_08$sitename[[1]])
+    ggtitle(rsofun::p_model_drivers_formatPhydro$sitename[[1]])
 
 ```
 
@@ -268,14 +268,15 @@ params_modl <- list(
     beta_unitcostratio = 146.0,
     rd_to_vcmax        = 0.014,      # value from Atkin et al. 2015 for C3 herbaceous
     tau_acclim         = 30.0,
-    kc_jmax            = 0.41
+    kc_jmax            = 0.41,
+    gw_calib           = 2.0
   )
 
 # run the model for these parameters
 output <- rsofun::runread_pmodel_f(
-  rsofun::p_model_drivers_format2024_08,
+  rsofun::p_model_drivers_formatPhydro,
   par = params_modl
-  )
+  )  
 ```
 
 ### Plotting output
@@ -295,7 +296,7 @@ df_gpp_plot <- rbind(
     unnest(data) |>
     select(date, gpp) |>
     mutate(type = "P-model output"),
-  rsofun::p_model_validation_format2024_08 |>
+  rsofun::p_model_validation_formatPhydro |>
     filter(sitename == "FR-Pue") |>
     unnest(data) |>
     select(date, gpp) |>
@@ -361,8 +362,8 @@ With all settings defined the optimization function `calib_sofun()` can be calle
 ```{r eval=FALSE}
 # calibrate the model and optimize free parameters
 pars <- calib_sofun(
-    drivers = rsofun::p_model_drivers_format2024_08,  
-    obs = rsofun::p_model_validation_format2024_08,
+    drivers = rsofun::p_model_drivers_formatPhydro,  
+    obs = rsofun::p_model_validation_formatPhydro,
     settings = settings,
     # extra arguments passed to the cost function:
     targets = "gpp",             # define target variable GPP
@@ -379,7 +380,7 @@ params_modl$kphio <- pars$par["kphio"]
 
 # Run the model for these parameters
 output_new <- rsofun::runread_pmodel_f(
-  rsofun::p_model_drivers_format2024_08,
+  rsofun::p_model_drivers_formatPhydro,
   par = params_modl
   )
 
@@ -440,18 +441,16 @@ Run the model and plot outputs
 
 ```{r}
 # run the model for these parameters
-output <- rsofun::runread_pmodel_f(
-  mutate(rsofun::p_model_drivers_format2024_08,
-         params_siml = params_siml |> mutate(use_gs = FALSE) |> list()),
-  par = params_modl
-)
+output <- rsofun::p_model_drivers_formatPhydro |>
+  mutate(params_siml = purrr::map(params_siml, ~mutate(., use_gs = FALSE))) |>
+  rsofun::runread_pmodel_f(par = params_modl)
 ```
 
 ```{r}
 df_plot <- output$data[[1]] %>% 
   select(date, gpp_mod = gpp, le_mod = le) %>% 
   left_join(
-    rsofun::p_model_validation_format2024_08$data[[1]] %>% 
+    rsofun::p_model_validation_formatPhydro$data[[1]] %>% 
       select(date, gpp_obs = gpp, le_obs = le),
     by = join_by(date)
   ) |> 
@@ -490,11 +489,9 @@ Run the model.
 
 ```{r}
 # run the model for these parameters
-output <- rsofun::runread_pmodel_f(
-  mutate(rsofun::p_model_drivers_format2024_08,
-         params_siml = params_siml |> mutate(use_gs = TRUE) |> list()),
-  par = params_modl
-)
+output <- rsofun::p_model_drivers_formatPhydro |>
+  mutate(params_siml = purrr::map(params_siml, ~mutate(., use_gs = TRUE))) |>
+  rsofun::runread_pmodel_f(par = params_modl)
 ```
 
 Plot outputs. 
@@ -503,7 +500,7 @@ Plot outputs.
 df_plot <- output$data[[1]] %>% 
   select(date, gpp_mod = gpp, le_mod = le) %>% 
   left_join(
-    rsofun::p_model_validation_format2024_08$data[[1]] %>% 
+    rsofun::p_model_validation_formatPhydro$data[[1]] %>% 
       select(date, gpp_obs = gpp, le_obs = le),
     by = join_by(date)
   ) |> 
@@ -542,11 +539,9 @@ Run the model.
 
 ```{r}
 # run the model for these parameters
-output <- rsofun::runread_pmodel_f(
-  mutate(rsofun::p_model_drivers_format2024_08,
-         params_siml = params_siml |> mutate(use_gs = TRUE, use_pml = TRUE, use_phydro + FALSE) |> list()),
-  par = params_modl
-)
+output <- rsofun::p_model_drivers_formatPhydro |>
+  mutate(params_siml = purrr::map(params_siml, ~mutate(., use_gs = TRUE, use_pml = TRUE, use_phydro = FALSE))) |>
+  rsofun::runread_pmodel_f(par = params_modl)
 ```
 
 Plot outputs. 
@@ -555,7 +550,7 @@ Plot outputs.
 df_plot <- output$data[[1]] %>% 
   select(date, gpp_mod = gpp, le_mod = le) %>% 
   left_join(
-    rsofun::p_model_validation_format2024_08$data[[1]] %>% 
+    rsofun::p_model_validation_formatPhydro$data[[1]] %>% 
       select(date, gpp_obs = gpp, le_obs = le),
     by = join_by(date)
   ) |> 
@@ -589,15 +584,15 @@ out_le$gg +
 For P-hydro, we must use the 3-hr daily max forcing as the acclimation forcing. So let's rename it in the data.
 
 ```{r}
-phdro_model_drivers <- rsofun::p_model_drivers_format2024_08 |> 
+phydro_model_drivers <- rsofun::p_model_drivers_formatPhydro  |> 
   rename(forcing_acclim = forcing_3hrmax)
-
-phdro_model_drivers$forcing_acclim[[1]] |>
+  
+phydro_model_drivers$forcing_acclim[[1]] |>
     # dplyr::filter(year(date) >= ystart & year(date) <= yend) |>
     dplyr::select(date, co2, ppfd, netrad, temp, vpd, fapar, rain, ccov) |>
     tidyr::pivot_longer(-date) |>
     dplyr::mutate(type="24-hr mean") |>
-    rbind(rsofun::p_model_validation_format2024_08$data[[1]] |>
+    rbind(rsofun::p_model_validation_formatPhydro$data[[1]] |>
             # dplyr::filter(year(date) >= ystart & year(date) <= yend) |>
             dplyr::select(date, gpp) |>
             tidyr::pivot_longer(-date) |>
@@ -608,7 +603,7 @@ phdro_model_drivers$forcing_acclim[[1]] |>
     theme_classic() +
     theme(strip.background = element_rect(color = "white", size = 1))+
     facet_wrap(~name, scales = "free")+
-    ggtitle(phdro_model_drivers$sitename[[1]])
+    ggtitle(phydro_model_drivers$sitename[[1]])
 ```
 
 For P-hydro runs, we always set `use_phydro = T` and `use_gs = T`.
@@ -628,16 +623,14 @@ params_modl <- list(
   phydro_b_plant     = 1,
   phydro_alpha       = 0.08,
   bsoil              = 3,
-  Ssoil              = 113
+  Ssoil              = 113,
+  gw_calib           = 2.0
 )
 
 # run the model for these parameters
-output <- rsofun::runread_pmodel_f(
-  mutate(phdro_model_drivers, 
-         params_siml = params_siml |> mutate(use_gs = TRUE, use_phydro = TRUE) |> list()),
-  par = params_modl
-)
-
+output <- rsofun::p_model_drivers_formatPhydro |>
+  mutate(params_siml = purrr::map(params_siml, ~mutate(., use_gs = TRUE, use_phydro = TRUE))) |>
+  rsofun::runread_pmodel_f(par = params_modl)
 ```
 
 ## Plot Phydro outputs
@@ -646,7 +639,7 @@ output <- rsofun::runread_pmodel_f(
 df_plot <- output$data[[1]] %>% 
   select(date, gpp_mod = gpp, le_mod = le) %>% 
   left_join(
-    rsofun::p_model_validation_format2024_08$data[[1]] %>% 
+    rsofun::p_model_validation_formatPhydro$data[[1]] %>% 
       select(date, gpp_obs = gpp, le_obs = le),
     by = join_by(date)
   ) |> 

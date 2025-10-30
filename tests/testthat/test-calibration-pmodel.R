@@ -3,7 +3,7 @@ set.seed(10)
 
 test_that("test GPP calibration routine p-model (BT, likelihood maximization)", {
   skip_on_cran()
-  drivers <- rsofun::p_model_drivers_format2024_08 # TODO: NOT YET UPDATED FOR PHYDRO (still add default phydro_* parameters)
+  drivers <- rsofun::p_model_drivers_formatPhydro # TODO: NOT YET UPDATED FOR PHYDRO (still add default phydro_* parameters)
   drivers$params_siml[[1]]$use_gs     <- TRUE
   
   obs <- rsofun::p_model_validation
@@ -15,7 +15,8 @@ test_that("test GPP calibration routine p-model (BT, likelihood maximization)", 
     beta_unitcostratio = 146.0,
     rd_to_vcmax        = 0.014, # value from Atkin et al. 2015 for C3 herbaceous
     tau_acclim         = 30.0,
-    kc_jmax            = 0.41
+    kc_jmax            = 0.41,
+    gw_calib           = 2.0
   )
   
   settings <- list(
@@ -56,7 +57,7 @@ test_that("test GPP calibration routine p-model (BT, likelihood maximization)", 
 
 test_that("test GPP calibration routine p-model (GenSA, rmse, all params)", {
   skip_on_cran()
-  drivers <- rsofun::p_model_drivers_format2024_08 # TODO: NOT YET UPDATED FOR PHYDRO (still add default phydro_* parameters)
+  drivers <- rsofun::p_model_drivers_formatPhydro # TODO: NOT YET UPDATED FOR PHYDRO (still add default phydro_* parameters)
   drivers$params_siml[[1]]$use_gs     <- TRUE
   obs <- rsofun::p_model_validation
   
@@ -86,7 +87,7 @@ test_that("test GPP calibration routine p-model (GenSA, rmse, all params)", {
     settings = settings,
     optim_out = FALSE,
     # extra arguments for the cost function
-    par_fixed = list(),
+    par_fixed = list(gw_calib = 2.0),
     targets = 'gpp'
   )
   
@@ -143,7 +144,7 @@ test_that("test Vcmax25 calibration routine p-model (BT, likelihood, all params)
     settings = settings,
     optim_out = FALSE,
     # arguments for cost function
-    par_fixed = list(), 
+    par_fixed = list(gw_calib = 2.0), 
     targets = 'vcmax25'
   )
   # plot(pars$mod)
@@ -179,7 +180,8 @@ test_that("test Vcmax25 calibration routine p-model (GenSA, rmse)", {
     beta_unitcostratio = 146.0,
     rd_to_vcmax        = 0.014, # value from Atkin et al. 2015 for C3 herbaceous
     # tau_acclim         = 30.0,
-    kc_jmax            = 0.41
+    kc_jmax            = 0.41,
+    gw_calib           = 2.0
   )
   
   settings <- list(
@@ -211,7 +213,7 @@ test_that("test Vcmax25 calibration routine p-model (GenSA, rmse)", {
 test_that("test joint calibration routine p-model (BT, likelihood maximization)", {
   skip_on_cran()
   drivers <- rbind(
-    gpp     =   rsofun::p_model_drivers_format2024_08, # TODO: NOT YET UPDATED FOR PHYDRO (still add default phydro_* parameters)
+    gpp     = rsofun::p_model_drivers_formatPhydro, # TODO: NOT YET UPDATED FOR PHYDRO (still add default phydro_* parameters)
     vcmax25 = rsofun::p_model_drivers_vcmax25  |>
       # TODO: NOT YET UPDATED FOR PHYDRO
       # # specify additionally needed params_siml flags:
@@ -240,7 +242,8 @@ test_that("test joint calibration routine p-model (BT, likelihood maximization)"
     beta_unitcostratio = 146.0,
     rd_to_vcmax        = 0.014, # value from Atkin et al. 2015 for C3 herbaceous
     tau_acclim         = 30.0,
-    kc_jmax            = 0.41
+    kc_jmax            = 0.41,
+    gw_calib           = 2.0
   )
   
   settings <- list(
@@ -284,7 +287,7 @@ test_that("test joint calibration routine p-model (BT, likelihood maximization)"
     # dput(pars$par)
   # print(dput(pars$par))
   ref_pars <- c(kphio       = 0.0453,
-                err_gpp     = 1.51,
+                err_gpp     = 1.14,
                 err_vcmax25 = 0.0060)
   expect_equal(pars$par, ref_pars, tolerance = 0.1)
   

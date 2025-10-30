@@ -1,4 +1,0 @@
-#!/bin/sh
-
-## a.out.dSYM may get created on OS X.
-rm -rf src/Makevars a.out.dSYM

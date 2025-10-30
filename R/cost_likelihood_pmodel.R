@@ -63,7 +63,7 @@
 #'     err_gpp            = 0.9         # value from previous simulations
 #'   ),                          # must be a named list
 #'   obs = p_model_validation,   # example data from package
-#'   drivers = p_model_drivers_format2024_08, #TODO rsofun::p_model_drivers is NOT YET UPDATED FOR PHYDRO (a newformat, b add phydro_ parameters)
+#'   drivers = p_model_drivers_formatPhydro, #TODO rsofun::p_model_drivers is NOT YET UPDATED FOR PHYDRO (a newformat, b add phydro_ parameters)
 #'   targets = "gpp",
 #'   par_fixed = list(
 #'     soilm_thetastar    = 0.6 * 240,  # to recover old setup with soil moisture stress
@@ -71,7 +71,7 @@
 #'     rd_to_vcmax        = 0.014,      # value from Atkin et al. 2015 for C3 herbaceous
 #'     tau_acclim         = 30.0,
 #'     kc_jmax            = 0.41,
-#'     whc                = 430
+#'     gw_calib           = 2.0
 #'   )
 #' )
 cost_likelihood_pmodel <- function(
