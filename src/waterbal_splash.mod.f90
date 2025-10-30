@@ -89,7 +89,7 @@ contains
       !---------------------------------------------------------
       ! Canopy transpiration and soil evaporation
       !---------------------------------------------------------
-      call calc_et( tile_fluxes(lu), grid, climate, sw, fapar(lu), using_phydro, using_gs, using_pml, params_gpp%gw_calib, tile(lu) )
+      call calc_et( tile(lu), tile_fluxes(lu), grid, climate, sw, fapar(lu), using_phydro, using_gs, using_pml, params_gpp%gw_calib )
 
       !---------------------------------------------------------
       ! Update soil moisture and snow pack
@@ -298,7 +298,7 @@ contains
   end subroutine solar
 
 
-  subroutine calc_et( tile_fluxes, grid, climate, sw, fapar, using_phydro, using_gs, using_pml, gw_calib, tile )
+  subroutine calc_et( tile, tile_fluxes, grid, climate, sw, fapar, using_phydro, using_gs, using_pml, gw_calib )
     !/////////////////////////////////////////////////////////////////////////
     !
     !-------------------------------------------------------------------------  
@@ -306,6 +306,7 @@ contains
     use md_sofunutils, only: dampen_variability
 
     ! arguments
+    type(tile_type), intent(in)           :: tile
     type(tile_fluxes_type), intent(inout) :: tile_fluxes
     type(gridtype), intent(in)            :: grid
     type(climate_type), intent(in)        :: climate
@@ -315,10 +316,6 @@ contains
     logical, intent(in)                   :: using_phydro
     logical, intent(in)                   :: using_gs   ! Should Pmodel/Phydro gs be used in ET calc? (otherwise, PT formulation will be used)
     logical, intent(in)                   :: using_pml  ! If using Pmodel/Phydro gs, should ET be calculated using PM equation (otherwise, diffusion equation will be used)
-
-    ! xxx test
-    type(tile_type), intent(in) :: tile
-    real :: tmp
 
     ! local variables
     real :: gamma                           ! psychrometric constant (Pa K-1) ! xxx Zhang et al. use it in units of (kPa K-1), probably they use sat_slope in kPa/K, too.
