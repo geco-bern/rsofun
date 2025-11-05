@@ -1,0 +1,217 @@
+cff-version: 1.2.0
+message: >-
+  If you use this software, please cite it using the
+  metadata from this file.
+  The corresponding documentation paper can be found at egusphere-2025-1260
+title: 'rsofun: The P-Model and BiomeE Modelling Framework'
+type: software
+license: GPL-3.0-only
+repository: 'http://dx.doi.org/10.32614/CRAN.package.rsofun'
+repository-code: 'https://github.com/fabern/zenodo_sandbox'
+repository-artifact: 'https://doi.org/10.5281/zenodo.3712928'
+url: 'https://doi.org/10.5281/zenodo.3712928'
+contact:
+- affiliation: University Bern
+  family-names: Stocker
+  given-names: Benjamin David
+  orcid: https://orcid.org/0000-0003-2697-9096
+  email: benjamin.stocker@gmail.com
+authors:
+- affiliation: University Bern
+  family-names: Stocker
+  given-names: Benjamin David
+  orcid: https://orcid.org/0000-0003-2697-9096
+- affiliation: '@bluegreen-labs'
+  family-names: Hufkens
+  given-names: Koen
+  orcid: https://orcid.org/0000-0002-5070-8109
+- affiliation: University Bern
+  family-names: "Ar\xE1n Paredes"
+  given-names: Josefa
+  orcid: https://orcid.org/0009-0006-7176-2311
+- affiliation: University Bern
+  family-names: Bernhard
+  given-names: Fabian
+  orcid: https://orcid.org/0000-0003-0338-0961
+- affiliation: University Bern
+  family-names: Marcadella
+  given-names: Mayeul
+  orcid: https://orcid.org/0000-0001-8555-3808
+keywords:
+- dgvm
+- growth
+- modeling
+- p-model
+- simulation
+- vegetation-dynamics
+abstract: '<h1>rsofun</h1>
+
+  <p>An R package for Simulating Optimal FUNctioning (rsofun). A model for site-scale
+  simulations of ecosystem processes. The package contains the following modules:</p>
+
+  <p>- P-model for leaf-level acclimation of photosynthesis from <a href="https://gmd.copernicus.org/preprints/gmd-2019-200/">Stocker
+  et al. (2019)</a>.<br>- SPLASH for bioclimatic variables, including the surface
+  radiation budget and the soil water balance from <a href="https://doi.org/10.5194/gmd-10-689-2017">Davis
+  et al. (2017)</a>.<br>- BiomeE for comprehensive simulations of ecosystem carbon
+  and water cycling, tree growth, and tree cohort-explicit forest dynamics following
+  the Perfect Plasticity Approximation, from <a href="https://doi.org/10.5194/bg-12-2655-2015">Weng
+  et al., (2015)</a>.</p>
+
+  <h2>Installation</h2>
+
+  <h3>Stable release</h3>
+
+  <p>To install the current stable release use a CRAN repository:</p>
+
+  <p><code>install.packages("rsofun")</code><br><code>library("rsofun")</code></p>
+
+  <h3>Development release</h3>
+
+  <p>To install the latest development release of the package run the following commands
+  to install rsofun directly from GitHub:</p>
+
+  <p><code>if(!require(remotes)){install.packages("remotes")}</code><br><code>remotes::install_github("geco-bern/rsofun")</code><br><code>library("rsofun")</code><br><br></p>
+
+  <p>**NOTE:** Installing from GitHub requires compilation of Fortran and C source
+  code contained in {rsofun}. To enable compiling source code, install <a href="https://cran.r-project.org/bin/windows/Rtools/">Rtools</a>
+  on Windows, or <a href="https://developer.apple.com/xcode/">Xcode</a> and the <a
+  href="https://github.com/fxcoudert/gfortran-for-macOS">GNU Fortran compiler on Mac</a>
+  (see also ''Mandatory tools'' <a href="https://mac.r-project.org/tools/">here</a>).
+  On Linux, the gfortran compiler is usually installed already.</p>
+
+  <p>Vignettes are not rendered by default, if you want to include additional documentation
+  please use:</p>
+
+  <p><code>if(!require(remotes)){install.packages("remotes")}</code><br><code>remotes::install_github("geco-bern/rsofun",
+  build_vignettes = TRUE)</code><br><code>library("rsofun")</code></p>
+
+  <h3>From source&nbsp;</h3>
+
+  <p>Assuming <code>rsofun</code> is the location of the source directory, on can
+  build the R package (with extension .tar.gz) from the command line using in a bash
+  shell:<br><br><code>R CMD build --no-manual --no-build-vignettes rsofun</code><br><br>The
+  package can then be installed with:</p>
+
+  <p><code>R CMD INSTALL -c --preclean &nbsp;*.tar.gz</code></p>
+
+  <p>, where the star <code>*</code> can be replaced by the name of the package produced
+  at the previous step.</p>
+
+  <h2>Use</h2>
+
+  <p>Below sections show the ease of use of the package in terms of model parameter
+  specification and running both a single run or optimizing the parameters for a given
+  site (or multiple sites). For an in depth discussion we refer to the <a href="https://geco-bern.github.io/rsofun/articles/">vignettes</a>.</p>
+
+  <h3>Running model</h3>
+
+  <p>With all data prepared we can run the P-model using <code>runread_pmodel_f()</code>.
+  This function takes the nested data structure and runs the model site by site, returning
+  nested model output results matching the input drivers. In R:</p>
+
+  <p><br><code># define model parameter values from previous</code><br><code># work</code><br><code>params_modl
+  &lt;- list(</code><br><code>&nbsp; &nbsp; kphio &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+  &nbsp; &nbsp;= 0.04998, &nbsp; &nbsp;# setup ORG in Stocker et al. 2020 GMD</code><br><code>&nbsp;
+  &nbsp; kphio_par_a &nbsp; &nbsp; &nbsp; &nbsp;= 0.0, &nbsp; &nbsp; &nbsp; &nbsp;#
+  set to zero to disable temperature-dependence of kphio</code><br><code>&nbsp; &nbsp;
+  kphio_par_b &nbsp; &nbsp; &nbsp; &nbsp;= 1.0,</code><br><code>&nbsp; &nbsp; soilm_thetastar
+  &nbsp; &nbsp;= 0.6 * 240, &nbsp;# to recover old setup with soil moisture stress</code><br><code>&nbsp;
+  &nbsp; soilm_betao &nbsp; &nbsp; &nbsp; &nbsp;= 0.0,</code><br><code>&nbsp; &nbsp;
+  beta_unitcostratio = 146.0,</code><br><code>&nbsp; &nbsp; rd_to_vcmax &nbsp; &nbsp;
+  &nbsp; &nbsp;= 0.014, &nbsp; &nbsp; &nbsp;# value from Atkin et al. 2015 for C3
+  herbaceous</code><br><code>&nbsp; &nbsp; tau_acclim &nbsp; &nbsp; &nbsp; &nbsp;
+  = 30.0,</code><br><code>&nbsp; &nbsp; kc_jmax &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+  &nbsp;= 0.41</code><br><code>&nbsp; )</code></p>
+
+  <p><code># run the model for these parameters</code><br><code>output &lt;- rsofun::runread_pmodel_f(</code><br><code>&nbsp;
+  p_model_drivers,</code><br><code>&nbsp; par = params_modl</code><br><code>&nbsp;
+  )</code><br><br></p>
+
+  <h3>Parameter optimization</h3>
+
+  <p>To optimize new parameters based upon driver data and a validation dataset we
+  must first specify an optimization strategy and settings, as well as a cost function
+  and parameter ranges. In R:</p>
+
+  <p><br><code>settings &lt;- list(</code><br><code>&nbsp; method &nbsp; &nbsp; &nbsp;
+  &nbsp; &nbsp; &nbsp; &nbsp;= "GenSA",</code><br><code>&nbsp; metric &nbsp; &nbsp;
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;= cost_rmse_pmodel,</code><br><code>&nbsp; control
+  = list(</code><br><code>&nbsp; &nbsp; maxit = 100),</code><br><code>&nbsp; par =
+  list(</code><br><code>&nbsp; &nbsp; kphio = list(lower=0.02, upper=0.2, init = 0.05)</code><br><code>&nbsp;
+  &nbsp; )</code><br><code>)</code><br><br></p>
+
+  <p>`rsofun` supports both optimization using the `GenSA` and `BayesianTools` packages.
+  The above statement provides settings for a `GenSA` optimization approach. For this
+  example the maximum number of iterations is kept artificially low. In a real scenario
+  you will have to increase this value orders of magnitude. Keep in mind that optimization
+  routines rely on a cost function, which, depending on its structure influences parameter
+  selection. A limited set of cost functions is provided but the model structure is
+  transparent and custom cost functions can be easily written. More details can be
+  found in the "Parameter calibration and cost functions" vignette.</p>
+
+  <p>In addition starting values and ranges are provided for the free parameters in
+  the model. Free parameters include: parameters for the quantum yield efficiency
+  `kphio`, `kphio_par_a` and `kphio_par_b`, soil moisture stress parameters `soilm_thetastar`
+  and `soilm_betao`, and also `beta_unitcostratio`, `rd_to_vcmax`, `tau_acclim` and
+  `kc_jmax` (see `?runread_pmodel_f`). Be mindful that with newer versions of `rsofun`
+  additional parameters might be introduced, so re-check vignettes and function documentation
+  when updating existing code.</p>
+
+  <p>With all settings defined the optimization function `calib_sofun()` can be called
+  with driver data and observations specified. Extra arguments for the cost function
+  (like what variable should be used as target to compute the root mean squared error
+  (RMSE) and previous values for the parameters that aren''t calibrated, which are
+  needed to run the P-model).</p>
+
+  <p><br><code># calibrate the model and optimize free parameters</code><br><code>pars
+  &lt;- calib_sofun(</code><br><code>&nbsp; &nbsp; drivers = p_model_drivers, &nbsp;</code><br><code>&nbsp;
+  &nbsp; obs = p_model_validation,</code><br><code>&nbsp; &nbsp; settings = settings,</code><br><code>&nbsp;
+  &nbsp; # extra arguments passed to the cost function:</code><br><code>&nbsp; &nbsp;
+  targets = "gpp", &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; # define target variable
+  GPP</code><br><code>&nbsp; &nbsp; par_fixed = params_modl[-1] &nbsp;# fix non-calibrated
+  parameters to previous&nbsp;</code><br><code>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;#
+  values, removing kphio</code><br><code>&nbsp; )</code><br><br></p>
+
+  <h2>Data and code for model documentation paper (Paredes et al., in rev.)</h2>
+
+  <p>Versioned releases of this repository are deposited on Zenodo (see badge at the
+  top of the README file). Code to reproduce the analysis and plots presented here
+  is contained in this repository (subdirectory `<code>analysis/</code>`) and is demonstrated
+  on the model documentation website (<a href="https://geco-bern.github.io/rsofun/">https://geco-bern.github.io/rsofun/</a>,
+  article &lsquo;Sensitivity analysis and calibration interpretation&rsquo;).</p>
+
+  <p>The model forcing and evaluation data is based on the publicly available FLUXNET2015
+  data for the site FR-Pue, prepared by FluxDataKit v3.4.2 (10.5281/zenodo.14808331),
+  taken here as a subset of the originally published data for years 2007-2012. It
+  is accessible through the {rsofun} R package and contained as part of this repository
+  (subdirectory&nbsp;<code>data/</code>) as CSV and as files. Outputs of the analysis
+  presented here are archived in the <code>analysis/paper_results_files/</code>&nbsp;subfolder.</p>
+
+  <p>The model documentation paper is currently under review.<br>A preprint is available
+  at: https://www.biorxiv.org/content/10.1101/2023.11.24.568574v3</p>
+
+  <h2>References</h2>
+
+  <p>Stocker, B. D., Wang, H., Smith, N. G., Harrison, S. P., Keenan, T. F., Sandoval,
+  D., Davis, T., and Prentice, I. C.: P-model v1.0: an optimality-based light use
+  efficiency model for simulating ecosystem gross primary production, Geosci. Model
+  Dev., 13, 1545&ndash;1581, https://doi.org/10.5194/gmd-13-1545-2020, 2020.</p>
+
+  <p>Davis, T. W., Prentice, I. C., Stocker, B. D., Thomas, R. T., Whitley, R. J.,
+  Wang, H., Evans, B. J., Gallego-Sala, A. V., Sykes, M. T., and Cramer, W.: Simple
+  process-led algorithms for simulating habitats (SPLASH v.1.0): robust indices of
+  radiation, evapotranspiration and plant-available moisture, Geoscientific Model
+  Development, 10, 689&ndash;708, doi:10.5194/gmd-10-689-2017, URL http: //www.geosci-model-dev.net/10/689/2017/,
+  2017.</p>
+
+  <p>Weng, E. S., Malyshev, S., Lichstein, J. W., Farrior, C. E., Dybzinski, R., Zhang,
+  T., Shevliakova, E., and Pacala, S. W.: Scaling from individual trees to forests
+  in an Earth system modeling framework using a mathematically tractable model of
+  height-structured competition, Biogeosciences, 12, 2655&ndash;2694, https://doi.org/10.5194/bg-12-2655-2015,
+  2015.</p>
+
+  <h2>Acknowledgements</h2>
+
+  <p>The {rsofun} is part of the LEMONTREE project and funded by Schmidt Futures and
+  under the umbrella of the Virtual Earth System Research Institute (VESRI).&nbsp;</p>'
