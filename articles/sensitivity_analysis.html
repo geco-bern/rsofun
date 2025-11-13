@@ -269,7 +269,7 @@ is.</p>
 <span><span class="co">#&gt; <span style="color: #BB0000;">✖</span> Problematic argument:</span></span>
 <span><span class="co">#&gt; <span style="color: #00BBBB;">•</span> color = NA</span></span>
 <span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Did you misspell an argument name?</span></span></code></pre></div>
-<p><img src="sensitivity_analysis_files/figure-html/unnamed-chunk-5-1.png" width="672" style="display: block; margin: auto;"></p>
+<p><img src="sensitivity_analysis_files/figure-html/unnamed-chunk-5-1.png" class="r-plt" width="672" style="display: block; margin: auto;"></p>
 <p>The outcome of the Morris sensitivity analysis depends strongly on
 the choice of parameter ranges and how parameters interact with each
 other in the underlying model. In this example, we constrained the
@@ -371,7 +371,7 @@ and those iterations are not shown by the following trace plot. The
 samples after the burnin period should be used for inference.</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">par_calib</span><span class="op">$</span><span class="va">mod</span><span class="op">)</span></span></code></pre></div>
-<p><img src="sensitivity_analysis_files/figure-html/unnamed-chunk-7-1.png" width="672" style="display: block; margin: auto;"><img src="sensitivity_analysis_files/figure-html/unnamed-chunk-7-2.png" width="672" style="display: block; margin: auto;"></p>
+<p><img src="sensitivity_analysis_files/figure-html/unnamed-chunk-7-1.png" class="r-plt" width="672" style="display: block; margin: auto;"><img src="sensitivity_analysis_files/figure-html/unnamed-chunk-7-2.png" class="r-plt" width="672" style="display: block; margin: auto;"></p>
 <!-- Internal recommendation: When you run the MCMC simulations with the DEzs sampler, there are two parameters that control the number of chains used: nrChains (documented for runMCMC) and startValue (documented for DEzs). The first dictates the number of independent chains to be run by the algorithm, while the second determines the number of internal chains to be run from a starting population (i.e. a population of initial parameter seeds). As Florian points out in this issue (https://github.com/florianhartig/BayesianTools/issues/224#issuecomment-877416919) the chains from within a population tend to be more correlated than those from independent "chains", and therefore internal chains should not be regarded as independent chains. This supports why for r3PG, they use nrChains=3 and startValue=3 (used by default), leading to 3*3=9 chains being plotted. For the example above, it doesn't make a big difference because the convergence is quite fast. -->
 <p>The posterior density plots may be lumpy. In this case it’s advisable
 to run the MCMC algorithm for more iterations, in order to get a better
@@ -399,7 +399,7 @@ We can also see that <code>err_gpp</code> is correlated with
 error represents how good the model fits the observed GPP.</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">correlationPlot</span><span class="op">(</span><span class="va">par_calib</span><span class="op">$</span><span class="va">mod</span>, thin <span class="op">=</span> <span class="fl">1</span><span class="op">)</span>   <span class="co"># use all samples, no thinning</span></span></code></pre></div>
-<p><img src="sensitivity_analysis_files/figure-html/unnamed-chunk-9-1.png" width="480" style="display: block; margin: auto;"></p>
+<p><img src="sensitivity_analysis_files/figure-html/unnamed-chunk-9-1.png" class="r-plt" width="480" style="display: block; margin: auto;"></p>
 <p>In addition to visualizations, it’s helpful to compute some
 convergence diagnostics, like the Gelman-Brooks-Rubin (GBR) potential
 scale factors. This diagnostic compares the variance within chains to
@@ -625,7 +625,7 @@ interval.</p>
 <span><span class="va">plot_gpp_error</span></span>
 <span><span class="co">#&gt; Warning: Removed 42 rows containing missing values or values outside the scale range</span></span>
 <span><span class="co">#&gt; (`geom_point()`).</span></span></code></pre></div>
-<p><img src="sensitivity_analysis_files/figure-html/unnamed-chunk-13-1.png" width="672" style="display: block; margin: auto;"></p>
+<p><img src="sensitivity_analysis_files/figure-html/unnamed-chunk-13-1.png" class="r-plt" width="672" style="display: block; margin: auto;"></p>
 <!-- Below we plot the first year of predicted GPP (in grey) against GPP observations (in black). -->
 <!-- We ran the P-model using the MAP estimates for all calibrated parameters and  -->
 <!-- computed a 90% predictive interval for GPP (grey shade), based on the normality assumption -->
