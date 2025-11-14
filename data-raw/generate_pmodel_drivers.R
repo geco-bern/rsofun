@@ -4,9 +4,6 @@ library(tidyverse)
 library(lubridate)
 library(rsofun)
 
-# load script arguments
-args <- commandArgs(trailingOnly = TRUE)
-
 # load data
 #   Download FluxDataKit data from Zenodo:
 #   sudo apt install librdf0-dev
@@ -69,5 +66,68 @@ save(p_model_drivers,
 save(p_model_validation,
      file ="data/p_model_validation.rda",
      compress = "xz")
+
+
+
+
+
+
+#---- p_model2_drivers -----
+# Download
+library(zen4R)
+dir <- file.path(tempdir(), "rsofun_doc")
+dir.create(dir)
+download_zenodo(path = dir, 
+                doi = "10.5281/zenodo.17495564", 
+                files = "geco-bern/rsofun_doc-v1.0.2.zip", 
+                timeout = 600)
+# files_in_zip <- unzip(
+#   zipfile = file.path(tempdir(), "rsofun_doc-v1.0.2.zip"), 
+#   list = TRUE)
+# print(files_in_zip)
+# tidyr::tibble(dplyr::filter(files_in_zip, grepl("data/.*rds",Name)))
+unzip(zipfile = file.path(dir, "rsofun_doc-v1.0.2.zip"), 
+      exdir   = file.path(dir, "extracted"), 
+      junkpaths = TRUE, 
+      files = c(#"geco-bern-rsofun_doc-93c8d4d/data/00_bigD13C_forcing.rds", 
+                #"geco-bern-rsofun_doc-93c8d4d/data/00_bigD13C_target.rds", 
+                #"geco-bern-rsofun_doc-93c8d4d/data/00_gpp_forcingtarget.rds", 
+                #"geco-bern-rsofun_doc-93c8d4d/data/00_vj_forcing.rds", 
+                #"geco-bern-rsofun_doc-93c8d4d/data/00_vj_target.rds", 
+                "geco-bern-rsofun_doc-93c8d4d/data/01_bigD13C-vj-gpp_calibsofun_drivers.rds", 
+                "geco-bern-rsofun_doc-93c8d4d/data/01_bigD13C-vj-gpp_calibsofun_obs.rds")
+)
+file.remove(file.path(dir, "rsofun_doc-v1.0.2.zip"))
+list.files(dir)
+list.files(file.path(dir, "extracted"))
+
+# readr::read_rds(file.path(dir, "extracted", "00_bigD13C_forcing.rds"))
+# readr::read_rds(file.path(dir, "extracted", "00_bigD13C_target.rds"))
+# readr::read_rds(file.path(dir, "extracted", "00_gpp_forcingtarget.rds"))
+# readr::read_rds(file.path(dir, "extracted", "00_vj_forcing.rds"))
+# readr::read_rds(file.path(dir, "extracted", "00_vj_target.rds"))
+
+p_model2_drivers    <- readr::read_rds(file.path(dir, "extracted", "01_bigD13C-vj-gpp_calibsofun_drivers.rds"))
+
+# subset dates and variables
+# TODO
+
+# store as rda into the package
+save(p_model2_drivers,
+     file ="data/p_model_drivers2.rda",
+     compress = "xz")
+
+#---- p_model2_validation -----
+p_model2_validation <- readr::read_rds(file.path(dir, "extracted", "01_bigD13C-vj-gpp_calibsofun_obs.rds"))
+
+# subset dates and variables
+# TODO
+
+# store as rda into the package
+save(p_model2_validation,
+     file ="data/p_model2_validation.rda",
+     compress = "xz")
+
+
 
 
