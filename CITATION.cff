@@ -174,7 +174,7 @@ abstract: '<h1>rsofun</h1>
   values, removing kphio</code><br><code>&nbsp; )</code><br><br></p>
 
   <h2>Data and code for model documentation paper (Paredes et al., in rev.)</h2>
-
+  <p>`<code>TODO: replace this with geco-bern/analysis_doc repository and update</code>`</p>
   <p>Versioned releases of this repository are deposited on Zenodo (see badge at the
   top of the README file). Code to reproduce the analysis and plots presented here
   is contained in this repository (subdirectory `<code>analysis/</code>`) and is demonstrated
@@ -190,6 +190,7 @@ abstract: '<h1>rsofun</h1>
 
   <p>The model documentation paper is currently under review.<br>A preprint is available
   at: https://www.biorxiv.org/content/10.1101/2023.11.24.568574v3</p>
+  <p>`<code>TODO: replace this with geco-bern/analysis_doc repository and update</code>`</p>
 
   <h2>References</h2>
 

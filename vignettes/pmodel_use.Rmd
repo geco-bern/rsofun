@@ -60,7 +60,7 @@ With all data prepared we can run the P-model using `runread_pmodel_f()`. This f
 ```{r}
 # Define model parameter values.
 # Correspond to maximum a posteriori estimates from Bayesian calibration in
-# analysis/02-bayesian-calibration.R.
+# analysis/02-bayesian-calibration.R. # TODO: replace this with geco-bern/analysis_doc repository
 params_modl <- list(
   kphio              = 5.000000e-02, # chosen to be too high for demonstration
   kphio_par_a        =-2.289344e-03,
