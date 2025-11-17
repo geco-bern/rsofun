@@ -69,7 +69,12 @@ Imports:
     lubridate,
     multidplyr,
     stats,
-    utils
+    utils,
+    doParallel,
+    ReIns,
+    msm,
+    foreach,
+    methods
 LazyData: true
 LazyDataCompression: xz
 ByteCompile: true
