@@ -1,5 +1,103 @@
 # rsofun (development version)
 
+## New features
+* P-model:
+  * New `calib_sofun_parallelized()` that can be handle more diverse prior 
+  distributions of the parameters to estimate (see internal function 
+  `createMixedPrior()`) and that can be parallelized
+  * New `cost_likelihood_pmodel_bigD13C_vj_gpp()` that can handle multiple 
+  target variables that require either `runread_pmodel()` or 
+  `run_pmodel_onestep_f_bysite()`. Thus also requires a new data format for the
+  `drivers` and `obs` arguments. See below under breaking changes for the new
+  format.
+  
+## Breaking changes
+
+* New driver data.frame format for P-model: containing a new column `run_model` 
+  determining which model  to run (`daily` or `onestep`) and in the 
+  `forcing` data.frame additional columns for `vwind` and non-zero `ccov`.
+  Each row in `p_model2_drivers` corresponds to a model run (either `daily` 
+  or `onestep`) and should have a corresponding row in `p_model2_validation`.
+  
+  ```
+  # A) Compare with previous example data set:
+  rsofun::p_model2_drivers |> dplyr::filter(sitename == "FR-Pue")
+  rsofun::p_model_drivers
+  
+  # bring new to old format:
+  rsofun::p_model2_drivers |> dplyr::filter(sitename == "FR-Pue") |> 
+    # remove new column 'run_model'
+    dplyr::select(-run_model) |> 
+    # 'params_siml' remains same
+    # 'site_info' remains same
+    # 'forcing' has additional info `vwind` that needs removing
+    tidyr::unnest(forcing) |>
+    dplyr::filter(date >= "2007-01-01" & date < "2013-01-01") |>
+    dplyr::select(-vwind) |> 
+    dplyr::mutate(ccov = 0) |> # note that fapar and co2 are also different
+    tidyr::nest(forcing = c(date, temp, vpd, ppfd, netrad, patm, 
+                            snow, rain, tmin, tmax, fapar, co2, ccov))
+  # bring old to new format:
+  rsofun::p_model_drivers |> 
+    # 'forcing' add new column `vwind`
+    tidyr::unnest(forcing) |> 
+    dplyr::mutate(vwind = 2.64, ccov = 0.485) |>
+    tidyr::nest(forcing = c(date, temp, vpd, ppfd, netrad, patm, 
+                            snow, rain, tmin, tmax, vwind, fapar, co2, ccov)) |>
+    # add new column 'run_model'
+    mutate(run_model = "daily")
+  ```
+
+* New validation (i.e. observation) data.frame format for P-model: 
+  containing a new column `run_model` determining which model 
+  to run (`daily` or `onestep`) and a new column `targets` determining which
+  variable(s) is/are the target of the corresponding line. 
+  Each row in `p_model2_validation` corresponds to a model run (either `daily` 
+  or `onestep`) and should have a corresponding row in `p_model2_drivers`.
+  For rows that run the `onestep`-model, the column `data` contains a named list 
+  of `data.frame()` for each target (e.g. `bigD13C` or `vj`). This allows to 
+  have different number of observations in each `data_frame()`.
+  For rows that run the `daily`-model, the column `data` contains a single 
+  `data.frame()` with columns for each target (e.g. `gpp` or `nee` or `le`) and 
+  a column `date`. This assumes each target value is available on the same dates. (TODO: define NA or other fill value.)
+  The exact column names of the targets must correspond to the list to fit under 
+  `targets`.
+  
+  ```
+  # B) Compare with previous example data set:
+  rsofun::p_model2_validation |> dplyr::filter(sitename == "FR-Pue")
+  rsofun::p_model_validation
+  
+  # bring new to old format:
+  rsofun::p_model2_validation |> dplyr::filter(sitename == "FR-Pue") |> 
+    # remove new column 'run_model'
+    dplyr::select(-run_model) |>
+    # remove new column 'targets'
+    dplyr::select(-targets) |>
+    # remove new columns inside of 'data':
+    tidyr::unnest(data) |>
+    dplyr::select(-c(gpp_qc, nee, nee_qc, le, le_qc)) |>
+    dplyr::mutate(gpp_unc = 0.01) |>
+    tidyr::nest(data = c('date', 'gpp','gpp_unc')) |>
+    # order columns
+    dplyr::select(sitename, data)
+  
+  # bring old to new format:
+  rsofun::p_model_validation |> 
+    # add new column 'run_model'
+    dplyr::mutate(run_model = "daily") |>
+    # add new column 'targets'
+    dplyr::mutate(targets = list(list(bigD13C = FALSE, gpp = TRUE))) |>
+    # add new columns inside of 'data':
+    tidyr::unnest(data) |>
+    dplyr::select(-gpp_unc) |>
+    dplyr::mutate(gpp_qc = 1, nee = NA, nee_qc = NA, le = NA, le_qc = NA) |>
+    tidyr::nest(data = c('date', 'gpp','gpp_qc','nee','nee_qc','le','le_qc')) |>
+    # order columns
+    dplyr::select(sitename, run_model, targets, data)
+  ```
+
+
 # rsofun 5.1.0
 
 ## New features

@@ -152,7 +152,8 @@ p_model2_validation_3_gppYears <- p_model2_validation_3 |>
   nest(data = -c(sitename, run_model, targets))
 p_model2_validation <- bind_rows(
   p_model2_validation_3_gppYears,
-  p_model2_validation_3 |> filter(run_model == "onestep"))
+  p_model2_validation_3 |> filter(run_model == "onestep") |> unnest(data) |> select(-vj) |> nest(data = c('bigD13C'))
+)
 
 # store as rda into the package
 usethis::use_data(p_model2_drivers,    overwrite = TRUE, compress = "xz")
