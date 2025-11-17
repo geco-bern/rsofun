@@ -420,13 +420,12 @@ is_trunclognormal_prior <- function(distr_pars){identical(sort(names(distr_pars)
 is_beta_prior <- function(distr_pars){identical(sort(names(distr_pars)), c("shape1","shape2"))}
 
 
-#' Convenience function to create a mixed prior distribution
+#' Internal convenience function to create a mixed prior distribution
 #' 
 #' Similar to BayesianTools::createUniformPrior() 
 #' 
 #' @param prior_definitions A named list with parameters for a distribution
 #' @return TRUE or FALSE, if the provided parameters describe a beta distribution
-#' @export
 #' @examples 
 #' library(BayesianTools)
 #' prior_definitions_mixed <- list(
@@ -532,77 +531,4 @@ createMixedPrior <- function(prior_definitions){
   }
   
   return(out)
-}
-
-# TODO: add to test set
-# # TEST:
-# prior_definitions_uniform <- list(par = list(
-#   par1 = list(lower=0.5, upper=1.5, init=1.0),
-#   par2 = list(lower=2.5, upper=3.5, init=3.0)))
-# priorUnif <- createMixedPrior(prior_definitions_uniform$par)
-# priorUnif2<- BayesianTools::createUniformPrior(
-#   lower = unname(unlist(lapply(prior_definitions_uniform$par, `[`, "lower"))), 
-#   upper = unname(unlist(lapply(prior_definitions_uniform$par, `[`, "upper")))
-# )
-# priorUnif$density( x = c(1.1, 2.5)) == priorUnif2$density(x = c(1.1, 2.5))
-# priorUnif$density( x = c(1.1, 2.4)) == priorUnif2$density(x = c(1.1, 2.4))
-# # plot_prior_density(priorUnif,  parNames = names(prior_definitions_uniform$par), n=10000)
-# # plot_prior_density(priorUnif2, parNames = names(prior_definitions_uniform$par), n=10000)
-# 
-# priorMixed  <- createMixedPrior(prior_definitions_mixed$par)
-# # plot_prior_density(priorMixed, parNames = names(prior_definitions_mixed$par), n=10000)
-# 
-# priorUnif$density(c(1.0,3.0)) == 0
-# priorMixed$density(c(15, 10, exp(-4), 12, exp(-4), 0.75)) == 0.519
-# priorMixed$density(c(15, 10, exp(-4), 12, 0.6,     0.75)) == -Inf
-# priorMixed$density(c(15, 10, exp(-4), 14.1, exp(-4), 0.75)) == -0.98
-# priorMixed$density(c(15, 10, exp(-4), 14.1, exp(-4), 0.75)) == -Inf
-
-
-
-
-# When using the output of createMixedPrior() to `createBayesianSetup` the
-# min-max values of the prior are not stored in the fields 'lower' and 'upper'.
-# For sensitivity analysis a sensible range of the parameters is needed. Therefore,
-# we write the function getPriorMinMaxRanges() to be used in combination with
-# sensitivity analysis.
-getPriorMinMaxRanges <- function(morrisSetup_prior, settings_par){
-  # by default use BayesianTool defined ranges
-  inflim_arg <- morrisSetup_prior$lower    # named vector: e.g. c(kphio = 0.02, kphio_par_a = -0.004, err_gpp = 0.1, ... )
-  suplim_arg <- morrisSetup_prior$upper    # named vector: e.g. c(kphio = 0.15, kphio_par_a = -0.001, err_gpp = 3,   ... )
-  
-  # Fallback if this fails with more complex priors
-  if(is.null(inflim_arg) || is.null(suplim_arg)){
-    par_names <- names(settings_par)
-    # use the currently defined distributions that are compatible with createMixedPrior():
-    # - is_uniform_prior        when has names: c("init", "lower", "upper"))}
-    # - is_normal_prior         when has names: c("mean", "sd"))}
-    # - is_lognormal_prior      when has names: c("meanlog","sdlog"))}
-    # - is_truncnormal_prior    when has names: c("lower", "mean", "sd", "upper"))}
-    # - is_trunclognormal_prior when has names: c("endpoint","meanlog","sdlog"))}
-    # - is_beta_prior           when has names: c("shape1","shape2"))}
-    
-    # make a list with lower and upper for each of these distributions:
-    inflim_suplim_list <- c(
-      settings_par |> purrr::keep(is_uniform_prior       ) |> lapply(function(x) list(inflim = x$lower, suplim = x$upper)),
-      # settings_par |> purrr::keep(is_normal_prior        ) |> names(), # TODO: add when needed
-      # settings_par |> purrr::keep(is_lognormal_prior     ) |> names(), # TODO: add when needed
-      settings_par |> purrr::keep(is_truncnormal_prior   ) |> lapply(function(x) list(inflim = x$lower, suplim = x$upper))
-      # settings_par |> purrr::keep(is_trunclognormal_prior) |> names(), # TODO: add when needed
-      # settings_par |> purrr::keep(is_beta_prior          ) |> names() # TODO: add when needed
-    )
-    stopifnot(settings_par |> purrr::keep(is_normal_prior        ) |> length() == 0) # TODO: remove once above is defined
-    stopifnot(settings_par |> purrr::keep(is_lognormal_prior     ) |> length() == 0) # TODO: remove once above is defined
-    stopifnot(settings_par |> purrr::keep(is_trunclognormal_prior) |> length() == 0) # TODO: remove once above is defined
-    stopifnot(settings_par |> purrr::keep(is_beta_prior          ) |> length() == 0) # TODO: remove once above is defined
-    
-    # derive two vectors: one for inflim and for suplim
-    inflim_arg <- unlist(lapply(inflim_suplim_list, `[[`, "inflim"))
-    suplim_arg <- unlist(lapply(inflim_suplim_list, `[[`, "suplim"))
-    
-    # ensure correct order
-    inflim_arg <- inflim_arg[par_names]
-    suplim_arg <- suplim_arg[par_names]
-  }
-  return(list(inflim = inflim_arg, suplim = suplim_arg))
 }
