@@ -118,12 +118,13 @@ pars <- calib_sofun(
   )
 ```
 
-## Data and code for model documentation paper (Paredes et al., in rev.)
-
+## Data and code for model documentation paper (Paredes et al., in press)
+`TODO: replace this with geco-bern/analysis_doc repository and update`
 Versioned releases of this repository are deposited on Zenodo (see badge at the top of the README file). Code to reproduce the analysis and plots presented here is contained in this repository (subdirectory `analysis/`) and is demonstrated on the model documentation website (https://geco-bern.github.io/rsofun/, article ‘Sensitivity analysis and calibration interpretation’).
-
+`TODO: replace this with geco-bern/analysis_doc repository and update`
 The model forcing and evaluation data is based on the publicly available FLUXNET2015 data for the site FR-Pue, prepared by FluxDataKit v3.4.2 (10.5281/zenodo.14808331), taken here as a subset of the originally published data for years 2007-2012. It is accessible through the {rsofun} R package and contained as part of this repository (subdirectory `data/`) as CSV and as files. Outputs of the analysis presented here are archived in the `analysis/paper_results_files/` subfolder.
-
+`TODO: replace this with geco-bern/analysis_doc repository and update`
+ 
 The model documentation paper is currently under review.
 A preprint is available at: https://www.biorxiv.org/content/10.1101/2023.11.24.568574v3
 
