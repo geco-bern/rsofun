@@ -178,16 +178,11 @@
 "p_model_output_vcmax25"
 
 
-#' rsofun P-model ... driver data TODO TODO TODO.
+#' rsofun P-model ... driver data TODO TODO TODO TODO.
 "p_model2_drivers"
 
-#' rsofun P-model ... target data TODO TODO TODO
+#' rsofun P-model ... target data TODO TODO TODO TODO
 "p_model2_validation"
-
-#' rsofun P-model output data
-#'
-#' Example output dataset TODO TODO TODO
-"p_model2_output"
 
 #' rsofun BiomeE driver data (Leuning photosynthesis model)
 #' 
