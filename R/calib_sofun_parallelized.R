@@ -144,8 +144,7 @@ calib_sofun_parallelized <- function(
     
     # parse prior distributions of parameters
     parnames <- names(settings$par)
-    # source(here::here("R/createMixedPrior.R")) # TODO: remove
-    priors  <- createMixedPrior(settings$par) # TODO: make createMixedPrior available
+    priors  <- createMixedPrior(settings$par)
     
     # Your external data
     # drivers
@@ -156,8 +155,6 @@ calib_sofun_parallelized <- function(
     # create this function on each worker
     
     # make available get_mod_obs_pmodel_bigD13C_vj_gpp so we can export it to workers
-    # source(here::here("R/cost_likelihood_pmodel_bigD13C_vj_gpp.R")) # TODO: remove
-    
     ll_factory <- function(obs, drivers, parnames, get_mod_obs, ...){
       function(random_par){
         eval(settings$metric)(par = setNames(random_par, parnames),
@@ -170,7 +167,6 @@ calib_sofun_parallelized <- function(
     
     
     ## Run the MCMC sampler: ----
-    # require(BayesianTools) # TODO: remove
     start_time <- Sys.time()
     
     if (settings$control$n_parallel_independent > 1){ # parallel MCMC sampler:
@@ -279,7 +275,7 @@ calib_sofun_parallelized <- function(
     ## Store results to file: ----
     return_value$fpath <- file.path(outpath, "calibrations", paste0("out_calib_", suffix, ".rds"))
     dir.create(path = dirname(return_value$fpath), showWarnings = FALSE)
-    saveRDS(return_value, file = return_value$fpath, compress = "xz") # TODO: reactivate
+    saveRDS(return_value, file = return_value$fpath, compress = "xz")
     
   } else if (tolower(settings$method) == "gensa"){
     stop("Unknown method (GenSA) passed to calib_sofun().")
@@ -437,7 +433,7 @@ is_beta_prior <- function(distr_pars){identical(sort(names(distr_pars)), c("shap
 #'     par_trunclognormal = list(meanlog = -4, sdlog = 1.1, endpoint = 0.5),
 #'     par_beta           = list(shape1  = 5, shape2 = 2)
 #'   ))
-#' priorMixed  <- createMixedPrior(prior_definitions_mixed$par)
+#' priorMixed  <- rsofun:::createMixedPrior(prior_definitions_mixed$par)
 #' priorMixed$sampler(10000)
 #' hist(priorMixed$sampler(10000)[,1])
 #' hist(priorMixed$sampler(10000)[,2])
