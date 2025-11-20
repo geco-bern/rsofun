@@ -16,7 +16,7 @@ run_pmodel_onestep_f_bysite(lc4, forcing, params_modl, makecheck = TRUE)
 \item{makecheck}{A logical specifying whether checks are performed 
  to verify forcings and model parameters. \code{TRUE} by default.
 
-For further specifications of above inputs and examples see \code{\link{p_model_drivers}} or \code{\link{p_model_drivers_vcmax25}}}
+For further specifications of above inputs and examples see \code{\link{p_model_oldformat_drivers}} or \code{\link{p_model_oldformat_drivers_vcmax25}}}
 }
 \value{
 Model output is provided as a tidy dataframe, with columns:

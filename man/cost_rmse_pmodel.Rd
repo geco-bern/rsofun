@@ -20,10 +20,10 @@ cost_rmse_pmodel(
 those described in \code{\link{runread_pmodel_f}}, in order).}
 
 \item{obs}{A nested data.frame of observations, with columns \code{'sitename'}
-and \code{'data'} (see \code{\link{p_model_validation}} or \code{\link{p_model_validation_vcmax25}}
+and \code{'data'} (see \code{\link{p_model_oldformat_validation}} or \code{\link{p_model_oldformat_validation_vcmax25}}
 to check their structure).}
 
-\item{drivers}{A nested data.frame of driver data. See \code{\link{p_model_drivers}}
+\item{drivers}{A nested data.frame of driver data. See \code{\link{p_model_oldformat_drivers}}
 for a description of the data structure.}
 
 \item{targets}{A character vector indicating the target variables for which the
@@ -77,8 +77,8 @@ trait value predicted on that date.
 # and example data
 cost_rmse_pmodel(
  par = c(0.05, -0.01, 0.5),  # kphio related parameters
- obs = p_model_validation,
- drivers = p_model_drivers,
+ obs = p_model_oldformat_validation,
+ drivers = p_model_oldformat_drivers,
  targets = c('gpp'),
  par_fixed = list(
   soilm_thetastar    = 0.6 * 240,  # old setup with soil moisture stress

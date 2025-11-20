@@ -7,13 +7,13 @@
 calib_sofun(drivers, obs, settings, optim_out = TRUE, ...)
 }
 \arguments{
-\item{drivers}{A data frame with driver data. See \code{\link{p_model_drivers}}
+\item{drivers}{A data frame with driver data. See \code{\link{p_model_oldformat_drivers}}
 for a description of the data structure. Additional columns can optionally be 
 provided to \code{drivers} to control e.g. the processing within a 
 personalized cost function.}
 
 \item{obs}{A data frame containing observational data used for model
-calibration. See \code{\link{p_model_validation}} for a description of the data
+calibration. See \code{\link{p_model_oldformat_validation}} for a description of the data
 structure. Additional columns can optionally be provided to \code{obs} to 
 control e.g. the processing within a personalized cost function.}
 
@@ -88,8 +88,8 @@ settings <- list(
  
  # Run the calibration for GPP data
  calib_output <- rsofun::calib_sofun(
-   drivers = rsofun::p_model_drivers,
-   obs = rsofun::p_model_validation,
+   drivers = rsofun::p_model_oldformat_drivers,
+   obs = rsofun::p_model_oldformat_validation,
    settings = settings,
    # extra arguments for the cost function
    par_fixed = params_fix,

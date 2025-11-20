@@ -23,10 +23,10 @@ for each target variable (for example \code{'gpp_err'}), in the same order as
 the targets appear in \code{targets}.}
 
 \item{obs}{A nested data.frame of observations, with columns \code{'sitename'}
-and \code{'data'} (see \code{\link{p_model_validation}} or \code{\link{p_model_validation_vcmax25}}
+and \code{'data'} (see \code{\link{p_model_oldformat_validation}} or \code{\link{p_model_oldformat_validation_vcmax25}}
 to check their structure).}
 
-\item{drivers}{A nested data.frame of driver data. See \code{\link{p_model_drivers}}
+\item{drivers}{A nested data.frame of driver data. See \code{\link{p_model_oldformat_drivers}}
 for a description of the data structure.}
 
 \item{targets}{A character vector indicating the target variables for which the
@@ -82,8 +82,8 @@ par = c(kphio       = 0.05,
         kphio_par_a = -0.01, 
         kphio_par_b = 1,     # model parameters
         err_gpp     = 2),    # err_gpp
- obs = p_model_validation,
- drivers = p_model_drivers,
+ obs = p_model_oldformat_validation,
+ drivers = p_model_oldformat_drivers,
  targets = c('gpp'),
  par_fixed = list(
   soilm_thetastar    = 0.6 * 240,  # old setup with soil moisture stress
