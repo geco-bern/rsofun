@@ -63,7 +63,7 @@ With all data prepared we can run the P-model using `runread_pmodel_f()`. This f
 # analysis/02-bayesian-calibration.R. # TODO: replace this with geco-bern/analysis_doc repository
 params_modl <- list(
   kphio              = 5.000000e-02, # chosen to be too high for demonstration
-  kphio_par_a        =-2.289344e-03,
+  kphio_par_a        = -2.289344e-03,
   kphio_par_b        = 1.525094e+01,
   soilm_thetastar    = 1.577507e+02,
   soilm_betao        = 1.169702e-04,
@@ -71,13 +71,22 @@ params_modl <- list(
   rd_to_vcmax        = 0.014,
   tau_acclim         = 20.0,
   kc_jmax            = 0.41
-  )
+)
 
 # Run the model for these parameters.
 output <- rsofun::runread_pmodel_f(
-  p_model_drivers,
+  rsofun::pmodel_drivers |>
+    # subset only certain sites:
+    dplyr::filter(sitename %in% c(
+      "FR-Pue",
+      "CA-Cbo", "CH-Aws", "CH-Fru", "ES-LM2", "FI-Let",
+      "IT-Lav", "IT-MBo", "IT-Noe", "IT-Ro2", "US-SRM"
+    )) |>
+    # only use sites where we request runs of the daily p-model (internally
+    # calling `run_pmodel_f_bysite`, and not `run_pmodel_onestep_f_bysite`)
+    dplyr::filter(run_model == "daily"),
   par = params_modl
-  )
+)
 ```
 
 ### Plotting output
@@ -93,16 +102,16 @@ library(ggplot2)
 # Create data.frame for plotting
 df_gpp_plot <- output |>
   tidyr::unnest(data) |>
-  dplyr::select(date, gpp_mod = gpp) |>
+  dplyr::select(sitename, date, gpp_mod = gpp) |>
   dplyr::left_join(
-    p_model_validation |>
+    rsofun::pmodel_validation |> dplyr::filter(run_model == "daily") |>
       tidyr::unnest(data) |>
-      dplyr::select(date, gpp_obs = gpp),
-    by = "date"
+      dplyr::select(sitename, date, gpp_obs = gpp),
+    by = c("sitename", "date")
     ) |> 
 
-  # Plot only first year
-  dplyr::slice(1:365)
+  # Plot only first year of each site
+  group_by(sitename) |> dplyr::slice(1:365)
 
 # Plot GPP
 ggplot(data = df_gpp_plot) +
@@ -117,6 +126,7 @@ ggplot(data = df_gpp_plot) +
     aes(
       x = date,
       y = gpp_mod,
+      group = sitename,
       color = "P-model"
     )
   ) +
@@ -129,6 +139,8 @@ ggplot(data = df_gpp_plot) +
     x = 'Date',
     y = expression(paste("GPP (g C m"^-2, "s"^-1, ")"))
   ) +
+  facet_wrap(~sitename, scales = "free_x") + 
+  scale_x_date(date_labels = "%Y\n%b", date_breaks = "4 months") +
   scale_color_manual(
     NULL,
     breaks = c("Observations",
@@ -160,8 +172,8 @@ With all settings defined the optimization function `calib_sofun()` can be calle
 ```{r eval=FALSE}
 # calibrate the model and optimize free parameters
 pars <- calib_sofun(
-  drivers = p_model_drivers,  
-  obs = p_model_validation,
+  drivers = pmodel_drivers |> filter(sitename == "FR-Pue"),
+  obs     = pmodel_validation |> filter(sitename == "FR-Pue"),
   settings = settings,
   # extra arguments passed to the cost function:
   targets = "gpp",             # define target variable GPP
@@ -173,7 +185,7 @@ pars <- calib_sofun(
 ```{r simulate_calibration_run, include = FALSE}
 # fake variable as optimization isn't run
 pars <- list()
-pars$par["kphio"] <- 0.04095957
+pars$par["kphio"] <- 0.03919745
 ```
 When successful the optimized parameters can be used to run subsequent modelling efforts, in this case slightly improving the model fit over a more global parameter set.
 
@@ -183,21 +195,23 @@ params_modl$kphio <- pars$par["kphio"]
 
 # Run the model for these parameters
 output_new <- rsofun::runread_pmodel_f(
-  p_model_drivers,
+  pmodel_drivers |> filter(sitename == "FR-Pue"),
   par = params_modl
   )
 
 # Update data.frame for plotting
-df_gpp_plot <- df_gpp_plot |> 
+df_gpp_plot_FRPue <- df_gpp_plot |> 
+  select(-starts_with("gpp_calib")) |>
   left_join(
     output_new |>
       unnest(data) |>
-      select(date, gpp_calib = gpp),
-    by = "date"
-  )
+      select(sitename, date, gpp_calib = gpp),
+    by = c("sitename", "date")
+  ) |>
+  filter(sitename == "FR-Pue")
 
 # Plot GPP
-ggplot(data = df_gpp_plot) +
+ggplot(data = df_gpp_plot_FRPue) +
   geom_point(
     aes(
       x = date,
@@ -209,6 +223,7 @@ ggplot(data = df_gpp_plot) +
     aes(
       x = date,
       y = gpp_mod,
+      group = sitename,
       color = "P-model (uncalibrated)"
     )
   ) +
@@ -216,6 +231,7 @@ ggplot(data = df_gpp_plot) +
     aes(
       x = date,
       y = gpp_calib,
+      group = sitename,
       color = "P-model (calibrated)"
     )
   ) +
@@ -228,6 +244,8 @@ ggplot(data = df_gpp_plot) +
     x = 'Date',
     y = expression(paste("GPP (g C m"^-2, "s"^-1, ")"))
   ) +
+  facet_wrap(~sitename, scales = "free_x") + 
+  scale_x_date(date_labels = "%Y\n%b", date_breaks = "4 months") +
   scale_color_manual(
     NULL,
     breaks = c("Observations",
