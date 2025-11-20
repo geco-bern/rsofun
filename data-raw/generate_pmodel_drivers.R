@@ -68,10 +68,7 @@ save(p_model_oldformat_validation,
      compress = "xz")
 
 
-
-
-
-#---- p_model2_drivers -----
+#---- pmodel_drivers -----
 # Download
 library(zen4R)
 dir <- file.path(tempdir(), "rsofun_doc")
@@ -90,14 +87,14 @@ unzip(zipfile = file.path(dir, "rsofun_doc-v1.0.2.zip"),
 )
 file.remove(file.path(dir, "rsofun_doc-v1.0.2.zip"))
 
-p_model2_drivers_allsites    <- readr::read_rds(
+pmodel_drivers_allsites    <- readr::read_rds(
   file.path(dir, "extracted", "01_bigD13C-vj-gpp_calibsofun_drivers.rds"))
-#---- p_model2_validation -----
-p_model2_validation_allsites <- readr::read_rds(
+#---- pmodel_validation -----
+pmodel_validation_allsites <- readr::read_rds(
   file.path(dir, "extracted", "01_bigD13C-vj-gpp_calibsofun_obs.rds"))
 
 # subset dates and variables
-p_model2_validation_allsites_2 <- p_model2_validation_allsites |> 
+pmodel_validation_allsites_2 <- pmodel_validation_allsites |> 
   tidyr::unnest_wider(targets) |> 
   # subset variables
   dplyr::filter(gpp | bigD13C) |>
@@ -105,27 +102,27 @@ p_model2_validation_allsites_2 <- p_model2_validation_allsites |>
 
 # subset sites
 set.seed(42)
-p_model2_validation_3 <- p_model2_validation_allsites_2 |> 
+pmodel_validation_3 <- pmodel_validation_allsites_2 |> 
   group_by(gpp) |> 
   # sample some sites
   slice_sample(n=10) |>
   ungroup() |>
   # and ensure FR-Pue is in it
-  bind_rows(filter(p_model2_validation_allsites_2, sitename == "FR-Pue")) |> distinct() |>
+  bind_rows(filter(pmodel_validation_allsites_2, sitename == "FR-Pue")) |> distinct() |>
   arrange(run_model) |>
   # nest again:
   # nest(targets = c('bigD13C','gpp'))
   mutate(targets = purrr::pmap(list(bigD13C,gpp), \(x,y) setNames(list(x,y), c("bigD13C", "gpp")))) |> select(-bigD13C, -gpp) |>
   select(sitename, run_model, targets, data)
 
-p_model2_drivers <- p_model2_drivers_allsites |> 
-  dplyr::filter(sitename %in% p_model2_validation_3$sitename)
+pmodel_drivers <- pmodel_drivers_allsites |> 
+  dplyr::filter(sitename %in% pmodel_validation_3$sitename)
 
-p_model2_drivers
-p_model2_validation_3
+pmodel_drivers
+pmodel_validation_3
 
 # reduce file size and remove unused columns:
-p_model2_drivers <- p_model2_drivers |>
+pmodel_drivers <- pmodel_drivers |>
   # remove columns: canopy_height, reference_height, nyears_gpp, FDK_koeppen_code, FDK_igbp_land_use
   dplyr::mutate(site_info = purrr::map(site_info, ~select(.x, lon, lat, elv, whc))) %>%
   # remove unneeded dates (only from daily model runs, i.e. GPP, not onestep, i.e. bigDelta13C)
@@ -137,12 +134,12 @@ p_model2_drivers <- p_model2_drivers |>
   )}
 
 # remove unneded dates from observations (i.e. those outside of the driver dates) :
-drivers_available <- p_model2_drivers |> 
+drivers_available <- pmodel_drivers |> 
   filter(run_model == "daily") |> group_by(sitename) |> 
   mutate(forcing_years_available = purrr::map(forcing, ~(.x$date |> lubridate::year() |> unique()))) |>
   select(sitename, forcing_years_available)
-p_model2_validation_3
-p_model2_validation_3_gppYears <- p_model2_validation_3 |> 
+pmodel_validation_3
+pmodel_validation_3_gppYears <- pmodel_validation_3 |> 
   left_join(drivers_available, by = join_by(sitename)) |>
   filter(run_model == "daily") |>
   unnest(data) |>
@@ -150,22 +147,19 @@ p_model2_validation_3_gppYears <- p_model2_validation_3 |>
   rowwise() |> filter(obs_year %in% forcing_years_available) |> ungroup() |>
   select(-obs_year, -forcing_years_available) |>
   nest(data = -c(sitename, run_model, targets))
-p_model2_validation <- bind_rows(
-  p_model2_validation_3_gppYears,
-  p_model2_validation_3 |> filter(run_model == "onestep") |> unnest(data) |> select(-vj) |> nest(data = c('bigD13C'))
+pmodel_validation <- bind_rows(
+  pmodel_validation_3_gppYears,
+  pmodel_validation_3 |> filter(run_model == "onestep") |> unnest(data) |> select(-vj) |> nest(data = c('bigD13C'))
 )
 
 # store as rda into the package
-usethis::use_data(p_model2_drivers,    overwrite = TRUE, compress = "xz")
-usethis::use_data(p_model2_validation, overwrite = TRUE, compress = "xz")
-# save(p_model2_drivers,
-#      file ="data/p_model_drivers2.rda",
-#      compress = "xz")
-# store as rda into the package
-# save(p_model2_validation,
-#      file ="data/p_model2_validation.rda",
-#      compress = "xz")
+usethis::use_data(pmodel_drivers,    overwrite = TRUE, compress = "xz")
+usethis::use_data(pmodel_validation, overwrite = TRUE, compress = "xz")
+
+# Alternative format:
+p_model3_drivers <- rsofun::pmodel_drivers |> 
+  dplyr::select(-run_model)
 
 
 
-
+rsofun::p_model_oldformat_validation         |> unnest(data) # date, gpp, gpp_unc

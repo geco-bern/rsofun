@@ -124,7 +124,7 @@ abstract: '<h1>rsofun</h1>
   &nbsp;= 0.41</code><br><code>&nbsp; )</code></p>
 
   <p><code># run the model for these parameters</code><br><code>output &lt;- rsofun::runread_pmodel_f(</code><br><code>&nbsp;
-  p_model_drivers,</code><br><code>&nbsp; par = params_modl</code><br><code>&nbsp;
+  p_model_oldformat_drivers,</code><br><code>&nbsp; par = params_modl</code><br><code>&nbsp;
   )</code><br><br></p>
 
   <h3>Parameter optimization</h3>
@@ -164,8 +164,8 @@ abstract: '<h1>rsofun</h1>
   needed to run the P-model).</p>
 
   <p><br><code># calibrate the model and optimize free parameters</code><br><code>pars
-  &lt;- calib_sofun(</code><br><code>&nbsp; &nbsp; drivers = p_model_drivers, &nbsp;</code><br><code>&nbsp;
-  &nbsp; obs = p_model_validation,</code><br><code>&nbsp; &nbsp; settings = settings,</code><br><code>&nbsp;
+  &lt;- calib_sofun(</code><br><code>&nbsp; &nbsp; drivers = p_model_oldformat_drivers, &nbsp;</code><br><code>&nbsp;
+  &nbsp; obs = p_model_oldformat_validation,</code><br><code>&nbsp; &nbsp; settings = settings,</code><br><code>&nbsp;
   &nbsp; # extra arguments passed to the cost function:</code><br><code>&nbsp; &nbsp;
   targets = "gpp", &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; # define target variable
   GPP</code><br><code>&nbsp; &nbsp; par_fixed = params_modl[-1] &nbsp;# fix non-calibrated

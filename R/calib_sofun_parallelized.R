@@ -97,8 +97,8 @@
 #'  )
 #'  # Run the calibration for GPP data
 #'  calib_output <- rsofun::calib_sofun_parallelized(
-#'    drivers = rsofun::p_model2_drivers    |> dplyr::filter(sitename == "FR-Pue"),
-#'    obs     = rsofun::p_model2_validation |> dplyr::filter(sitename == "FR-Pue"),
+#'    drivers = rsofun::pmodel_drivers    |> dplyr::filter(sitename == "FR-Pue"),
+#'    obs     = rsofun::pmodel_validation |> dplyr::filter(sitename == "FR-Pue"),
 #'    settings = settings,
 #'    suffix = "my_calibration_name",
 #'    # extra arguments for the cost function

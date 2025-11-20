@@ -27,16 +27,16 @@ TODO: where is p_model_oldformat_validation and p_model_validation_vcmax used:
   (resulting in columns `ccov`,`co2`,`date`,`fapar`,`netrad`,`patm`,`ppfd`,
   `rain`,`snow`,`temp`,`tmax`,`tmin`,`vpd`,`vwind`) for `daily` model runs 
   and columns (`co2`,`patm`,`ppfd`,`temp`,`vpd`) for `onestep` model runs.
-  Each row in `p_model2_drivers` corresponds to a model run (either `daily` 
-  or `onestep`) and should have a corresponding row in `p_model2_validation`.
+  Each row in `pmodel_drivers` corresponds to a model run (either `daily` 
+  or `onestep`) and should have a corresponding row in `pmodel_validation`.
   
   ```
   # A) Compare with previous example data set:
-  rsofun::p_model2_drivers |> dplyr::filter(sitename == "FR-Pue")
+  rsofun::pmodel_drivers |> dplyr::filter(sitename == "FR-Pue")
   rsofun::p_model_oldformat_drivers
   
   # bring new to old format:
-  rsofun::p_model2_drivers |> dplyr::filter(sitename == "FR-Pue") |> 
+  rsofun::pmodel_drivers |> dplyr::filter(sitename == "FR-Pue") |> 
     # remove new column 'run_model'
     dplyr::select(-run_model) |> 
     # 'params_siml' remains same
@@ -100,8 +100,8 @@ TODO: where is p_model_oldformat_validation and p_model_validation_vcmax used:
   containing a new column `run_model` determining which model 
   to run (`daily` or `onestep`) and a new column `targets` determining which
   variable(s) is/are the target of the corresponding line. 
-  Each row in `p_model2_validation` corresponds to a model run (either `daily` 
-  or `onestep`) and should have a corresponding row in `p_model2_drivers`.
+  Each row in `pmodel_validation` corresponds to a model run (either `daily` 
+  or `onestep`) and should have a corresponding row in `pmodel_drivers`.
   
   For `onestep`-model rows, the column `data` contains a named list 
   of `data.frame()` for each target (e.g. `bigD13C` or `vj`). This allows to 
@@ -115,11 +115,11 @@ TODO: where is p_model_oldformat_validation and p_model_validation_vcmax used:
   
   ```
   # B) Compare with previous example data set:
-  rsofun::p_model2_validation |> dplyr::filter(sitename == "FR-Pue")
+  rsofun::pmodel_validation |> dplyr::filter(sitename == "FR-Pue")
   rsofun::p_model_oldformat_validation
   
   # bring new to old format:
-  rsofun::p_model2_validation |> dplyr::filter(sitename == "FR-Pue") |> 
+  rsofun::pmodel_validation |> dplyr::filter(sitename == "FR-Pue") |> 
     # remove new column 'run_model'
     dplyr::select(-run_model) |>
     # remove new column 'targets'
