@@ -163,26 +163,19 @@
 #' New Phytol. 206 (2), 614–636. doi:10.1111/nph.13253
 "p_model_oldformat_validation_vcmax25"
 
-#' rsofun P-model output data
-#'
-#' Example output dataset from a p-model run using \code{\link{p_model_oldformat_drivers}}
-#' See \code{\link{run_pmodel_f_bysite}} for a detailed 
-#' description of the outputs.
-"p_model_output"
-
-#' rsofun P-model output data (using vcmax25 drivers)
-#'
-#' Example output dataset from a p-model run using \code{\link{p_model_oldformat_drivers_vcmax25}}
-#' See \code{\link{run_pmodel_f_bysite}} for a detailed 
-#' description of the outputs.
-"p_model_output_vcmax25"
-
-
 #' rsofun P-model ... driver data TODO TODO TODO TODO.
 "pmodel_drivers"
 
 #' rsofun P-model ... target data TODO TODO TODO TODO
 "pmodel_validation"
+
+#' rsofun P-model output data
+#'
+#' Example output dataset from a p-model run using \code{\link{pmodel_drivers}}
+#' See \code{\link{run_pmodel_f_bysite}} 
+#' and \code{\link{run_pmodel_onestep_f_bysite}} for a detailed 
+#' description of the outputs.
+"pmodel_output"
 
 #' rsofun BiomeE driver data (Leuning photosynthesis model)
 #' 
