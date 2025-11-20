@@ -6,6 +6,8 @@ test_that("p-model quantitative check", {
   # grab gpp data from the validation set
   # for FR-Pue
   gpp <- p_model_oldformat_validation$data[[1]]$gpp
+  # gpp <- pmodel_validation |> dplyr::filter(sitename == "FR-Pue") %>% 
+  #   `[[`("data") %>% `[[`(1) %>% `[[`("gpp")
   
   # set model drivers to the NPHT paper
   # ones
@@ -23,7 +25,9 @@ test_that("p-model quantitative check", {
   
   # run the model for these parameters
   output <- rsofun::runread_pmodel_f(
-    rsofun::p_model_oldformat_drivers,
+    rsofun::p_model_oldformat_drivers |> dplyr::mutate(run_model = "daily"),
+    # rsofun::pmodel_drivers |> dplyr::filter(sitename == "FR-Pue") |>
+    #   dplyr::mutate(site_info = purrr::map(site_info, ~mutate(.x, whc = 432))),
     par = params_modl
   )$data[[1]]$gpp
   

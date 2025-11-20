@@ -88,23 +88,23 @@ test_that("biomee parallel run check (p-model)", {
 })
 
 
-# # TODO: Add to test suite
-# output1 <- rsofun::runread_pmodel_f(
-#   drivers = rsofun::pmodel_drivers |> dplyr::filter(run_model=="daily"),
-#   par = params_modl)
-# output2 <- rsofun::runread_pmodel_f(
-#   drivers = rsofun::pmodel_drivers |> dplyr::filter(run_model=="onestep"),
-#   par = params_modl)
-# #' # Legacy input data format
-# output3 <- rsofun::runread_pmodel_f(
-#   drivers = rsofun::p_model_oldformat_drivers,
-#   par = params_modl)
-# output4 <- rsofun::runread_pmodel_f(
-#   drivers = rsofun::p_model_oldformat_drivers_vcmax25,
-#   par = params_modl)
-test_that("p-model run check GPP", {
+test_that("p-model run containing daily and onestep simulations", {
   skip_on_cran()
-
+  # # TODO: Add to test suite
+  # output1 <- rsofun::runread_pmodel_f(
+  #   drivers = rsofun::pmodel_drivers |> dplyr::filter(run_model=="daily"),
+  #   par = params_modl)
+  # output2 <- rsofun::runread_pmodel_f(
+  #   drivers = rsofun::pmodel_drivers |> dplyr::filter(run_model=="onestep"),
+  #   par = params_modl)
+  # #' # Legacy input data format
+  # output3 <- rsofun::runread_pmodel_f(
+  #   drivers = rsofun::p_model_oldformat_drivers,
+  #   par = params_modl)
+  # output4 <- rsofun::runread_pmodel_f(
+  #   drivers = rsofun::p_model_oldformat_drivers_vcmax25,
+  #   par = params_modl)
+  
   # load parameters (valid ones)
   params_modl <- list(
     kphio              = 0.04998, # setup ORG in Stocker et al. 2020 GMD
@@ -117,24 +117,24 @@ test_that("p-model run check GPP", {
     tau_acclim         = 30.0,
     kc_jmax            = 0.41
   )
-
+  
   # read in demo data
-  df_drivers <- p_model_oldformat_drivers
-
-  # run the SOFUN Fortran P-model
+  df_drivers <- pmodel_drivers
+  
+  # run the SOFUN Fortran P-model for FR-Pue
   mod <- run_pmodel_f_bysite(
-    df_drivers$sitename[1],
-    df_drivers$params_siml[[1]],
-    df_drivers$site_info[[1]],
-    df_drivers$forcing[[1]],
+    df_drivers$sitename[[6]],
+    df_drivers$params_siml[[6]],
+    df_drivers$site_info[[6]],
+    df_drivers$forcing[[6]],
     params_modl = params_modl,
     makecheck = FALSE
   )
-
+  
   # test if the returned types
   # are in a list (don't error / warning)
   expect_type(mod, "list")
-
+  
   # test runread_pmodel_f
   df_output <- runread_pmodel_f(
     df_drivers,
@@ -142,11 +142,11 @@ test_that("p-model run check GPP", {
     makecheck = FALSE,
     parallel = FALSE
   )
-
+  
   # test for correctly returned types
   expect_type(df_output, "list")
-
-  # test runread_pmodel_f
+  
+  # test runread_pmodel_f (parallel)
   df_output_p <- runread_pmodel_f(
     df_drivers,
     par = params_modl,
@@ -154,22 +154,21 @@ test_that("p-model run check GPP", {
     parallel = TRUE, 
     ncores = 2
   )
-
+  
   # test for correctly returned types
   expect_type(df_output_p, "list")
-
+  
   # also check for correctly returned _values_, not only types
-  mod_pmodel_bysite           <- head_tail(tibble(mod), n=30)
-  mod_pmodel_runread_serial   <- head_tail(tibble(df_output$data[[1]]), n=30)
-  mod_pmodel_runread_parallel <- head_tail(tibble(df_output_p$data[[1]]), n=30)
+  mod_pmodel_bysite_FRPue           <- head_tail(tibble(mod), n=30)
+  mod_pmodel_runread_serial_FRPue   <- head_tail(tibble(df_output$data[[6]]), n=30)
+  mod_pmodel_runread_parallel_FRPue <- head_tail(tibble(df_output_p$data[[6]]), n=30)
   
-  expect_equal(mod_pmodel_bysite, mod_pmodel_runread_serial)
-  expect_equal(mod_pmodel_bysite, mod_pmodel_runread_parallel)
-  expect_snapshot_value_fmt(mod_pmodel_bysite, tolerance = 0.01, cran = TRUE)
+  expect_equal(mod_pmodel_bysite_FRPue, mod_pmodel_runread_serial_FRPue)
+  expect_equal(mod_pmodel_bysite_FRPue, mod_pmodel_runread_parallel_FRPue)
+  expect_snapshot_value_fmt(mod_pmodel_bysite_FRPue, tolerance = 0.01, cran = TRUE)
   
-  # also check that reference data sets are up-to-date
-  # expect_equal(df_output, rsofun::p_model_output, tolerance = 0.01)
-  
+  # also check that reference data set is up-to-date
+  expect_equal(df_output, rsofun::pmodel_output, tolerance = 0.01)
   
   # Rerun again (inverse order) to test memory leakage:
   df_output_p_rerun <- runread_pmodel_f(
@@ -186,10 +185,10 @@ test_that("p-model run check GPP", {
     parallel = FALSE
   )
   mod_rerun <- run_pmodel_f_bysite(
-    df_drivers$sitename[1],
-    df_drivers$params_siml[[1]],
-    df_drivers$site_info[[1]],
-    df_drivers$forcing[[1]],
+    df_drivers$sitename[6],
+    df_drivers$params_siml[[6]],
+    df_drivers$site_info[[6]],
+    df_drivers$forcing[[6]],
     params_modl = params_modl,
     makecheck = FALSE
   )
@@ -199,104 +198,6 @@ test_that("p-model run check GPP", {
                df_output_rerun)
   expect_equal(df_output_p,
                df_output_p_rerun)
-})
-
-test_that("p-model run check Vcmax25", {
-  skip_on_cran()
-
-  # load parameters (valid ones)
-  params_modl <- list(
-    kphio              = 0.04998, # setup ORG in Stocker et al. 2020 GMD
-    kphio_par_a        = 0.01,  # set to zero to disable temperature-dependence of kphio, setup ORG in Stocker et al. 2020 GMD
-    kphio_par_b        = 1.0,
-    soilm_thetastar    = 0.6 * 240,  # to recover old setup with soil moisture stress
-    soilm_betao        = 0.01,
-    beta_unitcostratio = 146.0,
-    rd_to_vcmax        = 0.014, # value from Atkin et al. 2015 for C3 herbaceous
-    tau_acclim         = 30.0,
-    kc_jmax            = 0.41
-  )
-
-  # read in demo data
-  df_drivers <- p_model_oldformat_drivers_vcmax25
-
-  # run the SOFUN Fortran P-model
-  mod <- run_pmodel_f_bysite(
-    df_drivers$sitename[1],
-    df_drivers$params_siml[[1]],
-    df_drivers$site_info[[1]],
-    df_drivers$forcing[[1]],
-    params_modl = params_modl,
-    makecheck = FALSE
-  )
-
-  # test if the returned types
-  # are in a list (don't error / warning)
-  expect_type(mod, "list")
-
-  # test runread_pmodel_f
-  df_output <- runread_pmodel_f(
-    df_drivers,
-    par = params_modl,
-    makecheck = FALSE,
-    parallel = FALSE
-  )
-
-  # test for correctly returned types
-  expect_type(df_output, "list")
-
-  # test runread_pmodel_f
-  df_output_p <- runread_pmodel_f(
-    df_drivers,
-    par = params_modl,
-    makecheck = TRUE,
-    parallel = TRUE,
-    ncores = 2
-  )
-
-  # test for correctly returned types
-  expect_type(df_output_p, "list")
-  
-  # also check for correctly returned _values_, not only types
-  mod_pmodel_vcmax_bysite           <- head_tail(tibble(mod), n=30)
-  mod_pmodel_vcmax_runread_serial   <- head_tail(tibble(df_output$data[[1]]), n=30)
-  mod_pmodel_vcmax_runread_parallel <- head_tail(tibble(df_output_p$data[[1]]), n=30)
-  
-  expect_equal(mod_pmodel_vcmax_bysite, mod_pmodel_vcmax_runread_serial)
-  expect_equal(mod_pmodel_vcmax_bysite, mod_pmodel_vcmax_runread_parallel)
-  expect_snapshot_value_fmt(mod_pmodel_vcmax_bysite, tolerance = 0.01, cran = TRUE)
-  
-  # also check that reference data sets are up-to-date
-  # expect_equal(df_output, rsofun::p_model_output_vcmax25, tolerance = 0.01)
-  
-  # Rerun again (inverse order) to test memory leakage:
-  df_output_p_rerun <- runread_pmodel_f(
-    df_drivers,
-    par = params_modl,
-    makecheck = TRUE,
-    parallel = TRUE,
-    ncores = 2
-  )
-  df_output_rerun <- runread_pmodel_f(
-    df_drivers,
-    par = params_modl,
-    makecheck = FALSE,
-    parallel = FALSE
-  )
-  mod_rerun <- run_pmodel_f_bysite(
-    df_drivers$sitename[1],
-    df_drivers$params_siml[[1]],
-    df_drivers$site_info[[1]],
-    df_drivers$forcing[[1]],
-    params_modl = params_modl,
-    makecheck = FALSE
-  )
-  expect_equal(mod, 
-               mod_rerun)
-  expect_equal(df_output, 
-               df_output_rerun)
-  expect_equal(df_output_p |> arrange(sitename), 
-               df_output_p_rerun |> arrange(sitename))
 })
 
 test_that("p-model onestep output check (run_pmodel_onestep_f_bysite())", {
