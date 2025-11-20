@@ -7,9 +7,13 @@
 runread_pmodel_f(drivers, par, makecheck = TRUE, parallel = FALSE, ncores = 1)
 }
 \arguments{
-\item{drivers}{A nested data frame with one row for each site and columns
-named according to the arguments of function \code{\link{runread_pmodel_f}}.
-Namely \code{sitename, params_siml, site_info} and \code{forcing}.}
+\item{drivers}{A nested data frame with one row for each site and columns 
+\code{sitename} and \code{run_model} and further columns
+named according to the arguments of function \code{\link{run_pmodel_f_bysite}},
+or \code{\link{run_pmodel_onestep_f_bysite}}, namely 
+\code{sitename, params_siml, site_info} and \code{forcing} (Note, when 
+\code{run_model} is "onestep", \code{params_siml} contains a single column 
+\code{lc4}).}
 
 \item{par}{A named list of free (calibratable) model parameters.
 \describe{
@@ -49,7 +53,7 @@ computing (by default \code{ncores = 2}).}
 \value{
 A data frame (tibble) with one row for each site, site information 
 stored in the nested column \code{site_info} and outputs stored in the nested 
-column \code{data}. See \code{\link{run_pmodel_f_bysite}} for a detailed 
+column \code{data}. See \code{\link{run_pmodel_f_bysite}} and \code{\link{run_pmodel_onestep_f_bysite}} for a detailed 
 description of the outputs. 
 Example outputs are provided as \code{\link{biomee_p_model_output}} and
 \code{\link{biomee_gs_leuning_output}}.
@@ -107,9 +111,6 @@ params_modl <- list(
 
 # Run the model for these parameters and the example drivers
 output <- rsofun::runread_pmodel_f(
-  drivers = rsofun::p_model_oldformat_drivers,
-  par = params_modl)
-output_vcmax25 <- rsofun::runread_pmodel_f(
-  drivers = rsofun::p_model_oldformat_drivers_vcmax25,
+  drivers = rsofun::pmodel_drivers,
   par = params_modl)
 }

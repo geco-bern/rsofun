@@ -55,7 +55,7 @@ To get your raw data into the structure used within `rsofun`, please see R packa
 
 ## Running model
 
-With all data prepared we can run the P-model using `runread_pmodel_f()`. This function takes the nested data structure and runs the model site by site, returning nested model output results matching the input drivers.
+With all data prepared we can run the P-model using `runread_pmodel_f()`. This function takes the nested data structure and runs the model site by site, returning nested model output results matching the input drivers. Internally it calls for each site `run_pmodel_f_bysite()` or `run_pmodel_onestep_f_bysite()` (for latter refer to section 'One-step P-model call' below).
 
 ```{r}
 # Define model parameter values.
@@ -258,7 +258,7 @@ For details on the optimization settings we refer to the manuals of [GenSA](http
 
 ## One-step P-model call
 
-For certain applications, the core theory of the P-model, predicting the acclimation of photosynthesis at the leaf-level, may be all that's needed for simulations. {rsofun} also provides a stripped-down version of "one-step" P-model call. That is, without considering forcing (and output) time series, delayed acclimation, ecosystem-level up-scaled quantities, and the coupling with the water balance and related water limitation on photosynthesis. Applications of the stripped-down version may include simulations of leaf-level photosynthetic traits. The function `run_pmodel_onestep_f_bysite()` provides this functionality and further improves computational efficiency over a call to `run_pmodel_f_bysite()`. This is particularly useful when calibrating the model to photosynthetic traits data. 
+For certain applications, the core theory of the P-model, predicting the acclimation of photosynthesis at the leaf-level, may be all that's needed for simulations. {rsofun} also provides a stripped-down version of "one-step" P-model call. That is, without considering forcing (and output) time series, delayed acclimation, ecosystem-level up-scaled quantities, and the coupling with the water balance and related water limitation on photosynthesis. Applications of the stripped-down version may include simulations of leaf-level photosynthetic traits. The function `run_pmodel_onestep_f_bysite()` provides this functionality and further improves computational efficiency over a call to `run_pmodel_f_bysite()`. This is particularly useful when calibrating the model to photosynthetic traits data. Note that it can equally be run through `runread_pmodel()`, specifying `onestep` in the column `runtype` of the input driver.
 
 ```{r}
 run_pmodel_onestep_f_bysite(
