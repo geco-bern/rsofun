@@ -2,8 +2,8 @@
 #'
 #' Small dataset representing the driver to run the P-model at the FR-Pue site. 
 #' It can also be used together with daily GPP flux time series data from CH-LAE 
-#' (\code{\link{p_model_validation}}) to optimize model parameters.
-#' To optimize model parameters to leaf traits data use the datasets \code{\link{p_model_drivers_vcmax25}} and \code{\link{p_model_validation_vcmax25}}.
+#' (\code{\link{p_model_oldformat_validation}}) to optimize model parameters.
+#' To optimize model parameters to leaf traits data use the datasets \code{\link{p_model_oldformat_drivers_vcmax25}} and \code{\link{p_model_oldformat_validation_vcmax25}}.
 #'
 #' @format A tibble of driver data:
 #' \describe{
@@ -76,7 +76,7 @@
 #' 
 #' Fick, S.E. and R.J. Hijmans, 2017. WorldClim 2: new 1km spatial resolution climate 
 #' surfaces for global land areas. International Journal of Climatology 37 (12): 4302-4315.
-"p_model_drivers"
+"p_model_oldformat_drivers"
 
 #' rsofun P-model GPP validation data
 #'
@@ -96,21 +96,21 @@
 #'   }
 #' }
 #' @examples require(ggplot2); require(tidyr)
-#' p_model_validation %>% tidyr::unnest(data) 
+#' p_model_oldformat_validation %>% tidyr::unnest(data) 
 #' 
 #' @source Pastorello, G., Trotta, C., Canfora, E. et al. 
 #' The FLUXNET2015 dataset and the ONEFlux processing pipeline for eddy covariance data. 
 #' Sci Data 7, 225 (2020). https://doi.org/10.1038/s41597-020-0534-3
-"p_model_validation"
+"p_model_oldformat_validation"
 
 #' rsofun P-model driver data (for leaf traits)
 #'
 #' Small dataset representing the driver to run the P-model at four separate sites. 
 #' It can also be used together with leaf traits data from these four sites
-#' (\code{\link{p_model_validation_vcmax25}}) to optimize model parameters.
-#' To optimize model parameters to GPP flux data use the datasets \code{\link{p_model_drivers}} and \code{\link{p_model_validation}}.
+#' (\code{\link{p_model_oldformat_validation_vcmax25}}) to optimize model parameters.
+#' To optimize model parameters to GPP flux data use the datasets \code{\link{p_model_oldformat_drivers}} and \code{\link{p_model_oldformat_validation}}.
 #' 
-#' @format See \code{\link{p_model_drivers}}
+#' @format See \code{\link{p_model_oldformat_drivers}}
 #' 
 #' @source Atkin, O. K., Bloomfield, K. J., Reich, P. B., Tjoelker, M. G., Asner, G. P., Bonal, D., et al. (2015). 
 #' Global variability in leaf respiration in relation to climate, plant functional types and leaf traits. 
@@ -133,7 +133,7 @@
 #' 
 #' C.D. Keeling, R.B. Bacastow, A.E. Bainbridge, C.A. Ekdahl, P.R. Guenther, and L.S. Waterman, (1976), 
 #' Atmospheric carbon dioxide variations at Mauna Loa Observatory, Hawaii, Tellus, vol. 28, 538-551
-"p_model_drivers_vcmax25"
+"p_model_oldformat_drivers_vcmax25"
 
 #' rsofun P-model Vcmax25 validation data
 #'
@@ -156,33 +156,33 @@
 #'   }
 #' }
 #' @examples require(ggplot2); require(tidyr)
-#' p_model_validation_vcmax25 %>% tidyr::unnest(data) 
+#' p_model_oldformat_validation_vcmax25 %>% tidyr::unnest(data) 
 #' 
 #' @source Atkin, O. K., Bloomfield, K. J., Reich, P. B., Tjoelker, M. G., Asner, G. P., Bonal, D., et al. (2015). 
 #' Global variability in leaf respiration in relation to climate, plant functional types and leaf traits. 
 #' New Phytol. 206 (2), 614–636. doi:10.1111/nph.13253
-"p_model_validation_vcmax25"
+"p_model_oldformat_validation_vcmax25"
 
 #' rsofun P-model output data
 #'
-#' Example output dataset from a p-model run using \code{\link{p_model_drivers}}
+#' Example output dataset from a p-model run using \code{\link{p_model_oldformat_drivers}}
 #' See \code{\link{run_pmodel_f_bysite}} for a detailed 
 #' description of the outputs.
 "p_model_output"
 
 #' rsofun P-model output data (using vcmax25 drivers)
 #'
-#' Example output dataset from a p-model run using \code{\link{p_model_drivers_vcmax25}}
+#' Example output dataset from a p-model run using \code{\link{p_model_oldformat_drivers_vcmax25}}
 #' See \code{\link{run_pmodel_f_bysite}} for a detailed 
 #' description of the outputs.
 "p_model_output_vcmax25"
 
 
 #' rsofun P-model ... driver data TODO TODO TODO TODO.
-"p_model2_drivers"
+"pmodel_drivers"
 
 #' rsofun P-model ... target data TODO TODO TODO TODO
-"p_model2_validation"
+"pmodel_validation"
 
 #' rsofun BiomeE driver data (Leuning photosynthesis model)
 #' 

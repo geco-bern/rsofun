@@ -5,7 +5,7 @@ test_that("p-model quantitative check", {
   
   # grab gpp data from the validation set
   # for FR-Pue
-  gpp <- p_model_validation$data[[1]]$gpp
+  gpp <- p_model_oldformat_validation$data[[1]]$gpp
   
   # set model drivers to the NPHT paper
   # ones
@@ -23,7 +23,7 @@ test_that("p-model quantitative check", {
   
   # run the model for these parameters
   output <- rsofun::runread_pmodel_f(
-    rsofun::p_model_drivers,
+    rsofun::p_model_oldformat_drivers,
     par = params_modl
   )$data[[1]]$gpp
   

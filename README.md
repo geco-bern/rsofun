@@ -78,7 +78,7 @@ params_modl <- list(
 
 # run the model for these parameters
 output <- rsofun::runread_pmodel_f(
-  p_model_drivers,
+  p_model_oldformat_drivers,
   par = params_modl
   )
 ```
@@ -108,8 +108,8 @@ With all settings defined the optimization function `calib_sofun()` can be calle
 ``` r
 # calibrate the model and optimize free parameters
 pars <- calib_sofun(
-    drivers = p_model_drivers,  
-    obs = p_model_validation,
+    drivers = p_model_oldformat_drivers,  
+    obs = p_model_oldformat_validation,
     settings = settings,
     # extra arguments passed to the cost function:
     targets = "gpp",             # define target variable GPP

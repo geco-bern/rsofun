@@ -104,7 +104,7 @@ test_that("p-model run check GPP", {
   )
 
   # read in demo data
-  df_drivers <- p_model_drivers
+  df_drivers <- p_model_oldformat_drivers
 
   # run the SOFUN Fortran P-model
   mod <- run_pmodel_f_bysite(
@@ -203,7 +203,7 @@ test_that("p-model run check Vcmax25", {
   )
 
   # read in demo data
-  df_drivers <- p_model_drivers_vcmax25
+  df_drivers <- p_model_oldformat_drivers_vcmax25
 
   # run the SOFUN Fortran P-model
   mod <- run_pmodel_f_bysite(

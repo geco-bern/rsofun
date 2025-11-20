@@ -63,8 +63,8 @@ test_that("test function definitions for prior parameter distributions (to be us
 
 test_that("test GPP calibration routine p-model (BT, likelihood maximization)", {
   skip_on_cran()
-  drivers <- rsofun::p_model_drivers
-  obs <- rsofun::p_model_validation
+  drivers <- rsofun::p_model_oldformat_drivers
+  obs <- rsofun::p_model_oldformat_validation
   params_fix <- list(
     # kphio              = 0.04998, # setup ORG in Stocker et al. 2020 GMD
     kphio_par_a        = 0.01,  # set to zero to disable temperature-dependence of kphio, setup ORG in Stocker et al. 2020 GMD
@@ -113,8 +113,8 @@ test_that("test GPP calibration routine p-model (BT, likelihood maximization)", 
 
 test_that("test GPP calibration routine p-model (GenSA, rmse, all params)", {
   skip_on_cran()
-  drivers <- rsofun::p_model_drivers
-  obs <- rsofun::p_model_validation
+  drivers <- rsofun::p_model_oldformat_drivers
+  obs <- rsofun::p_model_oldformat_validation
   
   settings <- list(
     method              = "gensa",
@@ -152,8 +152,8 @@ test_that("test GPP calibration routine p-model (GenSA, rmse, all params)", {
 
 test_that("test Vcmax25 calibration routine p-model (BT, likelihood, all params)", {
   skip_on_cran()
-  drivers <- p_model_drivers_vcmax25
-  obs <- rsofun::p_model_validation_vcmax25
+  drivers <- p_model_oldformat_drivers_vcmax25
+  obs <- rsofun::p_model_oldformat_validation_vcmax25
   
   settings <- list(
     method              = "bayesiantools",
@@ -195,8 +195,8 @@ test_that("test Vcmax25 calibration routine p-model (BT, likelihood, all params)
 
 test_that("test Vcmax25 calibration routine p-model (GenSA, rmse)", {
   skip_on_cran()
-  drivers <- p_model_drivers_vcmax25
-  obs <- rsofun::p_model_validation_vcmax25
+  drivers <- p_model_oldformat_drivers_vcmax25
+  obs <- rsofun::p_model_oldformat_validation_vcmax25
   params_fix <- list(
     kphio              = 0.04998, # setup ORG in Stocker et al. 2020 GMD
     kphio_par_a        = 0.01,  # set to zero to disable temperature-dependence of kphio, setup ORG in Stocker et al. 2020 GMD
@@ -237,10 +237,10 @@ test_that("test Vcmax25 calibration routine p-model (GenSA, rmse)", {
 
 test_that("test joint calibration routine p-model (BT, likelihood maximization)", {
   skip_on_cran()
-  drivers <- rbind(gpp = rsofun::p_model_drivers, 
-                   vcmax25 = rsofun::p_model_drivers_vcmax25)
-  obs <- rbind(gpp = rsofun::p_model_validation,
-               vcmax25 = rsofun::p_model_validation_vcmax25)
+  drivers <- rbind(gpp = rsofun::p_model_oldformat_drivers, 
+                   vcmax25 = rsofun::p_model_oldformat_drivers_vcmax25)
+  obs <- rbind(gpp = rsofun::p_model_oldformat_validation,
+               vcmax25 = rsofun::p_model_oldformat_validation_vcmax25)
   params_fix <- list(
     # kphio              = 0.04998, # setup ORG in Stocker et al. 2020 GMD
     kphio_par_a        = 0.01,  # set to zero to disable temperature-dependence of kphio, setup ORG in Stocker et al. 2020 GMD

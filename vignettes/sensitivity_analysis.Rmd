@@ -60,8 +60,8 @@ ll_pmodel <- function(
 ){
   rsofun::cost_likelihood_pmodel(        # reuse likelihood cost function
     par_v,
-    obs = rsofun::p_model_validation,
-    drivers = rsofun::p_model_drivers,
+    obs = rsofun::p_model_oldformat_validation,
+    drivers = rsofun::p_model_oldformat_drivers,
     targets = "gpp"
   )
 }
@@ -257,9 +257,9 @@ settings_calib <- list(
     kphio_par_a =list(lower = -0.004, upper = -0.001, init = -0.0025),
     kphio_par_b = list(lower = 10, upper = 30, init = 20),
     soilm_thetastar = list(
-      lower = 0.01 * rsofun::p_model_drivers$site_info[[1]]$whc,
-      upper = 1.0  * rsofun::p_model_drivers$site_info[[1]]$whc,
-      init  = 0.6  * rsofun::p_model_drivers$site_info[[1]]$whc
+      lower = 0.01 * rsofun::p_model_oldformat_drivers$site_info[[1]]$whc,
+      upper = 1.0  * rsofun::p_model_oldformat_drivers$site_info[[1]]$whc,
+      init  = 0.6  * rsofun::p_model_oldformat_drivers$site_info[[1]]$whc
     ),
     soilm_betao = list(lower = 0.0, upper = 1.0, init = 0.0),
     err_gpp = list(lower = 0.1, upper = 3, init = 0.8)
@@ -275,8 +275,8 @@ par_fixed <- list(
 
 # Calibrate kphio-related parameters and err_gpp
 par_calib <- calib_sofun(
-  drivers = p_model_drivers,
-  obs = p_model_validation,
+  drivers = p_model_oldformat_drivers,
+  obs = p_model_oldformat_validation,
   settings = settings_calib,
   par_fixed = par_fixed,
   targets = "gpp"
@@ -381,7 +381,7 @@ run_pmodel <- function(par){
   # and also adds the new observation error
   
   out <- runread_pmodel_f(
-    drivers = p_model_drivers,
+    drivers = p_model_oldformat_drivers,
     par =  list(
       kphio              = par$kphio,
       kphio_par_a        = par$kphio_par_a,
@@ -465,7 +465,7 @@ data_to_plot <- pmodel_runs |>
   dplyr::slice(1:365) |>
   dplyr::left_join(
     # Merge GPP validation data (first year)
-    p_model_validation$data[[1]][1:365, ] |>
+    p_model_oldformat_validation$data[[1]][1:365, ] |>
       dplyr::rename(gpp_obs = gpp),
     by = "date")
 
@@ -528,7 +528,7 @@ plot_gpp_error
 run_pmodel <- function(par){
   # Function that runs the P-model for a sample of parameters
   out <- runread_pmodel_f(
-    drivers = p_model_drivers,
+    drivers = p_model_oldformat_drivers,
     par =  list(
       kphio              = par$kphio,
       kphio_par_a        = par$kphio_par_a,
@@ -562,7 +562,7 @@ data_to_plot <- pmodel_run_map |>
   dplyr::slice(1:365) |>
   dplyr::left_join(
     # Merge GPP validation data (first year)
-    p_model_validation$data[[1]][1:365, ] |>
+    p_model_oldformat_validation$data[[1]][1:365, ] |>
       dplyr::rename(gpp_obs = gpp),
     by = "date")
 

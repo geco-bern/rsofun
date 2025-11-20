@@ -13,12 +13,12 @@
   
 ## Breaking changes
 
-TODO: where is p_model_drivers used: 
+TODO: where is p_model_oldformat_drivers used: 
   run_pmodel_f_bysite()
   run_pmodel_onestep_f_bysite()
   runread_pmodel_f()
   calib_sofun(), calib_sofun_parallelized(), cost_likelilhood_pmodel(), cost_likelilhood_pmodel2(), cost_rmse_pmodel(), 
-TODO: where is p_model_validation and p_model_validation_vcmax used: 
+TODO: where is p_model_oldformat_validation and p_model_validation_vcmax used: 
   calib_sofun(), calib_sofun_parallelized(), cost_likelilhood_pmodel(), cost_likelilhood_pmodel2(), cost_rmse_pmodel()
 
 * New driver data.frame format for P-model: containing a new column `run_model` 
@@ -33,7 +33,7 @@ TODO: where is p_model_validation and p_model_validation_vcmax used:
   ```
   # A) Compare with previous example data set:
   rsofun::p_model2_drivers |> dplyr::filter(sitename == "FR-Pue")
-  rsofun::p_model_drivers
+  rsofun::p_model_oldformat_drivers
   
   # bring new to old format:
   rsofun::p_model2_drivers |> dplyr::filter(sitename == "FR-Pue") |> 
@@ -50,7 +50,7 @@ TODO: where is p_model_validation and p_model_validation_vcmax used:
                             snow, rain, tmin, tmax, fapar, co2, ccov))
 
   # bring old to new format:
-  rsofun::p_model_drivers |> 
+  rsofun::p_model_oldformat_drivers |> 
     # 'forcing' add new column `vwind`
     tidyr::unnest(forcing) |> 
     dplyr::mutate(vwind = 2.64, ccov = 0.485) |>
@@ -59,7 +59,7 @@ TODO: where is p_model_validation and p_model_validation_vcmax used:
     # add new column 'run_model'
     mutate(run_model = "daily")
     
-  rsofun::p_model_drivers_vcmax25 |> 
+  rsofun::p_model_oldformat_drivers_vcmax25 |> 
     tidyr::unnest(site_info) |> mutate(latitude = lat) |> tidyr::nest(site_info = c(lon,lat,elv,year_start,year_end,whc)) |>
     # 'forcing' compute growing averages of temp,vpd,ppfd,co2,patm
     # # add tgrowth (daily average daytime temperature)
@@ -70,7 +70,7 @@ TODO: where is p_model_validation and p_model_validation_vcmax used:
       # tgrowth_degC (i.e. average temperature during daytime, considering daylength, assuming sinusoidal temp profile):
       # eq.5 in Peng et al., 2023 (https://onlinelibrary.wiley.com/doi/abs/10.1111/1365-2745.14208)
       # tgrowth_degC    = ingestr::calc_tgrowth(tmin,tmax,lat=latitude,doy=doy),
-      tgrowth_degC = mean(tmin, tmax) # actually in rsofun::p_model_drivers_vcmax25 tmin == tmax, so no need to calc_tgrowth
+      tgrowth_degC = mean(tmin, tmax) # actually in rsofun::p_model_oldformat_drivers_vcmax25 tmin == tmax, so no need to calc_tgrowth
     ) |>
     group_by(sitename) |> 
     # 2ii) add growing season (if a month has tavg_monthly > 0)
@@ -116,7 +116,7 @@ TODO: where is p_model_validation and p_model_validation_vcmax used:
   ```
   # B) Compare with previous example data set:
   rsofun::p_model2_validation |> dplyr::filter(sitename == "FR-Pue")
-  rsofun::p_model_validation
+  rsofun::p_model_oldformat_validation
   
   # bring new to old format:
   rsofun::p_model2_validation |> dplyr::filter(sitename == "FR-Pue") |> 
@@ -133,7 +133,7 @@ TODO: where is p_model_validation and p_model_validation_vcmax used:
     dplyr::select(sitename, data)
   
   # bring old to new format:
-  rsofun::p_model_validation |> 
+  rsofun::p_model_oldformat_validation |> 
     # add new column 'run_model'
     dplyr::mutate(run_model = "daily") |>
     # add new column 'targets'
@@ -146,7 +146,7 @@ TODO: where is p_model_validation and p_model_validation_vcmax used:
     # order columns
     dplyr::select(sitename, run_model, targets, data)
   
-  rsofun::p_model_validation_vcmax25 |>
+  rsofun::p_model_oldformat_validation_vcmax25 |>
     # add new column 'run_model'
     dplyr::mutate(run_model = "onestep") |>
     # add new column 'targets'
