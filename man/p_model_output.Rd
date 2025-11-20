@@ -11,7 +11,7 @@ An object of class \code{tbl_df} (inherits from \code{tbl}, \code{data.frame}) w
 p_model_output
 }
 \description{
-Example output dataset from a p-model run using \code{\link{p_model_drivers}}
+Example output dataset from a p-model run using \code{\link{p_model_oldformat_drivers}}
 See \code{\link{run_pmodel_f_bysite}} for a detailed 
 description of the outputs.
 }

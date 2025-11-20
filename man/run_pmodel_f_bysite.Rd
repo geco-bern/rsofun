@@ -31,7 +31,7 @@ to verify forcings and model parameters. \code{TRUE} by default.}
 \item{verbose}{A logical specifying whether to print warnings.
 Defaults to \code{TRUE}.
 
-For further specifications of above inputs and examples see \code{\link{p_model_drivers}} or \code{\link{p_model_drivers_vcmax25}}}
+For further specifications of above inputs and examples see \code{\link{p_model_oldformat_drivers}} or \code{\link{p_model_oldformat_drivers_vcmax25}}}
 }
 \value{
 Model output is provided as a tidy dataframe, with columns:
@@ -128,10 +128,10 @@ params_modl <- list(
 # Run the Fortran P-model 
 mod_output <- run_pmodel_f_bysite(
   # unnest drivers example data
-  sitename = p_model_drivers$sitename[1],
-  params_siml = p_model_drivers$params_siml[[1]],
-  site_info = p_model_drivers$site_info[[1]],
-  forcing = p_model_drivers$forcing[[1]],
+  sitename = p_model_oldformat_drivers$sitename[1],
+  params_siml = p_model_oldformat_drivers$params_siml[[1]],
+  site_info = p_model_oldformat_drivers$site_info[[1]],
+  forcing = p_model_oldformat_drivers$forcing[[1]],
   params_modl = params_modl
  )
 }
