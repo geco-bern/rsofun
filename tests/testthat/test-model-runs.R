@@ -87,6 +87,21 @@ test_that("biomee parallel run check (p-model)", {
 
 })
 
+
+# # TODO: Add to test suite
+# output1 <- rsofun::runread_pmodel_f(
+#   drivers = rsofun::pmodel_drivers |> dplyr::filter(run_model=="daily"),
+#   par = params_modl)
+# output2 <- rsofun::runread_pmodel_f(
+#   drivers = rsofun::pmodel_drivers |> dplyr::filter(run_model=="onestep"),
+#   par = params_modl)
+# #' # Legacy input data format
+# output3 <- rsofun::runread_pmodel_f(
+#   drivers = rsofun::p_model_oldformat_drivers,
+#   par = params_modl)
+# output4 <- rsofun::runread_pmodel_f(
+#   drivers = rsofun::p_model_oldformat_drivers_vcmax25,
+#   par = params_modl)
 test_that("p-model run check GPP", {
   skip_on_cran()
 
@@ -142,7 +157,7 @@ test_that("p-model run check GPP", {
 
   # test for correctly returned types
   expect_type(df_output_p, "list")
-  
+
   # also check for correctly returned _values_, not only types
   mod_pmodel_bysite           <- head_tail(tibble(mod), n=30)
   mod_pmodel_runread_serial   <- head_tail(tibble(df_output$data[[1]]), n=30)

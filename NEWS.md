@@ -6,10 +6,17 @@
   distributions of the parameters to estimate (see internal function 
   `createMixedPrior()`) and that can be parallelized
   * New `cost_likelihood_pmodel_bigD13C_vj_gpp()` that can handle multiple 
-  target variables that require either `runread_pmodel()` or 
+  target variables that require to run either `run_pmodel_f_bysite()` or 
   `run_pmodel_onestep_f_bysite()`. Thus also requires a new data format for the
   `drivers` and `obs` arguments. See below under breaking changes for the new
   format.
+  * `runread_pmodel()` can now run onestep and daily model thanks to the new 
+  `drivers` format. If the old format is used it is implicitly assuming daily 
+  runs were requested.
+  * `pmodel_drivers` contain now more sites and a range of `daily` as well as 
+  `onestep` model runs. Note that the data of site `FR-Pue` were updated in FDK,
+  so that the forcing data has slightly changed and also `whc` was modified from 
+  432 to 260 mm.
   
 ## Breaking changes
 
