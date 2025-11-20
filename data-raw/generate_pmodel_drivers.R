@@ -30,14 +30,14 @@ download_zenodo(path = download_path, "10.5281/zenodo.14808331", files = "rsofun
 # FDK_published_rsofun_driver_data <- readRDS(file.path(download_path, "rsofun_driver_data_v3.4.rds"))
 FDK_published_rsofun_driver_data <- readRDS(file.path(download_path, "rsofun_driver_data_v3.4.2.rds"))
 
-#---- p_model_drivers -----
-p_model_drivers <- FDK_published_rsofun_driver_data %>%
+#---- p_model_oldformat_drivers -----
+p_model_oldformat_drivers <- FDK_published_rsofun_driver_data %>%
   filter(sitename == "FR-Pue")
-p_model_validation <- FDK_published_rsofun_driver_data %>%
+p_model_oldformat_validation <- FDK_published_rsofun_driver_data %>%
   filter(sitename == "FR-Pue") %>% select(sitename, forcing) %>% rename(data = forcing)
 
 # subset dates and variables
-p_model_drivers$forcing <- lapply(p_model_drivers$forcing, 
+p_model_oldformat_drivers$forcing <- lapply(p_model_oldformat_drivers$forcing, 
        \(df) df %>%
          # subset dates
          filter(date >= "2007-01-01", date <= "2012-12-31") %>%
@@ -49,7 +49,7 @@ p_model_drivers$forcing <- lapply(p_model_drivers$forcing,
                 snow, rain, tmin, tmax, fapar, co2, ccov) %>% 
          mutate(ccov = 0.0)) 
 
-p_model_validation$data <- lapply(p_model_validation$data, 
+p_model_oldformat_validation$data <- lapply(p_model_oldformat_validation$data, 
                                     \(df) df %>%
                                       # subset dates
                                       filter(date >= "2007-01-01", date <= "2012-12-31") %>%
@@ -58,13 +58,13 @@ p_model_validation$data <- lapply(p_model_validation$data,
                                       mutate(gpp_unc = 0.0)
                                     )
 
-save(p_model_drivers,
-     file ="data/p_model_drivers.rda",
+save(p_model_oldformat_drivers,
+     file ="data/p_model_oldformat_drivers.rda",
      compress = "xz")
 
-#---- p_model_validation -----
-save(p_model_validation,
-     file ="data/p_model_validation.rda",
+#---- p_model_oldformat_validation -----
+save(p_model_oldformat_validation,
+     file ="data/p_model_oldformat_validation.rda",
      compress = "xz")
 
 

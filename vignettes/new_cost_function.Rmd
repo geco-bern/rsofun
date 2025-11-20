@@ -45,8 +45,8 @@ settings_rmse <- list(
 # demo datasets
 pars_calib_rmse <- calib_sofun(
   # calib_sofun arguments:
-  drivers = p_model_drivers,  
-  obs = p_model_validation,
+  drivers = p_model_oldformat_drivers,  
+  obs = p_model_oldformat_validation,
   settings = settings_rmse,
   # extra arguments passed to the cost function:
   par_fixed = list(         # fix all other parameters
@@ -116,8 +116,8 @@ settings_likelihood <- list(
 # demo datasets
 pars_calib_likelihood <- calib_sofun(
   # calib_sofun arguments:
-  drivers = p_model_drivers,
-  obs = p_model_validation,
+  drivers = p_model_oldformat_drivers,
+  obs = p_model_oldformat_validation,
   settings = settings_likelihood,
   # extra arguments passed ot the cost function:
   par_fixed = list(         # fix all other parameters
@@ -167,10 +167,10 @@ settings_joint_likelihood <- list(
 
 # Run the calibration on the concatenated data
 par_calib_join <- calib_sofun(
-  drivers = rbind(p_model_drivers,
-                  p_model_drivers_vcmax25), 
-  obs = rbind(p_model_validation,
-              p_model_validation_vcmax25), 
+  drivers = rbind(p_model_oldformat_drivers,
+                  p_model_oldformat_drivers_vcmax25), 
+  obs = rbind(p_model_oldformat_validation,
+              p_model_oldformat_validation_vcmax25), 
   
   settings = settings_joint_likelihood,
   # arguments for the cost function
@@ -201,7 +201,7 @@ par_calib_join
 
 Note that GPP predictions are directly compared to GPP observations on that day, but Vcmax25 predicted by the P-model (being a leaf trait) is averaged over the growing season and compared to a single Vcmax25 observation taken per site. 
 
-The cost functions provided in the package tell apart fluxes and leaf traits by the presence of a `"date"` column in the nested validation data frames `p_model_validation` and `p_model_validation_vcmax25`.
+The cost functions provided in the package tell apart fluxes and leaf traits by the presence of a `"date"` column in the nested validation data frames `p_model_oldformat_validation` and `p_model_oldformat_validation_vcmax25`.
 
 ### Write your custom cost function 
 
@@ -267,8 +267,8 @@ settings_mae <- list(
 
 # Calibrate the model and optimize the free parameters
 pars_calib_mae <- calib_sofun(
-  drivers = p_model_drivers,
-  obs = p_model_validation,
+  drivers = p_model_oldformat_drivers,
+  obs = p_model_oldformat_validation,
   settings = settings_mae,
   # optional arguments if needed in the cost function
   my_own_message = "Hi from inside the cost_mae function."
@@ -371,8 +371,8 @@ settings_mae <- list(
 
 # Calibrate the model and optimize the free parameters
 pars_calib_mae <- calib_sofun(
-  drivers = p_model_drivers,
-  obs = p_model_validation,
+  drivers = p_model_oldformat_drivers,
+  obs = p_model_oldformat_validation,
   settings = settings_mae
 )
 ```

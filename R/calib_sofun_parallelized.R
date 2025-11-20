@@ -5,12 +5,12 @@
 #' This is the main function that handles the 
 #' calibration of SOFUN model parameters. 
 #' 
-#' @param drivers A data frame with driver data. See \code{\link{p_model_drivers}}
+#' @param drivers A data frame with driver data. See \code{\link{p_model_oldformat_drivers}}
 #' for a description of the data structure. Additional columns can optionally be 
 #' provided to \code{drivers} to control e.g. the processing within a 
 #' personalized cost function.
 #' @param obs A data frame containing observational data used for model
-#'  calibration. See \code{\link{p_model_validation}} for a description of the data
+#'  calibration. See \code{\link{p_model_oldformat_validation}} for a description of the data
 #'  structure. Additional columns can optionally be provided to \code{obs} to 
 #'  control e.g. the processing within a personalized cost function.
 #' @param settings A list containing model calibration settings. 

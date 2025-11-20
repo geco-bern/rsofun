@@ -33,13 +33,13 @@ The package includes two demo datasets to run and validate p-model output using 
 ```{r}
 library(rsofun)
 
-# this is to deal with an error p_model_drivers.rds not being found 
-p_model_drivers
+# this is to deal with an error p_model_oldformat_drivers.rds not being found 
+p_model_oldformat_drivers
 
-p_model_validation
+p_model_oldformat_validation
 ```
 
-These are real data from the French FR-Pue fluxnet site. Information about data structure, variable names, and their meaning and units can be found in the reference pages of `p_model_drivers` and `p_model_validation`. We can use these data to run the model, together with observations of GPP we can also calibrate `p-model` parameters.
+These are real data from the French FR-Pue fluxnet site. Information about data structure, variable names, and their meaning and units can be found in the reference pages of `p_model_oldformat_drivers` and `p_model_oldformat_validation`. We can use these data to run the model, together with observations of GPP we can also calibrate `p-model` parameters.
 
 Another two datasets are provided as an example to validate the model against leaf traits data, rather than fluxes. Measurements of Vcmax25 (aggregated over species) for a subset of 4 sites from the GlobResp database (Atkin et al., 2015) are given in `p_model_validation_vcmax25` and the corresponding forcing for the P-model is given in `p_model_drivers_vcmax25`. Since leaf traits are only measured once per site, the forcing used is a single year of average climate (the average measurements between 2001 and 2015 on each day of the year).
 
