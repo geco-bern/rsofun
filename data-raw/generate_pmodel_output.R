@@ -16,18 +16,23 @@ params_modl <- list(
 )
 
 # Run the model for these parameters and the example drivers
-p_model_output <- rsofun::runread_pmodel_f(
-  drivers = rsofun::p_model_oldformat_drivers,
+# p_model_oldformat_output <- rsofun::runread_pmodel_f(
+#   drivers = rsofun::p_model_oldformat_drivers,
+#   par     = params_modl)
+# 
+# p_model_oldformat_output_vcmax25 <- rsofun::runread_pmodel_f(
+#   drivers = rsofun::p_model_oldformat_drivers_vcmax25,
+#   par = params_modl)
+# 
+# save(p_model_oldformat_output,
+#      file ="data/p_model_oldformat_output.rda",
+#      compress = "xz")
+# 
+# save(p_model_oldformat_output_vcmax25,
+#      file ="data/p_model_oldformat_output_vcmax25.rda",
+#      compress = "xz")
+
+pmodel_output <- rsofun::runread_pmodel_f(
+  drivers = rsofun::pmodel_drivers,
   par     = params_modl)
-
-p_model_output_vcmax25 <- rsofun::runread_pmodel_f(
-  drivers = rsofun::p_model_oldformat_drivers_vcmax25,
-  par = params_modl)
-
-save(p_model_output,
-     file ="data/p_model_output.rda",
-     compress = "xz")
-
-save(p_model_output_vcmax25,
-     file ="data/p_model_output_vcmax25.rda",
-     compress = "xz")
+usethis::use_data(pmodel_output, overwrite = TRUE, compress = "xz")
