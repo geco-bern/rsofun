@@ -147,65 +147,56 @@ runread_pmodel_f <- function(
   }
   
   # ---- onestep model ----
-  # NOTE: this is to make this work gracefully even when no onestep simulations are requested
-  if (nrow(drivers_onestep) == 0){ # no onestep simulations requested, generate dummy output:
-  
-    df_out_onestep <- NULL
-  } else { # only run onestep simulations if requested, generate simulation output:
-  
-    df_out_onestep <- drivers_onestep |>
-      # do_if(parallel, function(df) multidplyr::partition(df, cl)) %>%
-      tidyr::unnest(c('params_siml')) |>
-      dplyr::mutate(data = pmap(
-        list(# ensure all required arguments are used:
-             lc4     = .data$lc4, 
-             forcing = .data$forcing,
-             # additional arguments of run_pmodel_onestep_f_bysite:
-             params_modl = list(par),        # list() needed so par is recycled
-             makecheck   = list(makecheck)), # list() needed so par is recycled
-        run_pmodel_onestep_f_bysite)) |>
-      do_if(parallel, function(df) dplyr::collect(df)) |>
-      # clean up output
-      tidyr::nest(params_siml = c("lc4")) |>
-      dplyr::mutate(data = purrr::map(
-        data, ~dplyr::rename(.x,
-                             'vcmax_mod_molm2s'        = 'vcmax',
-                             'jmax_mod_molm2s'         = 'jmax',
-                             'vcmax25_mod_molm2s'      = 'vcmax25',
-                             'jmax25_mod_molm2s'       = 'jmax25',
-                             'gs_accl_mod_molCmolPhPa' = 'gs_accl',
-                             'bigD13C_mod_permil'      = 'bigdelta',
-                             'chi'                     = 'chi',
-                             'iwue_mod__'              = 'iwue',
-                             'rd_mod_gCm2s'            = 'rd'))) |>
-      dplyr::select(-c('params_siml', 'forcing')) |>
-      dplyr::select('sitename', 'run_model', 'site_info', 'data')
-  }
+  # NOTE: this also work gracefully even when no daily simulations are requested,
+  # i.e. if nrow(drivers_onestep) == 0
+  df_out_onestep <- drivers_onestep |>
+    # do_if(parallel, function(df) multidplyr::partition(df, cl)) %>%
+    dplyr::mutate(data = pmap(
+      list(
+        # ensure all required arguments are used:
+        lc4     = lapply(.data$params_siml, `[[`, "lc4")  |> unlist(),
+        forcing = .data$forcing,
+        # additional arguments of run_pmodel_onestep_f_bysite:
+        params_modl = list(par),        # list() needed so par is recycled
+        makecheck   = list(makecheck)), # list() needed so par is recycled
+      run_pmodel_onestep_f_bysite)) |>
+    # do_if(parallel, function(df) dplyr::collect(df)) |>
+    # rename output columns (alternatively change them in run_pmodel_onestep_f_bysite)
+    dplyr::mutate(data = purrr::map(
+      data, ~dplyr::rename(.x,
+                           'vcmax_mod_molm2s'        = 'vcmax',
+                           'jmax_mod_molm2s'         = 'jmax',
+                           'vcmax25_mod_molm2s'      = 'vcmax25',
+                           'jmax25_mod_molm2s'       = 'jmax25',
+                           'gs_accl_mod_molCmolPhPa' = 'gs_accl',
+                           'bigD13C_mod_permil'      = 'bigdelta',
+                           'chi'                     = 'chi',
+                           'iwue_mod__'              = 'iwue',
+                           'rd_mod_gCm2s'            = 'rd'))) |>
+    # clean up output
+    dplyr::select(-c('params_siml', 'forcing')) |>
+    dplyr::select('sitename', 'run_model', 'site_info', 'data')
   
   # ---- daily model ----
-  # NOTE: this is to make this work gracefully even when no daily simulations are requested
-  if (nrow(drivers_daily) == 0){ # no daily simulations requested, generate dummy output:
-    
-    df_out_daily <- NULL
-  } else { # only run daily simulations if requested, generate simulation output:
-  
-    df_out_daily <- drivers_daily |>
-      do_if(parallel, function(df) multidplyr::partition(df, cl)) %>%
-      dplyr::mutate(data = pmap(
-        list(# ensure all required arguments are used:
-          sitename    = .data$sitename,
-          params_siml = .data$params_siml,
-          site_info   = .data$site_info,
-          forcing     = .data$forcing,
-          # additional arguments of run_pmodel_onestep_f_bysite:
-          params_modl = list(par),        # list() needed so par is recycled
-          makecheck   = list(makecheck)), # list() needed so par is recycled
-        run_pmodel_f_bysite)) |>
-      do_if(parallel, function(df) dplyr::collect(df)) |>
-      # clean up output
-      dplyr::select(-c('params_siml', 'forcing')) |>
-      dplyr::select('sitename', 'run_model', 'site_info', 'data')
-  }
+  # NOTE: this also work gracefully even when no daily simulations are requested,
+  # i.e. if nrow(drivers_daily) == 0
+  df_out_daily <- drivers_daily |>
+    do_if(parallel, function(df) multidplyr::partition(df, cl)) %>%
+    dplyr::mutate(data = pmap(
+      list(
+        # ensure all required arguments are used:
+        sitename    = .data$sitename,
+        params_siml = .data$params_siml,
+        site_info   = .data$site_info,
+        forcing     = .data$forcing,
+        # additional arguments of run_pmodel_onestep_f_bysite:
+        params_modl = list(par),        # list() needed so par is recycled
+        makecheck   = list(makecheck)), # list() needed so par is recycled
+      run_pmodel_f_bysite)) |>
+    do_if(parallel, function(df) dplyr::collect(df)) |>
+    # clean up output
+    dplyr::select(-c('params_siml', 'forcing')) |>
+    dplyr::select('sitename', 'run_model', 'site_info', 'data')
   
   # bind to output data.frame
   df_out <- bind_rows(df_out_daily, df_out_onestep) |> ungroup()
