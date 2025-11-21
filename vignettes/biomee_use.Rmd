@@ -128,7 +128,6 @@ biomee_p_model_output_annual_cohorts <- out2$data[[1]]$output_annual_cohorts
 We can now visualize the model output.
 
 ```{r fig.width=7}
-#| dev='svglite'
 # we only have one site so we'll unnest
 # the main model output
 biomee_p_model_output_annual_tile %>%
