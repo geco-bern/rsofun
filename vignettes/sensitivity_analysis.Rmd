@@ -175,6 +175,8 @@ and the standard deviation of the derivative,
 respectively. The higher the value of these statistics for a given parameter, 
 the more influential the parameter is.  
 ```{r eval = TRUE, fig.width=7, fig.height=4}
+#| dev='svglite'
+
 # Summarise the morris output
 morrisOut.df <- data.frame(
   parameter = names(par_cal_best),
@@ -304,6 +306,7 @@ When convergence has been reached, the oscillation of the time series should loo
 
 <!-- Furthermore, trace plots can be deceiving and partial autocorrelation plots can throw some light. If autocorrelation is present, this can mean that the sampling is stuck in local maxima and the posterior parameter space may not be explored fully. Sometimes, thinning is used to deal with this autocorrelation. -->
 ```{r fig.height = 10, fig.width = 7, eval = FALSE, echo = FALSE}
+#| dev='svglite'
 # Define function for plotting chains separately
 plot_acf_mcmc <- function(chains, par_names){
   # chains: from the BayesianTools output
@@ -435,7 +438,6 @@ pmodel_run_map <- run_pmodel(
 ```
 
 ```{r simulate_pmodel_runs, include = FALSE}
-# TODO: get rid of this and always fully run the vignettes
 # fake output since calibration isn't run
 # saveRDS(pmodel_runs, file = "files/pmodel_runs.rds")
 pmodel_runs <- readRDS("files/pmodel_runs.rds")
