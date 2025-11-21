@@ -101,7 +101,7 @@ pmodel_validation_allsites_2 <- pmodel_validation_allsites |>
   select(-vj)
 
 # subset sites
-N_sites <- 6
+N_sites <- 5 # per category "daily", "onestep"
 set.seed(42)
 pmodel_validation_3 <- pmodel_validation_allsites_2 |> 
   group_by(gpp) |> 
@@ -116,23 +116,32 @@ pmodel_validation_3 <- pmodel_validation_allsites_2 |>
   mutate(targets = purrr::pmap(list(bigD13C,gpp), \(x,y) setNames(list(x,y), c("bigD13C", "gpp")))) |> select(-bigD13C, -gpp) |>
   select(sitename, run_model, targets, data)
 
-pmodel_drivers <- pmodel_drivers_allsites |> 
+pmodel_drivers_3 <- pmodel_drivers_allsites |> 
   dplyr::filter(sitename %in% pmodel_validation_3$sitename)
 
-pmodel_drivers
-pmodel_validation_3
-
-# reduce file size and remove unused columns:
-pmodel_drivers <- pmodel_drivers |>
-  # remove columns: canopy_height, reference_height, nyears_gpp, FDK_koeppen_code, FDK_igbp_land_use
-  dplyr::mutate(site_info = purrr::map(site_info, ~select(.x, lon, lat, elv, whc))) %>%
+# reduce file size (reducing dates) and remove unused columns:
+pmodel_drivers_3_onestep <- pmodel_drivers_3 |> dplyr::filter(run_model == "onestep") 
+pmodel_drivers_3_daily   <- pmodel_drivers_3 |> dplyr::filter(run_model == "daily") |>
   # remove unneeded dates (only from daily model runs, i.e. GPP, not onestep, i.e. bigDelta13C)
-  {bind_rows(
-    dplyr::filter(., run_model == "daily") |>
-      dplyr::mutate(forcing = purrr::map(
-        forcing, ~dplyr::filter(.x, date >= "2007-01-01"))), #  & date < "2013-01-01"
-    dplyr::filter(., run_model == "onestep")
-  )}
+  tidyr::unnest(forcing) |>
+  dplyr::mutate(year = lubridate::year(date)) |>
+  dplyr::filter(year >= 2007 & year <=2016) |>
+  dplyr::group_by(sitename) |> dplyr::filter(
+    (sitename == "FR-Pue" & year < min(year) + 6) |          # only keep 6 years for FR-Pue
+      (sitename == "GF-Guy" & year >= 2015 & year <= 2016) | # or 2 specific years for GF-Guy (see validation)
+      (sitename != "GF-Guy" & year < min(year) + 2)          # only keep at most 2 years for other sites
+    ) |>
+  dplyr::select(-year) |>
+  tidyr::nest(forcing = "date":"ccov") |> 
+  dplyr::ungroup()
+
+pmodel_drivers <- bind_rows(pmodel_drivers_3_daily, pmodel_drivers_3_onestep) |>
+  # remove columns: canopy_height, reference_height, nyears_gpp, FDK_koeppen_code, FDK_igbp_land_use
+  dplyr::mutate(site_info = purrr::map(site_info, ~select(.x, lon, lat, elv, whc)))
+
+# p_model_oldformat_drivers |> unnest(forcing) |> group_by(sitename) |> mutate(year = lubridate::year(date)) |> summarise(min(year), max(year))
+# pmodel_drivers |> unnest(forcing) |> group_by(sitename) |> mutate(year = lubridate::year(date)) |> summarise(min(year), max(year))
+# pmodel_validation_3 |> unnest(data) |> group_by(sitename) |> mutate(year = lubridate::year(date)) |> summarise(min(year), max(year))
 
 # remove unneded dates from observations (i.e. those outside of the driver dates) :
 drivers_available <- pmodel_drivers |> 
@@ -157,10 +166,3 @@ pmodel_validation <- bind_rows(
 usethis::use_data(pmodel_drivers,    overwrite = TRUE, compress = "xz")
 usethis::use_data(pmodel_validation, overwrite = TRUE, compress = "xz")
 
-# Alternative format:
-p_model3_drivers <- rsofun::pmodel_drivers |> 
-  dplyr::select(-run_model)
-
-
-
-rsofun::p_model_oldformat_validation         |> unnest(data) # date, gpp, gpp_unc
