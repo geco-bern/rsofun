@@ -1,5 +1,5 @@
 #!/usr/bin/env Rscript
-
+devtools::load_all() # need to install rsofun package in case driver changed
 library(rsofun)
 
 # Define model parameter values from previous work
