@@ -255,7 +255,7 @@ runread_pmodel_f <- function(
     
     df_out_daily <- df_out_daily|> 
       dplyr::mutate(run_model = "daily") |> 
-      dplyr::select(sitename, run_model, site_info, data)
+      dplyr::select('sitename', 'run_model', 'site_info', 'data')
     
   } else {
     
@@ -270,7 +270,7 @@ runread_pmodel_f <- function(
         )
       ) |> 
       dplyr::mutate(run_model = "daily") |> 
-      dplyr::select(sitename, run_model, site_info, data)
+      dplyr::select('sitename', 'run_model', 'site_info', 'data')
   }
   }
   
