@@ -161,7 +161,7 @@ runread_pmodel_f <- function(
                               ppfd = .x$ppfd,
                               co2  = .x$co2,
                               patm = .x$patm),
-        params_modl = params_modl,
+        params_modl = par,
         makecheck   = FALSE)) |>
       dplyr::rename('vcmax_mod_molm2s'        = 'vcmax',
                     'jmax_mod_molm2s'         = 'jmax',
