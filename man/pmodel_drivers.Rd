@@ -5,7 +5,7 @@
 \alias{pmodel_drivers}
 \title{rsofun P-model ... driver data TODO TODO TODO TODO.}
 \format{
-An object of class \code{tbl_df} (inherits from \code{tbl}, \code{data.frame}) with 21 rows and 5 columns.
+An object of class \code{tbl_df} (inherits from \code{tbl}, \code{data.frame}) with 13 rows and 5 columns.
 }
 \usage{
 pmodel_drivers
