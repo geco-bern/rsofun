@@ -100,6 +100,9 @@
 #' output <- rsofun::runread_pmodel_f(
 #'   drivers = rsofun::pmodel_drivers,
 #'   par = params_modl)
+#' output <- rsofun::runread_pmodel_f(
+#'   drivers = rsofun::pmodel_drivers,
+#'   par = params_modl, parallel = TRUE, ncores = 3)
 
 runread_pmodel_f <- function(
     drivers,
@@ -130,148 +133,78 @@ runread_pmodel_f <- function(
   drivers_daily   <- drivers |> dplyr::filter(.data$run_model == "daily")
   drivers_onestep <- drivers |> dplyr::filter(.data$run_model == "onestep")
   
-  # ---- onestep model ---- # TODO: NOTE: currently this does work in parallel (becaus of group_modify: github.com/tidyverse/multidplyr/issues/102)
+  # setup helpers for conditional parallelization
+  do_if <- function(df, cond, f){ # enable conditional lines in dplyr piping
+    if(cond) f(df) else df
+  }
+  cl <- if (parallel){
+    multidplyr::new_cluster(n = ncores) |>
+      multidplyr::cluster_assign(par = par) |>
+      multidplyr::cluster_assign(makecheck = makecheck) |>
+      multidplyr::cluster_library(
+        packages = c("dplyr", "purrr", "rsofun")
+      )
+  }
+  
+  # ---- onestep model ----
   # NOTE: this is to make this work gracefully even when no onestep simulations are requested
   if (nrow(drivers_onestep) == 0){ # no onestep simulations requested, generate dummy output:
+  
     df_out_onestep <- NULL
   } else { # only run onestep simulations if requested, generate simulation output:
-    
-    # helper for conditional parallelization
-    do_if <- function(df, cond, f){
-      if(cond) f(df) else df
-    }
-    cl <- if (parallel){
-      multidplyr::new_cluster(n = ncores) |>
-        multidplyr::cluster_assign(par = par) |>
-        multidplyr::cluster_assign(makecheck = FALSE) |>
-        multidplyr::cluster_library(
-          packages = c("dplyr", "purrr", "rsofun")
-        )
-    }
-    
+  
     df_out_onestep <- drivers_onestep |>
-      dplyr::group_by(.data$sitename, .data$run_model, .data$site_info) |>
-      tidyr::unnest(c('params_siml', 'forcing')) |>
-      # do_if(parallel, function(df) multidplyr::partition(df, cl)) |> # this does not work with group_modify()
-      dplyr::group_modify(~run_pmodel_onestep_f_bysite(
-        lc4 = .x$lc4,
-        # select what forcing columns to use:
-        forcing =  data.frame(temp = .x$temp,
-                              vpd  = .x$vpd,
-                              ppfd = .x$ppfd,
-                              co2  = .x$co2,
-                              patm = .x$patm),
-        params_modl = par,
-        makecheck   = FALSE)) |>
-      dplyr::rename('vcmax_mod_molm2s'        = 'vcmax',
-                    'jmax_mod_molm2s'         = 'jmax',
-                    'vcmax25_mod_molm2s'      = 'vcmax25',
-                    'jmax25_mod_molm2s'       = 'jmax25',
-                    'gs_accl_mod_molCmolPhPa' = 'gs_accl',
-                    'bigD13C_mod_permil'      = 'bigdelta',
-                    'chi'                     = 'chi',
-                    'iwue_mod__'              = 'iwue',
-                    'rd_mod_gCm2s'            = 'rd') |>
-      #dplyr::mutate(vj_mod__ = .data$vcmax_mod_molm2s/.data$jmax_mod_molm2s) |>
-      # collect results as nested data.frame
-      tidyr::nest(data = c(
-        'vcmax_mod_molm2s',
-        'jmax_mod_molm2s',
-        'vcmax25_mod_molm2s',
-        'jmax25_mod_molm2s',
-        'gs_accl_mod_molCmolPhPa',
-        'bigD13C_mod_permil',
-        'chi',
-        'iwue_mod__',
-        'rd_mod_gCm2s')) |>
+      # do_if(parallel, function(df) multidplyr::partition(df, cl)) %>%
+      tidyr::unnest(c('params_siml')) |>
+      dplyr::mutate(data = pmap(
+        list(# ensure all required arguments are used:
+             lc4     = .data$lc4, 
+             forcing = .data$forcing,
+             # additional arguments of run_pmodel_onestep_f_bysite:
+             params_modl = list(par),        # list() needed so par is recycled
+             makecheck   = list(makecheck)), # list() needed so par is recycled
+        run_pmodel_onestep_f_bysite)) |>
+      do_if(parallel, function(df) dplyr::collect(df)) |>
+      # clean up output
+      tidyr::nest(params_siml = c("lc4")) |>
+      dplyr::mutate(data = purrr::map(
+        data, ~dplyr::rename(.x,
+                             'vcmax_mod_molm2s'        = 'vcmax',
+                             'jmax_mod_molm2s'         = 'jmax',
+                             'vcmax25_mod_molm2s'      = 'vcmax25',
+                             'jmax25_mod_molm2s'       = 'jmax25',
+                             'gs_accl_mod_molCmolPhPa' = 'gs_accl',
+                             'bigD13C_mod_permil'      = 'bigdelta',
+                             'chi'                     = 'chi',
+                             'iwue_mod__'              = 'iwue',
+                             'rd_mod_gCm2s'            = 'rd'))) |>
+      dplyr::select(-c('params_siml', 'forcing')) |>
       dplyr::select('sitename', 'run_model', 'site_info', 'data')
   }
   
   # ---- daily model ----
-  # NOTE: this is to make this work gracefully even when no onestep simulations are requested
-  if (nrow(drivers_daily) == 0){ # no onestep simulations requested, generate dummy output:
+  # NOTE: this is to make this work gracefully even when no daily simulations are requested
+  if (nrow(drivers_daily) == 0){ # no daily simulations requested, generate dummy output:
+    
     df_out_daily <- NULL
-  } else { # only run onestep simulations if requested, generate simulation output:
-  # guarantee order of files
-  drivers_daily <- drivers_daily |>
-    dplyr::select(
-      sitename,
-      params_siml,
-      site_info,
-      forcing
-    )
+  } else { # only run daily simulations if requested, generate simulation output:
   
-  if (parallel){
-    
-    cl <- multidplyr::new_cluster(n = ncores) |>
-      multidplyr::cluster_assign(par = par) |>
-      multidplyr::cluster_assign(makecheck = FALSE) |>
-      multidplyr::cluster_library(
-        packages = c("dplyr", "purrr", "rsofun")
-      )
-    
-    # distribute to to cores, making sure all data from
-    # a specific site is sent to the same core
     df_out_daily <- drivers_daily |>
-      dplyr::group_by(id = row_number()) |>
-      tidyr::nest(
-        input = c(
-          sitename,
-          params_siml,
-          site_info,
-          forcing)
-      ) %>%
-      multidplyr::partition(cl) %>% 
-      dplyr::mutate(data = purrr::map(input, 
-                                      ~run_pmodel_f_bysite(
-                                        sitename       = .x$sitename[[1]], 
-                                        params_siml    = .x$params_siml[[1]], 
-                                        site_info       = .x$site_info[[1]], 
-                                        forcing        = .x$forcing[[1]], 
-                                        par    = par, 
-                                        makecheck      = makecheck )
-      ))
-    
-    # collect the cluster data
-    data <- df_out_daily |>
-      dplyr::collect() |>
-      dplyr::ungroup() |>
-      dplyr::select(data)
-    
-    # meta-data
-    meta_data <- df_out_daily |>
-      dplyr::collect() |>
-      dplyr::ungroup() |>
-      dplyr::select( input ) |>
-      tidyr::unnest( cols = c( input )) |>
-      dplyr::select(sitename, site_info)
-    
-    # combine both data and meta-data
-    # this implicitly assumes that the order
-    # between the two functions above does
-    # not alter! There is no way of checking
-    # in the current setup
-    df_out_daily <- bind_cols(meta_data, data)
-    
-    df_out_daily <- df_out_daily|> 
-      dplyr::mutate(run_model = "daily") |> 
+      do_if(parallel, function(df) multidplyr::partition(df, cl)) %>%
+      dplyr::mutate(data = pmap(
+        list(# ensure all required arguments are used:
+          sitename    = .data$sitename,
+          params_siml = .data$params_siml,
+          site_info   = .data$site_info,
+          forcing     = .data$forcing,
+          # additional arguments of run_pmodel_onestep_f_bysite:
+          params_modl = list(par),        # list() needed so par is recycled
+          makecheck   = list(makecheck)), # list() needed so par is recycled
+        run_pmodel_f_bysite)) |>
+      do_if(parallel, function(df) dplyr::collect(df)) |>
+      # clean up output
+      dplyr::select(-c('params_siml', 'forcing')) |>
       dplyr::select('sitename', 'run_model', 'site_info', 'data')
-    
-  } else {
-    
-    # note that pmap() requires the object 'drivers_daily' to have columns in the order
-    # corresponding to the order of arguments of run_pmodel_f_bysite().
-    df_out_daily <- drivers_daily %>%
-      dplyr::mutate(
-        data = purrr::pmap(.,
-                           run_pmodel_f_bysite,
-                           params_modl = par,
-                           makecheck = makecheck
-        )
-      ) |> 
-      dplyr::mutate(run_model = "daily") |> 
-      dplyr::select('sitename', 'run_model', 'site_info', 'data')
-  }
   }
   
   # bind to output data.frame

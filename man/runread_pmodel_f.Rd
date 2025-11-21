@@ -113,4 +113,7 @@ params_modl <- list(
 output <- rsofun::runread_pmodel_f(
   drivers = rsofun::pmodel_drivers,
   par = params_modl)
+output <- rsofun::runread_pmodel_f(
+  drivers = rsofun::pmodel_drivers,
+  par = params_modl, parallel = TRUE, ncores = 3)
 }
