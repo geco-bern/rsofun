@@ -151,7 +151,7 @@ runread_pmodel_f <- function(
   # i.e. if nrow(drivers_onestep) == 0
   df_out_onestep <- drivers_onestep |>
     # do_if(parallel, function(df) multidplyr::partition(df, cl)) %>%
-    dplyr::mutate(data = pmap(
+    dplyr::mutate(data = purrr::pmap(
       list(
         # ensure all required arguments are used:
         lc4     = lapply(.data$params_siml, `[[`, "lc4")  |> unlist(),
@@ -163,7 +163,7 @@ runread_pmodel_f <- function(
     # do_if(parallel, function(df) dplyr::collect(df)) |>
     # rename output columns (alternatively change them in run_pmodel_onestep_f_bysite)
     dplyr::mutate(data = purrr::map(
-      data, ~dplyr::rename(.x,
+      .data$data, ~dplyr::rename(.x,
                            'vcmax_mod_molm2s'        = 'vcmax',
                            'jmax_mod_molm2s'         = 'jmax',
                            'vcmax25_mod_molm2s'      = 'vcmax25',
@@ -182,7 +182,7 @@ runread_pmodel_f <- function(
   # i.e. if nrow(drivers_daily) == 0
   df_out_daily <- drivers_daily |>
     do_if(parallel, function(df) multidplyr::partition(df, cl)) %>%
-    dplyr::mutate(data = pmap(
+    dplyr::mutate(data = purrr::pmap(
       list(
         # ensure all required arguments are used:
         sitename    = .data$sitename,
