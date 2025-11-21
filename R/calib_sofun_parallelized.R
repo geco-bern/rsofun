@@ -434,14 +434,8 @@ is_beta_prior <- function(distr_pars){identical(sort(names(distr_pars)), c("shap
 #'     par_beta           = list(shape1  = 5, shape2 = 2)
 #'   ))
 #' priorMixed  <- rsofun:::createMixedPrior(prior_definitions_mixed$par)
-#' priorMixed$sampler(10000)
-#' hist(priorMixed$sampler(10000)[,1])
-#' hist(priorMixed$sampler(10000)[,2])
-#' hist(priorMixed$sampler(10000)[,3])
-#' hist(priorMixed$sampler(10000)[,4])
-#' hist(priorMixed$sampler(10000)[,5])
-#' hist(priorMixed$sampler(10000)[,6])
-#' # plot_prior_density(priorMixed, parNames = names(prior_definitions_mixed$par), n=10000)
+#' priorMixed$sampler(2000)
+#' hist(priorMixed$sampler(2000)[,6])
 createMixedPrior <- function(prior_definitions){
 
   # # This is an example from the documentation: ?createPrior
