@@ -14,7 +14,7 @@
 
 #' @import dplyr
 #' 
-#' @returns Model output is provided as a tidy dataframe, with columns:
+#' @returns Model output is provided as a tidy dataframe (tibble), with columns:
 #' \describe{
 #'   \item{\code{vcmax}}{Maximum rate of RuBisCO carboxylation 
 #'       (Vcmax) (in mol C m\eqn{^{-2}} s\eqn{^{-1}}).}

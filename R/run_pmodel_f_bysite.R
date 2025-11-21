@@ -17,7 +17,7 @@
 #' @import dplyr
 #' @import lubridate
 #' 
-#' @returns Model output is provided as a tidy dataframe, with columns:
+#' @returns Model output is provided as a tidy dataframe (tibble), with columns:
 #' \describe{
 #'   \item{\code{date}}{Date of the observation in YYYY-MM-DD format.}
 #'   \item{\code{year_dec}}{Decimal representation of year and day of the year
@@ -382,7 +382,8 @@ build_out_pmodel <- function(pmodelout, firstyeartrend, nyeartrend){
   ddf <- init_dates_dataframe(
     yrstart = firstyeartrend,
     yrend = firstyeartrend + nyeartrend - 1,
-    noleap = TRUE)
+    noleap = TRUE) %>%
+    dplyr::as_tibble()
 
   # create NA output if continue == FALSE (ensure 21 corresponds to column names below)
   if (all(is.na(pmodelout))) { pmodelout <- array(dim = c(1,21), data = NA_real_) }
@@ -415,7 +416,7 @@ build_out_pmodel <- function(pmodelout, firstyeartrend, nyeartrend){
         "cleafd13c"
         )
     ) %>%
-    as_tibble(.name_repair = "check_unique") %>%
+    dplyr::as_tibble(.name_repair = "check_unique") %>%
     dplyr::bind_cols(ddf, .)
   
   if (all(is.na(pmodelout))){

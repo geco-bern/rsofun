@@ -17,6 +17,8 @@
   `onestep` model runs. Note that the data of site `FR-Pue` were updated in FDK,
   so that the forcing data has slightly changed and also `whc` was modified from 
   432 to 260 mm.
+  * output of `run_pmodel_f_bysite()` (and consequently of `runread_pmodel()`) 
+  has been made consistent into `tibble`
   
 ## Breaking changes
 
