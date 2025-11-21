@@ -65,8 +65,10 @@ test_that("test likelihood/RMSE calculations with pmodel", {
     #       ll_values <- apply(test_params_pmodel, 1, function(par_v) {...})
     rsofun::cost_likelihood_pmodel(     # likelihood cost function from package
       par = par_v,                      # par: should be a named vector
-      obs = rsofun::p_model_oldformat_validation, # obs: example data from package
-      drivers = rsofun::p_model_oldformat_drivers,# drivers: example data from package
+      # TODO change to: obs = rsofun::pmodel_validation |> filter(sitename == "FR-Pue"), # obs: example data from package
+      # TODO change to: drivers = rsofun::pmodel_drivers |> filter(sitename == "FR-Pue"),# drivers: example data from package
+      obs = rsofun::p_model_oldformat_validation |> mutate(run_model = "daily"), # obs: example data from package
+      drivers = rsofun::p_model_oldformat_drivers |> mutate(run_model = "daily"),
       targets = c('gpp'),
       par_fixed = NULL)
   })
@@ -86,8 +88,8 @@ test_that("test likelihood/RMSE calculations with pmodel", {
   rmse_values <- apply(dplyr::select(test_params_pmodel,-err_gpp, -err_vcmax25), 1, function(par_v) { # par_v is a named vector
     rsofun::cost_rmse_pmodel(
       par = par_v,                      # par: should be a named vector
-      obs = rsofun::p_model_oldformat_validation, # obs: example data from package
-      drivers = rsofun::p_model_oldformat_drivers,
+      obs = rsofun::p_model_oldformat_validation |> mutate(run_model = "daily"), # obs: example data from package
+      drivers = rsofun::p_model_oldformat_drivers |> mutate(run_model = "daily"),
       targets = c('gpp'),
       par_fixed = NULL
     )
@@ -111,15 +113,15 @@ test_that("test likelihood/RMSE calculations with pmodel", {
     #       ll_values2 <- apply(test_params_pmodel, 1, function(par_v) {...})
     rsofun::cost_likelihood_pmodel(         # likelihood cost function from package
       par     = par_v,                      # par: should be a named vector
-      obs     = p_model_oldformat_validation_vcmax25, # obs: example data from package
-      drivers = p_model_oldformat_drivers_vcmax25,    # drivers: example data from package
+      obs = rsofun::p_model_oldformat_validation_vcmax25 |> mutate(run_model = "daily"), # obs: example data from package
+      drivers = rsofun::p_model_oldformat_drivers_vcmax25 |> mutate(run_model = "daily"),# drivers: example data from package
       targets = c('vcmax25'))
   })
   ll_values3 <- apply(test_params_pmodel, 1, function(par_v) { # par_v is a named vector
     rsofun::cost_likelihood_pmodel(                                    # likelihood cost function from package
       par     = par_v,                                                 # par: should be a named vector
-      obs     = rbind(p_model_oldformat_validation, p_model_oldformat_validation_vcmax25), # obs: example data from package 
-      drivers = rbind(p_model_oldformat_drivers, p_model_oldformat_drivers_vcmax25),       # drivers: example data from package
+      obs     = rbind(p_model_oldformat_validation, p_model_oldformat_validation_vcmax25) |> mutate(run_model = "daily"), # obs: example data from package 
+      drivers = rbind(p_model_oldformat_drivers, p_model_oldformat_drivers_vcmax25) |> mutate(run_model = "daily"),       # drivers: example data from package
       targets = c('gpp', 'vcmax25'))
   })
   
@@ -152,8 +154,8 @@ test_that("test likelihood/RMSE calculations with pmodel", {
   # test p-model likelihood with only fixed parameters
   ll_pmodel_fixed <- rsofun::cost_likelihood_pmodel(
     par     = c(),                                                   # par: should be a named vector
-    obs     = rbind(p_model_oldformat_validation, p_model_oldformat_validation_vcmax25), # obs: example data from package 
-    drivers = rbind(p_model_oldformat_drivers, p_model_oldformat_drivers_vcmax25),       # drivers: example data from package
+    obs     = rbind(p_model_oldformat_validation, p_model_oldformat_validation_vcmax25) |> mutate(run_model = "daily"), # obs: example data from package 
+    drivers = rbind(p_model_oldformat_drivers, p_model_oldformat_drivers_vcmax25) |> mutate(run_model = "daily"),       # drivers: example data from package
     
     # additional arguments for the cost function
     par_fixed = c(         # fix parameter value from previous calibration

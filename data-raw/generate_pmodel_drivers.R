@@ -101,11 +101,12 @@ pmodel_validation_allsites_2 <- pmodel_validation_allsites |>
   select(-vj)
 
 # subset sites
+N_sites <- 6
 set.seed(42)
 pmodel_validation_3 <- pmodel_validation_allsites_2 |> 
   group_by(gpp) |> 
   # sample some sites
-  slice_sample(n=10) |>
+  slice_sample(n=N_sites) |>
   ungroup() |>
   # and ensure FR-Pue is in it
   bind_rows(filter(pmodel_validation_allsites_2, sitename == "FR-Pue")) |> distinct() |>
