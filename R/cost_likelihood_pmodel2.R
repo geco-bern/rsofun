@@ -86,6 +86,25 @@ cost_likelihood_pmodel_bigD13C_vj_gpp <- function(
   stopifnot(nrow(obs) > 0)     # ensure some observation data are provided
   stopifnot(nrow(drivers) > 0) # ensure some driver data are provided
   
+  # # ensure backwards compatibility with format without column 'run_model':
+  # browser()
+  # if ("run_model" %in% names(drivers)) {
+  #   # all good
+  # } else {
+  #   warning("
+  #     WARNING: Assuming daily P-model runs requested. To clarify please add a 
+  #     column 'run_model' with 'daily' or 'onestep' to your driver data.frame.")
+  #   drivers <- drivers |> mutate(run_model = "daily")
+  # }
+  # if ("run_model" %in% names(obs)) {
+  #   # all good
+  # } else {
+  #   warning("
+  #     WARNING: Assuming daily P-model runs requested. To clarify please add a 
+  #     column 'run_model' with 'daily' or 'onestep' to your obs data.frame.")
+  #   obs <- obs |> mutate(run_model = "daily")
+  # }
+  
   # A) Include current parameters ----
   stopifnot(length(intersect(names(par), names(par_fixed))) == 0) # no overlap
   params_modl_and_err <- c(par, par_fixed)
