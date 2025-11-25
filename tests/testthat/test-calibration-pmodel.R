@@ -105,7 +105,6 @@ test_that("test GPP calibration routine p-model (BT, likelihood maximization)", 
     settings = settings,
     # extra arguments for the cost function
     par_fixed = params_fix,
-    targets = c('gpp'),
     parallel = TRUE,
     ncores = 2
   )
@@ -116,8 +115,6 @@ test_that("test GPP calibration routine p-model (BT, likelihood maximization)", 
 
 test_that("test GPP calibration routine p-model (GenSA, rmse, all params)", {
   skip_on_cran()
-  # drivers <- rsofun::p_model_oldformat_drivers |> mutate(run_model = "daily")
-  # obs <- rsofun::p_model_oldformat_validation |> mutate(run_model = "daily")
   drivers <- pmodel_drivers |> dplyr::filter(sitename == "FR-Pue")
   obs <- pmodel_validation |> dplyr::filter(sitename == "FR-Pue")
   
@@ -146,9 +143,7 @@ test_that("test GPP calibration routine p-model (GenSA, rmse, all params)", {
     drivers = drivers,
     obs = obs,
     settings = settings,
-    optim_out = FALSE,
-    # extra arguments for the cost function
-    targets = 'gpp'
+    optim_out = FALSE
   )
   
   # test for correctly returned values

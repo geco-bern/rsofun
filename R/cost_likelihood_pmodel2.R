@@ -61,7 +61,6 @@
 #'          2),                # err_gpp
 #'  obs = pmodel_validation |> dplyr::filter(sitename == "FR-Pue"),
 #'  drivers = pmodel_drivers |> dplyr::filter(sitename == "FR-Pue"),
-#'  targets = c('gpp'),
 #'  par_fixed = list(
 #'   soilm_thetastar    = 0.6 * 240,  # old setup with soil moisture stress
 #'   soilm_betao        = 0.0,
