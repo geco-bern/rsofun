@@ -71,7 +71,7 @@
 #'     sampler = "DEzs",
 #'     settings = list(
 #'       nrChains = 1,
-#'       burnin = 0,        
+#'       burnin = 0,
 #'       iterations = 50     # kept artificially low
 #'     )
 #'   )
@@ -112,25 +112,6 @@ calib_sofun <- function(
   } else {
     stop("obs must be a (nested) data.frame")
   }
-  
-  # ensure backwards compatibility with format without column 'run_model':
-  if ("run_model" %in% names(drivers)) {
-    # all good
-  } else {
-    warning("
-      WARNING: Assuming daily P-model runs requested. To clarify please add a 
-      column 'run_model' with 'daily' or 'onestep' to your driver data.frame.")
-    drivers <- drivers |> mutate(run_model = "daily")
-  }
-  if ("run_model" %in% names(obs)) {
-    # all good
-  } else {
-    warning("
-      WARNING: Assuming daily P-model runs requested. To clarify please add a 
-      column 'run_model' with 'daily' or 'onestep' to your obs data.frame.")
-    obs <- obs |> mutate(run_model = "daily")
-  }
-  
   
   #--- GenSA ----
   if (tolower(settings$method) == "gensa"){
