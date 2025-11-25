@@ -55,8 +55,7 @@ A data frame (tibble) with one row for each site, site information
 stored in the nested column \code{site_info} and outputs stored in the nested 
 column \code{data}. See \code{\link{run_pmodel_f_bysite}} and \code{\link{run_pmodel_onestep_f_bysite}} for a detailed 
 description of the outputs. 
-Example outputs are provided as \code{\link{biomee_p_model_output}} and
-\code{\link{biomee_gs_leuning_output}}.
+Example outputs are provided as \code{\link{pmodel_output}}.
 }
 \description{
 Runs P-model for multiple sites.

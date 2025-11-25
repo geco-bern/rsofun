@@ -5,34 +5,15 @@
 \alias{p_model_oldformat_validation}
 \title{rsofun P-model GPP validation data}
 \format{
-A tibble of validation data:
-\describe{
-  \item{sitename}{A character string containing the site name (e.g. 'FR-Pue').}
-  \item{data}{A tibble [ 2,920 x 3 ] with time series for the following variables:
-    \describe{
-      \item{date}{Date vector with format YYYY-MM-DD.}
-      \item{gpp}{The observed Gross Primary Productivity (GPP) for each time stamp 
-      (in gC m\eqn{^{-2}} d\eqn{^{-1}}).}
-      \item{gpp_unc}{The uncertainty of the GPP (in gC m\eqn{^{-2}} d\eqn{^{-1}}).}
-    }
-  }
-}
-}
-\source{
-Pastorello, G., Trotta, C., Canfora, E. et al. 
-The FLUXNET2015 dataset and the ONEFlux processing pipeline for eddy covariance data. 
-Sci Data 7, 225 (2020). https://doi.org/10.1038/s41597-020-0534-3
+An object of class \code{tbl_df} (inherits from \code{tbl}, \code{data.frame}) with 1 rows and 2 columns.
 }
 \usage{
 p_model_oldformat_validation
 }
 \description{
 Small example dataset of target observations (daily GPP flux data) to optimize 
-model parameters with the function \code{\link{calib_sofun}}
-}
-\examples{
-require(ggplot2); require(tidyr)
-p_model_oldformat_validation \%>\% tidyr::unnest(data) 
-
+model parameters with the function \code{\link{calib_sofun}}.
+Legacy data set. See details in the documentation of its replacement 
+\code{\link{pmodel_validation}}
 }
 \keyword{datasets}

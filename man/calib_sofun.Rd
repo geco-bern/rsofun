@@ -7,13 +7,13 @@
 calib_sofun(drivers, obs, settings, optim_out = TRUE, ...)
 }
 \arguments{
-\item{drivers}{A data frame with driver data. See \code{\link{p_model_oldformat_drivers}}
+\item{drivers}{A data frame with driver data. See \code{\link{pmodel_drivers}}
 for a description of the data structure. Additional columns can optionally be 
 provided to \code{drivers} to control e.g. the processing within a 
 personalized cost function.}
 
 \item{obs}{A data frame containing observational data used for model
-calibration. See \code{\link{p_model_oldformat_validation}} for a description of the data
+calibration. See \code{\link{pmodel_validation}} for a description of the data
 structure. Additional columns can optionally be provided to \code{obs} to 
 control e.g. the processing within a personalized cost function.}
 
@@ -80,7 +80,7 @@ settings <- list(
     sampler = "DEzs",
     settings = list(
       nrChains = 1,
-      burnin = 0,        
+      burnin = 0,
       iterations = 50     # kept artificially low
     )
   )
@@ -88,8 +88,8 @@ settings <- list(
  
  # Run the calibration for GPP data
  calib_output <- rsofun::calib_sofun(
-   drivers = rsofun::p_model_oldformat_drivers,
-   obs = rsofun::p_model_oldformat_validation,
+   drivers = rsofun::pmodel_drivers |> dplyr::filter(sitename == "FR-Pue"),
+   obs     = rsofun::pmodel_validation |> dplyr::filter(sitename == "FR-Pue"),
    settings = settings,
    # extra arguments for the cost function
    par_fixed = params_fix,

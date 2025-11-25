@@ -8,7 +8,7 @@ cost_rmse_pmodel(
   par,
   obs,
   drivers,
-  targets,
+  targets = NULL,
   par_fixed = NULL,
   target_weights = NULL,
   parallel = FALSE,
@@ -20,16 +20,16 @@ cost_rmse_pmodel(
 those described in \code{\link{runread_pmodel_f}}, in order).}
 
 \item{obs}{A nested data.frame of observations, with columns \code{'sitename'}
-and \code{'data'} (see \code{\link{p_model_oldformat_validation}} or \code{\link{p_model_oldformat_validation_vcmax25}}
-to check their structure).}
+and \code{'data'} (see \code{\link{pmodel_validation}} to check its structure).}
 
-\item{drivers}{A nested data.frame of driver data. See \code{\link{p_model_oldformat_drivers}}
+\item{drivers}{A nested data.frame of driver data. See \code{\link{pmodel_drivers}}
 for a description of the data structure.}
 
-\item{targets}{A character vector indicating the target variables for which the
+\item{targets}{(obsolete) A character vector indicating the target variables for which the
 optimization will be done and the RMSE computed. This string must be a column 
-name of the \code{data} data.frame belonging to the validation nested data.frame 
-(for example 'gpp').}
+name of the \code{obs$data} data.frame belonging to the validation nested data.frame 
+(for example 'gpp'). Now defaults to \code{NULL}, and use of a corresponding
+column \code{'targets'} in \code{obs} should be used instead.}
 
 \item{par_fixed}{A named list of model parameter values to keep fixed during the
 calibration. These should complement the input \code{par} such that all model
@@ -77,9 +77,8 @@ trait value predicted on that date.
 # and example data
 cost_rmse_pmodel(
  par = c(0.05, -0.01, 0.5),  # kphio related parameters
- obs = p_model_oldformat_validation,
- drivers = p_model_oldformat_drivers,
- targets = c('gpp'),
+ obs = pmodel_validation |> dplyr::filter(sitename == "FR-Pue"),
+ drivers = pmodel_drivers |> dplyr::filter(sitename == "FR-Pue"),
  par_fixed = list(
   soilm_thetastar    = 0.6 * 240,  # old setup with soil moisture stress
   soilm_betao        = 0.0,
