@@ -65,9 +65,8 @@ test_that("test likelihood/RMSE calculations with pmodel", {
     #       ll_values <- apply(test_params_pmodel, 1, function(par_v) {...})
     rsofun::cost_likelihood_pmodel(     # likelihood cost function from package
       par = par_v,                      # par: should be a named vector
-      obs = rsofun::pmodel_validation |> filter(sitename == "FR-Pue"), # obs: example data from package
+      obs     = rsofun::pmodel_validation |> filter(sitename == "FR-Pue"), # obs: example data from package
       drivers = rsofun::pmodel_drivers |> filter(sitename == "FR-Pue"),# drivers: example data from package
-      targets = c('gpp'),
       par_fixed = NULL)
   })
   testthat::expect_equal(
@@ -81,6 +80,16 @@ test_that("test likelihood/RMSE calculations with pmodel", {
       -2692922.28725325,
       -4064.88443627102)
   )
+  ll_values_legacy <- apply(test_params_pmodel |> dplyr::select(-err_vcmax25), 1, function(par_v) { # par_v is a named vector
+    rsofun::cost_likelihood_pmodel(     # likelihood cost function from package
+      par = par_v,                      # par: should be a named vector
+      obs     = rsofun::pmodel_validation |> filter(sitename == "FR-Pue") |> dplyr::select(-targets), # obs: example data from package
+      drivers = rsofun::pmodel_drivers |> filter(sitename == "FR-Pue"),# drivers: example data from package
+      targets = c('gpp'), # this uses legacy arguments
+      par_fixed = NULL)
+  })
+  testthat::expect_equal(ll_values, ll_values_legacy)
+  
   
   # Test rsofun::cost_rmse_pmodel()
   rmse_values <- apply(dplyr::select(test_params_pmodel,-err_gpp, -err_vcmax25), 1, function(par_v) { # par_v is a named vector
@@ -88,7 +97,6 @@ test_that("test likelihood/RMSE calculations with pmodel", {
       par = par_v,                      # par: should be a named vector
       obs = rsofun::pmodel_validation |> filter(sitename == "FR-Pue"), # obs: example data from package
       drivers = rsofun::pmodel_drivers |> filter(sitename == "FR-Pue"),# drivers: example data from package
-      targets = c('gpp'),
       par_fixed = NULL
     )
   })
@@ -111,16 +119,16 @@ test_that("test likelihood/RMSE calculations with pmodel", {
     #       ll_values2 <- apply(test_params_pmodel, 1, function(par_v) {...})
     rsofun::cost_likelihood_pmodel(         # likelihood cost function from package
       par     = par_v,                      # par: should be a named vector
-      obs = rsofun::p_model_oldformat_validation_vcmax25 |> mutate(run_model = "daily"), # obs: example data from package
+      obs     = rsofun::p_model_oldformat_validation_vcmax25 |> mutate(run_model = "daily"), # obs: example data from package
       drivers = rsofun::p_model_oldformat_drivers_vcmax25 |> mutate(run_model = "daily"),# drivers: example data from package
-      targets = c('vcmax25'))
+      targets = c('vcmax25')) # define this since oldformat_validation does not contain it
   })
   ll_values3 <- apply(test_params_pmodel, 1, function(par_v) { # par_v is a named vector
     rsofun::cost_likelihood_pmodel(                                    # likelihood cost function from package
       par     = par_v,                                                 # par: should be a named vector
       obs     = rbind(p_model_oldformat_validation, p_model_oldformat_validation_vcmax25) |> mutate(run_model = "daily"), # obs: example data from package 
       drivers = rbind(p_model_oldformat_drivers, p_model_oldformat_drivers_vcmax25) |> mutate(run_model = "daily"),       # drivers: example data from package
-      targets = c('gpp', 'vcmax25'))
+      targets = c('gpp', 'vcmax25')) # define this since oldformat_validation does not contain it
   })
   
   # testthat::expect_equal(ll_values3, ll_values + ll_values2) # loglikelihood of multiple targets is additive

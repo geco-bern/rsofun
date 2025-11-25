@@ -10,10 +10,11 @@
 #' and \code{'data'} (see \code{\link{pmodel_validation}} to check its structure).
 #' @param drivers A nested data.frame of driver data. See \code{\link{pmodel_drivers}}
 #' for a description of the data structure.
-#' @param targets A character vector indicating the target variables for which the
+#' @param targets (obsolete) A character vector indicating the target variables for which the
 #' optimization will be done and the RMSE computed. This string must be a column 
-#' name of the \code{data} data.frame belonging to the validation nested data.frame 
-#' (for example 'gpp').
+#' name of the \code{obs$data} data.frame belonging to the validation nested data.frame 
+#' (for example 'gpp'). Now defaults to \code{NULL}, and use of a corresponding
+#' column \code{'targets'} in \code{obs} should be used instead.
 #' @param par_fixed A named list of model parameter values to keep fixed during the
 #' calibration. These should complement the input \code{par} such that all model
 #' parameters are passed on to \code{\link{runread_pmodel_f}}.
@@ -54,7 +55,6 @@
 #'  par = c(0.05, -0.01, 0.5),  # kphio related parameters
 #'  obs = pmodel_validation |> dplyr::filter(sitename == "FR-Pue"),
 #'  drivers = pmodel_drivers |> dplyr::filter(sitename == "FR-Pue"),
-#'  targets = c('gpp'),
 #'  par_fixed = list(
 #'   soilm_thetastar    = 0.6 * 240,  # old setup with soil moisture stress
 #'   soilm_betao        = 0.0,
@@ -69,7 +69,8 @@ cost_rmse_pmodel <- function(
     par,  # ordered vector of model parameters
     obs, 
     drivers,
-    targets,    
+    targets = NULL,     # legacy argument, targets should now be specified
+                        # for each row in the obs data.frame(). See pmodel_validation
     par_fixed = NULL, # non-calibrated model parameters
     target_weights = NULL, # if using several targets, how are the individual 
     #                      # RMSE weighted? named vector
@@ -79,12 +80,6 @@ cost_rmse_pmodel <- function(
   
   # predefine variables for CRAN check compliance
   sitename <- data <- gpp_mod <- NULL
-  
-  ## check input parameters
-  if( (length(par) + length(par_fixed)) != 9 ){
-    stop('Error: Input calibratable and fixed parameters (par and par_fixed)
-    do not match length of the required P-model parameters.')
-  }
   
   # ensure backwards compatibility with format without column 'run_model':
   if ("run_model" %in% names(drivers)) {
@@ -103,7 +98,37 @@ cost_rmse_pmodel <- function(
       column 'run_model' with 'daily' or 'onestep' to your obs data.frame.")
     obs <- obs |> mutate(run_model = "daily")
   }
+  if (!is.null(targets)) {
+    # for backwards compatibility, use provided argument 'targets' for all rows 
+    # of observation data.frame()
+    # Error if data.frame also specifies targets per row, resulting in ambiguity
+    if ("targets" %in% names(obs)){stop(
+      "Provided calibration targets as argument 'targets' and as column in obs data.frame(). Only one is allowed")
+    }
+    # Below creates a small tibble that will be nested into each element of obs$targets
+        # targets <- c("gpp","target2", "target3")
+        # # A tibble: 1 × 3
+        #   gpp   target2 target3
+        #   <lgl> <lgl>   <lgl>  
+        # 1 TRUE  TRUE    TRUE 
+    targets_element_df <- tibble(!!!structure(
+      rep(TRUE, length(targets)), .Names = targets)
+    )
+    obs <- obs |> mutate(targets = list(targets_element_df))
+  } # obs |> unnest_wider(targets)
   
+  ## generate a list of all calibration targets (across all obs rows)
+  targets <- obs |> 
+    dplyr::ungroup() |> dplyr::select(targets) |> tidyr::unnest_wider(targets) |>
+    # remove columns that are FALSE across all rows
+    dplyr::select(dplyr::where(~ any(. == TRUE))) |>
+    names()
+  
+  ## check input parameters
+  if( (length(par) + length(par_fixed)) != 9 ){
+    stop('Error: Input calibratable and fixed parameters (par and par_fixed)
+    do not match length of the required P-model parameters.')
+  }
   
   ## define parameter set based on calibrated parameters
   calib_param_names <- c('kphio', 'kphio_par_a', 'kphio_par_b',

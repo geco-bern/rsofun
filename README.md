@@ -108,11 +108,10 @@ With all settings defined the optimization function `calib_sofun()` can be calle
 ``` r
 # calibrate the model and optimize free parameters
 pars <- calib_sofun(
-    drivers = p_model_oldformat_drivers,  
-    obs = p_model_oldformat_validation,
+    drivers = pmodel_drivers,  
+    obs = pmodel_validation,
     settings = settings,
     # extra arguments passed to the cost function:
-    targets = "gpp",             # define target variable GPP
     par_fixed = params_modl[-1]  # fix non-calibrated parameters to previous 
                                  # values, removing kphio
   )

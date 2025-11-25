@@ -183,18 +183,23 @@
 #'   \item{sitename}{A character string containing the site name (e.g. 'FR-Pue').}
 #'   \item{run_model}{A character string, either: 'daily' or 'onestep', 
 #'   specifying whether to run daily simulations or onestep acclimation.}
-#'   \item{targets}{TODO}
-#'   \item{data}{A tibble with target values.
-#'   For daily simulations these can include:
+#'   \item{targets}{A single one-row tibble with a column for each target
+#'   containing TRUE or FALSE (or NA_logical)}
+#'   \item{data}{A single tibble or a list of tibbles with target observations.
+#'   For daily simulations this single tibble can contain daily values for:
 #'     \describe{
 #'       \item{date}{Date vector with format YYYY-MM-DD.}
 #'       \item{gpp}{The observed Gross Primary Productivity (GPP) for each time stamp 
 #'       (in gC m\eqn{^{-2}} d\eqn{^{-1}}).}
-#'       \item{gpp_unc}{The uncertainty of the GPP (in gC m\eqn{^{-2}} d\eqn{^{-1}}).}
+#'       \item{gpp_qc}{A quality check indicator.}
+#'       \item{le}{Latent heat of exchange ...}
+#'       \item{...}{... etc.}
 #'     }
-#'   For onestep acclimation can include:
+#'   For onestep acclimation this can fore example include:
 #'     \describe{
-#'       \item{lc4}{A logical value indicating whether to use C4 photosynthetic pathway.}
+#'       \item{bigD13C}{A tibble containing observations of leaf D13C values.}
+#'       \item{Vcmax}{A tibble containing observations of Vcmax values.}
+#'       \item{Jmax}{A tibble containing observations of Jmax values.}
 #'     }
 #'   }
 #' }
@@ -202,6 +207,7 @@
 #' p_model_oldformat_validation %>% tidyr::unnest(data) 
 #' pmodel_validation |> dplyr::filter(run_model == "daily") |> unnest(data)
 #' pmodel_validation |> dplyr::filter(run_model == "onestep") |> unnest(data)
+#' pmodel_validation |> dplyr::filter(run_model == "onestep") |> unnest(data) |> unnest(bigD13C)
 #' 
 #' @source Pastorello, G., Trotta, C., Canfora, E. et al. 
 #' The FLUXNET2015 dataset and the ONEFlux processing pipeline for eddy covariance data. 

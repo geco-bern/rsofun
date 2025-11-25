@@ -111,9 +111,8 @@ pmodel_validation_3 <- pmodel_validation_allsites_2 |>
   # and ensure FR-Pue is in it
   bind_rows(filter(pmodel_validation_allsites_2, sitename == "FR-Pue")) |> distinct() |>
   arrange(run_model) |>
-  # nest again:
-  # nest(targets = c('bigD13C','gpp'))
-  mutate(targets = purrr::pmap(list(bigD13C,gpp), \(x,y) setNames(list(x,y), c("bigD13C", "gpp")))) |> select(-bigD13C, -gpp) |>
+  # nest targets again into a one-row tibble:
+  nest(targets = c('bigD13C','gpp')) |>
   select(sitename, run_model, targets, data)
 
 pmodel_drivers_3 <- pmodel_drivers_allsites |> 
