@@ -45,8 +45,7 @@
 #' stored in the nested column \code{site_info} and outputs stored in the nested 
 #' column \code{data}. See \code{\link{run_pmodel_f_bysite}} and \code{\link{run_pmodel_onestep_f_bysite}} for a detailed 
 #' description of the outputs. 
-#' Example outputs are provided as \code{\link{biomee_p_model_output}} and
-#' \code{\link{biomee_gs_leuning_output}}.
+#' Example outputs are provided as \code{\link{pmodel_output}}.
 #' @export
 #' 
 #' @details Depending on the input model parameters, it's possible to run the 
@@ -115,7 +114,7 @@ runread_pmodel_f <- function(
   sitename <- params_siml <- site_info <-
     input <- forcing <- . <- NULL
   
-  # ensure backwards compatiblity with format without column 'run_model':
+  # ensure backwards compatibility with format without column 'run_model':
   if ("run_model" %in% names(drivers)) {
     # all good
   } else {

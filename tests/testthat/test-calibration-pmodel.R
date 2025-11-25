@@ -63,8 +63,11 @@ test_that("test function definitions for prior parameter distributions (to be us
 
 test_that("test GPP calibration routine p-model (BT, likelihood maximization)", {
   skip_on_cran()
-  drivers <- rsofun::p_model_oldformat_drivers |> mutate(run_model = "daily")
-  obs <- rsofun::p_model_oldformat_validation |> mutate(run_model = "daily")
+  # drivers <- rsofun::p_model_oldformat_drivers |> mutate(run_model = "daily")
+  # obs <- rsofun::p_model_oldformat_validation |> mutate(run_model = "daily")
+  drivers <- pmodel_drivers |> dplyr::filter(sitename == "FR-Pue")
+  obs <- pmodel_validation |> dplyr::filter(sitename == "FR-Pue")
+  
   params_fix <- list(
     # kphio              = 0.04998, # setup ORG in Stocker et al. 2020 GMD
     kphio_par_a        = 0.01,  # set to zero to disable temperature-dependence of kphio, setup ORG in Stocker et al. 2020 GMD
@@ -113,8 +116,10 @@ test_that("test GPP calibration routine p-model (BT, likelihood maximization)", 
 
 test_that("test GPP calibration routine p-model (GenSA, rmse, all params)", {
   skip_on_cran()
-  drivers <- rsofun::p_model_oldformat_drivers |> mutate(run_model = "daily")
-  obs <- rsofun::p_model_oldformat_validation |> mutate(run_model = "daily")
+  # drivers <- rsofun::p_model_oldformat_drivers |> mutate(run_model = "daily")
+  # obs <- rsofun::p_model_oldformat_validation |> mutate(run_model = "daily")
+  drivers <- pmodel_drivers |> dplyr::filter(sitename == "FR-Pue")
+  obs <- pmodel_validation |> dplyr::filter(sitename == "FR-Pue")
   
   settings <- list(
     method              = "gensa",

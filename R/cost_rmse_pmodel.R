@@ -7,9 +7,8 @@
 #' @param par A vector of values for the parameters to be calibrated (a subset of
 #' those described in \code{\link{runread_pmodel_f}}, in order).
 #' @param obs A nested data.frame of observations, with columns \code{'sitename'}
-#' and \code{'data'} (see \code{\link{p_model_oldformat_validation}} or \code{\link{p_model_oldformat_validation_vcmax25}}
-#' to check their structure).
-#' @param drivers A nested data.frame of driver data. See \code{\link{p_model_oldformat_drivers}}
+#' and \code{'data'} (see \code{\link{pmodel_validation}} to check its structure).
+#' @param drivers A nested data.frame of driver data. See \code{\link{pmodel_drivers}}
 #' for a description of the data structure.
 #' @param targets A character vector indicating the target variables for which the
 #' optimization will be done and the RMSE computed. This string must be a column 
@@ -53,8 +52,8 @@
 #' # and example data
 #' cost_rmse_pmodel(
 #'  par = c(0.05, -0.01, 0.5),  # kphio related parameters
-#'  obs = p_model_oldformat_validation,
-#'  drivers = p_model_oldformat_drivers,
+#'  obs = pmodel_validation |> dplyr::filter(sitename == "FR-Pue"),
+#'  drivers = pmodel_drivers |> dplyr::filter(sitename == "FR-Pue"),
 #'  targets = c('gpp'),
 #'  par_fixed = list(
 #'   soilm_thetastar    = 0.6 * 240,  # old setup with soil moisture stress

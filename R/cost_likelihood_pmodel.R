@@ -12,8 +12,8 @@
 #' for each target variable (for example \code{'gpp_err'}), in the same order as
 #' the targets appear in \code{targets}.
 #' @param obs A nested data.frame of observations, with columns \code{'sitename'}
-#' and \code{'data'} (see \code{\link{p_model_oldformat_validation}} or \code{\link{p_model_oldformat_validation_vcmax25}}
-#' to check their structure).
+#' and \code{'data'} (see \code{\link{pmodel_validation}} to check its structure).
+#' @param drivers A nested data.frame of driver data. See \code{\link{pmodel_drivers}}
 #' @param drivers A nested data.frame of driver data. See \code{\link{p_model_oldformat_drivers}}
 #' for a description of the data structure.
 #' @param targets A character vector indicating the target variables for which the
@@ -56,12 +56,12 @@
 #' # temperature dependence of kphio 
 #' # and example data
 #' cost_likelihood_pmodel(
-#' par = c(kphio       = 0.05, 
-#'         kphio_par_a = -0.01, 
+#' par = c(kphio       = 0.05,
+#'         kphio_par_a = -0.01,
 #'         kphio_par_b = 1,     # model parameters
 #'         err_gpp     = 2),    # err_gpp
-#'  obs = p_model_oldformat_validation,
-#'  drivers = p_model_oldformat_drivers,
+#'  obs = pmodel_validation |> dplyr::filter(sitename == "FR-Pue"),
+#'  drivers = pmodel_drivers |> dplyr::filter(sitename == "FR-Pue"),
 #'  targets = c('gpp'),
 #'  par_fixed = list(
 #'   soilm_thetastar    = 0.6 * 240,  # old setup with soil moisture stress

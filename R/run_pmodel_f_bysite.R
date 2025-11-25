@@ -3,7 +3,7 @@
 #' Run P-model on a single site for a forcing time series.
 #'
 #' @param sitename Site name.
-#' @param params_siml Simulation parameters.
+#' @param params_siml Simulation parameters. See \code{\link{pmodel_drivers}}
 #' @param site_info Site meta info in a data.frame.
 #' @param forcing A data frame of forcing climate data, used as input.
 #' @param params_modl A named list of free (calibratable) model parameters. See \code{\link{runread_pmodel_f}}

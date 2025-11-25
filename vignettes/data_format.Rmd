@@ -39,7 +39,7 @@ Each of the provided demo drivers contain only one sample site:
 
 ```{r}
 # call to the included p-model demo drivers
-rsofun::p_model_oldformat_drivers
+rsofun::pmodel_drivers
 
 # call to the included BiomeE (p-model) demo drivers
 rsofun::biomee_p_model_drivers
@@ -76,7 +76,7 @@ Each model has a specific forcing data resolution:
 Forcing data present in the demo drivers can be used as examples:
 ```{r}
 # Detailed look at the forcing data for the P-model
-rsofun::p_model_oldformat_drivers$forcing[[1]]
+rsofun::pmodel_drivers$forcing[[1]]
 ```
 
 ## Output data
