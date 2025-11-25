@@ -7,7 +7,7 @@
 run_pmodel_onestep_f_bysite(lc4, forcing, params_modl, makecheck = TRUE)
 }
 \arguments{
-\item{lc4}{Locigical specifying whether P-model simulation is for C4 (as opposed to C3). Defaults to \code{FALSE}.}
+\item{lc4}{Logical specifying whether P-model simulation is for C4 (as opposed to C3). Defaults to \code{FALSE}.}
 
 \item{forcing}{A data frame of forcing climate data, used as input (single row).}
 
@@ -16,10 +16,10 @@ run_pmodel_onestep_f_bysite(lc4, forcing, params_modl, makecheck = TRUE)
 \item{makecheck}{A logical specifying whether checks are performed 
  to verify forcings and model parameters. \code{TRUE} by default.
 
-For further specifications of above inputs and examples see \code{\link{p_model_oldformat_drivers}} or \code{\link{p_model_oldformat_drivers_vcmax25}}}
+For further specifications of above inputs and examples see \code{\link{pmodel_drivers}}}
 }
 \value{
-Model output is provided as a tidy dataframe, with columns:
+Model output is provided as a tidy dataframe (tibble), with columns:
 \describe{
   \item{\code{vcmax}}{Maximum rate of RuBisCO carboxylation 
       (Vcmax) (in mol C m\eqn{^{-2}} s\eqn{^{-1}}).}

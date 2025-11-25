@@ -17,7 +17,7 @@ run_pmodel_f_bysite(
 \arguments{
 \item{sitename}{Site name.}
 
-\item{params_siml}{Simulation parameters.}
+\item{params_siml}{Simulation parameters. See \code{\link{pmodel_drivers}}}
 
 \item{site_info}{Site meta info in a data.frame.}
 
@@ -34,7 +34,7 @@ Defaults to \code{TRUE}.
 For further specifications of above inputs and examples see \code{\link{pmodel_drivers}}.}
 }
 \value{
-Model output is provided as a tidy dataframe, with columns:
+Model output is provided as a tidy dataframe (tibble), with columns:
 \describe{
   \item{\code{date}}{Date of the observation in YYYY-MM-DD format.}
   \item{\code{year_dec}}{Decimal representation of year and day of the year

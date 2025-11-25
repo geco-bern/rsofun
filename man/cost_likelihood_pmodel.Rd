@@ -9,7 +9,7 @@ cost_likelihood_pmodel(
   par,
   obs,
   drivers,
-  targets,
+  targets = NULL,
   par_fixed = NULL,
   parallel = FALSE,
   ncores = 2
@@ -23,16 +23,16 @@ for each target variable (for example \code{'gpp_err'}), in the same order as
 the targets appear in \code{targets}.}
 
 \item{obs}{A nested data.frame of observations, with columns \code{'sitename'}
-and \code{'data'} (see \code{\link{p_model_oldformat_validation}} or \code{\link{p_model_oldformat_validation_vcmax25}}
-to check their structure).}
+and \code{'data'} (see \code{\link{pmodel_validation}} to check its structure).}
 
-\item{drivers}{A nested data.frame of driver data. See \code{\link{p_model_oldformat_drivers}}
+\item{drivers}{A nested data.frame of driver data. See \code{\link{pmodel_drivers}}
 for a description of the data structure.}
 
-\item{targets}{A character vector indicating the target variables for which the
+\item{targets}{(obsolete) A character vector indicating the target variables for which the
 optimization will be done and the RMSE computed. This string must be a column 
-name of the \code{data} data.frame belonging to the validation nested data.frame 
-(for example 'gpp').}
+name of the \code{obs$data} data.frame belonging to the validation nested data.frame 
+(for example 'gpp'). Now defaults to \code{NULL}, and use of a corresponding
+column \code{'targets'} in \code{obs} should be used instead.}
 
 \item{par_fixed}{A named list of model parameter values to keep fixed during the
 calibration. These should complement the input \code{par} such that all model
@@ -78,13 +78,12 @@ trait value predicted on that date.
 # temperature dependence of kphio 
 # and example data
 cost_likelihood_pmodel(
-par = c(kphio       = 0.05, 
-        kphio_par_a = -0.01, 
+par = c(kphio       = 0.05,
+        kphio_par_a = -0.01,
         kphio_par_b = 1,     # model parameters
         err_gpp     = 2),    # err_gpp
- obs = p_model_oldformat_validation,
- drivers = p_model_oldformat_drivers,
- targets = c('gpp'),
+ obs = pmodel_validation |> dplyr::filter(sitename == "FR-Pue"),
+ drivers = pmodel_drivers |> dplyr::filter(sitename == "FR-Pue"),
  par_fixed = list(
   soilm_thetastar    = 0.6 * 240,  # old setup with soil moisture stress
   soilm_betao        = 0.0,

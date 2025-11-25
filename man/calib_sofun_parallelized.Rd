@@ -16,13 +16,13 @@ calib_sofun_parallelized(
 )
 }
 \arguments{
-\item{drivers}{A data frame with driver data. See \code{\link{p_model_oldformat_drivers}}
+\item{drivers}{A data frame with driver data. See \code{\link{pmodel_drivers}}
 for a description of the data structure. Additional columns can optionally be 
 provided to \code{drivers} to control e.g. the processing within a 
 personalized cost function.}
 
 \item{obs}{A data frame containing observational data used for model
-calibration. See \code{\link{p_model_oldformat_validation}} for a description of the data
+calibration. See \code{\link{pmodel_validation}} for a description of the data
 structure. Additional columns can optionally be provided to \code{obs} to 
 control e.g. the processing within a personalized cost function.}
 
@@ -109,7 +109,7 @@ calibration of SOFUN model parameters.
        burnin = 0,
        iterations = 50     # kept artificially low
      ),
-     n_chains_independent   = 1, # 2, 
+     n_chains_independent   = 1, # 2,
      n_parallel_independent = 1  # 2, this can be parallelized
    )
  )
@@ -128,4 +128,12 @@ calibration of SOFUN model parameters.
  calib_output$runtime  # unused
  calib_output$name     # optionally used calibration name
  calib_output$fpath    # path of rds output
+ calib_output <- rsofun::calib_sofun_parallelized(
+   drivers = rsofun::pmodel_drivers    |> dplyr::filter(sitename \%in\% c("FR-Pue","lon_+104.92_lat_+037.43")),
+   obs     = rsofun::pmodel_validation |> dplyr::filter(sitename \%in\% c("FR-Pue","lon_+104.92_lat_+037.43")),
+   settings = settings,
+   suffix = "my_calibration_name",
+   # extra arguments for the cost function
+   par_fixed = params_fix
+ )
 }
