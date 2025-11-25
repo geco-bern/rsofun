@@ -12,12 +12,11 @@
 #' for each target variable (for example \code{'gpp_err'}), in the same order as
 #' the targets appear in \code{targets}.
 #' @param obs A nested data.frame of observations, with columns \code{'sitename'}
-#' and \code{'data'} (see \code{\link{p_model_oldformat_validation}} or \code{\link{p_model_oldformat_validation_vcmax25}}
-#' to check their structure). TODO
-#' @param drivers A nested data.frame of driver data. See \code{\link{p_model_oldformat_drivers}}
-#' for a description of the data structure. TODO
+#' and \code{'data'} (see \code{\link{pmodel_validation}} to check its structure).
+#' @param drivers A nested data.frame of driver data. See \code{\link{pmodel_drivers}}
+#' for a description of the data structure.
 #' 
-#' TODO: remove: at-param targets A character vector indicating the target variables for which the
+#' TODO: remove: (at)-param targets A character vector indicating the target variables for which the
 #' optimization will be done and the RMSE computed. This string must be a column
 #' name of the \code{data} data.frame belonging to the validation nested data.frame
 #' (for example 'gpp').
@@ -60,8 +59,8 @@
 #' cost_likelihood_pmodel(
 #'  par = c(0.05, -0.01, 1,     # model parameters
 #'          2),                # err_gpp
-#'  obs = p_model_oldformat_validation,
-#'  drivers = p_model_oldformat_drivers,
+#'  obs = pmodel_validation |> dplyr::filter(sitename == "FR-Pue"),
+#'  drivers = pmodel_drivers |> dplyr::filter(sitename == "FR-Pue"),
 #'  targets = c('gpp'),
 #'  par_fixed = list(
 #'   soilm_thetastar    = 0.6 * 240,  # old setup with soil moisture stress

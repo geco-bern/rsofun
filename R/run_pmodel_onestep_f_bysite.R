@@ -4,13 +4,13 @@
 #' water limitation, nor a simulation of water fluxes. Instead, this corresponds to a leaf-level representation of the 
 #' acclimation of photosynthesis.
 #'
-#' @param lc4 Locigical specifying whether P-model simulation is for C4 (as opposed to C3). Defaults to \code{FALSE}.
+#' @param lc4 Logical specifying whether P-model simulation is for C4 (as opposed to C3). Defaults to \code{FALSE}.
 #' @param forcing A data frame of forcing climate data, used as input (single row).
 #' @param params_modl A named list of free (calibratable) model parameters. See \code{\link{runread_pmodel_f}}
 #' @param makecheck A logical specifying whether checks are performed 
 #'  to verify forcings and model parameters. \code{TRUE} by default.
 #'
-#' For further specifications of above inputs and examples see \code{\link{p_model_oldformat_drivers}} or \code{\link{p_model_oldformat_drivers_vcmax25}}
+#' For further specifications of above inputs and examples see \code{\link{pmodel_drivers}}
 
 #' @import dplyr
 #' 

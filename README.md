@@ -78,7 +78,7 @@ params_modl <- list(
 
 # run the model for these parameters
 output <- rsofun::runread_pmodel_f(
-  p_model_oldformat_drivers,
+  pmodel_drivers,
   par = params_modl
   )
 ```
