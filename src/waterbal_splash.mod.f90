@@ -517,7 +517,7 @@ contains
         ! latent energy flux from canopy (W m-2) 
         ! See also calc_transpiration_pm() in photosynth_phydro.mod.f90
         ! tile_fluxes%canopy%daet_e_canop = (epsilon * fapar * tile_fluxes%canopy%drn + (rho_water * cp / gamma) &
-          * ga * climate%dvpd) / (epsilon + 1.0 + ga / gw) 
+        !  * ga * climate%dvpd) / (epsilon + 1.0 + ga / gw) 
 
         ! canopy conductance assuming gw = infinite
         tile_fluxes%canopy%dpet_e   = (epsilon * fapar * tile_fluxes%canopy%drn + (rho_water * cp / gamma) &
