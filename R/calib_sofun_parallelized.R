@@ -440,12 +440,12 @@ is_beta_prior <- function(distr_pars){identical(sort(names(distr_pars)), c("shap
 #'     par_normal         = list(mean    = 10, sd    = 2),
 #'     par_lognormal      = list(meanlog = -4, sdlog = 1.1),
 #'     par_truncnormal    = list(mean    = 10, sd    = 2, lower = 9, upper = 14),
-#'     par_trunclognormal = list(meanlog = -4, sdlog = 1.1, endpoint = 0.5),
+#'     # par_trunclognormal = list(meanlog = -4, sdlog = 1.1, endpoint = 0.5),
 #'     par_beta           = list(shape1  = 5, shape2 = 2)
 #'   ))
 #' priorMixed  <- rsofun:::createMixedPrior(prior_definitions_mixed$par)
 #' priorMixed$sampler(2000)
-#' hist(priorMixed$sampler(2000)[,6])
+#' hist(priorMixed$sampler(2000)[,5])
 createMixedPrior <- function(prior_definitions){
 
   # # This is an example from the documentation: ?createPrior
@@ -509,7 +509,7 @@ createMixedPrior <- function(prior_definitions){
       else if(is_normal_prior(def)){        return(list(rfct=stats::rnorm,   dfct=stats::dnorm,   args=list(mean   =def$mean,    sd    =def$sd)))}
       else if(is_lognormal_prior(def)){     return(list(rfct=stats::rlnorm,  dfct=stats::dlnorm,  args=list(meanlog=def$meanlog, sdlog =def$sdlog)))}
       else if(is_truncnormal_prior(def)){   return(list(rfct=msm::rtnorm,    dfct=msm::dtnorm,    args=list(mean   =def$mean,    sd    =def$sd,    lower    =def$lower, upper =def$upper)))}
-      else if(is_trunclognormal_prior(def)){return(list(rfct=ReIns::rtlnorm, dfct=ReIns::dtlnorm, args=list(meanlog=def$meanlog, sdlog =def$sdlog, endpoint =def$endpoint)))}
+      else if(is_trunclognormal_prior(def)){stop("Truncated lognormal temporally deactivated.")}#return(list(rfct=ReIns::rtlnorm, dfct=ReIns::dtlnorm, args=list(meanlog=def$meanlog, sdlog =def$sdlog, endpoint =def$endpoint)))}
       else if(is_beta_prior(def)){          return(list(rfct=stats::rbeta,   dfct=stats::dbeta,   args=list(shape1 =def$shape1,  shape2=def$shape2)))}
       else {stop("Unknown prior distribution,")}
     })

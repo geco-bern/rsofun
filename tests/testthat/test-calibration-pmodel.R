@@ -15,24 +15,24 @@ test_that("test function definitions for prior parameter distributions (to be us
       par_normal         = list(mean    = 10, sd    = 2),
       par_lognormal      = list(meanlog = -4, sdlog = 1.1),
       par_truncnormal    = list(mean    = 10, sd    = 2, lower = 9, upper = 14),
-      par_trunclognormal = list(meanlog = -4, sdlog = 1.1, endpoint = 0.5),
+      # par_trunclognormal = list(meanlog = -4, sdlog = 1.1, endpoint = 0.5),
       par_beta           = list(shape1  = 5, shape2 = 2)
     ))
   
   # tests
   # test is_xxx_prior() functions:
   make_named_list <- function(lst){ setNames(lst, names(prior_definitions_mixed$par))}
-  expect_identical(make_named_list(list(TRUE, FALSE, FALSE, FALSE, FALSE, FALSE)),
+  expect_identical(make_named_list(list(TRUE, FALSE, FALSE, FALSE, FALSE)),
     lapply(prior_definitions_mixed$par, rsofun:::is_uniform_prior        ))
-  expect_identical(make_named_list(list(FALSE, TRUE, FALSE, FALSE, FALSE, FALSE)),
+  expect_identical(make_named_list(list(FALSE, TRUE, FALSE, FALSE, FALSE)),
     lapply(prior_definitions_mixed$par, rsofun:::is_normal_prior         ))
-  expect_identical(make_named_list(list(FALSE, FALSE, TRUE, FALSE, FALSE, FALSE)),
+  expect_identical(make_named_list(list(FALSE, FALSE, TRUE, FALSE, FALSE)),
     lapply(prior_definitions_mixed$par, rsofun:::is_lognormal_prior      ))
-  expect_identical(make_named_list(list(FALSE, FALSE, FALSE, TRUE, FALSE, FALSE)),
+  expect_identical(make_named_list(list(FALSE, FALSE, FALSE, TRUE, FALSE)),
     lapply(prior_definitions_mixed$par, rsofun:::is_truncnormal_prior    ))
-  expect_identical(make_named_list(list(FALSE, FALSE, FALSE, FALSE, TRUE, FALSE)),
-    lapply(prior_definitions_mixed$par, rsofun:::is_trunclognormal_prior ))
-  expect_identical(make_named_list(list(FALSE, FALSE, FALSE, FALSE, FALSE, TRUE)),
+  # expect_identical(make_named_list(list(FALSE, FALSE, FALSE, FALSE, TRUE, FALSE)),
+  #   lapply(prior_definitions_mixed$par, rsofun:::is_trunclognormal_prior ))
+  expect_identical(make_named_list(list(FALSE, FALSE, FALSE, FALSE, TRUE)),
     lapply(prior_definitions_mixed$par, rsofun:::is_beta_prior           ))
   
   # test createMixedPrior() function:
@@ -50,14 +50,14 @@ test_that("test function definitions for prior parameter distributions (to be us
   priorMixed  <- rsofun:::createMixedPrior(prior_definitions_mixed$par)
   # plot_prior_density(priorMixed, parNames = names(prior_definitions_mixed$par), n=10000)
 
-  expect_equal(0,          priorUnif$density(c(1.0,3.0)),                             tolerance = 1e-7)
-  expect_equal(0.5194983,  priorMixed$density(c(15, 10, exp(-4), 12, exp(-4), 0.75)), tolerance = 1e-7)
-  expect_equal(0.5194983,  priorMixed$density(c(10, 10, exp(-4), 12, exp(-4), 0.75)), tolerance = 1e-7)
-  expect_equal(0.5194983,  priorMixed$density(c(30, 10, exp(-4), 12, exp(-4), 0.75)), tolerance = 1e-7)
+  expect_equal(0,           priorUnif$density(c(1.0,3.0)),                    tolerance = 1e-7)
+  expect_equal(-2.4675764,  priorMixed$density(c(15, 10, exp(-4), 12, 0.75)), tolerance = 1e-7)
+  expect_equal(-2.4675764,  priorMixed$density(c(10, 10, exp(-4), 12, 0.75)), tolerance = 1e-7)
+  expect_equal(-2.4675764,  priorMixed$density(c(30, 10, exp(-4), 12, 0.75)), tolerance = 1e-7)
   
-  expect_equal(-Inf,       priorMixed$density(c(15, 10, exp(-4), 12, 0.6,     0.75)), tolerance = 1e-7)
-  expect_equal(-0.6055017, priorMixed$density(c(15, 8,  exp(-4), 13, exp(-4), 0.75)), tolerance = 1e-7)
-  expect_equal(-Inf,       priorMixed$density(c(15, 10, exp(-4), 14.1, exp(-4), 0.75)), tolerance = 1e-7)
+  # expect_equal(-Inf,       priorMixed$density(c(15, 10, exp(-4), 12, 0.6,     0.75)), tolerance = 1e-7)
+  expect_equal(-3.59257637, priorMixed$density(c(15, 8,  exp(-4), 13, 0.75)), tolerance = 1e-7)
+  expect_equal(-Inf,        priorMixed$density(c(15, 10, exp(-4), 14.1, 0.75)), tolerance = 1e-7)
 })
 
 
