@@ -503,10 +503,20 @@ contains
         else 
           gw = gw_calib * lai_fapar * tile_fluxes%canopy%gs_accl * 1.6 * kR * (climate%dtemp + kTkelvin)
         end if
+
+        ! FRANCESCO: canopy height -1 = no vegetation
+
+        if (myinterface%canopy_height < 0) then
+        
+          tile_fluxes%canopy%daet_e_canop = 0
+        else
+          tile_fluxes%canopy%daet_e_canop = (epsilon * fapar * tile_fluxes%canopy%drn + (rho_water * cp / gamma) &
+          * ga * climate%dvpd) / (epsilon + 1.0 + ga / gw) 
+        end if
         
         ! latent energy flux from canopy (W m-2) 
         ! See also calc_transpiration_pm() in photosynth_phydro.mod.f90
-        tile_fluxes%canopy%daet_e_canop = (epsilon * fapar * tile_fluxes%canopy%drn + (rho_water * cp / gamma) &
+        ! tile_fluxes%canopy%daet_e_canop = (epsilon * fapar * tile_fluxes%canopy%drn + (rho_water * cp / gamma) &
           * ga * climate%dvpd) / (epsilon + 1.0 + ga / gw) 
 
         ! canopy conductance assuming gw = infinite
