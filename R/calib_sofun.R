@@ -76,15 +76,14 @@
 #'     )
 #'   )
 #'  )
-#'  
+#' 
 #'  # Run the calibration for GPP data
 #'  calib_output <- rsofun::calib_sofun(
 #'    drivers = rsofun::pmodel_drivers |> dplyr::filter(sitename == "FR-Pue"),
 #'    obs     = rsofun::pmodel_validation |> dplyr::filter(sitename == "FR-Pue"),
 #'    settings = settings,
 #'    # extra arguments for the cost function
-#'    par_fixed = params_fix,
-#'    targets = c("gpp")
+#'    par_fixed = params_fix
 #'  )
 
 calib_sofun <- function(
