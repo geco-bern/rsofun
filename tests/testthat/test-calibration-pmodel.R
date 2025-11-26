@@ -226,9 +226,7 @@ test_that("test Vcmax25 calibration routine p-model (GenSA, rmse)", {
     settings = settings,
     # arguments for cost function
     targets = 'vcmax25',
-    par_fixed = params_fix,
-    parallel = TRUE,
-    ncores = 2
+    par_fixed = params_fix
   )
   
   # test for correctly returned values

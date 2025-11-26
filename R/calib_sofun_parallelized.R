@@ -78,7 +78,6 @@
 #'    errbias_vj         = 1.0,
 #'    errscale_gpp       = 1.0
 #'  )
-#'  
 #'  # Define calibration settings
 #'  settings <- list(
 #'    method  = "BayesianTools",
@@ -91,7 +90,7 @@
 #'        burnin = 0,
 #'        iterations = 50     # kept artificially low
 #'      ),
-#'      n_chains_independent   = 1, # 2, 
+#'      n_chains_independent   = 1, # 2,
 #'      n_parallel_independent = 1  # 2, this can be parallelized
 #'    )
 #'  )
@@ -110,6 +109,17 @@
 #'  calib_output$runtime  # unused
 #'  calib_output$name     # optionally used calibration name
 #'  calib_output$fpath    # path of rds output
+#'  calib_output <- rsofun::calib_sofun_parallelized(
+#'    drivers = rsofun::pmodel_drivers    |> 
+#'      dplyr::filter(sitename %in% c("FR-Pue","lon_+104.92_lat_+037.43")),
+#'    obs     = rsofun::pmodel_validation |> 
+#'      dplyr::filter(sitename %in% c("FR-Pue","lon_+104.92_lat_+037.43")),
+#'    settings = settings,
+#'    suffix = "my_calibration_name",
+#'    # extra arguments for the cost function
+#'    par_fixed = params_fix
+#'  )
+
 calib_sofun_parallelized <- function(
     drivers,
     obs,
