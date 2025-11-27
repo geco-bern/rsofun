@@ -134,6 +134,7 @@ pmodel_drivers_subset_onestep <- pmodel_drivers_subset |> dplyr::filter(run_mode
 pmodel_drivers_subset_daily <- pmodel_drivers_subset_daily |>
   # remove unneeded dates (only from daily model runs, i.e. GPP, not onestep, i.e. bigDelta13C)
   tidyr::unnest(forcing) |>
+  rename(wind = "vwind") |>
   dplyr::mutate(year = lubridate::year(date)) |>
   dplyr::filter(year >= 2007 & year <=2016) |>
   dplyr::group_by(sitename) |> dplyr::filter(
@@ -211,10 +212,6 @@ pmodel_validation_subset_bigD13C <- pmodel_validation_subset |>
 # E) finalize validation observations
 pmodel_validation <- bind_rows(pmodel_validation_subset_gppYears,
                                pmodel_validation_subset_bigD13C)
-
-        # p_model_oldformat_drivers |> unnest(forcing) |> group_by(sitename) |> mutate(year = lubridate::year(date)) |> summarise(min(year), max(year))
-        # pmodel_drivers |> unnest(forcing) |> group_by(sitename) |> mutate(year = lubridate::year(date)) |> summarise(min(year), max(year))
-        # pmodel_validation_subset |> unnest(data) |> group_by(sitename) |> mutate(year = lubridate::year(date)) |> summarise(min(year), max(year))
 
 # store as rda into the package
 usethis::use_data(pmodel_drivers,    overwrite = TRUE, compress = "xz")

@@ -25,6 +25,7 @@ A tibble of driver data:
       \item{rain}{Rain as precipitation in liquid form in mm s\eqn{^{-1}}.}
       \item{tmin}{Daily minimum air temperature in \eqn{^\circ}C.}
       \item{tmax}{Daily maximum air temperature in \eqn{^\circ}C.}
+      \item{wind}{Wind velocity (m s-1)}
       \item{fapar}{Fraction of photosynthetic active radiation (fAPAR), taking
      values between 0 and 1.}
       \item{co2}{Atmospheric CO\eqn{_2} concentration in ppm.}

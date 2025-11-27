@@ -24,9 +24,9 @@
 * New driver data.frame format for P-model: now containing the information which
   model to run (`daily` or `onestep`) as additional column `onestep` = `TRUE`/`FALSE`
   in the `params_siml` column. Moreover, in the 
-  `forcing` column the nested data.frame has now additional columns for `vwind` and non-zero `ccov` 
+  `forcing` column the nested data.frame has now additional columns for `wind` and non-zero `ccov` 
   (resulting in columns `ccov`,`co2`,`date`,`fapar`,`netrad`,`patm`,`ppfd`,
-  `rain`,`snow`,`temp`,`tmax`,`tmin`,`vpd`,`vwind`) for `daily` model runs 
+  `rain`,`snow`,`temp`,`tmax`,`tmin`,`vpd`,`wind`) for `daily` model runs 
   and columns (`co2`,`patm`,`ppfd`,`temp`,`vpd`) for `onestep` model runs.
   Each row in `pmodel_drivers` corresponds to a model run (either `daily` 
   or `onestep`) and should have a corresponding row in `pmodel_validation`.
@@ -41,21 +41,21 @@
     # remove new column 'onestep' from nested 'param_siml'
     dplyr::mutate(params_siml = purrr::map(params_siml, ~dplyr::select(.x, -'onestep'))) |>
     # 'site_info' remains same
-    # 'forcing' has additional info `vwind` that needs removing
+    # 'forcing' has additional info `wind` that needs removing
     tidyr::unnest(forcing) |>
     dplyr::filter(date >= "2007-01-01" & date < "2013-01-01") |>
-    dplyr::select(-vwind) |> 
+    dplyr::select(-wind) |> 
     dplyr::mutate(ccov = 0) |> # note that fapar and co2 are also different
     tidyr::nest(forcing = c(date, temp, vpd, ppfd, netrad, patm, 
                             snow, rain, tmin, tmax, fapar, co2, ccov))
 
   # bring old to new format:
   rsofun::p_model_oldformat_drivers |> 
-    # 'forcing' add new column `vwind`
+    # 'forcing' add new column `wind`
     tidyr::unnest(forcing) |> 
-    dplyr::mutate(vwind = 2.64, ccov = 0.485) |>
+    dplyr::mutate(wind = 2.64, ccov = 0.485) |>
     tidyr::nest(forcing = c(date, temp, vpd, ppfd, netrad, patm, 
-                            snow, rain, tmin, tmax, vwind, fapar, co2, ccov)) |>
+                            snow, rain, tmin, tmax, wind, fapar, co2, ccov)) |>
     # add new column 'onestep' in nested 'param_siml'
     dplyr::mutate(params_siml = purrr::map(params_siml, ~dplyr::mutate(.x, onestep = FALSE)))
     
@@ -194,15 +194,15 @@
   rsofun::biomee_gs_leuning_drivers |> 
       tidyr::unnest(forcing) |> 
       tidyr::nest(forcing = c(date, hod, temp, vpd, ppfd, patm, 
-                              rain, temp, wind, co2)) # TODO: note here it is called wind instead of vwind
+                              rain, temp, wind, co2))
   rsofun::biomee_p_model_drivers |> 
       tidyr::unnest(forcing) |> 
       tidyr::nest(forcing = c(date, hod, temp, vpd, ppfd, patm, 
-                              rain, temp, wind, co2)) # TODO: note here it is called wind instead of vwind
+                              rain, temp, wind, co2))
   rsofun::biomee_p_model_luluc_drivers |> 
       tidyr::unnest(forcing) |> 
       tidyr::nest(forcing = c(date, hod, temp, vpd, ppfd, patm, 
-                              rain, temp, wind, co2)) # TODO: note here it is called wind instead of vwind
+                              rain, temp, wind, co2))
   ```
       
 # rsofun 5.1.0
