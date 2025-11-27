@@ -78,9 +78,15 @@ trait value predicted on that date.
 # model parameter values involved in the
 # temperature dependence of kphio
 # and example data
-cost_likelihood_pmodel(
- par = c(0.05, -0.01, 1,     # model parameters
-         2),                # err_gpp
+cost_likelihood_pmodel_bigD13C_vj_gpp(
+ par = c(kphio       = 0.05,
+           kphio_par_a = -0.01,
+           kphio_par_b = 1,
+           # error model parameters
+           err_gpp     = 2,
+           errscale_gpp = 1,
+           err_bigD13C = 0.7,       # TODO: this errors without err_bigD13C
+           errbias_bigD13C = -0.1), # TODO: this errors without errbias_bigD13C
  obs = pmodel_validation |> dplyr::filter(sitename == "FR-Pue"),
  drivers = pmodel_drivers |> dplyr::filter(sitename == "FR-Pue"),
  par_fixed = list(

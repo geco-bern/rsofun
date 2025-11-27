@@ -110,10 +110,10 @@
 #' # Run the Fortran P-model 
 #' mod_output <- run_pmodel_f_bysite(
 #'   # unnest drivers example data
-#'   sitename = pmodel_drivers$sitename[[4]],
-#'   params_siml = pmodel_drivers$params_siml[[4]],
-#'   site_info = pmodel_drivers$site_info[[4]],
-#'   forcing = pmodel_drivers$forcing[[4]],
+#'   sitename = pmodel_drivers$sitename[[5]],
+#'   params_siml = pmodel_drivers$params_siml[[5]],
+#'   site_info = pmodel_drivers$site_info[[5]],
+#'   forcing = pmodel_drivers$forcing[[5]],
 #'   params_modl = params_modl
 #'  )
 

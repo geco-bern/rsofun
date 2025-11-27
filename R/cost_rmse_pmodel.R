@@ -74,22 +74,16 @@ cost_rmse_pmodel <- function(
   # predefine variables for CRAN check compliance
   sitename <- data <- gpp_mod <- NULL
   
-  # ensure backwards compatibility with format without column 'run_model':
-  if ("run_model" %in% names(drivers)) {
+  # ensure backwards compatibility with format without column 'onestep':
+  if ("onestep" %in% names(drivers$params_siml[[1]])) {
     # all good
   } else {
     warning("
-      WARNING: Assuming daily P-model runs requested. To clarify please add a 
-      column 'run_model' with 'daily' or 'onestep' to your driver data.frame.")
-    drivers <- drivers |> mutate(run_model = "daily")
-  }
-  if ("run_model" %in% names(obs)) {
-    # all good
-  } else {
-    warning("
-      WARNING: Assuming daily P-model runs requested. To clarify please add a 
-      column 'run_model' with 'daily' or 'onestep' to your obs data.frame.")
-    obs <- obs |> mutate(run_model = "daily")
+      WARNING: Assuming daily P-model run requested. To clarify please add a 
+      column 'onestep' with 'FALSE' or 'TRUE' to the 'params_siml' data.frame.
+      in your driver.")
+    drivers <- drivers |> mutate(
+      params_siml = purrr::map(.data$params_siml, ~mutate(.x, onestep = FALSE)))
   }
   if (!is.null(targets)) {
     # for backwards compatibility, use provided argument 'targets' for all rows 
@@ -98,24 +92,15 @@ cost_rmse_pmodel <- function(
     if ("targets" %in% names(obs)){stop(
       "Provided calibration targets as argument 'targets' and as column in obs data.frame(). Only one is allowed")
     }
-    # Below creates a small tibble that will be nested into each element of obs$targets
-        # targets <- c("gpp","target2", "target3")
-        # # A tibble: 1 × 3
-        #   gpp   target2 target3
-        #   <lgl> <lgl>   <lgl>  
-        # 1 TRUE  TRUE    TRUE 
-    targets_element_df <- tibble(!!!structure(
-      rep(TRUE, length(targets)), .Names = targets)
-    )
-    obs <- obs |> mutate(targets = list(targets_element_df))
-  } # obs |> unnest_wider(targets)
+    # insert targets into row of obs
+    obs <- obs |> rowwise() |> mutate(targets = list(targets)) |> 
+      select('sitename', 'targets', 'data')
+  }
   
   ## generate a list of all calibration targets (across all obs rows)
   targets <- obs |> 
-    dplyr::ungroup() |> dplyr::select(targets) |> tidyr::unnest_wider(targets) |>
-    # remove columns that are FALSE across all rows
-    dplyr::select(dplyr::where(~ any(. == TRUE))) |>
-    names()
+    dplyr::ungroup() |> dplyr::select(targets) |> tidyr::unnest(targets) |>
+    magrittr::extract2("targets") |> unique()
   
   ## check input parameters
   if( (length(par) + length(par_fixed)) != 9 ){

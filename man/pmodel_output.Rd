@@ -5,7 +5,7 @@
 \alias{pmodel_output}
 \title{rsofun P-model output data}
 \format{
-An object of class \code{tbl_df} (inherits from \code{tbl}, \code{data.frame}) with 11 rows and 4 columns.
+An object of class \code{tbl_df} (inherits from \code{tbl}, \code{data.frame}) with 20 rows and 3 columns.
 }
 \usage{
 pmodel_output

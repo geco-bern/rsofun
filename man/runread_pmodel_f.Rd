@@ -8,12 +8,12 @@ runread_pmodel_f(drivers, par, makecheck = TRUE, parallel = FALSE, ncores = 1)
 }
 \arguments{
 \item{drivers}{A nested data frame with one row for each site and columns 
-\code{sitename} and \code{run_model} and further columns
-named according to the arguments of function \code{\link{run_pmodel_f_bysite}},
-or \code{\link{run_pmodel_onestep_f_bysite}}, namely 
-\code{sitename, params_siml, site_info} and \code{forcing} (Note, when 
-\code{run_model} is "onestep", \code{params_siml} contains a single column 
-\code{lc4}).}
+\code{sitename} and further columns
+\code{params_siml, site_info} and \code{forcing}. (\code{params_siml} contains
+the information whether or not to run the onestep or daily model through 
+\code{TRUE/FALSE} in column \code{onestep}. It also contains parameters
+\code{lc4} in the case of \code{onestep==TRUE} and those for function 
+\code{\link{run_pmodel_f_bysite}} in the case of \code{onestep==FALSE}.)}
 
 \item{par}{A named list of free (calibratable) model parameters.
 \describe{
@@ -45,7 +45,7 @@ to verify forcings and model parameters. \code{TRUE} by default.}
 
 \item{parallel}{A logical specifying whether simulations are to be
 parallelised (sending data from a certain number of sites to each core).
-Defaults to \code{FALSE}.}
+Defaults to \code{FALSE}. (Not applied to rows where \code{onestep==TRUE}.)}
 
 \item{ncores}{An integer specifying the number of cores used for parallel
 computing (by default \code{ncores = 2}).}
@@ -53,7 +53,8 @@ computing (by default \code{ncores = 2}).}
 \value{
 A data frame (tibble) with one row for each site, site information 
 stored in the nested column \code{site_info} and outputs stored in the nested 
-column \code{data}. See \code{\link{run_pmodel_f_bysite}} and \code{\link{run_pmodel_onestep_f_bysite}} for a detailed 
+column \code{data}. See \code{\link{run_pmodel_f_bysite}} and 
+\code{\link{run_pmodel_onestep_f_bysite}} for a detailed 
 description of the outputs. 
 Example outputs are provided as \code{\link{pmodel_output}}.
 }

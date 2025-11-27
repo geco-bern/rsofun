@@ -8,8 +8,6 @@
 A tibble of driver data:
 \describe{
   \item{sitename}{A character string containing the site name.}
-  \item{run_model}{A character string, either: 'daily' or 'onestep', 
-  specifying whether to run daily simulations or onestep acclimation.}
   \item{forcing}{A tibble of a time series of forcing climate data. Required 
   parameters differ for daily simulations or for onestep acclimation. 
   For daily simulations these include daily values of:
@@ -60,10 +58,14 @@ A tibble of driver data:
       \item{lgn3}{A logical value, \code{TRUE} if grass with C3 photosynthetic
       pathway and N-fixing.}
       \item{lgr4}{A logical value, \code{TRUE} if grass with C4 photosynthetic pathway.}
+      \item{onestep}{A logical value, \code{FALSE} to request daily simulations.
+      Defaults to \code{FALSE} if missing.}
     }
   For onestep acclimation these include:
     \describe{
       \item{lc4}{A logical value indicating whether to use C4 photosynthetic pathway.}
+      \item{onestep}{A logical value, \code{TRUE} to request onestep acclimation. 
+      Defaults to \code{FALSE} if missing.}
     }
   }
   \item{site_info}{A tibble containing site meta information.
@@ -73,7 +75,7 @@ This data structure can be freely used for documenting the dataset, but must inc
       \item{lat}{Latitude of the site location in degrees north.}
       \item{elv}{Elevation of the site location, in meters above sea level.}
       \item{whc}{A numeric value for the rooting zone water holding capacity 
-      (in mm). (Not needed if \code{run_model == "onestep"}.)}
+      (in mm). (Not needed if \code{onestep == "TRUE"}.)}
     }
   }
 }

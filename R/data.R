@@ -83,8 +83,6 @@
 #' @format A tibble of driver data:
 #' \describe{
 #'   \item{sitename}{A character string containing the site name.}
-#'   \item{run_model}{A character string, either: 'daily' or 'onestep', 
-#'   specifying whether to run daily simulations or onestep acclimation.}
 #'   \item{forcing}{A tibble of a time series of forcing climate data. Required 
 #'   parameters differ for daily simulations or for onestep acclimation. 
 #'   For daily simulations these include daily values of:
@@ -135,10 +133,14 @@
 #'       \item{lgn3}{A logical value, \code{TRUE} if grass with C3 photosynthetic
 #'       pathway and N-fixing.}
 #'       \item{lgr4}{A logical value, \code{TRUE} if grass with C4 photosynthetic pathway.}
+#'       \item{onestep}{A logical value, \code{FALSE} to request daily simulations.
+#'       Defaults to \code{FALSE} if missing.}
 #'     }
 #'   For onestep acclimation these include:
 #'     \describe{
 #'       \item{lc4}{A logical value indicating whether to use C4 photosynthetic pathway.}
+#'       \item{onestep}{A logical value, \code{TRUE} to request onestep acclimation. 
+#'       Defaults to \code{FALSE} if missing.}
 #'     }
 #'   }
 #'   \item{site_info}{A tibble containing site meta information.
@@ -148,7 +150,7 @@
 #'       \item{lat}{Latitude of the site location in degrees north.}
 #'       \item{elv}{Elevation of the site location, in meters above sea level.}
 #'       \item{whc}{A numeric value for the rooting zone water holding capacity 
-#'       (in mm). (Not needed if \code{run_model == "onestep"}.)}
+#'       (in mm). (Not needed if \code{onestep == "TRUE"}.)}
 #'     }
 #'   }
 #' }
@@ -181,8 +183,6 @@
 #' @format A tibble of validation data:
 #' \describe{
 #'   \item{sitename}{A character string containing the site name (e.g. 'FR-Pue').}
-#'   \item{run_model}{A character string, either: 'daily' or 'onestep', 
-#'   specifying whether to run daily simulations or onestep acclimation.}
 #'   \item{targets}{A single one-row tibble with a column for each target
 #'   containing TRUE or FALSE (or NA_logical)}
 #'   \item{data}{A single tibble or a list of tibbles with target observations.
@@ -205,9 +205,9 @@
 #' }
 #' @examples require(ggplot2); require(tidyr)
 #' p_model_oldformat_validation %>% tidyr::unnest(data) 
-#' pmodel_validation |> dplyr::filter(run_model == "daily") |> unnest(data)
-#' pmodel_validation |> dplyr::filter(run_model == "onestep") |> unnest(data)
-#' pmodel_validation |> dplyr::filter(run_model == "onestep") |> unnest(data) |> unnest(bigD13C)
+#' pmodel_validation |> tidyr::unnest_wider(targets, names_sep = "_")
+#' pmodel_validation |> dplyr::filter(grepl("^[A-Z]", sitename)) |> unnest(data)
+#' pmodel_validation |> dplyr::filter(grepl("lon", sitename)) |> unnest(data)
 #' 
 #' @source Pastorello, G., Trotta, C., Canfora, E. et al. 
 #' The FLUXNET2015 dataset and the ONEFlux processing pipeline for eddy covariance data. 

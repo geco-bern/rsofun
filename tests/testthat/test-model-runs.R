@@ -122,11 +122,12 @@ test_that("p-model run containing daily and onestep simulations", {
   df_drivers <- pmodel_drivers
   
   # run the SOFUN Fortran P-model for FR-Pue
+  stopifnot(df_drivers$sitename[[5]] == "FR-Pue")
   mod <- run_pmodel_f_bysite(
-    df_drivers$sitename[[4]],
-    df_drivers$params_siml[[4]],
-    df_drivers$site_info[[4]],
-    df_drivers$forcing[[4]],
+    df_drivers$sitename[[5]],
+    df_drivers$params_siml[[5]],
+    df_drivers$site_info[[5]],
+    df_drivers$forcing[[5]],
     params_modl = params_modl,
     makecheck = FALSE
   )
@@ -160,8 +161,8 @@ test_that("p-model run containing daily and onestep simulations", {
   
   # also check for correctly returned _values_, not only types
   mod_pmodel_bysite_FRPue           <- head_tail(tibble(mod), n=30)
-  mod_pmodel_runread_serial_FRPue   <- head_tail(tibble(df_output$data[[4]]), n=30)
-  mod_pmodel_runread_parallel_FRPue <- head_tail(tibble(df_output_p$data[[4]]), n=30)
+  mod_pmodel_runread_serial_FRPue   <- head_tail(tibble(df_output$data[[5]]), n=30)
+  mod_pmodel_runread_parallel_FRPue <- head_tail(tibble(df_output_p$data[[5]]), n=30)
   
   expect_equal(mod_pmodel_bysite_FRPue, mod_pmodel_runread_serial_FRPue)
   expect_equal(mod_pmodel_bysite_FRPue, mod_pmodel_runread_parallel_FRPue)
@@ -185,10 +186,10 @@ test_that("p-model run containing daily and onestep simulations", {
     parallel = FALSE
   )
   mod_rerun <- run_pmodel_f_bysite(
-    df_drivers$sitename[4],
-    df_drivers$params_siml[[4]],
-    df_drivers$site_info[[4]],
-    df_drivers$forcing[[4]],
+    df_drivers$sitename[5],
+    df_drivers$params_siml[[5]],
+    df_drivers$site_info[[5]],
+    df_drivers$forcing[[5]],
     params_modl = params_modl,
     makecheck = FALSE
   )

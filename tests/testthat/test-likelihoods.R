@@ -119,15 +119,17 @@ test_that("test likelihood/RMSE calculations with pmodel", {
     #       ll_values2 <- apply(test_params_pmodel, 1, function(par_v) {...})
     rsofun::cost_likelihood_pmodel(         # likelihood cost function from package
       par     = par_v,                      # par: should be a named vector
-      obs     = rsofun::p_model_oldformat_validation_vcmax25 |> mutate(run_model = "daily"), # obs: example data from package
-      drivers = rsofun::p_model_oldformat_drivers_vcmax25 |> mutate(run_model = "daily"),# drivers: example data from package
+      obs     = rsofun::p_model_oldformat_validation_vcmax25, # obs: example data from package
+      drivers = rsofun::p_model_oldformat_drivers_vcmax25 |>  # drivers: example data from package
+        mutate(params_siml = purrr::map(params_siml, ~mutate(.x, onestep = FALSE))), 
       targets = c('vcmax25')) # define this since oldformat_validation does not contain it
   })
   ll_values3 <- apply(test_params_pmodel, 1, function(par_v) { # par_v is a named vector
     rsofun::cost_likelihood_pmodel(                                    # likelihood cost function from package
       par     = par_v,                                                 # par: should be a named vector
-      obs     = rbind(p_model_oldformat_validation, p_model_oldformat_validation_vcmax25) |> mutate(run_model = "daily"), # obs: example data from package 
-      drivers = rbind(p_model_oldformat_drivers, p_model_oldformat_drivers_vcmax25) |> mutate(run_model = "daily"),       # drivers: example data from package
+      obs     = rbind(p_model_oldformat_validation, p_model_oldformat_validation_vcmax25) , # obs: example data from package 
+      drivers = rbind(p_model_oldformat_drivers, p_model_oldformat_drivers_vcmax25) |>      # drivers: example data from package
+        mutate(params_siml = purrr::map(params_siml, ~mutate(.x, onestep = FALSE))), 
       targets = c('gpp', 'vcmax25')) # define this since oldformat_validation does not contain it
   })
   
@@ -160,8 +162,9 @@ test_that("test likelihood/RMSE calculations with pmodel", {
   # test p-model likelihood with only fixed parameters
   ll_pmodel_fixed <- rsofun::cost_likelihood_pmodel(
     par     = c(),                                                   # par: should be a named vector
-    obs     = rbind(p_model_oldformat_validation, p_model_oldformat_validation_vcmax25) |> mutate(run_model = "daily"), # obs: example data from package 
-    drivers = rbind(p_model_oldformat_drivers, p_model_oldformat_drivers_vcmax25) |> mutate(run_model = "daily"),       # drivers: example data from package
+    obs     = rbind(p_model_oldformat_validation, p_model_oldformat_validation_vcmax25), # obs: example data from package 
+    drivers = rbind(p_model_oldformat_drivers, p_model_oldformat_drivers_vcmax25) |>     # drivers: example data from package
+      mutate(params_siml = purrr::map(params_siml, ~mutate(.x, onestep = FALSE))), 
     
     # additional arguments for the cost function
     par_fixed = c(         # fix parameter value from previous calibration
