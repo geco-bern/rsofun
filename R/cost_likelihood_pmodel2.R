@@ -56,9 +56,15 @@
 #' # model parameter values involved in the
 #' # temperature dependence of kphio
 #' # and example data
-#' cost_likelihood_pmodel(
-#'  par = c(0.05, -0.01, 1,     # model parameters
-#'          2),                # err_gpp
+#' cost_likelihood_pmodel_bigD13C_vj_gpp(
+#'  par = c(kphio       = 0.05,
+#'            kphio_par_a = -0.01,
+#'            kphio_par_b = 1,
+#'            # error model parameters
+#'            err_gpp     = 2,
+#'            errscale_gpp = 1,
+#'            err_bigD13C = 0.7,       # TODO: this errors without err_bigD13C
+#'            errbias_bigD13C = -0.1), # TODO: this errors without errbias_bigD13C
 #'  obs = pmodel_validation |> dplyr::filter(sitename == "FR-Pue"),
 #'  drivers = pmodel_drivers |> dplyr::filter(sitename == "FR-Pue"),
 #'  par_fixed = list(
@@ -84,23 +90,16 @@ cost_likelihood_pmodel_bigD13C_vj_gpp <- function(
   stopifnot(nrow(obs) > 0)     # ensure some observation data are provided
   stopifnot(nrow(drivers) > 0) # ensure some driver data are provided
   
-  # # ensure backwards compatibility with format without column 'run_model':
-  # browser()
-  # if ("run_model" %in% names(drivers)) {
+  # # ensure backwards compatibility with format without column 'onestep':
+  # if ("onestep" %in% names(drivers$params_siml[[1]])) {
   #   # all good
   # } else {
   #   warning("
-  #     WARNING: Assuming daily P-model runs requested. To clarify please add a 
-  #     column 'run_model' with 'daily' or 'onestep' to your driver data.frame.")
-  #   drivers <- drivers |> mutate(run_model = "daily")
-  # }
-  # if ("run_model" %in% names(obs)) {
-  #   # all good
-  # } else {
-  #   warning("
-  #     WARNING: Assuming daily P-model runs requested. To clarify please add a 
-  #     column 'run_model' with 'daily' or 'onestep' to your obs data.frame.")
-  #   obs <- obs |> mutate(run_model = "daily")
+  #     WARNING: Assuming daily P-model run requested. To clarify please add a 
+  #     column 'onestep' with 'FALSE' or 'TRUE' to the 'params_siml' data.frame.
+  #     in your driver.")
+  #   drivers <- drivers |> mutate(
+  #     params_siml = purrr::map(params_siml, ~mutate(.x, onestep = FALSE)))
   # }
   
   # A) Include current parameters ----
@@ -136,7 +135,7 @@ cost_likelihood_pmodel_bigD13C_vj_gpp <- function(
     mutate(ll = ll_normalAdditScaled(
       .data$obs,.data$mod,.data$err_par_sd,.data$err_par_bias,.data$err_par_scale)
     ) |>
-    select('sitename','run_model','target','mod','obs',
+    select('sitename','target','mod','obs',
            'err_par_sd','err_par_bias','err_par_scale','ll')
   
   ll <- sum(df_ll$ll)
@@ -166,7 +165,8 @@ get_mod_obs_pmodel_bigD13C_vj_gpp <- function(
   # B) Run model ----
   ## run the time series model for gpp/et/... time series
   df_daily <- drivers |>
-    dplyr::filter(.data$run_model == "daily") |> # NOTE: this works gracefully even when no simulations are requested
+    dplyr::rowwise() |> dplyr::filter(all(.data$params_siml$onestep == FALSE)) |> dplyr::ungroup() |>
+    # NOTE: this works gracefully even when no simulations are requested
     runread_pmodel_f(
       # drivers   = _, # NOTE: this is unneeded since `|>` automatically inserts first argument
       par       = params_modl_and_err,
@@ -178,7 +178,7 @@ get_mod_obs_pmodel_bigD13C_vj_gpp <- function(
   ## run the onestep model for traits
   df_onestep <- drivers |>
     # TODO: from here on unneeded computational overhead
-    dplyr::filter(.data$run_model == "onestep") |>
+    dplyr::rowwise() |> dplyr::filter(all(.data$params_siml$onestep == TRUE)) |> dplyr::ungroup() |>
     # dplyr::filter(FALSE) |>
     dplyr::group_by(.data$sitename) |>
     tidyr::unnest(c('params_siml', 'forcing'))
@@ -243,8 +243,8 @@ get_mod_obs_pmodel_bigD13C_vj_gpp <- function(
                      dplyr::full_join, 
                      dplyr::left_join)
   df_mod_obs_daily <- obs |>
-    dplyr::filter(.data$run_model == "daily") |>
-    dplyr::select('sitename', 'run_model', 'targets', 'data') |>
+    dplyr::filter(.data$sitename %in% df_daily$sitename) |> # this drops onestep rows for a potential full_join
+    dplyr::select('sitename', 'targets', 'data') |>
     tidyr::unnest(c('data')) |>
     # make this work gracefully in case nrow=0
     ensure_cols_defined(tibble(date = as.Date(character()))) |>
@@ -256,13 +256,11 @@ get_mod_obs_pmodel_bigD13C_vj_gpp <- function(
         ensure_cols_defined(tibble(date = as.Date(character()),gpp = numeric(),le = numeric())) |>
         select('sitename', 'date', gpp_mod = 'gpp', le_mod = 'le'),
       by = dplyr::join_by('sitename', 'date')) |>
-    tidyr::fill("run_model") |>
     # nest again
-    tidyr::nest(modobs = -c('sitename', 'run_model', 'targets'))
+    tidyr::nest(modobs = -c('sitename', 'targets'))
   
   df_mod_obs_onestep <- obs |>
-    filter(.data$run_model == "onestep") |>
-    select('sitename', 'run_model', 'targets', 'data') |>
+    select('sitename', 'targets', 'data') |>
     tidyr::unnest('data') |>
     # make this work gracefully in case nrow=0
     ensure_cols_defined(tibble(bigD13C = list(), vj = list())) |>
@@ -272,7 +270,7 @@ get_mod_obs_pmodel_bigD13C_vj_gpp <- function(
         select('sitename', 'vcmax_mod_molm2s', 'jmax_mod_molm2s', 'bigD13C_mod_permil', 'vj_mod__'),
       by = dplyr::join_by('sitename')) |>
     # nest again
-    tidyr::nest(modobs = -c('sitename', 'run_model', 'targets'))
+    tidyr::nest(modobs = -c('sitename', 'targets'))
   
   # combine into single data.frame
   targets <- grep("^err_", names(params_modl_and_err), value = TRUE)
@@ -295,14 +293,14 @@ get_mod_obs_pmodel_bigD13C_vj_gpp <- function(
                     err_par_bias = 0,
                     err_par_scale= params_modl_and_err[["errscale_gpp"]]) |>
       tidyr::nest(obs_metadata = c('date')) |>
-      dplyr::select('sitename', 'run_model', 'target', 'obs_metadata', 'mod', 'obs', 
+      dplyr::select('sitename', 'target', 'obs_metadata', 'mod', 'obs', 
                     'err_par_sd', 'err_par_bias', 'err_par_scale'),
     
     df_mod_obs_onestep |>
+      dplyr::rowwise() |> dplyr::filter("bigD13C" %in% .data$targets) |> dplyr::ungroup() |>
       tidyr::unnest('modobs') |>
       # make this work gracefully in case nrow=0
       ensure_cols_defined(tibble(bigD13C = list(), bigD13C_mod_permil = numeric())) |>
-      tidyr::unnest('bigD13C') |>
       # make this work gracefully in case nrow=0
       ensure_cols_defined(tibble(bigD13C_obs_permil = numeric(),
                                  species = character(), 
@@ -313,27 +311,28 @@ get_mod_obs_pmodel_bigD13C_vj_gpp <- function(
                     err_par_bias = params_modl_and_err[["errbias_bigD13C"]],
                     err_par_scale= 1) |>
       tidyr::nest(obs_metadata = c('species', 'year')) |> # , Nobs, Nyears, Ndates
-      dplyr::select('sitename', 'run_model', 'target', 'obs_metadata', 'mod', 'obs', 
-                    'err_par_sd', 'err_par_bias', 'err_par_scale'),
-    
-    df_mod_obs_onestep |>
-      tidyr::unnest('modobs') |>
-      # make this work gracefully in case nrow=0
-      ensure_cols_defined(tibble(vj = list(), vj_mod__ = numeric())) |>
-      tidyr::unnest('vj') |>
-      # make this work gracefully in case nrow=0
-      ensure_cols_defined(tibble(vj_obs__ = numeric(),
-                                 genus = character(), 
-                                 species = character(), 
-                                 year = integer())) |>
-      dplyr::rename(all_of(c(mod = "vj_mod__", obs = "vj_obs__"))) |>
-      dplyr::mutate(target  = "vj",                                         #curr_target,
-                    err_par_sd   = params_modl_and_err[["err_vj"]],         #params_modl_and_err[[paste0("err_,"curr_target]]) |> # TODO: work here on  not hardcoding this...
-                    err_par_bias = params_modl_and_err[["errbias_vj"]],
-                    err_par_scale= 1) |>
-      tidyr::nest(obs_metadata = c('genus', 'species', 'year')) |> # , Nobs, Nyears, Ndates
-      dplyr::select('sitename', 'run_model', 'target', 'obs_metadata', 'mod', 'obs', 
+      dplyr::select('sitename', 'target', 'obs_metadata', 'mod', 'obs', 
                     'err_par_sd', 'err_par_bias', 'err_par_scale')
+    
+    # , # VJ: (removed)
+    # df_mod_obs_onestep |>
+    #   tidyr::unnest('modobs') |>
+    #   # make this work gracefully in case nrow=0
+    #   ensure_cols_defined(tibble(vj = list(), vj_mod__ = numeric())) |>
+    #   tidyr::unnest('vj') |>
+    #   # make this work gracefully in case nrow=0
+    #   ensure_cols_defined(tibble(vj_obs__ = numeric(),
+    #                              genus = character(), 
+    #                              species = character(), 
+    #                              year = integer())) |>
+    #   dplyr::rename(all_of(c(mod = "vj_mod__", obs = "vj_obs__"))) |>
+    #   dplyr::mutate(target  = "vj",                                         #curr_target,
+    #                 err_par_sd   = params_modl_and_err[["err_vj"]],         #params_modl_and_err[[paste0("err_,"curr_target]]) |> # TODO: work here on  not hardcoding this...
+    #                 err_par_bias = params_modl_and_err[["errbias_vj"]],
+    #                 err_par_scale= 1) |>
+    #   tidyr::nest(obs_metadata = c('genus', 'species', 'year')) |> # , Nobs, Nyears, Ndates
+    #   dplyr::select('sitename', 'target', 'obs_metadata', 'mod', 'obs', 
+    #                 'err_par_sd', 'err_par_bias', 'err_par_scale')
   )
   stopifnot(all(targets        %in% c("err_gpp", "err_bigD13C", "err_vj"))) # above hardcoded snippet is wrong if this is not the case
   stopifnot(all(targets_biases %in% c("errbias_bigD13C", "errbias_vj")))    # above hardcoded snippet is wrong if this is not the case

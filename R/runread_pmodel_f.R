@@ -3,12 +3,12 @@
 #' Runs P-model for multiple sites.
 #'
 #' @param drivers A nested data frame with one row for each site and columns 
-#' \code{sitename} and \code{run_model} and further columns
-#' named according to the arguments of function \code{\link{run_pmodel_f_bysite}},
-#' or \code{\link{run_pmodel_onestep_f_bysite}}, namely 
-#' \code{sitename, params_siml, site_info} and \code{forcing} (Note, when 
-#' \code{run_model} is "onestep", \code{params_siml} contains a single column 
-#' \code{lc4}).
+#' \code{sitename} and further columns
+#' \code{params_siml, site_info} and \code{forcing}. (\code{params_siml} contains
+#' the information whether or not to run the onestep or daily model through 
+#' \code{TRUE/FALSE} in column \code{onestep}. It also contains parameters
+#' \code{lc4} in the case of \code{onestep==TRUE} and those for function 
+#' \code{\link{run_pmodel_f_bysite}} in the case of \code{onestep==FALSE}.)
 #' @param par A named list of free (calibratable) model parameters.
 #' \describe{
 #'   \item{kphio}{The quantum yield efficiency at optimal temperature \eqn{\varphi_0}, 
@@ -37,13 +37,14 @@
 #'  to verify forcings and model parameters. \code{TRUE} by default.
 #' @param parallel A logical specifying whether simulations are to be
 #'  parallelised (sending data from a certain number of sites to each core).
-#'  Defaults to \code{FALSE}.
+#'  Defaults to \code{FALSE}. (Not applied to rows where \code{onestep==TRUE}.)
 #' @param ncores An integer specifying the number of cores used for parallel
 #'  computing (by default \code{ncores = 2}).
 #'
 #' @return A data frame (tibble) with one row for each site, site information 
 #' stored in the nested column \code{site_info} and outputs stored in the nested 
-#' column \code{data}. See \code{\link{run_pmodel_f_bysite}} and \code{\link{run_pmodel_onestep_f_bysite}} for a detailed 
+#' column \code{data}. See \code{\link{run_pmodel_f_bysite}} and 
+#' \code{\link{run_pmodel_onestep_f_bysite}} for a detailed 
 #' description of the outputs. 
 #' Example outputs are provided as \code{\link{pmodel_output}}.
 #' @export
@@ -114,23 +115,25 @@ runread_pmodel_f <- function(
   sitename <- params_siml <- site_info <-
     input <- forcing <- . <- NULL
   
-  # ensure backwards compatibility with format without column 'run_model':
-  if ("run_model" %in% names(drivers)) {
+  # ensure backwards compatibility with format without column 'onestep':
+  if ("onestep" %in% names(drivers$params_siml[[1]])) {
     # all good
   } else {
     warning("
       WARNING: Assuming daily P-model run requested. To clarify please add a 
-      column 'run_model' with 'daily' or 'onestep' to your driver data.frame.")
-    drivers <- drivers |> mutate(run_model = "daily")
+      column 'onestep' with 'FALSE' or 'TRUE' to the 'params_siml' data.frame.
+      in your driver.")
+    drivers <- drivers |> mutate(
+      params_siml = purrr::map(params_siml, ~mutate(.x, onestep = FALSE)))
   }
   
   # check input validity
-  stopifnot(all(drivers$run_model %in% c("daily","onestep")))
+  stopifnot(is.logical(lapply(drivers$params_siml, `[[`, 'onestep') |> unlist()))
   stopifnot(!dplyr::is_grouped_df(drivers))
   
   # split what is run by run_pmodel_f_bysite and what is run by run_pmodel_onestep_f_bysite:
-  drivers_daily   <- drivers |> dplyr::filter(.data$run_model == "daily")
-  drivers_onestep <- drivers |> dplyr::filter(.data$run_model == "onestep")
+  drivers_daily   <- drivers |> dplyr::rowwise() |> dplyr::filter(all(.data$params_siml$onestep == FALSE)) |> ungroup()
+  drivers_onestep <- drivers |> dplyr::rowwise() |> dplyr::filter(all(.data$params_siml$onestep == TRUE)) |> ungroup()
   
   # setup helpers for conditional parallelization
   do_if <- function(df, cond, f){ # enable conditional lines in dplyr piping
@@ -149,7 +152,7 @@ runread_pmodel_f <- function(
   # NOTE: this also work gracefully even when no daily simulations are requested,
   # i.e. if nrow(drivers_onestep) == 0
   df_out_onestep <- drivers_onestep |>
-    # do_if(parallel, function(df) multidplyr::partition(df, cl)) %>%
+    # do_if(parallel, function(df) multidplyr::partition(df, cl)) %>% # NOTE: outcommented: decided to never parallelize onestep
     dplyr::mutate(data = purrr::pmap(
       list(
         # ensure all required arguments are used:
@@ -159,7 +162,7 @@ runread_pmodel_f <- function(
         params_modl = list(par),        # list() needed so par is recycled
         makecheck   = list(makecheck)), # list() needed so par is recycled
       run_pmodel_onestep_f_bysite)) |>
-    # do_if(parallel, function(df) dplyr::collect(df)) |>
+    # do_if(parallel, function(df) dplyr::collect(df)) |>             # NOTE: outcommented: decided to never parallelize onestep
     # rename output columns (alternatively change them in run_pmodel_onestep_f_bysite)
     dplyr::mutate(data = purrr::map(
       .data$data, ~dplyr::rename(.x,
@@ -174,7 +177,7 @@ runread_pmodel_f <- function(
                            'rd_mod_gCm2s'            = 'rd'))) |>
     # clean up output
     dplyr::select(-c('params_siml', 'forcing')) |>
-    dplyr::select('sitename', 'run_model', 'site_info', 'data')
+    dplyr::select('sitename', 'site_info', 'data')
   
   # ---- daily model ----
   # NOTE: this also work gracefully even when no daily simulations are requested,
@@ -195,7 +198,7 @@ runread_pmodel_f <- function(
     do_if(parallel, function(df) dplyr::collect(df)) |>
     # clean up output
     dplyr::select(-c('params_siml', 'forcing')) |>
-    dplyr::select('sitename', 'run_model', 'site_info', 'data')
+    dplyr::select('sitename', 'site_info', 'data')
   
   # bind to output data.frame
   df_out <- bind_rows(df_out_daily, df_out_onestep) |> ungroup()

@@ -93,34 +93,45 @@ pmodel_drivers_allsites    <- readr::read_rds(
 pmodel_validation_allsites <- readr::read_rds(
   file.path(dir, "extracted", "01_bigD13C-vj-gpp_calibsofun_obs.rds"))
 
-# subset dates and variables
-pmodel_validation_allsites_2 <- pmodel_validation_allsites |> 
-  tidyr::unnest_wider(targets) |> 
-  # subset variables
-  dplyr::filter(gpp | bigD13C) |>
-  select(-vj)
-
+#---- pmodel_drivers and pmodel_validation: processing -----
 # subset sites
-N_sites <- 5 # per category "daily", "onestep"
-set.seed(42)
-pmodel_validation_3 <- pmodel_validation_allsites_2 |> 
-  group_by(gpp) |> 
-  # sample some sites
-  slice_sample(n=N_sites) |>
-  ungroup() |>
-  # and ensure FR-Pue is in it
-  bind_rows(filter(pmodel_validation_allsites_2, sitename == "FR-Pue")) |> distinct() |>
-  arrange(run_model) |>
-  # nest targets again into a one-row tibble:
-  nest(targets = c('bigD13C','gpp')) |>
-  select(sitename, run_model, targets, data)
+sites_to_keep <- c( # these are some manual samples for different vegetation 
+                    # types from Table S2 (published version of https://www.biorxiv.org/content/10.1101/2023.11.24.568574v3)
+  "FR-Pue","DK-Sor","US-Ha1","CH-Dav","FI-Hyy","GF-Guy","CZ-BK1","US-PFa",
+  "lon_+010.52_lat_+051.08",
+  "lon_+112.58_lat_+023.13",
+  "lon_+011.10_lat_+048.30",
+  "lon_-079.10_lat_+035.97", # this site would have bigD13C AND VJ observations
+  "lon_-119.82_lat_+034.50",
+  "lon_+146.13_lat_-032.97",
+  "lon_+148.30_lat_-036.10",
+  "lon_+145.13_lat_-005.83",
+  "lon_+153.00_lat_-026.85",
+  "lon_-116.45_lat_+047.16",
+  "lon_-122.98_lat_+038.40",
+  "lon_-149.61_lat_+063.97")
 
-pmodel_drivers_3 <- pmodel_drivers_allsites |> 
-  dplyr::filter(sitename %in% pmodel_validation_3$sitename)
+# pmodel_drivers processing:
+# A) subset sites
+pmodel_drivers_subset <- pmodel_drivers_allsites |> 
+  # subset sites
+  dplyr::filter(sitename %in% sites_to_keep) |>
+  # remove unneeded columns of site_info: 
+  # canopy_height, reference_height, nyears_gpp, FDK_koeppen_code, FDK_igbp_land_use
+  dplyr::mutate(site_info = purrr::map(site_info, ~select(.x, lon, lat, elv, whc)))
 
-# reduce file size (reducing dates) and remove unused columns:
-pmodel_drivers_3_onestep <- pmodel_drivers_3 |> dplyr::filter(run_model == "onestep") 
-pmodel_drivers_3_daily   <- pmodel_drivers_3 |> dplyr::filter(run_model == "daily") |>
+# B) remove column 'run_model':
+pmodel_drivers_subset_daily <- pmodel_drivers_subset |> dplyr::filter(run_model == "daily") |>
+  # move 'run_model' into 'params_siml'
+  mutate(params_siml = purrr::map(params_siml, ~mutate(.x, onestep = FALSE))) |>
+  select(-run_model)
+pmodel_drivers_subset_onestep <- pmodel_drivers_subset |> dplyr::filter(run_model == "onestep") |>
+  # move 'run_model' into 'params_siml'
+  mutate(params_siml = purrr::map(params_siml, ~mutate(.x, onestep = TRUE))) |>
+  select(-run_model)
+
+# C) subset dates to reduce file size
+pmodel_drivers_subset_daily <- pmodel_drivers_subset_daily |>
   # remove unneeded dates (only from daily model runs, i.e. GPP, not onestep, i.e. bigDelta13C)
   tidyr::unnest(forcing) |>
   dplyr::mutate(year = lubridate::year(date)) |>
@@ -134,32 +145,76 @@ pmodel_drivers_3_daily   <- pmodel_drivers_3 |> dplyr::filter(run_model == "dail
   tidyr::nest(forcing = "date":"ccov") |> 
   dplyr::ungroup()
 
-pmodel_drivers <- bind_rows(pmodel_drivers_3_daily, pmodel_drivers_3_onestep) |>
-  # remove columns: canopy_height, reference_height, nyears_gpp, FDK_koeppen_code, FDK_igbp_land_use
-  dplyr::mutate(site_info = purrr::map(site_info, ~select(.x, lon, lat, elv, whc)))
+# D) finalize drivers
+pmodel_drivers <- bind_rows(pmodel_drivers_subset_daily, 
+                            pmodel_drivers_subset_onestep)
 
-# p_model_oldformat_drivers |> unnest(forcing) |> group_by(sitename) |> mutate(year = lubridate::year(date)) |> summarise(min(year), max(year))
-# pmodel_drivers |> unnest(forcing) |> group_by(sitename) |> mutate(year = lubridate::year(date)) |> summarise(min(year), max(year))
-# pmodel_validation_3 |> unnest(data) |> group_by(sitename) |> mutate(year = lubridate::year(date)) |> summarise(min(year), max(year))
+# pmodel_validation processing:
+# A) subset sites, variables
+pmodel_validation_subset <- pmodel_validation_allsites |> 
+  # remove 'run_model' from validation data set (we implicitly use targets)
+  select(-run_model) |>
+  # subset sites
+  dplyr::filter(sitename %in% sites_to_keep) |>
+  # subset variables
+  tidyr::unnest_wider(targets) |> 
+  select(-vj) |>
+  # only keep sites with targets bigD13C or gpp
+  dplyr::filter(gpp | bigD13C) |> 
+  # nest targets again into a one-row tibble:
+  nest(targets = c('bigD13C','gpp')) |>
+  select(sitename, targets, data)
 
+# B) transform targets from a named list into a
+named_boolean_list_to_vector <- function(lst){
+  # transform a named list, 
+  # e.g. list(bigD13C = FALSE, gpp = TRUE, et = TRUE) into list("gpp")
+  names(lst)[unlist(lst) == TRUE]
+}
+pmodel_validation_subset <- pmodel_validation_subset |> 
+  mutate(targets = purrr::map(targets, named_boolean_list_to_vector))
+
+# C) subset dates to reduce file size
 # remove unneded dates from observations (i.e. those outside of the driver dates) :
+# C1) find which years are available in driver
 drivers_available <- pmodel_drivers |> 
-  filter(run_model == "daily") |> group_by(sitename) |> 
-  mutate(forcing_years_available = purrr::map(forcing, ~(.x$date |> lubridate::year() |> unique()))) |>
+  # filter rows with run_model == "daily":
+  rowwise() |> dplyr::filter(all(params_siml$onestep == FALSE)) |> ungroup() |>
+  # summarise which years have driver data:
+  group_by(sitename) |> 
+  mutate(forcing_years_available = 
+           purrr::map(forcing, ~(.x$date |> lubridate::year() |> unique()))) |>
   select(sitename, forcing_years_available)
-pmodel_validation_3
-pmodel_validation_3_gppYears <- pmodel_validation_3 |> 
-  left_join(drivers_available, by = join_by(sitename)) |>
-  filter(run_model == "daily") |>
+
+# C2) subset gpp runs  
+pmodel_validation_subset_gppYears <- pmodel_validation_subset |>
+  # rowwise() |> filter("gpp" %in% targets) |> ungroup() |>
+  inner_join(drivers_available, by = join_by(sitename)) |>
   unnest(data) |>
   mutate(obs_year = lubridate::year(date)) |>
   rowwise() |> filter(obs_year %in% forcing_years_available) |> ungroup() |>
   select(-obs_year, -forcing_years_available) |>
-  nest(data = -c(sitename, run_model, targets))
-pmodel_validation <- bind_rows(
-  pmodel_validation_3_gppYears,
-  pmodel_validation_3 |> filter(run_model == "onestep") |> unnest(data) |> select(-vj) |> nest(data = c('bigD13C'))
-)
+  nest(data = -c(sitename, targets))
+
+# C3) define two targets for Davos CH-Dav:
+pmodel_validation_subset_gppYears$targets[[
+  which(pmodel_validation_subset_gppYears$sitename == "CH-Dav")]] <- c("gpp","le")
+
+# D) remove unneeded leaf-trait observations (vj) and format bigD13C
+pmodel_validation_subset_bigD13C <- pmodel_validation_subset |> 
+  rowwise() |> filter("bigD13C" %in% targets) |> ungroup() |>
+  # filter(run_model == "onestep") |> 
+  unnest(data) |> select(-vj) |> unnest(bigD13C) |> tidyr::unite(col = "id", c("year","species")) |>
+  select(sitename, targets, id, bigD13C = bigD13C_obs_permil) |>
+  nest(data = c('id', 'bigD13C'))
+
+# E) finalize validation observations
+pmodel_validation <- bind_rows(pmodel_validation_subset_gppYears,
+                               pmodel_validation_subset_bigD13C)
+
+        # p_model_oldformat_drivers |> unnest(forcing) |> group_by(sitename) |> mutate(year = lubridate::year(date)) |> summarise(min(year), max(year))
+        # pmodel_drivers |> unnest(forcing) |> group_by(sitename) |> mutate(year = lubridate::year(date)) |> summarise(min(year), max(year))
+        # pmodel_validation_subset |> unnest(data) |> group_by(sitename) |> mutate(year = lubridate::year(date)) |> summarise(min(year), max(year))
 
 # store as rda into the package
 usethis::use_data(pmodel_drivers,    overwrite = TRUE, compress = "xz")

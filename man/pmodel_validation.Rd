@@ -8,8 +8,6 @@
 A tibble of validation data:
 \describe{
   \item{sitename}{A character string containing the site name (e.g. 'FR-Pue').}
-  \item{run_model}{A character string, either: 'daily' or 'onestep', 
-  specifying whether to run daily simulations or onestep acclimation.}
   \item{targets}{A single one-row tibble with a column for each target
   containing TRUE or FALSE (or NA_logical)}
   \item{data}{A single tibble or a list of tibbles with target observations.
@@ -53,9 +51,9 @@ model parameters with the function \code{\link{calib_sofun}}
 \examples{
 require(ggplot2); require(tidyr)
 p_model_oldformat_validation \%>\% tidyr::unnest(data) 
-pmodel_validation |> dplyr::filter(run_model == "daily") |> unnest(data)
-pmodel_validation |> dplyr::filter(run_model == "onestep") |> unnest(data)
-pmodel_validation |> dplyr::filter(run_model == "onestep") |> unnest(data) |> unnest(bigD13C)
+pmodel_validation |> tidyr::unnest_wider(targets, names_sep = "_")
+pmodel_validation |> dplyr::filter(grepl("^[A-Z]", sitename)) |> unnest(data)
+pmodel_validation |> dplyr::filter(grepl("lon", sitename)) |> unnest(data)
 
 }
 \keyword{datasets}

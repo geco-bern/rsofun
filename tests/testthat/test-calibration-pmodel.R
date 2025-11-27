@@ -63,8 +63,6 @@ test_that("test function definitions for prior parameter distributions (to be us
 
 test_that("test GPP calibration routine p-model (BT, likelihood maximization)", {
   skip_on_cran()
-  # drivers <- rsofun::p_model_oldformat_drivers |> mutate(run_model = "daily")
-  # obs <- rsofun::p_model_oldformat_validation |> mutate(run_model = "daily")
   drivers <- pmodel_drivers |> dplyr::filter(sitename == "FR-Pue")
   obs <- pmodel_validation |> dplyr::filter(sitename == "FR-Pue")
   
@@ -152,8 +150,8 @@ test_that("test GPP calibration routine p-model (GenSA, rmse, all params)", {
 
 test_that("test Vcmax25 calibration routine p-model (BT, likelihood, all params)", {
   skip_on_cran()
-  drivers <- p_model_oldformat_drivers_vcmax25 |> mutate(run_model = "daily")
-  obs <- rsofun::p_model_oldformat_validation_vcmax25 |> mutate(run_model = "daily")
+  drivers <- p_model_oldformat_drivers_vcmax25 |> mutate(params_siml = purrr::map(params_siml, ~mutate(.x, onestep = FALSE)))
+  obs <- rsofun::p_model_oldformat_validation_vcmax25
   
   settings <- list(
     method              = "bayesiantools",
@@ -195,8 +193,8 @@ test_that("test Vcmax25 calibration routine p-model (BT, likelihood, all params)
 
 test_that("test Vcmax25 calibration routine p-model (GenSA, rmse)", {
   skip_on_cran()
-  drivers <- p_model_oldformat_drivers_vcmax25 |> mutate(run_model = "daily")
-  obs <- rsofun::p_model_oldformat_validation_vcmax25 |> mutate(run_model = "daily")
+  drivers <- p_model_oldformat_drivers_vcmax25 |> mutate(params_siml = purrr::map(params_siml, ~mutate(.x, onestep = FALSE)))
+  obs <- rsofun::p_model_oldformat_validation_vcmax25
   params_fix <- list(
     kphio              = 0.04998, # setup ORG in Stocker et al. 2020 GMD
     kphio_par_a        = 0.01,  # set to zero to disable temperature-dependence of kphio, setup ORG in Stocker et al. 2020 GMD
@@ -235,10 +233,12 @@ test_that("test Vcmax25 calibration routine p-model (GenSA, rmse)", {
 
 test_that("test joint calibration routine p-model (BT, likelihood maximization)", {
   skip_on_cran()
-  drivers <- rbind(gpp = rsofun::p_model_oldformat_drivers |> mutate(run_model = "daily"), 
-                   vcmax25 = rsofun::p_model_oldformat_drivers_vcmax25 |> mutate(run_model = "daily"))
-  obs <- rbind(gpp = rsofun::p_model_oldformat_validation |> mutate(run_model = "daily"),
-               vcmax25 = rsofun::p_model_oldformat_validation_vcmax25 |> mutate(run_model = "daily"))
+  drivers <- rbind(gpp = p_model_oldformat_drivers |> 
+                     mutate(params_siml = purrr::map(params_siml, ~mutate(.x, onestep = FALSE))),
+                   vcmax = p_model_oldformat_drivers_vcmax25 |> 
+                     mutate(params_siml = purrr::map(params_siml, ~mutate(.x, onestep = FALSE))))
+  obs <- rbind(gpp = rsofun::p_model_oldformat_validation,
+               vcmax25 = rsofun::p_model_oldformat_validation_vcmax25)
   params_fix <- list(
     # kphio              = 0.04998, # setup ORG in Stocker et al. 2020 GMD
     kphio_par_a        = 0.01,  # set to zero to disable temperature-dependence of kphio, setup ORG in Stocker et al. 2020 GMD

@@ -21,9 +21,10 @@
   has been made consistent into `tibble`
   
 ## (Non-)Breaking changes
-* New driver data.frame format for P-model: containing a new column `run_model` 
-  determining which model to run (`daily` or `onestep`) and in the 
-  `forcing` data.frame additional columns for `vwind` and non-zero `ccov` 
+* New driver data.frame format for P-model: now containing the information which
+  model to run (`daily` or `onestep`) as additional column `onestep` = `TRUE`/`FALSE`
+  in the `params_siml` column. Moreover, in the 
+  `forcing` column the nested data.frame has now additional columns for `vwind` and non-zero `ccov` 
   (resulting in columns `ccov`,`co2`,`date`,`fapar`,`netrad`,`patm`,`ppfd`,
   `rain`,`snow`,`temp`,`tmax`,`tmin`,`vpd`,`vwind`) for `daily` model runs 
   and columns (`co2`,`patm`,`ppfd`,`temp`,`vpd`) for `onestep` model runs.
@@ -37,9 +38,8 @@
   
   # bring new to old format:
   rsofun::pmodel_drivers |> dplyr::filter(sitename == "FR-Pue") |> 
-    # remove new column 'run_model'
-    dplyr::select(-run_model) |> 
-    # 'params_siml' remains same
+    # remove new column 'onestep' from nested 'param_siml'
+    dplyr::mutate(params_siml = purrr::map(params_siml, ~dplyr::select(.x, -'onestep'))) |>
     # 'site_info' remains same
     # 'forcing' has additional info `vwind` that needs removing
     tidyr::unnest(forcing) |>
@@ -56,8 +56,8 @@
     dplyr::mutate(vwind = 2.64, ccov = 0.485) |>
     tidyr::nest(forcing = c(date, temp, vpd, ppfd, netrad, patm, 
                             snow, rain, tmin, tmax, vwind, fapar, co2, ccov)) |>
-    # add new column 'run_model'
-    mutate(run_model = "daily")
+    # add new column 'onestep' in nested 'param_siml'
+    dplyr::mutate(params_siml = purrr::map(params_siml, ~dplyr::mutate(.x, onestep = FALSE)))
     
   rsofun::p_model_oldformat_drivers_vcmax25 |> 
     tidyr::unnest(site_info) |> mutate(latitude = lat) |> tidyr::nest(site_info = c(lon,lat,elv,year_start,year_end,whc)) |>
@@ -92,28 +92,30 @@
     ) |>
     ungroup() |> select(-growing_season_length) |>
     tidyr::nest(forcing = c(temp,vpd,ppfd,co2,patm)) |>
-    # add new column 'run_model'
-    mutate(run_model = "onestep")
+    # add new column 'onestep' in nested 'param_siml'
+    dplyr::mutate(params_siml = purrr::map(params_siml, ~dplyr::mutate(.x, onestep = FALSE)))
   ```
 
 * New validation (i.e. observation) data.frame format for P-model: 
-  containing a new column `run_model` determining which model 
-  to run (`daily` or `onestep`) and a new column `targets` determining which
-  variable(s) is/are the target of the corresponding line. 
+  containing a new column `targets` determining which
+  variable(s) is/are the target of the corresponding line and which model 
+  to run (`daily` or `onestep`).
   Each row in `pmodel_validation` corresponds to a model run (either `daily` 
   or `onestep`) and should have a corresponding row in `pmodel_drivers`.
   
-  For `onestep`-model rows, the column `data` contains a nested tibble with a 
-  separate `data.frame()` for each target (e.g. `bigD13C` or `vj`). This allows 
-  to have different number of observations in each `data_frame()`.
-  For `daily`-model rows, the column `data` contains a single 
-  `data.frame()` with a mandatory column `date` and additional columns for each 
-  target (e.g. `gpp` or `nee` or `le`). This format assumes each target value is 
-  available on the same dates. (TODO: define NA or other fill value.)
-  For `onestep` and `daily`-model rows, the exact column names of the targets in
-  the `data` column must correspond to column names provided under `targets`. The
-  column `targets` contains a single-row tibble with a column for each target
-  containing TRUE or FALSE (or NA_logical).
+  For each row, the column `data` contains a single 
+  `data.frame()` with a column `id` (`onestep`-row) or `date` (`daily`-row) 
+  and additional columns for each target (e.g. `gpp` or `nee` or `le`). 
+  
+  This format assumes for `daily`-rows that each target variable is 
+  available on the same dates and for
+  `onestep`-rows that multiple target variables have the same number of 
+  observations in each `data_frame()`. (NOTE: if in the future this appears 
+  too limiting we can define NA or other fill values, or alternatively use 
+  nested data.frames - i.e. one for each target value.)
+  
+  The exact column names of the targets in the `data.frame` in
+  the `data` column must correspond to names provided as a list of strings under `targets`.
   
   ```
   # B) Compare with previous example data set:
@@ -122,8 +124,6 @@
   
   # bring new to old format:
   rsofun::pmodel_validation |> dplyr::filter(sitename == "FR-Pue") |> 
-    # remove new column 'run_model'
-    dplyr::select(-run_model) |>
     # remove new column 'targets'
     dplyr::select(-targets) |>
     # remove new columns inside of 'data':
@@ -136,30 +136,27 @@
   
   # bring old to new format:
   rsofun::p_model_oldformat_validation |> 
-    # add new column 'run_model'
-    dplyr::mutate(run_model = "daily") |>
     # add new column 'targets'
-    dplyr::mutate(targets = list(tibble(bigD13C = FALSE, gpp = TRUE))) |>
+    dplyr::mutate(targets = list(c("gpp"))) |>
     # add new columns inside of 'data':
     tidyr::unnest(data) |>
     dplyr::select(-gpp_unc) |>
     dplyr::mutate(gpp_qc = 1, nee = NA, nee_qc = NA, le = NA, le_qc = NA) |>
     tidyr::nest(data = c('date', 'gpp','gpp_qc','nee','nee_qc','le','le_qc')) |>
     # order columns
-    dplyr::select(sitename, run_model, targets, data)
+    dplyr::select(sitename, targets, data)
   
   rsofun::p_model_oldformat_validation_vcmax25 |>
-    # add new column 'run_model'
-    dplyr::mutate(run_model = "onestep") |>
     # add new column 'targets'
-    dplyr::mutate(targets = list(tibble(vcmax25 = TRUE, bigD13C = FALSE, gpp = FALSE))) |>
+    dplyr::mutate(targets = list(c("vcmax25"))) |>
     # add new columns inside of 'data':
     tidyr::unnest(data) |>
     tidyr::nest(data = c('vcmax25', 'vcmax25_unc')) |>
     # order columns
-    dplyr::select(sitename, run_model, targets, data)
+    dplyr::select(sitename, targets, data)
   ```
-* Note: ideally, validation data and drivers could be a single data.frame.
+
+* Note for future: ideally, validation data and drivers could be a single data.frame.
   This would be ideal, since each row in the validation data.frame() must have a
   corresponding row in the drivers data.frame(). Having a single data.frame() 
   enforces this naturally.
@@ -182,37 +179,30 @@
     # bring to format with single row = single model run
     tidyr::pivot_wider(values_from = targets_obs, names_from = variables) |>
     # add new column 'targets'
-    dplyr::mutate(targets = list(list(GPP = TRUE, LAI = TRUE, Density = TRUE, Biomass = TRUE))) |>
+    dplyr::mutate(targets = list(c("GPP", "LAI", "Density", "Biomass"))) |>
     # make 'data' a list of nested data.frames
-    tidyr::nest(GPP     = c('GPP'),
-                LAI     = c('LAI'),
-                Density = c('Density'),
-                Biomass = c('Biomass')) |>
+    # # this double nesting could be useful:tidyr::nest(GPP     = c('GPP'),
+    # # this double nesting could be useful:            LAI     = c('LAI'),
+    # # this double nesting could be useful:            Density = c('Density'),
+    # # this double nesting could be useful:            Biomass = c('Biomass')) |>
+    # # this double nesting could be useful:tidyr::nest(data = c('GPP', 'LAI', 'Density', 'Biomass')) |>
     tidyr::nest(data = c('GPP', 'LAI', 'Density', 'Biomass')) |>
-    # add new column 'run_model'
-    dplyr::mutate(run_model = "biomee_onestep") |>
     # order columns
-    dplyr::select(sitename, run_model, targets, data)
+    dplyr::select(sitename, targets, data)
   ```
   ```
   rsofun::biomee_gs_leuning_drivers |> 
       tidyr::unnest(forcing) |> 
       tidyr::nest(forcing = c(date, hod, temp, vpd, ppfd, patm, 
-                              rain, temp, wind, co2)) |> # TODO: note here it is called wind instead of vwind
-      # add new column 'run_model'
-      mutate(run_model = "biomee_daily")
+                              rain, temp, wind, co2)) # TODO: note here it is called wind instead of vwind
   rsofun::biomee_p_model_drivers |> 
       tidyr::unnest(forcing) |> 
       tidyr::nest(forcing = c(date, hod, temp, vpd, ppfd, patm, 
-                              rain, temp, wind, co2)) |> # TODO: note here it is called wind instead of vwind
-      # add new column 'run_model'
-      mutate(run_model = "biomee_daily")
+                              rain, temp, wind, co2)) # TODO: note here it is called wind instead of vwind
   rsofun::biomee_p_model_luluc_drivers |> 
       tidyr::unnest(forcing) |> 
       tidyr::nest(forcing = c(date, hod, temp, vpd, ppfd, patm, 
-                              rain, temp, wind, co2)) |> # TODO: note here it is called wind instead of vwind
-      # add new column 'run_model'
-      mutate(run_model = "biomee_daily")
+                              rain, temp, wind, co2)) # TODO: note here it is called wind instead of vwind
   ```
       
 # rsofun 5.1.0
