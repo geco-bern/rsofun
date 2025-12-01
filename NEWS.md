@@ -162,55 +162,9 @@
     dplyr::select(sitename, targets, data)
   ```
 
-* Note for future: ideally, validation data and drivers could be a single data.frame.
-  This would be ideal, since each row in the validation data.frame() must have a
-  corresponding row in the drivers data.frame(). Having a single data.frame() 
-  enforces this naturally.
+* Note that driver and validation data format for biomee has not changed. But 
+could in the future be adapted accordingly.
 
-
-* TODO: what to do about driver and validation data format for biomee?
-  
-  ```
-  > rsofun::biomee_validation |> unnest(data)
-  # A tibble: 4 × 3
-    sitename variables targets_obs
-    <chr>    <chr>           <dbl>
-  1 CH-Lae   GPP              1.86
-  2 CH-Lae   LAI              6.49
-  3 CH-Lae   Density        296.  
-  4 CH-Lae   Biomass         44.5 
-  
-  # bring from old to new
-  rsofun::biomee_validation |> unnest(data) |>
-    # bring to format with single row = single model run
-    tidyr::pivot_wider(values_from = targets_obs, names_from = variables) |>
-    # add new column 'targets'
-    dplyr::mutate(targets = list(c("GPP", "LAI", "Density", "Biomass"))) |>
-    # make 'data' a list of nested data.frames
-    # # this double nesting could be useful:tidyr::nest(GPP     = c('GPP'),
-    # # this double nesting could be useful:            LAI     = c('LAI'),
-    # # this double nesting could be useful:            Density = c('Density'),
-    # # this double nesting could be useful:            Biomass = c('Biomass')) |>
-    # # this double nesting could be useful:tidyr::nest(data = c('GPP', 'LAI', 'Density', 'Biomass')) |>
-    tidyr::nest(data = c('GPP', 'LAI', 'Density', 'Biomass')) |>
-    # order columns
-    dplyr::select(sitename, targets, data)
-  ```
-  ```
-  rsofun::biomee_gs_leuning_drivers |> 
-      tidyr::unnest(forcing) |> 
-      tidyr::nest(forcing = c(date, hod, temp, vpd, ppfd, patm, 
-                              rain, temp, wind, co2))
-  rsofun::biomee_p_model_drivers |> 
-      tidyr::unnest(forcing) |> 
-      tidyr::nest(forcing = c(date, hod, temp, vpd, ppfd, patm, 
-                              rain, temp, wind, co2))
-  rsofun::biomee_p_model_luluc_drivers |> 
-      tidyr::unnest(forcing) |> 
-      tidyr::nest(forcing = c(date, hod, temp, vpd, ppfd, patm, 
-                              rain, temp, wind, co2))
-  ```
-      
 # rsofun 5.1.0
 
 ## New features
