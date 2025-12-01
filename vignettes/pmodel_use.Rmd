@@ -28,28 +28,22 @@ Here we give a short example on how to run the `p-model` on the included demo da
 
 ## Demo data
 
-The package includes two demo datasets to run and validate p-model output using GPP observations. These files can be directly loaded into your workspace by typing:
+The package includes two demo datasets to run and validate p-model output using GPP or D13C observations. These files can be directly loaded into your workspace by typing:
 
 ```{r}
 library(rsofun)
 
-# this is to deal with an error p_model_oldformat_drivers.rds not being found 
-p_model_oldformat_drivers
-
-p_model_oldformat_validation
-```
-
-These are real data from the French FR-Pue fluxnet site. Information about data structure, variable names, and their meaning and units can be found in the reference pages of `p_model_oldformat_drivers` and `p_model_oldformat_validation`. We can use these data to run the model, together with observations of GPP we can also calibrate `p-model` parameters.
-
-~~Another two datasets are provided as an example to validate the model against leaf traits data, rather than fluxes. Measurements of Vcmax25 (aggregated over species) for a subset of 4 sites from the GlobResp database (Atkin et al., 2015) are given in `p_model_oldformat_validation_vcmax25` and the corresponding forcing for the P-model is given in `p_model_oldformat_drivers_vcmax25`. Since leaf traits are only measured once per site, the forcing used is a single year of average climate (the average measurements between 2001 and 2015 on each day of the year).~~
-
-```{r}
+# this is to deal with an error pmodel_drivers.rds not being found 
 pmodel_drivers
 
 pmodel_validation
 ```
 
-For the remainder of this vignette, we will use the GPP flux datasets. The workflow is exactly the same for leaf traits data.
+These are real data from six fluxnet sites (CH-Aws, CZ-BK1, FR-LBr, FR-Pue, GF-Guy, US-Jo1). Information about data structure, variable names, and their meaning and units can be found in the reference pages of `pmodel_drivers` and `pmodel_validation`. We can use these data to run the model, together with observations of GPP we can also calibrate `p-model` parameters.
+
+~~Another two datasets are provided as an example to validate the model against leaf traits data, rather than fluxes. Measurements of Vcmax25 (aggregated over species) for a subset of 4 sites from the GlobResp database (Atkin et al., 2015) are given in `p_model_oldformat_validation_vcmax25` and the corresponding forcing for the P-model is given in `p_model_oldformat_drivers_vcmax25`. Since leaf traits are only measured once per site, the forcing used is a single year of average climate (the average measurements between 2001 and 2015 on each day of the year).~~
+
+~~For the remainder of this vignette, we will use the GPP fluxnet datasets. The workflow is exactly the same for leaf traits data.~~
 
 To get your raw data into the structure used within `rsofun`, please see R packages [ingestr](https://github.com/geco-bern/ingestr) and [FluxDataKit](https://github.com/geco-bern/FluxDataKit).
 
@@ -78,13 +72,10 @@ output <- rsofun::runread_pmodel_f(
   rsofun::pmodel_drivers |>
     # subset only certain sites:
     dplyr::filter(sitename %in% c(
+      # i.e. only use sites where we request runs of the daily p-model (internally
+      # calling `run_pmodel_f_bysite`, and not `run_pmodel_onestep_f_bysite`)
       "FR-Pue",
-      "CA-Cbo", "CH-Aws", "CH-Fru", "ES-LM2", "FI-Let",
-      "IT-Lav", "IT-MBo", "IT-Noe", "IT-Ro2", "US-SRM"
-    )) |>
-    # only use sites where we request runs of the daily p-model (internally
-    # calling `run_pmodel_f_bysite`, and not `run_pmodel_onestep_f_bysite`)
-    dplyr::filter(run_model == "daily"),
+      "CH-Dav", "CZ-BK1", "DK-Sor", "FI-Hyy", "GF-Guy", "US-Ha1", "US-PFa")),
   par = params_modl
 )
 ```
@@ -104,7 +95,9 @@ df_gpp_plot <- output |>
   tidyr::unnest(data) |>
   dplyr::select(sitename, date, gpp_mod = gpp) |>
   dplyr::left_join(
-    rsofun::pmodel_validation |> dplyr::filter(run_model == "daily") |>
+    rsofun::pmodel_validation |> dplyr::filter( sitename %in% c(
+      "FR-Pue",
+      "CH-Dav", "CZ-BK1", "DK-Sor", "FI-Hyy", "GF-Guy", "US-Ha1", "US-PFa")) |>
       tidyr::unnest(data) |>
       dplyr::select(sitename, date, gpp_obs = gpp),
     by = c("sitename", "date")
