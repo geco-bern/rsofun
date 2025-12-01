@@ -8,14 +8,14 @@
   * New `cost_likelihood_pmodel_bigD13C_vj_gpp()` that can handle multiple 
   target variables that require to run either `run_pmodel_f_bysite()` or 
   `run_pmodel_onestep_f_bysite()`. Thus also requires a new data format for the
-  `drivers` and `obs` arguments. See below under breaking changes for the new
+  `drivers` and `obs` arguments. See below under (non-)breaking changes for the new
   format.
   * `runread_pmodel()` can now run onestep and daily model thanks to the new 
   `drivers` format. If the old format is used it is implicitly assuming daily 
   runs were requested.
   * `pmodel_drivers` contain now more sites and a range of `daily` as well as 
   `onestep` model runs. Note that the data of site `FR-Pue` were updated in FDK,
-  so that the forcing data has slightly changed and also `whc` was modified from 
+  so that the forcing data has slightly changed and also `whc` of `FR-Pue` was modified from 
   432 to 260 mm.
   * output of `run_pmodel_f_bysite()` (and consequently of `runread_pmodel()`) 
   has been made consistent into `tibble`
@@ -24,13 +24,39 @@
 * New driver data.frame format for P-model: now containing the information which
   model to run (`daily` or `onestep`) as additional column `onestep` = `TRUE`/`FALSE`
   in the `params_siml` column. Moreover, in the 
-  `forcing` column the nested data.frame has now additional columns for `wind` and non-zero `ccov` 
+  `forcing` column the nested data.frame has now additional columns for `wind` 
   (resulting in columns `ccov`,`co2`,`date`,`fapar`,`netrad`,`patm`,`ppfd`,
   `rain`,`snow`,`temp`,`tmax`,`tmin`,`vpd`,`wind`) for `daily` model runs 
   and columns (`co2`,`patm`,`ppfd`,`temp`,`vpd`) for `onestep` model runs.
-  Each row in `pmodel_drivers` corresponds to a model run (either `daily` 
-  or `onestep`) and should have a corresponding row in `pmodel_validation`.
+  Each row in `pmodel_drivers` corresponds to a model run (either daily 
+  or onestep depending on `params_siml$onestep` logical) 
+  and should have a corresponding row in `pmodel_validation`.
+  The example data set for `FR-Pue` now contains non-zero `ccov`, previously this was set to `0`.
+* New validation (i.e. observation) data.frame format for P-model: 
+  containing a new column `targets` determining which
+  variable(s) is/are the target of the corresponding line.
+  Each row in `pmodel_validation` corresponds to a model run
+  and should have a corresponding row in `pmodel_drivers`.
   
+  For each row, the column `data` contains a single 
+  `data.frame()` with a column `id` (`onestep`-row) or `date` (`daily`-row) 
+  and additional columns for each target (e.g. `gpp` or `nee` or `le`). These 
+  column names must correspond with to names provided as a list of strings under `targets`.
+  They should also be consistent with the value of `params_siml$onestep` in the 
+  corresponding driver row.
+  
+  The format of the `data`-column assumes for `daily`-rows that each target 
+  variable is available on the same dates as all others and it assumes for
+  `onestep`-rows that multiple target variables have the same number of 
+  observations in each `data_frame()`. (NOTE: this can in the future be relaxed
+  by defining NA or other fill values, or alternatively use nested data.frames - 
+  i.e. one for each target value.)
+* Note for future: ideally, validation data and drivers could be a single data.frame.
+  This would be ideal, since each row in the validation data.frame() must have a
+  corresponding row in the drivers data.frame(). Having a single data.frame() 
+  enforces this naturally.
+* Below some code snippets to transform between new and old drivers data.frame format:
+
   ```
   # A) Compare with previous example data set:
   rsofun::pmodel_drivers |> dplyr::filter(sitename == "FR-Pue")
@@ -95,28 +121,8 @@
     # add new column 'onestep' in nested 'param_siml'
     dplyr::mutate(params_siml = purrr::map(params_siml, ~dplyr::mutate(.x, onestep = FALSE)))
   ```
+* Below some code snippets to transform between new and old validation (i.e. observation) data.frame format:
 
-* New validation (i.e. observation) data.frame format for P-model: 
-  containing a new column `targets` determining which
-  variable(s) is/are the target of the corresponding line and which model 
-  to run (`daily` or `onestep`).
-  Each row in `pmodel_validation` corresponds to a model run (either `daily` 
-  or `onestep`) and should have a corresponding row in `pmodel_drivers`.
-  
-  For each row, the column `data` contains a single 
-  `data.frame()` with a column `id` (`onestep`-row) or `date` (`daily`-row) 
-  and additional columns for each target (e.g. `gpp` or `nee` or `le`). 
-  
-  This format assumes for `daily`-rows that each target variable is 
-  available on the same dates and for
-  `onestep`-rows that multiple target variables have the same number of 
-  observations in each `data_frame()`. (NOTE: if in the future this appears 
-  too limiting we can define NA or other fill values, or alternatively use 
-  nested data.frames - i.e. one for each target value.)
-  
-  The exact column names of the targets in the `data.frame` in
-  the `data` column must correspond to names provided as a list of strings under `targets`.
-  
   ```
   # B) Compare with previous example data set:
   rsofun::pmodel_validation |> dplyr::filter(sitename == "FR-Pue")
