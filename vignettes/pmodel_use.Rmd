@@ -1,6 +1,6 @@
 ---
 title: "P-model usage"
-author: "Koen Hufkens, Josefa Arán, Benjamin Stocker"
+author: "Koen Hufkens, Josefa Arán, Fabian Bernhard, Benjamin Stocker"
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{P-model usage}
@@ -24,24 +24,26 @@ library(ggplot2)
 
 The `rsofun` package and framework includes two distinct simulation models. 
 The `p-model` and `biomee` (which in part relies on p-model component). 
-Here we give a short example on how to run the `p-model` on the included demo datasets to familiarize yourself with both the data structure and the outputs.
+Here we give a short example on how to run the `p-model` on the included demo dataset to familiarize yourself with both the data structure and the outputs.
 
 ## Demo data
 
-The package includes two demo datasets to run and validate p-model output using GPP or D13C observations. These files can be directly loaded into your workspace by typing:
+The package includes a demo dataset to run and validate p-model output using GPP or D13C observations. These files can be directly loaded into your workspace by typing:
 
 ```{r}
 library(rsofun)
 
-# this is to deal with an error pmodel_drivers.rds not being found 
 pmodel_drivers
 
 pmodel_validation
 ```
 
-These are real data from six fluxnet sites (CH-Aws, CZ-BK1, FR-LBr, FR-Pue, GF-Guy, US-Jo1). Information about data structure, variable names, and their meaning and units can be found in the reference pages of `pmodel_drivers` and `pmodel_validation`. We can use these data to run the model, together with observations of GPP we can also calibrate `p-model` parameters.
-
-~~Another two datasets are provided as an example to validate the model against leaf traits data, rather than fluxes. Measurements of Vcmax25 (aggregated over species) for a subset of 4 sites from the GlobResp database (Atkin et al., 2015) are given in `p_model_oldformat_validation_vcmax25` and the corresponding forcing for the P-model is given in `p_model_oldformat_drivers_vcmax25`. Since leaf traits are only measured once per site, the forcing used is a single year of average climate (the average measurements between 2001 and 2015 on each day of the year).~~
+These are real data from eight fluxnet sites (CH-Dav, CZ-BK1, DK-Sor, FI-Hyy, FR-Pue, GF-Guy, US-Ha1, US-PFa) 
+and twelve sites with with leaf carbon isotope signatures D13C [(Cornwell, 2025)](https://doi.org/10.5281/zenodo.15239220). 
+Information about data sources 
+and information about data structure, variable names, and their meaning and units can be found in the reference pages of `pmodel_drivers` and `pmodel_validation`.
+We can use these data to run the model, together with observations of GPP or D13C (`pmodel_validation`) we can also calibrate `p-model` parameters.
+Since leaf traits are only measured once per site, the forcings used are average climate conditions during the growing seasons.
 
 ~~For the remainder of this vignette, we will use the GPP fluxnet datasets. The workflow is exactly the same for leaf traits data.~~
 
@@ -67,17 +69,17 @@ params_modl <- list(
   kc_jmax            = 0.41
 )
 
-# Run the model for these parameters.
-output <- rsofun::runread_pmodel_f(
-  rsofun::pmodel_drivers |>
+# Define model drivers.
+driver <- rsofun::pmodel_drivers |>
     # subset only certain sites:
     dplyr::filter(sitename %in% c(
       # i.e. only use sites where we request runs of the daily p-model (internally
       # calling `run_pmodel_f_bysite`, and not `run_pmodel_onestep_f_bysite`)
       "FR-Pue",
-      "CH-Dav", "CZ-BK1", "DK-Sor", "FI-Hyy", "GF-Guy", "US-Ha1", "US-PFa")),
-  par = params_modl
-)
+      "CH-Dav", "CZ-BK1", "DK-Sor", "FI-Hyy", "GF-Guy", "US-Ha1", "US-PFa"))
+
+# Run the model for these parameters and drivers.
+output <- rsofun::runread_pmodel_f(driver, par = params_modl)
 ```
 
 ### Plotting output
@@ -169,16 +171,15 @@ pars <- calib_sofun(
   obs     = pmodel_validation |> filter(sitename == "FR-Pue"),
   settings = settings,
   # extra arguments passed to the cost function:
-  targets = "gpp",             # define target variable GPP
   par_fixed = params_modl[-1]  # fix non-calibrated parameters to previous 
-                               # values, removing kphio
+                               # values, removing kphio [-1]
   )
 ```
 
 ```{r simulate_calibration_run, include = FALSE}
 # fake variable as optimization isn't run
 pars <- list()
-pars$par["kphio"] <- 0.03919745
+pars$par["kphio"] <- 0.04424894
 ```
 When successful the optimized parameters can be used to run subsequent modelling efforts, in this case slightly improving the model fit over a more global parameter set.
 
@@ -251,7 +252,7 @@ For details on the optimization settings we refer to the manuals of [GenSA](http
 
 ## One-step P-model call
 
-For certain applications, the core theory of the P-model, predicting the acclimation of photosynthesis at the leaf-level, may be all that's needed for simulations. {rsofun} also provides a stripped-down version of "one-step" P-model call. That is, without considering forcing (and output) time series, delayed acclimation, ecosystem-level up-scaled quantities, and the coupling with the water balance and related water limitation on photosynthesis. Applications of the stripped-down version may include simulations of leaf-level photosynthetic traits. The function `run_pmodel_onestep_f_bysite()` provides this functionality and further improves computational efficiency over a call to `run_pmodel_f_bysite()`. This is particularly useful when calibrating the model to photosynthetic traits data. Note that it can equally be run through `runread_pmodel()`, specifying `onestep` in the column `runtype` of the input driver.
+For certain applications, the core theory of the P-model, predicting the acclimation of photosynthesis at the leaf-level, may be all that's needed for simulations. {rsofun} also provides a stripped-down version of "one-step" P-model call. That is, without considering forcing (and output) time series, delayed acclimation, ecosystem-level up-scaled quantities, and the coupling with the water balance and related water limitation on photosynthesis. Applications of the stripped-down version may include simulations of leaf-level photosynthetic traits. The function `run_pmodel_onestep_f_bysite()` provides this functionality and further improves computational efficiency over a call to `run_pmodel_f_bysite()`. This is particularly useful when calibrating the model to photosynthetic traits data. Note that it can equally be run through `runread_pmodel()`, specifying `onestep == TRUE` in the column `params_siml` of the input driver.
 
 ```{r}
 run_pmodel_onestep_f_bysite(
