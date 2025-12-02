@@ -48,7 +48,8 @@ spend our computational resources on calibrating the parameters to which the
 model is most sensitive.
 
 First of all, let's define a function which measures the agreement between
-GPP predictions from the P-model and GPP observations, for a set of values of
+GPP predictions from the P-model and GPP observations at the site `FR-Pue`, 
+for a set of values of
 the calibratable parameters. It computes the normal log-likelihood of 
 the GPP predictions, given the observed GPP and its uncertainty.
 We want to see how sensitive this function is to changes in the parameter values.
@@ -60,9 +61,8 @@ ll_pmodel <- function(
 ){
   rsofun::cost_likelihood_pmodel(        # reuse likelihood cost function
     par_v,
-    obs = rsofun::p_model_oldformat_validation,
-    drivers = rsofun::p_model_oldformat_drivers,
-    targets = "gpp"
+    obs     = rsofun::pmodel_validation |> filter(sitename == "FR-Pue"),
+    drivers = rsofun::pmodel_drivers    |> filter(sitename == "FR-Pue")
   )
 }
 
@@ -233,9 +233,11 @@ so trait data could also be added for validation.
 
 ## Interpretation of Bayesian calibration routine
 
-It is always important to check the convergence of the MCMC algorithm used for the Bayesian calibration. Here we show some plots and statistics that may help you assess whether the parameter calibration has converged.
+It is always important to check the convergence of the MCMC algorithm used for the Bayesian calibration. 
+Here we show some plots and statistics that may help you assess whether the parameter calibration has converged.
 
-According to the previous sensitivity analysis, calibrating the error parameter for GPP and the quantum yield efficiency parameters will have a high impact on the model fit. Let's run the calibration:
+According to the previous sensitivity analysis, calibrating the error parameter for GPP and the quantum yield efficiency parameters will have a high impact on the model fit. 
+Let's run the calibration:
 ```{r eval = FALSE, echo = TRUE}
 # Calibrates kphio, kphio_par_b, kc_jmax - top 3 model params
 set.seed(2025)
@@ -257,9 +259,9 @@ settings_calib <- list(
     kphio_par_a =list(lower = -0.004, upper = -0.001, init = -0.0025),
     kphio_par_b = list(lower = 10, upper = 30, init = 20),
     soilm_thetastar = list(
-      lower = 0.01 * rsofun::p_model_oldformat_drivers$site_info[[1]]$whc,
-      upper = 1.0  * rsofun::p_model_oldformat_drivers$site_info[[1]]$whc,
-      init  = 0.6  * rsofun::p_model_oldformat_drivers$site_info[[1]]$whc
+      lower = 0.01 * rsofun::pmodel_drivers$site_info[[5]]$whc,
+      upper = 1.0  * rsofun::pmodel_drivers$site_info[[5]]$whc,
+      init  = 0.6  * rsofun::pmodel_drivers$site_info[[5]]$whc
     ),
     soilm_betao = list(lower = 0.0, upper = 1.0, init = 0.0),
     err_gpp = list(lower = 0.1, upper = 3, init = 0.8)
@@ -275,11 +277,10 @@ par_fixed <- list(
 
 # Calibrate kphio-related parameters and err_gpp
 par_calib <- calib_sofun(
-  drivers = p_model_oldformat_drivers,
-  obs = p_model_oldformat_validation,
+  drivers = pmodel_drivers |> dplyr::filter(sitename == "FR-Pue"),
+  obs     = pmodel_validation |> dplyr::filter(sitename == "FR-Pue"),
   settings = settings_calib,
-  par_fixed = par_fixed,
-  targets = "gpp"
+  par_fixed = par_fixed
 )
 saveRDS(par_calib, "files/sensitivity_analysis.Rmd__par_calib.RDS", compress = "xz")
 
@@ -378,26 +379,32 @@ samples_par <- getSample(
 
 run_pmodel <- function(par){
   # Function that runs the P-model for a sample of parameters
-  # and also adds the new observation error
-  
   out <- runread_pmodel_f(
-    drivers = p_model_oldformat_drivers,
+    # use same drivers as for calibration
+    drivers = pmodel_drivers |> dplyr::filter(sitename == "FR-Pue"),
+    # use calibrated parameters and fixed parameters
     par =  list(
       kphio              = par$kphio,
       kphio_par_a        = par$kphio_par_a,
       kphio_par_b        = par$kphio_par_b,
       soilm_thetastar    = par$soilm_thetastar,
       soilm_betao        = par$soilm_betao,
-      beta_unitcostratio = 146.0,
-      rd_to_vcmax        = 0.014,
-      tau_acclim         = 20.0,
-      kc_jmax            = 0.41
+      beta_unitcostratio = par_fixed$beta_unitcostratio, # 146.0,
+      rd_to_vcmax        = par_fixed$rd_to_vcmax, # 0.014,
+      tau_acclim         = par_fixed$tau_acclim, # 20.0,
+      kc_jmax            = par_fixed$kc_jmax  #0.41
       )
   )
+}
+run_pmodel_add_error <- function(par){
+  # Function that runs the P-model for a sample of parameters
+  # and also adds the new observation error
+  
+  out <- run_pmodel(par)
   
   # return modelled GPP and prediction for a new GPP observation
-  gpp <- out$data[[1]][, "gpp"]
-  out <- data.frame(
+  gpp <- out$data[[1]][["gpp"]]
+  return(data.frame(
     gpp = gpp, 
     gpp_pred = rnorm(
       n = length(gpp), 
@@ -405,14 +412,14 @@ run_pmodel <- function(par){
       sd = par$err_gpp
       ),
     date = out$data[[1]][, "date"])
-  return(out)
+  )
 }
 
 set.seed(2025)
 
 # Run the P-model for each set of parameters
 pmodel_runs <- samples_par |>
-  dplyr::mutate(sim = purrr::map(pars, ~run_pmodel(.x))) |>
+  dplyr::mutate(sim = purrr::map(pars, ~run_pmodel_add_error(.x))) |>
   # format to obtain 90% credible intervals
   dplyr::select(mcmc_id, sim) |>
   tidyr::unnest(sim) |>
@@ -427,7 +434,7 @@ pmodel_runs <- samples_par |>
   )
 
 # run model with maximum a posteriori parameter estimates
-pmodel_run_map <- run_pmodel(
+pmodel_run_MAP <- run_pmodel_add_error(
   MAP(par_calib$mod)$parametersMAP |> 
     t() |> 
     as_tibble()
@@ -435,10 +442,9 @@ pmodel_run_map <- run_pmodel(
 ```
 
 ```{r simulate_pmodel_runs, include = FALSE}
-# TODO: get rid of this and always fully run the vignettes
 # fake output since calibration isn't run
-# saveRDS(pmodel_runs, file = "files/pmodel_runs.rds")
-pmodel_runs <- readRDS("files/pmodel_runs.rds")
+# saveRDS(pmodel_runs, file = "files/sensitivity_analysis.Rmd__pmodel_runs.RDS")
+pmodel_runs <- readRDS("files/sensitivity_analysis.Rmd__pmodel_runs.RDS")
 ```
 
 Below we plot the first year of observed GPP (in black) against the predicted 
@@ -524,30 +530,9 @@ plot_gpp_error
 <!-- with standard deviation `err_gpp`. -->
 
 ```{r fig.width=7, fig.height=5, echo = FALSE, eval = FALSE}
-# Define function to run model for a set of sampled parameters
-run_pmodel <- function(par){
-  # Function that runs the P-model for a sample of parameters
-  out <- runread_pmodel_f(
-    drivers = p_model_oldformat_drivers,
-    par =  list(
-      kphio              = par$kphio,
-      kphio_par_a        = par$kphio_par_a,
-      kphio_par_b        = par$kphio_par_b,
-      soilm_thetastar    = par$soilm_thetastar,
-      soilm_betao        = par$soilm_betao,
-      beta_unitcostratio = 146.0,
-      rd_to_vcmax        = 0.014,
-      tau_acclim         = 20.0,
-      kc_jmax            = 0.41
-      )
-  )
-  
-  return(out)
-}
-
 # Plot observed and predicted GPP, with a 95% confidence interval using err_gpp
 # Run model with maximum a posteriori parameter estimates (not shown on plot).
-pmodel_run_map <- run_pmodel(
+pmodel_run_MAP <- run_pmodel(
   BayesianTools::MAP(par_calib$mod)$parametersMAP |> 
     t() |> 
     as_tibble()
@@ -557,12 +542,13 @@ pmodel_run_map <- run_pmodel(
 
 # Plot the credible intervals computed above
 # for the first year only
-data_to_plot <- pmodel_run_map |>
+data_to_plot <- pmodel_run_MAP |>
   # Plot only first year
   dplyr::slice(1:365) |>
   dplyr::left_join(
     # Merge GPP validation data (first year)
-    p_model_oldformat_validation$data[[1]][1:365, ] |>
+    pmodel_validation |> filter(sitename == "FR-Pue") |>
+      unnest(data) |> slice(1:365) |>
       dplyr::rename(gpp_obs = gpp),
     by = "date")
 
