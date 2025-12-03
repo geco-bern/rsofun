@@ -1,6 +1,6 @@
 ---
-title: "Parameter calibration and cost functions"
-author: "Josefa Arán"
+title: "Parameter calibration (P-Model) and cost functions"
+author: "Josefa Arán, Fabian Bernhard"
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{Parameter calibration and cost functions}
@@ -22,12 +22,17 @@ library(ggplot2)
 The `rsofun` package allows to calibrate parameters of the `pmodel` and `biomee` models via the `calib_sofun()` function. The implementation of the calibration is fairly flexible and can be adapted to a specific use-case via a tailor-made cost function (used as metrics for the optimization routines in `calib_sofun()`). The package provides a set of standard cost functions named `cost_*`, which can be used for a variety of calibrations (different sets of model parameters, using various target variables, etc.). Alternatively, it's possible to write a more specific new cost function to be used together with `calib_sofun()`.
 
 In this vignette, we go over some examples on how to use the `rsofun` cost functions for parameter calibration with `calib_sofun()` and how to write your own custom one from scratch.
+The separate vignette 'Parameter calibration (P-Model) to multiple targets' (see `vignette("param_calib_multitarget")`) provides another example.
+
+Two calibration approaches are showcased below. First we showcase how to find a 
+single set of parameters that optimize the RMSE using a GenSA optimizer. 
+Second optimizing the likelihood with a Bayesian calibration approach is shown.
 
 ### Calibration to GPP using RMSE and GenSA optimizer
 
 A simple approach to parameter calibration is to find the parameter values that lead to the best prediction performance, in terms of the RMSE (root mean squared error). The function `cost_rmse_pmodel()` runs the P-model internally to calculate the RMSE between predicted target values (in this case GPP) and the corresponding observations.
 
-The implementations of `cost_rmse_pmodel()` and `calib_sofun()` allows flexibility in various ways. We can simultaneously calibrate a subset of model parameters and also replicate the different calibration setups in Stocker et al., 2020 GMD, simply by providing the appropriate inputs as `settings`, `par_fixed` and `targets` to `calib_sofun()`. Since the P-model is run internally to make predictions, we must always specify the values of the model parameters that aren't calibrated (via argument `par_fixed`). For example, following the `ORG` setup, only parameter `kphio` is calibrated with below code:
+The implementation of `cost_rmse_pmodel()` allows flexibility in various ways. We can simultaneously calibrate a subset of model parameters and also replicate the different calibration setups in Stocker et al., 2020 GMD, simply by providing the appropriate inputs to `calib_sofun()` using arguments as `settings`, `obs` and the optional argument `par_fixed`. Note that we must always specify the values of the model parameters that aren't calibrated (via argument `par_fixed`). For example, following the `ORG` setup, only parameter `kphio` is calibrated with below code:
 
 ```{r run GenSA calibration, eval = FALSE}
 # Define calibration settings and parameter ranges from previous work
@@ -41,12 +46,13 @@ settings_rmse <- list(
   )
 )
 
-# Calibrate the model and optimize the free parameters using
-# demo datasets
+# Calibrate the model and optimize the free parameters using demo datasets
+drivers_to_use <- pmodel_drivers    |> dplyr::filter(sitename == "FR-Pue")
+obs_to_use     <- pmodel_validation |> dplyr::filter(sitename == "FR-Pue")
 pars_calib_rmse <- calib_sofun(
   # calib_sofun arguments:
-  drivers = p_model_oldformat_drivers,  
-  obs = p_model_oldformat_validation,
+  drivers  = drivers_to_use,  
+  obs      = obs_to_use,
   settings = settings_rmse,
   # extra arguments passed to the cost function:
   par_fixed = list(         # fix all other parameters
@@ -59,24 +65,23 @@ pars_calib_rmse <- calib_sofun(
     rd_to_vcmax        = 0.014,      # value from Atkin et al. 2015 for C3 herbaceous
     tau_acclim         = 30.0,
     kc_jmax            = 0.41
-  ),
-  targets = "gpp"           # define target variable GPP
+  )
 )
 ```
 ```{r include = FALSE}
 # fake output since calibration isn't run
 pars_calib_rmse <- list(
-  par = c(kphio = 0.03580938038563619),
+  par = c(kphio = 0.039602577231004),
   mod = list(
-    value = 1.20014048299052467,
-    par = c(kphio = 0.03580938038563619),
+    value = 1.27552392197712,
+    par = c(kphio = 0.039602577231004),
     trace.mat = matrix(
-      c(1, 5230, 4.241255082597149, 1.20014048299052467),
+      c(1, 5230, 3.56178703103092, 1.27552392197712),
       nrow = 1L,
       ncol = 4L,
       dimnames = list(NULL, c("nb.steps", "temperature", "function.value", "current.minimum"))
     ),
-    counts = 286L
+    counts = 334L
   )
 )
 ```
@@ -86,12 +91,12 @@ pars_calib_rmse
 
 The output of `calib_sofun()` is a list containing the calibrated parameter values (element `par`) and the raw optimization output from the optimizer (element `mod`; here from `GenSA` or, as we see next, from `BayesianTools::runMCMC`).
 
-Note that the standard cost functions allow to calibrate to several targets (fluxes and leaf traits predicted by the P-model) simultaneously and to parallelize the simulations. 
+Note that the standard cost functions would allow to calibrate to several targets (fluxes and leaf traits predicted by the P-model) simultaneously. 
 
 ### Calibration to GPP using a simple likelihood function and BayesianTools
 
 Let's calibrate the parameters involved in the temperature dependency of the quantum yield efficiency, `kphio`, `kphio_par_a` and `kphio_par_b`. Taking a Bayesian calibration approach, we need to define a likelihood as cost function (we'll use `cost_likelihood_pmodel()`). We assume that the target variable (`'gpp'`) follows a normal distribution centered at the observations and with its _unknown_ standard deviation (`'err_gpp'`), that we need to add to the calibratable parameters. We also assume a uniform prior distribution for all calibratable parameters.
-By maximizing the log-likelihood, the MAP (maximum a posteriori) estimators for all 4 parameters are computed. With the functions `cost_likelihood_pmodel()` and `calib_sofun()`, we can easily perform this type of calibration:
+By maximizing the log-likelihood, the MAP (maximum a posteriori) estimators for all 4 parameters are computed. The functions `cost_likelihood_pmodel()` and `calib_sofun()`, allow us to perform this type of calibration in the following way:
 
 ```{r run Bayesian calibration, eval = FALSE}
 # Define calibration settings
@@ -112,14 +117,15 @@ settings_likelihood <- list(
   )
 )
 
-# Calibrate the model and optimize the free parameters using
-# demo datasets
+# Calibrate the model and optimize the free parameters using demo datasets
+drivers_to_use <- pmodel_drivers    |> dplyr::filter(sitename == "FR-Pue")
+obs_to_use     <- pmodel_validation |> dplyr::filter(sitename == "FR-Pue")
 pars_calib_likelihood <- calib_sofun(
   # calib_sofun arguments:
-  drivers = p_model_oldformat_drivers,
-  obs = p_model_oldformat_validation,
+  drivers  = drivers_to_use,  
+  obs      = obs_to_use,
   settings = settings_likelihood,
-  # extra arguments passed ot the cost function:
+  # extra arguments passed to the cost function:
   par_fixed = list(         # fix all other parameters
     soilm_thetastar    = 0.6 * 240,  # to recover paper setup with soil moisture stress
     soilm_betao        = 0.0,
@@ -127,17 +133,18 @@ pars_calib_likelihood <- calib_sofun(
     rd_to_vcmax        = 0.014,      # value from Atkin et al. 2015 for C3 herbaceous
     tau_acclim         = 30.0,
     kc_jmax            = 0.41
-  ),
-  targets = "gpp"
+  )
 )
 ```
 ```{r eval = FALSE, include = FALSE}
 # store output since calibration isn't run
-saveRDS(pars_calib_likelihood, "files/new_cost_function.Rmd__pars_calib_likelihood.RDS", compress = "xz")
+saveRDS(pars_calib_likelihood, 
+        here::here("vignettes", "files/new_cost_function.Rmd__pars_calib_likelihood.RDS"), 
+        compress = "xz")
 ```
 ```{r include = FALSE}
 # fake output since calibration isn't run
-pars_calib_likelihood <- readRDS("files/new_cost_function.Rmd__pars_calib_likelihood.RDS")
+pars_calib_likelihood <- readRDS(here::here("vignettes","files/new_cost_function.Rmd__pars_calib_likelihood.RDS"))
 ```
 ```{r}
 pars_calib_likelihood
@@ -147,7 +154,8 @@ Furthermore, there are equivalent cost functions available for the BiomeE model.
 
 ### Write your custom cost function 
 
-If the RMSE or log-likelihood (for one or several targets) cost functions that we provide do not fit your use case, you can easily write a custom one. In this section, we drive you through the main ideas with an example.
+If the RMSE or log-likelihood (for one or several targets) cost functions that we provide do not fit your use case, you can easily write a custom one. 
+In this section, we guide you through the main ideas with an example.
 To run the calibration, you can still use `calib_sofun()` in combination with 
 your custom cost function. 
 
@@ -209,15 +217,19 @@ settings_mae <- list(
 
 # Calibrate the model and optimize the free parameters
 pars_calib_mae <- calib_sofun(
-  drivers = p_model_oldformat_drivers,
-  obs = p_model_oldformat_validation,
+  drivers = pmodel_drivers,
+  obs = pmodel_validation,
   settings = settings_mae,
   # optional arguments if needed in the cost function
   my_own_message = "Hi from inside the cost_mae function."
 )
 ```
 
-During the optimization procedure, the cost function receives as argument a suggestion of the parameters `par`. This might be just a subset of all needed parameters (defined via `settings$par`). Thus to call `runread_pmodel_f()` within the cost function, a full set of model parameters is needed. Here, we'll hardcode the parameters that aren't being calibrated inside the cost function. (Note, that in above examples they were passed as an additional argument `par_fixed`).
+During the optimization procedure, the cost function receives as argument a suggestion of the parameters `par`. 
+This might be just a subset of all needed parameters (defined via `settings$par`). 
+Thus to call `runread_pmodel_f()` within the cost function, a full set of model parameters is needed. 
+Here, we'll hardcode the parameters that aren't being calibrated inside the cost function. 
+(Note, that in above examples they were passed as an additional argument `par_fixed`).
 ```{r, eval = FALSE}
 cost_mae <- function(par, obs, drivers, my_own_message){
   
@@ -275,14 +287,14 @@ cost_mae <- function(par, obs, drivers){
   )
   
   # Clean model output to compute cost
-  df <- df %>%
-    dplyr::select(sitename, data) %>%
+  df <- df |>
+    dplyr::select(sitename, data) |>
     tidyr::unnest(data)
     
   # Clean validation data to compute cost
-  obs <- obs %>%
-    dplyr::select(sitename, data) %>%
-    tidyr::unnest(data) %>%
+  obs <- obs |>
+    dplyr::select(sitename, data) |>
+    tidyr::unnest(data) |>
     dplyr::rename('gpp_obs' = 'gpp') # rename for later
     
   # Left join model output with observations by site and date
@@ -313,8 +325,8 @@ settings_mae <- list(
 
 # Calibrate the model and optimize the free parameters
 pars_calib_mae <- calib_sofun(
-  drivers = p_model_oldformat_drivers,
-  obs = p_model_oldformat_validation,
+  drivers = pmodel_drivers,
+  obs = pmodel_validation,
   settings = settings_mae
 )
 ```
