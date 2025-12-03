@@ -145,64 +145,6 @@ pars_calib_likelihood
 
 Furthermore, there are equivalent cost functions available for the BiomeE model. Check out the reference pages for more details on how to use `cost_likelihood_biomee()` and `cost_rmse_biomee()`.
 
-### Calibration to GPP and Vcmax25 using the joint log-likelihood and BayesianTools
-
-You may be interested in calibrating the model to different target variables simultaneously, like flux and leaf trait measurements. Here we present an example, where we use `cost_likelihood_pmodel()` to compute the joint likelihood of all the targets specified (that is, by summing the log-likelihoods of GPP and Vcmax25) and ultimately calibrate the `kc_jmax` parameter. It would be possible to follow this workflow for several-target calibration also with RMSE as the optimization metric, using `cost_rmse_pmodel()` and `GenSA` optimization.
-
-```{r run concatenated calibration, eval = FALSE}
-# Define calibration settings for two targets
-settings_joint_likelihood <- list(
-  method = "BayesianTools",
-  metric = cost_likelihood_pmodel,
-  control = list(
-    sampler = "DEzs",
-    settings = list(
-      burnin = 1500,             # kept artificially low
-      iterations = 3000
-    )),
-  par = list(kc_jmax = list(lower = 0.2, upper = 0.8, init = 0.41),  # uniform priors
-             err_gpp = list(lower = 0.001, upper = 4, init = 1),
-             err_vcmax25 = list(lower = 0.000001, upper = 0.0001, init = 0.00001))
-)
-
-# Run the calibration on the concatenated data
-par_calib_join <- calib_sofun(
-  drivers = rbind(p_model_oldformat_drivers,
-                  p_model_oldformat_drivers_vcmax25), 
-  obs = rbind(p_model_oldformat_validation,
-              p_model_oldformat_validation_vcmax25), 
-  
-  settings = settings_joint_likelihood,
-  # arguments for the cost function
-  par_fixed = list(         # fix parameter value from previous calibration
-    kphio              = 0.041,
-    kphio_par_a        = 0.0,
-    kphio_par_b        = 16,
-    soilm_thetastar    = 0.6 * 240,  # to recover paper setup with soil moisture stress
-    soilm_betao        = 0.0,
-    beta_unitcostratio = 146.0,
-    rd_to_vcmax        = 0.014,      # value from Atkin et al. 2015 for C3 herbaceous
-    tau_acclim         = 30.0
-  ),    
-  targets = c('gpp', 'vcmax25')
-)
-```
-```{r eval = FALSE, include = FALSE}
-# store output since calibration isn't run
-saveRDS(par_calib_join, "files/new_cost_function.Rmd__par_calib_join.RDS", compress = "xz")
-```
-```{r include = FALSE}
-# fake output since calibration isn't run
-par_calib_join <- readRDS("files/new_cost_function.Rmd__par_calib_join.RDS")
-```
-```{r}
-par_calib_join
-```
-
-Note that GPP predictions are directly compared to GPP observations on that day, but Vcmax25 predicted by the P-model (being a leaf trait) is averaged over the growing season and compared to a single Vcmax25 observation taken per site. 
-
-The cost functions provided in the package tell apart fluxes and leaf traits by the presence of a `"date"` column in the nested validation data frames `p_model_oldformat_validation` and `p_model_oldformat_validation_vcmax25`.
-
 ### Write your custom cost function 
 
 If the RMSE or log-likelihood (for one or several targets) cost functions that we provide do not fit your use case, you can easily write a custom one. In this section, we drive you through the main ideas with an example.

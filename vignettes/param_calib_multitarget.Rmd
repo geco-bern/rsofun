@@ -1,0 +1,682 @@
+---
+title: "Parameter calibration (P-Model) to multiple targets"
+author: "Josefa Arán, Fabian Bernhard"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Parameter calibration and cost functions}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\usepackage[utf8]{inputenc}
+---
+  
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+
+library(rsofun)
+library(dplyr)
+library(ggplot2)
+```
+
+### Calibration to GPP and bigD13C using the joint log-likelihood and BayesianTools
+
+This vignette showcases a simplified version of the Bayesian calibration to 
+multiple target variables taken from the documentation paper [Paredes et al. (in press)](https://www.biorxiv.org/content/10.1101/2023.11.24.568574v3).
+The separate vignette 'Parameter calibration (P-Model) and cost functions' (see `vignette("new_cost_function")`) provides simpler examples.
+
+You may be interested in calibrating the model to different target variables simultaneously, like flux and leaf trait measurements. 
+
+#### Calibrating one GPP and one D13C site
+Here we present an example, where we use `cost_likelihood_pmodel()` to compute the joint likelihood of all the targets specified (that is, by summing the log-likelihoods of GPP and bigD13C) and ultimately calibrate the `beta_unitcostratio` parameter.
+
+TODO: further below we calibrate another example to multiple sites
+
+```{r run concatenated calibration, eval = FALSE}
+# Define calibration settings for two targets
+params_to_estimate <- list(
+  beta_unitcostratio = list(lower = 14.6,  upper = 440, init = 146.0),  # uniform priors
+  kc_jmax            = list(lower = 0.2,   upper = 0.8, init = 0.41),   # uniform priors
+  err_gpp            = list(lower = 0.001, upper = 4,   init = 1),
+  err_bigD13C        = list(lower = 0.01,  upper = 3,   init = 0.8),
+  errbias_bigD13C    = list(lower =   -8,  upper = 8,   init = 0.0))
+
+params_fixed <- list(         # fix parameter value from previous calibration
+  kphio              = 0.041,
+  kphio_par_a        = 0.0,
+  kphio_par_b        = 16,
+  soilm_thetastar    = 0.6 * 240,  # to recover paper setup with soil moisture stress
+  soilm_betao        = 0.01,
+  rd_to_vcmax        = 0.014,      # value from Atkin et al. 2015 for C3 herbaceous
+  tau_acclim         = 30.0,
+  err_vj             = 1.0,
+  errbias_vj         = 1.0,
+  errscale_gpp       = 1.0)
+
+settings_joint_likelihood <- list(
+  method = "BayesianTools",
+  # metric = cost_likelihood_pmodel, # TODO: make this work
+  metric  = rsofun::cost_likelihood_pmodel_bigD13C_vj_gpp, # TODO: replace this with cost_likelihood_pmodel
+  control = list(
+    sampler = "DEzs",
+    settings = list(
+      # burnin = 1500,             # kept artificially low
+      # iterations = 3000,
+      burnin = 0,
+      iterations = 50,     # kept artificially low
+      nrChains = 1
+    ),
+    # parallelization
+    n_chains_independent   = 1, # 2,
+    n_parallel_independent = 1  # 2, this can be parallelized
+  ),
+  # parameters
+  par = params_to_estimate
+)
+
+# Run the calibration on the observational data of two sites
+# par_calib_join <- calib_sofun( # TODO: make this work with par_calib_join <- calib_sofun(
+par_calib_join <- calib_sofun_parallelized(
+  drivers  = pmodel_drivers    |> 
+    dplyr::filter(sitename %in% c("FR-Pue","lon_+104.92_lat_+037.43")),
+  obs      = pmodel_validation |> 
+    dplyr::filter(sitename %in% c("FR-Pue","lon_+104.92_lat_+037.43")), 
+  settings = settings_joint_likelihood,
+  # arguments for the cost function
+  par_fixed = params_fixed
+)
+```
+
+```{r eval = FALSE, include = FALSE}
+# store output since calibration isn't run
+saveRDS(par_calib_join, 
+        here::here("vignettes", "files/param_calib_multitarget.Rmd__par_calib_join.RDS"), 
+        compress = "xz")
+```
+
+```{r include = FALSE}
+# fake output since calibration isn't run
+par_calib_join <- readRDS(
+  here::here("vignettes", "files/param_calib_multitarget.Rmd__par_calib_join.RDS"))
+```
+
+```{r}
+par_calib_join
+```
+
+Note that GPP predictions are directly compared to GPP observations on that day, but the leaf trait bigD13C is predicted by the P-model as "onestep" prediction for average conditions over the growing season and compared to the (multiple) bigD13C observations taken across trees per site. 
+This is specified by the arguments `drivers` and `obs`.
+Namely, it is specified 
+by the column `params_siml$onestep` within `drivers`, which can be `FALSE` (for 
+                                                                            daily simulation) or `TRUE` (for onestep acclimation), 
+by the corresponding column `forcing` containing daily or average conditions,
+and by the column `targets` specified for each simulation site (i.e. each row in `drivers` and `obs`).
+See below or the documentation of `pmodel_drivers` and `pmodel_validation`.
+
+```{r}
+# Note the columns: 'targets', and 'data' (containing observations)
+pmodel_validation |> tidyr::unnest_wider(targets, names_sep = "_")
+pmodel_validation |> dplyr::filter(grepl("lon", sitename)) |>  tidyr::unnest(data)
+pmodel_validation |> dplyr::filter(grepl("^[A-Z]", sitename)) |> tidyr::unnest(data)
+
+pmodel_drivers |> dplyr::filter(grepl("lon", sitename)) |>  tidyr::unnest(forcing)
+pmodel_drivers |> dplyr::filter(grepl("^[A-Z]", sitename)) |> tidyr::unnest(forcing)
+
+pmodel_drivers |> dplyr::filter(grepl("lon", sitename)) |>  tidyr::unnest(params_siml)
+pmodel_drivers |> dplyr::filter(grepl("^[A-Z]", sitename)) |> tidyr::unnest(params_siml)
+```
+
+
+#### Calibrating multiple sites
+
+##### Some helper functions for calibration
+Below we define some helper functions to facilitate model calibration with 
+different target variables, resulting thus in different calibration setups.
+These helper functions simplify the use of parallel execution and avoid code repetition.
+
+Here, we showcase two different setups. The first setup uses only D13C as target
+variable (corresponds to Setup S1 in the documentation paper). The second setup 
+uses D13C and GPP as calibration targets and (truncated) normal priors for the 
+parameters (Setup S6).
+In below code, we define first these two different calibration setups by 
+specifying the function `setup_rsofun_calibration()`, that returns an object with
+the necessary specifications.
+
+Then we also define a function to run the Markov Chain Monte Carlo (MCMC) sampling `run_mcmc_rsofun()`.
+
+With the second calibration setup we additionally showcase how to parallelize 
+multiple chains to different cores and thus how to significantly speed up 
+long-running calibration tasks.
+
+For long-running calibrations it can also be useful to be able to continue an 
+existing sampling chain with `continue_mcmc_rsofun()`.
+While this is not shown in this vignette, code for this is available on Zenodo 
+([10.5281/zenodo.17204361](https://dx.doi.org/10.5281/zenodo.17204361)).
+
+
+```{r prepare multisite, multitarget calibration, eval = TRUE}
+
+# Setup_rsofun_calibration allows to define different setups
+# that may differ in the calibrated parameters and data used 
+# and potentially in the test-train split.
+# Setups are uniquely identified with a numeric identifer. Below 
+# code defines setups 226 and 231.
+#    226: Setup c)      Delta^'13 C*',VJ       
+#    231: Setup h)      Delta^'13 C*',VJ, GPP  
+
+setup_rsofun_calibration <- function(scenario){
+  require(tidyverse)
+  require(rpmodel)
+  require(rgeco) # pak::pkg_install("geco-bern/rgeco")
+  require(dplyr)
+  require(purrr)
+  require(rsofun)  # install from branch simple_pmodel_v2
+  # require(ingestr)
+  require(BayesianTools)
+
+  ## Load forcing and targets data from disk (here now from package) ----
+  bigD13C_vj_gpp_drivers <- rsofun::pmodel_drivers 
+  bigD13C_vj_gpp_obs     <- rsofun::pmodel_validation 
+
+  # ## Read test-train split from disk ----
+  # df_test_train_split <- read_csv(
+  #   here::here("data/01_test_train_split.csv"),
+  #   col_types = cols(
+  #     sitename = col_character(),
+  #     run_model = col_character(),
+  #     targets_vj = col_logical(),
+  #     targets_bigD13C = col_logical(),
+  #     targets_gpp = col_logical(),
+  #     dataset = col_character()
+  #   ))
+  # 
+  # sites_train <- df_test_train_split |> filter(dataset == "train")
+  # sites_test  <- df_test_train_split |> filter(dataset == "test")
+  # 
+  # ## Append test-train split thereby subsetting to only test and train sites ----
+  # bigD13C_vj_gpp_drivers <- bigD13C_vj_gpp_drivers |>
+  #   inner_join(
+  #     select(bind_rows(sites_train,sites_test), sitename, run_model, dataset),
+  #     by = join_by(sitename, run_model))
+  # 
+  # bigD13C_vj_gpp_obs <- bigD13C_vj_gpp_obs |>
+  #   inner_join(
+  #     select(bind_rows(sites_train,sites_test), sitename, run_model, dataset),
+  #     by = join_by(sitename, run_model))
+  
+  
+  ## Preprocess observation data (gpp) ----
+  ## # no additinal QC needed
+
+  ## Apply test-train split to data ----
+  train_drivers <- bigD13C_vj_gpp_drivers
+  train_obs     <- bigD13C_vj_gpp_obs
+
+  test_drivers <- bigD13C_vj_gpp_drivers |> slice(0)
+  test_obs     <- bigD13C_vj_gpp_obs     |> slice(0)
+
+  ## Setup the settings for the different calibration scenarios ----
+  ## Define default parameter
+  default_par_fixed <- list(# fix parameter value from previous calibration
+    kphio              = 0.04998,    # value from Stocker et al. 2020
+    kphio_par_a        = 0.0,        # 0 corresponds to no temperature dependency of kphio (ORG setup in Stocker et al. 2020)
+    kphio_par_b        = 1.0,        #
+    soilm_thetastar    = 0.6 * 240,  # to recover paper setup with soil moisture stress
+    soilm_betao        = 0.0,        # 1 corresponds to no reduction, 0 to full reduction at theta==0
+    beta_unitcostratio = 146.0,      # value from Stocker et al. 2020
+    rd_to_vcmax        = 0.014,      # value from Atkin et al. 2015 for C3 herbaceous
+    tau_acclim         = 14.0,       # value from Liu et al. 2024
+    kc_jmax            = 0.41,       # value from Stocker et al. 2024 (citing Wang et al. 2017)
+    errbias_bigD13C    = 0.0,
+    errbias_vj         = 0.0,
+    errscale_gpp       = 1.0
+  )
+
+  ## Define parameters to estimate and their priors
+  if (scenario %in% c(223,226,231)){# 231 is like 223 but using posteriors from 226
+    par_to_estimate <- list(
+      kphio           = list(lower = 0.02, upper = 0.15, init = 0.05),
+      kphio_par_a     = list(lower = -0.004, upper = -0.001, init = -0.0025),
+      kphio_par_b     = list(lower = 10, upper = 30, init = 20),
+      soilm_thetastar = list(lower = 1, upper = 250, init = 40),
+      # soilm_betao        = list(lower = 0.0, upper = 1.0, init = 0.0),
+      # rd_to_vcmax        = as.list(c(lower = 0.1, upper = 3.0, init = 1.0)*0.014), # use a fixed rd_to_vcmax      # 0.014 value from Atkin et al. 2015 for C3 herbaceous
+      beta_unitcostratio = as.list(c(lower = 0.1, upper = 3.0, init = 1.0)*146.0),
+      tau_acclim         = list(mean = 14, sd = 8, lower = 0.01, upper = 40),           # truncated normal, with ~14 days as mean, taken from Liu et al. 2024, Nat.Plants and Mäkelä et al. 2004, Tree Phys.
+      kc_jmax            = as.list(c(lower = 0.1, upper = 3.0, init = 1.0)*0.41),
+      err_gpp         = list(lower = 0.01, upper = 3, init = 0.8),
+      err_bigD13C     = list(lower = 0.01, upper = 3, init = 0.8),
+      err_vj          = list(lower = 0.01, upper = 3, init = 0.8),
+      errbias_bigD13C = list(lower =   -8, upper = 8, init = 0.0),
+      errbias_vj      = list(lower =   -1, upper = 1, init = 0.0)
+    )
+    if (scenario %in% c(223,226,231)){
+      par_to_estimate$err_bigD13C     <- list(lower = 0.01, upper = 15, init = 0.8)
+      par_to_estimate$errbias_bigD13C <- NULL
+      par_to_estimate$errbias_vj      <- NULL
+    }
+  } else {
+    stop(sprintf("Unsupported scenario: %d", scenario))
+  }
+
+  if (scenario %in% c(231)){   # 231 is like 223 but using posteriors from 226 
+                               # for beta_unitcostratio and kc_jmax as priors
+      # Below was done iteratively
+      # calib_scen226 <- readr::read_rds(file.path(rsofun_doc_output_path, "data","calibrations","out_calib__scen226_DREAMzs-100000-0iter_8x3chains_on_CPU8x1_continued.rds"))
+      # # i) extract samples as a data.frame
+      # burnins_scen226 <- 30000
+      # samples_scen226 <- getSample(calib_scen226$mod, thin = 1, start = burnins_scen226) %>% as.data.frame()
+      # 
+      # # ii) fit normal and lognormal distributions for each parameter
+      # param_normals_scen226 <- lapply(setNames(names(samples_scen226), names(samples_scen226)), function(p) {
+      #   list(mean = mean(samples_scen226[[p]]),
+      #       sd   = sd(  samples_scen226[[p]]))
+      # })[c('beta_unitcostratio', 'kc_jmax')] # only keep these
+      # 
+      # # then pass on these as prior for these
+      # par_to_estimate$beta_unitcostratio <- param_normals_scen226$beta_unitcostratio
+      # par_to_estimate$kc_jmax            <- param_normals_scen226$kc_jmax
+
+    par_to_estimate$beta_unitcostratio <- list(mean    = 207.86, sd    = 6.79)
+    par_to_estimate$kc_jmax            <- list(mean    = 0.4244, sd    = 0.0217)
+    if (scenario %in% c(231)){
+      par_to_estimate$beta_unitcostratio <- list(mean    = 207.86, sd    = 6.79,    lower = 207.86 - 3*6.79, upper = 207.86 + 3*6.79)   # truncated normal
+      par_to_estimate$kc_jmax            <- list(mean    = 0.4244, sd    = 0.0217)
+    }
+  }
+  # Remove parameters that are defined to be estimated from default_par_fixed
+  par_to_fix <- default_par_fixed[!(names(default_par_fixed) %in% names(par_to_estimate))]
+
+  ## Setup the data (drivers and obs) for the three calibration scenarios ----
+
+  # Subset different combination sites to dfeine target variables.
+  # For easier handling do this in combined drivobs-object.
+  drivobs_train_bigD13C_vj_gpp <- dplyr::inner_join(
+    train_drivers,
+    train_obs,
+    by = join_by(sitename))
+
+  drivobs_test_bigD13C_vj_gpp <- dplyr::inner_join(
+    test_drivers,
+    test_obs,
+    by = join_by(sitename))
+
+  all_potential_targets <- unique(unlist(drivobs_train_bigD13C_vj_gpp$targets))
+  if (scenario %in% c(223,224,225, 229,230,231)) { # GPP and traits data
+    targets_to_keep <- c("gpp", "bigD13C")
+  } else if (scenario %in% c(226)) {       # only traits data, either both, or vj only, or bigD13C only
+    targets_to_keep <- c("bigD13C")
+  # } else if (scenario %in% c(220)) {  # only GPP data from FR-Pue
+  #   targets_to_keep <- c("gpp")
+  #   sites_to_keep <- "FR-Pue"
+  } else {
+    stop(sprintf("Unsupported scenario: %d", scenario))
+  }
+  stopifnot(all(targets_to_keep %in% all_potential_targets))
+  
+  drivobs_train <- drivobs_train_bigD13C_vj_gpp |>
+    # keep only sites with targets we want
+    dplyr::rowwise() |> dplyr::filter(any(targets_to_keep %in% .data$targets)) |> dplyr::ungroup() |>
+    # remove other unwanted target specifications from sites we keep (e.g. ET observations for a site with GPP and ET)
+    dplyr::mutate(targets = list(intersect(targets, targets_to_keep))) |> dplyr::ungroup()
+
+  drivobs_test <- drivobs_test_bigD13C_vj_gpp ## for the test data set keep all
+
+  ## return ---
+  return(list(
+    drivobs_train = drivobs_train,
+    drivobs_test = drivobs_test,
+    par_fixed = par_to_fix,
+    par = par_to_estimate
+  ))
+}
+
+run_mcmc_rsofun <- function(
+    curr_calibration_scenario,
+    # MCMC setup:
+    iterations = 6,
+    burnin = 0,
+    n_chains_independent    = 3, # number of independent chains
+    n_chains_within_sampler = 3, # number of internal chains to be sampled (at least 2 for DEzs)
+
+    # parallelization:
+    n_parallel_independent  = 3,      # number of cores for parallelization of independent chains     https://cran.r-project.org/web/packages/BayesianTools/vignettes/InterfacingAModel.html#running-several-mcmcs-in-parallel
+    n_parallel_within_sampler = FALSE,# number of cores for parallelization of within-sampler chains  https://cran.r-project.org/web/packages/BayesianTools/vignettes/InterfacingAModel.html#within-sampler-parallelization as well as https://cran.r-project.org/web/packages/BayesianTools/vignettes/BayesianTools.html#reference-on-creating-likelihoods
+    outpath = here::here("data"), 
+    suffix_str = "", 
+    sampler = "DEzs"
+){
+  # Setup simulation model
+  res <- setup_rsofun_calibration(scenario = curr_calibration_scenario)
+  # res$drivobs_train
+  # res$drivobs_test
+  # res$par_fixed
+  # res$par
+
+  # Load loglikelihood
+  # source(here::here("R/calibration_helpers.R"), echo = FALSE)
+  # source(here::here("R/cost_likelihood_pmodel_bigD13C_vj_gpp.R"), echo = FALSE)
+
+  # Setup MCMC          # uses drivobs_train, not drivobs_test
+  driver_to_use_for_mcmc <- select(res$drivobs_train, sitename, params_siml, site_info, forcing)
+  obs_to_use_for_mcmc    <- select(res$drivobs_train, sitename, targets, data)
+
+  calib_sofun_settings <- list(
+    method = "BayesianTools",
+    metric = rsofun::cost_likelihood_pmodel_bigD13C_vj_gpp,
+    control = list(
+      sampler = sampler,
+      settings = list(
+        burnin     = burnin,                 # 10000,
+        iterations = iterations,             # 50000,
+        nrChains   = NA,                     # number of independent chains
+        startValue = n_chains_within_sampler # number of internal chains to be sampled
+      ),
+      n_chains_independent      = n_chains_independent,
+      n_parallel_independent    = n_parallel_independent,
+      n_parallel_within_sampler = n_parallel_within_sampler
+    ),
+    par = res$par
+  )
+
+  # setup output directories for parallel calibration
+  filepath <- file.path(outpath, "calibrations", paste0("out_calib_", suffix_str, ".rds"))
+  dir.create(path = dirname(filepath), showWarnings = FALSE)
+
+  # Run calibration in parallel
+  cat(paste0(Sys.time(),": start sampling of ", paste0("out_calib_", suffix_str, ".rds")))
+  out_calib <- calib_sofun_parallelized(
+    drivers   = driver_to_use_for_mcmc,
+    obs       = obs_to_use_for_mcmc,
+    settings  = calib_sofun_settings,
+    filepath  = filepath, 
+    logpath   = paste0(filepath, ".log.txt"),
+    # other arguments for the cost function
+    par_fixed = res$par_fixed
+  )
+  
+  ## Store result object to file: ----
+  ## This enables easy continuation of MCMC sampling
+  rds_path <- gsub(".log.txt","", out_calib$logpath)
+  saveRDS(out_calib, file = rds_path, compress = "xz")
+  cat(paste0(Sys.time(),": end   sampling of ", out_calib$name,
+               ". \nWritten *.rds-output to: ", rds_path))
+  
+  # return only performance results as tibble
+  timings <- tibble(
+    scenario       = curr_calibration_scenario,
+    name           = out_calib$name,
+    # sampling options:
+    sampler        = calib_sofun_settings$control$sampler,
+    burnin         = burnin,
+    iterations     = iterations,
+    n_chains       = n_chains_independent,
+    n_chains_inner = n_chains_within_sampler,
+    # performance results:
+    cores          = n_parallel_independent,
+    cores_inner    = n_parallel_within_sampler,
+    # runtime        = out_calib$runtime, # TODO: currently removed
+    walltime       = out_calib$walltime,
+    resultfile     = out_calib$logpath
+  )
+  return(timings)
+}
+```
+##### Run calibration
+With these helper functions specified, we can then run the two calibration setups.
+The sampled MCMC chains are stored to a specified path so that they can easily 
+be loaded at a later time in a separate R session.
+
+Below, the second setup is run a second time making use of parallel sampling of
+the independent chains.
+
+We make use of arguments of the user-defined function `run_mcmc_rsofun()` that 
+allow us to specify the calibration setup, the MCMC setup, and the 
+parallelization strategy.
+
+```{r run multisite, multitarget calibration, eval = FALSE}
+setup_rsofun_calibration(226)
+setup_rsofun_calibration(226)$drivobs_train
+setup_rsofun_calibration(231)
+setup_rsofun_calibration(231)$drivobs_train
+
+dir.create(here::here("vignettes", "files/param_calib_multitarget/"), showWarnings = FALSE)
+df_timings226 <- run_mcmc_rsofun(226, suffix_str = "setup_226",
+  outpath = here::here("vignettes", "files/param_calib_multitarget/"),
+  # mcmc setup:
+  sampler = "DREAMzs",
+  iterations = 600, 
+  burnin = 0,
+  n_chains_independent      = 8,
+  n_chains_within_sampler   = 3,
+  # parallelization
+  n_parallel_independent    = 1,     
+  n_parallel_within_sampler = FALSE
+  )
+
+df_timings231 <- run_mcmc_rsofun(231, suffix_str = "setup_231",
+  outpath = here::here("vignettes", "files/param_calib_multitarget/"),
+  # mcmc setup:
+  sampler = "DREAMzs",
+  iterations = 600, # TODO: increase 
+  burnin = 0,
+  n_chains_independent      = 8,
+  n_chains_within_sampler   = 3,
+  # parallelization
+  n_parallel_independent    = 1,     
+  n_parallel_within_sampler = FALSE
+  )
+df_timings231p <- run_mcmc_rsofun(231, suffix_str = "setup_231_parallel",
+  outpath = here::here("vignettes", "files/param_calib_multitarget/"),
+  # mcmc setup:
+  sampler = "DREAMzs",
+  iterations = 600, # TODO: increase
+  burnin = 0,
+  n_chains_independent      = 8,
+  n_chains_within_sampler   = 3,
+  # parallelization
+  n_parallel_independent    = 8,     # here now we parallelize the 8 chains to 8 cores
+  n_parallel_within_sampler = FALSE
+  )
+
+calib_timings <- bind_rows(
+  df_timings226, 
+  df_timings231,
+  df_timings231p)
+```
+```{r eval = FALSE, include = FALSE}
+# store output since calibration isn't run
+saveRDS(calib_timings,
+        here::here("vignettes", "files/param_calib_multitarget.Rmd__calib_timings.RDS"),
+        compress = "xz")
+```
+```{r eval = TRUE, include = FALSE}
+# fake output since calibration was run previous to vignette rendering
+calib_timings <- readRDS(
+  here::here("vignettes", "files/param_calib_multitarget.Rmd__calib_timings.RDS"))
+```
+
+Since MCMC sampling can be long running tasks, the resulting MCMC sampling 
+chains are stored to disk, so that they can easily be recovered in a later R 
+session for an analysis similar to the one below.
+
+During the MCMC sampling
+
+##### Analyze model calibration
+```{r load MCMC chains}
+out_calib_226 <- readRDS(here::here("vignettes/", "files/param_calib_multitarget/calibrations/out_calib_setup_226.rds"))
+out_calib_231 <- readRDS(here::here("vignettes/", "files/param_calib_multitarget/calibrations/out_calib_setup_231.rds"))
+out_calib_231p<- readRDS(here::here("vignettes/", "files/param_calib_multitarget/calibrations/out_calib_setup_231_parallel.rds"))
+```
+
+```{r plot MCMC trace plot}
+rsofun_symbol_parname_description <- tibble::tribble(
+  ~variable,            ~label,                                                      ~Symbol_R2,
+  "kphio",              "italic(phi)[0]^'*'*' (mol mol\u207B\u00B9)'",               "italic(phi)[0]^'*'",
+  "kphio_par_a",        "italic(a)[italic(phi)]*' (\u00B0C\u207B\u00B2)'",           "italic(a)[italic(phi)]",
+  "kphio_par_b",        "italic(b)[italic(phi)]*' (\u00B0C)'",                       "italic(b)[italic(phi)]",
+  "soilm_thetastar",    "italic(theta)^'*'*' ('*'mm'*')'",                           "italic(theta)^'*'",
+  "soilm_betao",        "italic(beta)[0]*' (-)'",                                    "italic(beta)[0]",
+  "beta_unitcostratio", "italic(beta)*' (-)'",                                       "italic(beta)",
+  "rd_to_vcmax",        "italic(b)[0]*' (-)'",                                       "italic(b)[0]",
+  "tau_acclim",         "italic(tau)*' (days)'",                                     "italic(tau)",
+  "kc_jmax",            "italic(c)^'*'*' (-)'",                                      "italic(c)^'*'",
+  "err_gpp",            "italic(sigma)['GPP']*' (gC m \u207B\u00B2 s\u207B\u00B9)'", "italic(sigma)['GPP']",
+  "err_bigD13C",        "italic(sigma)[Delta]*' ('*'\u2030'*')'",                    "italic(sigma)[Delta]",
+  "err_vj",             "italic(sigma)['VJ']*' (-)'",                                "italic(sigma)['VJ']",
+  "errbias_bigD13C",    "italic(delta)[Delta]*' (\u2030)'",                          "italic(delta)[Delta]",
+  "errbias_vj",         "italic(delta)['VJ']*' (-)'",                                "italic(delta)['VJ']",
+  "errscale_gpp",       "italic(kappa)['GPP']*' (-)'",                               "italic(kappa)['GPP']",
+) |> 
+  mutate(variable = forcats::as_factor(variable)) # make factor to keep ordering
+label_vec_short <- setNames(rsofun_symbol_parname_description$Symbol_R2, rsofun_symbol_parname_description$variable)
+custom_labeller_variable <- function(labels, multi_line = TRUE) { # adapted from label_parsed
+  replaced_labels <- left_join(select(labels, variable), # TODO: this has variable hardcoded
+                               select(rsofun_symbol_parname_description, variable, label),
+                               by = join_by(variable))
+  # print(tibble(replaced_labels))
+  replaced_labels <- replaced_labels |> select(-variable)
+  replaced_labels <- label_value(replaced_labels, multi_line = multi_line)
+  # print(replaced_labels)
+  lapply(unname(replaced_labels), lapply, function(values) {
+          c(parse(text = as.character(values)))
+      })
+}
+
+
+# Define plotting function
+plot_mcmc_trace <- function(out_calib, nr_internal_chains, burnin_to_skip, burnin_to_skip_gelman = burnin_to_skip, dont_thin=FALSE, end = NULL){
+  x <- out_calib$mod
+  title <- basename(out_calib$name)
+
+  curr_iter <- x[[1]]$settings$iterations
+  if(dont_thin || curr_iter < 10000){
+    curr_thin <- 1
+  } else {
+    curr_thin <- floor(curr_iter / 10000)
+  }
+
+  xsample <- BayesianTools::getSample(x, coda = T, thin = curr_thin, start = burnin_to_skip, end = end)
+
+  # nr_internal_chains will have same color
+  dat_to_plot <- lapply(xsample, function(single_chain){
+      as_tibble(single_chain) |> mutate(iteration = burnin_to_skip + curr_thin*(1:n()))
+    }) |>
+    bind_rows(.id = "chain_id") |>
+    pivot_longer(-c(iteration, chain_id), names_to = "variable") |>
+    # mark inner and outer chains (assumes DEzs): # TODO: setup for DREAMzs
+    mutate(outerChain = as.factor(ceiling(as.numeric(chain_id)/3)),
+           innerChain = (as.numeric(chain_id)+2)%%3 + 1,
+           innerChain_str = letters[innerChain],
+           chain_id_str = paste0(outerChain, letters[innerChain])) |>
+    # fix order: in order of appearance
+    mutate(variable = forcats::as_factor(variable))
+
+  pl <- ggplot(dat_to_plot,
+         aes(x=iteration, y=value, color = outerChain, linetype = innerChain_str)) + geom_line() +
+    # geom_rug(sides = "r") +
+    theme_classic() +
+    scale_x_continuous(labels = scales::label_number(scale_cut = scales::cut_short_scale())) +
+    facet_wrap(~variable,  nrow = 2, scales = "free_y", labeller = custom_labeller_variable) + 
+    theme(
+      legend.position = "bottom", strip.text = element_text(size=12)
+    ) +
+    labs(y="", color = "chain", linetype = "internal\nchains")
+
+  # add Gelman Diagnostics
+  get_gelman_diag <- function(mcmc, burnin_to_skip, end){
+    gelman_df <- BayesianTools::gelmanDiagnostics(mcmc, start = burnin_to_skip, end = end)
+    psrf_values <- gelman_df$psrf[,"Point est."]
+    # psrf_strings <- paste0(substr(names(psrf_values),1,5), "..=", sprintf("%.2f", psrf_values))
+    psrf_strings <- paste0("'*",unname(label_vec_short[names(psrf_values)]), "*'=", sprintf("%.2f", psrf_values))
+    psrf_string <- paste0(psrf_strings, collapse = ", ")
+
+    subtitle <- sprintf("'GelmanDiagnostics: mpsrf=%.1f; psrf:%s'",
+            gelman_df$mpsrf,
+            psrf_string)
+  }
+  subtitle <- tryCatch(get_gelman_diag(x, burnin_to_skip_gelman + 1, end = end), error = function(e) {e}) # unsure why min burnin of 1 is needed
+  pl <- pl + ggtitle(title, subtitle = parse(text=subtitle))
+
+  pl <- pl + geom_vline(xintercept = burnin_to_skip_gelman, color="red", linetype="dashed")
+
+  return(pl)
+}
+plot_mcmc_trace(out_calib_226, nr_internal_chains = 3, burnin_to_skip = 0, burnin_to_skip_gelman = 150)
+plot_mcmc_trace(out_calib_231, nr_internal_chains = 3, burnin_to_skip = 0, burnin_to_skip_gelman = 150)
+plot_mcmc_trace(out_calib_231p,nr_internal_chains = 3, burnin_to_skip = 0, burnin_to_skip_gelman = 150)
+```
+
+```{r plot parameter distributions}
+plot_prior_posterior_density <- function(x, burnin_to_skip){
+  require(BayesianTools)
+  require(dplyr)
+  require(tidyr)
+  require(ggplot2)
+
+  # Get matrices of prior and posterior samples
+  posteriorMat <- BayesianTools::getSample(x, parametersOnly = TRUE, start = burnin_to_skip)
+  priorMat <-  BayesianTools:::getSetup(x)$prior$sampler(10000) # nPriorDraws = 10000
+
+  # Parameter names
+  parNames <- colnames(posteriorMat)
+  # rename columns priorMat
+  colnames(priorMat) <- parNames
+
+  # Create data frame for plotting
+  df_plot <- rbind(
+    data.frame(priorMat,     par_estimation = "prior"),
+    data.frame(posteriorMat, par_estimation = "posterior")
+  ) |>
+    dplyr::mutate(par_estimation = forcats::fct_inorder(par_estimation)) |> # order by appearance
+    tibble()
+  levels(df_plot$par_estimation)
+  # Plot with facet wrap
+  gg <- df_plot |>
+    tidyr::pivot_longer(-c(par_estimation), names_to = "variable") |>
+    dplyr::mutate(variable = forcats::fct_inorder(variable)) |> # order by appearance
+    ggplot(
+      aes(x = value, fill = par_estimation)
+    ) +
+    geom_density(alpha=0.8) +
+    theme_classic() +
+    facet_wrap( ~ variable , nrow = 2, scales = "free") +
+    theme(
+      legend.position = "bottom",
+      axis.title.x = element_text(""),
+      axis.ticks.y = element_blank(),
+      axis.text.y = element_blank(),
+    ) +
+    scale_fill_manual(NULL, values = c("posterior" = "#29a274ff", 
+                                       "prior" = "#777055ff")) # GECO colors
+
+  return(gg)
+}
+
+library(cowplot)
+p1 <- plot_prior_posterior_density(out_calib_226$mod,  burnin_to_skip = 200) +  ggtitle(out_calib_226$name)
+p2 <- plot_prior_posterior_density(out_calib_231$mod,  burnin_to_skip = 20) +  ggtitle(out_calib_231$name)
+p3 <- plot_prior_posterior_density(out_calib_231p$mod, burnin_to_skip = 20) +  ggtitle(out_calib_231p$name)
+cowplot::plot_grid(p1,p2,p3, ncol = 1)
+```
+
+```{r plot parameter correlation}
+BayesianTools::correlationPlot(out_calib_226$mod)
+BayesianTools::correlationPlot(out_calib_231$mod)
+BayesianTools::correlationPlot(out_calib_231p$mod)
+```
+
+
+##### Compare predictions of calibrated model with observations
+```{r load MCMC chains II}
+out_calib_226 <- readRDS(here::here("vignettes/", "files/param_calib_multitarget/calibrations/out_calib_setup_226.rds"))
+out_calib_231 <- readRDS(here::here("vignettes/", "files/param_calib_multitarget/calibrations/out_calib_setup_231.rds"))
+out_calib_231p<- readRDS(here::here("vignettes/", "files/param_calib_multitarget/calibrations/out_calib_setup_231_parallel.rds"))
+```
+
+TODO: add Pred Vs Obs plots
+  TODO: one like Figure C5
+  TODO: one like Figure 5
+
+
+

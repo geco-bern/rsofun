@@ -12,7 +12,10 @@
   format.
   * `runread_pmodel()` can now run onestep and daily model thanks to the new 
   `drivers` format. If the old format is used it is implicitly assuming daily 
-  runs were requested.
+  runs were requested. Output of `runread_pmodel()` can be split based on columns 
+  present in the `data` column: 
+  `df |> rowwise() |> filter("vcmax_mod_molm2s" %in% names(data)) |> ungroup()` or
+  `df |> rowwise() |> filter("date" %in% names(data)) |> ungroup()`
   * `pmodel_drivers` and `pmodel_validation` contain now more sites and a range of `daily` as well as 
   `onestep` model runs. Note that the data of site `FR-Pue` were updated in FDK,
   so that the forcing data has slightly changed and also `whc` of `FR-Pue` was modified from 

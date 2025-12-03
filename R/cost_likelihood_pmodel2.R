@@ -106,7 +106,6 @@ cost_likelihood_pmodel_bigD13C_vj_gpp <- function(
   stopifnot(length(intersect(names(par), names(par_fixed))) == 0) # no overlap
   params_modl_and_err <- c(par, par_fixed)
   
-  
   # B,C) Run model and bring together with observed ----
   ## run the time series model for gpp/et/... time series
   ## run the onestep model for traits
@@ -161,65 +160,22 @@ get_mod_obs_pmodel_bigD13C_vj_gpp <- function(
 ){
   
   # NOTE: params_modl_and_err contains model and error parameters
-  
   # B) Run model ----
-  ## run the time series model for gpp/et/... time series
-  df_daily <- drivers |>
-    dplyr::rowwise() |> dplyr::filter(all(.data$params_siml$onestep == FALSE)) |> dplyr::ungroup() |>
-    # NOTE: this works gracefully even when no simulations are requested
-    runread_pmodel_f(
-      # drivers   = _, # NOTE: this is unneeded since `|>` automatically inserts first argument
-      par       = params_modl_and_err,
-      makecheck = FALSE,
-      parallel  = parallel,
-      ncores    = ncores
-    )
+  df <- runread_pmodel_f(
+    drivers   = drivers,
+    par       = params_modl_and_err,
+    makecheck = FALSE,
+    parallel  = parallel,
+    ncores    = ncores
+  )
+  df_daily <- df |> rowwise() |> filter("date" %in% names(data)) |> ungroup()
+  df_onestep <- df |> rowwise() |> filter("vcmax_mod_molm2s" %in% names(data)) |> ungroup()
   
-  ## run the onestep model for traits
-  df_onestep <- drivers |>
-    # TODO: from here on unneeded computational overhead
-    dplyr::rowwise() |> dplyr::filter(all(.data$params_siml$onestep == TRUE)) |> dplyr::ungroup() |>
-    # dplyr::filter(FALSE) |>
-    dplyr::group_by(.data$sitename) |>
-    tidyr::unnest(c('params_siml', 'forcing'))
-  # TODO: up until here: unneeded computational overhead
-  
-  # NOTE: this is to make this work gracefully even when no simulations are requested
-  if (nrow(df_onestep) == 0){ # no onestep simulations requested, generate dummy output:
-    df_onestep <- tibble(
-      sitename                 = character(),
-      vcmax_mod_molm2s         = numeric(),
-      jmax_mod_molm2s          = numeric(),
-      vcmax25_mod_molm2s       = numeric(),
-      jmax25_mod_molm2s        = numeric(),
-      gs_accl_mod_molCmolPhPa  = numeric(),
-      wscal_mod__              = numeric(),
-      bigD13C_mod_permil       = numeric(),
-      iwue_mod__               = numeric(),
-      rd_mod_gCm2s             = numeric(),
-      vj_mod__                 = numeric())
-  } else { # only run onestep simulations if requested, generate simulation output:
-    df_onestep <- df_onestep |>
-      dplyr::group_modify(~run_pmodel_onestep_f_bysite(
-        lc4 = FALSE,
-        # select what forcing columns to use:
-        forcing =  data.frame(temp = .x$temp,
-                              vpd  = .x$vpd,
-                              ppfd = .x$ppfd,
-                              co2  = .x$co2,
-                              patm = .x$patm),
-        params_modl = params_modl_and_err,
-        makecheck   = FALSE)) |> # TODO: disable check
-      dplyr::rename('vcmax_mod_molm2s'   = 'vcmax',
-                    'jmax_mod_molm2s'    = 'jmax',
-                    'vcmax25_mod_molm2s' = 'vcmax25',
-                    'jmax25_mod_molm2s'  = 'jmax25',
-                    'gs_accl_mod_molCmolPhPa' = 'gs_accl',
-                    'bigD13C_mod_permil'      = 'bigdelta',
-                    'iwue_mod__'         = 'iwue',
-                    'rd_mod_gCm2s'       = 'rd') |>
-      dplyr::mutate(vj_mod__ = .data$vcmax_mod_molm2s/.data$jmax_mod_molm2s)
-  }
+  # # add vj_mod__
+  # df_onestep <- df_onestep |> tidyr::unnest(data) |>
+  #   dplyr::mutate(vj_mod__ = .data$vcmax_mod_molm2s/.data$jmax_mod_molm2s) |>
+  #   tidyr::nest(data = -c('sitename', 'site_info'))
+
   
   # C) Bring together modelled and observed ----
   
@@ -237,7 +193,6 @@ get_mod_obs_pmodel_bigD13C_vj_gpp <- function(
         cross_join(expected_columns)
     } else {df}
   }
-  
   
   join_fct <- ifelse(return_continuous_timeseries, 
                      dplyr::full_join, 
@@ -268,7 +223,13 @@ get_mod_obs_pmodel_bigD13C_vj_gpp <- function(
     # join the modelled data
     left_join(
       df_onestep |>
-        select('sitename', 'vcmax_mod_molm2s', 'jmax_mod_molm2s', 'bigD13C_mod_permil', 'vj_mod__'),
+        tidyr::unnest('data') |>
+        # make this work gracefully in case nrow=0
+        ensure_cols_defined(tibble(vcmax_mod_molm2s = list(), 
+                                   jmax_mod_molm2s = list(),
+                                   bigD13C_mod_permil = list()
+                                   )) |> # vj_mod__ = list())
+        select('sitename', 'vcmax_mod_molm2s', 'jmax_mod_molm2s', 'bigD13C_mod_permil'), # , 'vj_mod__'
       by = dplyr::join_by('sitename')) |>
     # nest again
     tidyr::nest(modobs = -c('sitename', 'targets'))
@@ -282,7 +243,7 @@ get_mod_obs_pmodel_bigD13C_vj_gpp <- function(
   #    but loop over targets and subset by df_mod_obs_daily$targets
   # for (curr_target in targets){
   #   print(curr_target)
-  # } # or alternativel lapply
+  # } # or alternatively lapply
   # or hardcode:
   df_mod_obs <- bind_rows(
     df_mod_obs_daily |> tidyr::unnest('modobs') |>
@@ -295,7 +256,9 @@ get_mod_obs_pmodel_bigD13C_vj_gpp <- function(
                     err_par_sd   = params_modl_and_err[["err_gpp"]],  #params_modl_and_err[[paste0("err_,"curr_target]]) |> # TODO: work here on  not hardcoding this...
                     err_par_bias = 0,
                     err_par_scale= params_modl_and_err[["errscale_gpp"]]) |>
+      # ensure metadata can be bound together between different target types:
       tidyr::nest(obs_metadata = c('date')) |>
+      # select needed columns
       dplyr::select('sitename', 'target', 'obs_metadata', 'mod', 'obs', 
                     'err_par_sd', 'err_par_bias', 'err_par_scale'),
     
@@ -305,15 +268,18 @@ get_mod_obs_pmodel_bigD13C_vj_gpp <- function(
       # make this work gracefully in case nrow=0
       ensure_cols_defined(tibble(bigD13C = list(), bigD13C_mod_permil = numeric())) |>
       # make this work gracefully in case nrow=0
-      ensure_cols_defined(tibble(bigD13C_obs_permil = numeric(),
-                                 species = character(), 
-                                 year = integer())) |>
-      dplyr::rename(all_of(c(mod = "bigD13C_mod_permil", obs = "bigD13C_obs_permil"))) |>
+      ensure_cols_defined(tibble(bigD13C = numeric()#, instead of bigD13C_obs_permil
+                                 # species = character(), 
+                                 # year = integer()
+                                 )) |>
+      dplyr::rename(all_of(c(mod = "bigD13C_mod_permil", obs = "bigD13C"))) |> # instead of bigD13C_obs_permil
       dplyr::mutate(target  = "bigD13C",                                         #curr_target,
                     err_par_sd   = params_modl_and_err[["err_bigD13C"]],         #params_modl_and_err[[paste0("err_,"curr_target]]) |> # TODO: work here on  not hardcoding this...
                     err_par_bias = params_modl_and_err[["errbias_bigD13C"]],
                     err_par_scale= 1) |>
-      tidyr::nest(obs_metadata = c('species', 'year')) |> # , Nobs, Nyears, Ndates
+      # ensure metadata can be bound together between different target types:
+      tidyr::nest(obs_metadata = c('id')) |> 
+      # select needed columns
       dplyr::select('sitename', 'target', 'obs_metadata', 'mod', 'obs', 
                     'err_par_sd', 'err_par_bias', 'err_par_scale')
     
@@ -333,6 +299,7 @@ get_mod_obs_pmodel_bigD13C_vj_gpp <- function(
     #                 err_par_sd   = params_modl_and_err[["err_vj"]],         #params_modl_and_err[[paste0("err_,"curr_target]]) |> # TODO: work here on  not hardcoding this...
     #                 err_par_bias = params_modl_and_err[["errbias_vj"]],
     #                 err_par_scale= 1) |>
+    # # ensure metadata can be bound together between different target types:
     #   tidyr::nest(obs_metadata = c('genus', 'species', 'year')) |> # , Nobs, Nyears, Ndates
     #   dplyr::select('sitename', 'target', 'obs_metadata', 'mod', 'obs', 
     #                 'err_par_sd', 'err_par_bias', 'err_par_scale')
