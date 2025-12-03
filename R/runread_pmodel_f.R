@@ -116,7 +116,7 @@ runread_pmodel_f <- function(
     input <- forcing <- . <- NULL
   
   # ensure backwards compatibility with format without column 'onestep':
-  if ("onestep" %in% names(drivers$params_siml[[1]])) {
+  if (nrow(drivers) > 0 && "onestep" %in% names(drivers$params_siml[[1]])) {
     # all good
   } else {
     warning("
@@ -128,13 +128,17 @@ runread_pmodel_f <- function(
   }
   
   # check input validity
-  stopifnot(is.logical(lapply(drivers$params_siml, `[[`, 'onestep') |> unlist()))
+  stopifnot(nrow(drivers) == 0 || is.logical(lapply(drivers$params_siml, `[[`, 'onestep') |> unlist()))
   stopifnot(!dplyr::is_grouped_df(drivers))
   
   # split what is run by run_pmodel_f_bysite and what is run by run_pmodel_onestep_f_bysite:
-  drivers_daily   <- drivers |> dplyr::rowwise() |> dplyr::filter(all(.data$params_siml$onestep == FALSE)) |> ungroup()
-  drivers_onestep <- drivers |> dplyr::rowwise() |> dplyr::filter(all(.data$params_siml$onestep == TRUE)) |> ungroup()
-  
+  if (nrow(drivers) > 0) {
+    drivers_daily   <- drivers |> dplyr::rowwise() |> dplyr::filter(all(.data$params_siml$onestep == FALSE)) |> ungroup()
+    drivers_onestep <- drivers |> dplyr::rowwise() |> dplyr::filter(all(.data$params_siml$onestep == TRUE)) |> ungroup()
+  } else {
+    drivers_daily   <- drivers
+    drivers_onestep <- drivers
+  }  
   # setup helpers for conditional parallelization
   do_if <- function(df, cond, f){ # enable conditional lines in dplyr piping
     if(cond) f(df) else df
