@@ -260,6 +260,7 @@ get_mod_obs_pmodel_bigD13C_vj_gpp <- function(
     tidyr::nest(modobs = -c('sitename', 'targets'))
   
   df_mod_obs_onestep <- obs |>
+    dplyr::filter(.data$sitename %in% df_onestep$sitename) |> # this drops daily rows
     select('sitename', 'targets', 'data') |>
     tidyr::unnest('data') |>
     # make this work gracefully in case nrow=0
