@@ -2,7 +2,8 @@ cff-version: 1.2.0
 message: >-
   If you use this software, please cite it using the
   metadata from this file.
-  The corresponding documentation paper can be found at egusphere-2025-1260
+  The corresponding documentation paper (currently in press) can be found as https://www.biorxiv.org/content/10.1101/2023.11.24.568574v3
+
 title: 'rsofun: The P-Model and BiomeE Modelling Framework'
 type: software
 license: GPL-3.0-only

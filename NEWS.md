@@ -4,7 +4,7 @@
 * P-model:
   * New `calib_sofun_parallelized()` that can handle more diverse prior 
   distributions of the parameters to estimate (see internal function 
-  `createMixedPrior()`) and that can be parallelized
+  `createMixedPrior()`) and that can parallelize multiple the MCMC chains
   * New `cost_likelihood_pmodel_bigD13C_vj_gpp()` that can handle multiple 
   target variables that require to run either `run_pmodel_f_bysite()` or 
   `run_pmodel_onestep_f_bysite()`. Thus also requires a new data format for the
@@ -13,12 +13,12 @@
   * `runread_pmodel()` can now run onestep and daily model thanks to the new 
   `drivers` format. If the old format is used it is implicitly assuming daily 
   runs were requested.
-  * `pmodel_drivers` contain now more sites and a range of `daily` as well as 
+  * `pmodel_drivers` and `pmodel_validation` contain now more sites and a range of `daily` as well as 
   `onestep` model runs. Note that the data of site `FR-Pue` were updated in FDK,
   so that the forcing data has slightly changed and also `whc` of `FR-Pue` was modified from 
   432 to 260 mm.
   * output of `run_pmodel_f_bysite()` (and consequently of `runread_pmodel()`) 
-  has been made consistent into `tibble`
+  has been transformed into `tibble` for consistency
   
 ## (Non-)Breaking changes
 * New driver data.frame format for P-model: now containing the information which
