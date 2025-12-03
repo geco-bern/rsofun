@@ -140,16 +140,15 @@ cost_rmse_pmodel <- function(
   )
   
   # clean model output and unnest
-  df <- df |>
-    dplyr::rowwise() |>
-    dplyr::reframe(
-      cbind(sitename, data[, c('date', unique(c('gpp', targets)))]) |>
-        stats::setNames(c('sitename', 'date', paste0(unique(c('gpp', targets)), '_mod')))
-    ) # gpp is used to get average trait prediction
+  # df <- df |>
+  #   dplyr::rowwise() |>
+  #   dplyr::reframe(
+  #     cbind(sitename, data[, c('date', unique(c('gpp', targets)))]) |>
+  #       stats::setNames(c('sitename', 'date', paste0(unique(c('gpp', targets)), '_mod')))
+  #   ) # gpp is used to get average trait prediction
   
   # separate validation data into fluxes and traits, site by site
   is_flux <- apply(obs, 1, function(x){ 'date' %in% colnames(x$data)})
-  
   if(sum(is_flux) > 0){
     flux_sites <- obs$sitename[is_flux]
     
@@ -165,7 +164,11 @@ cost_rmse_pmodel <- function(
     }else{
       # Join P-model output and flux observations
       df_flux <- df |>
-        dplyr::filter(sitename %in% flux_sites) |>
+        dplyr::filter(sitename %in% flux_sites) |> 
+        tidyr::unnest(data) |>
+        dplyr::rename_with(function(x){paste0(x,"_mod")}, 
+                           .cols = "year_dec":"cleafd13c"
+                           ) |>
         dplyr::left_join(
           obs_flux, 
           by = c('sitename', 'date'))    # observations with missing date are ignored
@@ -191,10 +194,9 @@ cost_rmse_pmodel <- function(
       df_trait <- df |>
         dplyr::filter(sitename %in% trait_sites) |>
         dplyr::group_by(sitename) |>
-        # get growing season average traits
-        dplyr::summarise(across(ends_with("_mod") & !starts_with('gpp'),
-                                ~ sum(.x * gpp_mod/sum(gpp_mod)),
-                                .names = "{.col}")) |>
+        tidyr::unnest(data) |>
+        # get within-site average
+        dplyr::summarise(bigD13C_mod = mean(.data$bigD13C_mod_permil)) |>
         dplyr::left_join(
           obs_trait,
           by = c('sitename')        # compare yearly averages rather than daily obs
@@ -219,9 +221,13 @@ cost_rmse_pmodel <- function(
   }) |>
     unlist()
   
+  names(rmse) <- targets
+  
   # Aggregate RMSE over targets (weighted average)
+  #target_weights <- c("bigD13C" = 0.2, "gpp" = 1, "le" = 0.1)
   if(!is.null(target_weights)){
-    cost <- sum(rmse * target_weights)
+    stopifnot(sort(names(rmse)) == sort(names(target_weights)))
+    cost <- sum(rmse * target_weights[names(rmse)])
   }else{
     cost <- mean(rmse, na.rm = TRUE)
   }
