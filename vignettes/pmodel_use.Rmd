@@ -250,7 +250,7 @@ ggplot(data = df_gpp_plot_FRPue) +
 
 For details on the optimization settings we refer to the manuals of [GenSA](https://cran.r-project.org/package=GenSA) and [BayesianTools](https://github.com/florianhartig/BayesianTools).
 
-## One-step P-model call
+## Running One-step P-model
 
 For certain applications, the core theory of the P-model, predicting the acclimation of photosynthesis at the leaf-level, may be all that's needed for simulations. {rsofun} also provides a stripped-down version of "one-step" P-model call. That is, without considering forcing (and output) time series, delayed acclimation, ecosystem-level up-scaled quantities, and the coupling with the water balance and related water limitation on photosynthesis. Applications of the stripped-down version may include simulations of leaf-level photosynthetic traits. The function `run_pmodel_onestep_f_bysite()` provides this functionality and further improves computational efficiency over a call to `run_pmodel_f_bysite()`. This is particularly useful when calibrating the model to photosynthetic traits data. Note that it can equally be run through `runread_pmodel()`, specifying `onestep == TRUE` in the column `params_siml` of the input driver.
 

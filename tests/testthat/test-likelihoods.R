@@ -114,6 +114,7 @@ test_that("test likelihood/RMSE calculations with pmodel", {
   )
   
   # Also test vcmax25 target and multi-target loglikelihoods:
+  # # TODO: update this test
   ll_values2 <- apply(dplyr::select(test_params_pmodel, -err_gpp), 1, function(par_v) { # par_v is a named vector
     # TODO: when rewriting cost_likelihood_pmodel: activate more difficult check to ignore unneded error parameter 'err_gpp'
     #       ll_values2 <- apply(test_params_pmodel, 1, function(par_v) {...})
@@ -160,6 +161,7 @@ test_that("test likelihood/RMSE calculations with pmodel", {
   )
   
   # test p-model likelihood with only fixed parameters
+  # TODO: update this test
   ll_pmodel_fixed <- rsofun::cost_likelihood_pmodel(
     par     = c(),                                                   # par: should be a named vector
     obs     = rbind(p_model_oldformat_validation, p_model_oldformat_validation_vcmax25), # obs: example data from package 

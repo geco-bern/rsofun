@@ -277,6 +277,8 @@ get_mod_obs_pmodel_bigD13C_vj_gpp <- function(
   targets_biases <- grep("^errbias", names(params_modl_and_err), value = TRUE)
   targets_scales <- grep("^errscale", names(params_modl_and_err), value = TRUE)
   
+  # TODO here refrain from hardcoding.
+  #    but loop over targets and subset by df_mod_obs_daily$targets
   # for (curr_target in targets){
   #   print(curr_target)
   # } # or alternativel lapply
