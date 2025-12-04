@@ -139,16 +139,19 @@ cost_rmse_pmodel <- function(
     parallel = FALSE
   )
   
-  # clean model output and unnest
-  # df <- df |>
-  #   dplyr::rowwise() |>
-  #   dplyr::reframe(
-  #     cbind(sitename, data[, c('date', unique(c('gpp', targets)))]) |>
-  #       stats::setNames(c('sitename', 'date', paste0(unique(c('gpp', targets)), '_mod')))
-  #   ) # gpp is used to get average trait prediction
-  
+  ## clean model output, unnest, and append "_mod"
+  df <- df |>
+    tidyr::unnest(data) |>
+    dplyr::rename(any_of(c("bigD13C"="bigD13C_mod_permil"))) |>
+    # always keep gpp, since is used to get average trait prediction
+    dplyr::select('sitename', any_of(unique(c('date','gpp', targets)))) |>
+    dplyr::rename_with(.cols = -any_of(c('sitename','date')),
+                       .fn = paste0,
+                       "_mod")
+
   # separate validation data into fluxes and traits, site by site
   is_flux <- apply(obs, 1, function(x){ 'date' %in% colnames(x$data)})
+  
   if(sum(is_flux) > 0){
     flux_sites <- obs$sitename[is_flux]
     
@@ -164,11 +167,7 @@ cost_rmse_pmodel <- function(
     }else{
       # Join P-model output and flux observations
       df_flux <- df |>
-        dplyr::filter(sitename %in% flux_sites) |> 
-        tidyr::unnest(data) |>
-        dplyr::rename_with(function(x){paste0(x,"_mod")}, 
-                           .cols = "year_dec":"cleafd13c"
-                           ) |>
+        dplyr::filter(sitename %in% flux_sites) |>
         dplyr::left_join(
           obs_flux, 
           by = c('sitename', 'date'))    # observations with missing date are ignored
@@ -194,9 +193,12 @@ cost_rmse_pmodel <- function(
       df_trait <- df |>
         dplyr::filter(sitename %in% trait_sites) |>
         dplyr::group_by(sitename) |>
-        tidyr::unnest(data) |>
         # get within-site average
-        dplyr::summarise(bigD13C_mod = mean(.data$bigD13C_mod_permil)) |>
+        # dplyr::summarise(bigD13C_mod = mean(.data$bigD13C_mod_permil)) |>
+        # get growing season average traits (currently not limited to growing season)
+        dplyr::summarise(across(ends_with("_mod") & !starts_with('gpp'),
+                                ~ sum(.x * gpp_mod/sum(gpp_mod)),
+                                .names = "{.col}")) |>
         dplyr::left_join(
           obs_trait,
           by = c('sitename')        # compare yearly averages rather than daily obs
