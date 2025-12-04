@@ -71,6 +71,24 @@
 #'   kc_jmax            = 0.41
 #'  )
 #' )
+#' cost_likelihood_pmodel(
+#'   par = c(kphio       = 0.05,
+#'           kphio_par_a = -0.01,
+#'           kphio_par_b = 1,     # model parameters
+#'           err_le      = 2,
+#'           err_gpp     = 2,
+#'           err_bigD13C = 2),
+#'   obs = pmodel_validation,
+#'   drivers = pmodel_drivers,
+#'   par_fixed = list(
+#'     soilm_thetastar    = 0.6 * 240,  # old setup with soil moisture stress
+#'     soilm_betao        = 0.0,
+#'     beta_unitcostratio = 146.0,
+#'     rd_to_vcmax        = 0.014,      # from Atkin et al. 2015 for C3 herbaceous
+#'     tau_acclim         = 30.0,
+#'     kc_jmax            = 0.41
+#'   )
+#' )
 
 cost_likelihood_pmodel <- function(
     par,   # model parameters & error terms for each target
@@ -155,14 +173,16 @@ cost_likelihood_pmodel <- function(
     ncores = ncores
   )
   
-  ## clean model output and unnest
+  ## clean model output, unnest, and append "_mod"
   df <- df |>
-    dplyr::rowwise() |>
-    dplyr::reframe(
-      cbind(sitename, data[, c('date', unique(c('gpp', targets)))]) |>
-        stats::setNames(c('sitename', 'date', paste0(unique(c('gpp', targets)), '_mod')))
-    ) # gpp is used to get average trait prediction
-  
+    tidyr::unnest(data) |>
+    dplyr::rename(any_of(c("bigD13C"="bigD13C_mod_permil"))) |>
+    # always keep gpp, since is used to get average trait prediction
+    dplyr::select('sitename', any_of(unique(c('date','gpp', targets)))) |>
+    dplyr::rename_with(.cols = -any_of(c('sitename','date')),
+                       .fn = paste0,
+                       "_mod")
+
   # separate validation data into fluxes and traits, site by site
   is_flux <- apply(obs, 1, function(x){ 'date' %in% colnames(x$data)})
   
@@ -207,7 +227,7 @@ cost_likelihood_pmodel <- function(
       df_trait <- df |>
         dplyr::filter(sitename %in% trait_sites) |>
         dplyr::group_by(sitename) |>
-        # get growing season average traits
+        # get growing season average traits (currently not limited to growing season)
         dplyr::summarise(across(ends_with("_mod") & !starts_with('gpp'),
                                 ~ sum(.x * gpp_mod/sum(gpp_mod)),
                                 .names = "{.col}")) |>
