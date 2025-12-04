@@ -168,8 +168,8 @@ get_mod_obs_pmodel_bigD13C_vj_gpp <- function(
     parallel  = parallel,
     ncores    = ncores
   )
-  df_daily <- df |> rowwise() |> filter("date" %in% names(data)) |> ungroup()
-  df_onestep <- df |> rowwise() |> filter("vcmax_mod_molm2s" %in% names(data)) |> ungroup()
+  df_daily <- df |> rowwise() |> filter("date" %in% names(.data$data)) |> ungroup()
+  df_onestep <- df |> rowwise() |> filter("vcmax_mod_molm2s" %in% names(.data$data)) |> ungroup()
   
   # # add vj_mod__
   # df_onestep <- df_onestep |> tidyr::unnest(data) |>

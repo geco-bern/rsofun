@@ -9,9 +9,7 @@ calib_sofun_parallelized(
   obs,
   settings,
   optim_out = TRUE,
-  outpath = tempdir(),
-  logpath = "",
-  suffix = "",
+  filepath = file.path(tempdir(), paste0("out_calib_", "my_calibration_name", ".rds")),
   ...
 )
 }
@@ -48,19 +46,15 @@ See the 'P-model usage' vignette for more information and examples.
  \link[BayesianTools:runMCMC]{BayesianTools::runMCMC}.}
 }}
 
-\item{optim_out}{A logical indicating whether the function returns the raw
-output of the optimization functions (defaults to TRUE).}
+\item{optim_out}{A logical indicating whether the function returns and stores 
+the raw output of the optimization functions (defaults to TRUE).}
 
-\item{outpath}{TODO: describe}
-
-\item{logpath}{TODO: describe}
-
-\item{suffix}{TODO: describe}
+\item{filepath}{TODO: describe}
 
 \item{...}{Optional arguments, simply passed on to the cost function.}
 }
 \value{
-TODO: describe: stores the rds to outpath, stores log to logpath
+TODO: describe: stores the rds to filepath, if parallel stores log, too.
 A named list containing the calibrated parameter vector `par` and
 the output object from the optimization `mod`. For more details on this
 output and how to evaluate it, see \link[BayesianTools:runMCMC]{runMCMC} (also
@@ -75,66 +69,62 @@ This is the main function that handles the
 calibration of SOFUN model parameters.
 }
 \examples{
- # Define priors of model parameters that will be calibrated
- params_to_estimate <- list(
-   kphio           = list(lower = 0.02, upper = 0.15, init = 0.05),
-   err_gpp         = list(lower = 0.01, upper = 3, init = 0.8)
- )
- # Fix model parameters that won't be calibrated
- params_fix       <- list(
-   kphio_par_a        = 0,
-   kphio_par_b        = 1.0,
-   soilm_thetastar    = 0.6*240,
-   soilm_betao        = 0.01,
-   beta_unitcostratio = 146,
-   rd_to_vcmax        = 0.014,
-   tau_acclim         = 30,
-   kc_jmax            = 0.41,
-   err_bigD13C        = 1.0,
-   err_vj             = 1.0,
-   errbias_bigD13C    = 1.0,
-   errbias_vj         = 1.0,
-   errscale_gpp       = 1.0
- )
- # Define calibration settings
- settings <- list(
-   method  = "BayesianTools",
-   par     = params_to_estimate,
-   metric  = rsofun::cost_likelihood_pmodel_bigD13C_vj_gpp,
-   control = list(
-     sampler = "DEzs",
-     settings = list(
-       nrChains = 1,
-       burnin = 0,
-       iterations = 50     # kept artificially low
-     ),
-     n_chains_independent   = 1, # 2,
-     n_parallel_independent = 1  # 2, this can be parallelized
-   )
- )
- # Run the calibration for GPP data
- calib_output <- rsofun::calib_sofun_parallelized(
-   drivers = rsofun::pmodel_drivers    |> dplyr::filter(sitename == "FR-Pue"),
-   obs     = rsofun::pmodel_validation |> dplyr::filter(sitename == "FR-Pue"),
-   settings = settings,
-   suffix = "my_calibration_name",
-   # extra arguments for the cost function
-   par_fixed = params_fix
- )
- calib_output$mod      # BayesianTools::mcmcSamplerList
- calib_output$par      # Named vector
- calib_output$walltime # Benchmarked time
- calib_output$runtime  # unused
- calib_output$name     # optionally used calibration name
- calib_output$fpath    # path of rds output
- calib_output <- rsofun::calib_sofun_parallelized(
-   drivers = rsofun::pmodel_drivers    |> 
-     dplyr::filter(sitename \%in\% c("FR-Pue","lon_+104.92_lat_+037.43")),
-   obs     = rsofun::pmodel_validation |> 
-     dplyr::filter(sitename \%in\% c("FR-Pue","lon_+104.92_lat_+037.43")),
-   settings = settings,
-   suffix = "my_calibration_name",
-   # extra arguments for the cost function
-   par_fixed = params_fix
- )
+# Define priors of model parameters that will be calibrated
+params_to_estimate <- list(
+  kphio           = list(lower = 0.02, upper = 0.15, init = 0.05),
+  err_gpp         = list(lower = 0.01, upper = 3, init = 0.8)
+)
+# Fix model parameters that won't be calibrated
+params_fix       <- list(
+  kphio_par_a        = 0,
+  kphio_par_b        = 25,
+  soilm_thetastar    = 0.6*240,
+  soilm_betao        = 0.01,
+  beta_unitcostratio = 146,
+  rd_to_vcmax        = 0.014,
+  tau_acclim         = 30,
+  kc_jmax            = 0.41,
+  err_bigD13C        = 1.0,
+  errbias_bigD13C    = 1.0,
+  errscale_gpp       = 1.0
+)
+# Define calibration settings
+settings <- list(
+  method  = "BayesianTools",
+  par     = params_to_estimate,
+  metric  = rsofun::cost_likelihood_pmodel_bigD13C_vj_gpp,
+  control = list(
+    sampler = "DEzs",
+    settings = list(
+      nrChains = 1,
+      burnin = 0,
+      iterations = 50     # kept artificially low
+    ),
+    n_chains_independent   = 1, # 2,
+    n_parallel_independent = 1  # 2, this can be parallelized
+  )
+)
+# Run the calibration for GPP data
+calib_output <- rsofun::calib_sofun_parallelized(
+  drivers = rsofun::pmodel_drivers    |> dplyr::filter(sitename == "FR-Pue"),
+  obs     = rsofun::pmodel_validation |> dplyr::filter(sitename == "FR-Pue"),
+  settings = settings,
+  # extra arguments for the cost function
+  par_fixed = params_fix
+)
+calib_output$mod      # BayesianTools::mcmcSamplerList
+calib_output$par      # Named vector
+calib_output$walltime # Benchmarked time
+calib_output$runtime  # unused
+calib_output$name     # optionally used calibration name
+calib_output$fpath    # path of rds output
+calib_output <- rsofun::calib_sofun_parallelized(
+  drivers = rsofun::pmodel_drivers    |>
+    dplyr::filter(sitename \%in\% c("FR-Pue","lon_+146.13_lat_-032.97")),
+  obs     = rsofun::pmodel_validation |>
+    dplyr::filter(sitename \%in\% c("FR-Pue","lon_+146.13_lat_-032.97")),
+  settings = settings,
+  # extra arguments for the cost function
+  par_fixed = params_fix
+)
 }
