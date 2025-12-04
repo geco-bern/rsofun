@@ -36,6 +36,7 @@ Sci Data 7, 225 (2020). https://doi.org/10.1038/s41597-020-0534-3
 
 Cornwell, W. (2025). traitecoevo/leaf13C: V0.2.2 (Version v0.2.2) 
 [Computer software]. Zenodo. https://doi.org/10.5281/zenodo.15239220
+
 Cornwell, William K., et al. “Climate and soils together regulate 
 photosynthetic carbon isotope discrimination within C3 plants worldwide.” 
 Global Ecology and Biogeography 27.9 (2018): 1056-1067.

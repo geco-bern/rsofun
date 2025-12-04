@@ -3,7 +3,7 @@ title: "Parameter calibration (P-Model) and cost functions"
 author: "Josefa Arán, Fabian Bernhard"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Parameter calibration and cost functions}
+  %\VignetteIndexEntry{Parameter calibration (P-Model) and cost functions}
   %\VignetteEngine{knitr::rmarkdown}
   %\usepackage[utf8]{inputenc}
 ---
@@ -139,12 +139,12 @@ pars_calib_likelihood <- calib_sofun(
 ```{r eval = FALSE, include = FALSE}
 # store output since calibration isn't run
 saveRDS(pars_calib_likelihood, 
-        here::here("vignettes", "files/new_cost_function.Rmd__pars_calib_likelihood.RDS"), 
+        "files/new_cost_function.Rmd__pars_calib_likelihood.RDS", 
         compress = "xz")
 ```
 ```{r include = FALSE}
 # fake output since calibration isn't run
-pars_calib_likelihood <- readRDS(here::here("vignettes","files/new_cost_function.Rmd__pars_calib_likelihood.RDS"))
+pars_calib_likelihood <- readRDS("files/new_cost_function.Rmd__pars_calib_likelihood.RDS")
 ```
 ```{r}
 pars_calib_likelihood

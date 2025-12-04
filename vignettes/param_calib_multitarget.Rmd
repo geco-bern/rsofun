@@ -3,7 +3,7 @@ title: "Parameter calibration (P-Model) to multiple targets"
 author: "Josefa Arán, Fabian Bernhard"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Parameter calibration and cost functions}
+  %\VignetteIndexEntry{Parameter calibration (P-Model) to multiple targets}
   %\VignetteEngine{knitr::rmarkdown}
   %\usepackage[utf8]{inputenc}
 ---
@@ -90,14 +90,14 @@ par_calib_join <- calib_sofun_parallelized(
 ```{r eval = FALSE, include = FALSE}
 # store output since calibration isn't run
 saveRDS(par_calib_join, 
-        here::here("vignettes", "files/param_calib_multitarget.Rmd__par_calib_join.RDS"), 
+        "files/param_calib_multitarget.Rmd__par_calib_join.RDS"), 
         compress = "xz")
 ```
 
 ```{r include = FALSE}
 # fake output since calibration isn't run
 par_calib_join <- readRDS(
-  here::here("vignettes", "files/param_calib_multitarget.Rmd__par_calib_join.RDS"))
+  "files/param_calib_multitarget.Rmd__par_calib_join.RDS")
 ```
 
 ```{r}
@@ -342,7 +342,7 @@ run_mcmc_rsofun <- function(
     # parallelization:
     n_parallel_independent  = 3,      # number of cores for parallelization of independent chains     https://cran.r-project.org/web/packages/BayesianTools/vignettes/InterfacingAModel.html#running-several-mcmcs-in-parallel
     n_parallel_within_sampler = FALSE,# number of cores for parallelization of within-sampler chains  https://cran.r-project.org/web/packages/BayesianTools/vignettes/InterfacingAModel.html#within-sampler-parallelization as well as https://cran.r-project.org/web/packages/BayesianTools/vignettes/BayesianTools.html#reference-on-creating-likelihoods
-    outpath = here::here("data"), 
+    outpath = "data",
     suffix_str = "", 
     sampler = "DEzs"
 ){
@@ -353,9 +353,9 @@ run_mcmc_rsofun <- function(
   # res$par_fixed
   # res$par
 
-  # Load loglikelihood
-  # source(here::here("R/calibration_helpers.R"), echo = FALSE)
-  # source(here::here("R/cost_likelihood_pmodel_bigD13C_vj_gpp.R"), echo = FALSE)
+  # Load loglikelihood (e.g. if using a tailor-made one, instead of package-provided):
+    # source("R/calibration_helpers.R", echo = FALSE)
+    # source("R/cost_likelihood_pmodel_bigD13C_vj_gpp.R", echo = FALSE)
 
   # Setup MCMC          # uses drivobs_train, not drivobs_test
   driver_to_use_for_mcmc <- select(res$drivobs_train, sitename, params_siml, site_info, forcing)
@@ -440,9 +440,9 @@ setup_rsofun_calibration(226)$drivobs_train
 setup_rsofun_calibration(231)
 setup_rsofun_calibration(231)$drivobs_train
 
-dir.create(here::here("vignettes", "files/param_calib_multitarget/"), showWarnings = FALSE)
+dir.create("files/param_calib_multitarget/", showWarnings = FALSE)
 df_timings226 <- run_mcmc_rsofun(226, suffix_str = "setup_226",
-  outpath = here::here("vignettes", "files/param_calib_multitarget/"),
+  outpath = "files/param_calib_multitarget/",
   # mcmc setup:
   sampler = "DREAMzs",
   iterations = 600, 
@@ -455,7 +455,7 @@ df_timings226 <- run_mcmc_rsofun(226, suffix_str = "setup_226",
   )
 
 df_timings231 <- run_mcmc_rsofun(231, suffix_str = "setup_231",
-  outpath = here::here("vignettes", "files/param_calib_multitarget/"),
+  outpath = "files/param_calib_multitarget/",
   # mcmc setup:
   sampler = "DREAMzs",
   iterations = 600, # TODO: increase 
@@ -467,7 +467,7 @@ df_timings231 <- run_mcmc_rsofun(231, suffix_str = "setup_231",
   n_parallel_within_sampler = FALSE
   )
 df_timings231p <- run_mcmc_rsofun(231, suffix_str = "setup_231_parallel",
-  outpath = here::here("vignettes", "files/param_calib_multitarget/"),
+  outpath = "files/param_calib_multitarget/",
   # mcmc setup:
   sampler = "DREAMzs",
   iterations = 600, # TODO: increase
@@ -487,13 +487,13 @@ calib_timings <- bind_rows(
 ```{r eval = FALSE, include = FALSE}
 # store output since calibration isn't run
 saveRDS(calib_timings,
-        here::here("vignettes", "files/param_calib_multitarget.Rmd__calib_timings.RDS"),
+        "files/param_calib_multitarget.Rmd__calib_timings.RDS",
         compress = "xz")
 ```
 ```{r eval = TRUE, include = FALSE}
 # fake output since calibration was run previous to vignette rendering
 calib_timings <- readRDS(
-  here::here("vignettes", "files/param_calib_multitarget.Rmd__calib_timings.RDS"))
+  "files/param_calib_multitarget.Rmd__calib_timings.RDS")
 ```
 
 Since MCMC sampling can be long running tasks, the resulting MCMC sampling 
@@ -505,13 +505,13 @@ During the MCMC sampling
 ##### Analyze model calibration
 ```{r load MCMC chains}
 # This loads MCMC chains that might have been generated with a separate R script
-out_calib_226 <- readRDS(here::here("vignettes/", "files/param_calib_multitarget/calibrations/out_calib_setup_226.rds"))
-out_calib_231 <- readRDS(here::here("vignettes/", "files/param_calib_multitarget/calibrations/out_calib_setup_231.rds"))
-out_calib_231p<- readRDS(here::here("vignettes/", "files/param_calib_multitarget/calibrations/out_calib_setup_231_parallel.rds"))
+out_calib_226 <- readRDS("files/param_calib_multitarget/calibrations/out_calib_setup_226.rds")
+out_calib_231 <- readRDS("files/param_calib_multitarget/calibrations/out_calib_setup_231.rds")
+out_calib_231p<- readRDS("files/param_calib_multitarget/calibrations/out_calib_setup_231_parallel.rds")
 ```
 
 ```{r plot MCMC trace plot, fig.width=7, fig.height=4}
-rsofun_symbol_parname_description <- tibble::tribble(
+rsofun_symbol_parname_description <- dplyr::tribble(
   ~variable,            ~label,                                                      ~Symbol_R2,
   "kphio",              "italic(phi)[0]^'*'*' (mol mol\u207B\u00B9)'",               "italic(phi)[0]^'*'",
   "kphio_par_a",        "italic(a)[italic(phi)]*' (\u00B0C\u207B\u00B2)'",           "italic(a)[italic(phi)]",
@@ -528,8 +528,8 @@ rsofun_symbol_parname_description <- tibble::tribble(
   "errbias_bigD13C",    "italic(delta)[Delta]*' (\u2030)'",                          "italic(delta)[Delta]",
   "errbias_vj",         "italic(delta)['VJ']*' (-)'",                                "italic(delta)['VJ']",
   "errscale_gpp",       "italic(kappa)['GPP']*' (-)'",                               "italic(kappa)['GPP']",
-) |> 
-  mutate(variable = forcats::as_factor(variable)) # make factor to keep ordering
+) #|> 
+  #mutate(variable = forcats::as_factor(variable)) # make factor to keep ordering
 label_vec_short <- setNames(rsofun_symbol_parname_description$Symbol_R2, rsofun_symbol_parname_description$variable)
 custom_labeller_variable <- function(labels, multi_line = TRUE) { # adapted from label_parsed
   replaced_labels <- left_join(select(labels, variable), # TODO: this has variable hardcoded
@@ -569,15 +569,15 @@ plot_mcmc_trace <- function(out_calib, nr_internal_chains, burnin_to_skip, burni
     mutate(outerChain = as.factor(ceiling(as.numeric(chain_id)/3)),
            innerChain = (as.numeric(chain_id)+2)%%3 + 1,
            innerChain_str = letters[innerChain],
-           chain_id_str = paste0(outerChain, letters[innerChain])) |>
+           chain_id_str = paste0(outerChain, letters[innerChain])) #|>
     # fix order: in order of appearance
-    mutate(variable = forcats::as_factor(variable))
+    # mutate(variable = forcats::as_factor(variable))
 
   pl <- ggplot(dat_to_plot,
          aes(x=iteration, y=value, color = outerChain, linetype = innerChain_str)) + geom_line() +
     # geom_rug(sides = "r") +
     theme_classic() +
-    scale_x_continuous(labels = scales::label_number(scale_cut = scales::cut_short_scale())) +
+    # scale_x_continuous(labels = scales::label_number(scale_cut = scales::cut_short_scale())) +
     facet_wrap(~variable,  nrow = 2, scales = "free_y", labeller = custom_labeller_variable) + 
     theme(
       legend.position = "bottom", strip.text = element_text(size=12)
@@ -629,13 +629,13 @@ plot_prior_posterior_density <- function(x, burnin_to_skip){
     data.frame(priorMat,     par_estimation = "prior"),
     data.frame(posteriorMat, par_estimation = "posterior")
   ) |>
-    dplyr::mutate(par_estimation = forcats::fct_inorder(par_estimation)) |> # order by appearance
+    # dplyr::mutate(par_estimation = forcats::fct_inorder(par_estimation)) |> # order by appearance
     tibble()
   levels(df_plot$par_estimation)
   # Plot with facet wrap
   gg <- df_plot |>
     tidyr::pivot_longer(-c(par_estimation), names_to = "variable") |>
-    dplyr::mutate(variable = forcats::fct_inorder(variable)) |> # order by appearance
+    # dplyr::mutate(variable = forcats::fct_inorder(variable)) |> # order by appearance
     ggplot(
       aes(x = value, fill = par_estimation)
     ) +
@@ -671,9 +671,9 @@ BayesianTools::correlationPlot(out_calib_231p$mod)
 ##### Compare predictions of calibrated model with observations
 ```{r load MCMC chains II}
 # This loads MCMC chains that might have been generated with a separate R script
-out_calib_226 <- readRDS(here::here("vignettes/", "files/param_calib_multitarget/calibrations/out_calib_setup_226.rds"))
-out_calib_231 <- readRDS(here::here("vignettes/", "files/param_calib_multitarget/calibrations/out_calib_setup_231.rds"))
-out_calib_231p<- readRDS(here::here("vignettes/", "files/param_calib_multitarget/calibrations/out_calib_setup_231_parallel.rds"))
+out_calib_226 <- readRDS("files/param_calib_multitarget/calibrations/out_calib_setup_226.rds")
+out_calib_231 <- readRDS("files/param_calib_multitarget/calibrations/out_calib_setup_231.rds")
+out_calib_231p<- readRDS("files/param_calib_multitarget/calibrations/out_calib_setup_231_parallel.rds")
 ```
 
 ```{r prepare predictions, eval = TRUE}
@@ -914,7 +914,7 @@ df_predict_231p_bigD13C_sampled <- apply_bias_correction_and_sample_error(
 
 
 # FOR STORAGE REASONS unnest the obs_metadata and save different targets separately:
-out_prediction_template <- here::here("vignettes", "files/param_calib_multitarget/", 
+out_prediction_template <- "files/param_calib_multitarget/", 
                                       "predictions", "pred_231p_XXX.rds")
 dir.create(dirname(out_prediction_template), showWarnings = FALSE)
 fname_out_gpp     <- gsub("_XXX", 
@@ -940,6 +940,7 @@ fname_out_bigD13C <- gsub("_XXX",
 ```
 
 ```{r plot helper functions, eval = TRUE}
+# library(khroma)
 # add transparency to colors
 t_col <- function(color, percent = 50, name = NULL) {
   #      color = color name

@@ -93,4 +93,22 @@ par = c(kphio       = 0.05,
   kc_jmax            = 0.41
  )
 )
+cost_likelihood_pmodel(
+  par = c(kphio       = 0.05,
+          kphio_par_a = -0.01,
+          kphio_par_b = 1,     # model parameters
+          err_le      = 2,
+          err_gpp     = 2,
+          err_bigD13C = 2),
+  obs = pmodel_validation,
+  drivers = pmodel_drivers,
+  par_fixed = list(
+    soilm_thetastar    = 0.6 * 240,  # old setup with soil moisture stress
+    soilm_betao        = 0.0,
+    beta_unitcostratio = 146.0,
+    rd_to_vcmax        = 0.014,      # from Atkin et al. 2015 for C3 herbaceous
+    tau_acclim         = 30.0,
+    kc_jmax            = 0.41
+  )
+)
 }
