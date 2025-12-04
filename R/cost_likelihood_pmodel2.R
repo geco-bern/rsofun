@@ -266,12 +266,9 @@ get_mod_obs_pmodel_bigD13C_vj_gpp <- function(
       dplyr::rowwise() |> dplyr::filter("bigD13C" %in% .data$targets) |> dplyr::ungroup() |>
       tidyr::unnest('modobs') |>
       # make this work gracefully in case nrow=0
-      ensure_cols_defined(tibble(bigD13C = list(), bigD13C_mod_permil = numeric())) |>
-      # make this work gracefully in case nrow=0
-      ensure_cols_defined(tibble(bigD13C = numeric()#, instead of bigD13C_obs_permil
-                                 # species = character(), 
-                                 # year = integer()
-                                 )) |>
+      ensure_cols_defined(tibble(bigD13C_mod_permil = numeric(),
+                                 bigD13C = numeric(), 
+                                 id = character())) |>
       dplyr::rename(all_of(c(mod = "bigD13C_mod_permil", obs = "bigD13C"))) |> # instead of bigD13C_obs_permil
       dplyr::mutate(target  = "bigD13C",                                         #curr_target,
                     err_par_sd   = params_modl_and_err[["err_bigD13C"]],         #params_modl_and_err[[paste0("err_,"curr_target]]) |> # TODO: work here on  not hardcoding this...
