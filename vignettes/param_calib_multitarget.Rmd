@@ -78,9 +78,9 @@ settings_joint_likelihood <- list(
 # par_calib_join <- calib_sofun( # TODO: make this work with par_calib_join <- calib_sofun(
 par_calib_join <- calib_sofun_parallelized(
   drivers  = pmodel_drivers    |> 
-    dplyr::filter(sitename %in% c("FR-Pue","lon_+104.92_lat_+037.43")),
+    dplyr::filter(sitename %in% c("FR-Pue", "lon_+146.13_lat_-032.97")),
   obs      = pmodel_validation |> 
-    dplyr::filter(sitename %in% c("FR-Pue","lon_+104.92_lat_+037.43")), 
+    dplyr::filter(sitename %in% c("FR-Pue", "lon_+146.13_lat_-032.97")), 
   settings = settings_joint_likelihood,
   # arguments for the cost function
   par_fixed = params_fixed
@@ -154,7 +154,7 @@ While this is not shown in this vignette, code for this is available on Zenodo
 ([10.5281/zenodo.17204361](https://dx.doi.org/10.5281/zenodo.17204361)).
 
 
-```{r prepare multisite, multitarget calibration, eval = TRUE}
+```{r prepare multisite/multitarget calibration, eval = TRUE}
 
 # Setup_rsofun_calibration allows to define different setups
 # that may differ in the calibrated parameters and data used 
@@ -434,7 +434,7 @@ We make use of arguments of the user-defined function `run_mcmc_rsofun()` that
 allow us to specify the calibration setup, the MCMC setup, and the 
 parallelization strategy.
 
-```{r run multisite, multitarget calibration, eval = FALSE}
+```{r run multisite/multitarget calibration, eval = FALSE}
 setup_rsofun_calibration(226)
 setup_rsofun_calibration(226)$drivobs_train
 setup_rsofun_calibration(231)
@@ -504,12 +504,13 @@ During the MCMC sampling
 
 ##### Analyze model calibration
 ```{r load MCMC chains}
+# This loads MCMC chains that might have been generated with a separate R script
 out_calib_226 <- readRDS(here::here("vignettes/", "files/param_calib_multitarget/calibrations/out_calib_setup_226.rds"))
 out_calib_231 <- readRDS(here::here("vignettes/", "files/param_calib_multitarget/calibrations/out_calib_setup_231.rds"))
 out_calib_231p<- readRDS(here::here("vignettes/", "files/param_calib_multitarget/calibrations/out_calib_setup_231_parallel.rds"))
 ```
 
-```{r plot MCMC trace plot}
+```{r plot MCMC trace plot, fig.width=7, fig.height=4}
 rsofun_symbol_parname_description <- tibble::tribble(
   ~variable,            ~label,                                                      ~Symbol_R2,
   "kphio",              "italic(phi)[0]^'*'*' (mol mol\u207B\u00B9)'",               "italic(phi)[0]^'*'",
@@ -562,8 +563,8 @@ plot_mcmc_trace <- function(out_calib, nr_internal_chains, burnin_to_skip, burni
   dat_to_plot <- lapply(xsample, function(single_chain){
       as_tibble(single_chain) |> mutate(iteration = burnin_to_skip + curr_thin*(1:n()))
     }) |>
-    bind_rows(.id = "chain_id") |>
-    pivot_longer(-c(iteration, chain_id), names_to = "variable") |>
+    dplyr::bind_rows(.id = "chain_id") |>
+    tidyr::pivot_longer(-c(iteration, chain_id), names_to = "variable") |>
     # mark inner and outer chains (assumes DEzs): # TODO: setup for DREAMzs
     mutate(outerChain = as.factor(ceiling(as.numeric(chain_id)/3)),
            innerChain = (as.numeric(chain_id)+2)%%3 + 1,
@@ -607,7 +608,7 @@ plot_mcmc_trace(out_calib_231, nr_internal_chains = 3, burnin_to_skip = 0, burni
 plot_mcmc_trace(out_calib_231p,nr_internal_chains = 3, burnin_to_skip = 0, burnin_to_skip_gelman = 150)
 ```
 
-```{r plot parameter distributions}
+```{r plot parameter distributions, fig.width=7, fig.height=7}
 plot_prior_posterior_density <- function(x, burnin_to_skip){
   require(BayesianTools)
   require(dplyr)
@@ -660,23 +661,657 @@ p3 <- plot_prior_posterior_density(out_calib_231p$mod, burnin_to_skip = 20) +  g
 cowplot::plot_grid(p1,p2,p3, ncol = 1)
 ```
 
-```{r plot parameter correlation}
-BayesianTools::correlationPlot(out_calib_226$mod)
-BayesianTools::correlationPlot(out_calib_231$mod)
+```{r plot parameter correlation, fig.width=7, fig.height=7}
+# BayesianTools::correlationPlot(out_calib_226$mod)
+# BayesianTools::correlationPlot(out_calib_231$mod)
 BayesianTools::correlationPlot(out_calib_231p$mod)
 ```
 
 
 ##### Compare predictions of calibrated model with observations
 ```{r load MCMC chains II}
+# This loads MCMC chains that might have been generated with a separate R script
 out_calib_226 <- readRDS(here::here("vignettes/", "files/param_calib_multitarget/calibrations/out_calib_setup_226.rds"))
 out_calib_231 <- readRDS(here::here("vignettes/", "files/param_calib_multitarget/calibrations/out_calib_setup_231.rds"))
 out_calib_231p<- readRDS(here::here("vignettes/", "files/param_calib_multitarget/calibrations/out_calib_setup_231_parallel.rds"))
 ```
 
-TODO: add Pred Vs Obs plots
-  TODO: one like Figure C5
-  TODO: one like Figure 5
+```{r prepare predictions, eval = TRUE}
+# Samples posterior parameters (MAP or N=n_samples) and runs
+# model predictions
+# 
+# This allows to do two things:
+# A) make predictions at sites/dates/... where we have observations
+# B) make predictions also  on dates/... where we have no observations, e.g. for continuous time series
+# we do B) once {by setting `return_continuous_timeseries = TRUE`} and then derive A) from it. 
+run_prediction_rsofun <- function(
+    mcmc_posterior,
+    prediction = c("both","test","train"),
+    burnin_to_skip = 0,
+    n_samples = 100,      # if n_samples == 1, use MAP
+    n_cores = NULL){
+
+  if (length(prediction) == 1 && (prediction %in% c("both","test","train"))){
+    # as expected
+  } else {
+    stop("Provide prediction as either: 'both', 'test' or 'train'")
+  }
+  n_cores <- ifelse(is.null(n_cores), 1, n_cores)
+  stopifnot(is(mcmc_posterior$mod, "mcmcSamplerList"))
+
+  curr_calibration_scenario <- as.integer(gsub(
+    ".*_setup_([0-9]*)_.*",  # NOTE: hardcoded expected format of filename
+    "\\1",
+    mcmc_posterior$name))
+  stopifnot(!is.na(curr_calibration_scenario)) # Catches if expected format is inaccurate
+
+  # Setup simulation model
+  res <- setup_rsofun_calibration(scenario = curr_calibration_scenario)
+
+  # Set random seed for reproducibility
+  set.seed(2023)
+
+  # Sample parameters from MCMC posterior
+  # Evaluation of the uncertainty coming from the model parameters' uncertainty
+  if (n_samples > 1){
+    samples_par <- getSample(
+        mcmc_posterior$mod,
+        thin = 1,
+        start = burnin_to_skip, numSamples = n_samples
+      ) |>
+        as.data.frame() |>
+        # Add sample IDs
+        dplyr::mutate(posterior_sample_id = 1:n()) |>
+        tidyr::nest(.by = posterior_sample_id, .key = "pars")
+  } else {
+    # mcmc_posterior$par # these are already precomputed...
+    # but more robust to recompute:
+    samples_par <- BayesianTools::MAP(mcmc_posterior$mod)$parametersMAP |>
+      as.list() |> as_tibble() |>
+      # Add sample IDs
+      dplyr::mutate(posterior_sample_id = 0L) |> # posterior_sample_id == 0 means MAP
+      tidyr::nest(.by = posterior_sample_id, .key = "pars")
+  }
+
+  # Setup prediction
+  predict_sofun_settings <- list(n_cores=n_cores)
+
+  if (prediction == "both"){
+    curr_driver <- bind_rows(res$drivobs_train, res$drivobs_test) |>
+      select(sitename, params_siml, site_info, forcing)
+    curr_obs    <- bind_rows(res$drivobs_train, res$drivobs_test) |>
+      select(sitename, targets, data)
+  } else if (prediction == "train"){
+    curr_driver <- select(res$drivobs_train, sitename, params_siml, site_info, forcing)
+    curr_obs    <- select(res$drivobs_train, sitename, targets, data)
+  } else if (prediction == "test"){
+    curr_driver <- select(res$drivobs_test, sitename, params_siml, site_info, forcing)
+    curr_obs    <- select(res$drivobs_test, sitename, targets, data)
+    stopifnot(nrow(curr_obs)>0)
+  }
+
+  # Run prediction
+  df_pred_vs_obs <- predict_sofun_parallelized(
+    drivers     = curr_driver,
+    obs         = curr_obs,
+    settings    = predict_sofun_settings,
+    par         = samples_par,
+    par_fixed   = res$par_fixed
+  )
+
+  return(df_pred_vs_obs)
+}
+
+# Runs the requested model predictions and returns results
+# Requested model predictions are defined by data.frame `par_df` containing 
+# model parameter sets
+predict_sofun_parallelized <- function(
+    drivers,
+    obs,
+    settings,
+    par_fixed,
+    par_df = NULL) {
+
+  # Set number of cores if not specified
+  if (is.null(settings$n_cores)) {
+    settings$n_cores <- min(detectCores() - 1, 20) # at most 20
+  }
+  settings$n_cores <- min(nrow(par_df), 
+                          settings$n_cores) # ensure not more than needed
+
+  # Function to run prediction for a single parameter set
+  run_pmodel_single_prediction <- function(par, par_fixed, drivers, obs) {
+    # Function that runs the P-model for a sample of parameters
+    # but does not add the observation error
+
+    # Taken from cost_likelihood_pmodel_bigD13C_vj_gpp()
+    stopifnot(nrow(obs) > 0)     # ensure some observation data are provided
+    stopifnot(nrow(drivers) > 0) # ensure some driver data are provided
+
+    # A) Include current parameters ----
+    stopifnot(length(intersect(names(par), names(par_fixed))) == 0) # no overlap
+    params_modl <- c(par, par_fixed)
+
+    # B,C) Run model and bring together with observed ----
+    ## run the time series model for gpp/et/... time series
+    ## run the onestep model for traits
+    df_pred_vs_obs <- rsofun:::get_mod_obs_pmodel_bigD13C_vj_gpp(
+      drivers, 
+      obs, 
+      params_modl, 
+      parallel=FALSE, 
+      ncores=1, 
+      return_continuous_timeseries = TRUE)
+
+    # D) (DON'T) Sample error model ----
+    # NOTE: sampling is not done here, but can optionally be done before plotting
+    #       Here we rename to clarify that no error model has yet been applied.
+    df_pred_vs_obs <- df_pred_vs_obs |>
+      # clarify name of model output (containing not yet any error model term)
+      rename(mod_no_err = mod) |>
+      relocate(c(mod_no_err, err_par_sd), .after = last_col())
+
+    return(df_pred_vs_obs)
+  }
+
+  # Run the P-model predictions for each set of parameters
+  ## Prepare parallelization: 
+  parallel_flag <- (settings$n_cores > 1 && nrow(par_df) > 1)
+  # setup helpers for conditional parallelization
+  do_if <- function(df, cond, f){ # enable conditional lines in dplyr piping
+    if(cond) f(df) else df
+  }
+  cl <- if (parallel_flag){
+    multidplyr::new_cluster(settings$n_cores) |>
+      # multidplyr::cluster_assign(
+        #get_mod_obs_pmodel_bigD13C_vj_gpp = rsofun:::get_mod_obs_pmodel_bigD13C_vj_gpp
+      # ) |>
+      multidplyr::cluster_library(
+        packages = c("dplyr", "tidyr", "purrr", "rsofun")
+      )
+  }
+  ## Run predictions:
+  df_model_predictions <- par_df |>
+    do_if(parallel_flag, function(df) multidplyr::partition(df, cl)) %>%
+    dplyr::mutate('sim' = purrr::map(
+      pars,
+      ~run_pmodel_single_prediction(
+        par = .x,
+        par_fixed,
+        drivers,
+        obs
+      )
+    )) |>
+    do_if(parallel_flag, function(df) dplyr::collect(df))
+  
+  return(df_model_predictions)
+}
+
+apply_bias_correction_and_sample_error <- function(df_pred, N_sample_error){
+  require(data.table)
+  require(dtplyr)
+  set.seed(1982)
+  df_pred |>
+    lazy_dt() |>   # use lazy data.table and dtplyr for speed
+    # a) repeat lines: once for each sampled error
+    # following line is basically a cross_join: with
+    slice(rep(1:n(), each = N_sample_error)) |>
+    mutate(error_sample_id = as.integer(rep(1:N_sample_error, n()/N_sample_error))) |>
+    arrange(posterior_sample_id) |>
+    # b) sample the error:
+    group_by(err_par_sd, err_par_bias) |>
+    mutate(err_sample                = rnorm(n(),   sd = err_par_sd),
+           mod_biasremoved_no_err    = mod_no_err - err_par_bias,
+           mod_biasremoved_with_err  = mod_no_err - err_par_bias + err_sample) |>
+    ungroup() |>
+    as_tibble() |> # to access results of lazy dtplyr-computation as normal tibble()
+    # keep output light: i.e. remove unneded columns:
+    select(-err_sample) |> # select(, -sample_id, -err_par_bias, -err_par_sd) |>
+    mutate(across(where(is.character), as.factor)) # |> object.size() |> format("MB")
+}
+```
+
+```{r make predictions, eval = FALSE}
+# get MAP and run model for MAP parameter set
+df_predict_MAP_train_231p <- run_prediction_rsofun(
+  mcmc_posterior = out_calib_231p,
+  prediction     = "train",
+  burnin_to_skip = 200,
+  n_samples      = 1, # n_samples == 1, requests MAP
+  n_cores        = 4) # TODO: is this used?
+
+# get parameter samples and run model for thes parameter sets
+df_predict_train_231p <- run_prediction_rsofun(
+  mcmc_posterior = out_calib_231p,
+  prediction     = "train",
+  burnin_to_skip = 200,
+  n_samples      = 20,
+  n_cores        = 4) # TODO: is this used?
+
+df_predict <- bind_rows(
+  # df_predict_test      |> mutate(is_train0_test1 = 1L, is_MAP = FALSE),
+  df_predict_train_231p     |> mutate(is_train0_test1 = 0L, is_MAP = FALSE),
+  # df_predict_MAP_test  |> mutate(is_train0_test1 = 1L, is_MAP = TRUE),
+  df_predict_MAP_train_231p |> mutate(is_train0_test1 = 0L, is_MAP = TRUE)
+)
+
+# Free memory:
+# rm(df_predict_train_231p, 
+#    df_predict_MAP_train_231p)
+
+# df_predict_params<- df_predict |> select(posterior_sample_id, is_train0_test1, is_MAP, pars) |> unnest(pars)
+df_predict_gpp     <- df_predict |> select(posterior_sample_id, is_train0_test1, is_MAP, sim)  |> unnest(sim) |> filter(target == "gpp")     |> unnest(obs_metadata)
+df_predict_bigD13C <- df_predict |> select(posterior_sample_id, is_train0_test1, is_MAP, sim)  |> unnest(sim) |> filter(target == "bigD13C") |> unnest(obs_metadata)
+
+# apply bias-correction and simulate structural error
+N_sample_error <- 3
+df_predict_231p_gpp_sampled <- apply_bias_correction_and_sample_error(
+  df_predict_gpp,
+  N_sample_error = N_sample_error)
+df_predict_231p_bigD13C_sampled <- apply_bias_correction_and_sample_error(
+  df_predict_bigD13C,
+  N_sample_error = N_sample_error)
 
 
+# FOR STORAGE REASONS unnest the obs_metadata and save different targets separately:
+out_prediction_template <- here::here("vignettes", "files/param_calib_multitarget/", 
+                                      "predictions", "pred_231p_XXX.rds")
+dir.create(dirname(out_prediction_template), showWarnings = FALSE)
+fname_out_gpp     <- gsub("_XXX", 
+                          paste0(    "_gpp_sampled_N", N_sample_error, "errors"), 
+                          out_prediction_template)
+fname_out_bigD13C <- gsub("_XXX", 
+                          paste0("_bigD13C_sampled_N", N_sample_error, "errors"), 
+                          out_prediction_template)
+
+# Save predictions to plot with separate script:
+# df_predict_231p_gpp_sampled     |> 
+#   select(posterior_sample_id,error_sample_id,is_train0_test1,is_MAP,sitename,target,obs,   date,err_par_bias,err_par_sd,mod_no_err,mod_biasremoved_no_err,mod_biasremoved_with_err) |> 
+#   saveRDS(fname_out_gpp,     compress = "xz")
+# df_predict_231p_bigD13C_sampled |> 
+#   select(posterior_sample_id,error_sample_id,is_train0_test1,is_MAP,sitename,target,obs,id,     err_par_bias,err_par_sd,mod_no_err,mod_biasremoved_no_err,mod_biasremoved_with_err) |> 
+#   saveRDS(fname_out_bigD13C, compress = "xz")
+
+# Load predictions for plotting with separate script:
+# df_predict_231p_gpp_sampled     <- readRDS("files/param_calib_multitarget//predictions/pred_231p_gpp_sampled_N3errors.rds")
+# df_predict_231p_bigD13C_sampled <- readRDS("files/param_calib_multitarget//predictions/pred_231p_bigD13C_sampled_N3errors.rds")
+# df_predict_231p_bigD13C_sampled <- readr::read_rds(paste0("/storage/scratch/giub_geco/fbernhard/rsofun_doc_outputs/data/predictions/out_predict_",n_post,"_30000burnin__out_calib__scen222_DREAMzs-100000-0iter_8x3chains_on_CPU8x1_continued.rds_vj_sampled",n_err,".rds"))
+# df_predict_231p_gpp_sampled     <- readr::read_rds(paste0("/storage/scratch/giub_geco/fbernhard/rsofun_doc_outputs/data/predictions/out_predict_",n_post,"_30000burnin__out_calib__scen222_DREAMzs-100000-0iter_8x3chains_on_CPU8x1_continued.rds_gpp_sampled",n_err,".rds"))
+```
+
+```{r plot helper functions, eval = TRUE}
+# add transparency to colors
+t_col <- function(color, percent = 50, name = NULL) {
+  #      color = color name
+  #    percent = % transparency
+  #       name = an optional name for the color
+  rgb.val <- col2rgb(color) # Get RGB values for named color
+  ## Make new color using input color as base and alpha set by transparency
+  t.col <- rgb(rgb.val[1], rgb.val[2], rgb.val[3],
+               max = 255,
+               alpha = (100 - percent) * 255 / 100,
+               names = name)
+  invisible(t.col) ## Save the color
+}
+
+## copied from sofunCalVal package (and adapted to analyse_modobs3)
+analyse_modobs3 <- function(df,
+                            mod,
+                            obs,
+                            type = "points",
+                            filnam = NA,
+                            relative = FALSE,
+                            lower_xlim = 0,
+                            use_factor = NULL,
+                            shortsubtitle = FALSE,
+                            plot_subtitle = TRUE,
+                            plot_linmod = TRUE,
+                            pal = "batlowW",
+                            ...) {
+  require(ggplot2)
+  require(dplyr)
+  # require(LSD)
+  require(ggthemes)
+  # require(RColorBrewer)
+
+  # if (identical(filnam, NA)) filnam <- "analyse_modobs.pdf"
+
+  ## rename to 'mod' and 'obs' and remove rows with NA in mod or obs
+  df <- df %>%
+    as_tibble() %>%
+    ungroup() %>%
+    dplyr::select(dplyr::all_of(c(mod = mod, obs = obs))) %>%
+    tidyr::drop_na(mod, obs)
+
+  ## get linear regression (coefficients)
+  linmod <- lm(obs ~ mod, data = df)
+
+  ## construct metrics table using the 'yardstick' library
+  df_metrics <- df %>%
+    yardstick::metrics(obs, mod) %>%
+    dplyr::bind_rows(tibble(.metric = "n", .estimator = "standard", .estimate = summarise(df, numb = n()) %>% unlist())) %>%
+    dplyr::bind_rows(tibble(.metric = "slope", .estimator = "standard", .estimate = coef(linmod)[2])) %>%
+    # dplyr::bind_rows( tibble( .metric = "nse",      .estimator = "standard", .estimate = hydroGOF::NSE( obs, mod, na.rm=TRUE ) ) ) %>%
+    dplyr::bind_rows(tibble(.metric = "mean_obs", .estimator = "standard", .estimate = summarise(df, mean = mean(obs, na.rm = TRUE)) %>% unlist())) %>%
+    dplyr::bind_rows(tibble(
+      .metric = "prmse", .estimator = "standard",
+      .estimate = dplyr::filter(., .metric == "rmse") %>% dplyr::select(.estimate) %>% unlist() /
+        dplyr::filter(., .metric == "mean_obs") %>%
+        dplyr::select(.estimate) %>%
+        unlist()
+    )) %>%
+    dplyr::bind_rows(tibble(
+      .metric = "pmae", .estimator = "standard",
+      .estimate = dplyr::filter(., .metric == "mae") %>% dplyr::select(.estimate) %>% unlist() /
+        dplyr::filter(., .metric == "mean_obs") %>%
+        dplyr::select(.estimate) %>%
+        unlist()
+    )) %>%
+    dplyr::bind_rows(tibble(.metric = "bias", .estimator = "standard", .estimate = dplyr::summarise(df, mean((mod - obs), na.rm = TRUE)) %>% unlist())) %>%
+    dplyr::bind_rows(tibble(.metric = "pbias", .estimator = "standard", .estimate = dplyr::summarise(df, mean((mod - obs) / obs, na.rm = TRUE)) %>% unlist()))
+
+  rsq_val <- df_metrics %>%
+    dplyr::filter(.metric == "rsq") %>%
+    dplyr::select(.estimate) %>%
+    unlist() %>%
+    unname()
+  rmse_val <- df_metrics %>%
+    dplyr::filter(.metric == "rmse") %>%
+    dplyr::select(.estimate) %>%
+    unlist() %>%
+    unname()
+  mae_val <- df_metrics %>%
+    dplyr::filter(.metric == "mae") %>%
+    dplyr::select(.estimate) %>%
+    unlist() %>%
+    unname()
+  bias_val <- df_metrics %>%
+    dplyr::filter(.metric == "bias") %>%
+    dplyr::select(.estimate) %>%
+    unlist() %>%
+    unname()
+  slope_val <- df_metrics %>%
+    dplyr::filter(.metric == "slope") %>%
+    dplyr::select(.estimate) %>%
+    unlist() %>%
+    unname()
+  n_val <- df_metrics %>%
+    dplyr::filter(.metric == "n") %>%
+    dplyr::select(.estimate) %>%
+    unlist() %>%
+    unname()
+
+  if (relative) {
+    rmse_val <- rmse_val / mean(df$obs, na.rm = TRUE)
+    bias_val <- bias_val / mean(df$obs, na.rm = TRUE)
+  }
+
+  rsq_lab <- format(rsq_val, digits = 2)
+  rmse_lab <- format(rmse_val, digits = 3)
+  mae_lab <- format(mae_val, digits = 3)
+  bias_lab <- format(bias_val, digits = 3)
+  slope_lab <- format(slope_val, digits = 3)
+  n_lab <- format(n_val, digits = 3)
+
+  results <- tibble(rsq = rsq_val, rmse = rmse_val, mae = mae_val, bias = bias_val, slope = slope_val, n = n_val)
+
+  if (shortsubtitle) {
+    subtitle <- bquote(italic(R)^2 == .(rsq_lab) ~ ~
+                         RMSE == .(rmse_lab))
+  } else {
+    subtitle <- bquote(italic(R)^2 == .(rsq_lab) ~ ~
+                         RMSE == .(rmse_lab) ~ ~
+                         bias == .(bias_lab) ~ ~
+                         slope == .(slope_lab) ~ ~
+                         italic(N) == .(n_lab))
+  }
+
+  if (type == "hex") {
+
+    upper_xlim <- round(max(quantile(df$mod, 0.9999), quantile(df$obs, 0.9999)))
+    stopifnot(is.null(lower_xlim) || (is.numeric(lower_xlim) && length(lower_xlim)==1))
+    lower_xlim = ifelse(is.null(lower_xlim),
+                        round(min(quantile(df$mod, 0.0001), quantile(df$obs, 0.0001))),
+                        lower_xlim)
+
+    ## ggplot hexbin
+    gg <- df %>%
+      ggplot2::ggplot(aes(x = mod, y = obs)) +
+      geom_hex(bins = 50, show.legend = FALSE) +
+      geom_abline(intercept = 0, slope = 1, linetype = "dotted") +
+      # geom_hline(yintercept = 0, linetype = "dotted") +
+      # geom_vline(xintercept = 0, linetype = "dotted") +
+      coord_fixed() +
+      xlim(lower_xlim, upper_xlim) +
+      ylim(lower_xlim, upper_xlim) +
+      theme_classic() +
+      labs(x = mod, y = obs)
+
+    if (pal == "batlowW"){
+      gg <- gg + khroma::scale_fill_batlowW(trans = "log", reverse = TRUE)
+    } else if (pal == "davos"){
+      gg <- gg + khroma::scale_fill_davos(trans = "log", reverse = TRUE)
+    }
+
+    if (plot_subtitle) gg <- gg + labs(subtitle = subtitle)
+    if (plot_linmod) gg <- gg + geom_smooth(method = "lm", color = "red", linewidth = 0.5, se = FALSE)
+
+    if (!identical(filnam, NA)) {
+      ggsave(filnam, width = 5, height = 5)
+    }
+  }
+
+  return(list(df_metrics = df_metrics, gg = gg, linmod = linmod, results = results))
+}
+```
+
+```{r plot Pred Vs Obs time series, eval = FALSE}
+# Time series of GPP (Figure C5)
+dflong_gpp_train <- df_predict_231p_gpp_sampled |> 
+  mutate(Scenario = "231") |>
+  # select only training sites
+  filter(is_train0_test1 == 0) |> 
+  select(posterior_sample_id, error_sample_id, Scenario, is_train0_test1, is_MAP, sitename, target,
+         obs,                 date, # these are target specific observation_metadata
+         mod_no_err, mod_biasremoved_no_err, mod_biasremoved_with_err) |>
+  # pivot the model_output_types to long
+  tidyr::pivot_longer(c(mod_no_err, mod_biasremoved_no_err, mod_biasremoved_with_err),
+                      names_to = "model_output_type", values_to = "modelled") |>
+  mutate(model_output_type = factor(
+    model_output_type,
+    levels = c("mod_no_err","mod_biasremoved_no_err","mod_biasremoved_with_err"),
+    labels = c("rsofun",    "bias-corrected",        "with struct. uncert."))) |>
+  # derive column `parameters` ("MAP" or "Posterior") from `is_MAP`
+  mutate(is_MAP = factor(ifelse(is_MAP, "MAP", "Posterior"))) |> 
+  rename(parameters = is_MAP) |>
+  # derive column `dataset` ("train" or "test") from column `is_train0_test1`
+  mutate(is_train0_test1 = factor(ifelse(is_train0_test1==1, "test", "train"))) |> 
+  rename(dataset = is_train0_test1)
+
+df_B3_timeseries <- dflong_gpp_train |>
+  # remove the bias-corrected values for gpp since we did not fit a bias
+  filter(!(model_output_type %in% c("bias-corrected"))) |>
+  # select what to plot and how to name it
+  mutate(y_facet = case_when(
+    Scenario == "231" & model_output_type == "rsofun" &               parameters == "MAP"       ~ "MAP",
+    Scenario == "231" & model_output_type == "rsofun" &               parameters == "Posterior" ~ "Posterior",
+    Scenario == "231" & model_output_type == "with struct. uncert." & parameters == "Posterior" ~ "Post.+Error",
+    # all else is not plotted
+    TRUE ~ "remove") |> factor(levels = c("MAP","Posterior","Post.+Error"))) |>
+  filter(y_facet != "remove")
+
+# Plot raw predictions
+plot_predobs_gpp_timeseries3 <- function(ts_to_plot){
+  
+  # separate obs
+  df_tsplot_gpp_obs <- ts_to_plot |>
+    select(sitename, target, date, obs, Scenario, dataset) |>
+    distinct()
+  
+  # compute stats of sampled distributions before plotting them
+  tibble_to_plot <- ts_to_plot |>
+    filter(target == "gpp") |>
+    # dtplyr::lazy_dt() |> # THIS WAS NEEDED FOR THE FULL DATA.FRAME
+    group_by(Scenario, dataset, parameters, sitename, target, date, model_output_type, y_facet) |>
+    summarise(#mod_no_err_p50 = quantile(mod_no_err, 0.5),
+      modelled_p50 = quantile(modelled, 0.5),
+      modelled_p95 = quantile(modelled, 0.95),
+      modelled_p05 = quantile(modelled, 0.05)
+    ) |>
+    as_tibble() |>
+    # and bind back obsevations
+    left_join(
+      df_tsplot_gpp_obs,
+      by = join_by(sitename, target, date, Scenario, dataset))
+  
+  n_sites <- tibble_to_plot$sitename |> unique() |> length()
+  
+  pl_timeseries_gpp <- ggplot(
+    data = tibble_to_plot,
+    mapping = aes(x=date, y=modelled_p50)) +
+    # Observations underneath (following Cameron 2022)
+    geom_point(
+      data = function(df) df |> select(-parameters, -model_output_type, -y_facet, -starts_with("modelled")) |> distinct(),
+      # data = df_tsplot_gpp_obs, # variant 1, but does not allow %+%-replacement of underlying data
+      mapping = aes(y=obs), color = "black", shape = 4, alpha= 0.5, size=0.5) +
+    # Structural uncertainty (including error model), a.k.a prediction band
+    geom_ribbon(
+      alpha=0.5,
+      data = function(df) df |> filter(model_output_type == "with struct. uncert."),
+      mapping = aes(ymin = modelled_p05, ymax = modelled_p95, fill = "Post.+Error")) +
+    # Parametric uncertainty (without error model, only parameter sampling), a.k.a confidence band
+    geom_ribbon(
+      alpha=0.5,
+      data = function(df) df |> filter(model_output_type == "rsofun"),
+      mapping = aes(ymin = modelled_p05, ymax = modelled_p95, fill = "Posterior")) +
+    geom_line(
+      data = function(df) df |> filter(model_output_type == "rsofun"),
+      mapping = aes(y = modelled_p50, color = "Posterior")) +
+    # layout
+    facet_wrap(~sitename, scales = "free_x") +
+    theme_classic() + theme(legend.position = "bottom") +
+    labs(
+      x = NULL, #'Date',
+      y = expression(paste("GPP (g C m"^-2, "s"^-1, ")"))
+    ) +
+    scale_fill_manual(NULL,aesthetics = c("colour", "fill"),
+                      breaks = c("Post.+Error",
+                                 "Posterior"),
+                      values = c("Posterior"   = t_col("#29a274ff"),
+                                 "Post.+Error" = t_col("#777055ff"))
+    ) +
+    scale_x_date(date_breaks = "12 months", date_labels = "%Y-%m")
+}
+
+pl_timeseries_gpp <- plot_predobs_gpp_timeseries3(df_B3_timeseries)
+pl_timeseries_gpp
+```
+```{r eval = FALSE, include = FALSE}
+# store output since prediction isn't run when vignette is rendered
+# ggb <- ggplot2::ggplot_build(pl_timeseries_gpp)
+# ggt <- ggplot2::ggplot_gtable(ggb)
+# saveRDS(ggt,
+#         "files/param_calib_multitarget/predictions/df_B3_timeseries_ggt.rds",
+#         compress = "xz")
+ggplot2::ggsave(
+  filename = "files/param_calib_multitarget/predictions/pl_timeseries_gpp.png",
+  plot = pl_timeseries_gpp, width = 7, height = 7, dpi = 150)
+```
+```{r eval = TRUE, include = TRUE}
+# fake output since prediction was run previous to vignette rendering
+# plot(readRDS("files/param_calib_multitarget/predictions/pl_scatter_comparison_ggt.rds"))
+knitr::include_graphics("files/param_calib_multitarget/predictions/pl_timeseries_gpp.png", 
+                        dpi = 150)
+```
+
+```{r plot Pred Vs Obs scatter plot, eval = FALSE}
+gpp_labs <- function(xNULL=FALSE){
+  list(labs(x = ifelse(xNULL," ", "Predicted GPP (g C m\u207B\u00B2 s\u207B\u00B9)"),
+            y = "Observed GPP (g C m\u207B\u00B2 s\u207B\u00B9)"))
+}
+bigD13C_labs <- function(xNULL=FALSE){
+  list(labs(x = ifelse(xNULL," ", "Predicted Δ (\u2030)"),
+            y = "Observed Δ (\u2030)"))
+}
+
+# compute scatters (and skills) for MAP of test set:
+list_of_scenarios_to_loop_over <- list(
+  # s228 = list("bigD13C" = df_228_bigD13C,  "gpp" = df_228_gpp),
+  s231 = list("bigD13C" = df_predict_231p_bigD13C_sampled,  "gpp" = df_predict_231p_gpp_sampled)
+)
+
+parameter_set <- "MAP"
+list_of_scatters <- lapply(list_of_scenarios_to_loop_over, function(list_of_targets){
+  lapply(list_of_targets, function(df_target_prediction){
+    curr_target <- first(df_target_prediction$target)
+    
+    # (MAP, Posterior, Posterior+Error)
+    # MAP:             is posterior_sample_id==0
+    #                  e.g. filter(df_gpp, is_train0_test1 == 1,     is_MAP, error_sample_id==1)
+    # Posterior:       just take one error sampling, but all (~25 posterior samples)
+    #                  e.g. filter(df_gpp, is_train0_test1 == 1,             error_sample_id==1),
+    # Posterior+Error: take all errors
+    #                  e.g. filter(df_gpp, is_train0_test1 == 1,             error_sample_id>=1)
+    df <- df_target_prediction %>% {
+        if (parameter_set == "MAP") filter(., is_MAP) else .
+        } %>% filter(error_sample_id==1) # , is_train0_test1 == 1 # TODO: why was this removed?
+    mod <- "mod_biasremoved_no_err"
+    lower_xlim <- ifelse(curr_target == "gpp", list(0), list(NULL))[[1]]
+    
+    if (nrow(df) == 0) {
+      return(list(gg = ggplot() + theme_void()))
+    } else {
+      return(analyse_modobs3(df, mod = mod, obs = "obs", type = "hex"))
+    }
+  })
+})
+
+### indivdiual plots for each scenario: ----
+# pl_scatter_231 <- cowplot::plot_grid(
+#   nrow = 1,
+#   list_of_scatters$s231$bigD13C$gg + bigD13C_labs() + labs(title = "Scenario 231"),
+#   list_of_scatters$s231$gpp$gg     + gpp_labs()     + labs(title = "Scenario 231"))
+# pl_scatter_231
+
+### single comparison plot: ----
+mark_as_target <- theme(panel.background = element_rect(fill = t_col("darkgreen", 80)))
+pl_scatter_comparison <- cowplot::plot_grid(
+  # ncol = 3, byrow = TRUE, labels = c("(a)","","", "(b)","","", "(c)","","", "(d)","","", "(e)","","", "(f)","",""),
+  # list_of_scatters$s228$bigD13C$gg + mark_as_target + bigD13C_labs(xNULL=TRUE) ,#+ labs(title = "Scenario 228"),
+  # list_of_scatters$s228$gpp$gg                      + gpp_labs(xNULL=TRUE)     ,#+ labs(title = "Scenario 228"),
+  # 
+  # list_of_scatters$s227$bigD13C$gg                  + bigD13C_labs(xNULL=TRUE) ,#+ labs(title = "Scenario 227"),
+  # list_of_scatters$s227$gpp$gg                      + gpp_labs(xNULL=TRUE)     ,#+ labs(title = "Scenario 227"),
+  # 
+  # list_of_scatters$s226$bigD13C$gg + mark_as_target + bigD13C_labs(xNULL=TRUE) ,#+ labs(title = "Scenario 226"),
+  # list_of_scatters$s226$gpp$gg                      + gpp_labs(xNULL=TRUE)     ,#+ labs(title = "Scenario 226"),
+  # 
+  # list_of_scatters$s222$bigD13C$gg                  + bigD13C_labs(xNULL=TRUE) ,#+ labs(title = "Scenario 222"),
+  # list_of_scatters$s222$gpp$gg     + mark_as_target + gpp_labs(xNULL=TRUE)     ,#+ labs(title = "Scenario 222"),
+  # 
+  # list_of_scatters$s223$bigD13C$gg + mark_as_target + bigD13C_labs(xNULL=TRUE) ,#+ labs(title = "Scenario 223"),
+  # list_of_scatters$s223$gpp$gg                      + gpp_labs(xNULL=TRUE)     ,#+ labs(title = "Scenario 223"),
+
+  list_of_scatters$s231$bigD13C$gg + mark_as_target + bigD13C_labs() ,#+ labs(title = "Scenario 231"),   # USE LETTER (h) for scenario 231
+  list_of_scatters$s231$gpp$gg     + mark_as_target + gpp_labs()      #+ labs(title = "Scenario 231")    # USE LETTER (h) for scenario 231
+)
+pl_scatter_comparison
+```
+```{r eval = FALSE, include = FALSE}
+# store output since prediction isn't run when vignette is rendered
+# ggb_scatter <- ggplot2::ggplot_build(pl_scatter_comparison)
+# ggt_scatter <- ggplot2::ggplot_gtable(ggb_scatter)
+# saveRDS(ggt_scatter,
+#         "files/param_calib_multitarget/predictions/pl_scatter_comparison_ggt.rds",
+#         compress = "xz")
+ggplot2::ggsave(
+  filename = "files/param_calib_multitarget/predictions/pl_scatter_comparison.png",
+  plot = pl_scatter_comparison, width = 7, height = 4, dpi = 150)
+```
+```{r eval = TRUE, include = TRUE}
+# fake output since prediction was run previous to vignette rendering
+# plot(readRDS("files/param_calib_multitarget/predictions/pl_scatter_comparison_ggt.rds"))
+knitr::include_graphics("files/param_calib_multitarget/predictions/pl_scatter_comparison.png", 
+                        dpi = 150)
+```
 
