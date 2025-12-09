@@ -2,7 +2,7 @@
 % Please edit documentation in R/calib_sofun_parallelized.R
 \name{calib_sofun_parallelized}
 \alias{calib_sofun_parallelized}
-\title{Calibrates SOFUN model parameters}
+\title{Calibrates SOFUN model parameters (for parallelized applications)}
 \usage{
 calib_sofun_parallelized(
   drivers,

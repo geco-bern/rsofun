@@ -30,9 +30,8 @@ The separate vignette 'Parameter calibration (P-Model) and cost functions' (see 
 You may be interested in calibrating the model to different target variables simultaneously, like flux and leaf trait measurements. 
 
 #### Calibrating one GPP and one D13C site
-Here we present an example, where we use `cost_likelihood_pmodel()` to compute the joint likelihood of all the targets specified (that is, by summing the log-likelihoods of GPP and bigD13C) and ultimately calibrate the `beta_unitcostratio` parameter.
-
-TODO: further below we calibrate another example to multiple sites
+In this section we present an example, where we use `cost_likelihood_pmodel()` to compute the joint likelihood of all the targets specified (that is, by summing the log-likelihoods of GPP and bigD13C) and ultimately calibrate the `beta_unitcostratio` parameter.
+In the section after, we calibrate another example to multiple sites.
 
 ```{r run concatenated calibration, eval = FALSE}
 # Define calibration settings for two targets
@@ -173,31 +172,8 @@ setup_rsofun_calibration <- function(scenario){
   bigD13C_vj_gpp_obs     <- rsofun::pmodel_validation 
 
   # ## Read test-train split from disk ----
-  # df_test_train_split <- read_csv(
-  #   here::here("data/01_test_train_split.csv"),
-  #   col_types = cols(
-  #     sitename = col_character(),
-  #     run_model = col_character(),
-  #     targets_vj = col_logical(),
-  #     targets_bigD13C = col_logical(),
-  #     targets_gpp = col_logical(),
-  #     dataset = col_character()
-  #   ))
-  # 
-  # sites_train <- df_test_train_split |> filter(dataset == "train")
-  # sites_test  <- df_test_train_split |> filter(dataset == "test")
-  # 
-  # ## Append test-train split thereby subsetting to only test and train sites ----
-  # bigD13C_vj_gpp_drivers <- bigD13C_vj_gpp_drivers |>
-  #   inner_join(
-  #     select(bind_rows(sites_train,sites_test), sitename, run_model, dataset),
-  #     by = join_by(sitename, run_model))
-  # 
-  # bigD13C_vj_gpp_obs <- bigD13C_vj_gpp_obs |>
-  #   inner_join(
-  #     select(bind_rows(sites_train,sites_test), sitename, run_model, dataset),
-  #     by = join_by(sitename, run_model))
-  
+  # read_csv(here::here("data/01_test_train_split.csv"))
+  # Not needed here for vignette
   
   ## Preprocess observation data (gpp) ----
   ## # no additinal QC needed
@@ -216,7 +192,7 @@ setup_rsofun_calibration <- function(scenario){
     kphio_par_a        = 0.0,        # 0 corresponds to no temperature dependency of kphio (ORG setup in Stocker et al. 2020)
     kphio_par_b        = 1.0,        #
     soilm_thetastar    = 0.6 * 240,  # to recover paper setup with soil moisture stress
-    soilm_betao        = 0.0,        # 1 corresponds to no reduction, 0 to full reduction at theta==0
+    soilm_betao        = 0.01,       # 1 corresponds to no reduction, 0 to full reduction at theta==0
     beta_unitcostratio = 146.0,      # value from Stocker et al. 2020
     rd_to_vcmax        = 0.014,      # value from Atkin et al. 2015 for C3 herbaceous
     tau_acclim         = 14.0,       # value from Liu et al. 2024
@@ -233,11 +209,11 @@ setup_rsofun_calibration <- function(scenario){
       kphio_par_a     = list(lower = -0.004, upper = -0.001, init = -0.0025),
       kphio_par_b     = list(lower = 10, upper = 30, init = 20),
       soilm_thetastar = list(lower = 1, upper = 250, init = 40),
-      # soilm_betao        = list(lower = 0.0, upper = 1.0, init = 0.0),
-      # rd_to_vcmax        = as.list(c(lower = 0.1, upper = 3.0, init = 1.0)*0.014), # use a fixed rd_to_vcmax      # 0.014 value from Atkin et al. 2015 for C3 herbaceous
       beta_unitcostratio = as.list(c(lower = 0.1, upper = 3.0, init = 1.0)*146.0),
-      tau_acclim         = list(mean = 14, sd = 8, lower = 0.01, upper = 40),           # truncated normal, with ~14 days as mean, taken from Liu et al. 2024, Nat.Plants and Mäkelä et al. 2004, Tree Phys.
-      kc_jmax            = as.list(c(lower = 0.1, upper = 3.0, init = 1.0)*0.41),
+      # truncated normal, with ~14 days as mean, taken from Liu et al. 
+      # 2024, Nat.Plants and Mäkelä et al. 2004, Tree Phys.
+      tau_acclim      = list(mean = 14, sd = 8, lower = 0.01, upper = 40),
+      kc_jmax         = as.list(0.41 * c(lower = 0.1, upper = 3.0, init = 1.0)),
       err_gpp         = list(lower = 0.01, upper = 3, init = 0.8),
       err_bigD13C     = list(lower = 0.01, upper = 3, init = 0.8),
       err_vj          = list(lower = 0.01, upper = 3, init = 0.8),
@@ -274,7 +250,11 @@ setup_rsofun_calibration <- function(scenario){
     par_to_estimate$beta_unitcostratio <- list(mean    = 207.86, sd    = 6.79)
     par_to_estimate$kc_jmax            <- list(mean    = 0.4244, sd    = 0.0217)
     if (scenario %in% c(231)){
-      par_to_estimate$beta_unitcostratio <- list(mean    = 207.86, sd    = 6.79,    lower = 207.86 - 3*6.79, upper = 207.86 + 3*6.79)   # truncated normal
+      # truncated normal:
+      par_to_estimate$beta_unitcostratio <- list(mean    = 207.86, sd    = 6.79,    
+                                                 lower = 207.86 - 3*6.79, 
+                                                 upper = 207.86 + 3*6.79)
+      # normal:
       par_to_estimate$kc_jmax            <- list(mean    = 0.4244, sd    = 0.0217)
     }
   }
@@ -452,7 +432,7 @@ df_timings231 <- run_mcmc_rsofun(231, suffix_str = "setup_231",
   outpath = "files/param_calib_multitarget/",
   # mcmc setup:
   sampler = "DREAMzs",
-  iterations = 600, # TODO: increase 
+  iterations = 600, 
   burnin = 0,
   n_chains_independent      = 8,
   n_chains_within_sampler   = 3,
@@ -464,7 +444,7 @@ df_timings231p <- run_mcmc_rsofun(231, suffix_str = "setup_231_parallel",
   outpath = "files/param_calib_multitarget/",
   # mcmc setup:
   sampler = "DREAMzs",
-  iterations = 600, # TODO: increase
+  iterations = 600,
   burnin = 0,
   n_chains_independent      = 8,
   n_chains_within_sampler   = 3,
@@ -500,7 +480,6 @@ During the MCMC sampling
 ```{r load MCMC chains}
 # This loads MCMC chains that might have been generated with a separate R script
 out_calib_226 <- readRDS("files/param_calib_multitarget/calibrations/out_calib_setup_226.rds")
-# out_calib_231 <- readRDS("files/param_calib_multitarget/calibrations/out_calib_setup_231.rds")
 out_calib_231p<- readRDS("files/param_calib_multitarget/calibrations/out_calib_setup_231_parallel.rds")
 ```
 
@@ -526,7 +505,7 @@ rsofun_symbol_parname_description <- dplyr::tribble(
   #mutate(variable = forcats::as_factor(variable)) # make factor to keep ordering
 label_vec_short <- setNames(rsofun_symbol_parname_description$Symbol_R2, rsofun_symbol_parname_description$variable)
 custom_labeller_variable <- function(labels, multi_line = TRUE) { # adapted from label_parsed
-  replaced_labels <- left_join(select(labels, variable), # TODO: this has variable hardcoded
+  replaced_labels <- left_join(select(labels, variable), # NOTE: this has variable hardcoded
                                select(rsofun_symbol_parname_description, variable, label),
                                by = join_by(variable))
   # print(tibble(replaced_labels))
@@ -559,7 +538,7 @@ plot_mcmc_trace <- function(out_calib, nr_internal_chains, burnin_to_skip, burni
     }) |>
     dplyr::bind_rows(.id = "chain_id") |>
     tidyr::pivot_longer(-c(iteration, chain_id), names_to = "variable") |>
-    # mark inner and outer chains (assumes DEzs): # TODO: setup for DREAMzs
+    # mark inner and outer chains (assumes DEzs or DREAMzs): 
     mutate(outerChain = as.factor(ceiling(as.numeric(chain_id)/3)),
            innerChain = (as.numeric(chain_id)+2)%%3 + 1,
            innerChain_str = letters[innerChain],
@@ -654,7 +633,6 @@ cowplot::plot_grid(p1,p2, ncol = 1)
 ```
 
 ```{r plot parameter correlation, fig.width=7, fig.height=7}
-# BayesianTools::correlationPlot(out_calib_226$mod)
 BayesianTools::correlationPlot(out_calib_231p$mod)
 ```
 
@@ -663,7 +641,6 @@ BayesianTools::correlationPlot(out_calib_231p$mod)
 ```{r load MCMC chains II}
 # This loads MCMC chains that might have been generated with a separate R script
 out_calib_226 <- readRDS("files/param_calib_multitarget/calibrations/out_calib_setup_226.rds")
-# out_calib_231 <- readRDS("files/param_calib_multitarget/calibrations/out_calib_setup_231.rds")
 out_calib_231p<- readRDS("files/param_calib_multitarget/calibrations/out_calib_setup_231_parallel.rds")
 ```
 
@@ -767,8 +744,8 @@ predict_sofun_parallelized <- function(
   if (is.null(settings$n_cores)) {
     settings$n_cores <- min(detectCores() - 1, 20) # at most 20
   }
-  settings$n_cores <- min(nrow(par_df), 
-                          settings$n_cores) # ensure not more than needed
+  # ensure not more than needed
+  settings$n_cores <- min(nrow(par_df), settings$n_cores)
 
   # Function to run prediction for a single parameter set
   run_pmodel_single_prediction <- function(par, par_fixed, drivers, obs) {
@@ -784,8 +761,6 @@ predict_sofun_parallelized <- function(
     params_modl <- c(par, par_fixed)
 
     # B,C) Run model and bring together with observed ----
-    ## run the time series model for gpp/et/... time series
-    ## run the onestep model for traits
     df_pred_vs_obs <- rsofun:::get_mod_obs_pmodel_bigD13C_vj_gpp(
       drivers, 
       obs, 
@@ -814,9 +789,6 @@ predict_sofun_parallelized <- function(
   }
   cl <- if (parallel_flag){
     multidplyr::new_cluster(settings$n_cores) |>
-      # multidplyr::cluster_assign(
-        #get_mod_obs_pmodel_bigD13C_vj_gpp = rsofun:::get_mod_obs_pmodel_bigD13C_vj_gpp
-      # ) |>
       multidplyr::cluster_library(
         packages = c("dplyr", "tidyr", "purrr", "rsofun")
       )
@@ -841,7 +813,7 @@ predict_sofun_parallelized <- function(
 apply_bias_correction_and_sample_error <- function(df_pred, N_sample_error){
   set.seed(1982)
   df_pred |>
-    # lazy_dt() |>   # use lazy data.table and dtplyr for speed
+    # lazy_dt() |>   # if needed, uses lazy data.table and dtplyr for speed
     # a) repeat lines: once for each sampled error
     # following line is basically a cross_join: with
     slice(rep(1:n(), each = N_sample_error)) |>
@@ -855,8 +827,8 @@ apply_bias_correction_and_sample_error <- function(df_pred, N_sample_error){
     ungroup() |>
     as_tibble() |> # to access results of lazy dtplyr-computation as normal tibble()
     # keep output light: i.e. remove unneded columns:
-    select(-err_sample) |> # select(, -sample_id, -err_par_bias, -err_par_sd) |>
-    mutate(across(where(is.character), as.factor)) # |> object.size() |> format("MB")
+    select(-err_sample) |>
+    mutate(across(where(is.character), as.factor))
 }
 ```
 
@@ -867,7 +839,7 @@ df_predict_MAP_train_231p <- run_prediction_rsofun(
   prediction     = "train",
   burnin_to_skip = 200,
   n_samples      = 1, # n_samples == 1, requests MAP
-  n_cores        = 4) # TODO: is this used?
+  n_cores        = 1) # this could be increased e.g. to 4
 
 # get parameter samples and run model for thes parameter sets
 df_predict_train_231p <- run_prediction_rsofun(
@@ -875,7 +847,7 @@ df_predict_train_231p <- run_prediction_rsofun(
   prediction     = "train",
   burnin_to_skip = 200,
   n_samples      = 20,
-  n_cores        = 4) # TODO: is this used?
+  n_cores        = 1) # this could be increased e.g. to 4
 
 df_predict <- bind_rows(
   # df_predict_test      |> mutate(is_train0_test1 = 1L, is_MAP = FALSE),
@@ -1194,20 +1166,14 @@ pl_timeseries_gpp
 ```
 ```{r eval = FALSE, include = FALSE}
 # store output since prediction isn't run when vignette is rendered
-# ggb <- ggplot2::ggplot_build(pl_timeseries_gpp)
-# ggt <- ggplot2::ggplot_gtable(ggb)
-# saveRDS(ggt,
-#         "files/param_calib_multitarget/predictions/df_B3_timeseries_ggt.rds",
-#         compress = "xz")
 ggplot2::ggsave(
   filename = "files/param_calib_multitarget/predictions/pl_timeseries_gpp.png",
-  plot = pl_timeseries_gpp, width = 7, height = 7, dpi = 150)
+  plot = pl_timeseries_gpp, width = 7, height = 7, dpi = 100)
 ```
 ```{r eval = TRUE, include = TRUE}
 # fake output since prediction was run previous to vignette rendering
-# plot(readRDS("files/param_calib_multitarget/predictions/pl_scatter_comparison_ggt.rds"))
 knitr::include_graphics("files/param_calib_multitarget/predictions/pl_timeseries_gpp.png", 
-                        dpi = 150)
+                        dpi = 100)
 ```
 
 ```{r plot Pred Vs Obs scatter plot, eval = FALSE}
@@ -1222,7 +1188,6 @@ bigD13C_labs <- function(xNULL=FALSE){
 
 # compute scatters (and skills) for MAP of test set:
 list_of_scenarios_to_loop_over <- list(
-  # s228 = list("bigD13C" = df_228_bigD13C,  "gpp" = df_228_gpp),
   s231 = list("bigD13C" = df_predict_231p_bigD13C_sampled,  "gpp" = df_predict_231p_gpp_sampled)
 )
 
@@ -1252,51 +1217,22 @@ list_of_scatters <- lapply(list_of_scenarios_to_loop_over, function(list_of_targ
   })
 })
 
-### indivdiual plots for each scenario: ----
-# pl_scatter_231 <- cowplot::plot_grid(
-#   nrow = 1,
-#   list_of_scatters$s231$bigD13C$gg + bigD13C_labs() + labs(title = "Scenario 231"),
-#   list_of_scatters$s231$gpp$gg     + gpp_labs()     + labs(title = "Scenario 231"))
-# pl_scatter_231
-
 ### single comparison plot: ----
 mark_as_target <- theme(panel.background = element_rect(fill = t_col("darkgreen", 80)))
 pl_scatter_comparison <- cowplot::plot_grid(
-  # ncol = 3, byrow = TRUE, labels = c("(a)","","", "(b)","","", "(c)","","", "(d)","","", "(e)","","", "(f)","",""),
-  # list_of_scatters$s228$bigD13C$gg + mark_as_target + bigD13C_labs(xNULL=TRUE) ,#+ labs(title = "Scenario 228"),
-  # list_of_scatters$s228$gpp$gg                      + gpp_labs(xNULL=TRUE)     ,#+ labs(title = "Scenario 228"),
-  # 
-  # list_of_scatters$s227$bigD13C$gg                  + bigD13C_labs(xNULL=TRUE) ,#+ labs(title = "Scenario 227"),
-  # list_of_scatters$s227$gpp$gg                      + gpp_labs(xNULL=TRUE)     ,#+ labs(title = "Scenario 227"),
-  # 
-  # list_of_scatters$s226$bigD13C$gg + mark_as_target + bigD13C_labs(xNULL=TRUE) ,#+ labs(title = "Scenario 226"),
-  # list_of_scatters$s226$gpp$gg                      + gpp_labs(xNULL=TRUE)     ,#+ labs(title = "Scenario 226"),
-  # 
-  # list_of_scatters$s222$bigD13C$gg                  + bigD13C_labs(xNULL=TRUE) ,#+ labs(title = "Scenario 222"),
-  # list_of_scatters$s222$gpp$gg     + mark_as_target + gpp_labs(xNULL=TRUE)     ,#+ labs(title = "Scenario 222"),
-  # 
-  # list_of_scatters$s223$bigD13C$gg + mark_as_target + bigD13C_labs(xNULL=TRUE) ,#+ labs(title = "Scenario 223"),
-  # list_of_scatters$s223$gpp$gg                      + gpp_labs(xNULL=TRUE)     ,#+ labs(title = "Scenario 223"),
-
-  list_of_scatters$s231$bigD13C$gg + mark_as_target + bigD13C_labs() ,#+ labs(title = "Scenario 231"),   # USE LETTER (h) for scenario 231
-  list_of_scatters$s231$gpp$gg     + mark_as_target + gpp_labs()      #+ labs(title = "Scenario 231")    # USE LETTER (h) for scenario 231
+  list_of_scatters$s231$bigD13C$gg + mark_as_target + bigD13C_labs() ,
+  list_of_scatters$s231$gpp$gg     + mark_as_target + gpp_labs()
 )
 pl_scatter_comparison
 ```
 ```{r eval = FALSE, include = FALSE}
 # store output since prediction isn't run when vignette is rendered
-# ggb_scatter <- ggplot2::ggplot_build(pl_scatter_comparison)
-# ggt_scatter <- ggplot2::ggplot_gtable(ggb_scatter)
-# saveRDS(ggt_scatter,
-#         "files/param_calib_multitarget/predictions/pl_scatter_comparison_ggt.rds",
-#         compress = "xz")
 ggplot2::ggsave(
   filename = "files/param_calib_multitarget/predictions/pl_scatter_comparison.png",
   plot = pl_scatter_comparison, width = 7, height = 4, dpi = 150)
 ```
 ```{r eval = TRUE, include = TRUE}
 # fake output since prediction was run previous to vignette rendering
-# plot(readRDS("files/param_calib_multitarget/predictions/pl_scatter_comparison_ggt.rds"))
 knitr::include_graphics("files/param_calib_multitarget/predictions/pl_scatter_comparison.png", 
                         dpi = 150)
 ```

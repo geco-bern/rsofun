@@ -233,16 +233,18 @@ getPriorMinMaxRanges <- function(morrisSetup_prior, settings_par){
     # make a list with lower and upper for each of these distributions:
     inflim_suplim_list <- c(
       settings_par |> purrr::keep(is_uniform_prior       ) |> lapply(function(x) list(inflim = x$lower, suplim = x$upper)),
-      # settings_par |> purrr::keep(is_normal_prior        ) |> names(), # TODO: add when needed
-      # settings_par |> purrr::keep(is_lognormal_prior     ) |> names(), # TODO: add when needed
+      # settings_par |> purrr::keep(is_normal_prior        ) |> names(), # NOTE: add when needed
+      # settings_par |> purrr::keep(is_lognormal_prior     ) |> names(), # NOTE: add when needed
       settings_par |> purrr::keep(is_truncnormal_prior   ) |> lapply(function(x) list(inflim = x$lower, suplim = x$upper))
-      # settings_par |> purrr::keep(is_trunclognormal_prior) |> names(), # TODO: add when needed
-      # settings_par |> purrr::keep(is_beta_prior          ) |> names() # TODO: add when needed
+      # settings_par |> purrr::keep(is_trunclognormal_prior) |> names(), # NOTE: add when needed
+      # settings_par |> purrr::keep(is_beta_prior          ) |> names() # NOTE: add when needed
     )
-    stopifnot(settings_par |> purrr::keep(is_normal_prior        ) |> length() == 0) # TODO: remove once above is defined
-    stopifnot(settings_par |> purrr::keep(is_lognormal_prior     ) |> length() == 0) # TODO: remove once above is defined
-    stopifnot(settings_par |> purrr::keep(is_trunclognormal_prior) |> length() == 0) # TODO: remove once above is defined
-    stopifnot(settings_par |> purrr::keep(is_beta_prior          ) |> length() == 0) # TODO: remove once above is defined
+    # NOTE: suplim is currently not implemented for all distributions, hence error if on of these is requested:
+    stopifnot(settings_par |> purrr::keep(is_normal_prior        ) |> length() == 0) # NOTE: remove once above is defined
+    stopifnot(settings_par |> purrr::keep(is_lognormal_prior     ) |> length() == 0) # NOTE: remove once above is defined
+    stopifnot(settings_par |> purrr::keep(is_trunclognormal_prior) |> length() == 0) # NOTE: remove once above is defined
+    stopifnot(settings_par |> purrr::keep(is_beta_prior          ) |> length() == 0) # NOTE: remove once above is defined
+    
     
     # derive two vectors: one for inflim and for suplim
     inflim_arg <- unlist(lapply(inflim_suplim_list, `[[`, "inflim"))
