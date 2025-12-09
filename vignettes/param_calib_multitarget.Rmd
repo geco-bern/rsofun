@@ -17,6 +17,8 @@ knitr::opts_chunk$set(
 library(rsofun)
 library(dplyr)
 library(ggplot2)
+library(khroma)
+library(yardstick)
 ```
 
 ### Calibration to GPP and bigD13C using the joint log-likelihood and BayesianTools
@@ -88,7 +90,7 @@ par_calib_join <- calib_sofun_parallelized(
 ```
 
 ```{r eval = FALSE, include = FALSE}
-# store output since calibration isn't run
+# store output since calibration isn't run at each vignette rendering
 saveRDS(par_calib_join, 
         "files/param_calib_multitarget.Rmd__par_calib_join.RDS"), 
         compress = "xz")
@@ -165,14 +167,6 @@ While this is not shown in this vignette, code for this is available on Zenodo
 #    231: Setup h)      Delta^'13 C*',VJ, GPP  
 
 setup_rsofun_calibration <- function(scenario){
-  require(tidyverse)
-  require(rpmodel)
-  require(rgeco) # pak::pkg_install("geco-bern/rgeco")
-  require(dplyr)
-  require(purrr)
-  require(rsofun)  # install from branch simple_pmodel_v2
-  # require(ingestr)
-  require(BayesianTools)
 
   ## Load forcing and targets data from disk (here now from package) ----
   bigD13C_vj_gpp_drivers <- rsofun::pmodel_drivers 
@@ -506,7 +500,7 @@ During the MCMC sampling
 ```{r load MCMC chains}
 # This loads MCMC chains that might have been generated with a separate R script
 out_calib_226 <- readRDS("files/param_calib_multitarget/calibrations/out_calib_setup_226.rds")
-out_calib_231 <- readRDS("files/param_calib_multitarget/calibrations/out_calib_setup_231.rds")
+# out_calib_231 <- readRDS("files/param_calib_multitarget/calibrations/out_calib_setup_231.rds")
 out_calib_231p<- readRDS("files/param_calib_multitarget/calibrations/out_calib_setup_231_parallel.rds")
 ```
 
@@ -604,7 +598,6 @@ plot_mcmc_trace <- function(out_calib, nr_internal_chains, burnin_to_skip, burni
   return(pl)
 }
 plot_mcmc_trace(out_calib_226, nr_internal_chains = 3, burnin_to_skip = 0, burnin_to_skip_gelman = 150)
-plot_mcmc_trace(out_calib_231, nr_internal_chains = 3, burnin_to_skip = 0, burnin_to_skip_gelman = 150)
 plot_mcmc_trace(out_calib_231p,nr_internal_chains = 3, burnin_to_skip = 0, burnin_to_skip_gelman = 150)
 ```
 
@@ -656,14 +649,12 @@ plot_prior_posterior_density <- function(x, burnin_to_skip){
 
 library(cowplot)
 p1 <- plot_prior_posterior_density(out_calib_226$mod,  burnin_to_skip = 200) +  ggtitle(out_calib_226$name)
-p2 <- plot_prior_posterior_density(out_calib_231$mod,  burnin_to_skip = 20) +  ggtitle(out_calib_231$name)
-p3 <- plot_prior_posterior_density(out_calib_231p$mod, burnin_to_skip = 20) +  ggtitle(out_calib_231p$name)
-cowplot::plot_grid(p1,p2,p3, ncol = 1)
+p2 <- plot_prior_posterior_density(out_calib_231p$mod, burnin_to_skip = 20) +  ggtitle(out_calib_231p$name)
+cowplot::plot_grid(p1,p2, ncol = 1)
 ```
 
 ```{r plot parameter correlation, fig.width=7, fig.height=7}
 # BayesianTools::correlationPlot(out_calib_226$mod)
-# BayesianTools::correlationPlot(out_calib_231$mod)
 BayesianTools::correlationPlot(out_calib_231p$mod)
 ```
 
@@ -672,7 +663,7 @@ BayesianTools::correlationPlot(out_calib_231p$mod)
 ```{r load MCMC chains II}
 # This loads MCMC chains that might have been generated with a separate R script
 out_calib_226 <- readRDS("files/param_calib_multitarget/calibrations/out_calib_setup_226.rds")
-out_calib_231 <- readRDS("files/param_calib_multitarget/calibrations/out_calib_setup_231.rds")
+# out_calib_231 <- readRDS("files/param_calib_multitarget/calibrations/out_calib_setup_231.rds")
 out_calib_231p<- readRDS("files/param_calib_multitarget/calibrations/out_calib_setup_231_parallel.rds")
 ```
 
@@ -848,11 +839,9 @@ predict_sofun_parallelized <- function(
 }
 
 apply_bias_correction_and_sample_error <- function(df_pred, N_sample_error){
-  require(data.table)
-  require(dtplyr)
   set.seed(1982)
   df_pred |>
-    lazy_dt() |>   # use lazy data.table and dtplyr for speed
+    # lazy_dt() |>   # use lazy data.table and dtplyr for speed
     # a) repeat lines: once for each sampled error
     # following line is basically a cross_join: with
     slice(rep(1:n(), each = N_sample_error)) |>
@@ -914,7 +903,7 @@ df_predict_231p_bigD13C_sampled <- apply_bias_correction_and_sample_error(
 
 
 # FOR STORAGE REASONS unnest the obs_metadata and save different targets separately:
-out_prediction_template <- "files/param_calib_multitarget/", 
+out_prediction_template <- file.path("files/param_calib_multitarget/", 
                                       "predictions", "pred_231p_XXX.rds")
 dir.create(dirname(out_prediction_template), showWarnings = FALSE)
 fname_out_gpp     <- gsub("_XXX", 
@@ -940,7 +929,6 @@ fname_out_bigD13C <- gsub("_XXX",
 ```
 
 ```{r plot helper functions, eval = TRUE}
-# library(khroma)
 # add transparency to colors
 t_col <- function(color, percent = 50, name = NULL) {
   #      color = color name
@@ -971,9 +959,6 @@ analyse_modobs3 <- function(df,
                             ...) {
   require(ggplot2)
   require(dplyr)
-  # require(LSD)
-  require(ggthemes)
-  # require(RColorBrewer)
 
   # if (identical(filnam, NA)) filnam <- "analyse_modobs.pdf"
 

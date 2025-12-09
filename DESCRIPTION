@@ -90,7 +90,9 @@ Suggests:
     knitr,
     sensitivity,
     rpmodel,
-    rlang
+    rlang,
+    khroma,
+    yardstick
 VignetteBuilder: knitr
 Encoding: UTF-8
 Config/testthat/edition: 3

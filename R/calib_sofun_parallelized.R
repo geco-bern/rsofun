@@ -173,8 +173,7 @@ calib_sofun_parallelized <- function(
     start_time <- Sys.time()
     
     if (settings$control$n_parallel_independent > 1){ # parallel MCMC sampler:
-      require(foreach) # TODO: how to translate this to the rsofun package
-      
+
       logpath <- paste0(filepath, ".log.txt") # use logs only for parallelized sampling
       cl <- parallel::makeCluster(
         settings$control$n_parallel_independent,  
@@ -194,6 +193,7 @@ calib_sofun_parallelized <- function(
       # predefine variables for CRAN check compliance
       iii <- NULL
       
+      requireNamespace("foreach", quietly = FALSE) # instead of foreach::`%dopar%`
       indep_chains <- foreach::foreach(
         iii = 1:settings$control$n_parallel_independent,
         .packages=c('BayesianTools','rsofun','dplyr','tidyr','lubridate'),

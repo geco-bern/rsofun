@@ -35,4 +35,5 @@ params_modl <- list(
 pmodel_output <- rsofun::runread_pmodel_f(
   drivers = rsofun::pmodel_drivers,
   par     = params_modl)
+pmodel_output <- pmodel_output |> slice(c(1,2,4,9,10)) # reduce file size of pkg
 usethis::use_data(pmodel_output, overwrite = TRUE, compress = "xz")

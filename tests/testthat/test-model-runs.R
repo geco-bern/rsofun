@@ -169,7 +169,11 @@ test_that("p-model run containing daily and onestep simulations", {
   expect_snapshot_value_fmt(mod_pmodel_bysite_FRPue, tolerance = 0.01, cran = TRUE)
   
   # also check that reference data set is up-to-date
-  expect_equal(df_output, rsofun::pmodel_output, tolerance = 0.01)
+  expect_equal(df_output |> 
+                 # slice needed since we reduced file size of pkg 
+                 slice(c(1,2,4,9,10)), 
+               rsofun::pmodel_output, 
+               tolerance = 0.01)
   
   # Rerun again (inverse order) to test memory leakage:
   df_output_p_rerun <- runread_pmodel_f(
