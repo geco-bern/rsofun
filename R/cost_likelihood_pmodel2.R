@@ -6,23 +6,19 @@
 #' observed values and with standard deviation given as an input parameter
 #' (calibratable).
 #'
-#' @param par A vector of values for the parameters to be calibrated, including
-#' a subset of model parameters (described in \code{\link{runread_pmodel_f}}),
-#' in order, and error terms
-#' for each target variable (for example \code{'gpp_err'}), in the same order as
-#' the targets appear in \code{targets}.
+#' @param par A named list for the parameters to be calibrated, including
+#' a subset of model parameters and error terms for each target variable (for 
+#' example \code{'gpp_err'}).
 #' @param obs A nested data.frame of observations, with columns \code{'sitename'}
-#' and \code{'data'} (see \code{\link{pmodel_validation}} to check its structure).
+#' \code{'targets'}, and \code{'data'} (see \code{\link{pmodel_validation}} to 
+#' check its structure). \code{'targets'} indicates the target variable(s) for 
+#' which the likelihood is computed, it must be a column name of the 
+#' \code{'data'} data.frame.
 #' @param drivers A nested data.frame of driver data. See \code{\link{pmodel_drivers}}
 #' for a description of the data structure.
-#' 
-#' TODO: remove: (at)-param targets A character vector indicating the target variables for which the
-#' optimization will be done and the RMSE computed. This string must be a column
-#' name of the \code{data} data.frame belonging to the validation nested data.frame
-#' (for example 'gpp').
 #' @param par_fixed A named list of model parameter values to keep fixed during the
 #' calibration. These should complement the input \code{par} such that all model
-#' parameters are passed on to \code{\link{runread_pmodel_f}}.
+#' parameters are uniquely defined and passed on to \code{\link{runread_pmodel_f}}.
 #' @param parallel A logical specifying whether simulations are to be parallelised
 #' (sending data from a certain number of sites to each core). Defaults to
 #' \code{FALSE}.
@@ -32,9 +28,8 @@
 #'
 #' @return The log-likelihood of the observed target values, assuming that they
 #' are independent, normally distributed and centered on the predictions
-#' made by the P-model run with standard deviation given as input (via `par` because
-#' the error terms are estimated through the calibration with `BayesianTools`,
-#' as shown in the "Parameter calibration and cost functions" vignette).
+#' made by the P-model run with standard deviation given as input \code{par} e.g.
+#' \code{gpp_err}.
 #'
 #' @details To run the P-model, all model parameters must be given. The cost
 #' function uses arguments \code{par} and \code{par_fixed} such that, in the
@@ -42,12 +37,7 @@
 #' \code{par_fixed} are kept unchanged throughout calibration.
 #'
 #' If the validation data contains a "date" column (fluxes), the simulated target time series
-#' is compared to the observed values on those same dates (e.g. for GPP). Otherwise,
-#' there should only be one observed value per site (leaf traits), and the outputs
-#' (averaged over the growing season, weighted by predicted GPP) will be
-#' compared to this single value representative of the site (e.g. Vcmax25). As an exception,
-#' when the date of a trait measurement is available, it will be compared to the
-#' trait value predicted on that date.
+#' is compared to the observed values on those same dates (e.g. for GPP).
 #'
 #' @export
 #'
@@ -84,7 +74,10 @@ cost_likelihood_pmodel_bigD13C_vj_gpp <- function(
     par_fixed = NULL,   # non-calibrated model parameters
     parallel  = FALSE,
     ncores    = 1,
-    get_mod_obs = get_mod_obs_pmodel_bigD13C_vj_gpp # default argument needed to make this function easily avaialable on parallel workers
+    get_mod_obs = get_mod_obs_pmodel_bigD13C_vj_gpp # default argument needed as 
+                                                    # workaround to make this 
+                                                    # function easily available 
+                                                    # on parallel workers
 ){
   
   stopifnot(nrow(obs) > 0)     # ensure some observation data are provided
@@ -159,7 +152,8 @@ get_mod_obs_pmodel_bigD13C_vj_gpp <- function(
                                          # Otherwise only values coinciding with observations are returned
 ){
   
-  # NOTE: params_modl_and_err contains model and error parameters
+  # @param params_modl_and_err A named list of model and error parameters.
+
   # B) Run model ----
   df <- runread_pmodel_f(
     drivers   = drivers,
