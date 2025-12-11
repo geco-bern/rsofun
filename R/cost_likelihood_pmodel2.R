@@ -52,9 +52,7 @@
 #'            kphio_par_b = 1,
 #'            # error model parameters
 #'            err_gpp     = 2,
-#'            errscale_gpp = 1,
-#'            err_bigD13C = 0.7,       # TODO: this errors without err_bigD13C
-#'            errbias_bigD13C = -0.1), # TODO: this errors without errbias_bigD13C
+#'            err_bigD13C = 0.7),      # TODO: this errors without err_bigD13C
 #'  obs = pmodel_validation |> dplyr::filter(sitename == "FR-Pue"),
 #'  drivers = pmodel_drivers |> dplyr::filter(sitename == "FR-Pue"),
 #'  par_fixed = list(
@@ -229,9 +227,9 @@ get_mod_obs_pmodel_bigD13C_vj_gpp <- function(
     tidyr::nest(modobs = -c('sitename', 'targets'))
   
   # combine into single data.frame
-  targets <- grep("^err_", names(params_modl_and_err), value = TRUE)
-  targets_biases <- grep("^errbias", names(params_modl_and_err), value = TRUE)
-  targets_scales <- grep("^errscale", names(params_modl_and_err), value = TRUE)
+  targets        <- grep("^err_", names(params_modl_and_err), value = TRUE)
+  # targets_biases <- grep("^errbias", names(params_modl_and_err), value = TRUE)
+  # targets_scales <- grep("^errscale", names(params_modl_and_err), value = TRUE)
   
   # TODO here refrain from hardcoding.
   #    but loop over targets and subset by df_mod_obs_daily$targets
@@ -249,7 +247,7 @@ get_mod_obs_pmodel_bigD13C_vj_gpp <- function(
       dplyr::mutate(target  = "gpp",                                  #curr_target,
                     err_par_sd   = params_modl_and_err[["err_gpp"]],  #params_modl_and_err[[paste0("err_,"curr_target]]) |> # TODO: work here on  not hardcoding this...
                     err_par_bias = 0,
-                    err_par_scale= params_modl_and_err[["errscale_gpp"]]) |>
+                    err_par_scale= 1) |> # params_modl_and_err[["errscale_gpp"]]
       # ensure metadata can be bound together between different target types:
       tidyr::nest(obs_metadata = c('date')) |>
       # select needed columns
@@ -266,38 +264,18 @@ get_mod_obs_pmodel_bigD13C_vj_gpp <- function(
       dplyr::rename(all_of(c(mod = "bigD13C_mod_permil", obs = "bigD13C"))) |> # instead of bigD13C_obs_permil
       dplyr::mutate(target  = "bigD13C",                                         #curr_target,
                     err_par_sd   = params_modl_and_err[["err_bigD13C"]],         #params_modl_and_err[[paste0("err_,"curr_target]]) |> # TODO: work here on  not hardcoding this...
-                    err_par_bias = params_modl_and_err[["errbias_bigD13C"]],
+                    err_par_bias = 0,  # params_modl_and_err[["errbias_bigD13C"]]
                     err_par_scale= 1) |>
       # ensure metadata can be bound together between different target types:
       tidyr::nest(obs_metadata = c('id')) |> 
       # select needed columns
       dplyr::select('sitename', 'target', 'obs_metadata', 'mod', 'obs', 
                     'err_par_sd', 'err_par_bias', 'err_par_scale')
-    
-    # , # VJ: (removed)
-    # df_mod_obs_onestep |>
-    #   tidyr::unnest('modobs') |>
-    #   # make this work gracefully in case nrow=0
-    #   ensure_cols_defined(tibble(vj = list(), vj_mod__ = numeric())) |>
-    #   tidyr::unnest('vj') |>
-    #   # make this work gracefully in case nrow=0
-    #   ensure_cols_defined(tibble(vj_obs__ = numeric(),
-    #                              genus = character(), 
-    #                              species = character(), 
-    #                              year = integer())) |>
-    #   dplyr::rename(all_of(c(mod = "vj_mod__", obs = "vj_obs__"))) |>
-    #   dplyr::mutate(target  = "vj",                                         #curr_target,
-    #                 err_par_sd   = params_modl_and_err[["err_vj"]],         #params_modl_and_err[[paste0("err_,"curr_target]]) |> # TODO: work here on  not hardcoding this...
-    #                 err_par_bias = params_modl_and_err[["errbias_vj"]],
-    #                 err_par_scale= 1) |>
-    # # ensure metadata can be bound together between different target types:
-    #   tidyr::nest(obs_metadata = c('genus', 'species', 'year')) |> # , Nobs, Nyears, Ndates
-    #   dplyr::select('sitename', 'target', 'obs_metadata', 'mod', 'obs', 
-    #                 'err_par_sd', 'err_par_bias', 'err_par_scale')
+
   )
-  stopifnot(all(targets        %in% c("err_gpp", "err_bigD13C", "err_vj"))) # above hardcoded snippet is wrong if this is not the case
-  stopifnot(all(targets_biases %in% c("errbias_bigD13C", "errbias_vj")))    # above hardcoded snippet is wrong if this is not the case
-  stopifnot(all(targets_scales %in% c("errscale_gpp")))                     # above hardcoded snippet is wrong if this is not the case
+  stopifnot(all(targets        %in% c("err_gpp", "err_bigD13C"))) # above hardcoded snippet is wrong if this is not the case
+  # stopifnot(all(targets_biases %in% c("errbias_bigD13C")))        # above hardcoded snippet is wrong if this is not the case
+  # stopifnot(all(targets_scales %in% c("errscale_gpp")))           # above hardcoded snippet is wrong if this is not the case
   
   return(df_mod_obs)
 }

@@ -39,8 +39,7 @@ params_to_estimate <- list(
   beta_unitcostratio = list(lower = 14.6,  upper = 440, init = 146.0),  # uniform priors
   kc_jmax            = list(lower = 0.2,   upper = 0.8, init = 0.41),   # uniform priors
   err_gpp            = list(lower = 0.001, upper = 4,   init = 1),
-  err_bigD13C        = list(lower = 0.01,  upper = 3,   init = 0.8),
-  errbias_bigD13C    = list(lower =   -8,  upper = 8,   init = 0.0))
+  err_bigD13C        = list(lower = 0.01,  upper = 3,   init = 0.8))
 
 params_fixed <- list(         # fix parameter value from previous calibration
   kphio              = 0.041,
@@ -49,10 +48,7 @@ params_fixed <- list(         # fix parameter value from previous calibration
   soilm_thetastar    = 0.6 * 240,  # to recover paper setup with soil moisture stress
   soilm_betao        = 0.01,
   rd_to_vcmax        = 0.014,      # value from Atkin et al. 2015 for C3 herbaceous
-  tau_acclim         = 30.0,
-  err_vj             = 1.0,
-  errbias_vj         = 1.0,
-  errscale_gpp       = 1.0)
+  tau_acclim         = 30.0)
 
 settings_joint_likelihood <- list(
   method = "BayesianTools",
@@ -196,10 +192,7 @@ setup_rsofun_calibration <- function(scenario){
     beta_unitcostratio = 146.0,      # value from Stocker et al. 2020
     rd_to_vcmax        = 0.014,      # value from Atkin et al. 2015 for C3 herbaceous
     tau_acclim         = 14.0,       # value from Liu et al. 2024
-    kc_jmax            = 0.41,       # value from Stocker et al. 2024 (citing Wang et al. 2017)
-    errbias_bigD13C    = 0.0,
-    errbias_vj         = 0.0,
-    errscale_gpp       = 1.0
+    kc_jmax            = 0.41        # value from Stocker et al. 2024 (citing Wang et al. 2017)
   )
 
   ## Define parameters to estimate and their priors
@@ -215,15 +208,10 @@ setup_rsofun_calibration <- function(scenario){
       tau_acclim      = list(mean = 14, sd = 8, lower = 0.01, upper = 40),
       kc_jmax         = as.list(0.41 * c(lower = 0.1, upper = 3.0, init = 1.0)),
       err_gpp         = list(lower = 0.01, upper = 3, init = 0.8),
-      err_bigD13C     = list(lower = 0.01, upper = 3, init = 0.8),
-      err_vj          = list(lower = 0.01, upper = 3, init = 0.8),
-      errbias_bigD13C = list(lower =   -8, upper = 8, init = 0.0),
-      errbias_vj      = list(lower =   -1, upper = 1, init = 0.0)
+      err_bigD13C     = list(lower = 0.01, upper = 3, init = 0.8)
     )
     if (scenario %in% c(223,226,231)){
       par_to_estimate$err_bigD13C     <- list(lower = 0.01, upper = 15, init = 0.8)
-      par_to_estimate$errbias_bigD13C <- NULL
-      par_to_estimate$errbias_vj      <- NULL
     }
   } else {
     stop(sprintf("Unsupported scenario: %d", scenario))
@@ -496,13 +484,8 @@ rsofun_symbol_parname_description <- dplyr::tribble(
   "tau_acclim",         "italic(tau)*' (days)'",                                     "italic(tau)",
   "kc_jmax",            "italic(c)^'*'*' (-)'",                                      "italic(c)^'*'",
   "err_gpp",            "italic(sigma)['GPP']*' (gC m \u207B\u00B2 s\u207B\u00B9)'", "italic(sigma)['GPP']",
-  "err_bigD13C",        "italic(sigma)[Delta]*' ('*'\u2030'*')'",                    "italic(sigma)[Delta]",
-  "err_vj",             "italic(sigma)['VJ']*' (-)'",                                "italic(sigma)['VJ']",
-  "errbias_bigD13C",    "italic(delta)[Delta]*' (\u2030)'",                          "italic(delta)[Delta]",
-  "errbias_vj",         "italic(delta)['VJ']*' (-)'",                                "italic(delta)['VJ']",
-  "errscale_gpp",       "italic(kappa)['GPP']*' (-)'",                               "italic(kappa)['GPP']",
-) #|> 
-  #mutate(variable = forcats::as_factor(variable)) # make factor to keep ordering
+  "err_bigD13C",        "italic(sigma)[Delta]*' ('*'\u2030'*')'",                    "italic(sigma)[Delta]"
+)
 label_vec_short <- setNames(rsofun_symbol_parname_description$Symbol_R2, rsofun_symbol_parname_description$variable)
 custom_labeller_variable <- function(labels, multi_line = TRUE) { # adapted from label_parsed
   replaced_labels <- left_join(select(labels, variable), # NOTE: this has variable hardcoded
