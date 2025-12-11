@@ -1,4 +1,4 @@
-#' Calibrates SOFUN model parameters
+#' Calibrates SOFUN model parameters (for parallelized applications)
 #'
 #' Runs the requested model calibration, stores to data-folder and returns results
 #'
@@ -36,15 +36,19 @@
 #'  }
 #' @param optim_out A logical indicating whether the function returns and stores 
 #'  the raw output of the optimization functions (defaults to TRUE).
-#' @param filepath TODO: describe
+#' @param logpath A path where a log-file is created and progress logged for 
+#' parallel sampling, defaults to a temporary directory. The path is stored in 
+#' the output object as simulation `name` and `logpath`. (Note that this argument 
+#' is only used when parallelized sampling is requested.)
 #' @param ... Optional arguments, simply passed on to the cost function. 
 #' 
-#' @return TODO: describe: stores the rds to filepath, if parallel stores log, too.
-#' A named list containing the calibrated parameter vector `par` and
-#' the output object from the optimization `mod`. For more details on this
+#' @return
+#' A named list containing the calibrated parameter vector `par`,
+#' the output object from the optimization `mod`, and additional identifier 
+#' outputs `name`, `logpath`, and `walltime`. For more details on the `mod`
 #' output and how to evaluate it, see \link[BayesianTools:runMCMC]{runMCMC} (also
 #' \href{https://florianhartig.github.io/BayesianTools/articles/BayesianTools.html}{this post})
-#' and \link[GenSA]{GenSA}.
+#' and \link[GenSA]{GenSA}. If parallel also a logfile is created at `logpath`.
 #' @export
 #' @importFrom magrittr %>%
 #' @importFrom stats setNames
@@ -120,7 +124,7 @@ calib_sofun_parallelized <- function(
     settings,
     optim_out = TRUE, # whether to return chains
     # for storing rds and log.txt
-    filepath = file.path(tempdir(),paste0("out_calib_", "my_calibration_name", ".rds")),
+    logpath = file.path(tempdir(),paste0("out_calib_", "my_calibration_name", ".rds.log.txt")),
     ...
 ){
   # backwards compatibility: set default values of parallelization options
@@ -174,11 +178,10 @@ calib_sofun_parallelized <- function(
     
     if (settings$control$n_parallel_independent > 1){ # parallel MCMC sampler:
 
-      logpath <- paste0(filepath, ".log.txt") # use logs only for parallelized sampling
       cl <- parallel::makeCluster(
         settings$control$n_parallel_independent,  
-        outfile = logpath)
-      # else:  cl <- parallel::makeCluster(settings$control$n_parallel_independent)
+        outfile = logpath) # logpath for progress logging of all workers
+
       doParallel::registerDoParallel(cl)
       
       if (settings$control$n_parallel_independent != settings$control$n_chains_independent){
@@ -187,7 +190,8 @@ calib_sofun_parallelized <- function(
           settings$control$n_chains_independent, settings$control$n_parallel_independent)
         )
       }
-      # since parallel sampling, fix the number of chains of runMCMC to 1, but call it multiple times
+      # since parallel sampling, fix the number of chains of runMCMC to 1, 
+      # but call it multiple times and combine afterwards
       settings$control$settings$nrChains <- 1
       
       # predefine variables for CRAN check compliance
@@ -204,8 +208,11 @@ calib_sofun_parallelized <- function(
         set.seed(1982 + iii) # set a different seed on each worker
         bayesianSetup <- BayesianTools::createBayesianSetup(
           
-          # inside worker: rebuild the closure so it picks up 'obs', 'drivers', 'parnames', 'get_mod_obs_pmodel_bigD13C_vj_gpp'
-          likelihood = ll_factory(obs, drivers, parnames, get_mod_obs = get_mod_obs_pmodel_bigD13C_vj_gpp, ...),
+          # inside worker: rebuild the closure so it picks up 'obs', 'drivers', 
+          #                'parnames', 'get_mod_obs_pmodel_bigD13C_vj_gpp'
+          likelihood = ll_factory(obs, drivers, parnames, 
+                                  get_mod_obs = get_mod_obs_pmodel_bigD13C_vj_gpp, 
+                                  ...),
           prior      = priors,
           names      = parnames,
           parallel   = settings$control$n_parallel_within_sampler)
@@ -244,7 +251,8 @@ calib_sofun_parallelized <- function(
     # ensure return value 'mcmc_out' is a mcmcSamplerList even if n_chains_independent==1
     # (by default runMCMC returns only a mcmcSampler if n_chains_independent==1)
     if(methods::is(mcmc_out, "mcmcSampler")){
-      mcmc_out <- BayesianTools::createMcmcSamplerList(list(mcmc_out)) # now mcmc_out is a mcmcSamplerList
+      mcmc_out <- BayesianTools::createMcmcSamplerList(list(mcmc_out)) 
+      # now mcmc_out is a mcmcSamplerList
     }
     
     end_time <- Sys.time()
@@ -257,26 +265,23 @@ calib_sofun_parallelized <- function(
     
     return_value <- list(par = bt_par)
     
-    if (optim_out){ # append raw MCMC chains
+    if (optim_out){ # append raw MCMC output chains
       return_value <- c(return_value, list(mod = mcmc_out))
     }
-    # if (input_out){ # append MCMC input
+    # if (input_out){ # append MCMC input arguments
     #   return_value <- c(return_value,
     #                     list(bayesianSetup = bayesianSetup,             # unneded: return_value$mod[[1]]$setup
     #                          sampler       = settings$control$sampler,  # unneded: return_value$mod[[1]]$sampler
     #                          settings      = settings$control$settings))# unneded: return_value$mod[[1]]$settings
     # }
     
+    # append naming information
+    return_value$name <- basename(logpath)# just "" if not parallelized
+    return_value$logpath <- logpath       # just "" if not parallelized
+    
     # append timing information
     return_value$walltime <- end_time - start_time
-    return_value$runtime  <- NaN # TODO: get_runtime_numeric(return_value)
-    # summary(return_value)
-    # plot(return_value$mod)
-    # print(get_runtime_numeric(return_value))
-    # print(get_walltime(return_value))
-    
-    return_value$name <- basename(filepath)
-    return_value$logpath <- logpath # just "" if not parallelized
+    # return_value$runtime  <- NaN # NOTE: get_runtime_numeric(return_value)
     
   } else if (tolower(settings$method) == "gensa"){
     stop("Unknown method (GenSA) passed to calib_sofun().")

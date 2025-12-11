@@ -9,7 +9,8 @@ calib_sofun_parallelized(
   obs,
   settings,
   optim_out = TRUE,
-  filepath = file.path(tempdir(), paste0("out_calib_", "my_calibration_name", ".rds")),
+  logpath = file.path(tempdir(), paste0("out_calib_", "my_calibration_name",
+    ".rds.log.txt")),
   ...
 )
 }
@@ -49,17 +50,20 @@ See the 'P-model usage' vignette for more information and examples.
 \item{optim_out}{A logical indicating whether the function returns and stores 
 the raw output of the optimization functions (defaults to TRUE).}
 
-\item{filepath}{TODO: describe}
+\item{logpath}{A path where a log-file is created and progress logged for 
+parallel sampling, defaults to a temporary directory. The path is stored in 
+the output object as simulation `name` and `logpath`. (Note that this argument 
+is only used when parallelized sampling is requested.)}
 
 \item{...}{Optional arguments, simply passed on to the cost function.}
 }
 \value{
-TODO: describe: stores the rds to filepath, if parallel stores log, too.
-A named list containing the calibrated parameter vector `par` and
-the output object from the optimization `mod`. For more details on this
+A named list containing the calibrated parameter vector `par`,
+the output object from the optimization `mod`, and additional identifier 
+outputs `name`, `logpath`, and `walltime`. For more details on the `mod`
 output and how to evaluate it, see \link[BayesianTools:runMCMC]{runMCMC} (also
 \href{https://florianhartig.github.io/BayesianTools/articles/BayesianTools.html}{this post})
-and \link[GenSA]{GenSA}.
+and \link[GenSA]{GenSA}. If parallel also a logfile is created at `logpath`.
 }
 \description{
 Runs the requested model calibration, stores to data-folder and returns results
@@ -84,9 +88,7 @@ params_fix       <- list(
   rd_to_vcmax        = 0.014,
   tau_acclim         = 30,
   kc_jmax            = 0.41,
-  err_bigD13C        = 1.0,
-  errbias_bigD13C    = 1.0,
-  errscale_gpp       = 1.0
+  err_bigD13C        = 1.0
 )
 # Define calibration settings
 settings <- list(
