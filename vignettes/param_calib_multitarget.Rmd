@@ -55,7 +55,7 @@ settings_joint_likelihood <- list(
   # metric = cost_likelihood_pmodel, # TODO: make this work
   metric  = rsofun::cost_likelihood_pmodel_bigD13C_vj_gpp, # TODO: replace this with cost_likelihood_pmodel
   control = list(
-    sampler = "DEzs",
+    sampler = "DREAMzs",
     settings = list(
       # burnin = 1500,             # kept artificially low
       # iterations = 3000,
@@ -87,7 +87,7 @@ par_calib_join <- calib_sofun_parallelized(
 ```{r eval = FALSE, include = FALSE}
 # store output since calibration isn't run at each vignette rendering
 saveRDS(par_calib_join, 
-        "files/param_calib_multitarget.Rmd__par_calib_join.RDS"), 
+        "files/param_calib_multitarget.Rmd__par_calib_join.RDS", 
         compress = "xz")
 ```
 
@@ -306,7 +306,7 @@ run_mcmc_rsofun <- function(
     n_parallel_within_sampler = FALSE,# number of cores for parallelization of within-sampler chains  https://cran.r-project.org/web/packages/BayesianTools/vignettes/InterfacingAModel.html#within-sampler-parallelization as well as https://cran.r-project.org/web/packages/BayesianTools/vignettes/BayesianTools.html#reference-on-creating-likelihoods
     outpath = "data",
     suffix_str = "", 
-    sampler = "DEzs"
+    sampler = "DREAMzs"
 ){
   # Setup simulation model
   res <- setup_rsofun_calibration(scenario = curr_calibration_scenario)
@@ -342,8 +342,9 @@ run_mcmc_rsofun <- function(
   )
 
   # setup output directories for parallel calibration
-  filepath <- file.path(outpath, "calibrations", paste0("out_calib_", suffix_str, ".rds"))
-  dir.create(path = dirname(filepath), showWarnings = FALSE)
+  logpath <- file.path(outpath, "calibrations", paste0("out_calib_", suffix_str, ".rds.log.txt"))
+  rds_path <- gsub(".log.txt","", logpath)
+  dir.create(path = dirname(logpath), showWarnings = FALSE)
 
   # Run calibration in parallel
   cat(paste0(Sys.time(),": start sampling of ", paste0("out_calib_", suffix_str, ".rds")))
@@ -351,15 +352,12 @@ run_mcmc_rsofun <- function(
     drivers   = driver_to_use_for_mcmc,
     obs       = obs_to_use_for_mcmc,
     settings  = calib_sofun_settings,
-    filepath  = filepath, 
-    logpath   = paste0(filepath, ".log.txt"),
+    logpath   = logpath,
     # other arguments for the cost function
     par_fixed = res$par_fixed
   )
-  
   ## Store result object to file: ----
   ## This enables easy continuation of MCMC sampling
-  rds_path <- gsub(".log.txt","", out_calib$logpath)
   saveRDS(out_calib, file = rds_path, compress = "xz")
   cat(paste0(Sys.time(),": end   sampling of ", out_calib$name,
                ". \nWritten *.rds-output to: ", rds_path))
@@ -403,6 +401,7 @@ setup_rsofun_calibration(231)
 setup_rsofun_calibration(231)$drivobs_train
 
 dir.create("files/param_calib_multitarget/", showWarnings = FALSE)
+
 df_timings226 <- run_mcmc_rsofun(226, suffix_str = "setup_226",
   outpath = "files/param_calib_multitarget/",
   # mcmc setup:
@@ -856,19 +855,17 @@ df_predict_231p_bigD13C_sampled <- apply_bias_correction_and_sample_error(
   df_predict_bigD13C,
   N_sample_error = N_sample_error)
 
-
-# FOR STORAGE REASONS unnest the obs_metadata and save different targets separately:
-out_prediction_template <- file.path("files/param_calib_multitarget/", 
-                                      "predictions", "pred_231p_XXX.rds")
-dir.create(dirname(out_prediction_template), showWarnings = FALSE)
-fname_out_gpp     <- gsub("_XXX", 
-                          paste0(    "_gpp_sampled_N", N_sample_error, "errors"), 
-                          out_prediction_template)
-fname_out_bigD13C <- gsub("_XXX", 
-                          paste0("_bigD13C_sampled_N", N_sample_error, "errors"), 
-                          out_prediction_template)
-
 # Save predictions to plot with separate script:
+# FOR STORAGE REASONS unnest the obs_metadata and save different targets separately:
+# out_prediction_template <- file.path("files/param_calib_multitarget/", 
+#                                       "predictions", "pred_231p_XXX.rds")
+# dir.create(dirname(out_prediction_template), showWarnings = FALSE)
+# fname_out_gpp     <- gsub("_XXX", 
+#                           paste0(    "_gpp_sampled_N", N_sample_error, "errors"), 
+#                           out_prediction_template)
+# fname_out_bigD13C <- gsub("_XXX", 
+#                           paste0("_bigD13C_sampled_N", N_sample_error, "errors"), 
+#                           out_prediction_template)
 # df_predict_231p_gpp_sampled     |> 
 #   select(posterior_sample_id,error_sample_id,is_train0_test1,is_MAP,sitename,target,obs,   date,err_par_bias,err_par_sd,mod_no_err,mod_biasremoved_no_err,mod_biasremoved_with_err) |> 
 #   saveRDS(fname_out_gpp,     compress = "xz")

@@ -175,7 +175,8 @@ calib_sofun_parallelized <- function(
     start_time <- Sys.time()
     
     if (settings$control$n_parallel_independent > 1){ # parallel MCMC sampler:
-
+      simname <- basename(logpath)
+      
       cl <- parallel::makeCluster(
         settings$control$n_parallel_independent,  
         outfile = logpath) # logpath for progress logging of all workers
@@ -224,6 +225,7 @@ calib_sofun_parallelized <- function(
       mcmc_out <- BayesianTools::createMcmcSamplerList(indep_chains) # combine the independent chains
       
     } else { # sequential MCMC sampler:
+      simname <- basename(logpath)
       logpath <- "" # use logs only for parallelized sampling
       
       # setup the bayesian sampling
@@ -276,8 +278,8 @@ calib_sofun_parallelized <- function(
     # }
     
     # append naming information
-    return_value$name <- basename(logpath)# just "" if not parallelized
-    return_value$logpath <- logpath       # just "" if not parallelized
+    return_value$name <- simname
+    return_value$logpath <- logpath # just "" if not parallelized
     
     # append timing information
     return_value$walltime <- end_time - start_time
