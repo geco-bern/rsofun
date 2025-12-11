@@ -670,3 +670,187 @@ The following objects are masked from ‘package:base’:
  Running DREAM-MCMC, chain  1 iteration 600 of 600 . Current logp  -15162.31 -15132.49 -14593.1 Please wait! runMCMC terminated after 27.247seconds
  Running DREAM-MCMC, chain  1 iteration 600 of 600 . Current logp  -14623.63 -14613.84 -14455.66 Please wait! runMCMC terminated after 27.281seconds
  Running DREAM-MCMC, chain  1 iteration 600 of 600 . Current logp  -14728.85 -14549.06 -14790.35 Please wait! runMCMC terminated after 27.316seconds
+starting worker pid=81758 on localhost:11695 at 14:43:48.823
+starting worker pid=81771 on localhost:11695 at 14:43:48.911
+starting worker pid=81784 on localhost:11695 at 14:43:48.992
+starting worker pid=81797 on localhost:11695 at 14:43:49.072
+starting worker pid=81810 on localhost:11695 at 14:43:49.154
+starting worker pid=81823 on localhost:11695 at 14:43:49.237
+starting worker pid=81836 on localhost:11695 at 14:43:49.325
+starting worker pid=81849 on localhost:11695 at 14:43:49.413
+Loading required package: rsofun
+loaded rsofun and set parent environment
+
+Attaching package: ‘dplyr’
+
+The following objects are masked from ‘package:stats’:
+
+    filter, lag
+
+The following objects are masked from ‘package:base’:
+
+    intersect, setdiff, setequal, union
+
+
+Attaching package: ‘lubridate’
+
+The following objects are masked from ‘package:base’:
+
+    date, intersect, setdiff, union
+
+Loading required package: rsofun
+loaded rsofun and set parent environment
+
+Attaching package: ‘dplyr’
+
+The following objects are masked from ‘package:stats’:
+
+    filter, lag
+
+The following objects are masked from ‘package:base’:
+
+    intersect, setdiff, setequal, union
+
+
+Attaching package: ‘lubridate’
+
+The following objects are masked from ‘package:base’:
+
+    date, intersect, setdiff, union
+
+Loading required package: rsofun
+loaded rsofun and set parent environment
+
+Attaching package: ‘dplyr’
+
+The following objects are masked from ‘package:stats’:
+
+    filter, lag
+
+The following objects are masked from ‘package:base’:
+
+    intersect, setdiff, setequal, union
+
+
+Attaching package: ‘lubridate’
+
+The following objects are masked from ‘package:base’:
+
+    date, intersect, setdiff, union
+
+Loading required package: rsofun
+loaded rsofun and set parent environment
+
+Attaching package: ‘dplyr’
+
+The following objects are masked from ‘package:stats’:
+
+    filter, lag
+
+The following objects are masked from ‘package:base’:
+
+    intersect, setdiff, setequal, union
+
+
+Attaching package: ‘lubridate’
+
+The following objects are masked from ‘package:base’:
+
+    date, intersect, setdiff, union
+
+Loading required package: rsofun
+loaded rsofun and set parent environment
+
+Attaching package: ‘dplyr’
+
+The following objects are masked from ‘package:stats’:
+
+    filter, lag
+
+The following objects are masked from ‘package:base’:
+
+    intersect, setdiff, setequal, union
+
+
+Attaching package: ‘lubridate’
+
+The following objects are masked from ‘package:base’:
+
+    date, intersect, setdiff, union
+
+Loading required package: rsofun
+loaded rsofun and set parent environment
+
+Attaching package: ‘dplyr’
+
+The following objects are masked from ‘package:stats’:
+
+    filter, lag
+
+The following objects are masked from ‘package:base’:
+
+    intersect, setdiff, setequal, union
+
+
+Attaching package: ‘lubridate’
+
+The following objects are masked from ‘package:base’:
+
+    date, intersect, setdiff, union
+
+Loading required package: rsofun
+loaded rsofun and set parent environment
+
+Attaching package: ‘dplyr’
+
+The following objects are masked from ‘package:stats’:
+
+    filter, lag
+
+The following objects are masked from ‘package:base’:
+
+    intersect, setdiff, setequal, union
+
+
+Attaching package: ‘lubridate’
+
+The following objects are masked from ‘package:base’:
+
+    date, intersect, setdiff, union
+
+Loading required package: rsofun
+loaded rsofun and set parent environment
+
+Attaching package: ‘dplyr’
+
+The following objects are masked from ‘package:stats’:
+
+    filter, lag
+
+The following objects are masked from ‘package:base’:
+
+    intersect, setdiff, setequal, union
+
+
+Attaching package: ‘lubridate’
+
+The following objects are masked from ‘package:base’:
+
+    date, intersect, setdiff, union
+
+[1] "Info is missing upper/lower/best. This can cause plotting and sensitivity analysis functions to fail. If you want to use those functions provide (plot)upper/lower/best either in createBayesianSetup or prior"
+[1] "Info is missing upper/lower/best. This can cause plotting and sensitivity analysis functions to fail. If you want to use those functions provide (plot)upper/lower/best either in createBayesianSetup or prior"
+[1] "Info is missing upper/lower/best. This can cause plotting and sensitivity analysis functions to fail. If you want to use those functions provide (plot)upper/lower/best either in createBayesianSetup or prior"
+[1] "Info is missing upper/lower/best. This can cause plotting and sensitivity analysis functions to fail. If you want to use those functions provide (plot)upper/lower/best either in createBayesianSetup or prior"
+[1] "Info is missing upper/lower/best. This can cause plotting and sensitivity analysis functions to fail. If you want to use those functions provide (plot)upper/lower/best either in createBayesianSetup or prior"
+[1][1] "Info is missing upper/lower/best. This can cause plotting and sensitivity analysis functions to fail. If you want to use those functions provide (plot)upper/lower/best either in createBayesianSetup or prior"
+ "Info is missing upper/lower/best. This can cause plotting and sensitivity analysis functions to fail. If you want to use those functions provide (plot)upper/lower/best either in createBayesianSetup or prior"
+[1] "Info is missing upper/lower/best. This can cause plotting and sensitivity analysis functions to fail. If you want to use those functions provide (plot)upper/lower/best either in createBayesianSetup or prior"
+ Running DREAM-MCMC, chain  1 iteration 300 of 600 . Current logp  -15821.48 -15569.16 -14442.62 Please wait!  Running DREAM-MCMC, chain  1 iteration 300 of 600 . Current logp  -15415.3 -14387.58 -15128.49 Please wait!  Running DREAM-MCMC, chain  1 iteration 300 of 600 . Current logp  -14739.42 -14734.94 -15059.57 Please wait!  Running DREAM-MCMC, chain  1 iteration 300 of 600 . Current logp  -14491.26 -14666.63 -14562.2 Please wait!  Running DREAM-MCMC, chain  1 iteration 300 of 600 . Current logp  -15881.22 -15981.08 -15115.12 Please wait!  Running DREAM-MCMC, chain  1 iteration 300 of 600 . Current logp  -15027.13 -15712.03 -15693.39 Please wait!  Running DREAM-MCMC, chain  1 iteration 300 of 600 . Current logp  -14915.48 -14938.01 -14557.94 Please wait!  Running DREAM-MCMC, chain  1 iteration 300 of 600 . Current logp  -14978.01 -14895.34 -14788.28 Please wait!  Running DREAM-MCMC, chain  1 iteration 600 of 600 . Current logp  -14643.33 -14345.16 -14360.82 Please wait! runMCMC terminated after 27.731seconds
+ Running DREAM-MCMC, chain  1 iteration 600 of 600 . Current logp  -14655.22 -14653.25 -14843.28 Please wait! runMCMC terminated after 29.017seconds
+ Running DREAM-MCMC, chain  1 iteration 600 of 600 . Current logp  -14737.28 -14370.6 -14783.82 Please wait! runMCMC terminated after 29.205seconds
+ Running DREAM-MCMC, chain  1 iteration 600 of 600 . Current logp  -14501.1 -14575.85 -14730.22 Please wait! runMCMC terminated after 30.067seconds
+ Running DREAM-MCMC, chain  1 iteration 600 of 600 . Current logp  -14320.72 -14604.83 -14562.2 Please wait! runMCMC terminated after 30.345seconds
+ Running DREAM-MCMC, chain  1 iteration 600 of 600 . Current logp  -14597.71 -14773.76 -14470.22 Please wait! runMCMC terminated after 31.715seconds
+ Running DREAM-MCMC, chain  1 iteration 600 of 600 . Current logp  -14654.76 -15639.51 -15021.44 Please wait! runMCMC terminated after 32.11seconds
+ Running DREAM-MCMC, chain  1 iteration 600 of 600 . Current logp  -14927.09 -14766.38 -14342.04 Please wait! runMCMC terminated after 35.561seconds
