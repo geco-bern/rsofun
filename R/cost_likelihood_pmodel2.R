@@ -13,7 +13,8 @@
 #' \code{'targets'}, and \code{'data'} (see \code{\link{pmodel_validation}} to 
 #' check its structure). \code{'targets'} indicates the target variable(s) for 
 #' which the likelihood is computed, it must be a column name of the 
-#' \code{'data'} data.frame.
+#' \code{'data'} data.frame and it must have an error term in either \code{'par'} 
+#' or \code{'par_fixed'}.
 #' @param drivers A nested data.frame of driver data. See \code{\link{pmodel_drivers}}
 #' for a description of the data structure.
 #' @param par_fixed A named list of model parameter values to keep fixed during the
@@ -51,8 +52,7 @@
 #'            kphio_par_a = -0.01,
 #'            kphio_par_b = 1,
 #'            # error model parameters
-#'            err_gpp     = 2,
-#'            err_bigD13C = 0.7),      # TODO: this errors without err_bigD13C
+#'            err_gpp     = 2),
 #'  obs = pmodel_validation |> dplyr::filter(sitename == "FR-Pue"),
 #'  drivers = pmodel_drivers |> dplyr::filter(sitename == "FR-Pue"),
 #'  par_fixed = list(
@@ -81,6 +81,18 @@ cost_likelihood_pmodel_bigD13C_vj_gpp <- function(
   stopifnot(nrow(obs) > 0)     # ensure some observation data are provided
   stopifnot(nrow(drivers) > 0) # ensure some driver data are provided
   
+  requested_targets    <- unique(tidyr::unnest(obs, 'targets')$targets)
+  # check that targets have an error term in \code{'par'}.
+  provided_error_terms <- c(
+    gsub("^err_","",grep("^err_", names(par), value = TRUE)),
+    gsub("^err_","",grep("^err_", names(par_fixed), value = TRUE)))
+  stopifnot(all(requested_targets %in% provided_error_terms) ||
+              stop("No error term provided for requested target: ",
+                   paste0(setdiff(requested_targets, provided_error_terms))))
+  # check that targets are a column name of the \code{'data'} 
+  # NOT CHECKED
+  
+  
   # # ensure backwards compatibility with format without column 'onestep':
   # if ("onestep" %in% names(drivers$params_siml[[1]])) {
   #   # all good
@@ -98,7 +110,7 @@ cost_likelihood_pmodel_bigD13C_vj_gpp <- function(
   params_modl_and_err <- c(par, par_fixed)
   
   # B,C) Run model and bring together with observed ----
-  ## run the time series model for gpp/et/... time series
+  ## run the time series model for gpp/le/... time series
   ## run the onestep model for traits
   df_mod_obs <- get_mod_obs(drivers, obs, params_modl_and_err, parallel, ncores)
   
@@ -109,24 +121,16 @@ cost_likelihood_pmodel_bigD13C_vj_gpp <- function(
   # ll_lognormal         <- function(obs,mod,sd){stats::dlnorm(           x=obs, meanlog = mod,             sdlog = sd, log = TRUE)} # TODO: err_par_sd must be positive
   # ll_lognormal2        <- function(obs,mod,sd){stats::dlnorm(           x=obs, meanlog = log(mod) + sd^2, sdlog = sd, log = TRUE)}
   # ll_proportional      <- function(obs,mod,sd){stats::dnorm(            x=obs, mean = mod,                sd = abs(mod)*sd, log = TRUE)} # proportional: https://docs.pumas.ai/stable/model_components/error_models/
-  # ll_userdefined     <- function(obs,mod,err_par1, err_par2, err_par3){}
+  # ll_userdefined       <- function(obs,mod,err_par1, err_par2, err_par3){}
   
   # compute ll
   df_ll <- df_mod_obs |> 
     group_by(.data$target, .data$err_par_sd, .data$err_par_bias, .data$err_par_scale) |>
-    # compute loglikelihoods
-    # # rowwise() |> # not needed and slowing things down
-    # mutate(ll = case_when(
-    #   target == "gpp"     ~ ll_normal(            obs,mod,err_par_sd),
-    #   target == "bigD13C" ~ ll_normalAdditiveBias(obs,mod,err_par_sd),
-    #   target == "vj"      ~ ll_normalAdditiveBias(obs,mod,err_par_sd)
-    # )) |>
-    # mutate(ll = ll_normalAdditiveBias(obs,mod,err_par_sd,err_par_bias)) |> 
     mutate(ll = ll_normalAdditScaled(
       .data$obs,.data$mod,.data$err_par_sd,.data$err_par_bias,.data$err_par_scale)
-    ) |>
-    select('sitename','target','mod','obs',
-           'err_par_sd','err_par_bias','err_par_scale','ll')
+    ) #|>
+    # select('sitename','target','mod','obs',
+    #        'err_par_sd','err_par_bias','err_par_scale','ll')
   
   ll <- sum(df_ll$ll)
   
@@ -160,7 +164,7 @@ get_mod_obs_pmodel_bigD13C_vj_gpp <- function(
     parallel  = parallel,
     ncores    = ncores
   )
-  df_daily <- df |> rowwise() |> filter("date" %in% names(.data$data)) |> ungroup()
+  df_daily   <- df |> rowwise() |> filter("date" %in% names(.data$data)) |> ungroup()
   df_onestep <- df |> rowwise() |> filter("vcmax_mod_molm2s" %in% names(.data$data)) |> ungroup()
   
   # # add vj_mod__
@@ -227,55 +231,67 @@ get_mod_obs_pmodel_bigD13C_vj_gpp <- function(
     tidyr::nest(modobs = -c('sitename', 'targets'))
   
   # combine into single data.frame
-  targets        <- grep("^err_", names(params_modl_and_err), value = TRUE)
+  targets        <- gsub("^err_","", grep("^err_", names(params_modl_and_err), value = TRUE))
   # targets_biases <- grep("^errbias", names(params_modl_and_err), value = TRUE)
   # targets_scales <- grep("^errscale", names(params_modl_and_err), value = TRUE)
   
-  # TODO here refrain from hardcoding.
-  #    but loop over targets and subset by df_mod_obs_daily$targets
-  # for (curr_target in targets){
-  #   print(curr_target)
-  # } # or alternatively lapply
-  # or hardcode:
-  df_mod_obs <- bind_rows(
-    df_mod_obs_daily |> tidyr::unnest('modobs') |>
-      # make this work gracefully in case nrow=0
-      ensure_cols_defined(tibble(gpp_mod = numeric(), 
-                                 gpp = numeric(), 
-                                 date = lubridate::Date())) |>
-      dplyr::rename(all_of(c(mod = "gpp_mod", obs = "gpp"))) |>
-      dplyr::mutate(target  = "gpp",                                  #curr_target,
-                    err_par_sd   = params_modl_and_err[["err_gpp"]],  #params_modl_and_err[[paste0("err_,"curr_target]]) |> # TODO: work here on  not hardcoding this...
-                    err_par_bias = 0,
-                    err_par_scale= 1) |> # params_modl_and_err[["errscale_gpp"]]
-      # ensure metadata can be bound together between different target types:
-      tidyr::nest(obs_metadata = c('date')) |>
-      # select needed columns
-      dplyr::select('sitename', 'target', 'obs_metadata', 'mod', 'obs', 
-                    'err_par_sd', 'err_par_bias', 'err_par_scale'),
-    
-    df_mod_obs_onestep |>
-      dplyr::rowwise() |> dplyr::filter("bigD13C" %in% .data$targets) |> dplyr::ungroup() |>
-      tidyr::unnest('modobs') |>
-      # make this work gracefully in case nrow=0
-      ensure_cols_defined(tibble(bigD13C_mod_permil = numeric(),
-                                 bigD13C = numeric(), 
-                                 id = character())) |>
-      dplyr::rename(all_of(c(mod = "bigD13C_mod_permil", obs = "bigD13C"))) |> # instead of bigD13C_obs_permil
-      dplyr::mutate(target  = "bigD13C",                                         #curr_target,
-                    err_par_sd   = params_modl_and_err[["err_bigD13C"]],         #params_modl_and_err[[paste0("err_,"curr_target]]) |> # TODO: work here on  not hardcoding this...
-                    err_par_bias = 0,  # params_modl_and_err[["errbias_bigD13C"]]
-                    err_par_scale= 1) |>
-      # ensure metadata can be bound together between different target types:
-      tidyr::nest(obs_metadata = c('id')) |> 
-      # select needed columns
-      dplyr::select('sitename', 'target', 'obs_metadata', 'mod', 'obs', 
-                    'err_par_sd', 'err_par_bias', 'err_par_scale')
+  list_df_mod_obs <- lapply(targets, function(curr_target){
+    if (curr_target %in% c("gpp","le")) {# hardcode certain variables to daily model output
+      
+      df_mod_obs_daily |> 
+        # subset only rows that indicate this target:
+        dplyr::rowwise() |> dplyr::filter(curr_target %in% .data$targets) |> dplyr::ungroup() |>
+        tidyr::unnest('modobs') |>
+        # make this work gracefully in case nrow=0
+        ensure_cols_defined(tibble(date    = lubridate::Date(),
+                                   le_mod  = numeric(), 
+                                   le      = numeric(), 
+                                   gpp_mod = numeric(), 
+                                   gpp     = numeric())) |>
+        # keep everything needed to compute loglikelihood:
+        dplyr::mutate(target        = curr_target,
+                      obs           = .data[[curr_target]],
+                      mod           = .data[[paste0(curr_target,"_mod")]], # e.g. gpp_mod
+                      err_par_sd    = params_modl_and_err[[paste0("err_",curr_target)]], #e.g. err_gpp
+                      err_par_bias  = 0,
+                      err_par_scale = 1) |>
+        # ensure metadata can be bound together between different target types:
+        tidyr::nest(obs_metadata = c('date')) |>
+        # select needed columns
+        dplyr::select('sitename', 'target', 'obs_metadata', 
+                      'mod', 'obs', 
+                      'err_par_sd', 'err_par_bias', 'err_par_scale')
+        
+    } else if (curr_target %in% c("bigD13C","vj")) {# hardcode certain variables to onestep model output
+      
+      df_mod_obs_onestep |>
+        # subset only rows that indicate this target:
+        dplyr::rowwise() |> dplyr::filter(curr_target %in% .data$targets) |> dplyr::ungroup() |>
+        tidyr::unnest('modobs') |>
+        # make this work gracefully in case nrow=0
+        ensure_cols_defined(tibble(id                 = character(),
+                                   bigD13C_mod_permil = numeric(),
+                                   bigD13C            = numeric())) |>
+        # fix naming
+        dplyr::rename(all_of(c(bigD13C_mod = "bigD13C_mod_permil"))) |> 
+        # keep everything needed to compute loglikelihood:
+        dplyr::mutate(target        = curr_target,
+                      obs           = .data[[curr_target]],
+                      mod           = .data[[paste0(curr_target,"_mod")]], # e.g. bigD13C_mod TODO: this was bigD13C_mod_permil
+                      err_par_sd    = params_modl_and_err[[paste0("err_",curr_target)]], #e.g. err_bigD13C
+                      err_par_bias  = 0,
+                      err_par_scale = 1) |>
+        # ensure metadata can be bound together between different target types:
+        tidyr::nest(obs_metadata = c('id')) |> 
+        # select needed columns
+        dplyr::select('sitename', 'target', 'obs_metadata', 
+                      'mod', 'obs', 
+                      'err_par_sd', 'err_par_bias', 'err_par_scale')
+    } else {
+      stop(paste0("Target '", curr_target, "' is unsupported by get_mod_obs()."))
+    }
+  })
+  df_mod_obs <- bind_rows(list_df_mod_obs)
 
-  )
-  stopifnot(all(targets        %in% c("err_gpp", "err_bigD13C"))) # above hardcoded snippet is wrong if this is not the case
-  # stopifnot(all(targets_biases %in% c("errbias_bigD13C")))        # above hardcoded snippet is wrong if this is not the case
-  # stopifnot(all(targets_scales %in% c("errscale_gpp")))           # above hardcoded snippet is wrong if this is not the case
-  
   return(df_mod_obs)
 }
