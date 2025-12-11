@@ -74,9 +74,7 @@
 #'   rd_to_vcmax        = 0.014,
 #'   tau_acclim         = 30,
 #'   kc_jmax            = 0.41,
-#'   err_bigD13C        = 1.0,
-#'   errbias_bigD13C    = 1.0,
-#'   errscale_gpp       = 1.0
+#'   err_bigD13C        = 1.0
 #' )
 #' # Define calibration settings
 #' settings <- list(
@@ -230,7 +228,9 @@ calib_sofun_parallelized <- function(
       
       # setup the bayesian sampling
       bayesianSetup <- BayesianTools::createBayesianSetup(
-        likelihood = ll_factory(obs, drivers, parnames, get_mod_obs = get_mod_obs_pmodel_bigD13C_vj_gpp, ...),
+        likelihood = ll_factory(obs, drivers, parnames, 
+                                get_mod_obs = get_mod_obs_pmodel_bigD13C_vj_gpp, 
+                                ...),
         prior      = priors,
         names      = parnames,
         parallel   = settings$control$n_parallel_within_sampler)
