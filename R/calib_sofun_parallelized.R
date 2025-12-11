@@ -62,7 +62,8 @@
 #' # Define priors of model parameters that will be calibrated
 #' params_to_estimate <- list(
 #'   kphio           = list(lower = 0.02, upper = 0.15, init = 0.05),
-#'   err_gpp         = list(lower = 0.01, upper = 3, init = 0.8)
+#'   err_gpp         = list(lower = 0.01, upper = 3, init = 0.8),
+#'   err_bigD13C     = list(lower = 0.5, upper = 4.0, init = 2.0)
 #' )
 #' # Fix model parameters that won't be calibrated
 #' params_fix       <- list(
@@ -73,8 +74,7 @@
 #'   beta_unitcostratio = 146,
 #'   rd_to_vcmax        = 0.014,
 #'   tau_acclim         = 30,
-#'   kc_jmax            = 0.41,
-#'   err_bigD13C        = 1.0
+#'   kc_jmax            = 0.41
 #' )
 #' # Define calibration settings
 #' settings <- list(
@@ -92,10 +92,12 @@
 #'     n_parallel_independent = 1  # 2, this can be parallelized
 #'   )
 #' )
-#' # Run the calibration for GPP data
+#' # Run the calibration for GPP and D13C data
 #' calib_output <- rsofun::calib_sofun_parallelized(
-#'   drivers = rsofun::pmodel_drivers    |> dplyr::filter(sitename == "FR-Pue"),
-#'   obs     = rsofun::pmodel_validation |> dplyr::filter(sitename == "FR-Pue"),
+#'   drivers = rsofun::pmodel_drivers    |>
+#'     dplyr::filter(sitename %in% c("FR-Pue","lon_+146.13_lat_-032.97")),
+#'   obs     = rsofun::pmodel_validation |>
+#'     dplyr::filter(sitename %in% c("FR-Pue","lon_+146.13_lat_-032.97")),
 #'   settings = settings,
 #'   # extra arguments for the cost function
 #'   par_fixed = params_fix
@@ -106,15 +108,6 @@
 #' calib_output$runtime  # unused
 #' calib_output$name     # optionally used calibration name
 #' calib_output$fpath    # path of rds output
-#' calib_output <- rsofun::calib_sofun_parallelized(
-#'   drivers = rsofun::pmodel_drivers    |>
-#'     dplyr::filter(sitename %in% c("FR-Pue","lon_+146.13_lat_-032.97")),
-#'   obs     = rsofun::pmodel_validation |>
-#'     dplyr::filter(sitename %in% c("FR-Pue","lon_+146.13_lat_-032.97")),
-#'   settings = settings,
-#'   # extra arguments for the cost function
-#'   par_fixed = params_fix
-#' )
 
 calib_sofun_parallelized <- function(
     drivers,

@@ -24,7 +24,8 @@ example \code{'gpp_err'}).}
 \code{'targets'}, and \code{'data'} (see \code{\link{pmodel_validation}} to 
 check its structure). \code{'targets'} indicates the target variable(s) for 
 which the likelihood is computed, it must be a column name of the 
-\code{'data'} data.frame.}
+\code{'data'} data.frame and it must have an error term in either \code{'par'} 
+or \code{'par_fixed'}.}
 
 \item{drivers}{A nested data.frame of driver data. See \code{\link{pmodel_drivers}}
 for a description of the data structure.}
@@ -73,8 +74,7 @@ cost_likelihood_pmodel_bigD13C_vj_gpp(
            kphio_par_a = -0.01,
            kphio_par_b = 1,
            # error model parameters
-           err_gpp     = 2,
-           err_bigD13C = 0.7),      # TODO: this errors without err_bigD13C
+           err_gpp     = 2),
  obs = pmodel_validation |> dplyr::filter(sitename == "FR-Pue"),
  drivers = pmodel_drivers |> dplyr::filter(sitename == "FR-Pue"),
  par_fixed = list(

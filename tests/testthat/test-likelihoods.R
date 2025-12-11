@@ -187,6 +187,35 @@ test_that("test likelihood/RMSE calculations with pmodel", {
                          object = ll_pmodel_fixed,
                          # expected was generated with dput(ll_pmodel_fixed)
                          expected = -336583.32327482)
+  
+  # test p-model likelihood with GPP, and ET and bigD13C
+  par <- c(kphio       = 0.05,
+           kphio_par_a = -0.01,
+           kphio_par_b = 1,
+           # error model parameters
+           err_gpp     = 2,
+           err_le      = 2e8,
+           err_bigD13C = 4)
+  obs     <- pmodel_validation |> dplyr::filter(sitename %in% c("CH-Dav","lon_+010.52_lat_+051.08"))
+  drivers <- pmodel_drivers    |> dplyr::filter(sitename %in% c("CH-Dav","lon_+010.52_lat_+051.08"))
+  par_fixed<- list(
+    soilm_thetastar    = 0.6 * 240,  # old setup with soil moisture stress
+    soilm_betao        = 0.0,
+    beta_unitcostratio = 146.0,
+    rd_to_vcmax        = 0.014,      # from Atkin et al. 2015 for C3 herbaceous
+    tau_acclim         = 30.0,
+    kc_jmax            = 0.41
+  )
+  par_D13C <- par[-c(4,5)]; obs_D13C <- obs |> mutate(targets = lapply(targets, \(x) setdiff(x, c("gpp","le"))))      # remove gpp and le
+  par_GPP  <- par[-c(5,6)]; obs_GPP  <- obs |> mutate(targets = lapply(targets, \(x) setdiff(x, c("le","bigD13C"))))  # remove le and D13C
+  par_LE   <- par[-c(4,6)]; obs_LE   <- obs |> mutate(targets = lapply(targets, \(x) setdiff(x, c("gpp","bigD13C")))) # remove gpp and D13C
+  
+  ll_all  <- cost_likelihood_pmodel_bigD13C_vj_gpp(par,obs,drivers,par_fixed)
+  ll_D13C <- cost_likelihood_pmodel_bigD13C_vj_gpp(par_D13C, obs_D13C, drivers,par_fixed)
+  ll_GPP  <- cost_likelihood_pmodel_bigD13C_vj_gpp(par_GPP,  obs_GPP,  drivers,par_fixed)
+  ll_LE   <- cost_likelihood_pmodel_bigD13C_vj_gpp(par_LE,   obs_LE,   drivers,par_fixed)
+  
+  testthat::expect_equal(ll_all, ll_D13C + ll_GPP + ll_LE)
 })
 
 test_that("test likelihood/RMSE calculations with BiomeE", {
