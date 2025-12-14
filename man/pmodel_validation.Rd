@@ -3,7 +3,7 @@
 \docType{data}
 \name{pmodel_validation}
 \alias{pmodel_validation}
-\title{rsofun P-model GPP validation data}
+\title{rsofun P-model GPP and leaf D13C validation data}
 \format{
 A tibble of validation data:
 \describe{
@@ -47,7 +47,7 @@ pmodel_validation
 \description{
 Small example dataset of target observations (daily GPP flux data as well as
 leaf D13C data) to optimize 
-model parameters with the function \code{\link{calib_sofun}}
+model parameters with the function \code{\link{calib_sofun_parallelized}}
 }
 \examples{
 require(ggplot2); require(tidyr)

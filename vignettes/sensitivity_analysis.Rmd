@@ -59,8 +59,8 @@ We want to see how sensitive this function is to changes in the parameter values
 ll_pmodel <- function(
     par_v                 # a named vector of all calibratable parameters including errors
 ){
-  rsofun::cost_likelihood_pmodel(        # reuse likelihood cost function
-    par_v,
+  rsofun::cost_likelihood_pmodel_bigD13C_vj_gpp( # reuse likelihood cost function
+    as.list(par_v),
     obs     = rsofun::pmodel_validation |> filter(sitename == "FR-Pue"),
     drivers = rsofun::pmodel_drivers    |> filter(sitename == "FR-Pue")
   )
@@ -77,7 +77,7 @@ ll_pmodel( par_v = c(
   rd_to_vcmax        = 0.014,
   tau_acclim         = 20.0,
   kc_jmax            = 0.41,
-  error_gpp          = 0.9         # value from previous simulations
+  err_gpp            = 0.9         # value from previous simulations
 ))
 ```
 
@@ -97,7 +97,7 @@ par_cal_best <- c(
   rd_to_vcmax        = 0.014,
   tau_acclim         = 30.0,
   kc_jmax            = 0.41,
-  error_gpp          = 1
+  err_gpp          = 1
 )
 
 # lower bound
@@ -111,7 +111,7 @@ par_cal_min <- c(
   rd_to_vcmax        = 0.01,
   tau_acclim         = 7.0,
   kc_jmax            = 0.2,
-  error_gpp          = 0.01
+  err_gpp          = 0.01
 )
 
 # upper bound
@@ -125,7 +125,7 @@ par_cal_max <- c(
   rd_to_vcmax        = 0.1,
   tau_acclim         = 60.0,
   kc_jmax            = 0.8,
-  error_gpp          = 4
+  err_gpp          = 4
 )
 ```
 
@@ -188,9 +188,8 @@ morrisOut.df |>
   ggplot(aes(
     reorder(parameter, value),
     value, 
-    fill = variable),
-    color = NA) +
-  geom_bar(position = position_dodge(), stat = 'identity') +
+    fill = variable)) +
+  geom_bar(position = position_dodge(), stat = 'identity', color = NA) +
   scale_fill_manual("", 
                     labels = c('mu.star' = expression(mu * "*"),
                                'sigma' = expression(sigma)),
@@ -245,7 +244,7 @@ set.seed(2025)
 # Define calibration settings
 settings_calib <- list(
   method = "BayesianTools",
-  metric = rsofun::cost_likelihood_pmodel,
+  metric = rsofun::cost_likelihood_pmodel_bigD13C_vj_gpp,
   control = list(
     sampler = "DEzs",
     settings = list(
@@ -276,7 +275,7 @@ par_fixed <- list(
   )
 
 # Calibrate kphio-related parameters and err_gpp
-par_calib <- calib_sofun(
+par_calib <- calib_sofun_parallelized(
   drivers = pmodel_drivers |> dplyr::filter(sitename == "FR-Pue"),
   obs     = pmodel_validation |> dplyr::filter(sitename == "FR-Pue"),
   settings = settings_calib,

@@ -138,7 +138,7 @@ settings_rmse <- list(
 drivers_to_use <- pmodel_drivers
 obs_to_use     <- pmodel_validation
 pars_calib_rmse <- calib_sofun_parallelized(
-  # calib_sofun arguments:
+  # calib_sofun_parallelized arguments:
   drivers  = drivers_to_use,
   obs      = obs_to_use,
   settings = settings_rmse,

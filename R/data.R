@@ -175,11 +175,11 @@
 #' surfaces for global land areas. International Journal of Climatology 37 (12): 4302-4315.
 "pmodel_drivers"
 
-#' rsofun P-model GPP validation data
+#' rsofun P-model GPP and leaf D13C validation data
 #'
 #' Small example dataset of target observations (daily GPP flux data as well as
 #' leaf D13C data) to optimize 
-#' model parameters with the function \code{\link{calib_sofun}}
+#' model parameters with the function \code{\link{calib_sofun_parallelized}}
 #'
 #' @format A tibble of validation data:
 #' \describe{

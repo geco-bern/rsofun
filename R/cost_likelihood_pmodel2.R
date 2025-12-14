@@ -282,11 +282,11 @@ get_mod_obs_pmodel_bigD13C_vj_gpp <- function(
                                    bigD13C_mod_permil = numeric(),
                                    bigD13C            = numeric())) |>
         # fix naming
-        dplyr::rename(all_of(c(bigD13C_mod = "bigD13C_mod_permil"))) |> 
+        dplyr::rename(all_of(c(bigD13C_mod = "bigD13C_mod_permil"))) |> # NOTE: this was bigD13C_mod_permil
         # keep everything needed to compute loglikelihood:
         dplyr::mutate(target        = curr_target,
                       obs           = .data[[curr_target]],
-                      mod           = .data[[paste0(curr_target,"_mod")]], # e.g. bigD13C_mod TODO: this was bigD13C_mod_permil
+                      mod           = .data[[paste0(curr_target,"_mod")]], # e.g. bigD13C_mod
                       err_par_sd    = params_modl_and_err[[paste0("err_",curr_target)]], #e.g. err_bigD13C
                       err_par_bias  = 0,
                       err_par_scale = 1) |>

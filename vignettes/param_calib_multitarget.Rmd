@@ -30,7 +30,7 @@ The separate vignette 'Parameter calibration (P-Model) and cost functions' (see 
 You may be interested in calibrating the model to different target variables simultaneously, like flux and leaf trait measurements. 
 
 #### Calibrating one GPP and one D13C site
-In this section we present an example, where we use `cost_likelihood_pmodel()` to compute the joint likelihood of all the targets specified (that is, by summing the log-likelihoods of GPP and bigD13C) and ultimately calibrate the `beta_unitcostratio` parameter.
+In this section we present an example, where we use `cost_likelihood_pmodel_bigD13C_vj_gpp()` to compute the joint likelihood of all the targets specified (that is, by summing the log-likelihoods of GPP and bigD13C) and ultimately calibrate the `beta_unitcostratio` parameter.
 In the section after, we calibrate another example to multiple sites.
 
 ```{r run concatenated calibration, eval = FALSE}
@@ -52,8 +52,7 @@ params_fixed <- list(         # fix parameter value from previous calibration
 
 settings_joint_likelihood <- list(
   method = "BayesianTools",
-  # metric = cost_likelihood_pmodel, # TODO: make this work
-  metric  = rsofun::cost_likelihood_pmodel_bigD13C_vj_gpp, # TODO: replace this with cost_likelihood_pmodel
+  metric  = rsofun::cost_likelihood_pmodel_bigD13C_vj_gpp,
   control = list(
     sampler = "DREAMzs",
     settings = list(
@@ -72,7 +71,6 @@ settings_joint_likelihood <- list(
 )
 
 # Run the calibration on the observational data of two sites
-# par_calib_join <- calib_sofun( # TODO: make this work with par_calib_join <- calib_sofun(
 par_calib_join <- calib_sofun_parallelized(
   drivers  = pmodel_drivers    |> 
     dplyr::filter(sitename %in% c("FR-Pue", "lon_+146.13_lat_-032.97")),
@@ -375,7 +373,6 @@ run_mcmc_rsofun <- function(
     # performance results:
     cores          = n_parallel_independent,
     cores_inner    = n_parallel_within_sampler,
-    # runtime        = out_calib$runtime, # TODO: currently removed
     walltime       = out_calib$walltime,
     resultfile     = out_calib$logpath
   )

@@ -82,7 +82,7 @@ test_that("test GPP calibration routine p-model (BT, likelihood maximization)", 
     method              = "bayesiantools",
     targets             = c("gpp"),
     sitenames           = "FR-Pue",
-    metric              = rsofun::cost_likelihood_pmodel,
+    metric              = rsofun::cost_likelihood_pmodel_bigD13C_vj_gpp,
     control = list(
       sampler = "DEzs",
       settings = list(
@@ -97,14 +97,14 @@ test_that("test GPP calibration routine p-model (BT, likelihood maximization)", 
     )
   )
   
-  pars <- rsofun::calib_sofun(
+  pars <- rsofun::calib_sofun_parallelized(
     drivers = drivers,
     obs = obs,
     settings = settings,
     # extra arguments for the cost function
     par_fixed = params_fix,
-    parallel = TRUE,
-    ncores = 2
+    parallel = FALSE,
+    ncores = 1
   )
   
   # test for correctly returned values
@@ -137,7 +137,7 @@ test_that("test GPP calibration routine p-model (GenSA, rmse, all params)", {
     )
   )
   
-  pars <- rsofun::calib_sofun(
+  pars <- rsofun::calib_sofun_parallelized(
     drivers = drivers,
     obs = obs,
     settings = settings,
@@ -148,53 +148,68 @@ test_that("test GPP calibration routine p-model (GenSA, rmse, all params)", {
   expect_type(pars, "list")
 })
 
-test_that("test Vcmax25 calibration routine p-model (BT, likelihood, all params)", {
+test_that("test GPP/bigDelta13C calibration routine p-model (BT, likelihood, all params)", {
   skip_on_cran()
-  drivers <- p_model_oldformat_drivers_vcmax25 |> mutate(params_siml = purrr::map(params_siml, ~mutate(.x, onestep = FALSE)))
-  obs <- rsofun::p_model_oldformat_validation_vcmax25
   
+  # Calib 1: use Bayesian calibration approach with likelihood:
+  drivers <- rsofun::pmodel_drivers    |>
+    dplyr::filter(sitename %in% c("FR-Pue","lon_+146.13_lat_-032.97"))
+  obs <- rsofun::pmodel_validation |>
+    dplyr::filter(sitename %in% c("FR-Pue","lon_+146.13_lat_-032.97"))
+  # Define priors of model parameters that will be calibrated
+  params_to_estimate <- list(
+    kphio = list(lower=0.04, upper=0.09, init=0.05),
+    kphio_par_a = list(lower = 0, upper = 1, init = 0.2),
+    kphio_par_b = list(lower = 10, upper = 40, init =25),
+    soilm_thetastar = list(lower = 0, upper = 3000, init = 0.6*240),
+    soilm_betao = list(lower = 0, upper = 1, init = 0.2),
+    beta_unitcostratio = list(lower = 50, upper = 200, init = 146),
+    rd_to_vcmax = list(lower = 0.01, upper = 0.1, init = 0.014),
+    tau_acclim = list(lower = 7, upper = 60, init = 30),
+    kc_jmax = list(lower = 0.2, upper = 0.8, init = 0.41),
+    err_gpp         = list(lower = 0.01, upper = 3, init = 0.8),
+    err_bigD13C     = list(lower = 0.5, upper = 4.0, init = 2.0)
+  )
+  # Fix model parameters that won't be calibrated
+  params_fix       <- list() # i.e. none
+  # Define calibration settings
   settings <- list(
-    method              = "bayesiantools",
-    metric              = rsofun::cost_likelihood_pmodel,
+    method  = "BayesianTools",
+    par     = params_to_estimate,
+    metric  = rsofun::cost_likelihood_pmodel_bigD13C_vj_gpp,
     control = list(
       sampler = "DEzs",
       settings = list(
         nrChains = 1,
         burnin = 1,
         iterations = 4
-      )
-    ),
-    par = list(
-      kphio = list(lower=0.04, upper=0.09, init=0.05),
-      kphio_par_a = list(lower = 0, upper = 1, init = 0.2),
-      kphio_par_b = list(lower = 10, upper = 40, init =25),
-      soilm_thetastar = list(lower = 0, upper = 3000, init = 0.6*240),
-      soilm_betao = list(lower = 0, upper = 1, init = 0.2),
-      beta_unitcostratio = list(lower = 50, upper = 200, init = 146),
-      rd_to_vcmax = list(lower = 0.01, upper = 0.1, init = 0.014),
-      tau_acclim = list(lower = 7, upper = 60, init = 30),
-      kc_jmax = list(lower = 0.2, upper = 0.8, init = 0.41),
-      err_vcmax25 = list(lower = 0.001, upper = 0.2, init = 0.1)
+      ),
+      n_chains_independent   = 1, # 2,
+      n_parallel_independent = 1  # 2, this can be parallelized
     )
   )
-  
-  pars <- rsofun::calib_sofun(
-    drivers = drivers,
-    obs = obs,
+
+  # Run the calibration for GPP and D13C data
+  pars <- rsofun::calib_sofun_parallelized(
+    drivers,
+    obs,
     settings = settings,
-    optim_out = FALSE,
-    # arguments for cost function
-    targets = 'vcmax25'
+    # extra arguments for the cost function
+    par_fixed = params_fix,
+    optim_out = FALSE
   )
   
   # test for correctly returned values
   expect_type(pars, "list")
 })
 
-test_that("test Vcmax25 calibration routine p-model (GenSA, rmse)", {
+test_that("test GPP/bigDelta13C calibration routine p-model (GenSA, rmse)", {
   skip_on_cran()
-  drivers <- p_model_oldformat_drivers_vcmax25 |> mutate(params_siml = purrr::map(params_siml, ~mutate(.x, onestep = FALSE)))
-  obs <- rsofun::p_model_oldformat_validation_vcmax25
+  # Calib 2: use GenSa optimization of RMSE
+  # Calibrate the model and optimize the free parameters using demo datasets
+  drivers_to_use <- pmodel_drivers
+  obs_to_use     <- pmodel_validation
+  
   params_fix <- list(
     kphio              = 0.04998, # setup ORG in Stocker et al. 2020 GMD
     kphio_par_a        = 0.01,  # set to zero to disable temperature-dependence of kphio, setup ORG in Stocker et al. 2020 GMD
@@ -206,24 +221,24 @@ test_that("test Vcmax25 calibration routine p-model (GenSA, rmse)", {
     # tau_acclim         = 30.0,
     kc_jmax            = 0.41
   )
-  
-  settings <- list(
-    method              = "gensa",
-    metric              = rsofun::cost_rmse_pmodel,
-    control = list(
-      maxit = 2
-    ),
-    par = list(
-      tau_acclim = list(lower = 7, upper = 60, init = 30)
-    )
+  # bounds for the parameter space
+  params_to_estimate <- list(
+    tau_acclim = list(lower = 7, upper = 60, init = 30)
+  )
+  settings_rmse <- list(
+    method = 'GenSA',                   # minimizes the RMSE
+    metric = cost_rmse_pmodel,          # our cost function returning the RMSE
+    control = list(                     # control parameters for optimizer GenSA
+      maxit = 2),
+    par = params_to_estimate
   )
   
-  pars <- rsofun::calib_sofun(
-    drivers = drivers,
-    obs = obs,
-    settings = settings,
-    # arguments for cost function
-    targets = 'vcmax25',
+  pars_calib_rmse <- calib_sofun_parallelized(
+    # calib_sofun_parallelized arguments:
+    drivers  = drivers_to_use,
+    obs      = obs_to_use,
+    settings = settings_rmse,
+    # extra arguments passed to the cost function:
     par_fixed = params_fix
   )
   
@@ -231,52 +246,3 @@ test_that("test Vcmax25 calibration routine p-model (GenSA, rmse)", {
   expect_type(pars, "list")
 })
 
-test_that("test joint calibration routine p-model (BT, likelihood maximization)", {
-  skip_on_cran()
-  drivers <- rbind(gpp = p_model_oldformat_drivers |> 
-                     mutate(params_siml = purrr::map(params_siml, ~mutate(.x, onestep = FALSE))),
-                   vcmax = p_model_oldformat_drivers_vcmax25 |> 
-                     mutate(params_siml = purrr::map(params_siml, ~mutate(.x, onestep = FALSE))))
-  obs <- rbind(gpp = rsofun::p_model_oldformat_validation,
-               vcmax25 = rsofun::p_model_oldformat_validation_vcmax25)
-  params_fix <- list(
-    # kphio              = 0.04998, # setup ORG in Stocker et al. 2020 GMD
-    kphio_par_a        = 0.01,  # set to zero to disable temperature-dependence of kphio, setup ORG in Stocker et al. 2020 GMD
-    kphio_par_b        = 1.0,
-    soilm_thetastar    = 0.6 * 240,  # to recover old setup with soil moisture stress
-    soilm_betao        = 0.01,
-    beta_unitcostratio = 146.0,
-    rd_to_vcmax        = 0.014, # value from Atkin et al. 2015 for C3 herbaceous
-    tau_acclim         = 30.0,
-    kc_jmax            = 0.41
-  )
-  
-  settings <- list(
-    method              = "bayesiantools",
-    metric              = rsofun::cost_likelihood_pmodel,
-    control = list(
-      sampler = "DEzs",
-      settings = list(
-        nrChains = 1,
-        burnin = 1,
-        iterations = 4
-      )
-    ),
-    par = list(
-      kphio = list(lower=0.04, upper=0.09, init=0.05),
-      err_gpp = list(lower = 0.01, upper = 4, init = 2),
-      err_vcmax25 = list(lower = 0.0001, upper = 0.1, init = 0.005)
-    )
-  )
-  
-  pars <- rsofun::calib_sofun(
-    drivers = drivers,
-    obs = obs,
-    settings = settings,
-    targets = c('gpp', 'vcmax25'),
-    par_fixed = params_fix
-  )
-  
-  # test for correctly returned values
-  expect_type(pars, "list")
-})
