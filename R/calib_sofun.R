@@ -161,8 +161,9 @@ calib_sofun <- function(
     # backwards compatibility: set default values of parallelization options
     # by default do three chains
     if(is.null(settings$control$n_chains_independent)){    settings$control$n_chains_independent <- 3}
-    # by default activate parallelization of independent chains, but deactivate within-sampler paralellization
-    if(is.null(settings$control$n_parallel_independent)){  settings$control$n_parallel_independent <- settings$control$n_chains_independent}
+    # by default de-activate parallelization of independent chains (for easier passing on CRAN)
+    if(is.null(settings$control$n_parallel_independent)){  settings$control$n_parallel_independent <- 1}
+    # by default deactivate within-sampler paralellization
     if(is.null(settings$control$n_parallel_within_sampler)){settings$control$n_parallel_within_sampler <- 1}
     
     if(settings$control$n_parallel_within_sampler==1){
