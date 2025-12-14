@@ -25,7 +25,8 @@
 #' \code{FALSE}.
 #' @param ncores An integer specifying the number of cores used for parallel
 #' computing. Defaults to 2.
-#' @param get_mod_obs TODO: document
+#' @param get_mod_obs Function running P-model and combining model outputs and 
+#' observations (defaults to get_mod_obs_pmodel_bigD13C_vj_gpp)
 #'
 #' @return The log-likelihood of the observed target values, assuming that they
 #' are independent, normally distributed and centered on the predictions
@@ -142,20 +143,34 @@ cost_likelihood_pmodel_bigD13C_vj_gpp <- function(
 
 
 
-
-
+#' Function running P-model and combining model and observations
+#'
+#' The get_mod_obs function performs a P-model run for the input drivers and 
+#' model parameter values, and collects and combines the model output with the
+#' observations.
+#'
+#' @param drivers A nested data.frame of driver data. See \code{\link{pmodel_drivers}}
+#' for a description of the data structure.
+#' @param obs A nested data.frame of observations, see \code{\link{pmodel_validation}} and
+#' \code{cost_likelihood_pmodel_bigD13C_vj_gpp} for details.
+#' @param params_modl_and_err A named list for the model parameters and error 
+#' terms for each target variable, see \code{cost_likelihood_pmodel_bigD13C_vj_gpp} for details.
+#' @param parallel A logical specifying whether simulations are to be parallelised
+#' (sending data from a certain number of sites to each core).
+#' @param ncores An integer specifying the number of cores used for parallel computing.
+#' @param return_continuous_timeseries A logical specifying whether modelled values
+#' are returned as daily, continuous time series (including days without observations)
+#' or whether modelled values are only returned when a corresponding observation 
+#' is available.
 get_mod_obs_pmodel_bigD13C_vj_gpp <- function(
     drivers,
     obs,
     params_modl_and_err,
     parallel,
     ncores,
-    return_continuous_timeseries = FALSE # This gives daily values for time series for plotting purposes
-                                         # Otherwise only values coinciding with observations are returned
+    return_continuous_timeseries = FALSE
 ){
   
-  # @param params_modl_and_err A named list of model and error parameters.
-
   # B) Run model ----
   df <- runread_pmodel_f(
     drivers   = drivers,
@@ -166,12 +181,6 @@ get_mod_obs_pmodel_bigD13C_vj_gpp <- function(
   )
   df_daily   <- df |> rowwise() |> filter("date" %in% names(.data$data)) |> ungroup()
   df_onestep <- df |> rowwise() |> filter("vcmax_mod_molm2s" %in% names(.data$data)) |> ungroup()
-  
-  # # add vj_mod__
-  # df_onestep <- df_onestep |> tidyr::unnest(data) |>
-  #   dplyr::mutate(vj_mod__ = .data$vcmax_mod_molm2s/.data$jmax_mod_molm2s) |>
-  #   tidyr::nest(data = -c('sitename', 'site_info'))
-
   
   # C) Bring together modelled and observed ----
   

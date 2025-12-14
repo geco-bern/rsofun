@@ -41,7 +41,8 @@ parameters are uniquely defined and passed on to \code{\link{runread_pmodel_f}}.
 \item{ncores}{An integer specifying the number of cores used for parallel
 computing. Defaults to 2.}
 
-\item{get_mod_obs}{TODO: document}
+\item{get_mod_obs}{Function running P-model and combining model outputs and 
+observations (defaults to get_mod_obs_pmodel_bigD13C_vj_gpp)}
 }
 \value{
 The log-likelihood of the observed target values, assuming that they
