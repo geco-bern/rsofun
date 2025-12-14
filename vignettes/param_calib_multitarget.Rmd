@@ -59,8 +59,7 @@ settings_joint_likelihood <- list(
       # burnin = 1500,             # kept artificially low
       # iterations = 3000,
       burnin = 0,
-      iterations = 50,     # kept artificially low
-      nrChains = 1
+      iterations = 50     # kept artificially low
     ),
     # parallelization
     n_chains_independent   = 1, # 2,
@@ -329,7 +328,6 @@ run_mcmc_rsofun <- function(
       settings = list(
         burnin     = burnin,                 # 10000,
         iterations = iterations,             # 50000,
-        nrChains   = NA,                     # number of independent chains
         startValue = n_chains_within_sampler # number of internal chains to be sampled
       ),
       n_chains_independent      = n_chains_independent,
