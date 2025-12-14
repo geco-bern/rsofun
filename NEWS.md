@@ -2,10 +2,11 @@
 
 ## New features
 * P-model:
-  * New `calib_sofun_parallelized()` that can handle more diverse prior 
+  * Rewritten `calib_sofun()` that can handle more diverse prior 
   distributions of the parameters to estimate (see internal function 
-  `createMixedPrior()`) and that can parallelize multiple the MCMC chains
-  * New `cost_likelihood_pmodel_bigD13C_vj_gpp()` that can handle multiple 
+  `createMixedPrior()`) and that can parallelize multiple the MCMC chains.
+  The old version is still available as `calib_sofun_legacy()`.
+  * New `cost_likelihood_pmodel2()` that can handle multiple 
   target variables that require to run either `run_pmodel_f_bysite()` or 
   `run_pmodel_onestep_f_bysite()`. Thus also requires a new data format for the
   `drivers` and `obs` arguments. See below under (non-)breaking changes for the new

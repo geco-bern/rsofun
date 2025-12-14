@@ -8,7 +8,7 @@
 #' rsofun P-model GPP validation data
 #'
 #' Small example dataset of target observations (daily GPP flux data) to optimize 
-#' model parameters with the function \code{\link{calib_sofun}}.
+#' model parameters with the function \code{\link{calib_sofun_legacy}}.
 #' Legacy data set. See details in the documentation of its replacement 
 #' \code{\link{pmodel_validation}}
 "p_model_oldformat_validation"
@@ -48,7 +48,7 @@
 #' rsofun P-model Vcmax25 validation data
 #'
 #' Small example dataset of target observations (leaf trait data) to optimize 
-#' model parameters with the function \code{\link{calib_sofun}}
+#' model parameters with the function \code{\link{calib_sofun_legacy}}
 #'
 #' @format A tibble of validation data:
 #' \describe{
@@ -179,7 +179,7 @@
 #'
 #' Small example dataset of target observations (daily GPP flux data as well as
 #' leaf D13C data) to optimize 
-#' model parameters with the function \code{\link{calib_sofun_parallelized}}
+#' model parameters with the function \code{\link{calib_sofun}}
 #'
 #' @format A tibble of validation data:
 #' \describe{
@@ -435,7 +435,7 @@
 #' rsofun BiomeE targets validation data
 #'
 #' Small example dataset of target observations (leaf trait data) at the CH-LAE site
-#' to optimize model parameters with the function \code{\link{calib_sofun}}
+#' to optimize model parameters with the function \code{\link{calib_sofun_legacy}}
 #'
 #' @format A tibble of validation data:
 #' \describe{

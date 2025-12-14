@@ -18,10 +18,10 @@ get_mod_obs_pmodel_bigD13C_vj_gpp(
 for a description of the data structure.}
 
 \item{obs}{A nested data.frame of observations, see \code{\link{pmodel_validation}} and
-\code{cost_likelihood_pmodel_bigD13C_vj_gpp} for details.}
+\code{cost_likelihood_pmodel2} for details.}
 
 \item{params_modl_and_err}{A named list for the model parameters and error 
-terms for each target variable, see \code{cost_likelihood_pmodel_bigD13C_vj_gpp} for details.}
+terms for each target variable, see \code{cost_likelihood_pmodel2} for details.}
 
 \item{parallel}{A logical specifying whether simulations are to be parallelised
 (sending data from a certain number of sites to each core).}

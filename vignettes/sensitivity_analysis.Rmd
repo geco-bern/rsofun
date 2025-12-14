@@ -59,7 +59,7 @@ We want to see how sensitive this function is to changes in the parameter values
 ll_pmodel <- function(
     par_v                 # a named vector of all calibratable parameters including errors
 ){
-  rsofun::cost_likelihood_pmodel_bigD13C_vj_gpp( # reuse likelihood cost function
+  rsofun::cost_likelihood_pmodel2( # reuse likelihood cost function
     as.list(par_v),
     obs     = rsofun::pmodel_validation |> filter(sitename == "FR-Pue"),
     drivers = rsofun::pmodel_drivers    |> filter(sitename == "FR-Pue")
@@ -244,7 +244,7 @@ set.seed(2025)
 # Define calibration settings
 settings_calib <- list(
   method = "BayesianTools",
-  metric = rsofun::cost_likelihood_pmodel_bigD13C_vj_gpp,
+  metric = rsofun::cost_likelihood_pmodel2,
   control = list(
     sampler = "DEzs",
     settings = list(
@@ -275,7 +275,7 @@ par_fixed <- list(
   )
 
 # Calibrate kphio-related parameters and err_gpp
-par_calib <- calib_sofun_parallelized(
+par_calib <- calib_sofun(
   drivers = pmodel_drivers |> dplyr::filter(sitename == "FR-Pue"),
   obs     = pmodel_validation |> dplyr::filter(sitename == "FR-Pue"),
   settings = settings_calib,

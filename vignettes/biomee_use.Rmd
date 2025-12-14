@@ -174,7 +174,7 @@ settings <- list(
 )
 
 # Using BiomeEP (with P-model for photosynthesis)
-pars_all <- calib_sofun(
+pars_all <- calib_sofun_legacy(
   drivers = biomee_p_model_drivers,
   obs = biomee_validation,
   settings = settings

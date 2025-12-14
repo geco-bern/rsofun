@@ -19,9 +19,9 @@ library(dplyr)
 library(ggplot2)
 ```
 
-The `rsofun` package allows to calibrate parameters of the `pmodel` and `biomee` models via the `calib_sofun_parallelized()` function. The implementation of the calibration is fairly flexible and can be adapted to a specific use-case via a tailor-made cost function (used as metrics for the optimization routines in `calib_sofun_parallelized()`). The package provides a set of standard cost functions named `cost_*`, which can be used for a variety of calibrations (different sets of model parameters, using various target variables, etc.). Alternatively, it's possible to write a more specific new cost function to be used together with `calib_sofun_parallelized()`.
+The `rsofun` package allows to calibrate parameters of the `pmodel` and `biomee` models via the `calib_sofun()` function. The implementation of the calibration is fairly flexible and can be adapted to a specific use-case via a tailor-made cost function (used as metrics for the optimization routines in `calib_sofun()`). The package provides a set of standard cost functions named `cost_*`, which can be used for a variety of calibrations (different sets of model parameters, using various target variables, etc.). Alternatively, it's possible to write a more specific new cost function to be used together with `calib_sofun()`.
 
-In this vignette, we go over some examples on how to use the `rsofun` cost functions for parameter calibration with `calib_sofun_parallelized()` and how to write your own custom one from scratch.
+In this vignette, we go over some examples on how to use the `rsofun` cost functions for parameter calibration with `calib_sofun()` and how to write your own custom one from scratch.
 The separate vignette 'Parameter calibration (P-Model) to multiple targets' (see `vignette("param_calib_multitarget")`) provides another example.
 
 Two calibration approaches are showcased below. First we showcase how to find a 
@@ -32,7 +32,7 @@ Second optimizing the likelihood with a Bayesian calibration approach is shown.
 
 A simple approach to parameter calibration is to find the parameter values that lead to the best prediction performance, in terms of the RMSE (root mean squared error). The function `cost_rmse_pmodel()` runs the P-model internally to calculate the RMSE between predicted target values (in this case GPP) and the corresponding observations.
 
-The implementation of `cost_rmse_pmodel()` allows flexibility in various ways. We can simultaneously calibrate a subset of model parameters and also replicate the different calibration setups in Stocker et al., 2020 GMD, simply by providing the appropriate inputs to `calib_sofun_parallelized()` using arguments as `settings`, `obs` and the optional argument `par_fixed`. Note that we must always specify the values of the model parameters that aren't calibrated (via argument `par_fixed`). For example, following the `ORG` setup, only parameter `kphio` is calibrated with below code:
+The implementation of `cost_rmse_pmodel()` allows flexibility in various ways. We can simultaneously calibrate a subset of model parameters and also replicate the different calibration setups in Stocker et al., 2020 GMD, simply by providing the appropriate inputs to `calib_sofun()` using arguments as `settings`, `obs` and the optional argument `par_fixed`. Note that we must always specify the values of the model parameters that aren't calibrated (via argument `par_fixed`). For example, following the `ORG` setup, only parameter `kphio` is calibrated with below code:
 
 ```{r run GenSA calibration, eval = FALSE}
 # Define calibration settings and parameter ranges from previous work
@@ -49,8 +49,8 @@ settings_rmse <- list(
 # Calibrate the model and optimize the free parameters using demo datasets
 drivers_to_use <- pmodel_drivers    |> dplyr::filter(sitename == "FR-Pue")
 obs_to_use     <- pmodel_validation |> dplyr::filter(sitename == "FR-Pue")
-pars_calib_rmse <- calib_sofun_parallelized(
-  # calib_sofun_parallelized arguments:
+pars_calib_rmse <- calib_sofun(
+  # calib_sofun arguments:
   drivers  = drivers_to_use,  
   obs      = obs_to_use,
   settings = settings_rmse,
@@ -89,20 +89,20 @@ pars_calib_rmse <- list(
 pars_calib_rmse
 ```
 
-The output of `calib_sofun_parallelized()` is a list containing the calibrated parameter values (element `par`) and the raw optimization output from the optimizer (element `mod`; here from `GenSA` or, as we see next, from `BayesianTools::runMCMC`).
+The output of `calib_sofun()` is a list containing the calibrated parameter values (element `par`) and the raw optimization output from the optimizer (element `mod`; here from `GenSA` or, as we see next, from `BayesianTools::runMCMC`).
 
 Note that the standard cost functions would allow to calibrate to several targets (fluxes and leaf traits predicted by the P-model) simultaneously. 
 
 ### Calibration to GPP using a simple likelihood function and BayesianTools
 
-Let's calibrate the parameters involved in the temperature dependency of the quantum yield efficiency, `kphio`, `kphio_par_a` and `kphio_par_b`. Taking a Bayesian calibration approach, we need to define a likelihood as cost function (we'll use `cost_likelihood_pmodel_bigD13C_vj_gpp()`). We assume that the target variable (`'gpp'`) follows a normal distribution centered at the observations and with its _unknown_ standard deviation (`'err_gpp'`), that we need to add to the calibratable parameters. We also assume a uniform prior distribution for all calibratable parameters.
-By maximizing the log-likelihood, the MAP (maximum a posteriori) estimators for all 4 parameters are computed. The functions `cost_likelihood_pmodel_bigD13C_vj_gpp()` and `calib_sofun_parallelized()`, allow us to perform this type of calibration in the following way:
+Let's calibrate the parameters involved in the temperature dependency of the quantum yield efficiency, `kphio`, `kphio_par_a` and `kphio_par_b`. Taking a Bayesian calibration approach, we need to define a likelihood as cost function (we'll use `cost_likelihood_pmodel2()`). We assume that the target variable (`'gpp'`) follows a normal distribution centered at the observations and with its _unknown_ standard deviation (`'err_gpp'`), that we need to add to the calibratable parameters. We also assume a uniform prior distribution for all calibratable parameters.
+By maximizing the log-likelihood, the MAP (maximum a posteriori) estimators for all 4 parameters are computed. The functions `cost_likelihood_pmodel2()` and `calib_sofun()`, allow us to perform this type of calibration in the following way:
 
 ```{r run Bayesian calibration, eval = FALSE}
 # Define calibration settings
 settings_likelihood <- list(
   method = 'BayesianTools',
-  metric = cost_likelihood_pmodel_bigD13C_vj_gpp,            # our cost function
+  metric = cost_likelihood_pmodel2,            # our cost function
   control = list(                             # optimization control settings for 
     sampler = 'DEzs',                           # BayesianTools::runMCMC
     settings = list(
@@ -120,8 +120,8 @@ settings_likelihood <- list(
 # Calibrate the model and optimize the free parameters using demo datasets
 drivers_to_use <- pmodel_drivers    |> dplyr::filter(sitename == "FR-Pue")
 obs_to_use     <- pmodel_validation |> dplyr::filter(sitename == "FR-Pue")
-pars_calib_likelihood <- calib_sofun_parallelized(
-  # calib_sofun_parallelized arguments:
+pars_calib_likelihood <- calib_sofun(
+  # calib_sofun arguments:
   drivers  = drivers_to_use,  
   obs      = obs_to_use,
   settings = settings_likelihood,
@@ -156,15 +156,15 @@ Furthermore, there are equivalent cost functions available for the BiomeE model.
 
 If the RMSE or log-likelihood (for one or several targets) cost functions that we provide do not fit your use case, you can easily write a custom one. 
 In this section, we guide you through the main ideas with an example.
-To run the calibration, you can still use `calib_sofun_parallelized()` in combination with 
+To run the calibration, you can still use `calib_sofun()` in combination with 
 your custom cost function. 
 
-The routine `calib_sofun_parallelized()` requires `drivers`, `obs` 
+The routine `calib_sofun()` requires `drivers`, `obs` 
 and `settings` as mandatory arguments. These provide data.frames with driver and
 observational data, as well as settings for the calibration.
 The optional argument `optim_out` defines if the raw optimization output should 
 be returned.
-All other (optional) arguments to `calib_sofun_parallelized()` are passed through to the cost 
+All other (optional) arguments to `calib_sofun()` are passed through to the cost 
 function (e.g. `par_fixed` in above example). 
 They can be used freely inside of your custom cost function, e.g. to control 
 the simulation setup or the processing. On top of these optional arguments, it 
@@ -191,7 +191,7 @@ function will eventually need to run the P-model and compare its output to
 observed validation data. 
 
 To get started we suggest to write a dummy cost function and use it together 
-with `calib_sofun_parallelized()` as shown below. Note that one way of developing the cost
+with `calib_sofun()` as shown below. Note that one way of developing the cost
 function would be to use a `browser()` statement during the development. It 
 allows you to explore the variables that you have access to from within the cost
 function.
@@ -216,7 +216,7 @@ settings_mae <- list(
 )
 
 # Calibrate the model and optimize the free parameters
-pars_calib_mae <- calib_sofun_parallelized(
+pars_calib_mae <- calib_sofun(
   drivers = pmodel_drivers,
   obs = pmodel_validation,
   settings = settings_mae,
@@ -324,7 +324,7 @@ settings_mae <- list(
 )
 
 # Calibrate the model and optimize the free parameters
-pars_calib_mae <- calib_sofun_parallelized(
+pars_calib_mae <- calib_sofun(
   drivers = pmodel_drivers,
   obs = pmodel_validation,
   settings = settings_mae

@@ -31,7 +31,7 @@ p_model_oldformat_validation_vcmax25
 }
 \description{
 Small example dataset of target observations (leaf trait data) to optimize 
-model parameters with the function \code{\link{calib_sofun}}
+model parameters with the function \code{\link{calib_sofun_legacy}}
 }
 \examples{
 require(ggplot2); require(tidyr)
