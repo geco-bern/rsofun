@@ -124,7 +124,7 @@
 #' drivers_to_use <- pmodel_drivers
 #' obs_to_use     <- pmodel_validation
 #' pars_calib_rmse <- calib_sofun_parallelized(
-#'   # calib_sofun arguments:
+#'   # calib_sofun_parallelized arguments:
 #'   drivers  = drivers_to_use,
 #'   obs      = obs_to_use,
 #'   settings = settings_rmse,
@@ -349,7 +349,7 @@ calib_sofun_parallelized <- function(
     return_value$walltime <- end_time - start_time
     
   } else {
-    stop("Unknown method passed to calib_sofun().")
+    stop("Unknown method passed to calib_sofun_parallelized().")
   }
   return(return_value)
 }

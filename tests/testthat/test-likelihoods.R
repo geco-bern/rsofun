@@ -55,16 +55,16 @@ test_that("test likelihood/RMSE calculations with pmodel", {
   # test_params_pmodel was created with:   stats::setNames(nm = names(par_cal_min))
   # test_params_pmodel was created with: test_params_pmodel <- bind_rows(par_cal_best, test_params_pmodel)
   
-  # also add error model for vcmax25
-  test_params_pmodel <- dplyr::mutate(test_params_pmodel, err_vcmax25 = 0.5) 
+  # also add error model for bigDelta13C and le
+  test_params_pmodel <- dplyr::mutate(test_params_pmodel, err_bigD13C = 5, err_le = 100000) 
   
   
-  # Test rsofun::cost_likelihood_pmodel()
+  # Test rsofun::cost_likelihood_pmodel_bigD13C_vj_gpp()
   ll_values <- apply(test_params_pmodel |> dplyr::select(-err_vcmax25), 1, function(par_v) { # par_v is a named vector
-    # TODO: when rewriting cost_likelihood_pmodel: activate more difficult check to ignore unneded error parameter 'err_vcmax25'
+    # TODO: when rewriting cost_likelihood_pmodel_bigD13C_vj_gpp: activate more difficult check to ignore unneded error parameter 'err_vcmax25'
     #       ll_values <- apply(test_params_pmodel, 1, function(par_v) {...})
-    rsofun::cost_likelihood_pmodel(     # likelihood cost function from package
-      par = par_v,                      # par: should be a named vector
+    rsofun::cost_likelihood_pmodel_bigD13C_vj_gpp(     # likelihood cost function from package
+      par     = as.list(par_v),                      # par: should be a named list
       obs     = rsofun::pmodel_validation |> filter(sitename == "FR-Pue"), # obs: example data from package
       drivers = rsofun::pmodel_drivers |> filter(sitename == "FR-Pue"),# drivers: example data from package
       par_fixed = NULL)
@@ -80,9 +80,11 @@ test_that("test likelihood/RMSE calculations with pmodel", {
       -2692922.28725325,
       -4064.88443627102)
   )
-  ll_values_legacy <- apply(test_params_pmodel |> dplyr::select(-err_vcmax25), 1, function(par_v) { # par_v is a named vector
+  
+  # NOTE: this can be removed when legacy cost_likelihood_pmodel is removed/upated
+  ll_values_legacy <- apply(test_params_pmodel |> dplyr::select(-err_bigD13C, -err_le), 1, function(par_v) { # par_v is a named vector
     rsofun::cost_likelihood_pmodel(     # likelihood cost function from package
-      par = par_v,                      # par: should be a named vector
+      par     = par_v,                  # par: should be a named vector (for legacy)
       obs     = rsofun::pmodel_validation |> filter(sitename == "FR-Pue") |> dplyr::select(-targets), # obs: example data from package
       drivers = rsofun::pmodel_drivers |> filter(sitename == "FR-Pue"),# drivers: example data from package
       targets = c('gpp'), # this uses legacy arguments
@@ -92,7 +94,7 @@ test_that("test likelihood/RMSE calculations with pmodel", {
   
   
   # Test rsofun::cost_rmse_pmodel()
-  rmse_values <- apply(dplyr::select(test_params_pmodel,-err_gpp, -err_vcmax25), 1, function(par_v) { # par_v is a named vector
+  rmse_values <- apply(dplyr::select(test_params_pmodel,-err_gpp, -err_bigD13C, -err_le), 1, function(par_v) { # par_v is a named vector
     rsofun::cost_rmse_pmodel(
       par = par_v,                      # par: should be a named vector
       obs = rsofun::pmodel_validation |> filter(sitename == "FR-Pue"), # obs: example data from package
@@ -113,38 +115,84 @@ test_that("test likelihood/RMSE calculations with pmodel", {
     )
   )
   
-  # Also test vcmax25 target and multi-target loglikelihoods:
-  # # TODO: update this test
-  ll_values2 <- apply(dplyr::select(test_params_pmodel, -err_gpp), 1, function(par_v) { # par_v is a named vector
-    # TODO: when rewriting cost_likelihood_pmodel: activate more difficult check to ignore unneded error parameter 'err_gpp'
-    #       ll_values2 <- apply(test_params_pmodel, 1, function(par_v) {...})
-    rsofun::cost_likelihood_pmodel(         # likelihood cost function from package
-      par     = par_v,                      # par: should be a named vector
-      obs     = rsofun::p_model_oldformat_validation_vcmax25, # obs: example data from package
-      drivers = rsofun::p_model_oldformat_drivers_vcmax25 |>  # drivers: example data from package
-        mutate(params_siml = purrr::map(params_siml, ~mutate(.x, onestep = FALSE))), 
-      targets = c('vcmax25')) # define this since oldformat_validation does not contain it
+  
+  
+  # Also test D13C and LE targets and multi-target loglikelihoods:
+  obs     <- pmodel_validation |> dplyr::filter(sitename %in% c("CH-Dav","lon_+010.52_lat_+051.08"))
+  drivers <- pmodel_drivers    |> dplyr::filter(sitename %in% c("CH-Dav","lon_+010.52_lat_+051.08"))
+  
+  obs_D13C <- obs |> mutate(targets = lapply(targets, \(x) setdiff(x, c("gpp","le"))))      # remove gpp and le
+  obs_GPP  <- obs |> mutate(targets = lapply(targets, \(x) setdiff(x, c("le","bigD13C"))))  # remove le and D13C
+  obs_LE   <- obs |> mutate(targets = lapply(targets, \(x) setdiff(x, c("gpp","bigD13C")))) # remove gpp and D13C
+  
+  # D13C only
+  ll_values2 <- apply(dplyr::select(test_params_pmodel, -err_gpp, -err_le), 1, function(par_v) { # par_v is a named vector
+    rsofun::cost_likelihood_pmodel_bigD13C_vj_gpp(         # likelihood cost function from package
+      par     = as.list(par_v),
+      obs     = obs_D13C,
+      drivers = drivers,
+    )
   })
-  ll_values3 <- apply(test_params_pmodel, 1, function(par_v) { # par_v is a named vector
-    rsofun::cost_likelihood_pmodel(                                    # likelihood cost function from package
-      par     = par_v,                                                 # par: should be a named vector
-      obs     = rbind(p_model_oldformat_validation, p_model_oldformat_validation_vcmax25) , # obs: example data from package 
-      drivers = rbind(p_model_oldformat_drivers, p_model_oldformat_drivers_vcmax25) |>      # drivers: example data from package
-        mutate(params_siml = purrr::map(params_siml, ~mutate(.x, onestep = FALSE))), 
-      targets = c('gpp', 'vcmax25')) # define this since oldformat_validation does not contain it
+  # LE only
+  ll_values3 <- apply(dplyr::select(test_params_pmodel, -err_bigD13C, -err_gpp), 1, function(par_v) {
+    rsofun::cost_likelihood_pmodel_bigD13C_vj_gpp(
+      par     = as.list(par_v),
+      obs     = obs_LE,
+      drivers = drivers,
+    )
+  })
+  # GPP only
+  ll_values4 <- apply(dplyr::select(test_params_pmodel, -err_bigD13C, -err_le), 1, function(par_v) {
+    rsofun::cost_likelihood_pmodel_bigD13C_vj_gpp(
+      par     = as.list(par_v),
+      obs     = obs_GPP,
+      drivers = drivers,
+    )
+  })
+  # All together
+  ll_values_all <- apply(test_params_pmodel, 1, function(par_v) {
+    rsofun::cost_likelihood_pmodel_bigD13C_vj_gpp(
+      par     = as.list(par_v),
+      obs     = obs,
+      drivers = drivers,
+    )
   })
   
-  # testthat::expect_equal(ll_values3, ll_values + ll_values2) # loglikelihood of multiple targets is additive
+  testthat::expect_equal(ll_values_all, ll_values2 + ll_values3 + ll_values4) # loglikelihood of multiple targets is additive
+  testthat::expect_equal(
+    tolerance = 0.5, #tolerance = 1e-4,
+    object = ll_values_all, 
+    # expected was generated with dput(ll_values_all)
+    expected = c(
+      -7604094.26694711, 
+      -7597509.03269559, 
+      -7599477.68138934, 
+      -8019161.82496339, 
+      -7597376.3915261
+    )
+  )
+  testthat::expect_equal(
+    tolerance = 0.5, #tolerance = 1e-4,
+    object = ll_values4, 
+    # expected was generated with dput(ll_values4)
+    expected = c(
+      -8400.06603907821, 
+      -1814.84759984799, 
+      -3783.50251326301, 
+      -423467.623009604, 
+      -1682.21297953174
+    )
+  )
   testthat::expect_equal(
     tolerance = 0.5, #tolerance = 1e-4,
     object = ll_values3, 
     # expected was generated with dput(ll_values3)
     expected = c(
-      -13707.4063840446,
-      -4110.8773900703,
-      -11149.1301175005,
-      -2255168.59027969,
-      -3846.93254413504
+      -7595676.40909368, 
+      -7595676.40909368, 
+      -7595676.40909368, 
+      -7595676.40909368, 
+      -7595676.40909368
     )
   )
   testthat::expect_equal(
@@ -152,59 +200,32 @@ test_that("test likelihood/RMSE calculations with pmodel", {
     object = ll_values2, 
     # expected was generated with dput(ll_values2)
     expected = c(
-      -0.903165435731823,
-      -0.903165445893757,
-      -0.903165590656233,
-      -0.903165645611412, 
-      -0.90316542572855
+      -17.7918143528227, 
+      -17.7760020628653, 
+      -17.7697824014869, 
+      -17.7928601079711, 
+      -17.7694528869911
     )
   )
   
-  # test p-model likelihood with only fixed parameters
-  # TODO: update this test
-  ll_pmodel_fixed <- rsofun::cost_likelihood_pmodel(
-    par     = c(),                                                   # par: should be a named vector
-    obs     = rbind(p_model_oldformat_validation, p_model_oldformat_validation_vcmax25), # obs: example data from package 
-    drivers = rbind(p_model_oldformat_drivers, p_model_oldformat_drivers_vcmax25) |>     # drivers: example data from package
-      mutate(params_siml = purrr::map(params_siml, ~mutate(.x, onestep = FALSE))), 
-    
-    # additional arguments for the cost function
-    par_fixed = c(         # fix parameter value from previous calibration
-      kc_jmax            = 0.8,
-      kphio              = 0.041,
-      kphio_par_a        = 0.0,
-      kphio_par_b        = 16,
-      soilm_thetastar    = 0.6 * 240,  # to recover paper setup with soil moisture stress
-      soilm_betao        = 0.0,
-      beta_unitcostratio = 146.0,
-      rd_to_vcmax        = 0.014,      # value from Atkin et al. 2015 for C3 herbaceous
-      tau_acclim         = 30.0,
-      err_gpp = 0.2, err_vcmax25 = 3.0
-    ), 
-    targets = c('gpp', 'vcmax25')
-  )
-  testthat::expect_equal(tolerance = 0.5, #tolerance = 1e-4,
-                         object = ll_pmodel_fixed,
-                         # expected was generated with dput(ll_pmodel_fixed)
-                         expected = -336583.32327482)
-  
-  # test p-model likelihood with GPP, and ET and bigD13C
-  par <- c(kphio       = 0.05,
-           kphio_par_a = -0.01,
-           kphio_par_b = 1,
-           # error model parameters
-           err_gpp     = 2,
-           err_le      = 2e8,
-           err_bigD13C = 4)
+  # test p-model likelihood with only fixed parameters (for GPP, and ET and bigD13C)
+  par <- list() # no estimatable parameters
   obs     <- pmodel_validation |> dplyr::filter(sitename %in% c("CH-Dav","lon_+010.52_lat_+051.08"))
   drivers <- pmodel_drivers    |> dplyr::filter(sitename %in% c("CH-Dav","lon_+010.52_lat_+051.08"))
   par_fixed<- list(
+    kphio       = 0.05,
+    kphio_par_a = -0.01,
+    kphio_par_b = 1,
     soilm_thetastar    = 0.6 * 240,  # old setup with soil moisture stress
     soilm_betao        = 0.0,
     beta_unitcostratio = 146.0,
     rd_to_vcmax        = 0.014,      # from Atkin et al. 2015 for C3 herbaceous
     tau_acclim         = 30.0,
-    kc_jmax            = 0.41
+    kc_jmax            = 0.41,
+    # error model parameters
+    err_gpp     = 2,
+    err_le      = 2e8,
+    err_bigD13C = 4
   )
   par_D13C <- par[-c(4,5)]; obs_D13C <- obs |> mutate(targets = lapply(targets, \(x) setdiff(x, c("gpp","le"))))      # remove gpp and le
   par_GPP  <- par[-c(5,6)]; obs_GPP  <- obs |> mutate(targets = lapply(targets, \(x) setdiff(x, c("le","bigD13C"))))  # remove le and D13C

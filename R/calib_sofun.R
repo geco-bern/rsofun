@@ -66,7 +66,7 @@
 #'     kphio = list(lower=0.04, upper=0.09, init=0.05),
 #'     err_gpp = list(lower = 0.01, upper = 4, init = 2)
 #'   ),
-#'   metric = rsofun::cost_likelihood_pmodel,
+#'  metric = rsofun::cost_likelihood_pmodel_bigD13C_vj_gpp,
 #'   control = list(
 #'     sampler = "DEzs",
 #'     settings = list(
