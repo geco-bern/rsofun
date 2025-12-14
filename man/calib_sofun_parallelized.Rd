@@ -66,13 +66,14 @@ output and how to evaluate it, see \link[BayesianTools:runMCMC]{runMCMC} (also
 and \link[GenSA]{GenSA}. If parallel also a logfile is created at `logpath`.
 }
 \description{
-Runs the requested model calibration, stores to data-folder and returns results
+Runs the requested model calibration and returns results
 }
 \details{
 This is the main function that handles the 
 calibration of SOFUN model parameters.
 }
 \examples{
+# Calib 1: use Bayesian calibration approach with likelihood:
 # Define priors of model parameters that will be calibrated
 params_to_estimate <- list(
   kphio           = list(lower = 0.02, upper = 0.15, init = 0.05),
@@ -122,4 +123,36 @@ calib_output$walltime # Benchmarked time
 calib_output$runtime  # unused
 calib_output$name     # optionally used calibration name
 calib_output$fpath    # path of rds output
+
+# Calib 2: use GenSa optimization of RMSE
+# Calibrate the model and optimize the free parameters using demo datasets
+settings_rmse <- list(
+  method = 'GenSA',                   # minimizes the RMSE
+  metric = cost_rmse_pmodel,          # our cost function returning the RMSE
+  control = list(                     # control parameters for optimizer GenSA
+    maxit = 2),
+  par = list(                         # bounds for the parameter space
+    kphio = list(lower=0.02, upper=0.2, init=0.05)
+  )
+)
+drivers_to_use <- pmodel_drivers
+obs_to_use     <- pmodel_validation
+pars_calib_rmse <- calib_sofun_parallelized(
+  # calib_sofun arguments:
+  drivers  = drivers_to_use,
+  obs      = obs_to_use,
+  settings = settings_rmse,
+  # extra arguments passed to the cost function:
+  par_fixed = list(         # fix all other parameters
+    kphio_par_a        = 0.0,        # set to zero to disable temperature-dependence
+    # of kphio, setup ORG
+    kphio_par_b        = 1.0,
+    soilm_thetastar    = 0.6 * 240,  # to recover paper setup with soil moisture stress
+    soilm_betao        = 0.0,
+    beta_unitcostratio = 146.0,
+    rd_to_vcmax        = 0.014,      # value from Atkin et al. 2015 for C3 herbaceous
+    tau_acclim         = 30.0,
+    kc_jmax            = 0.41
+  )
+)
 }

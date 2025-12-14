@@ -1,6 +1,6 @@
 #' Calibrates SOFUN model parameters (for parallelized applications)
 #'
-#' Runs the requested model calibration, stores to data-folder and returns results
+#' Runs the requested model calibration and returns results
 #'
 #' This is the main function that handles the 
 #' calibration of SOFUN model parameters. 
@@ -59,6 +59,7 @@
 #' @import parallel doParallel foreach
 #' 
 #' @examples
+#' # Calib 1: use Bayesian calibration approach with likelihood:
 #' # Define priors of model parameters that will be calibrated
 #' params_to_estimate <- list(
 #'   kphio           = list(lower = 0.02, upper = 0.15, init = 0.05),
@@ -108,6 +109,38 @@
 #' calib_output$runtime  # unused
 #' calib_output$name     # optionally used calibration name
 #' calib_output$fpath    # path of rds output
+#'
+#' # Calib 2: use GenSa optimization of RMSE
+#' # Calibrate the model and optimize the free parameters using demo datasets
+#' settings_rmse <- list(
+#'   method = 'GenSA',                   # minimizes the RMSE
+#'   metric = cost_rmse_pmodel,          # our cost function returning the RMSE
+#'   control = list(                     # control parameters for optimizer GenSA
+#'     maxit = 2),
+#'   par = list(                         # bounds for the parameter space
+#'     kphio = list(lower=0.02, upper=0.2, init=0.05)
+#'   )
+#' )
+#' drivers_to_use <- pmodel_drivers
+#' obs_to_use     <- pmodel_validation
+#' pars_calib_rmse <- calib_sofun_parallelized(
+#'   # calib_sofun arguments:
+#'   drivers  = drivers_to_use,
+#'   obs      = obs_to_use,
+#'   settings = settings_rmse,
+#'   # extra arguments passed to the cost function:
+#'   par_fixed = list(         # fix all other parameters
+#'     kphio_par_a        = 0.0,        # set to zero to disable temperature-dependence
+#'     # of kphio, setup ORG
+#'     kphio_par_b        = 1.0,
+#'     soilm_thetastar    = 0.6 * 240,  # to recover paper setup with soil moisture stress
+#'     soilm_betao        = 0.0,
+#'     beta_unitcostratio = 146.0,
+#'     rd_to_vcmax        = 0.014,      # value from Atkin et al. 2015 for C3 herbaceous
+#'     tau_acclim         = 30.0,
+#'     kc_jmax            = 0.41
+#'   )
+#' )
 
 calib_sofun_parallelized <- function(
     drivers,
@@ -118,25 +151,25 @@ calib_sofun_parallelized <- function(
     logpath = file.path(tempdir(),paste0("out_calib_", "my_calibration_name", ".rds.log.txt")),
     ...
 ){
-  # backwards compatibility: set default values of parallelization options
-  # by default do three chains
-  if(is.null(settings$control$n_chains_independent)){    settings$control$n_chains_independent <- 3}
-  # by default activate parallelization of independent chains, but deactivate within-sampler paralellization
-  if(is.null(settings$control$n_parallel_independent)){  settings$control$n_parallel_independent <- settings$control$n_chains_independent}
-  if(is.null(settings$control$n_parallel_within_sampler)){settings$control$n_parallel_within_sampler <- 1}
-  
-  if(settings$control$n_parallel_within_sampler==1){
-    settings$control$n_parallel_within_sampler <- FALSE
-  } # When set to 1 we want to deactivate parallel running.
-  #   Unfortunately runMCMC interprets 1 as TRUE (leading parallelization to n_cores - 1)
-  #   Thus we need to set it manually to FALSE.
-  
   # ensure input is ungrouped:
   drivers <- drivers |> dplyr::ungroup()
   obs <- obs |> dplyr::ungroup()
   
   #--- Bayesiantools ----
   if (tolower(settings$method) == "bayesiantools"){
+  
+    # backwards compatibility: set default values of parallelization options
+    # by default do three chains
+    if(is.null(settings$control$n_chains_independent)){    settings$control$n_chains_independent <- 3}
+    # by default activate parallelization of independent chains, but deactivate within-sampler paralellization
+    if(is.null(settings$control$n_parallel_independent)){  settings$control$n_parallel_independent <- settings$control$n_chains_independent}
+    if(is.null(settings$control$n_parallel_within_sampler)){settings$control$n_parallel_within_sampler <- 1}
+    
+    if(settings$control$n_parallel_within_sampler==1){
+      settings$control$n_parallel_within_sampler <- FALSE
+    } # When set to 1 we want to deactivate parallel running.
+    #   Unfortunately runMCMC interprets 1 as TRUE (leading parallelization to n_cores - 1)
+    #   Thus we need to set it manually to FALSE.
     
     ## Preprocess: ----
     
@@ -279,8 +312,42 @@ calib_sofun_parallelized <- function(
     # return_value$runtime  <- NaN # NOTE: get_runtime_numeric(return_value)
     
   } else if (tolower(settings$method) == "gensa"){
-    stop("Unknown method (GenSA) passed to calib_sofun().")
-    # TODO: support again GenSA
+
+    # convert to standard cost function naming
+    cost <- settings$metric
+    
+    # create bounds
+    lower <- unlist(lapply(settings$par, function(x) x$lower))
+    upper <- unlist(lapply(settings$par, function(x) x$upper))
+    pars <- unlist(lapply( settings$par, function(x) x$init))
+    
+    simname <- basename(logpath)
+    start_time <- Sys.time()
+    out <- GenSA::GenSA(
+      par   = pars,
+      fn    = cost,
+      lower = lower,
+      upper = upper,
+      control = settings$control,
+      obs = obs,
+      drivers = drivers,
+      ...
+    )
+    end_time <- Sys.time()
+    
+    return_value <- list(par = out$par)
+    
+    if (optim_out){ # append raw GenSA output
+      return_value <- c(return_value, list(mod = out))
+    }
+
+    # append naming information
+    return_value$name <- simname
+    return_value$logpath <- "" # just "" for GenSA
+    
+    # append timing information
+    return_value$walltime <- end_time - start_time
+    
   } else {
     stop("Unknown method passed to calib_sofun().")
   }
