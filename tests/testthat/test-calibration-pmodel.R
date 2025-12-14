@@ -86,7 +86,7 @@ test_that("test GPP calibration routine p-model (BT, likelihood maximization)", 
     control = list(
       sampler = "DEzs",
       settings = list(
-        nrChains = 1,
+        n_chains_independent = 1,
         burnin = 1,
         iterations = 4
       )
@@ -180,7 +180,6 @@ test_that("test GPP/bigDelta13C calibration routine p-model (BT, likelihood, all
     control = list(
       sampler = "DEzs",
       settings = list(
-        nrChains = 1,
         burnin = 1,
         iterations = 4
       ),
@@ -243,6 +242,6 @@ test_that("test GPP/bigDelta13C calibration routine p-model (GenSA, rmse)", {
   )
   
   # test for correctly returned values
-  expect_type(pars, "list")
+  expect_type(pars_calib_rmse, "list")
 })
 

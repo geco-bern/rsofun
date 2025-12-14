@@ -85,7 +85,6 @@
 #'   control = list(
 #'     sampler = "DEzs",
 #'     settings = list(
-#'       nrChains = 1,
 #'       burnin = 0,
 #'       iterations = 50     # kept artificially low
 #'     ),

@@ -60,7 +60,7 @@ test_that("test likelihood/RMSE calculations with pmodel", {
   
   
   # Test rsofun::cost_likelihood_pmodel2()
-  ll_values <- apply(test_params_pmodel |> dplyr::select(-err_vcmax25), 1, function(par_v) { # par_v is a named vector
+  ll_values <- apply(test_params_pmodel, 1, function(par_v) { # par_v is a named vector
     # TODO: when rewriting cost_likelihood_pmodel2: activate more difficult check to ignore unneded error parameter 'err_vcmax25'
     #       ll_values <- apply(test_params_pmodel, 1, function(par_v) {...})
     rsofun::cost_likelihood_pmodel2(     # likelihood cost function from package

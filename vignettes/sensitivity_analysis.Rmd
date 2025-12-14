@@ -250,9 +250,11 @@ settings_calib <- list(
     settings = list(
       burnin = 12000,
       iterations = 24000,
-      nrChains = 3,       # number of independent chains
-      startValue = 3      # number of internal chains to be sampled
-    )),
+      startValue = 3 # number of internal chains to be sampled (dependent)
+      ),
+    n_chains_independent      = 3,
+    n_parallel_independent    = 1 # do not parallelize the three independent chains
+    ),
   par = list(
     kphio = list(lower = 0.02, upper = 0.15, init = 0.05),
     kphio_par_a =list(lower = -0.004, upper = -0.001, init = -0.0025),
