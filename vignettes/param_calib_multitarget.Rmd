@@ -30,7 +30,7 @@ The separate vignette 'Parameter calibration (P-Model) and cost functions' (see 
 You may be interested in calibrating the model to different target variables simultaneously, like flux and leaf trait measurements. 
 
 #### Calibrating one GPP and one D13C site
-In this section we present an example, where we use `cost_likelihood_pmodel_bigD13C_vj_gpp()` to compute the joint likelihood of all the targets specified (that is, by summing the log-likelihoods of GPP and bigD13C) and ultimately calibrate the `beta_unitcostratio` parameter.
+In this section we present an example, where we use `cost_likelihood_pmodel2()` to compute the joint likelihood of all the targets specified (that is, by summing the log-likelihoods of GPP and bigD13C) and ultimately calibrate the `beta_unitcostratio` parameter.
 In the section after, we calibrate another example to multiple sites.
 
 ```{r run concatenated calibration, eval = FALSE}
@@ -52,7 +52,7 @@ params_fixed <- list(         # fix parameter value from previous calibration
 
 settings_joint_likelihood <- list(
   method = "BayesianTools",
-  metric  = rsofun::cost_likelihood_pmodel_bigD13C_vj_gpp,
+  metric  = rsofun::cost_likelihood_pmodel2,
   control = list(
     sampler = "DREAMzs",
     settings = list(
@@ -71,7 +71,7 @@ settings_joint_likelihood <- list(
 )
 
 # Run the calibration on the observational data of two sites
-par_calib_join <- calib_sofun_parallelized(
+par_calib_join <- calib_sofun(
   drivers  = pmodel_drivers    |> 
     dplyr::filter(sitename %in% c("FR-Pue", "lon_+146.13_lat_-032.97")),
   obs      = pmodel_validation |> 
@@ -315,7 +315,7 @@ run_mcmc_rsofun <- function(
 
   # Load loglikelihood (e.g. if using a tailor-made one, instead of package-provided):
     # source("R/calibration_helpers.R", echo = FALSE)
-    # source("R/cost_likelihood_pmodel_bigD13C_vj_gpp.R", echo = FALSE)
+    # source("R/cost_likelihood_pmodel2.R", echo = FALSE)
 
   # Setup MCMC          # uses drivobs_train, not drivobs_test
   driver_to_use_for_mcmc <- select(res$drivobs_train, sitename, params_siml, site_info, forcing)
@@ -323,7 +323,7 @@ run_mcmc_rsofun <- function(
 
   calib_sofun_settings <- list(
     method = "BayesianTools",
-    metric = rsofun::cost_likelihood_pmodel_bigD13C_vj_gpp,
+    metric = rsofun::cost_likelihood_pmodel2,
     control = list(
       sampler = sampler,
       settings = list(
@@ -346,7 +346,7 @@ run_mcmc_rsofun <- function(
 
   # Run calibration in parallel
   cat(paste0(Sys.time(),": start sampling of ", paste0("out_calib_", suffix_str, ".rds")))
-  out_calib <- calib_sofun_parallelized(
+  out_calib <- calib_sofun(
     drivers   = driver_to_use_for_mcmc,
     obs       = obs_to_use_for_mcmc,
     settings  = calib_sofun_settings,
@@ -731,7 +731,7 @@ predict_sofun_parallelized <- function(
     # Function that runs the P-model for a sample of parameters
     # but does not add the observation error
 
-    # Taken from cost_likelihood_pmodel_bigD13C_vj_gpp()
+    # Taken from cost_likelihood_pmodel2()
     stopifnot(nrow(obs) > 0)     # ensure some observation data are provided
     stopifnot(nrow(drivers) > 0) # ensure some driver data are provided
 

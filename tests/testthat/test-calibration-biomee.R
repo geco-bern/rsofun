@@ -31,7 +31,7 @@ test_that("test calibration routine biomee (likelihood cost + Bayesiantools)", {
     )
   )
   
-  pars <- rsofun::calib_sofun(
+  pars <- rsofun::calib_sofun_legacy(
     drivers = df_drivers,
     obs = ddf_obs,
     settings = settings,
@@ -64,7 +64,7 @@ test_that("test calibration routine biomee (rmse cost + GenSA)", {
     )
   )
   
-  pars <- rsofun::calib_sofun(
+  pars <- rsofun::calib_sofun_legacy(
     drivers = df_drivers,
     obs = ddf_obs,
     settings = settings

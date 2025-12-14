@@ -55,7 +55,7 @@
 #' # model parameter values involved in the
 #' # temperature dependence of kphio 
 #' # and example data
-#' cost_likelihood_pmodel(
+#' cost_likelihood_pmodel1(
 #' par = c(kphio       = 0.05,
 #'         kphio_par_a = -0.01,
 #'         kphio_par_b = 1,     # model parameters
@@ -71,7 +71,7 @@
 #'   kc_jmax            = 0.41
 #'  )
 #' )
-#' cost_likelihood_pmodel(
+#' cost_likelihood_pmodel1(
 #'   par = c(kphio       = 0.05,
 #'           kphio_par_a = -0.01,
 #'           kphio_par_b = 1,     # model parameters
@@ -90,7 +90,7 @@
 #'   )
 #' )
 
-cost_likelihood_pmodel <- function(
+cost_likelihood_pmodel1 <- function(
     par,   # model parameters & error terms for each target
     obs,
     drivers,

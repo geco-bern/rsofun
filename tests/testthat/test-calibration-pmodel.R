@@ -82,7 +82,7 @@ test_that("test GPP calibration routine p-model (BT, likelihood maximization)", 
     method              = "bayesiantools",
     targets             = c("gpp"),
     sitenames           = "FR-Pue",
-    metric              = rsofun::cost_likelihood_pmodel_bigD13C_vj_gpp,
+    metric              = rsofun::cost_likelihood_pmodel2,
     control = list(
       sampler = "DEzs",
       settings = list(
@@ -97,7 +97,7 @@ test_that("test GPP calibration routine p-model (BT, likelihood maximization)", 
     )
   )
   
-  pars <- rsofun::calib_sofun_parallelized(
+  pars <- rsofun::calib_sofun(
     drivers = drivers,
     obs = obs,
     settings = settings,
@@ -137,7 +137,7 @@ test_that("test GPP calibration routine p-model (GenSA, rmse, all params)", {
     )
   )
   
-  pars <- rsofun::calib_sofun_parallelized(
+  pars <- rsofun::calib_sofun(
     drivers = drivers,
     obs = obs,
     settings = settings,
@@ -176,7 +176,7 @@ test_that("test GPP/bigDelta13C calibration routine p-model (BT, likelihood, all
   settings <- list(
     method  = "BayesianTools",
     par     = params_to_estimate,
-    metric  = rsofun::cost_likelihood_pmodel_bigD13C_vj_gpp,
+    metric  = rsofun::cost_likelihood_pmodel2,
     control = list(
       sampler = "DEzs",
       settings = list(
@@ -190,7 +190,7 @@ test_that("test GPP/bigDelta13C calibration routine p-model (BT, likelihood, all
   )
 
   # Run the calibration for GPP and D13C data
-  pars <- rsofun::calib_sofun_parallelized(
+  pars <- rsofun::calib_sofun(
     drivers,
     obs,
     settings = settings,
@@ -233,8 +233,8 @@ test_that("test GPP/bigDelta13C calibration routine p-model (GenSA, rmse)", {
     par = params_to_estimate
   )
   
-  pars_calib_rmse <- calib_sofun_parallelized(
-    # calib_sofun_parallelized arguments:
+  pars_calib_rmse <- calib_sofun(
+    # calib_sofun arguments:
     drivers  = drivers_to_use,
     obs      = obs_to_use,
     settings = settings_rmse,

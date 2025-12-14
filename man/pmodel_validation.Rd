@@ -47,7 +47,7 @@ pmodel_validation
 \description{
 Small example dataset of target observations (daily GPP flux data as well as
 leaf D13C data) to optimize 
-model parameters with the function \code{\link{calib_sofun_parallelized}}
+model parameters with the function \code{\link{calib_sofun}}
 }
 \examples{
 require(ggplot2); require(tidyr)

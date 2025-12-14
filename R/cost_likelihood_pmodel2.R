@@ -48,7 +48,7 @@
 #' # model parameter values involved in the
 #' # temperature dependence of kphio
 #' # and example data
-#' cost_likelihood_pmodel_bigD13C_vj_gpp(
+#' cost_likelihood_pmodel2(
 #'  par = c(kphio       = 0.05,
 #'            kphio_par_a = -0.01,
 #'            kphio_par_b = 1,
@@ -66,7 +66,7 @@
 #'  )
 #' )
 
-cost_likelihood_pmodel_bigD13C_vj_gpp <- function(
+cost_likelihood_pmodel2 <- function(
     par,   # model parameters & error terms for each target
     obs,
     drivers,
@@ -152,9 +152,9 @@ cost_likelihood_pmodel_bigD13C_vj_gpp <- function(
 #' @param drivers A nested data.frame of driver data. See \code{\link{pmodel_drivers}}
 #' for a description of the data structure.
 #' @param obs A nested data.frame of observations, see \code{\link{pmodel_validation}} and
-#' \code{cost_likelihood_pmodel_bigD13C_vj_gpp} for details.
+#' \code{cost_likelihood_pmodel2} for details.
 #' @param params_modl_and_err A named list for the model parameters and error 
-#' terms for each target variable, see \code{cost_likelihood_pmodel_bigD13C_vj_gpp} for details.
+#' terms for each target variable, see \code{cost_likelihood_pmodel2} for details.
 #' @param parallel A logical specifying whether simulations are to be parallelised
 #' (sending data from a certain number of sites to each core).
 #' @param ncores An integer specifying the number of cores used for parallel computing.
