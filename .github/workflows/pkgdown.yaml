@@ -15,8 +15,8 @@ permissions: read-all
 
 jobs:
   pkgdown:
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
+    runs-on: Ubuntu-latest
+    timeout-minutes: 30
     # Only restrict concurrency for non-PR jobs
     concurrency:
       group: pkgdown-${{ github.event_name != 'pull_request' || github.run_id }}
@@ -35,6 +35,7 @@ jobs:
 
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
+          cache: true
           extra-packages: any::pkgdown, any::devtools, local::.
           needs: website
 
