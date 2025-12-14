@@ -60,7 +60,6 @@
 #'  )
 #' )
 #' 
-#' 
 #' cost_rmse_pmodel(
 #'  par = c(0.05, -0.01, 0.5),  # kphio related parameters
 #'  obs = pmodel_validation,
@@ -73,37 +72,6 @@
 #'   tau_acclim         = 30.0,
 #'   kc_jmax            = 0.41
 #'  )
-#' )
-#' # Calibrate the model and optimize the free parameters using demo datasets
-#' settings_rmse <- list(
-#'   method = 'GenSA',                   # minimizes the RMSE
-#'   metric = cost_rmse_pmodel,          # our cost function returning the RMSE
-#'   control = list(                     # control parameters for optimizer GenSA
-#'     maxit = 2),
-#'   par = list(                         # bounds for the parameter space
-#'     kphio = list(lower=0.02, upper=0.2, init=0.05)
-#'   )
-#' )
-#' drivers_to_use <- pmodel_drivers
-#' obs_to_use     <- pmodel_validation
-#' pars_calib_rmse <- calib_sofun( # TODO: make this work with calib_sofun_
-#'                                 # parallelized (and then move it to those examples)
-#'   # calib_sofun arguments:
-#'   drivers  = drivers_to_use,
-#'   obs      = obs_to_use,
-#'   settings = settings_rmse,
-#'   # extra arguments passed to the cost function:
-#'   par_fixed = list(         # fix all other parameters
-#'     kphio_par_a        = 0.0,        # set to zero to disable temperature-dependence
-#'     # of kphio, setup ORG
-#'     kphio_par_b        = 1.0,
-#'     soilm_thetastar    = 0.6 * 240,  # to recover paper setup with soil moisture stress
-#'     soilm_betao        = 0.0,
-#'     beta_unitcostratio = 146.0,
-#'     rd_to_vcmax        = 0.014,      # value from Atkin et al. 2015 for C3 herbaceous
-#'     tau_acclim         = 30.0,
-#'     kc_jmax            = 0.41
-#'   )
 #' )
 
 cost_rmse_pmodel <- function(
