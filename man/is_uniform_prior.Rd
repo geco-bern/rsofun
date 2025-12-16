@@ -24,6 +24,6 @@ prior_definitions_mixed <- list(
     par_truncnormal    = list(mean    = 10, sd    = 2, lower = 9, upper = 14),
     par_trunclognormal = list(meanlog = -4, sdlog = 1.1, endpoint = 2.2),
     par_beta           = list(shape1  = 5, shape2 = 2)
-  ))
+))
 lapply(prior_definitions_mixed$par, rsofun:::is_uniform_prior)
 }

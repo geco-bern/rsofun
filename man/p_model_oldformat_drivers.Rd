@@ -12,7 +12,7 @@ p_model_oldformat_drivers
 }
 \description{
 Small dataset representing the driver to run the P-model at the FR-Pue site.
-Legacy data set. See details in the documentation of its replacement 
+Legacy data set. See details in the documentation of its replacement
 \code{\link{pmodel_drivers}}
 }
 \keyword{datasets}

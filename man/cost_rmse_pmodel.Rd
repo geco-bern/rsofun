@@ -24,8 +24,8 @@ and \code{'data'} (see \code{\link{pmodel_validation}} to check its structure).}
 for a description of the data structure.}
 
 \item{targets}{(obsolete) A character vector indicating the target variables for which the
-optimization will be done and the RMSE computed. This string must be a column 
-name of the \code{obs$data} data.frame belonging to the validation nested data.frame 
+optimization will be done and the RMSE computed. This string must be a column
+name of the \code{obs$data} data.frame belonging to the validation nested data.frame
 (for example 'gpp'). Now defaults to \code{NULL}, and use of a corresponding
 column \code{'targets'} in \code{obs} should be used instead.}
 
@@ -51,15 +51,15 @@ the root mean squared error (RMSE).
 \details{
 To run the P-model, all model parameters must be given. The cost
 function uses arguments \code{par} and \code{par_fixed} such that, in the
-calibration routine, \code{par} can be updated by the optimizer and 
+calibration routine, \code{par} can be updated by the optimizer and
 \code{par_fixed} are kept unchanged throughout calibration.
-  
+
 If the validation data contains a "date" column (fluxes), the simulated target time series
-is compared to the observed values on those same dates (e.g. for GPP). Otherwise, 
-there should only be one observed value per site (leaf traits), and the outputs 
-(averaged over the growing season, weighted by predicted GPP) will be 
+is compared to the observed values on those same dates (e.g. for GPP). Otherwise,
+there should only be one observed value per site (leaf traits), and the outputs
+(averaged over the growing season, weighted by predicted GPP) will be
 compared to this single value representative of the site (e.g. Vcmax25). As an exception,
-when the date of a trait measurement is available, it will be compared to the 
+when the date of a trait measurement is available, it will be compared to the
 trait value predicted on that date.
 }
 \examples{
@@ -67,30 +67,30 @@ trait value predicted on that date.
 # of model parameter values
 # and example data
 cost_rmse_pmodel(
- par = c(0.05, -0.01, 0.5),  # kphio related parameters
- obs = pmodel_validation |> dplyr::filter(sitename == "FR-Pue"),
- drivers = pmodel_drivers |> dplyr::filter(sitename == "FR-Pue"),
- par_fixed = list(
-  soilm_thetastar    = 0.6 * 240,  # old setup with soil moisture stress
-  soilm_betao        = 0.0,
-  beta_unitcostratio = 146.0,
-  rd_to_vcmax        = 0.014,      # from Atkin et al. 2015 for C3 herbaceous
-  tau_acclim         = 30.0,
-  kc_jmax            = 0.41
- )
+  par = c(0.05, -0.01, 0.5),  # kphio related parameters
+  obs = pmodel_validation |> dplyr::filter(sitename == "FR-Pue"),
+  drivers = pmodel_drivers |> dplyr::filter(sitename == "FR-Pue"),
+  par_fixed = list(
+    soilm_thetastar    = 0.6 * 240,  # old setup with soil moisture stress
+    soilm_betao        = 0.0,
+    beta_unitcostratio = 146.0,
+    rd_to_vcmax        = 0.014,      # from Atkin et al. 2015 for C3 herbaceous
+    tau_acclim         = 30.0,
+    kc_jmax            = 0.41
+  )
 )
 
 cost_rmse_pmodel(
- par = c(0.05, -0.01, 0.5),  # kphio related parameters
- obs = pmodel_validation,
- drivers = pmodel_drivers,
- par_fixed = list(
-  soilm_thetastar    = 0.6 * 240,  # old setup with soil moisture stress
-  soilm_betao        = 0.0,
-  beta_unitcostratio = 146.0,
-  rd_to_vcmax        = 0.014,      # from Atkin et al. 2015 for C3 herbaceous
-  tau_acclim         = 30.0,
-  kc_jmax            = 0.41
- )
+  par = c(0.05, -0.01, 0.5),  # kphio related parameters
+  obs = pmodel_validation,
+  drivers = pmodel_drivers,
+  par_fixed = list(
+    soilm_thetastar    = 0.6 * 240,  # old setup with soil moisture stress
+    soilm_betao        = 0.0,
+    beta_unitcostratio = 146.0,
+    rd_to_vcmax        = 0.014,      # from Atkin et al. 2015 for C3 herbaceous
+    tau_acclim         = 30.0,
+    kc_jmax            = 0.41
+  )
 )
 }

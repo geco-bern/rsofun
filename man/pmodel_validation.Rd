@@ -14,7 +14,7 @@ A tibble of validation data:
   For daily simulations this single tibble can contain daily values for:
     \describe{
       \item{date}{Date vector with format YYYY-MM-DD.}
-      \item{gpp}{The observed Gross Primary Productivity (GPP) for each time stamp 
+      \item{gpp}{The observed Gross Primary Productivity (GPP) for each time stamp
       (in gC m\eqn{^{-2}} d\eqn{^{-1}}).}
       \item{gpp_qc}{A quality check indicator.}
       \item{le}{Latent heat of exchange ...}
@@ -30,15 +30,15 @@ A tibble of validation data:
 }
 }
 \source{
-Pastorello, G., Trotta, C., Canfora, E. et al. 
-The FLUXNET2015 dataset and the ONEFlux processing pipeline for eddy covariance data. 
+Pastorello, G., Trotta, C., Canfora, E. et al.
+The FLUXNET2015 dataset and the ONEFlux processing pipeline for eddy covariance data.
 Sci Data 7, 225 (2020). https://doi.org/10.1038/s41597-020-0534-3
 
-Cornwell, W. (2025). traitecoevo/leaf13C: V0.2.2 (Version v0.2.2) 
+Cornwell, W. (2025). traitecoevo/leaf13C: V0.2.2 (Version v0.2.2)
 [Computer software]. Zenodo. https://doi.org/10.5281/zenodo.15239220
 
-Cornwell, William K., et al. “Climate and soils together regulate 
-photosynthetic carbon isotope discrimination within C3 plants worldwide.” 
+Cornwell, William K., et al. “Climate and soils together regulate
+photosynthetic carbon isotope discrimination within C3 plants worldwide.”
 Global Ecology and Biogeography 27.9 (2018): 1056-1067.
 }
 \usage{
@@ -46,12 +46,13 @@ pmodel_validation
 }
 \description{
 Small example dataset of target observations (daily GPP flux data as well as
-leaf D13C data) to optimize 
+leaf D13C data) to optimize
 model parameters with the function \code{\link{calib_sofun}}
 }
 \examples{
-require(ggplot2); require(tidyr)
-p_model_oldformat_validation \%>\% tidyr::unnest(data) 
+require(ggplot2)
+require(tidyr)
+p_model_oldformat_validation \%>\% tidyr::unnest(data)
 pmodel_validation |> tidyr::unnest_wider(targets, names_sep = "_")
 pmodel_validation |> dplyr::filter(grepl("^[A-Z]", sitename)) |> unnest(data)
 pmodel_validation |> dplyr::filter(grepl("lon", sitename)) |> unnest(data)

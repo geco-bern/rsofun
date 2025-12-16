@@ -11,9 +11,9 @@ An object of class \code{tbl_df} (inherits from \code{tbl}, \code{data.frame}) w
 p_model_oldformat_validation
 }
 \description{
-Small example dataset of target observations (daily GPP flux data) to optimize 
+Small example dataset of target observations (daily GPP flux data) to optimize
 model parameters with the function \code{\link{calib_sofun_legacy}}.
-Legacy data set. See details in the documentation of its replacement 
+Legacy data set. See details in the documentation of its replacement
 \code{\link{pmodel_validation}}
 }
 \keyword{datasets}

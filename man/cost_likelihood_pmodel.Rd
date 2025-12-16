@@ -17,14 +17,14 @@ cost_likelihood_pmodel(
 }
 \arguments{
 \item{par}{A named list for the parameters to be calibrated, including
-a subset of model parameters and error terms for each target variable (for 
+a subset of model parameters and error terms for each target variable (for
 example \code{'gpp_err'}).}
 
 \item{obs}{A nested data.frame of observations, with columns \code{'sitename'}
-\code{'targets'}, and \code{'data'} (see \code{\link{pmodel_validation}} to 
-check its structure). \code{'targets'} indicates the target variable(s) for 
-which the likelihood is computed, it must be a column name of the 
-\code{'data'} data.frame and it must have an error term in either \code{'par'} 
+\code{'targets'}, and \code{'data'} (see \code{\link{pmodel_validation}} to
+check its structure). \code{'targets'} indicates the target variable(s) for
+which the likelihood is computed, it must be a column name of the
+\code{'data'} data.frame and it must have an error term in either \code{'par'}
 or \code{'par_fixed'}.}
 
 \item{drivers}{A nested data.frame of driver data. See \code{\link{pmodel_drivers}}
@@ -41,7 +41,7 @@ parameters are uniquely defined and passed on to \code{\link{runread_pmodel_f}}.
 \item{ncores}{An integer specifying the number of cores used for parallel
 computing. Defaults to 2.}
 
-\item{get_mod_obs}{Function running P-model and combining model outputs and 
+\item{get_mod_obs}{Function running P-model and combining model outputs and
 observations (defaults to get_mod_obs_pmodel)}
 }
 \value{
@@ -71,20 +71,20 @@ is compared to the observed values on those same dates (e.g. for GPP).
 # temperature dependence of kphio
 # and example data
 cost_likelihood_pmodel(
- par = c(kphio       = 0.05,
-           kphio_par_a = -0.01,
-           kphio_par_b = 1,
-           # error model parameters
-           err_gpp     = 2),
- obs = pmodel_validation |> dplyr::filter(sitename == "FR-Pue"),
- drivers = pmodel_drivers |> dplyr::filter(sitename == "FR-Pue"),
- par_fixed = list(
-  soilm_thetastar    = 0.6 * 240,  # old setup with soil moisture stress
-  soilm_betao        = 0.0,
-  beta_unitcostratio = 146.0,
-  rd_to_vcmax        = 0.014,      # from Atkin et al. 2015 for C3 herbaceous
-  tau_acclim         = 30.0,
-  kc_jmax            = 0.41
- )
+  par = c(kphio       = 0.05,
+    kphio_par_a = -0.01,
+    kphio_par_b = 1,
+    # error model parameters
+    err_gpp     = 2),
+  obs = pmodel_validation |> dplyr::filter(sitename == "FR-Pue"),
+  drivers = pmodel_drivers |> dplyr::filter(sitename == "FR-Pue"),
+  par_fixed = list(
+    soilm_thetastar    = 0.6 * 240,  # old setup with soil moisture stress
+    soilm_betao        = 0.0,
+    beta_unitcostratio = 146.0,
+    rd_to_vcmax        = 0.014,      # from Atkin et al. 2015 for C3 herbaceous
+    tau_acclim         = 30.0,
+    kc_jmax            = 0.41
+  )
 )
 }

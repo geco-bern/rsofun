@@ -16,21 +16,21 @@ calib_sofun(
 }
 \arguments{
 \item{drivers}{A data frame with driver data. See \code{\link{pmodel_drivers}}
-for a description of the data structure. Additional columns can optionally be 
-provided to \code{drivers} to control e.g. the processing within a 
+for a description of the data structure. Additional columns can optionally be
+provided to \code{drivers} to control e.g. the processing within a
 personalized cost function.}
 
 \item{obs}{A data frame containing observational data used for model
 calibration. See \code{\link{pmodel_validation}} for a description of the data
-structure. Additional columns can optionally be provided to \code{obs} to 
+structure. Additional columns can optionally be provided to \code{obs} to
 control e.g. the processing within a personalized cost function.}
 
-\item{settings}{A list containing model calibration settings. 
+\item{settings}{A list containing model calibration settings.
 See the 'P-model usage' vignette for more information and examples.
 \describe{
  \item{\code{method}}{A string indicating the optimization method, either \code{'GenSA'}
  or \code{'BayesianTools'}.}
- \item{\code{par}}{A list of model parameters. For each parameter, an initial value 
+ \item{\code{par}}{A list of model parameters. For each parameter, an initial value
  and lower and upper bounds should be provided. The calibratable parameters
  include model parameters 'kphio', 'kphio_par_a', 'kphio_par_b', 'soilm_thetastar',
  'soilm_betao', 'beta_costunitratio', 'rd_to_vcmax', 'tau_acclim', 'kc_jmax'
@@ -47,19 +47,19 @@ See the 'P-model usage' vignette for more information and examples.
  \link[BayesianTools:runMCMC]{BayesianTools::runMCMC}.}
 }}
 
-\item{optim_out}{A logical indicating whether the function returns and stores 
+\item{optim_out}{A logical indicating whether the function returns and stores
 the raw output of the optimization functions (defaults to TRUE).}
 
-\item{logpath}{A path where a log-file is created and progress logged for 
-parallel sampling, defaults to a temporary directory. The path is stored in 
-the output object as simulation `name` and `logpath`. (Note that this argument 
+\item{logpath}{A path where a log-file is created and progress logged for
+parallel sampling, defaults to a temporary directory. The path is stored in
+the output object as simulation `name` and `logpath`. (Note that this argument
 is only used when parallelized sampling is requested.)}
 
 \item{...}{Optional arguments, simply passed on to the cost function.}
 }
 \value{
 A named list containing the calibrated parameter vector `par`,
-the output object from the optimization `mod`, and additional identifier 
+the output object from the optimization `mod`, and additional identifier
 outputs `name`, `logpath`, and `walltime`. For more details on the `mod`
 output and how to evaluate it, see \link[BayesianTools:runMCMC]{runMCMC} (also
 \href{https://florianhartig.github.io/BayesianTools/articles/BayesianTools.html}{this post})
@@ -69,7 +69,7 @@ and \link[GenSA]{GenSA}. If parallel also a logfile is created at `logpath`.
 Runs the requested model calibration and returns results
 }
 \details{
-This is the main function that handles the 
+This is the main function that handles the
 calibration of SOFUN model parameters.
 }
 \examples{
@@ -84,7 +84,7 @@ params_to_estimate <- list(
 params_fix       <- list(
   kphio_par_a        = 0,
   kphio_par_b        = 25,
-  soilm_thetastar    = 0.6*240,
+  soilm_thetastar    = 0.6 * 240,
   soilm_betao        = 0.01,
   beta_unitcostratio = 146,
   rd_to_vcmax        = 0.014,
@@ -109,9 +109,9 @@ settings <- list(
 # Run the calibration for GPP and D13C data
 calib_output <- rsofun::calib_sofun(
   drivers = rsofun::pmodel_drivers    |>
-    dplyr::filter(sitename \%in\% c("FR-Pue","lon_+146.13_lat_-032.97")),
+    dplyr::filter(sitename \%in\% c("FR-Pue", "lon_+146.13_lat_-032.97")),
   obs     = rsofun::pmodel_validation |>
-    dplyr::filter(sitename \%in\% c("FR-Pue","lon_+146.13_lat_-032.97")),
+    dplyr::filter(sitename \%in\% c("FR-Pue", "lon_+146.13_lat_-032.97")),
   settings = settings,
   # extra arguments for the cost function
   par_fixed = params_fix
@@ -126,12 +126,12 @@ calib_output$fpath    # path of rds output
 # Calib 2: use GenSa optimization of RMSE
 # Calibrate the model and optimize the free parameters using demo datasets
 settings_rmse <- list(
-  method = 'GenSA',                   # minimizes the RMSE
+  method = "GenSA",                   # minimizes the RMSE
   metric = cost_rmse_pmodel,          # our cost function returning the RMSE
-  control = list(                     # control parameters for optimizer GenSA
+  control = list( # control parameters for optimizer GenSA
     maxit = 2),
-  par = list(                         # bounds for the parameter space
-    kphio = list(lower=0.02, upper=0.2, init=0.05)
+  par = list( # bounds for the parameter space
+    kphio = list(lower = 0.02, upper = 0.2, init = 0.05)
   )
 )
 drivers_to_use <- pmodel_drivers
@@ -142,7 +142,7 @@ pars_calib_rmse <- calib_sofun(
   obs      = obs_to_use,
   settings = settings_rmse,
   # extra arguments passed to the cost function:
-  par_fixed = list(         # fix all other parameters
+  par_fixed = list( # fix all other parameters
     kphio_par_a        = 0.0,        # set to zero to disable temperature-dependence
     # of kphio, setup ORG
     kphio_par_b        = 1.0,

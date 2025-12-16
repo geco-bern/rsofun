@@ -1,11 +1,11 @@
 #' Cost function computing a log-likelihood for calibration of P-model
 #' parameters
-#' 
+#'
 #' The cost function performs a P-model run for the input drivers and model parameter
 #' values, and computes the outcome's normal log-likelihood centered at the input
-#' observed values and with standard deviation given as an input parameter 
+#' observed values and with standard deviation given as an input parameter
 #' (calibratable).
-#' 
+#'
 #' @param par A named vector of values for the parameters to be calibrated, including
 #' a subset of model parameters (described in \code{\link{runread_pmodel_f}}),
 #' in order, and error terms
@@ -16,8 +16,8 @@
 #' @param drivers A nested data.frame of driver data. See \code{\link{pmodel_drivers}}
 #' for a description of the data structure.
 #' @param targets (obsolete) A character vector indicating the target variables for which the
-#' optimization will be done and the RMSE computed. This string must be a column 
-#' name of the \code{obs$data} data.frame belonging to the validation nested data.frame 
+#' optimization will be done and the RMSE computed. This string must be a column
+#' name of the \code{obs$data} data.frame belonging to the validation nested data.frame
 #' (for example 'gpp'). Now defaults to \code{NULL}, and use of a corresponding
 #' column \code{'targets'} in \code{obs} should be used instead.
 #' @param par_fixed A named list of model parameter values to keep fixed during the
@@ -28,56 +28,56 @@
 #' \code{FALSE}.
 #' @param ncores An integer specifying the number of cores used for parallel
 #' computing. Defaults to 2.
-#' 
+#'
 #' @return The log-likelihood of the observed target values, assuming that they
 #' are independent, normally distributed and centered on the predictions
 #' made by the P-model run with standard deviation given as input (via `par` because
 #' the error terms are estimated through the calibration with `BayesianTools`,
 #' as shown in the "Parameter calibration and cost functions" vignette).
-#' 
+#'
 #' @details To run the P-model, all model parameters must be given. The cost
 #' function uses arguments \code{par} and \code{par_fixed} such that, in the
-#' calibration routine, \code{par} can be updated by the optimizer and 
+#' calibration routine, \code{par} can be updated by the optimizer and
 #' \code{par_fixed} are kept unchanged throughout calibration.
-#' 
+#'
 #' If the validation data contains a "date" column (fluxes), the simulated target time series
-#' is compared to the observed values on those same dates (e.g. for GPP). Otherwise, 
-#' there should only be one observed value per site (leaf traits), and the outputs 
-#' (averaged over the growing season, weighted by predicted GPP) will be 
+#' is compared to the observed values on those same dates (e.g. for GPP). Otherwise,
+#' there should only be one observed value per site (leaf traits), and the outputs
+#' (averaged over the growing season, weighted by predicted GPP) will be
 #' compared to this single value representative of the site (e.g. Vcmax25). As an exception,
-#' when the date of a trait measurement is available, it will be compared to the 
+#' when the date of a trait measurement is available, it will be compared to the
 #' trait value predicted on that date.
-#' 
+#'
 #' @export
-#' 
+#'
 #' @examples
-#' # Compute the likelihood for a set of 
+#' # Compute the likelihood for a set of
 #' # model parameter values involved in the
-#' # temperature dependence of kphio 
+#' # temperature dependence of kphio
 #' # and example data
 #' cost_likelihood_pmodel_legacy(
-#' par = c(kphio       = 0.05,
-#'         kphio_par_a = -0.01,
-#'         kphio_par_b = 1,     # model parameters
-#'         err_gpp     = 2),    # err_gpp
-#'  obs = pmodel_validation |> dplyr::filter(sitename == "FR-Pue"),
-#'  drivers = pmodel_drivers |> dplyr::filter(sitename == "FR-Pue"),
-#'  par_fixed = list(
-#'   soilm_thetastar    = 0.6 * 240,  # old setup with soil moisture stress
-#'   soilm_betao        = 0.0,
-#'   beta_unitcostratio = 146.0,
-#'   rd_to_vcmax        = 0.014,      # from Atkin et al. 2015 for C3 herbaceous
-#'   tau_acclim         = 30.0,
-#'   kc_jmax            = 0.41
-#'  )
+#'   par = c(kphio       = 0.05,
+#'     kphio_par_a = -0.01,
+#'     kphio_par_b = 1,     # model parameters
+#'     err_gpp     = 2),    # err_gpp
+#'   obs = pmodel_validation |> dplyr::filter(sitename == "FR-Pue"),
+#'   drivers = pmodel_drivers |> dplyr::filter(sitename == "FR-Pue"),
+#'   par_fixed = list(
+#'     soilm_thetastar    = 0.6 * 240,  # old setup with soil moisture stress
+#'     soilm_betao        = 0.0,
+#'     beta_unitcostratio = 146.0,
+#'     rd_to_vcmax        = 0.014,      # from Atkin et al. 2015 for C3 herbaceous
+#'     tau_acclim         = 30.0,
+#'     kc_jmax            = 0.41
+#'   )
 #' )
 #' cost_likelihood_pmodel_legacy(
 #'   par = c(kphio       = 0.05,
-#'           kphio_par_a = -0.01,
-#'           kphio_par_b = 1,     # model parameters
-#'           err_le      = 2,
-#'           err_gpp     = 2,
-#'           err_bigD13C = 2),
+#'     kphio_par_a = -0.01,
+#'     kphio_par_b = 1,     # model parameters
+#'     err_le      = 2,
+#'     err_gpp     = 2,
+#'     err_bigD13C = 2),
 #'   obs = pmodel_validation,
 #'   drivers = pmodel_drivers,
 #'   par_fixed = list(
@@ -89,81 +89,81 @@
 #'     kc_jmax            = 0.41
 #'   )
 #' )
-
 cost_likelihood_pmodel_legacy <- function(
     par,   # model parameters & error terms for each target
     obs,
     drivers,
     targets = NULL,     # legacy argument, targets should now be specified
-                        # for each row in the obs data.frame(). See pmodel_validation
+    # for each row in the obs data.frame(). See pmodel_validation
     par_fixed = NULL,   # non-calibrated model parameters
     parallel = FALSE,
     ncores = 2
-){
+    ) {
   # predefine variables for CRAN check compliance
   sitename <- data <- gpp_mod <- NULL
   par <- unname(par) # reproduces previous behavior, when par was unnamed
-  
+
   # ensure backwards compatibility with format without column 'onestep':
   if ("onestep" %in% names(drivers$params_siml[[1]])) {
     # all good
   } else {
     warning("
-      WARNING: Assuming daily P-model run requested. To clarify please add a 
+      WARNING: Assuming daily P-model run requested. To clarify please add a
       column 'onestep' with 'FALSE' or 'TRUE' to the 'params_siml' data.frame.
       in your driver.")
     drivers <- drivers |> mutate(
-      params_siml = purrr::map(.data$params_siml, ~mutate(.x, onestep = FALSE)))
+      params_siml = purrr::map(.data$params_siml, ~ mutate(.x, onestep = FALSE)))
   }
   if (!is.null(targets)) {
-    # for backwards compatibility, use provided argument 'targets' for all rows 
+    # for backwards compatibility, use provided argument 'targets' for all rows
     # of observation data.frame()
     # Error if data.frame also specifies targets per row, resulting in ambiguity
-    if ("targets" %in% names(obs)){stop(
-      "Provided calibration targets as argument 'targets' and as column in obs data.frame(). Only one is allowed")
+    if ("targets" %in% names(obs)) {
+      stop(
+        "Provided calibration targets as argument 'targets' and as column in obs data.frame(). Only one is allowed")
     }
     # insert targets into row of obs
-    obs <- obs |> rowwise() |> mutate(targets = list(targets)) |> 
-      select('sitename', 'targets', 'data')
+    obs <- obs |> rowwise() |> mutate(targets = list(targets)) |>
+      select("sitename", "targets", "data")
   }
-  
+
   ## generate a list of all calibration targets (across all obs rows)
-  targets <- obs |> 
+  targets <- obs |>
     dplyr::ungroup() |> dplyr::select(targets) |> tidyr::unnest(targets) |>
     magrittr::extract2("targets") |> unique()
 
   ## check input parameters
-  if( (length(par) + length(par_fixed)) != (9 + length(targets)) ){
-    stop('Error: Input calibratable and fixed parameters (par and par_fixed)
-    do not match length of the required P-model parameters and target error terms.')
+  if ((length(par) + length(par_fixed)) != (9 + length(targets))) {
+    stop("Error: Input calibratable and fixed parameters (par and par_fixed)
+    do not match length of the required P-model parameters and target error terms.")
   }
-  
+
   ## define parameter set based on calibrated parameters
-  calib_param_names <- c('kphio', 'kphio_par_a', 'kphio_par_b',
-                         'soilm_thetastar', 'soilm_betao',
-                         'beta_unitcostratio', 'rd_to_vcmax', 
-                         'tau_acclim', 'kc_jmax')
-  
-  if(!is.null(par_fixed) && length(par)>0){
+  calib_param_names <- c("kphio", "kphio_par_a", "kphio_par_b",
+                         "soilm_thetastar", "soilm_betao",
+                         "beta_unitcostratio", "rd_to_vcmax",
+                         "tau_acclim", "kc_jmax")
+
+  if (!is.null(par_fixed) && length(par) > 0) {
     params_modl <- list()
     # complete with calibrated values
     i <- 1 # start counter
-    for(par_name in calib_param_names){
-      if(is.null(par_fixed[[par_name]])){
+    for (par_name in calib_param_names) {
+      if (is.null(par_fixed[[par_name]])) {
         params_modl[[par_name]] <- par[i]   # use calibrated par value
         i <- i + 1                          # counter of calibrated params
-      }else{
+      } else {
         params_modl[[par_name]] <- par_fixed[[par_name]]  # use fixed par value
       }
     }
-  }else if(length(par)==0){                # no parameters calibrated
+  } else if (length(par) == 0) {                # no parameters calibrated
     params_modl <- as.list(par_fixed[calib_param_names])
-    par <- par_fixed[grepl("err_",names(par_fixed))]
-  }else{
+    par <- par_fixed[grepl("err_", names(par_fixed))]
+  } else {
     params_modl <- as.list(par[1:9])       # all parameters calibrated
-    names(params_modl) <- calib_param_names# TODO: problematic, since it assumes they are in the right order
+    names(params_modl) <- calib_param_names # TODO: problematic, since it assumes they are in the right order
   }
-  
+
   ## run the model
   df <- runread_pmodel_f(
     drivers,
@@ -172,104 +172,108 @@ cost_likelihood_pmodel_legacy <- function(
     parallel = parallel,
     ncores = ncores
   )
-  
+
   ## clean model output, unnest, and append "_mod"
   df <- df |>
     tidyr::unnest(data) |>
-    dplyr::rename(any_of(c("bigD13C"="bigD13C_mod_permil"))) |>
+    dplyr::rename(any_of(c("bigD13C" = "bigD13C_mod_permil"))) |>
     # always keep gpp, since is used to get average trait prediction
-    dplyr::select('sitename', any_of(unique(c('date','gpp', targets)))) |>
-    dplyr::rename_with(.cols = -any_of(c('sitename','date')),
-                       .fn = paste0,
-                       "_mod")
+    dplyr::select("sitename", any_of(unique(c("date", "gpp", targets)))) |>
+    dplyr::rename_with(
+      .cols = -any_of(c("sitename", "date")),
+      .fn = paste0,
+      "_mod")
 
   # separate validation data into fluxes and traits, site by site
-  is_flux <- apply(obs, 1, function(x){ 'date' %in% colnames(x$data)})
-  
-  if(sum(is_flux) > 0){
+  is_flux <- apply(obs, 1, function(x) {
+    "date" %in% colnames(x$data)
+  })
+
+  if (sum(is_flux) > 0) {
     flux_sites <- obs$sitename[is_flux]
-    
+
     # Unnest flux observations for our targets
     obs_flux <- obs[is_flux, ] |>
       dplyr::select(sitename, data) |>
       tidyr::unnest(data) |>
-      dplyr::select(any_of(c('sitename', 'date', targets)))
-    
-    if(ncol(obs_flux) < 3){
+      dplyr::select(any_of(c("sitename", "date", targets)))
+
+    if (ncol(obs_flux) < 3) {
       warning("Dated observations (fluxes) are missing for the chosen targets.")
       df_flux <- data.frame()
-    }else{
+    } else {
       # Join P-model output and flux observations
       df_flux <- df |>
         dplyr::filter(sitename %in% flux_sites) |>
         dplyr::left_join(
-          obs_flux, 
-          by = c('sitename', 'date'))    # observations with missing date are ignored
+          obs_flux,
+          by = c("sitename", "date"))    # observations with missing date are ignored
     }
-  }else{
+  } else {
     df_flux <- data.frame()
   }
-  
-  if(sum(!is_flux) > 0){
+
+  if (sum(!is_flux) > 0) {
     trait_sites <- obs$sitename[!is_flux]
-    
+
     # Unnest trait observations for our targets
     obs_trait <- obs[!is_flux, ] |>
       dplyr::select(sitename, data) |>
       tidyr::unnest(data) |>
-      dplyr::select(any_of(c('sitename', targets)))
-    
-    if(ncol(obs_trait) < 2){
+      dplyr::select(any_of(c("sitename", targets)))
+
+    if (ncol(obs_trait) < 2) {
       warning("Non-dated observations (traits) are missing for the chosen targets.")
       df_trait <- data.frame()
-    }else{
+    } else {
       # Join output and trait observations
       df_trait <- df |>
         dplyr::filter(sitename %in% trait_sites) |>
         dplyr::group_by(sitename) |>
         # get growing season average traits (currently not limited to growing season)
-        dplyr::summarise(across(ends_with("_mod") & !starts_with('gpp'),
-                                ~ sum(.x * gpp_mod/sum(gpp_mod)),
-                                .names = "{.col}")) |>
+        dplyr::summarise(across(ends_with("_mod") & !starts_with("gpp"),
+          ~ sum(.x * gpp_mod / sum(gpp_mod)),
+          .names = "{.col}")) |>
         dplyr::left_join(
           obs_trait,
-          by = c('sitename')        # compare yearly averages rather than daily obs
+          by = c("sitename")        # compare yearly averages rather than daily obs
         )
     }
-  }else{
+  } else {
     df_trait <- data.frame()
   }
-  
+
   # loop over targets
-  ll <- lapply(seq(length(targets)), function(i){
+  ll <- lapply(seq(length(targets)), function(i) {
     target <- targets[i]
-    # get observations and predicted target values, without NA 
-    if(target %in% colnames(df_flux)){
-      df_target <- df_flux[, c(paste0(target, '_mod'), target)] |>
+    # get observations and predicted target values, without NA
+    if (target %in% colnames(df_flux)) {
+      df_target <- df_flux[, c(paste0(target, "_mod"), target)] |>
         tidyr::drop_na()
-    }else{
+    } else {
       df_target <- data.frame()
     }
-    if(target %in% colnames(df_trait)){
+    if (target %in% colnames(df_trait)) {
       df_target <- rbind(df_target,
-                         df_trait[, c(paste0(target, '_mod'), target)] |>
-                           tidyr::drop_na())
+        df_trait[, c(paste0(target, "_mod"), target)] |>
+          tidyr::drop_na())
     }
-    
+
     # calculate normal log-likelihood
     ll <- sum(stats::dnorm(
-      df_target[[paste0(target, '_mod')]],
+      df_target[[paste0(target, "_mod")]],
       mean = df_target[[target]],
-      sd = par[length(par)-length(targets) + i],
+      sd = par[length(par) - length(targets) + i],
       log = TRUE
     ))
   }) |>
     unlist() |>
     sum()
-  
+
   # trap boundary conditions
-  if(is.nan(ll) | is.na(ll) | ll == 0){ll <- -Inf}
-  
+  if (is.nan(ll) | is.na(ll) | ll == 0) {
+    ll <- -Inf
+  }
+
   return(ll)
 }
-

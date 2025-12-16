@@ -29,8 +29,8 @@ and \code{'data'} (see \code{\link{pmodel_validation}} to check its structure).}
 for a description of the data structure.}
 
 \item{targets}{(obsolete) A character vector indicating the target variables for which the
-optimization will be done and the RMSE computed. This string must be a column 
-name of the \code{obs$data} data.frame belonging to the validation nested data.frame 
+optimization will be done and the RMSE computed. This string must be a column
+name of the \code{obs$data} data.frame belonging to the validation nested data.frame
 (for example 'gpp'). Now defaults to \code{NULL}, and use of a corresponding
 column \code{'targets'} in \code{obs} should be used instead.}
 
@@ -55,51 +55,51 @@ as shown in the "Parameter calibration and cost functions" vignette).
 \description{
 The cost function performs a P-model run for the input drivers and model parameter
 values, and computes the outcome's normal log-likelihood centered at the input
-observed values and with standard deviation given as an input parameter 
+observed values and with standard deviation given as an input parameter
 (calibratable).
 }
 \details{
 To run the P-model, all model parameters must be given. The cost
 function uses arguments \code{par} and \code{par_fixed} such that, in the
-calibration routine, \code{par} can be updated by the optimizer and 
+calibration routine, \code{par} can be updated by the optimizer and
 \code{par_fixed} are kept unchanged throughout calibration.
 
 If the validation data contains a "date" column (fluxes), the simulated target time series
-is compared to the observed values on those same dates (e.g. for GPP). Otherwise, 
-there should only be one observed value per site (leaf traits), and the outputs 
-(averaged over the growing season, weighted by predicted GPP) will be 
+is compared to the observed values on those same dates (e.g. for GPP). Otherwise,
+there should only be one observed value per site (leaf traits), and the outputs
+(averaged over the growing season, weighted by predicted GPP) will be
 compared to this single value representative of the site (e.g. Vcmax25). As an exception,
-when the date of a trait measurement is available, it will be compared to the 
+when the date of a trait measurement is available, it will be compared to the
 trait value predicted on that date.
 }
 \examples{
-# Compute the likelihood for a set of 
+# Compute the likelihood for a set of
 # model parameter values involved in the
-# temperature dependence of kphio 
+# temperature dependence of kphio
 # and example data
 cost_likelihood_pmodel_legacy(
-par = c(kphio       = 0.05,
-        kphio_par_a = -0.01,
-        kphio_par_b = 1,     # model parameters
-        err_gpp     = 2),    # err_gpp
- obs = pmodel_validation |> dplyr::filter(sitename == "FR-Pue"),
- drivers = pmodel_drivers |> dplyr::filter(sitename == "FR-Pue"),
- par_fixed = list(
-  soilm_thetastar    = 0.6 * 240,  # old setup with soil moisture stress
-  soilm_betao        = 0.0,
-  beta_unitcostratio = 146.0,
-  rd_to_vcmax        = 0.014,      # from Atkin et al. 2015 for C3 herbaceous
-  tau_acclim         = 30.0,
-  kc_jmax            = 0.41
- )
+  par = c(kphio       = 0.05,
+    kphio_par_a = -0.01,
+    kphio_par_b = 1,     # model parameters
+    err_gpp     = 2),    # err_gpp
+  obs = pmodel_validation |> dplyr::filter(sitename == "FR-Pue"),
+  drivers = pmodel_drivers |> dplyr::filter(sitename == "FR-Pue"),
+  par_fixed = list(
+    soilm_thetastar    = 0.6 * 240,  # old setup with soil moisture stress
+    soilm_betao        = 0.0,
+    beta_unitcostratio = 146.0,
+    rd_to_vcmax        = 0.014,      # from Atkin et al. 2015 for C3 herbaceous
+    tau_acclim         = 30.0,
+    kc_jmax            = 0.41
+  )
 )
 cost_likelihood_pmodel_legacy(
   par = c(kphio       = 0.05,
-          kphio_par_a = -0.01,
-          kphio_par_b = 1,     # model parameters
-          err_le      = 2,
-          err_gpp     = 2,
-          err_bigD13C = 2),
+    kphio_par_a = -0.01,
+    kphio_par_b = 1,     # model parameters
+    err_le      = 2,
+    err_gpp     = 2,
+    err_bigD13C = 2),
   obs = pmodel_validation,
   drivers = pmodel_drivers,
   par_fixed = list(

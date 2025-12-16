@@ -20,7 +20,7 @@ for a description of the data structure.}
 \item{obs}{A nested data.frame of observations, see \code{\link{pmodel_validation}} and
 \code{cost_likelihood_pmodel} for details.}
 
-\item{params_modl_and_err}{A named list for the model parameters and error 
+\item{params_modl_and_err}{A named list for the model parameters and error
 terms for each target variable, see \code{cost_likelihood_pmodel} for details.}
 
 \item{parallel}{A logical specifying whether simulations are to be parallelised
@@ -30,11 +30,11 @@ terms for each target variable, see \code{cost_likelihood_pmodel} for details.}
 
 \item{return_continuous_timeseries}{A logical specifying whether modelled values
 are returned as daily, continuous time series (including days without observations)
-or whether modelled values are only returned when a corresponding observation 
+or whether modelled values are only returned when a corresponding observation
 is available.}
 }
 \description{
-The get_mod_obs function performs a P-model run for the input drivers and 
+The get_mod_obs function performs a P-model run for the input drivers and
 model parameter values, and collects and combines the model output with the
 observations.
 }
