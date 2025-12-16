@@ -82,7 +82,7 @@ test_that("test GPP calibration routine p-model (BT, likelihood maximization)", 
     method              = "bayesiantools",
     targets             = c("gpp"),
     sitenames           = "FR-Pue",
-    metric              = rsofun::cost_likelihood_pmodel2,
+    metric              = rsofun::cost_likelihood_pmodel,
     control = list(
       sampler = "DEzs",
       settings = list(
@@ -176,7 +176,7 @@ test_that("test GPP/bigDelta13C calibration routine p-model (BT, likelihood, all
   settings <- list(
     method  = "BayesianTools",
     par     = params_to_estimate,
-    metric  = rsofun::cost_likelihood_pmodel2,
+    metric  = rsofun::cost_likelihood_pmodel,
     control = list(
       sampler = "DEzs",
       settings = list(

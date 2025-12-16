@@ -95,14 +95,14 @@ Note that the standard cost functions would allow to calibrate to several target
 
 ### Calibration to GPP using a simple likelihood function and BayesianTools
 
-Let's calibrate the parameters involved in the temperature dependency of the quantum yield efficiency, `kphio`, `kphio_par_a` and `kphio_par_b`. Taking a Bayesian calibration approach, we need to define a likelihood as cost function (we'll use `cost_likelihood_pmodel2()`). We assume that the target variable (`'gpp'`) follows a normal distribution centered at the observations and with its _unknown_ standard deviation (`'err_gpp'`), that we need to add to the calibratable parameters. We also assume a uniform prior distribution for all calibratable parameters.
-By maximizing the log-likelihood, the MAP (maximum a posteriori) estimators for all 4 parameters are computed. The functions `cost_likelihood_pmodel2()` and `calib_sofun()`, allow us to perform this type of calibration in the following way:
+Let's calibrate the parameters involved in the temperature dependency of the quantum yield efficiency, `kphio`, `kphio_par_a` and `kphio_par_b`. Taking a Bayesian calibration approach, we need to define a likelihood as cost function (we'll use `cost_likelihood_pmodel()`). We assume that the target variable (`'gpp'`) follows a normal distribution centered at the observations and with its _unknown_ standard deviation (`'err_gpp'`), that we need to add to the calibratable parameters. We also assume a uniform prior distribution for all calibratable parameters.
+By maximizing the log-likelihood, the MAP (maximum a posteriori) estimators for all 4 parameters are computed. The functions `cost_likelihood_pmodel()` and `calib_sofun()`, allow us to perform this type of calibration in the following way:
 
 ```{r run Bayesian calibration, eval = FALSE}
 # Define calibration settings
 settings_likelihood <- list(
   method = 'BayesianTools',
-  metric = cost_likelihood_pmodel2,            # our cost function
+  metric = cost_likelihood_pmodel,            # our cost function
   control = list(                             # optimization control settings for 
     sampler = 'DEzs',                           # BayesianTools::runMCMC
     settings = list(

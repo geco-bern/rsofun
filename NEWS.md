@@ -6,11 +6,11 @@
   distributions of the parameters to estimate (see internal function 
   `createMixedPrior()`) and that can parallelize multiple the MCMC chains.
   The old version is still available as `calib_sofun_legacy()`.
-  * New `cost_likelihood_pmodel2()` that can handle multiple 
+  * Rewritten `cost_likelihood_pmodel()` now handling multiple 
   target variables that require to run either `run_pmodel_f_bysite()` or 
   `run_pmodel_onestep_f_bysite()`. Thus also requires a new data format for the
   `drivers` and `obs` arguments. See below under (non-)breaking changes for the new
-  format. The old likelihood function is still available as `cost_likelihood_pmodel1()`.
+  format. The old likelihood function is still available as `cost_likelihood_pmodel_legacy()`.
   * `runread_pmodel()` can now run onestep and daily model thanks to the new 
   `drivers` format. If the old format is used it is implicitly assuming daily 
   runs were requested. Output of `runread_pmodel()` can be split based on columns 
@@ -21,13 +21,17 @@
   range of `daily` as well as `onestep` model runs. Note that the data of 
   site `FR-Pue` were updated in FDK, so that the forcing data has slightly 
   changed and also `whc` of `FR-Pue` was modified from 432 to 260 mm.
-  * output of `run_pmodel_f_bysite()` (and consequently that of `runread_pmodel()`) 
+  * The old `p_model_drivers_vcmax25` and `p_model_validation_vcmax25` were 
+  removed. The old `p_model_drivers` and `p_model_validation` were renamed to 
+  `p_model_oldformat_drivers` and `p_model_oldformat_validation`.  See 
+  below how to transform between new and old formats.
+  * Output of `run_pmodel_f_bysite()` (and consequently that of `runread_pmodel()`) 
   has been transformed into `tibble` for consistency
 
-## Breaking changes
-* `calib_sofun()` has been renamed to `calib_sofun_legacy()`, and `calib_sofun()`
-  has been rewritten (see new features above). For P-model calibration it is 
-  fully backwards compatible. For BiomeE calibration this needs to be tested.
+## (Potentially) Breaking changes
+* `calib_sofun()` has been renamed to `calib_sofun_legacy()`, and a new 
+  `calib_sofun()` has been written (see new features above). For P-model calibration 
+  it is fully backwards compatible. For BiomeE calibration this still needs to be tested.
   
 ## Non-Breaking changes
 * New driver data.frame format for P-model: now containing the information which

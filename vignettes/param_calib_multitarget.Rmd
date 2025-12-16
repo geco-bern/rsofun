@@ -31,7 +31,7 @@ The separate vignette 'Parameter calibration (P-Model) and cost functions' (see 
 You may be interested in calibrating the model to different target variables simultaneously, like flux and leaf trait measurements. 
 
 ### Calibrating one GPP and one D13C site
-In this section we present an example, where we use `cost_likelihood_pmodel2()` to compute the joint likelihood of all the targets specified (that is, by summing the log-likelihoods of GPP and bigD13C) and ultimately calibrate the `beta_unitcostratio` parameter.
+In this section we present an example, where we use `cost_likelihood_pmodel()` to compute the joint likelihood of all the targets specified (that is, by summing the log-likelihoods of GPP and bigD13C) and ultimately calibrate the `beta_unitcostratio` parameter.
 In the section after, we calibrate another example to multiple sites.
 
 ```{r run single-site calibration, eval = FALSE}
@@ -54,7 +54,7 @@ params_fixed <- list(         # fix parameter value from previous calibration
 
 settings_joint_likelihood <- list(
   method = "BayesianTools",
-  metric  = rsofun::cost_likelihood_pmodel2,
+  metric  = rsofun::cost_likelihood_pmodel,
   control = list(
     sampler = "DREAMzs",
     settings = list(
@@ -334,7 +334,7 @@ run_mcmc_rsofun <- function(
 
   # Load loglikelihood (e.g. if using a tailor-made one, instead of package-provided):
     # source("R/calibration_helpers.R", echo = FALSE)
-    # source("R/cost_likelihood_pmodel2.R", echo = FALSE)
+    # source("R/cost_likelihood_pmodel.R", echo = FALSE)
 
   # Setup MCMC          # uses drivobs_train, not drivobs_test
   driver_to_use_for_mcmc <- select(res$drivobs_train, sitename, params_siml, site_info, forcing)
@@ -342,7 +342,7 @@ run_mcmc_rsofun <- function(
 
   calib_sofun_settings <- list(
     method = "BayesianTools",
-    metric = rsofun::cost_likelihood_pmodel2,
+    metric = rsofun::cost_likelihood_pmodel,
     control = list(
       sampler = sampler,
       settings = list(
@@ -853,7 +853,7 @@ predict_sofun_parallelized <- function(
     # Function that runs the P-model for a sample of parameters
     # but does not add the observation error
 
-    # Taken from cost_likelihood_pmodel2()
+    # Taken from cost_likelihood_pmodel()
     stopifnot(nrow(obs) > 0)     # ensure some observation data are provided
     stopifnot(nrow(drivers) > 0) # ensure some driver data are provided
 
