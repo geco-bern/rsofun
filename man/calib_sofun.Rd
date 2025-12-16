@@ -95,7 +95,7 @@ params_fix       <- list(
 settings <- list(
   method  = "BayesianTools",
   par     = params_to_estimate,
-  metric  = rsofun::cost_likelihood_pmodel2,
+  metric  = rsofun::cost_likelihood_pmodel,
   control = list(
     sampler = "DEzs",
     settings = list(

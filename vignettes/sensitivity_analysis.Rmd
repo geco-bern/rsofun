@@ -59,7 +59,7 @@ We want to see how sensitive this function is to changes in the parameter values
 ll_pmodel <- function(
     par_v                 # a named vector of all calibratable parameters including errors
 ){
-  rsofun::cost_likelihood_pmodel2( # reuse likelihood cost function
+  rsofun::cost_likelihood_pmodel( # reuse likelihood cost function
     as.list(par_v),
     obs     = rsofun::pmodel_validation |> filter(sitename == "FR-Pue"),
     drivers = rsofun::pmodel_drivers    |> filter(sitename == "FR-Pue")
@@ -244,7 +244,7 @@ set.seed(2025)
 # Define calibration settings
 settings_calib <- list(
   method = "BayesianTools",
-  metric = rsofun::cost_likelihood_pmodel2,
+  metric = rsofun::cost_likelihood_pmodel,
   control = list(
     sampler = "DEzs",
     settings = list(
