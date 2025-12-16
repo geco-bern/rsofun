@@ -96,7 +96,7 @@ pmodel_validation_allsites <- readr::read_rds(
 #---- pmodel_drivers and pmodel_validation: processing -----
 # subset sites
 sites_to_keep <- c( # these are some manual samples for different vegetation 
-                    # types from Table S2 (published version of https://www.biorxiv.org/content/10.1101/2023.11.24.568574v3)
+                    # types from Table S2 (https://doi.org/10.5194/gmd-18-9855-2025)
   "FR-Pue","DK-Sor","US-Ha1","CH-Dav","FI-Hyy","GF-Guy","CZ-BK1","US-PFa",
   "lon_+010.52_lat_+051.08",
   "lon_+112.58_lat_+023.13",
