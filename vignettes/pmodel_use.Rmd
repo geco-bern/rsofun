@@ -71,12 +71,12 @@ params_modl <- list(
 
 # Define model drivers.
 driver <- rsofun::pmodel_drivers |>
-    # subset only certain sites:
-    dplyr::filter(sitename %in% c(
-      # i.e. only use sites where we request runs of the daily p-model (internally
-      # calling `run_pmodel_f_bysite`, and not `run_pmodel_onestep_f_bysite`)
-      "FR-Pue",
-      "CH-Dav", "CZ-BK1", "DK-Sor", "FI-Hyy", "GF-Guy", "US-Ha1", "US-PFa"))
+  # subset only certain sites:
+  dplyr::filter(sitename %in% c(
+    # i.e. only use sites where we request runs of the daily p-model (internally
+    # calling `run_pmodel_f_bysite`, and not `run_pmodel_onestep_f_bysite`)
+    "FR-Pue",
+    "CH-Dav", "CZ-BK1", "DK-Sor", "FI-Hyy", "GF-Guy", "US-Ha1", "US-PFa"))
 
 # Run the model for these parameters and drivers.
 output <- rsofun::runread_pmodel_f(driver, par = params_modl)
@@ -97,13 +97,13 @@ df_gpp_plot <- output |>
   tidyr::unnest(data) |>
   dplyr::select(sitename, date, gpp_mod = gpp) |>
   dplyr::left_join(
-    rsofun::pmodel_validation |> dplyr::filter( sitename %in% c(
+    rsofun::pmodel_validation |> dplyr::filter(sitename %in% c(
       "FR-Pue",
       "CH-Dav", "CZ-BK1", "DK-Sor", "FI-Hyy", "GF-Guy", "US-Ha1", "US-PFa")) |>
       tidyr::unnest(data) |>
       dplyr::select(sitename, date, gpp_obs = gpp),
     by = c("sitename", "date")
-    ) |> 
+  ) |>
 
   # Plot only first year of each site
   group_by(sitename) |> dplyr::slice(1:365)
@@ -129,17 +129,17 @@ ggplot(data = df_gpp_plot) +
   theme(
     panel.grid.major.y = element_line(),
     legend.position = "bottom"
-    ) +
+  ) +
   labs(
-    x = 'Date',
+    x = "Date",
     y = expression(paste("GPP (g C m"^-2, "s"^-1, ")"))
   ) +
-  facet_wrap(~sitename, scales = "free_x") + 
+  facet_wrap(~sitename, scales = "free_x") +
   scale_x_date(date_labels = "%Y\n%b", date_breaks = "4 months") +
   scale_color_manual(
     NULL,
     breaks = c("Observations",
-               "P-model"),
+      "P-model"),
     values = c("black", "tomato"))
 ```
 
@@ -153,8 +153,8 @@ settings <- list(
   metric = cost_rmse_pmodel,
   control = list(maxit = 100),
   par = list(
-    kphio = list(lower=0.02, upper=0.2, init = 0.05)
-    )
+    kphio = list(lower = 0.02, upper = 0.2, init = 0.05)
+  )
 )
 ```
 
@@ -171,9 +171,9 @@ pars <- calib_sofun(
   obs     = pmodel_validation |> filter(sitename == "FR-Pue"),
   settings = settings,
   # extra arguments passed to the cost function:
-  par_fixed = params_modl[-1]  # fix non-calibrated parameters to previous 
-                               # values, removing kphio [-1]
-  )
+  par_fixed = params_modl[-1]  # fix non-calibrated parameters to previous
+  # values, removing kphio [-1]
+)
 ```
 
 ```{r simulate_calibration_run, include = FALSE}
@@ -191,10 +191,10 @@ params_modl$kphio <- pars$par["kphio"]
 output_new <- rsofun::runread_pmodel_f(
   pmodel_drivers |> filter(sitename == "FR-Pue"),
   par = params_modl
-  )
+)
 
 # Update data.frame for plotting
-df_gpp_plot_FRPue <- df_gpp_plot |> 
+df_gpp_plot_FRPue <- df_gpp_plot |>
   select(-starts_with("gpp_calib")) |>
   left_join(
     output_new |>
@@ -233,18 +233,18 @@ ggplot(data = df_gpp_plot_FRPue) +
   theme(
     panel.grid.major.y = element_line(),
     legend.position = "bottom"
-    ) +
+  ) +
   labs(
-    x = 'Date',
+    x = "Date",
     y = expression(paste("GPP (g C m"^-2, "s"^-1, ")"))
   ) +
-  facet_wrap(~sitename, scales = "free_x") + 
+  facet_wrap(~sitename, scales = "free_x") +
   scale_x_date(date_labels = "%Y\n%b", date_breaks = "4 months") +
   scale_color_manual(
     NULL,
     breaks = c("Observations",
-               "P-model (uncalibrated)",
-               "P-model (calibrated)"),
+      "P-model (uncalibrated)",
+      "P-model (calibrated)"),
     values = c("black", "grey", "tomato"))
 ```
 
@@ -260,7 +260,7 @@ run_pmodel_onestep_f_bysite(
   forcing = data.frame(
     temp  = 20,           # temperature, deg C
     vpd   = 1000,         # Pa,
-    ppfd  = 300/10^6,     # mol/m2/s
+    ppfd  = 300 / 10^6,   # mol/m2/s
     co2   = 400,          # ppm,
     patm  = 101325        # Pa
   ),
@@ -288,12 +288,12 @@ out_rpmodel <- rpmodel(
   vpd            = 1000,         # Pa,
   co2            = 400,          # ppm,
   fapar          = 1,            # fraction,
-  ppfd           = 300/10^6,     # ~~mol/m2/d~~ or mol/m2/s
+  ppfd           = 300 / 10^6,   # ~~mol/m2/d~~ or mol/m2/s
                                  # rpmodel docs state that units of ppfd define 
                                  # output units of: lue, gpp, vcmax, rd 
                                  # (as well as vcmax25, gs)
   patm           = 101325,       # Pa
-  kphio          = 0.04998,      # quantum yield efficiency as calibrated 
+  kphio          = 0.04998,      # quantum yield efficiency as calibrated
                                  # for setup ORG by Stocker et al. 2020 GMD,
   beta           = 146.0,        # unit cost ratio a/b,
   c4             = FALSE,
@@ -301,15 +301,16 @@ out_rpmodel <- rpmodel(
   do_ftemp_kphio = FALSE,        # corresponding to setup ORG
   do_soilmstress = FALSE,        # corresponding to setup ORG
   verbose        = TRUE
-  )
-  
+)
+
 # out_rpmodel
-tidyr::as_tibble(out_rpmodel) |> 
+tidyr::as_tibble(out_rpmodel) |>
   dplyr::select(vcmax, jmax, vcmax25, jmax25, gs, chi, iwue, rd) |>
   # bring units to same as output of run_pmodel_onestep_f_bysite()
-  dplyr::mutate(gs   = gs/1/(300/10^6), # divide by fapar (-) and by ppfd (mol/m2/s)
-                iwue = iwue/101325,     # divide by patm (Pa)
-                rd   = rd*12            # mutliply by c_molmass (gC/mol)
+  dplyr::mutate(
+    gs   = gs / 1 / (300 / 10^6), # divide by fapar (-) and by ppfd (mol/m2/s)
+    iwue = iwue / 101325,         # divide by patm (Pa)
+    rd   = rd * 12                # mutliply by c_molmass (gC/mol)
   )
 ```
 

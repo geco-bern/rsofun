@@ -1,22 +1,22 @@
 #' Calibrates SOFUN model parameters
 #'
-#' This is the main function that handles the 
-#' calibration of SOFUN model parameters. 
-#' 
+#' This is the main function that handles the
+#' calibration of SOFUN model parameters.
+#'
 #' @param drivers A data frame with driver data. See \code{\link{pmodel_drivers}}
-#' for a description of the data structure. Additional columns can optionally be 
-#' provided to \code{drivers} to control e.g. the processing within a 
+#' for a description of the data structure. Additional columns can optionally be
+#' provided to \code{drivers} to control e.g. the processing within a
 #' personalized cost function.
 #' @param obs A data frame containing observational data used for model
 #'  calibration. See \code{\link{pmodel_validation}} for a description of the data
-#'  structure. Additional columns can optionally be provided to \code{obs} to 
+#'  structure. Additional columns can optionally be provided to \code{obs} to
 #'  control e.g. the processing within a personalized cost function.
-#' @param settings A list containing model calibration settings. 
+#' @param settings A list containing model calibration settings.
 #'  See the 'P-model usage' vignette for more information and examples.
 #'  \describe{
 #'   \item{\code{method}}{A string indicating the optimization method, either \code{'GenSA'}
 #'   or \code{'BayesianTools'}.}
-#'   \item{\code{par}}{A list of model parameters. For each parameter, an initial value 
+#'   \item{\code{par}}{A list of model parameters. For each parameter, an initial value
 #'   and lower and upper bounds should be provided. The calibratable parameters
 #'   include model parameters 'kphio', 'kphio_par_a', 'kphio_par_b', 'soilm_thetastar',
 #'   'soilm_betao', 'beta_costunitratio', 'rd_to_vcmax', 'tau_acclim', 'kc_jmax'
@@ -34,8 +34,8 @@
 #'  }
 #' @param optim_out A logical indicating whether the function returns the raw
 #'  output of the optimization functions (defaults to TRUE).
-#' @param ... Optional arguments, simply passed on to the cost function. 
-#' 
+#' @param ... Optional arguments, simply passed on to the cost function.
+#'
 #' @return A named list containing the calibrated parameter vector `par` and
 #' the output object from the optimization `mod`. For more details on this
 #' output and how to evaluate it, see \link[BayesianTools:runMCMC]{runMCMC} (also
@@ -45,28 +45,28 @@
 #' @importFrom magrittr %>%
 #' @importFrom stats setNames
 #' @import GenSA BayesianTools
-#' 
+#'
 #' @examples
 #' # Fix model parameters that won't be calibrated
 #' params_fix <- list(
 #'   kphio_par_a        = 0,
 #'   kphio_par_b        = 1.0,
-#'   soilm_thetastar    = 0.6*240,
+#'   soilm_thetastar    = 0.6 * 240,
 #'   soilm_betao        = 0.01,
 #'   beta_unitcostratio = 146,
 #'   rd_to_vcmax        = 0.014,
 #'   tau_acclim         = 30,
 #'   kc_jmax            = 0.41
 #' )
-#' 
+#'
 #' # Define calibration settings
 #' settings <- list(
 #'   method = "BayesianTools",
 #'   par = list(
-#'     kphio = list(lower=0.04, upper=0.09, init=0.05),
+#'     kphio = list(lower = 0.04, upper = 0.09, init = 0.05),
 #'     err_gpp = list(lower = 0.01, upper = 4, init = 2)
 #'   ),
-#'  metric = rsofun::cost_likelihood_pmodel,
+#'   metric = rsofun::cost_likelihood_pmodel,
 #'   control = list(
 #'     sampler = "DEzs",
 #'     settings = list(
@@ -75,49 +75,47 @@
 #'       iterations = 50     # kept artificially low
 #'     )
 #'   )
-#'  )
-#' 
-#'  # Run the calibration for GPP data
-#'  calib_output <- rsofun::calib_sofun_legacy(
-#'    drivers = rsofun::pmodel_drivers |> dplyr::filter(sitename == "FR-Pue"),
-#'    obs     = rsofun::pmodel_validation |> dplyr::filter(sitename == "FR-Pue"),
-#'    settings = settings,
-#'    # extra arguments for the cost function
-#'    par_fixed = params_fix
-#'  )
-
+#' )
+#'
+#' # Run the calibration for GPP data
+#' calib_output <- rsofun::calib_sofun_legacy(
+#'   drivers = rsofun::pmodel_drivers |> dplyr::filter(sitename == "FR-Pue"),
+#'   obs     = rsofun::pmodel_validation |> dplyr::filter(sitename == "FR-Pue"),
+#'   settings = settings,
+#'   # extra arguments for the cost function
+#'   par_fixed = params_fix
+#' )
 calib_sofun_legacy <- function(
     drivers,
     obs,
     settings,
     optim_out = TRUE,
     ...
-){
+    ) {
   # predefine variables for CRAN check compliance
   lower <- upper <- out_optim <- NULL
-  
+
   # check input variables
-  if (missing(obs) | missing(drivers) | missing(settings)){
+  if (missing(obs) | missing(drivers) | missing(settings)) {
     stop("missing input arguments, please check all parameters")
   }
-  
+
   # check data structure
-  if (is.data.frame(obs)){
-    if (nrow(obs) == 0){
+  if (is.data.frame(obs)) {
+    if (nrow(obs) == 0) {
       warning("no validation data available, returning NA parameters")
       return(lapply(settings$par,
-                    function(x) NA))
+        function(x) NA))
     }
   } else {
     stop("obs must be a (nested) data.frame")
   }
-  
+
   #--- GenSA ----
-  if (tolower(settings$method) == "gensa"){
-    
+  if (tolower(settings$method) == "gensa") {
     # convert to standard cost function naming
     cost <- settings$metric
-    
+
     # create bounds
     lower <- unlist(lapply(settings$par, function(x) x$lower))
     upper <- unlist(lapply(settings$par, function(x) x$upper))
@@ -134,43 +132,42 @@ calib_sofun_legacy <- function(
       ...
     )
 
-    if (optim_out){
+    if (optim_out) {
       out_optim <- list(par = out$par, mod = out)
     } else {
       out_optim <- list(par = out$par)
     }
-    
-  } 
-  
+
+  }
+
   #--- Bayesiantools ----
-  if (tolower(settings$method) == "bayesiantools"){
-    
+  if (tolower(settings$method) == "bayesiantools") {
     # convert to standard cost function naming
     # cost <- eval(settings$metric)
-    cost <- function(par, obs, drivers){
+    cost <- function(par, obs, drivers) {
       eval(settings$metric)(par = par,
-                            obs = obs,
-                            drivers = drivers,
-                            ...)
+        obs = obs,
+        drivers = drivers,
+        ...)
     }
-    
+
     # reformat parameters
-    pars <- as.data.frame(do.call("rbind", settings$par)) 
-         # NOTE: This keeps parameters as row names. 
-         # This does not change anything to previous behavior.
-         # But this agrees better with the example data 
-         # `dput(BayesianTools::VSEMgetDefaults())`
-    
+    pars <- as.data.frame(do.call("rbind", settings$par))
+    # NOTE: This keeps parameters as row names.
+    # This does not change anything to previous behavior.
+    # But this agrees better with the example data
+    # `dput(BayesianTools::VSEMgetDefaults())`
+
     priors  <- BayesianTools::createUniformPrior(
       lower = unlist(pars$lower),
       upper = unlist(pars$upper),
       best  = unlist(pars$init)
     )
-    
+
     # setup the bayes run, no message forwarding is provided
     # so wrap the function in a do.call
     setup <- BayesianTools::createBayesianSetup(
-      likelihood = function(random_par){
+      likelihood = function(random_par) {
         do.call(
           "cost",
           list(
@@ -184,32 +181,32 @@ calib_sofun_legacy <- function(
           )
         )
       },
-    prior = priors,
-    names = rownames(pars)
-    )    
-    
+      prior = priors,
+      names = rownames(pars)
+    )
+
     # set bt control parameters
     bt_settings <- settings$control$settings
-    
+
     # calculate the runs
     out <- BayesianTools::runMCMC(
       bayesianSetup = setup,
       sampler = settings$control$sampler,
       settings = bt_settings
     )
-    
+
     # drop last value
     bt_par <- BayesianTools::MAP(out)$parametersMAP
     bt_par <- bt_par[1:(length(bt_par))]
 
-    if (optim_out){
+    if (optim_out) {
       out_optim <- list(par = bt_par, mod = out)
     } else {
       out_optim <- list(par = bt_par)
     }
-    
+
     names(out_optim$par) <- names(settings$par)
   }
-  
+
   return(out_optim)
 }

@@ -58,7 +58,7 @@ We want to see how sensitive this function is to changes in the parameter values
 # Define log-likelihood function
 ll_pmodel <- function(
     par_v                 # a named vector of all calibratable parameters including errors
-){
+    ) {
   rsofun::cost_likelihood_pmodel( # reuse likelihood cost function
     as.list(par_v),
     obs     = rsofun::pmodel_validation |> filter(sitename == "FR-Pue"),
@@ -67,9 +67,9 @@ ll_pmodel <- function(
 }
 
 # Compute log-likelihood for a given set of parameters
-ll_pmodel( par_v = c(
+ll_pmodel(par_v = c(
   kphio              = 4.102119e-02,
-  kphio_par_a        =-2.289344e-03,
+  kphio_par_a        = -2.289344e-03,
   kphio_par_b        = 1.525094e+01,
   soilm_thetastar    = 1.577507e+02,
   soilm_betao        = 1.169702e-04,
@@ -91,7 +91,7 @@ par_cal_best <- c(
   kphio              = 0.09423773,
   kphio_par_a        = -0.0025,
   kphio_par_b        = 20,
-  soilm_thetastar    = 0.6*240,
+  soilm_thetastar    = 0.6 * 240,
   soilm_betao        = 0.2,
   beta_unitcostratio = 146.0,
   rd_to_vcmax        = 0.014,
@@ -152,13 +152,13 @@ and is still computationally cheaper than running the parameter calibration.
 set.seed(432)
 morrisOut <- sensitivity::morris(
   model = morris_setup$posterior$density,
-  factors = names(par_cal_best), 
-  r = 1000, 
-  design = list(type = "oat", levels = 20, grid.jump = 3), 
-  binf = par_cal_min, 
-  bsup = par_cal_max, 
+  factors = names(par_cal_best),
+  r = 1000,
+  design = list(type = "oat", levels = 20, grid.jump = 3),
+  binf = par_cal_min,
+  bsup = par_cal_max,
   scale = TRUE
-  )
+)
 ```
 
 ```{r simulate_morrisOut, include = FALSE}
@@ -180,21 +180,21 @@ morrisOut.df <- data.frame(
   parameter = names(par_cal_best),
   mu.star = apply(abs(morrisOut$ee), 2, mean, na.rm = T),
   sigma = apply(morrisOut$ee, 2, sd, na.rm = T)
-) |> 
-  arrange( mu.star )
+) |>
+  arrange(mu.star)
 
 morrisOut.df |>
-  tidyr::pivot_longer( -parameter, names_to = "variable", values_to = "value") |>
+  tidyr::pivot_longer(-parameter, names_to = "variable", values_to = "value") |>
   ggplot(aes(
     reorder(parameter, value),
-    value, 
+    value,
     fill = variable)) +
-  geom_bar(position = position_dodge(), stat = 'identity', color = NA) +
-  scale_fill_manual("", 
-                    labels = c('mu.star' = expression(mu * "*"),
-                               'sigma' = expression(sigma)),
-                    values = c('mu.star' = "#29a274ff", 
-                               'sigma' = "#777055ff")) +
+  geom_bar(position = position_dodge(), stat = "identity", color = NA) +
+  scale_fill_manual("",
+    labels = c("mu.star" = expression(mu * "*"),
+      "sigma" = expression(sigma)),
+    values = c("mu.star" = "#29a274ff",
+      "sigma" = "#777055ff")) +
   theme_classic() +
   theme(
     axis.text = element_text(size = 6),
@@ -251,13 +251,13 @@ settings_calib <- list(
       burnin = 12000,
       iterations = 24000,
       startValue = 3 # number of internal chains to be sampled (dependent)
-      ),
+    ),
     n_chains_independent      = 3,
     n_parallel_independent    = 1 # do not parallelize the three independent chains
-    ),
+  ),
   par = list(
     kphio = list(lower = 0.02, upper = 0.15, init = 0.05),
-    kphio_par_a =list(lower = -0.004, upper = -0.001, init = -0.0025),
+    kphio_par_a = list(lower = -0.004, upper = -0.001, init = -0.0025),
     kphio_par_b = list(lower = 10, upper = 30, init = 20),
     soilm_thetastar = list(
       lower = 0.01 * rsofun::pmodel_drivers$site_info[[5]]$whc,
@@ -274,7 +274,7 @@ par_fixed <- list(
   kc_jmax            = 0.41,
   rd_to_vcmax        = 0.014,
   tau_acclim         = 20.0
-  )
+)
 
 # Calibrate kphio-related parameters and err_gpp
 par_calib <- calib_sofun(
@@ -307,33 +307,34 @@ When convergence has been reached, the oscillation of the time series should loo
 <!-- Furthermore, trace plots can be deceiving and partial autocorrelation plots can throw some light. If autocorrelation is present, this can mean that the sampling is stuck in local maxima and the posterior parameter space may not be explored fully. Sometimes, thinning is used to deal with this autocorrelation. -->
 ```{r fig.height = 10, fig.width = 7, eval = FALSE, echo = FALSE}
 # Define function for plotting chains separately
-plot_acf_mcmc <- function(chains, par_names){
+plot_acf_mcmc <- function(chains, par_names) {
   # chains: from the BayesianTools output
   n_chains <- length(chains)
   n_internal_chains <- length(chains[[1]]$chain)
   par(mfrow = c(length(par_names), n_chains))
-  for(par_name in par_names){
-    for(i in 1:n_chains){
-      stopifnot(n_internal_chains<=3); color = c("blue", "red", "darkgreen")
-      spacing = 0.5/n_internal_chains
-      for(j in 1:n_internal_chains){
+  for (par_name in par_names) {
+    for (i in 1:n_chains) {
+      stopifnot(n_internal_chains <= 3)
+      color <- c("blue", "red", "darkgreen")
+      spacing <- 0.5 / n_internal_chains
+      for (j in 1:n_internal_chains) {
         autocorr_internal_chain <- pacf(getSample(chains[[i]]$chain[[j]])[, par_name], plot = FALSE)
-        if(j==1){
-          plot(autocorr_internal_chain, col = color[j], 
-               main = sprintf("Series of %s , chain (%i)", par_name, i))  
+        if (j == 1) {
+          plot(autocorr_internal_chain, col = color[j],
+            main = sprintf("Series of %s , chain (%i)", par_name, i))
         } else {
-          lines(autocorr_internal_chain$lag + spacing*(j-1),
-                autocorr_internal_chain$acf,
-                col = color[j], type = "h")  
+          lines(autocorr_internal_chain$lag + spacing * (j - 1),
+            autocorr_internal_chain$acf,
+            col = color[j], type = "h")
         }
       }
     }
   }
 }
 plot_acf_mcmc(
-  par_calib$mod, 
+  par_calib$mod,
   c("kphio", "kphio_par_a", "kphio_par_b", "soilm_thetastar", "soilm_betao",  "err_gpp")
-  )
+)
 ```
 
 Looking at the correlation between chains for different parameters is also helpful because parameter correlation may slow down convergence, or the chains may oscillate in the multivariate posterior space. In this calibration we expect parameter samples to be somewhat correlated, especially `kphio_par_a` and `kphio_par_b` because they specify the shape of the temperature dependence of the quantum yield efficiency, $\varphi_o(T)$. We can also see that `err_gpp` is correlated with `kphio` (to which the P-model is very sensitive), since the error represents how good the model fits the observed GPP.
@@ -373,12 +374,12 @@ incorporates the Gaussian model error.
 samples_par <- getSample(
   par_calib$mod,
   thin = 60
-  ) |>
+) |>
   as.data.frame() |>
   dplyr::mutate(mcmc_id = 1:n()) |>
   tidyr::nest(.by = mcmc_id, .key = "pars")
 
-run_pmodel <- function(par){
+run_pmodel <- function(par) {
   # Function that runs the P-model for a sample of parameters
   out <- runread_pmodel_f(
     # use same drivers as for calibration
@@ -393,25 +394,25 @@ run_pmodel <- function(par){
       beta_unitcostratio = par_fixed$beta_unitcostratio, # 146.0,
       rd_to_vcmax        = par_fixed$rd_to_vcmax, # 0.014,
       tau_acclim         = par_fixed$tau_acclim, # 20.0,
-      kc_jmax            = par_fixed$kc_jmax  #0.41
-      )
+      kc_jmax            = par_fixed$kc_jmax  # 0.41
+    )
   )
 }
-run_pmodel_add_error <- function(par){
+run_pmodel_add_error <- function(par) {
   # Function that runs the P-model for a sample of parameters
   # and also adds the new observation error
-  
+
   out <- run_pmodel(par)
-  
+
   # return modelled GPP and prediction for a new GPP observation
   gpp <- out$data[[1]][["gpp"]]
   return(data.frame(
-    gpp = gpp, 
+    gpp = gpp,
     gpp_pred = rnorm(
-      n = length(gpp), 
+      n = length(gpp),
       mean = gpp,
       sd = par$err_gpp
-      ),
+    ),
     date = out$data[[1]][, "date"])
   )
 }
@@ -420,7 +421,7 @@ set.seed(2025)
 
 # Run the P-model for each set of parameters
 pmodel_runs <- samples_par |>
-  dplyr::mutate(sim = purrr::map(pars, ~run_pmodel_add_error(.x))) |>
+  dplyr::mutate(sim = purrr::map(pars, ~ run_pmodel_add_error(.x))) |>
   # format to obtain 90% credible intervals
   dplyr::select(mcmc_id, sim) |>
   tidyr::unnest(sim) |>
@@ -436,8 +437,8 @@ pmodel_runs <- samples_par |>
 
 # run model with maximum a posteriori parameter estimates
 pmodel_run_MAP <- run_pmodel_add_error(
-  MAP(par_calib$mod)$parametersMAP |> 
-    t() |> 
+  MAP(par_calib$mod)$parametersMAP |>
+    t() |>
     as_tibble()
 )
 ```
@@ -458,11 +459,11 @@ captured by the predictive interval.
 
 ```{r fig.width=7, fig.height=5}
 ## add transparency to color given as a name
-add_alpha <- function( col, alpha ){
-  col    <- col2rgb( col, alpha = TRUE )/255
+add_alpha <- function(col, alpha) {
+  col    <- col2rgb(col, alpha = TRUE) / 255
   col[4] <- alpha
-  col    <- rgb(col[1,],col[2,],col[3,],col[4,])
-  return( col )
+  col    <- rgb(col[1, ], col[2, ], col[3, ], col[4, ])
+  return(col)
 }
 
 # Plot the credible intervals computed above
@@ -483,20 +484,20 @@ plot_gpp_error <- ggplot(data = data_to_plot) +
       ymax = gpp_pred_q95,
       x = date,
       fill = "Model uncertainty"
-    )) +
+  )) +
   geom_ribbon(
     aes(
-      ymin = gpp_q05, 
+      ymin = gpp_q05,
       ymax = gpp_q95,
       x = date,
       fill = "Parameter uncertainty"
-    )) +
+  )) +
   # Include observations in the plot
   geom_point(
     aes(
       x = date,
-     y = gpp_obs,
-     color = "Observations"
+      y = gpp_obs,
+      color = "Observations"
     ),
   ) +
   geom_line(
@@ -508,20 +509,20 @@ plot_gpp_error <- ggplot(data = data_to_plot) +
   ) +
   theme_classic() +
   theme(panel.grid.major.y = element_line(),
-        legend.position = "bottom") +
+    legend.position = "bottom") +
   labs(
-    x = 'Date',
+    x = "Date",
     y = expression(paste("GPP (g C m"^-2, "s"^-1, ")"))
   ) +
   scale_color_manual(NULL,
-                     breaks = c("Observations",
-                                "Predictions"),
-                     values = c("black", "tomato")) +
+    breaks = c("Observations",
+      "Predictions"),
+    values = c("black", "tomato")) +
   scale_fill_manual(NULL,
-                    breaks = c("Model uncertainty",
-                               "Parameter uncertainty"),
-                    values = c(add_alpha("tomato", 0.5),
-                               "#1b9e77", 0))
+    breaks = c("Model uncertainty",
+      "Parameter uncertainty"),
+    values = c(add_alpha("tomato", 0.5),
+      "#1b9e77", 0))
 plot_gpp_error
 ```
 
@@ -534,11 +535,11 @@ plot_gpp_error
 # Plot observed and predicted GPP, with a 95% confidence interval using err_gpp
 # Run model with maximum a posteriori parameter estimates (not shown on plot).
 pmodel_run_MAP <- run_pmodel(
-  BayesianTools::MAP(par_calib$mod)$parametersMAP |> 
-    t() |> 
+  BayesianTools::MAP(par_calib$mod)$parametersMAP |>
+    t() |>
     as_tibble()
-) |> 
-  dplyr::select(-site_info) |> 
+) |>
+  dplyr::select(-site_info) |>
   tidyr::unnest(data)
 
 # Plot the credible intervals computed above
@@ -558,8 +559,8 @@ plot_gpp_error <- ggplot(data = data_to_plot) +
   geom_point(
     aes(
       x = date,
-     y = gpp_obs,
-     color = "Observations"
+      y = gpp_obs,
+      color = "Observations"
     ),
   ) +
   geom_line(
@@ -571,14 +572,14 @@ plot_gpp_error <- ggplot(data = data_to_plot) +
   ) +
   theme_classic() +
   theme(panel.grid.major.y = element_line(),
-        legend.position = "bottom") +
+    legend.position = "bottom") +
   labs(
-    x = 'Date',
+    x = "Date",
     y = expression(paste("GPP (g C m"^-2, "s"^-1, ")"))
   ) +
   scale_color_manual(NULL,
-                     breaks = c("Observations",
-                                "Predictions based on MAP"),
-                     values = c("black", "tomato"))
+    breaks = c("Observations",
+      "Predictions based on MAP"),
+    values = c("black", "tomato"))
 plot_gpp_error
 ```

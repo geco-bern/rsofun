@@ -8,21 +8,21 @@ calib_sofun_legacy(drivers, obs, settings, optim_out = TRUE, ...)
 }
 \arguments{
 \item{drivers}{A data frame with driver data. See \code{\link{pmodel_drivers}}
-for a description of the data structure. Additional columns can optionally be 
-provided to \code{drivers} to control e.g. the processing within a 
+for a description of the data structure. Additional columns can optionally be
+provided to \code{drivers} to control e.g. the processing within a
 personalized cost function.}
 
 \item{obs}{A data frame containing observational data used for model
 calibration. See \code{\link{pmodel_validation}} for a description of the data
-structure. Additional columns can optionally be provided to \code{obs} to 
+structure. Additional columns can optionally be provided to \code{obs} to
 control e.g. the processing within a personalized cost function.}
 
-\item{settings}{A list containing model calibration settings. 
+\item{settings}{A list containing model calibration settings.
 See the 'P-model usage' vignette for more information and examples.
 \describe{
  \item{\code{method}}{A string indicating the optimization method, either \code{'GenSA'}
  or \code{'BayesianTools'}.}
- \item{\code{par}}{A list of model parameters. For each parameter, an initial value 
+ \item{\code{par}}{A list of model parameters. For each parameter, an initial value
  and lower and upper bounds should be provided. The calibratable parameters
  include model parameters 'kphio', 'kphio_par_a', 'kphio_par_b', 'soilm_thetastar',
  'soilm_betao', 'beta_costunitratio', 'rd_to_vcmax', 'tau_acclim', 'kc_jmax'
@@ -52,7 +52,7 @@ output and how to evaluate it, see \link[BayesianTools:runMCMC]{runMCMC} (also
 and \link[GenSA]{GenSA}.
 }
 \description{
-This is the main function that handles the 
+This is the main function that handles the
 calibration of SOFUN model parameters.
 }
 \examples{
@@ -60,7 +60,7 @@ calibration of SOFUN model parameters.
 params_fix <- list(
   kphio_par_a        = 0,
   kphio_par_b        = 1.0,
-  soilm_thetastar    = 0.6*240,
+  soilm_thetastar    = 0.6 * 240,
   soilm_betao        = 0.01,
   beta_unitcostratio = 146,
   rd_to_vcmax        = 0.014,
@@ -72,10 +72,10 @@ params_fix <- list(
 settings <- list(
   method = "BayesianTools",
   par = list(
-    kphio = list(lower=0.04, upper=0.09, init=0.05),
+    kphio = list(lower = 0.04, upper = 0.09, init = 0.05),
     err_gpp = list(lower = 0.01, upper = 4, init = 2)
   ),
- metric = rsofun::cost_likelihood_pmodel,
+  metric = rsofun::cost_likelihood_pmodel,
   control = list(
     sampler = "DEzs",
     settings = list(
@@ -84,14 +84,14 @@ settings <- list(
       iterations = 50     # kept artificially low
     )
   )
- )
+)
 
- # Run the calibration for GPP data
- calib_output <- rsofun::calib_sofun_legacy(
-   drivers = rsofun::pmodel_drivers |> dplyr::filter(sitename == "FR-Pue"),
-   obs     = rsofun::pmodel_validation |> dplyr::filter(sitename == "FR-Pue"),
-   settings = settings,
-   # extra arguments for the cost function
-   par_fixed = params_fix
- )
+# Run the calibration for GPP data
+calib_output <- rsofun::calib_sofun_legacy(
+  drivers = rsofun::pmodel_drivers |> dplyr::filter(sitename == "FR-Pue"),
+  obs     = rsofun::pmodel_validation |> dplyr::filter(sitename == "FR-Pue"),
+  settings = settings,
+  # extra arguments for the cost function
+  par_fixed = params_fix
+)
 }

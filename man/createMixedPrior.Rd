@@ -25,8 +25,8 @@ prior_definitions_mixed <- list(
     par_truncnormal    = list(mean    = 10, sd    = 2, lower = 9, upper = 14),
     # par_trunclognormal = list(meanlog = -4, sdlog = 1.1, endpoint = 0.5),
     par_beta           = list(shape1  = 5, shape2 = 2)
-  ))
+))
 priorMixed  <- rsofun:::createMixedPrior(prior_definitions_mixed$par)
 priorMixed$sampler(2000)
-hist(priorMixed$sampler(2000)[,5])
+hist(priorMixed$sampler(2000)[, 5])
 }
