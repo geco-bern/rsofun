@@ -86,7 +86,7 @@
 #'     sampler = "DEzs",
 #'     settings = list(
 #'       burnin = 0,
-#'       iterations = 50     # kept artificially low
+#'       iterations = 10     # kept artificially low
 #'     ),
 #'     n_chains_independent   = 1, # 2,
 #'     n_parallel_independent = 1  # 2, this can be parallelized
