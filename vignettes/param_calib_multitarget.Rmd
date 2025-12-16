@@ -1,9 +1,11 @@
 ---
-title: "Parameter calibration (P-Model) to multiple targets"
+title: "Parameter calibration (P-Model) to multiple targets (GPP, bigD13C)"
 author: "Josefa Arán, Fabian Bernhard"
-output: rmarkdown::html_vignette
+output: 
+  rmarkdown::html_vignette:
+    code_folding: show
 vignette: >
-  %\VignetteIndexEntry{Parameter calibration (P-Model) to multiple targets}
+  %\VignetteIndexEntry{Parameter calibration (P-Model) to multiple targets (GPP, bigD13C)}
   %\VignetteEngine{knitr::rmarkdown}
   %\usepackage[utf8]{inputenc}
 ---
@@ -21,19 +23,19 @@ library(khroma)
 library(yardstick)
 ```
 
-### Calibration to GPP and bigD13C using the joint log-likelihood and BayesianTools
-
 This vignette showcases a simplified version of the Bayesian calibration to 
-multiple target variables taken from the documentation paper [Paredes et al. (in press)](https://www.biorxiv.org/content/10.1101/2023.11.24.568574v3).
+with a joint log-likelihood to
+multiple target variables taken from the documentation paper [Paredes et al. (2025)](https://doi.org/10.5194/gmd-18-9855-2025).
 The separate vignette 'Parameter calibration (P-Model) and cost functions' (see `vignette("new_cost_function")`) provides simpler examples.
 
 You may be interested in calibrating the model to different target variables simultaneously, like flux and leaf trait measurements. 
 
-#### Calibrating one GPP and one D13C site
+### Calibrating one GPP and one D13C site
 In this section we present an example, where we use `cost_likelihood_pmodel2()` to compute the joint likelihood of all the targets specified (that is, by summing the log-likelihoods of GPP and bigD13C) and ultimately calibrate the `beta_unitcostratio` parameter.
 In the section after, we calibrate another example to multiple sites.
 
-```{r run concatenated calibration, eval = FALSE}
+```{r run single-site calibration, eval = FALSE}
+#| class.source = 'fold-show'
 # Define calibration settings for two targets
 params_to_estimate <- list(
   beta_unitcostratio = list(lower = 14.6,  upper = 440, init = 146.0),  # uniform priors
@@ -70,11 +72,14 @@ settings_joint_likelihood <- list(
 )
 
 # Run the calibration on the observational data of two sites
+drivers <- pmodel_drivers    |> 
+    dplyr::filter(sitename %in% c("FR-Pue", "lon_+146.13_lat_-032.97"))
+obs <- pmodel_validation |> 
+    dplyr::filter(sitename %in% c("FR-Pue", "lon_+146.13_lat_-032.97"))
+
 par_calib_join <- calib_sofun(
-  drivers  = pmodel_drivers    |> 
-    dplyr::filter(sitename %in% c("FR-Pue", "lon_+146.13_lat_-032.97")),
-  obs      = pmodel_validation |> 
-    dplyr::filter(sitename %in% c("FR-Pue", "lon_+146.13_lat_-032.97")), 
+  drivers  = drivers,
+  obs      = obs, 
   settings = settings_joint_likelihood,
   # arguments for the cost function
   par_fixed = params_fixed
@@ -94,20 +99,31 @@ par_calib_join <- readRDS(
   "files/param_calib_multitarget.Rmd__par_calib_join.RDS")
 ```
 
+Calibration with `calib_sofun` returns an object that contains the 
+maximum-a-posteriori (MAP) estimates of the parameters in `par` and the full 
+distribution of the parameters in the MCMC chains in `mod`. Besides those it 
+also reports additional information.
+
 ```{r}
 par_calib_join
 ```
 
-Note that GPP predictions are directly compared to GPP observations on that day, but the leaf trait bigD13C is predicted by the P-model as "onestep" prediction for average conditions over the growing season and compared to the (multiple) bigD13C observations taken across trees per site. 
+Note that GPP predictions are directly compared to GPP observations on that day, 
+but the leaf trait bigD13C is predicted by the P-model as "onestep" prediction 
+for average conditions over the growing season and compared to the (multiple) 
+bigD13C observations taken across trees per site. 
 This is specified by the arguments `drivers` and `obs`.
 Namely, it is specified 
 by the column `params_siml$onestep` within `drivers`, which can be `FALSE` (for 
-                                                                            daily simulation) or `TRUE` (for onestep acclimation), 
+daily simulation) or `TRUE` (for onestep acclimation), 
 by the corresponding column `forcing` containing daily or average conditions,
 and by the column `targets` specified for each simulation site (i.e. each row in `drivers` and `obs`).
-See below or the documentation of `pmodel_drivers` and `pmodel_validation`.
+
+For more details, unfold the code below or check the documentation of `pmodel_drivers` and `pmodel_validation`.
 
 ```{r}
+#| class.source = 'fold-hide'
+
 # Note the columns: 'targets', and 'data' (containing observations)
 pmodel_validation |> tidyr::unnest_wider(targets, names_sep = "_")
 pmodel_validation |> dplyr::filter(grepl("lon", sitename)) |>  tidyr::unnest(data)
@@ -120,10 +136,10 @@ pmodel_drivers |> dplyr::filter(grepl("lon", sitename)) |>  tidyr::unnest(params
 pmodel_drivers |> dplyr::filter(grepl("^[A-Z]", sitename)) |> tidyr::unnest(params_siml)
 ```
 
+### Calibrating multiple GPP and D13C sites
 
-#### Calibrating multiple sites
+#### Some helper functions for calibration
 
-##### Some helper functions for calibration
 Below we define some helper functions to facilitate model calibration with 
 different target variables, resulting thus in different calibration setups.
 These helper functions simplify the use of parallel execution and avoid code repetition.
@@ -136,25 +152,13 @@ In below code, we define first these two different calibration setups by
 specifying the function `setup_rsofun_calibration()`, that returns an object with
 the necessary specifications.
 
-Then we also define a function to run the Markov Chain Monte Carlo (MCMC) sampling `run_mcmc_rsofun()`.
+These specifications can differ in the selection of calibration parameters and priors, 
+in the data used and potentially in the test-train split.
+Here, setups are uniquely identified with a numeric identifer. 
+Below code defines `setup_rsofun_calibration()` for setups 226 and 231.
+```{r prepare multisite/multitarget calibration setups, eval = TRUE}
+#| class.source = 'fold-hide'
 
-With the second calibration setup we additionally showcase how to parallelize 
-multiple chains to different cores and thus how to significantly speed up 
-long-running calibration tasks.
-
-For long-running calibrations it can also be useful to be able to continue an 
-existing sampling chain with `continue_mcmc_rsofun()`.
-While this is not shown in this vignette, code for this is available on Zenodo 
-([10.5281/zenodo.17204361](https://dx.doi.org/10.5281/zenodo.17204361)).
-
-
-```{r prepare multisite/multitarget calibration, eval = TRUE}
-
-# Setup_rsofun_calibration allows to define different setups
-# that may differ in the calibrated parameters and data used 
-# and potentially in the test-train split.
-# Setups are uniquely identified with a numeric identifer. Below 
-# code defines setups 226 and 231.
 #    226: Setup c)      Delta^'13 C*',VJ       
 #    231: Setup h)      Delta^'13 C*',VJ, GPP  
 
@@ -290,6 +294,22 @@ setup_rsofun_calibration <- function(scenario){
   ))
 }
 
+
+setup_rsofun_calibration(226)
+setup_rsofun_calibration(226)$drivobs_train
+setup_rsofun_calibration(231)
+setup_rsofun_calibration(231)$drivobs_train
+```
+
+Then we also define a function to run the Markov Chain Monte Carlo (MCMC) sampling `run_mcmc_rsofun()`.
+This function reads in the unique setup identifier
+and uses the function `setup_rsofun_calibration()` to get all the necessary 
+definitions.
+By doing so this code can easily be parallelized in multiple jobs.
+
+```{r prepare multisite/multitarget calibration, eval = TRUE}
+#| class.source = 'fold-hide'
+
 run_mcmc_rsofun <- function(
     curr_calibration_scenario,
     # MCMC setup:
@@ -360,8 +380,8 @@ run_mcmc_rsofun <- function(
   
   # return only performance results as tibble
   timings <- tibble(
-    scenario       = curr_calibration_scenario,
-    name           = out_calib$name,
+    setup       = curr_calibration_scenario,
+    name        = gsub(".rds.log.txt","",out_calib$name),
     # sampling options:
     sampler        = calib_sofun_settings$control$sampler,
     burnin         = burnin,
@@ -371,13 +391,25 @@ run_mcmc_rsofun <- function(
     # performance results:
     cores          = n_parallel_independent,
     cores_inner    = n_parallel_within_sampler,
-    walltime       = out_calib$walltime,
-    resultfile     = out_calib$logpath
+    walltime       = out_calib$walltime #,
+    # logfile        = out_calib$logpath
   )
   return(timings)
 }
+
 ```
-##### Run calibration
+
+We additionally showcase below how to parallelize 
+multiple chains to different cores (`n_parallel_independent = 8`)
+and thus how to significantly speed up long-running calibration tasks.
+
+For long-running calibrations it can also be useful to be able to continue an 
+existing sampling chain with `continue_mcmc_rsofun()`.
+While this is not shown in this vignette, code for this is available on Zenodo 
+([10.5281/zenodo.17204361](https://dx.doi.org/10.5281/zenodo.17204361)).
+
+
+#### Run calibration
 With these helper functions specified, we can then run the two calibration setups.
 The sampled MCMC chains are stored to a specified path so that they can easily 
 be loaded at a later time in a separate R session.
@@ -390,15 +422,10 @@ allow us to specify the calibration setup, the MCMC setup, and the
 parallelization strategy.
 
 ```{r run multisite/multitarget calibration, eval = FALSE}
-setup_rsofun_calibration(226)
-setup_rsofun_calibration(226)$drivobs_train
-setup_rsofun_calibration(231)
-setup_rsofun_calibration(231)$drivobs_train
-
-dir.create("files/param_calib_multitarget/", showWarnings = FALSE)
+dir.create("vignettes/files/param_calib_multitarget/", showWarnings = FALSE)
 
 df_timings226 <- run_mcmc_rsofun(226, suffix_str = "setup_226",
-  outpath = "files/param_calib_multitarget/",
+  outpath = "vignettes/files/param_calib_multitarget/",
   # mcmc setup:
   sampler = "DREAMzs",
   iterations = 600, 
@@ -409,9 +436,14 @@ df_timings226 <- run_mcmc_rsofun(226, suffix_str = "setup_226",
   n_parallel_independent    = 1,     
   n_parallel_within_sampler = FALSE
   )
+# 2025-12-16 10:49:52.217434: start sampling of out_calib_setup_226.rds
+# runMCMC terminated after 4.39500000000407seconds00 . Current logp  -389.1087 -421.1468 -396.6275 Please wait! 
+# runMCMC terminated after 3.95499999998719seconds00 . Current logp  -377.7371 -379.5134 -377.3347 Please wait! 
+# ...
+# runMCMC terminated after 4.23500000000058seconds00 . Current logp  -397.9886 -379.6501 -382.6354 Please wait! 
 
 df_timings231 <- run_mcmc_rsofun(231, suffix_str = "setup_231",
-  outpath = "files/param_calib_multitarget/",
+  outpath = "vignettes/files/param_calib_multitarget/",
   # mcmc setup:
   sampler = "DREAMzs",
   iterations = 600, 
@@ -422,8 +454,16 @@ df_timings231 <- run_mcmc_rsofun(231, suffix_str = "setup_231",
   n_parallel_independent    = 1,     
   n_parallel_within_sampler = FALSE
   )
+# 2025-12-16 10:51:14.211219: start sampling of out_calib_setup_231.rds
+# Running DREAM-MCMC, chain  1 iteration 300 of 600 . Current logp  -14645.97 -14571.83 -15471.88 Please wait! 
+# runMCMC terminated after 16.8090000000084seconds00 . Current logp  -14616.55 -14462.62 -14529.8 Please wait!  
+# Running DREAM-MCMC, chain  2 iteration 300 of 600 . Current logp  -16760.01 -15828.73 -14948.44 Please wait! 
+# runMCMC terminated after 16.4020000000019seconds00 . Current logp  -14955.26 -14941.47 -14441.98 Please wait! 
+# ...
+# runMCMC terminated after 17.8410000000003seconds00 . Current logp  -15023.04 -14854.75 -14265.61 Please wait! 
+
 df_timings231p <- run_mcmc_rsofun(231, suffix_str = "setup_231_parallel",
-  outpath = "files/param_calib_multitarget/",
+  outpath = "vignettes/files/param_calib_multitarget/",
   # mcmc setup:
   sampler = "DREAMzs",
   iterations = 600,
@@ -434,16 +474,20 @@ df_timings231p <- run_mcmc_rsofun(231, suffix_str = "setup_231_parallel",
   n_parallel_independent    = 8,     # here now we parallelize the 8 chains to 8 cores
   n_parallel_within_sampler = FALSE
   )
-
+# 2025-12-16 10:52:17.880666: start sampling of out_calib_setup_231_parallel.rds
+# Writing MCMC sampling log to: files/param_calib_multitarget//calibrations/out_calib_setup_231_parallel.rds.log.txt
+# ...
+# 2025-12-16 10:55:56.813577: end   sampling of out_calib_setup_231_parallel.rds.log.txt. 
+# Written *.rds-output to: files/param_calib_multitarget//calibrations/out_calib_setup_231_parallel.rds
+```
+```{r eval = FALSE, include = FALSE}
+# store output since calibration isn't run
 calib_timings <- bind_rows(
   df_timings226, 
   df_timings231,
   df_timings231p)
-```
-```{r eval = FALSE, include = FALSE}
-# store output since calibration isn't run
 saveRDS(calib_timings,
-        "files/param_calib_multitarget.Rmd__calib_timings.RDS",
+        "vignettes/files/param_calib_multitarget.Rmd__calib_timings.RDS",
         compress = "xz")
 ```
 ```{r eval = TRUE, include = FALSE}
@@ -451,23 +495,68 @@ saveRDS(calib_timings,
 calib_timings <- readRDS(
   "files/param_calib_multitarget.Rmd__calib_timings.RDS")
 ```
+```{r}
+#| class.source = 'fold-hide'
+# calib_timings <- bind_rows(
+#   df_timings226, 
+#   df_timings231,
+#   df_timings231p)
+knitr::kable(calib_timings |> 
+               dplyr::mutate(name = gsub(".rds.log.txt","",name)) |>
+               dplyr::mutate(resultfile = gsub("vignettes/","",resultfile))
+             )
+```
+Note how the parallelized version reduced the walltime by 4x. 
+With additional independent MCMC chains (e.g. the rsofun documentation paper
+used up to 8 chains), this can become important.
 
 Since MCMC sampling can be long running tasks, the resulting MCMC sampling 
 chains are stored to disk, so that they can easily be recovered in a later R 
 session for an analysis similar to the one below.
 
-During the MCMC sampling
+During the paralell MCMC sampling the workers don't send output to the console.
+This is why a logfile is created and progress can be checked there.
+The above example resulted in a common log file of all eight workers:
+```
+starting worker pid=43576 on localhost:11353 at 11:15:05.976
+starting worker pid=43589 on localhost:11353 at 11:15:06.058
+starting worker pid=43602 on localhost:11353 at 11:15:06.142
+starting worker pid=43615 on localhost:11353 at 11:15:06.224
+starting worker pid=43628 on localhost:11353 at 11:15:06.306
+starting worker pid=43641 on localhost:11353 at 11:15:06.389
+starting worker pid=43654 on localhost:11353 at 11:15:06.476
+starting worker pid=43668 on localhost:11353 at 11:15:06.570
+Loading required package: rsofun
+loaded rsofun and set parent environment
+...
+ Running DREAM-MCMC, chain  1 iteration 300 of 600 . Current logp  -15821.4 ... Please wait! 
+ Running DREAM-MCMC, chain  1 iteration 300 of 600 . Current logp  -15415.3 ... Please wait! 
+ Running DREAM-MCMC, chain  1 iteration 300 of 600 . Current logp  -14739.4 ... Please wait! 
+...
+ Running DREAM-MCMC, chain  1 iteration 600 of 600 . Current logp  -14654.7 ... Please wait! 
+runMCMC terminated after 36.634seconds
+ Running DREAM-MCMC, chain  1 iteration 600 of 600 . Current logp  -14927.0 ... Please wait! 
+runMCMC terminated after 40.068seconds
+```
 
-##### Analyze model calibration
+#### Analyze model calibration
+
+After the MCMC sampling we could (potentially in a new R script), load the 
+sampled chains and analyse the chain convergence and posterior distribution.
+To do so we load the previous results from RDS files:
+
 ```{r load MCMC chains}
 # This loads MCMC chains that might have been generated with a separate R script
 out_calib_226 <- readRDS("files/param_calib_multitarget/calibrations/out_calib_setup_226.rds")
 out_calib_231p<- readRDS("files/param_calib_multitarget/calibrations/out_calib_setup_231_parallel.rds")
 ```
 
-```{r plot MCMC trace plot, fig.width=7, fig.height=4}
+We define some labelling changes to obtain nicer looking plots.
+
+```{r prepare MCMC plotting helpers, fig.width=7, fig.height=4}
+#| class.source = 'fold-hide'
 rsofun_symbol_parname_description <- dplyr::tribble(
-  ~variable,            ~label,                                                      ~Symbol_R2,
+  ~variable,            ~label,                                                      ~Symbol_R,
   "kphio",              "italic(phi)[0]^'*'*' (mol mol\u207B\u00B9)'",               "italic(phi)[0]^'*'",
   "kphio_par_a",        "italic(a)[italic(phi)]*' (\u00B0C\u207B\u00B2)'",           "italic(a)[italic(phi)]",
   "kphio_par_b",        "italic(b)[italic(phi)]*' (\u00B0C)'",                       "italic(b)[italic(phi)]",
@@ -480,7 +569,7 @@ rsofun_symbol_parname_description <- dplyr::tribble(
   "err_gpp",            "italic(sigma)['GPP']*' (gC m \u207B\u00B2 s\u207B\u00B9)'", "italic(sigma)['GPP']",
   "err_bigD13C",        "italic(sigma)[Delta]*' ('*'\u2030'*')'",                    "italic(sigma)[Delta]"
 )
-label_vec_short <- setNames(rsofun_symbol_parname_description$Symbol_R2, rsofun_symbol_parname_description$variable)
+label_vec_short <- setNames(rsofun_symbol_parname_description$Symbol_R, rsofun_symbol_parname_description$variable)
 custom_labeller_variable <- function(labels, multi_line = TRUE) { # adapted from label_parsed
   replaced_labels <- left_join(select(labels, variable), # NOTE: this has variable hardcoded
                                select(rsofun_symbol_parname_description, variable, label),
@@ -494,6 +583,19 @@ custom_labeller_variable <- function(labels, multi_line = TRUE) { # adapted from
       })
 }
 
+```
+
+And we define a function `plot_mcmc_trace()` to plot a trace plot of the MCMC sampling including
+Gelman-Rubin statistics to easily assess convergence for the two calibration setups.
+For this vignette examples we did not run the MCMC long enough to see converging trace plots.
+In a real application, one would need to increase the number of iterations.
+What we can see is the number of chains, which are the 8 independent chains, each
+consisting of 3 internal chains for a total of 24 traces in the plots.
+Note that the 3 internal chains also reduce the length of the iterations from 
+the specified 600 to 200.
+
+```{r function for  MCMC trace plot, fig.width=7, fig.height=4}
+#| class.source = 'fold-hide'
 
 # Define plotting function
 plot_mcmc_trace <- function(out_calib, nr_internal_chains, burnin_to_skip, burnin_to_skip_gelman = burnin_to_skip, dont_thin=FALSE, end = NULL){
@@ -553,11 +655,22 @@ plot_mcmc_trace <- function(out_calib, nr_internal_chains, burnin_to_skip, burni
 
   return(pl)
 }
+```
+
+```{r plot MCMC trace plot, fig.width=7, fig.height=4}
 plot_mcmc_trace(out_calib_226, nr_internal_chains = 3, burnin_to_skip = 0, burnin_to_skip_gelman = 150)
 plot_mcmc_trace(out_calib_231p,nr_internal_chains = 3, burnin_to_skip = 0, burnin_to_skip_gelman = 150)
 ```
 
-```{r plot parameter distributions, fig.width=7, fig.height=7}
+We illustrate the posterior (derived from these unconverged example MCMC chains) 
+by defining a function `plot_prior_posterior_density()` that shows the prior and
+posterior distributions.
+
+We can clearly distinguish the different priors used in the the two setups, and
+how the calibration constrains the posteriors to different parameter values.
+
+```{r function for plot parameter distributions, fig.width=7, fig.height=7}
+#| class.source = 'fold-hide'
 plot_prior_posterior_density <- function(x, burnin_to_skip){
   require(BayesianTools)
   require(dplyr)
@@ -590,7 +703,8 @@ plot_prior_posterior_density <- function(x, burnin_to_skip){
     ) +
     geom_density(alpha=0.8) +
     theme_classic() +
-    facet_wrap( ~ variable , nrow = 2, scales = "free") +
+    facet_wrap( ~ variable,  nrow = 2, scales = "free", labeller = custom_labeller_variable) +
+    # facet_wrap( ~ variable , nrow = 2, scales = "free") +
     theme(
       legend.position = "bottom",
       axis.title.x = element_text(""),
@@ -602,26 +716,36 @@ plot_prior_posterior_density <- function(x, burnin_to_skip){
 
   return(gg)
 }
-
+```
+```{r plot parameter distributions, fig.width=7, fig.height=7}
 library(cowplot)
 p1 <- plot_prior_posterior_density(out_calib_226$mod,  burnin_to_skip = 200) +  ggtitle(out_calib_226$name)
 p2 <- plot_prior_posterior_density(out_calib_231p$mod, burnin_to_skip = 20) +  ggtitle(out_calib_231p$name)
 cowplot::plot_grid(p1,p2, ncol = 1)
 ```
 
+The joint prior distributions of the parameters can be assessed for correlation
+between parameters, indicating compensating effects between them which is often
+also called equifinality - same model output with different parameter sets.
+
 ```{r plot parameter correlation, fig.width=7, fig.height=7}
 BayesianTools::correlationPlot(out_calib_231p$mod)
 ```
 
 
-##### Compare predictions of calibrated model with observations
-```{r load MCMC chains II}
-# This loads MCMC chains that might have been generated with a separate R script
-out_calib_226 <- readRDS("files/param_calib_multitarget/calibrations/out_calib_setup_226.rds")
-out_calib_231p<- readRDS("files/param_calib_multitarget/calibrations/out_calib_setup_231_parallel.rds")
-```
+#### Compare predictions of the calibrated model with observations
+Eventually, we want to use the calibrated model for predictions and also check 
+their agreement with the observations used for calibration. For that we define 
+another helper function `run_prediction_rsofun()`, which samples parameter sets 
+from the MCMC chain to make predictions. A second function samples errors from
+the identified structural uncertainty (error model) and combines them with the 
+predictions.
+To do so they use helper functions (`setup_rsofun_calibration()`, 
+`apply_bias_correction_and_sample_error()`, and `predict_sofun_parallelized()`).
 
 ```{r prepare predictions, eval = TRUE}
+#| class.source = 'fold-hide'
+
 # Samples posterior parameters (MAP or N=n_samples) and runs
 # model predictions
 # 
@@ -809,6 +933,10 @@ apply_bias_correction_and_sample_error <- function(df_pred, N_sample_error){
 }
 ```
 
+With these functions we can generate the predictions using e.g. the 
+Maximum-A-Posteriori (MAP) parameters as well as `n=20` samples from the 
+posterior.
+
 ```{r make predictions, eval = FALSE}
 # get MAP and run model for MAP parameter set
 df_predict_MAP_train_231p <- run_prediction_rsofun(
@@ -849,7 +977,9 @@ df_predict_231p_gpp_sampled <- apply_bias_correction_and_sample_error(
 df_predict_231p_bigD13C_sampled <- apply_bias_correction_and_sample_error(
   df_predict_bigD13C,
   N_sample_error = N_sample_error)
-
+```
+```{R}
+#| class.source = 'fold-hide'
 # Save predictions to plot with separate script:
 # FOR STORAGE REASONS unnest the obs_metadata and save different targets separately:
 # out_prediction_template <- file.path("files/param_calib_multitarget/", 
@@ -875,7 +1005,18 @@ df_predict_231p_bigD13C_sampled <- apply_bias_correction_and_sample_error(
 # df_predict_231p_gpp_sampled     <- readr::read_rds(paste0("/storage/scratch/giub_geco/fbernhard/rsofun_doc_outputs/data/predictions/out_predict_",n_post,"_30000burnin__out_calib__scen222_DREAMzs-100000-0iter_8x3chains_on_CPU8x1_continued.rds_gpp_sampled",n_err,".rds"))
 ```
 
+With a function `plot_predobs_gpp_timeseries3()` and `analyse_modobs3()`, model 
+output and observations can be 
+compared as either time series plots or as scatter plots.
+
+Below we plot a time series comparing predictions with observations, 
+we can distinguish the parametric uncertainty ('Posterior') related to the width 
+of the posterior distribtution of the parameters and structural uncertainty (or
+model uncertainty) that includes the samples of the error model.
+
 ```{r plot helper functions, eval = TRUE}
+#| class.source = 'fold-hide'
+
 # add transparency to colors
 t_col <- function(color, percent = 50, name = NULL) {
   #      color = color name
@@ -1036,44 +1177,7 @@ analyse_modobs3 <- function(df,
 
   return(list(df_metrics = df_metrics, gg = gg, linmod = linmod, results = results))
 }
-```
 
-```{r plot Pred Vs Obs time series, eval = FALSE}
-# Time series of GPP (Figure C5)
-dflong_gpp_train <- df_predict_231p_gpp_sampled |> 
-  mutate(Scenario = "231") |>
-  # select only training sites
-  filter(is_train0_test1 == 0) |> 
-  select(posterior_sample_id, error_sample_id, Scenario, is_train0_test1, is_MAP, sitename, target,
-         obs,                 date, # these are target specific observation_metadata
-         mod_no_err, mod_biasremoved_no_err, mod_biasremoved_with_err) |>
-  # pivot the model_output_types to long
-  tidyr::pivot_longer(c(mod_no_err, mod_biasremoved_no_err, mod_biasremoved_with_err),
-                      names_to = "model_output_type", values_to = "modelled") |>
-  mutate(model_output_type = factor(
-    model_output_type,
-    levels = c("mod_no_err","mod_biasremoved_no_err","mod_biasremoved_with_err"),
-    labels = c("rsofun",    "bias-corrected",        "with struct. uncert."))) |>
-  # derive column `parameters` ("MAP" or "Posterior") from `is_MAP`
-  mutate(is_MAP = factor(ifelse(is_MAP, "MAP", "Posterior"))) |> 
-  rename(parameters = is_MAP) |>
-  # derive column `dataset` ("train" or "test") from column `is_train0_test1`
-  mutate(is_train0_test1 = factor(ifelse(is_train0_test1==1, "test", "train"))) |> 
-  rename(dataset = is_train0_test1)
-
-df_B3_timeseries <- dflong_gpp_train |>
-  # remove the bias-corrected values for gpp since we did not fit a bias
-  filter(!(model_output_type %in% c("bias-corrected"))) |>
-  # select what to plot and how to name it
-  mutate(y_facet = case_when(
-    Scenario == "231" & model_output_type == "rsofun" &               parameters == "MAP"       ~ "MAP",
-    Scenario == "231" & model_output_type == "rsofun" &               parameters == "Posterior" ~ "Posterior",
-    Scenario == "231" & model_output_type == "with struct. uncert." & parameters == "Posterior" ~ "Post.+Error",
-    # all else is not plotted
-    TRUE ~ "remove") |> factor(levels = c("MAP","Posterior","Post.+Error"))) |>
-  filter(y_facet != "remove")
-
-# Plot raw predictions
 plot_predobs_gpp_timeseries3 <- function(ts_to_plot){
   
   # separate obs
@@ -1135,7 +1239,44 @@ plot_predobs_gpp_timeseries3 <- function(ts_to_plot){
     ) +
     scale_x_date(date_breaks = "12 months", date_labels = "%Y-%m")
 }
+```
 
+```{r plot Pred Vs Obs time series, eval = FALSE}
+# Time series of GPP (Figure C5)
+dflong_gpp_train <- df_predict_231p_gpp_sampled |> 
+  mutate(Scenario = "231") |>
+  # select only training sites
+  filter(is_train0_test1 == 0) |> 
+  select(posterior_sample_id, error_sample_id, Scenario, is_train0_test1, is_MAP, sitename, target,
+         obs,                 date, # these are target specific observation_metadata
+         mod_no_err, mod_biasremoved_no_err, mod_biasremoved_with_err) |>
+  # pivot the model_output_types to long
+  tidyr::pivot_longer(c(mod_no_err, mod_biasremoved_no_err, mod_biasremoved_with_err),
+                      names_to = "model_output_type", values_to = "modelled") |>
+  mutate(model_output_type = factor(
+    model_output_type,
+    levels = c("mod_no_err","mod_biasremoved_no_err","mod_biasremoved_with_err"),
+    labels = c("rsofun",    "bias-corrected",        "with struct. uncert."))) |>
+  # derive column `parameters` ("MAP" or "Posterior") from `is_MAP`
+  mutate(is_MAP = factor(ifelse(is_MAP, "MAP", "Posterior"))) |> 
+  rename(parameters = is_MAP) |>
+  # derive column `dataset` ("train" or "test") from column `is_train0_test1`
+  mutate(is_train0_test1 = factor(ifelse(is_train0_test1==1, "test", "train"))) |> 
+  rename(dataset = is_train0_test1)
+
+df_B3_timeseries <- dflong_gpp_train |>
+  # remove the bias-corrected values for gpp since we did not fit a bias
+  filter(!(model_output_type %in% c("bias-corrected"))) |>
+  # select what to plot and how to name it
+  mutate(y_facet = case_when(
+    Scenario == "231" & model_output_type == "rsofun" &               parameters == "MAP"       ~ "MAP",
+    Scenario == "231" & model_output_type == "rsofun" &               parameters == "Posterior" ~ "Posterior",
+    Scenario == "231" & model_output_type == "with struct. uncert." & parameters == "Posterior" ~ "Post.+Error",
+    # all else is not plotted
+    TRUE ~ "remove") |> factor(levels = c("MAP","Posterior","Post.+Error"))) |>
+  filter(y_facet != "remove")
+
+# Plot raw predictions
 pl_timeseries_gpp <- plot_predobs_gpp_timeseries3(df_B3_timeseries)
 pl_timeseries_gpp
 ```
@@ -1150,6 +1291,11 @@ ggplot2::ggsave(
 knitr::include_graphics("files/param_calib_multitarget/predictions/pl_timeseries_gpp.png", 
                         dpi = 100)
 ```
+
+Below we show a density scatter plot comparing predictions with observations.
+Since we use the MAP values for predictions, the uncertainty of the parameters
+is not taken into account. These plots are useful to detect model biases for 
+specific target variables or specific ranges of the target variables.
 
 ```{r plot Pred Vs Obs scatter plot, eval = FALSE}
 gpp_labs <- function(xNULL=FALSE){
@@ -1211,4 +1357,11 @@ ggplot2::ggsave(
 knitr::include_graphics("files/param_calib_multitarget/predictions/pl_scatter_comparison.png", 
                         dpi = 150)
 ```
+
+
+The above vignette hopefully gives a first glimpse into a realistic workflow
+that calibrates `rsofun` for multiple sites to multiple targets.
+For more details refer to the model documentation paper 
+[(Paredes et al. 2025)](https://doi.org/10.5194/gmd-18-9855-2025) and
+the code referred therein.
 
