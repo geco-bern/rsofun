@@ -203,7 +203,7 @@ calib_sofun <- function(
     if (settings$control$n_parallel_independent > 1){ # parallel MCMC sampler:
       simname <- basename(logpath)
       
-      message(paste0("Writing MCMC sampling log to: ", logpath)); flush.console()
+      message(paste0("Writing MCMC sampling log to: ", logpath)); utils::flush.console()
       cl <- parallel::makeCluster(
         settings$control$n_parallel_independent,  
         outfile = logpath) # logpath for progress logging of all workers
