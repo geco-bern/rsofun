@@ -101,9 +101,6 @@ test_that("p-model run containing daily and onestep simulations", {
   # output3 <- rsofun::runread_pmodel_f(
   #   drivers = rsofun::p_model_oldformat_drivers,
   #   par = params_modl)
-  # output4 <- rsofun::runread_pmodel_f(
-  #   drivers = rsofun::p_model_oldformat_drivers_vcmax25,
-  #   par = params_modl)
   
   # load parameters (valid ones)
   params_modl <- list(

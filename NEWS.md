@@ -93,42 +93,6 @@
                             snow, rain, tmin, tmax, wind, fapar, co2, ccov)) |>
     # add new column 'onestep' in nested 'param_siml'
     dplyr::mutate(params_siml = purrr::map(params_siml, ~dplyr::mutate(.x, onestep = FALSE)))
-    
-  rsofun::p_model_oldformat_drivers_vcmax25 |> 
-    tidyr::unnest(site_info) |> mutate(latitude = lat) |> tidyr::nest(site_info = c(lon,lat,elv,year_start,year_end,whc)) |>
-    # 'forcing' compute growing averages of temp,vpd,ppfd,co2,patm
-    # # add tgrowth (daily average daytime temperature)
-    tidyr::unnest(forcing) |> 
-    rowwise() |>
-    mutate(
-      doy             = lubridate::yday(date),
-      # tgrowth_degC (i.e. average temperature during daytime, considering daylength, assuming sinusoidal temp profile):
-      # eq.5 in Peng et al., 2023 (https://onlinelibrary.wiley.com/doi/abs/10.1111/1365-2745.14208)
-      # tgrowth_degC    = ingestr::calc_tgrowth(tmin,tmax,lat=latitude,doy=doy),
-      tgrowth_degC = mean(tmin, tmax) # actually in rsofun::p_model_oldformat_drivers_vcmax25 tmin == tmax, so no need to calc_tgrowth
-    ) |>
-    group_by(sitename) |> 
-    # 2ii) add growing season (if a month has tavg_monthly > 0)
-    mutate(month = lubridate::month(date)) |>
-    group_by(sitename, params_siml, site_info, month) |> mutate(tavg_monthly = mean(temp), 
-                                                                growing_season  = tavg_monthly > 0) |> 
-    group_by(sitename) |>
-    # compute means across growing season (i.e. across months for which monthly tmean > 0 deg C)
-    filter(growing_season) |>
-    group_by(sitename, params_siml, site_info) |>
-    summarise(
-      # growing_season_doys = paste0(doy,collapse = ","),
-      growing_season_length = length(date),
-      temp = mean(tgrowth_degC),
-      vpd = mean(vpd),
-      ppfd=mean(ppfd),  # molm2s
-      co2 = mean(co2),
-      patm = mean(patm)
-    ) |>
-    ungroup() |> select(-growing_season_length) |>
-    tidyr::nest(forcing = c(temp,vpd,ppfd,co2,patm)) |>
-    # add new column 'onestep' in nested 'param_siml'
-    dplyr::mutate(params_siml = purrr::map(params_siml, ~dplyr::mutate(.x, onestep = FALSE)))
   ```
 * Below some code snippets to transform between new and old validation (i.e. observation) data.frame format:
 
@@ -158,15 +122,6 @@
     dplyr::select(-gpp_unc) |>
     dplyr::mutate(gpp_qc = 1, nee = NA, nee_qc = NA, le = NA, le_qc = NA) |>
     tidyr::nest(data = c('date', 'gpp','gpp_qc','nee','nee_qc','le','le_qc')) |>
-    # order columns
-    dplyr::select(sitename, targets, data)
-  
-  rsofun::p_model_oldformat_validation_vcmax25 |>
-    # add new column 'targets'
-    dplyr::mutate(targets = list(c("vcmax25"))) |>
-    # add new columns inside of 'data':
-    tidyr::unnest(data) |>
-    tidyr::nest(data = c('vcmax25', 'vcmax25_unc')) |>
     # order columns
     dplyr::select(sitename, targets, data)
   ```
