@@ -557,8 +557,8 @@ We define some labelling changes to obtain nicer looking plots.
 #| class.source = 'fold-hide'
 rsofun_symbol_parname_description <- dplyr::tribble(
   ~variable,            ~label,                                                      ~Symbol_R,
-  "kphio",              "italic(phi)[0]^'*'*' (mol mol\u207B\u00B9)'",               "italic(phi)[0]^'*'",
-  "kphio_par_a",        "italic(a)[italic(phi)]*' (\u00B0C\u207B\u00B2)'",           "italic(a)[italic(phi)]",
+  "kphio",              "italic(phi)[0]^'*'*' (mol mol-\u00B9)'",               "italic(phi)[0]^'*'",
+  "kphio_par_a",        "italic(a)[italic(phi)]*' (\u00B0C-\u00B2)'",           "italic(a)[italic(phi)]",
   "kphio_par_b",        "italic(b)[italic(phi)]*' (\u00B0C)'",                       "italic(b)[italic(phi)]",
   "soilm_thetastar",    "italic(theta)^'*'*' ('*'mm'*')'",                           "italic(theta)^'*'",
   "soilm_betao",        "italic(beta)[0]*' (-)'",                                    "italic(beta)[0]",
@@ -566,7 +566,7 @@ rsofun_symbol_parname_description <- dplyr::tribble(
   "rd_to_vcmax",        "italic(b)[0]*' (-)'",                                       "italic(b)[0]",
   "tau_acclim",         "italic(tau)*' (days)'",                                     "italic(tau)",
   "kc_jmax",            "italic(c)^'*'*' (-)'",                                      "italic(c)^'*'",
-  "err_gpp",            "italic(sigma)['GPP']*' (gC m \u207B\u00B2 s\u207B\u00B9)'", "italic(sigma)['GPP']",
+  "err_gpp",            "italic(sigma)['GPP']*' (gC m -\u00B2 s-\u00B9)'", "italic(sigma)['GPP']",
   "err_bigD13C",        "italic(sigma)[Delta]*' ('*'\u2030'*')'",                    "italic(sigma)[Delta]"
 )
 label_vec_short <- setNames(rsofun_symbol_parname_description$Symbol_R, rsofun_symbol_parname_description$variable)
@@ -1299,8 +1299,8 @@ specific target variables or specific ranges of the target variables.
 
 ```{r plot Pred Vs Obs scatter plot, eval = FALSE}
 gpp_labs <- function(xNULL=FALSE){
-  list(labs(x = ifelse(xNULL," ", "Predicted GPP (g C m\u207B\u00B2 s\u207B\u00B9)"),
-            y = "Observed GPP (g C m\u207B\u00B2 s\u207B\u00B9)"))
+  list(labs(x = ifelse(xNULL," ", "Predicted GPP (g C m-\u00B2 s-\u00B9)"),
+            y = "Observed GPP (g C m-\u00B2 s-\u00B9)"))
 }
 bigD13C_labs <- function(xNULL=FALSE){
   list(labs(x = ifelse(xNULL," ", "Predicted Δ (\u2030)"),
