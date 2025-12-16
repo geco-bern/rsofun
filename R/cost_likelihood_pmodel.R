@@ -26,7 +26,7 @@
 #' @param ncores An integer specifying the number of cores used for parallel
 #' computing. Defaults to 2.
 #' @param get_mod_obs Function running P-model and combining model outputs and 
-#' observations (defaults to get_mod_obs_pmodel_bigD13C_vj_gpp)
+#' observations (defaults to get_mod_obs_pmodel)
 #'
 #' @return The log-likelihood of the observed target values, assuming that they
 #' are independent, normally distributed and centered on the predictions
@@ -73,7 +73,7 @@ cost_likelihood_pmodel <- function(
     par_fixed = NULL,   # non-calibrated model parameters
     parallel  = FALSE,
     ncores    = 1,
-    get_mod_obs = get_mod_obs_pmodel_bigD13C_vj_gpp # default argument needed as 
+    get_mod_obs = get_mod_obs_pmodel # default argument needed as 
                                                     # workaround to make this 
                                                     # function easily available 
                                                     # on parallel workers
@@ -162,7 +162,7 @@ cost_likelihood_pmodel <- function(
 #' are returned as daily, continuous time series (including days without observations)
 #' or whether modelled values are only returned when a corresponding observation 
 #' is available.
-get_mod_obs_pmodel_bigD13C_vj_gpp <- function(
+get_mod_obs_pmodel <- function(
     drivers,
     obs,
     params_modl_and_err,

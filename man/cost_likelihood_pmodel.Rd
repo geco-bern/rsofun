@@ -12,7 +12,7 @@ cost_likelihood_pmodel(
   par_fixed = NULL,
   parallel = FALSE,
   ncores = 1,
-  get_mod_obs = get_mod_obs_pmodel_bigD13C_vj_gpp
+  get_mod_obs = get_mod_obs_pmodel
 )
 }
 \arguments{
@@ -42,7 +42,7 @@ parameters are uniquely defined and passed on to \code{\link{runread_pmodel_f}}.
 computing. Defaults to 2.}
 
 \item{get_mod_obs}{Function running P-model and combining model outputs and 
-observations (defaults to get_mod_obs_pmodel_bigD13C_vj_gpp)}
+observations (defaults to get_mod_obs_pmodel)}
 }
 \value{
 The log-likelihood of the observed target values, assuming that they

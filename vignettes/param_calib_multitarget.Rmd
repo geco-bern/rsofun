@@ -862,7 +862,7 @@ predict_sofun_parallelized <- function(
     params_modl <- c(par, par_fixed)
 
     # B,C) Run model and bring together with observed ----
-    df_pred_vs_obs <- rsofun:::get_mod_obs_pmodel_bigD13C_vj_gpp(
+    df_pred_vs_obs <- rsofun:::get_mod_obs_pmodel(
       drivers, 
       obs, 
       params_modl, 

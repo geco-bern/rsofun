@@ -185,7 +185,7 @@ calib_sofun <- function(
     # since data is provided as a closure (drivers, obs) we need a function factory to be able
     # create this function on each worker
     
-    # make available get_mod_obs_pmodel_bigD13C_vj_gpp so we can export it to workers
+    # make available get_mod_obs_pmodel so we can export it to workers
     ll_factory <- function(obs, drivers, parnames, get_mod_obs, ...){
       function(random_par){
         eval(settings$metric)(par = setNames(random_par, parnames),
@@ -227,7 +227,7 @@ calib_sofun <- function(
       indep_chains <- foreach::foreach(
         iii = 1:settings$control$n_parallel_independent,
         .packages=c('BayesianTools','rsofun','dplyr','tidyr','lubridate'),
-        .export = c('get_mod_obs_pmodel_bigD13C_vj_gpp'),
+        .export = c('get_mod_obs_pmodel'),
         .verbose = TRUE
       ) %dopar% {    # foreach::`%dopar%`
         
@@ -235,9 +235,9 @@ calib_sofun <- function(
         bayesianSetup <- BayesianTools::createBayesianSetup(
           
           # inside worker: rebuild the closure so it picks up 'obs', 'drivers', 
-          #                'parnames', 'get_mod_obs_pmodel_bigD13C_vj_gpp'
+          #                'parnames', 'get_mod_obs_pmodel'
           likelihood = ll_factory(obs, drivers, parnames, 
-                                  get_mod_obs = get_mod_obs_pmodel_bigD13C_vj_gpp, 
+                                  get_mod_obs = get_mod_obs_pmodel, 
                                   ...),
           prior      = priors,
           names      = parnames,
@@ -258,7 +258,7 @@ calib_sofun <- function(
       # setup the bayesian sampling
       bayesianSetup <- BayesianTools::createBayesianSetup(
         likelihood = ll_factory(obs, drivers, parnames, 
-                                get_mod_obs = get_mod_obs_pmodel_bigD13C_vj_gpp, 
+                                get_mod_obs = get_mod_obs_pmodel, 
                                 ...),
         prior      = priors,
         names      = parnames,
