@@ -10,8 +10,8 @@ test_that("test calibration routine biomee (likelihood cost + Bayesiantools)", {
     method              = "bayesiantools",
     metric              = rsofun::cost_likelihood_biomee,
     control = list(
-      sampler = "DEzs",
-      settings = list(
+      sampler_runMCMC = "DEzs",
+      settings_runMCMC = list(
         burnin = 1,
         iterations = 4,
         nrChains = 1

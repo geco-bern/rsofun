@@ -56,8 +56,8 @@ settings_joint_likelihood <- list(
   method = "BayesianTools",
   metric  = rsofun::cost_likelihood_pmodel,
   control = list(
-    sampler = "DREAMzs",
-    settings = list(
+    sampler_runMCMC = "DREAMzs",
+    settings_runMCMC = list(
       # burnin = 1500,             # kept artificially low
       # iterations = 3000,
       burnin = 0,
@@ -80,7 +80,7 @@ obs <- pmodel_validation |>
 par_calib_join <- calib_sofun(
   drivers  = drivers,
   obs      = obs,
-  settings = settings_joint_likelihood,
+  settings_calib = settings_joint_likelihood,
   # arguments for the cost function
   par_fixed = params_fixed
 )
@@ -322,7 +322,7 @@ run_mcmc_rsofun <- function(
     n_parallel_within_sampler = FALSE, # number of cores for parallelization of within-sampler chains  https://cran.r-project.org/web/packages/BayesianTools/vignettes/InterfacingAModel.html#within-sampler-parallelization as well as https://cran.r-project.org/web/packages/BayesianTools/vignettes/BayesianTools.html#reference-on-creating-likelihoods
     outpath = "data",
     suffix_str = "",
-    sampler = "DREAMzs"
+    sampler_runMCMC = "DREAMzs"
     ) {
   # Setup simulation model
   res <- setup_rsofun_calibration(scenario = curr_calibration_scenario)
@@ -343,8 +343,8 @@ run_mcmc_rsofun <- function(
     method = "BayesianTools",
     metric = rsofun::cost_likelihood_pmodel,
     control = list(
-      sampler = sampler,
-      settings = list(
+      sampler_runMCMC = sampler,
+      settings_runMCMC = list(
         burnin     = burnin,                 # 10000,
         iterations = iterations,             # 50000,
         startValue = n_chains_within_sampler # number of internal chains to be sampled
@@ -366,7 +366,7 @@ run_mcmc_rsofun <- function(
   out_calib <- calib_sofun(
     drivers   = driver_to_use_for_mcmc,
     obs       = obs_to_use_for_mcmc,
-    settings  = calib_sofun_settings,
+    settings_calib = calib_sofun_settings,
     logpath   = logpath,
     # other arguments for the cost function
     par_fixed = res$par_fixed
@@ -382,7 +382,7 @@ run_mcmc_rsofun <- function(
     setup       = curr_calibration_scenario,
     name        = gsub(".rds.log.txt", "", out_calib$name),
     # sampling options:
-    sampler        = calib_sofun_settings$control$sampler,
+    sampler        = calib_sofun_settings$control$sampler_runMCMC,
     burnin         = burnin,
     iterations     = iterations,
     n_chains       = n_chains_independent,

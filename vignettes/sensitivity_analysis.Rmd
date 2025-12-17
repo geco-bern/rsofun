@@ -246,8 +246,8 @@ settings_calib <- list(
   method = "BayesianTools",
   metric = rsofun::cost_likelihood_pmodel,
   control = list(
-    sampler = "DEzs",
-    settings = list(
+    sampler_runMCMC = "DEzs",
+    settings_runMCMC = list(
       burnin = 12000,
       iterations = 24000,
       startValue = 3 # number of internal chains to be sampled (dependent)
@@ -280,7 +280,7 @@ par_fixed <- list(
 par_calib <- calib_sofun(
   drivers = pmodel_drivers |> dplyr::filter(sitename == "FR-Pue"),
   obs     = pmodel_validation |> dplyr::filter(sitename == "FR-Pue"),
-  settings = settings_calib,
+  settings_calib = settings_calib,
   par_fixed = par_fixed
 )
 saveRDS(par_calib, "files/sensitivity_analysis.Rmd__par_calib.RDS", compress = "xz")

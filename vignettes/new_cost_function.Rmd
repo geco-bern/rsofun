@@ -104,8 +104,8 @@ settings_likelihood <- list(
   method = "BayesianTools",
   metric = cost_likelihood_pmodel,            # our cost function
   control = list(                             # optimization control settings for 
-    sampler = "DEzs",                           # BayesianTools::runMCMC
-    settings = list(
+    sampler_runMCMC = "DEzs",                 # BayesianTools::runMCMC
+    settings_runMCMC = list(
       burnin = 1500,
       iterations = 3000
   )),
@@ -124,7 +124,7 @@ pars_calib_likelihood <- calib_sofun(
   # calib_sofun arguments:
   drivers  = drivers_to_use,
   obs      = obs_to_use,
-  settings = settings_likelihood,
+  settings_calib = settings_likelihood,
   # extra arguments passed to the cost function:
   par_fixed = list( # fix all other parameters
     soilm_thetastar    = 0.6 * 240,  # to recover paper setup with soil moisture stress
@@ -219,7 +219,7 @@ settings_mae <- list(
 pars_calib_mae <- calib_sofun(
   drivers = pmodel_drivers,
   obs = pmodel_validation,
-  settings = settings_mae,
+  settings_calib = settings_mae,
   # optional arguments if needed in the cost function
   my_own_message = "Hi from inside the cost_mae function."
 )
@@ -325,7 +325,7 @@ settings_mae <- list(
 pars_calib_mae <- calib_sofun(
   drivers = pmodel_drivers,
   obs = pmodel_validation,
-  settings = settings_mae
+  settings_calib = settings_mae
 )
 ```
 ```{r eval = FALSE, include = FALSE}

@@ -7,7 +7,7 @@
 calib_sofun(
   drivers,
   obs,
-  settings,
+  settings_calib,
   optim_out = TRUE,
   logpath = file.path(tempdir(), paste0("out_calib_", "my_calibration_name",
     ".rds.log.txt")),
@@ -25,7 +25,7 @@ calibration. See \code{\link{pmodel_validation}} for a description of the data
 structure. Additional columns can optionally be provided to \code{obs} to
 control e.g. the processing within a personalized cost function.}
 
-\item{settings}{A list containing model calibration settings.
+\item{settings_calib}{A list containing model calibration settings.
 See the 'P-model usage' vignette for more information and examples.
 \describe{
  \item{\code{method}}{A string indicating the optimization method, either \code{'GenSA'}
@@ -43,7 +43,7 @@ See the 'P-model usage' vignette for more information and examples.
  calibration' vignette for examples.}
  \item{\code{control}}{A list of arguments passed on to the optimization function.
  If \code{method = 'GenSA'}, see \link[GenSA]{GenSA}. If \code{method = 'BayesianTools'}
- the list should include at least \code{settings} and \code{sampler}, see
+ the list should include at least \code{sampler_runMCMC} and \code{settings_runMCMC}, see
  \link[BayesianTools:runMCMC]{BayesianTools::runMCMC}.}
 }}
 
@@ -92,17 +92,17 @@ params_fix       <- list(
   kc_jmax            = 0.41
 )
 # Define calibration settings
-settings <- list(
+settings_calib <- list(
   method  = "BayesianTools",
   par     = params_to_estimate,
   metric  = rsofun::cost_likelihood_pmodel,
   control = list(
-    sampler = "DEzs",
-    settings = list(
+    sampler_runMCMC = "DEzs",
+    settings_runMCMC = list(
       burnin = 0,
-      iterations = 10     # kept artificially low
+      iterations = 10,     # kept artificially low
+      nrChains = 1         # 2, # these are the independent chains
     ),
-    n_chains_independent   = 1, # 2,
     n_parallel_independent = 1  # 2, this can be parallelized
   )
 )
@@ -112,7 +112,7 @@ calib_output <- rsofun::calib_sofun(
     dplyr::filter(sitename \%in\% c("FR-Pue", "lon_+146.13_lat_-032.97")),
   obs     = rsofun::pmodel_validation |>
     dplyr::filter(sitename \%in\% c("FR-Pue", "lon_+146.13_lat_-032.97")),
-  settings = settings,
+  settings_calib = settings_calib,
   # extra arguments for the cost function
   par_fixed = params_fix
 )
@@ -125,7 +125,7 @@ calib_output$fpath    # path of rds output
 
 # Calib 2: use GenSa optimization of RMSE
 # Calibrate the model and optimize the free parameters using demo datasets
-settings_rmse <- list(
+settings_calib_rmse <- list(
   method = "GenSA",                   # minimizes the RMSE
   metric = cost_rmse_pmodel,          # our cost function returning the RMSE
   control = list( # control parameters for optimizer GenSA
@@ -140,7 +140,7 @@ pars_calib_rmse <- calib_sofun(
   # calib_sofun arguments:
   drivers  = drivers_to_use,
   obs      = obs_to_use,
-  settings = settings_rmse,
+  settings_calib = settings_calib_rmse,
   # extra arguments passed to the cost function:
   par_fixed = list( # fix all other parameters
     kphio_par_a        = 0.0,        # set to zero to disable temperature-dependence

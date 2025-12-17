@@ -88,7 +88,7 @@ output <- rsofun::runread_pmodel_f(
 To optimize new parameters based upon driver data and a validation dataset we must first specify an optimization strategy and settings, as well as a cost function and parameter ranges.
 
 ``` r
-settings <- list(
+settings_calib <- list(
   method              = "GenSA",
   metric              = cost_rmse_pmodel,
   control = list(
@@ -110,7 +110,7 @@ With all settings defined the optimization function `calib_sofun()` can be calle
 pars <- calib_sofun(
     drivers = pmodel_drivers,  
     obs = pmodel_validation,
-    settings = settings,
+    settings_calib = settings_calib,
     # extra arguments passed to the cost function:
     par_fixed = params_modl[-1]  # fix non-calibrated parameters to previous 
                                  # values, removing kphio
