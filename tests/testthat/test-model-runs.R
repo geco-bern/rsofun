@@ -118,8 +118,6 @@ test_that("p-model run containing daily and onestep simulations", {
   # read in demo data
   df_drivers <- pmodel_drivers
 
-  df_drivers[[5,'site_info']][[1]]$whc <- 432.375 # to force old value for test
-  
   # run the SOFUN Fortran P-model for FR-Pue
   stopifnot(df_drivers$sitename[[5]] == "FR-Pue")
   mod <- run_pmodel_f_bysite(
