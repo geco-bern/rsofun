@@ -158,7 +158,7 @@ abstract: '<h1>rsofun</h1>
   additional parameters might be introduced, so re-check vignettes and function documentation
   when updating existing code.</p>
 
-  <p>With all settings defined the optimization function `calib_sofun_parallellized()` can be called
+  <p>With all settings defined the optimization function `calib_sofun()` can be called
   with driver data and observations specified. Extra arguments for the cost function
   (like what variable should be used as target to compute the root mean squared error
   (RMSE) and previous values for the parameters that aren''t calibrated, which are
