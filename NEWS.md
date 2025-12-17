@@ -40,7 +40,7 @@
   `forcing` column the nested data.frame has now additional columns for `wind` 
   (resulting in columns `ccov`,`co2`,`date`,`fapar`,`netrad`,`patm`,`ppfd`,
   `rain`,`snow`,`temp`,`tmax`,`tmin`,`vpd`,`wind`) for `daily` model runs. For 
-  `onestep` model runs thre required columns are (`co2`,`patm`,`ppfd`,`temp`,`vpd`).
+  `onestep` model runs the required columns are (`co2`,`patm`,`ppfd`,`temp`,`vpd`).
   Each row in `pmodel_drivers` corresponds to a model run (either daily 
   or onestep depending on `params_siml$onestep` logical) 
   and (for calibration) should have a corresponding row in `pmodel_validation`.
@@ -58,16 +58,19 @@
   They should also be consistent with the value of `params_siml$onestep` in the 
   corresponding driver row.
   
-  The format of the `data`-column assumes for `daily`-rows that each target 
-  variable is available on the same dates as all others and it assumes for
-  `onestep`-rows that multiple target variables have the same number of 
-  observations in each `data_frame()`. (NOTE: this can in the future be relaxed
+  The format of the `data`-column involves some assumptions: 
+  namely for `daily`-rows it assumes that each target variable is available on 
+  the same dates as all others 
+  and for `onestep`-rows it assumes that multiple target variables have the same 
+  number of observations in each `data_frame()`. (NOTE: this can in the future be relaxed
   by defining NA or other fill values, or alternatively use nested data.frames - 
   i.e. one for each target value.)
+  
 * Note for future: ideally, validation data and drivers could be a single data.frame.
   This would be ideal for calibration, since each row in the validation data.frame() must have a
   corresponding row in the drivers data.frame(). Having a single data.frame() 
-  enforces this naturally.
+  enforces this naturally. However, for just running the model only the drivers 
+  are needed.
 * Find below some code snippets to transform between new and old drivers data.frame format:
 
   ```
