@@ -86,7 +86,7 @@ test_that("test GPP calibration routine p-model (BT, likelihood maximization)", 
     control = list(
       sampler_runMCMC = "DEzs",
       settings_runMCMC = list(
-        n_chains_independent = 1,
+        nrChains = 1,
         burnin = 1,
         iterations = 4
       )
@@ -180,11 +180,11 @@ test_that("test GPP/bigDelta13C calibration routine p-model (BT, likelihood, all
     control = list(
       sampler_runMCMC = "DEzs",
       settings_runMCMC = list(
+        nrChains   = 1, # 2,
         burnin = 1,
         iterations = 4
       ),
-      n_chains_independent   = 1, # 2,
-      n_parallel_independent = 1  # 2, this can be parallelized
+      n_parallel_nrChains = 1  # 2, this can be parallelized
     )
   )
 

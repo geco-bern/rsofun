@@ -31,8 +31,12 @@
 #'   calibration' vignette for examples.}
 #'   \item{\code{control}}{A list of arguments passed on to the optimization function.
 #'   If \code{method = 'GenSA'}, see \link[GenSA]{GenSA}. If \code{method = 'BayesianTools'}
-#'   the list should include at least \code{sampler_runMCMC} and \code{settings_runMCMC}, see
-#'   \link[BayesianTools:runMCMC]{BayesianTools::runMCMC}.}
+#'   the list should include at least \code{sampler_runMCMC} and \code{settings_runMCMC},
+#'   see \link[BayesianTools:runMCMC]{BayesianTools::runMCMC}.
+#'   For \code{method = 'BayesianTools'}, \code{n_parallel_nrChains} can optionally be
+#'   used to specify the number of cores to be used for parallel sampling of chains.
+#'   (If >=2 it overwrites \code{settings_runMCMC$nrChains.}, if 0 or 1 parallel 
+#'   sampling is deactivated.}
 #'  }
 #' @param optim_out A logical indicating whether the function returns and stores
 #'  the raw output of the optimization functions (defaults to TRUE).
@@ -89,7 +93,7 @@
 #'       iterations = 10,     # kept artificially low
 #'       nrChains = 1         # 2, # these are the independent chains
 #'     ),
-#'     n_parallel_independent = 1  # 2, this can be parallelized
+#'     n_parallel_nrChains = 1  # 2, this can be parallelized
 #'   )
 #' )
 #' # Run the calibration for GPP and D13C data
@@ -169,24 +173,19 @@ calib_sofun <- function(
   if (tolower(settings_calib$method) == "bayesiantools") {
     # backwards compatibility: set default values of parallelization options
     # by default do three chains
-    if (is.null(settings_calib$control$n_chains_independent)) {
-      settings_calib$control$n_chains_independent <- 3
+    if (is.null(settings_calib$control$settings_runMCMC$nrChains)) {
+      settings_calib$control$settings_runMCMC$nrChains <- 3
     }
     # by default de-activate parallelization of independent chains (for easier passing on CRAN)
-    if (is.null(settings_calib$control$n_parallel_independent)) {
-      settings_calib$control$n_parallel_independent <- 1
+    if (is.null(settings_calib$control$n_parallel_nrChains)) {
+      settings_calib$control$n_parallel_nrChains <- 1
     }
-    # by default deactivate within-sampler paralellization
-    if (is.null(settings_calib$control$n_parallel_within_sampler)) {
-      settings_calib$control$n_parallel_within_sampler <- 1
-    }
-
-    if (settings_calib$control$n_parallel_within_sampler == 1) {
-      settings_calib$control$n_parallel_within_sampler <- FALSE
-    } # When set to 1 we want to deactivate parallel running.
-    #   Unfortunately runMCMC interprets 1 as TRUE (leading parallelization to n_cores - 1)
-    #   Thus we need to set it manually to FALSE.
-
+    # deactivate internal, within-sampler parallelization
+    # # further info:
+    # # https://cran.r-project.org/web/packages/BayesianTools/vignettes/InterfacingAModel.html#within-sampler-parallelization
+    # # https://cran.r-project.org/web/packages/BayesianTools/vignettes/BayesianTools.html#reference-on-creating-likelihoods
+    n_parallel_within_sampler <- FALSE 
+    
     ## Preprocess: ----
 
     # parse prior distributions of parameters
@@ -216,38 +215,38 @@ calib_sofun <- function(
     ## Run the MCMC sampler: ----
     start_time <- Sys.time()
 
-    if (settings_calib$control$n_parallel_independent > 1) { # parallel MCMC sampler:
+    if (settings_calib$control$n_parallel_nrChains > 1) { # parallel MCMC sampler:
       simname <- basename(logpath)
 
       message(paste0("Writing MCMC sampling log to: ", logpath))
       utils::flush.console()
       cl <- parallel::makeCluster(
-        settings_calib$control$n_parallel_independent,
+        settings_calib$control$n_parallel_nrChains,
         outfile = logpath) # logpath for progress logging of all workers
 
       doParallel::registerDoParallel(cl)
 
-      if (settings_calib$control$n_parallel_independent != settings_calib$control$n_chains_independent) {
+      if (settings_calib$control$n_parallel_nrChains != settings_calib$control$settings_runMCMC$nrChains) {
         warning(sprintf(
-          "Requested %d indep. chains, but ran %d indep. chains as `n_parallel_independent` takes precedence.",
-          settings_calib$control$n_chains_independent, settings_calib$control$n_parallel_independent)
+          "Requested %d indep. chains, but ran %d indep. chains as `n_parallel_nrChains` takes precedence.",
+          settings_calib$control$settings_runMCMC$nrChains, settings_calib$control$n_parallel_nrChains)
         )
       }
       # since parallel sampling, fix the number of chains of runMCMC to 1,
       # but call it multiple times and combine afterwards
       settings_calib$control$settings_runMCMC$nrChains <- 1
-
+      
       # predefine variables for CRAN check compliance
       iii <- NULL
 
       requireNamespace("foreach", quietly = FALSE) # instead of foreach::`%dopar%`
       indep_chains <- foreach::foreach(
-        iii = 1:settings_calib$control$n_parallel_independent,
+        iii = 1:settings_calib$control$n_parallel_nrChains,
         .packages = c("BayesianTools", "rsofun", "dplyr", "tidyr", "lubridate"),
         .export = c("get_mod_obs_pmodel"),
         .verbose = TRUE
       ) %dopar% {    # foreach::`%dopar%`
-
+      
         set.seed(1982 + iii) # set a different seed on each worker
         bayesianSetup <- BayesianTools::createBayesianSetup(
 
@@ -258,7 +257,7 @@ calib_sofun <- function(
             ...),
           prior      = priors,
           names      = parnames,
-          parallel   = settings_calib$control$n_parallel_within_sampler)
+          parallel   = n_parallel_within_sampler)
         BayesianTools::runMCMC(
           bayesianSetup = bayesianSetup,
           sampler       = settings_calib$control$sampler_runMCMC,
@@ -279,10 +278,10 @@ calib_sofun <- function(
           ...),
         prior      = priors,
         names      = parnames,
-        parallel   = settings_calib$control$n_parallel_within_sampler)
+        parallel   = n_parallel_within_sampler)
 
       # since sequential sampling, let runMCMC handle the actual number of chains
-      settings_calib$control$settings_runMCMC$nrChains <- settings_calib$control$n_chains_independent
+      settings_calib$control$settings_runMCMC$nrChains <- settings_calib$control$settings_runMCMC$nrChains
       # calculate the runs
       mcmc_out <- BayesianTools::runMCMC(
         bayesianSetup = bayesianSetup,
@@ -294,8 +293,8 @@ calib_sofun <- function(
 
     ## Postprocess: ----
 
-    # ensure return value 'mcmc_out' is a mcmcSamplerList even if n_chains_independent==1
-    # (by default runMCMC returns only a mcmcSampler if n_chains_independent==1)
+    # ensure return value 'mcmc_out' is a mcmcSamplerList even if nrChains==1
+    # (by default runMCMC returns only a mcmcSampler if nrChains==1)
     if (methods::is(mcmc_out, "mcmcSampler")) {
       mcmc_out <- BayesianTools::createMcmcSamplerList(list(mcmc_out))
       # now mcmc_out is a mcmcSamplerList
