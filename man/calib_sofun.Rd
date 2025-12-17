@@ -43,8 +43,12 @@ See the 'P-model usage' vignette for more information and examples.
  calibration' vignette for examples.}
  \item{\code{control}}{A list of arguments passed on to the optimization function.
  If \code{method = 'GenSA'}, see \link[GenSA]{GenSA}. If \code{method = 'BayesianTools'}
- the list should include at least \code{sampler_runMCMC} and \code{settings_runMCMC}, see
- \link[BayesianTools:runMCMC]{BayesianTools::runMCMC}.}
+ the list should include at least \code{sampler_runMCMC} and \code{settings_runMCMC},
+ see \link[BayesianTools:runMCMC]{BayesianTools::runMCMC}.
+ For \code{method = 'BayesianTools'}, \code{n_parallel_nrChains} can optionally be
+ used to specify the number of cores to be used for parallel sampling of chains.
+ (If >=2 it overwrites \code{settings_runMCMC$nrChains.}, if 0 or 1 parallel 
+ sampling is deactivated.}
 }}
 
 \item{optim_out}{A logical indicating whether the function returns and stores
@@ -103,7 +107,7 @@ settings_calib <- list(
       iterations = 10,     # kept artificially low
       nrChains = 1         # 2, # these are the independent chains
     ),
-    n_parallel_independent = 1  # 2, this can be parallelized
+    n_parallel_nrChains = 1  # 2, this can be parallelized
   )
 )
 # Run the calibration for GPP and D13C data

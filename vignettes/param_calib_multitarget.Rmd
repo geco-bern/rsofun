@@ -61,11 +61,11 @@ settings_joint_likelihood <- list(
       # burnin = 1500,             # kept artificially low
       # iterations = 3000,
       burnin = 0,
-      iterations = 50     # kept artificially low
+      iterations = 50,   # kept artificially low
+      nrChains   = 1
     ),
-    # parallelization
-    n_chains_independent   = 1, # 2,
-    n_parallel_independent = 1  # 2, this can be parallelized
+    # optional parallelization
+    n_parallel_nrChains = 1  # 2, this can be parallelized
   ),
   # parameters
   par = params_to_estimate
@@ -314,12 +314,11 @@ run_mcmc_rsofun <- function(
     # MCMC setup:
     iterations = 6,
     burnin = 0,
-    n_chains_independent    = 3, # number of independent chains
-    n_chains_within_sampler = 3, # number of internal chains to be sampled (at least 2 for DEzs)
+    n_chains_independent    = 3, # number of independent chains (called 'nrChains' in runMCMC)
+    n_chains_within_sampler = 3, # number of internal chains to be sampled (called 'startValue' in runMCMC, at least 2 for DEzs)
 
     # parallelization:
-    n_parallel_independent  = 3,      # number of cores for parallelization of independent chains     https://cran.r-project.org/web/packages/BayesianTools/vignettes/InterfacingAModel.html#running-several-mcmcs-in-parallel
-    n_parallel_within_sampler = FALSE, # number of cores for parallelization of within-sampler chains  https://cran.r-project.org/web/packages/BayesianTools/vignettes/InterfacingAModel.html#within-sampler-parallelization as well as https://cran.r-project.org/web/packages/BayesianTools/vignettes/BayesianTools.html#reference-on-creating-likelihoods
+    n_parallel_independent  = 3, # number of cores for parallelization of independent chains     https://cran.r-project.org/web/packages/BayesianTools/vignettes/InterfacingAModel.html#running-several-mcmcs-in-parallel
     outpath = "data",
     suffix_str = "",
     sampler_runMCMC = "DREAMzs"
@@ -347,11 +346,10 @@ run_mcmc_rsofun <- function(
       settings_runMCMC = list(
         burnin     = burnin,                 # 10000,
         iterations = iterations,             # 50000,
+        nrChains   = n_chains_independent,   # number of independent chains to be sampled
         startValue = n_chains_within_sampler # number of internal chains to be sampled
       ),
-      n_chains_independent      = n_chains_independent,
-      n_parallel_independent    = n_parallel_independent,
-      n_parallel_within_sampler = n_parallel_within_sampler
+      n_parallel_nrChains = n_parallel_independent
     ),
     par = res$par
   )
@@ -389,7 +387,6 @@ run_mcmc_rsofun <- function(
     n_chains_inner = n_chains_within_sampler,
     # performance results:
     cores          = n_parallel_independent,
-    cores_inner    = n_parallel_within_sampler,
     walltime       = out_calib$walltime # ,
     # logfile        = out_calib$logpath
   )
@@ -431,8 +428,7 @@ df_timings226 <- run_mcmc_rsofun(226, suffix_str = "setup_226",
   n_chains_independent      = 8,
   n_chains_within_sampler   = 3,
   # parallelization
-  n_parallel_independent    = 1,
-  n_parallel_within_sampler = FALSE
+  n_parallel_independent    = 1
 )
 # 2025-12-16 10:49:52.217434: start sampling of out_calib_setup_226.rds
 # runMCMC terminated after 4.39500000000407seconds00 . Current logp  -389.1087 -421.1468 -396.6275 Please wait!
@@ -449,8 +445,7 @@ df_timings231 <- run_mcmc_rsofun(231, suffix_str = "setup_231",
   n_chains_independent      = 8,
   n_chains_within_sampler   = 3,
   # parallelization
-  n_parallel_independent    = 1,
-  n_parallel_within_sampler = FALSE
+  n_parallel_independent    = 1
 )
 # 2025-12-16 10:51:14.211219: start sampling of out_calib_setup_231.rds
 # Running DREAM-MCMC, chain  1 iteration 300 of 600 . Current logp  -14645.97 -14571.83 -15471.88 Please wait!
@@ -469,8 +464,7 @@ df_timings231p <- run_mcmc_rsofun(231, suffix_str = "setup_231_parallel",
   n_chains_independent      = 8,
   n_chains_within_sampler   = 3,
   # parallelization
-  n_parallel_independent    = 8,     # here now we parallelize the 8 chains to 8 cores
-  n_parallel_within_sampler = FALSE
+  n_parallel_independent    = 8     # here now we parallelize the 8 chains to 8 cores
 )
 # 2025-12-16 10:52:17.880666: start sampling of out_calib_setup_231_parallel.rds
 # Writing MCMC sampling log to: files/param_calib_multitarget//calibrations/out_calib_setup_231_parallel.rds.log.txt
