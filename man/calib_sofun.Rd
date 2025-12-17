@@ -67,7 +67,8 @@ the output object from the optimization `mod`, and additional identifier
 outputs `name`, `logpath`, and `walltime`. For more details on the `mod`
 output and how to evaluate it, see \link[BayesianTools:runMCMC]{runMCMC} (also
 \href{https://florianhartig.github.io/BayesianTools/articles/BayesianTools.html}{this post})
-and \link[GenSA]{GenSA}. If parallel also a logfile is created at `logpath`.
+and \link[GenSA]{GenSA}. If parallel (`n_parallel_nrChains >= 2`) also a 
+logfile is created at `logpath`.
 }
 \description{
 Runs the requested model calibration and returns results
@@ -111,11 +112,13 @@ settings_calib <- list(
   )
 )
 # Run the calibration for GPP and D13C data
+drivers_to_use <- rsofun::pmodel_drivers    |>
+  dplyr::filter(sitename \%in\% c("FR-Pue", "lon_+146.13_lat_-032.97"))
+obs_to_use     <- rsofun::pmodel_validation |>
+  dplyr::filter(sitename \%in\% c("FR-Pue", "lon_+146.13_lat_-032.97"))
 calib_output <- rsofun::calib_sofun(
-  drivers = rsofun::pmodel_drivers    |>
-    dplyr::filter(sitename \%in\% c("FR-Pue", "lon_+146.13_lat_-032.97")),
-  obs     = rsofun::pmodel_validation |>
-    dplyr::filter(sitename \%in\% c("FR-Pue", "lon_+146.13_lat_-032.97")),
+  drivers = drivers_to_use,
+  obs     = obs_to_use,
   settings_calib = settings_calib,
   # extra arguments for the cost function
   par_fixed = params_fix

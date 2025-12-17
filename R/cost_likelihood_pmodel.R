@@ -73,9 +73,9 @@ cost_likelihood_pmodel <- function(
     parallel  = FALSE,
     ncores    = 1,
     get_mod_obs = get_mod_obs_pmodel # default argument needed as
-    # workaround to make this
-    # function easily available
-    # on parallel workers
+                                     # workaround to make this
+                                     # function easily available
+                                     # on parallel workers
     ) {
 
   stopifnot(nrow(obs) > 0)     # ensure some observation data are provided
@@ -101,7 +101,7 @@ cost_likelihood_pmodel <- function(
   #     WARNING: Assuming daily P-model run requested. To clarify please add a
   #     column 'onestep' with 'FALSE' or 'TRUE' to the 'params_siml' data.frame.
   #     in your driver.")
-  #   drivers <- drivers |> mutate(
+  #   drivers <- drivers |> dplyr::mutate(
   #     params_siml = purrr::map(params_siml, ~mutate(.x, onestep = FALSE)))
   # }
 
@@ -119,7 +119,7 @@ cost_likelihood_pmodel <- function(
   # ll_normalAdditiveBias<- function(obs,mod,sd,bias){stats::dnorm(       x=obs, mean = mod-bias,           sd    = sd, log = TRUE)} # TODO: err_par_sd must be positive, err_par_bias: if it is positive: the model has a positive bias
   ll_normalAdditScaled <- function(obs, mod, sd, bias, scale) {
     stats::dnorm(x = obs, mean = mod * scale - bias,   sd    = sd, log = TRUE)
-  } # TODO: err_par_sd must be positive, err_par_bias: if it is positive: the model has a positive bias
+  } # NOTE: err_par_sd must be positive, err_par_bias: if it is positive: the model has a positive bias
   # ll_lognormal         <- function(obs,mod,sd){stats::dlnorm(           x=obs, meanlog = mod,             sdlog = sd, log = TRUE)} # TODO: err_par_sd must be positive
   # ll_lognormal2        <- function(obs,mod,sd){stats::dlnorm(           x=obs, meanlog = log(mod) + sd^2, sdlog = sd, log = TRUE)}
   # ll_proportional      <- function(obs,mod,sd){stats::dnorm(            x=obs, mean = mod,                sd = abs(mod)*sd, log = TRUE)} # proportional: https://docs.pumas.ai/stable/model_components/error_models/

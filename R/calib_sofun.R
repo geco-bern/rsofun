@@ -52,7 +52,8 @@
 #' outputs `name`, `logpath`, and `walltime`. For more details on the `mod`
 #' output and how to evaluate it, see \link[BayesianTools:runMCMC]{runMCMC} (also
 #' \href{https://florianhartig.github.io/BayesianTools/articles/BayesianTools.html}{this post})
-#' and \link[GenSA]{GenSA}. If parallel also a logfile is created at `logpath`.
+#' and \link[GenSA]{GenSA}. If parallel (`n_parallel_nrChains >= 2`) also a 
+#' logfile is created at `logpath`.
 #' @export
 #' @importFrom magrittr %>%
 #' @importFrom stats setNames
@@ -97,11 +98,13 @@
 #'   )
 #' )
 #' # Run the calibration for GPP and D13C data
+#' drivers_to_use <- rsofun::pmodel_drivers    |>
+#'   dplyr::filter(sitename %in% c("FR-Pue", "lon_+146.13_lat_-032.97"))
+#' obs_to_use     <- rsofun::pmodel_validation |>
+#'   dplyr::filter(sitename %in% c("FR-Pue", "lon_+146.13_lat_-032.97"))
 #' calib_output <- rsofun::calib_sofun(
-#'   drivers = rsofun::pmodel_drivers    |>
-#'     dplyr::filter(sitename %in% c("FR-Pue", "lon_+146.13_lat_-032.97")),
-#'   obs     = rsofun::pmodel_validation |>
-#'     dplyr::filter(sitename %in% c("FR-Pue", "lon_+146.13_lat_-032.97")),
+#'   drivers = drivers_to_use,
+#'   obs     = obs_to_use,
 #'   settings_calib = settings_calib,
 #'   # extra arguments for the cost function
 #'   par_fixed = params_fix
@@ -169,8 +172,47 @@ calib_sofun <- function(
     settings_calib <- eval.parent(mc$settings)
   }
   
-  #--- Bayesiantools ----
-  if (tolower(settings_calib$method) == "bayesiantools") {
+  #--- GenSA or BayesianTools----
+  if (tolower(settings_calib$method) == "gensa") {
+    #--- GenSA ----
+    # convert to standard cost function naming
+    cost <- settings_calib$metric
+    
+    # create bounds
+    lower <- unlist(lapply(settings_calib$par, function(x) x$lower))
+    upper <- unlist(lapply(settings_calib$par, function(x) x$upper))
+    pars <- unlist(lapply(settings_calib$par, function(x) x$init))
+    
+    simname <- basename(logpath)
+    start_time <- Sys.time()
+    out <- GenSA::GenSA(
+      par   = pars,
+      fn    = cost,
+      lower = lower,
+      upper = upper,
+      control = settings_calib$control,
+      obs = obs,
+      drivers = drivers,
+      ...
+    )
+    end_time <- Sys.time()
+    
+    return_value <- list(par = out$par)
+    
+    if (optim_out) { # append raw GenSA output
+      return_value <- c(return_value, list(mod = out))
+    }
+    
+    # append naming information
+    return_value$name <- simname
+    return_value$logpath <- "" # just "" for GenSA
+    
+    # append timing information
+    return_value$walltime <- end_time - start_time
+    
+  } else if (tolower(settings_calib$method) == "bayesiantools") {
+    #--- Bayesiantools ----
+  
     # backwards compatibility: set default values of parallelization options
     # by default do three chains
     if (is.null(settings_calib$control$settings_runMCMC$nrChains)) {
@@ -210,7 +252,6 @@ calib_sofun <- function(
           ...)
       }
     }
-
 
     ## Run the MCMC sampler: ----
     start_time <- Sys.time()
@@ -302,7 +343,6 @@ calib_sofun <- function(
 
     end_time <- Sys.time()
 
-
     ## Build return object: 'return_value' ----
 
     # Extract MAP (maximum a posteriori value) of parameters
@@ -313,12 +353,6 @@ calib_sofun <- function(
     if (optim_out) { # append raw MCMC output chains
       return_value <- c(return_value, list(mod = mcmc_out))
     }
-    # if (input_out){ # append MCMC input arguments
-    #   return_value <- c(return_value,
-    #                     list(bayesianSetup = bayesianSetup,             # unneded: return_value$mod[[1]]$setup
-    #                          sampler       = settings_calib$control$sampler_runMCMC,  # unneded: return_value$mod[[1]]$sampler_runMCMC
-    #                          settings      = settings_calib$control$settings_runMCMC))# unneded: return_value$mod[[1]]$settings
-    # }
 
     # append naming information
     return_value$name <- simname
@@ -327,42 +361,6 @@ calib_sofun <- function(
     # append timing information
     return_value$walltime <- end_time - start_time
     # return_value$runtime  <- NaN # NOTE: get_runtime_numeric(return_value)
-
-  } else if (tolower(settings_calib$method) == "gensa") {
-    # convert to standard cost function naming
-    cost <- settings_calib$metric
-
-    # create bounds
-    lower <- unlist(lapply(settings_calib$par, function(x) x$lower))
-    upper <- unlist(lapply(settings_calib$par, function(x) x$upper))
-    pars <- unlist(lapply(settings_calib$par, function(x) x$init))
-
-    simname <- basename(logpath)
-    start_time <- Sys.time()
-    out <- GenSA::GenSA(
-      par   = pars,
-      fn    = cost,
-      lower = lower,
-      upper = upper,
-      control = settings_calib$control,
-      obs = obs,
-      drivers = drivers,
-      ...
-    )
-    end_time <- Sys.time()
-
-    return_value <- list(par = out$par)
-
-    if (optim_out) { # append raw GenSA output
-      return_value <- c(return_value, list(mod = out))
-    }
-
-    # append naming information
-    return_value$name <- simname
-    return_value$logpath <- "" # just "" for GenSA
-
-    # append timing information
-    return_value$walltime <- end_time - start_time
 
   } else {
     stop("Unknown method passed to calib_sofun().")

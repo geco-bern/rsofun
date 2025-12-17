@@ -235,45 +235,45 @@ createMixedPrior <- function(prior_definitions) {
 # For sensitivity analysis a sensible range of the parameters is needed. Therefore,
 # we write the function getPriorMinMaxRanges() to be used in combination with
 # sensitivity analysis.
-getPriorMinMaxRanges <- function(morrisSetup_prior, settings_par) {
-  # by default use BayesianTool defined ranges
-  inflim_arg <- morrisSetup_prior$lower    # named vector: e.g. c(kphio = 0.02, kphio_par_a = -0.004, err_gpp = 0.1, ... )
-  suplim_arg <- morrisSetup_prior$upper    # named vector: e.g. c(kphio = 0.15, kphio_par_a = -0.001, err_gpp = 3,   ... )
-
-  # Fallback if this fails with more complex priors
-  if (is.null(inflim_arg) || is.null(suplim_arg)) {
-    par_names <- names(settings_par)
-    # use the currently defined distributions that are compatible with createMixedPrior():
-    # - is_uniform_prior        when has names: c("init", "lower", "upper"))}
-    # - is_normal_prior         when has names: c("mean", "sd"))}
-    # - is_lognormal_prior      when has names: c("meanlog","sdlog"))}
-    # - is_truncnormal_prior    when has names: c("lower", "mean", "sd", "upper"))}
-    # - is_trunclognormal_prior when has names: c("endpoint","meanlog","sdlog"))}
-    # - is_beta_prior           when has names: c("shape1","shape2"))}
-
-    # make a list with lower and upper for each of these distributions:
-    inflim_suplim_list <- c(
-      settings_par |> purrr::keep(is_uniform_prior) |> lapply(function(x) list(inflim = x$lower, suplim = x$upper)),
-      # settings_par |> purrr::keep(is_normal_prior        ) |> names(), # NOTE: add when needed
-      # settings_par |> purrr::keep(is_lognormal_prior     ) |> names(), # NOTE: add when needed
-      settings_par |> purrr::keep(is_truncnormal_prior) |> lapply(function(x) list(inflim = x$lower, suplim = x$upper))
-      # settings_par |> purrr::keep(is_trunclognormal_prior) |> names(), # NOTE: add when needed
-      # settings_par |> purrr::keep(is_beta_prior          ) |> names() # NOTE: add when needed
-    )
-    # NOTE: suplim is currently not implemented for all distributions, hence error if on of these is requested:
-    stopifnot(settings_par |> purrr::keep(is_normal_prior) |> length() == 0) # NOTE: remove once above is defined
-    stopifnot(settings_par |> purrr::keep(is_lognormal_prior) |> length() == 0) # NOTE: remove once above is defined
-    stopifnot(settings_par |> purrr::keep(is_trunclognormal_prior) |> length() == 0) # NOTE: remove once above is defined
-    stopifnot(settings_par |> purrr::keep(is_beta_prior) |> length() == 0) # NOTE: remove once above is defined
-
-
-    # derive two vectors: one for inflim and for suplim
-    inflim_arg <- unlist(lapply(inflim_suplim_list, `[[`, "inflim"))
-    suplim_arg <- unlist(lapply(inflim_suplim_list, `[[`, "suplim"))
-
-    # ensure correct order
-    inflim_arg <- inflim_arg[par_names]
-    suplim_arg <- suplim_arg[par_names]
-  }
-  return(list(inflim = inflim_arg, suplim = suplim_arg))
-}
+# getPriorMinMaxRanges <- function(morrisSetup_prior, settings_par) {
+#   # by default use BayesianTool defined ranges
+#   inflim_arg <- morrisSetup_prior$lower    # named vector: e.g. c(kphio = 0.02, kphio_par_a = -0.004, err_gpp = 0.1, ... )
+#   suplim_arg <- morrisSetup_prior$upper    # named vector: e.g. c(kphio = 0.15, kphio_par_a = -0.001, err_gpp = 3,   ... )
+# 
+#   # Fallback if this fails with more complex priors
+#   if (is.null(inflim_arg) || is.null(suplim_arg)) {
+#     par_names <- names(settings_par)
+#     # use the currently defined distributions that are compatible with createMixedPrior():
+#     # - is_uniform_prior        when has names: c("init", "lower", "upper"))}
+#     # - is_normal_prior         when has names: c("mean", "sd"))}
+#     # - is_lognormal_prior      when has names: c("meanlog","sdlog"))}
+#     # - is_truncnormal_prior    when has names: c("lower", "mean", "sd", "upper"))}
+#     # - is_trunclognormal_prior when has names: c("endpoint","meanlog","sdlog"))}
+#     # - is_beta_prior           when has names: c("shape1","shape2"))}
+# 
+#     # make a list with lower and upper for each of these distributions:
+#     inflim_suplim_list <- c(
+#       settings_par |> purrr::keep(is_uniform_prior) |> lapply(function(x) list(inflim = x$lower, suplim = x$upper)),
+#       # settings_par |> purrr::keep(is_normal_prior        ) |> names(), # NOTE: add when needed
+#       # settings_par |> purrr::keep(is_lognormal_prior     ) |> names(), # NOTE: add when needed
+#       settings_par |> purrr::keep(is_truncnormal_prior) |> lapply(function(x) list(inflim = x$lower, suplim = x$upper))
+#       # settings_par |> purrr::keep(is_trunclognormal_prior) |> names(), # NOTE: add when needed
+#       # settings_par |> purrr::keep(is_beta_prior          ) |> names() # NOTE: add when needed
+#     )
+#     # NOTE: suplim is currently not implemented for all distributions, hence error if on of these is requested:
+#     stopifnot(settings_par |> purrr::keep(is_normal_prior) |> length() == 0) # NOTE: remove once above is defined
+#     stopifnot(settings_par |> purrr::keep(is_lognormal_prior) |> length() == 0) # NOTE: remove once above is defined
+#     stopifnot(settings_par |> purrr::keep(is_trunclognormal_prior) |> length() == 0) # NOTE: remove once above is defined
+#     stopifnot(settings_par |> purrr::keep(is_beta_prior) |> length() == 0) # NOTE: remove once above is defined
+# 
+# 
+#     # derive two vectors: one for inflim and for suplim
+#     inflim_arg <- unlist(lapply(inflim_suplim_list, `[[`, "inflim"))
+#     suplim_arg <- unlist(lapply(inflim_suplim_list, `[[`, "suplim"))
+# 
+#     # ensure correct order
+#     inflim_arg <- inflim_arg[par_names]
+#     suplim_arg <- suplim_arg[par_names]
+#   }
+#   return(list(inflim = inflim_arg, suplim = suplim_arg))
+# }

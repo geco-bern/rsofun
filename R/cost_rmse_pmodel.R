@@ -94,7 +94,7 @@ cost_rmse_pmodel <- function(
       WARNING: Assuming daily P-model run requested. To clarify please add a
       column 'onestep' with 'FALSE' or 'TRUE' to the 'params_siml' data.frame.
       in your driver.")
-    drivers <- drivers |> mutate(
+    drivers <- drivers |> dplyr::mutate(
       params_siml = purrr::map(.data$params_siml, ~ mutate(.x, onestep = FALSE)))
   }
   if (!is.null(targets)) {
