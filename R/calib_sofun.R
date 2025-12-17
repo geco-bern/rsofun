@@ -13,7 +13,7 @@
 #'  calibration. See \code{\link{pmodel_validation}} for a description of the data
 #'  structure. Additional columns can optionally be provided to \code{obs} to
 #'  control e.g. the processing within a personalized cost function.
-#' @param settings A list containing model calibration settings.
+#' @param settings_calib A list containing model calibration settings.
 #'  See the 'P-model usage' vignette for more information and examples.
 #'  \describe{
 #'   \item{\code{method}}{A string indicating the optimization method, either \code{'GenSA'}
@@ -31,7 +31,7 @@
 #'   calibration' vignette for examples.}
 #'   \item{\code{control}}{A list of arguments passed on to the optimization function.
 #'   If \code{method = 'GenSA'}, see \link[GenSA]{GenSA}. If \code{method = 'BayesianTools'}
-#'   the list should include at least \code{settings} and \code{sampler}, see
+#'   the list should include at least \code{sampler_runMCMC} and \code{settings_runMCMC}, see
 #'   \link[BayesianTools:runMCMC]{BayesianTools::runMCMC}.}
 #'  }
 #' @param optim_out A logical indicating whether the function returns and stores
@@ -78,17 +78,17 @@
 #'   kc_jmax            = 0.41
 #' )
 #' # Define calibration settings
-#' settings <- list(
+#' settings_calib <- list(
 #'   method  = "BayesianTools",
 #'   par     = params_to_estimate,
 #'   metric  = rsofun::cost_likelihood_pmodel,
 #'   control = list(
-#'     sampler = "DEzs",
-#'     settings = list(
+#'     sampler_runMCMC = "DEzs",
+#'     settings_runMCMC = list(
 #'       burnin = 0,
-#'       iterations = 10     # kept artificially low
+#'       iterations = 10,     # kept artificially low
+#'       nrChains = 1         # 2, # these are the independent chains
 #'     ),
-#'     n_chains_independent   = 1, # 2,
 #'     n_parallel_independent = 1  # 2, this can be parallelized
 #'   )
 #' )
@@ -98,7 +98,7 @@
 #'     dplyr::filter(sitename %in% c("FR-Pue", "lon_+146.13_lat_-032.97")),
 #'   obs     = rsofun::pmodel_validation |>
 #'     dplyr::filter(sitename %in% c("FR-Pue", "lon_+146.13_lat_-032.97")),
-#'   settings = settings,
+#'   settings_calib = settings_calib,
 #'   # extra arguments for the cost function
 #'   par_fixed = params_fix
 #' )
@@ -111,7 +111,7 @@
 #'
 #' # Calib 2: use GenSa optimization of RMSE
 #' # Calibrate the model and optimize the free parameters using demo datasets
-#' settings_rmse <- list(
+#' settings_calib_rmse <- list(
 #'   method = "GenSA",                   # minimizes the RMSE
 #'   metric = cost_rmse_pmodel,          # our cost function returning the RMSE
 #'   control = list( # control parameters for optimizer GenSA
@@ -126,7 +126,7 @@
 #'   # calib_sofun arguments:
 #'   drivers  = drivers_to_use,
 #'   obs      = obs_to_use,
-#'   settings = settings_rmse,
+#'   settings_calib = settings_calib_rmse,
 #'   # extra arguments passed to the cost function:
 #'   par_fixed = list( # fix all other parameters
 #'     kphio_par_a        = 0.0,        # set to zero to disable temperature-dependence
@@ -143,34 +143,46 @@
 calib_sofun <- function(
     drivers,
     obs,
-    settings,
+    settings_calib,
     optim_out = TRUE, # whether to return chains
     # for storing rds and log.txt
     logpath = file.path(tempdir(), paste0("out_calib_", "my_calibration_name", ".rds.log.txt")),
     ...
     ) {
+
   # ensure input is ungrouped:
   drivers <- drivers |> dplyr::ungroup()
   obs <- obs |> dplyr::ungroup()
 
+  # backwards compatibility: warn and recover if 'settings' instead of 'settings_calib' was provided
+  # NOTE: actually not needed since partial argument matching works between these two
+  # mc <- match.call() # will do partial argument matching (https://stackoverflow.com/a/15284583)
+  mc <- sys.call()     # does no partial argumant matching
+  if (is.null(mc$settings_calib) && !is.null(mc$settings)) {
+    warning(paste0("Argument 'settings' is deprecated.", 
+                   " Please use 'settings_calib' instead.",
+                   " Have now used 'settings' for backwards compatibility."))
+    settings_calib <- eval.parent(mc$settings)
+  }
+  
   #--- Bayesiantools ----
-  if (tolower(settings$method) == "bayesiantools") {
+  if (tolower(settings_calib$method) == "bayesiantools") {
     # backwards compatibility: set default values of parallelization options
     # by default do three chains
-    if (is.null(settings$control$n_chains_independent)) {
-      settings$control$n_chains_independent <- 3
+    if (is.null(settings_calib$control$n_chains_independent)) {
+      settings_calib$control$n_chains_independent <- 3
     }
     # by default de-activate parallelization of independent chains (for easier passing on CRAN)
-    if (is.null(settings$control$n_parallel_independent)) {
-      settings$control$n_parallel_independent <- 1
+    if (is.null(settings_calib$control$n_parallel_independent)) {
+      settings_calib$control$n_parallel_independent <- 1
     }
     # by default deactivate within-sampler paralellization
-    if (is.null(settings$control$n_parallel_within_sampler)) {
-      settings$control$n_parallel_within_sampler <- 1
+    if (is.null(settings_calib$control$n_parallel_within_sampler)) {
+      settings_calib$control$n_parallel_within_sampler <- 1
     }
 
-    if (settings$control$n_parallel_within_sampler == 1) {
-      settings$control$n_parallel_within_sampler <- FALSE
+    if (settings_calib$control$n_parallel_within_sampler == 1) {
+      settings_calib$control$n_parallel_within_sampler <- FALSE
     } # When set to 1 we want to deactivate parallel running.
     #   Unfortunately runMCMC interprets 1 as TRUE (leading parallelization to n_cores - 1)
     #   Thus we need to set it manually to FALSE.
@@ -178,8 +190,8 @@ calib_sofun <- function(
     ## Preprocess: ----
 
     # parse prior distributions of parameters
-    parnames <- names(settings$par)
-    priors  <- createMixedPrior(settings$par)
+    parnames <- names(settings_calib$par)
+    priors  <- createMixedPrior(settings_calib$par)
 
     # Your external data
     # drivers
@@ -192,7 +204,7 @@ calib_sofun <- function(
     # make available get_mod_obs_pmodel so we can export it to workers
     ll_factory <- function(obs, drivers, parnames, get_mod_obs, ...) {
       function(random_par) {
-        eval(settings$metric)(par = setNames(random_par, parnames),
+        eval(settings_calib$metric)(par = setNames(random_par, parnames),
           obs = obs,
           drivers = drivers,
           get_mod_obs = get_mod_obs,
@@ -204,33 +216,33 @@ calib_sofun <- function(
     ## Run the MCMC sampler: ----
     start_time <- Sys.time()
 
-    if (settings$control$n_parallel_independent > 1) { # parallel MCMC sampler:
+    if (settings_calib$control$n_parallel_independent > 1) { # parallel MCMC sampler:
       simname <- basename(logpath)
 
       message(paste0("Writing MCMC sampling log to: ", logpath))
       utils::flush.console()
       cl <- parallel::makeCluster(
-        settings$control$n_parallel_independent,
+        settings_calib$control$n_parallel_independent,
         outfile = logpath) # logpath for progress logging of all workers
 
       doParallel::registerDoParallel(cl)
 
-      if (settings$control$n_parallel_independent != settings$control$n_chains_independent) {
+      if (settings_calib$control$n_parallel_independent != settings_calib$control$n_chains_independent) {
         warning(sprintf(
           "Requested %d indep. chains, but ran %d indep. chains as `n_parallel_independent` takes precedence.",
-          settings$control$n_chains_independent, settings$control$n_parallel_independent)
+          settings_calib$control$n_chains_independent, settings_calib$control$n_parallel_independent)
         )
       }
       # since parallel sampling, fix the number of chains of runMCMC to 1,
       # but call it multiple times and combine afterwards
-      settings$control$settings$nrChains <- 1
+      settings_calib$control$settings_runMCMC$nrChains <- 1
 
       # predefine variables for CRAN check compliance
       iii <- NULL
 
       requireNamespace("foreach", quietly = FALSE) # instead of foreach::`%dopar%`
       indep_chains <- foreach::foreach(
-        iii = 1:settings$control$n_parallel_independent,
+        iii = 1:settings_calib$control$n_parallel_independent,
         .packages = c("BayesianTools", "rsofun", "dplyr", "tidyr", "lubridate"),
         .export = c("get_mod_obs_pmodel"),
         .verbose = TRUE
@@ -246,11 +258,11 @@ calib_sofun <- function(
             ...),
           prior      = priors,
           names      = parnames,
-          parallel   = settings$control$n_parallel_within_sampler)
+          parallel   = settings_calib$control$n_parallel_within_sampler)
         BayesianTools::runMCMC(
           bayesianSetup = bayesianSetup,
-          sampler       = settings$control$sampler,
-          settings      = settings$control$settings
+          sampler       = settings_calib$control$sampler_runMCMC,
+          settings      = settings_calib$control$settings_runMCMC
         )
       }
       parallel::stopCluster(cl)
@@ -267,15 +279,15 @@ calib_sofun <- function(
           ...),
         prior      = priors,
         names      = parnames,
-        parallel   = settings$control$n_parallel_within_sampler)
+        parallel   = settings_calib$control$n_parallel_within_sampler)
 
       # since sequential sampling, let runMCMC handle the actual number of chains
-      settings$control$settings$nrChains <- settings$control$n_chains_independent
+      settings_calib$control$settings_runMCMC$nrChains <- settings_calib$control$n_chains_independent
       # calculate the runs
       mcmc_out <- BayesianTools::runMCMC(
         bayesianSetup = bayesianSetup,
-        sampler       = settings$control$sampler,
-        settings      = settings$control$settings
+        sampler       = settings_calib$control$sampler_runMCMC,
+        settings      = settings_calib$control$settings_runMCMC
       )
     }
 
@@ -305,8 +317,8 @@ calib_sofun <- function(
     # if (input_out){ # append MCMC input arguments
     #   return_value <- c(return_value,
     #                     list(bayesianSetup = bayesianSetup,             # unneded: return_value$mod[[1]]$setup
-    #                          sampler       = settings$control$sampler,  # unneded: return_value$mod[[1]]$sampler
-    #                          settings      = settings$control$settings))# unneded: return_value$mod[[1]]$settings
+    #                          sampler       = settings_calib$control$sampler_runMCMC,  # unneded: return_value$mod[[1]]$sampler_runMCMC
+    #                          settings      = settings_calib$control$settings_runMCMC))# unneded: return_value$mod[[1]]$settings
     # }
 
     # append naming information
@@ -317,14 +329,14 @@ calib_sofun <- function(
     return_value$walltime <- end_time - start_time
     # return_value$runtime  <- NaN # NOTE: get_runtime_numeric(return_value)
 
-  } else if (tolower(settings$method) == "gensa") {
+  } else if (tolower(settings_calib$method) == "gensa") {
     # convert to standard cost function naming
-    cost <- settings$metric
+    cost <- settings_calib$metric
 
     # create bounds
-    lower <- unlist(lapply(settings$par, function(x) x$lower))
-    upper <- unlist(lapply(settings$par, function(x) x$upper))
-    pars <- unlist(lapply(settings$par, function(x) x$init))
+    lower <- unlist(lapply(settings_calib$par, function(x) x$lower))
+    upper <- unlist(lapply(settings_calib$par, function(x) x$upper))
+    pars <- unlist(lapply(settings_calib$par, function(x) x$init))
 
     simname <- basename(logpath)
     start_time <- Sys.time()
@@ -333,7 +345,7 @@ calib_sofun <- function(
       fn    = cost,
       lower = lower,
       upper = upper,
-      control = settings$control,
+      control = settings_calib$control,
       obs = obs,
       drivers = drivers,
       ...

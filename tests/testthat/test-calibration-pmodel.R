@@ -78,14 +78,14 @@ test_that("test GPP calibration routine p-model (BT, likelihood maximization)", 
     kc_jmax            = 0.41
   )
 
-  settings <- list(
+  settings_calib <- list(
     method              = "bayesiantools",
     targets             = c("gpp"),
     sitenames           = "FR-Pue",
     metric              = rsofun::cost_likelihood_pmodel,
     control = list(
-      sampler = "DEzs",
-      settings = list(
+      sampler_runMCMC = "DEzs",
+      settings_runMCMC = list(
         n_chains_independent = 1,
         burnin = 1,
         iterations = 4
@@ -100,7 +100,7 @@ test_that("test GPP calibration routine p-model (BT, likelihood maximization)", 
   pars <- rsofun::calib_sofun(
     drivers = drivers,
     obs = obs,
-    settings = settings,
+    settings_calib = settings_calib,
     # extra arguments for the cost function
     par_fixed = params_fix,
     parallel = FALSE,
@@ -116,7 +116,7 @@ test_that("test GPP calibration routine p-model (GenSA, rmse, all params)", {
   drivers <- pmodel_drivers |> dplyr::filter(sitename == "FR-Pue")
   obs <- pmodel_validation |> dplyr::filter(sitename == "FR-Pue")
 
-  settings <- list(
+  settings_calib <- list(
     method              = "gensa",
     targets             = c("gpp"),
     sitenames           = "FR-Pue",
@@ -140,7 +140,7 @@ test_that("test GPP calibration routine p-model (GenSA, rmse, all params)", {
   pars <- rsofun::calib_sofun(
     drivers = drivers,
     obs = obs,
-    settings = settings,
+    settings_calib = settings_calib,
     optim_out = FALSE
   )
 
@@ -173,13 +173,13 @@ test_that("test GPP/bigDelta13C calibration routine p-model (BT, likelihood, all
   # Fix model parameters that won't be calibrated
   params_fix       <- list() # i.e. none
   # Define calibration settings
-  settings <- list(
+  settings_calib <- list(
     method  = "BayesianTools",
     par     = params_to_estimate,
     metric  = rsofun::cost_likelihood_pmodel,
     control = list(
-      sampler = "DEzs",
-      settings = list(
+      sampler_runMCMC = "DEzs",
+      settings_runMCMC = list(
         burnin = 1,
         iterations = 4
       ),
@@ -192,7 +192,7 @@ test_that("test GPP/bigDelta13C calibration routine p-model (BT, likelihood, all
   pars <- rsofun::calib_sofun(
     drivers,
     obs,
-    settings = settings,
+    settings_calib = settings_calib,
     # extra arguments for the cost function
     par_fixed = params_fix,
     optim_out = FALSE
@@ -224,7 +224,7 @@ test_that("test GPP/bigDelta13C calibration routine p-model (GenSA, rmse)", {
   params_to_estimate <- list(
     tau_acclim = list(lower = 7, upper = 60, init = 30)
   )
-  settings_rmse <- list(
+  settings_calib_rmse <- list(
     method = "GenSA",                   # minimizes the RMSE
     metric = cost_rmse_pmodel,          # our cost function returning the RMSE
     control = list( # control parameters for optimizer GenSA
@@ -236,7 +236,7 @@ test_that("test GPP/bigDelta13C calibration routine p-model (GenSA, rmse)", {
     # calib_sofun arguments:
     drivers  = drivers_to_use,
     obs      = obs_to_use,
-    settings = settings_rmse,
+    settings_calib = settings_calib_rmse,
     # extra arguments passed to the cost function:
     par_fixed = params_fix
   )
