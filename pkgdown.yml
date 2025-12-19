@@ -6,6 +6,7 @@ articles:
   biomee_use: biomee_use.html
   data_format: data_format.html
   new_cost_function: new_cost_function.html
+  param_calib_multitarget: param_calib_multitarget.html
   pmodel_use: pmodel_use.html
   sensitivity_analysis: sensitivity_analysis.html
-last_built: 2025-11-13T13:10Z
+last_built: 2025-12-19T09:20Z
