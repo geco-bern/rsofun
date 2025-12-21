@@ -21,7 +21,7 @@
         <a class="external-link hidden-md hidden-lg" href="https://geco-group.org/">
           <img src="https://raw.githubusercontent.com/computationales/GECO_template/main/geco_logo_white_small.png" id="hexlogo" alt="GECO"></a>
         <a class="navbar-brand" href="../index.html">
-           <i>rsofun <small>v5.1.0.9001</small></i>
+           <i>rsofun <small>v5.1.0.9000</small></i>
         </a>
       </div>
     </div>
@@ -93,10 +93,6 @@
       </tr><tr><td>
           <p><code><a href="calib_sofun.html">calib_sofun()</a></code> </p>
         </td>
-        <td><p>Calibrates SOFUN model parameters (for parallelized applications)</p></td>
-      </tr><tr><td>
-          <p><code><a href="calib_sofun_legacy.html">calib_sofun_legacy()</a></code> </p>
-        </td>
         <td><p>Calibrates SOFUN model parameters</p></td>
       </tr><tr><td>
           <p><code><a href="cost_likelihood_biomee.html">cost_likelihood_biomee()</a></code> </p>
@@ -104,10 +100,6 @@
         <td><p>Log-likelihood cost function for BiomeE with different targets</p></td>
       </tr><tr><td>
           <p><code><a href="cost_likelihood_pmodel.html">cost_likelihood_pmodel()</a></code> </p>
-        </td>
-        <td><p>Cost function computing a log-likelihood for calibration of P-model parameters</p></td>
-      </tr><tr><td>
-          <p><code><a href="cost_likelihood_pmodel_legacy.html">cost_likelihood_pmodel_legacy()</a></code> </p>
         </td>
         <td><p>Cost function computing a log-likelihood for calibration of P-model parameters</p></td>
       </tr><tr><td>
@@ -119,61 +111,33 @@
         </td>
         <td><p>Cost function computing RMSE for calibration of P-model parameters</p></td>
       </tr><tr><td>
-          <p><code><a href="createMixedPrior.html">createMixedPrior()</a></code> </p>
-        </td>
-        <td><p>Internal convenience function to create a mixed prior distribution</p></td>
-      </tr><tr><td>
-          <p><code><a href="get_mod_obs_pmodel.html">get_mod_obs_pmodel()</a></code> </p>
-        </td>
-        <td><p>Function running P-model and combining model and observations</p></td>
-      </tr><tr><td>
           <p><code><a href="init_dates_dataframe.html">init_dates_dataframe()</a></code> </p>
         </td>
         <td><p>Initialises a tibble with dates</p></td>
       </tr><tr><td>
-          <p><code><a href="is_beta_prior.html">is_beta_prior()</a></code> </p>
-        </td>
-        <td><p>Checks if provided parameter list describes a beta distribution</p></td>
-      </tr><tr><td>
-          <p><code><a href="is_lognormal_prior.html">is_lognormal_prior()</a></code> </p>
-        </td>
-        <td><p>Checks if provided parameter list describes a lognormal distribution</p></td>
-      </tr><tr><td>
-          <p><code><a href="is_normal_prior.html">is_normal_prior()</a></code> </p>
-        </td>
-        <td><p>Checks if provided parameter list describes a normal distribution</p></td>
-      </tr><tr><td>
-          <p><code><a href="is_trunclognormal_prior.html">is_trunclognormal_prior()</a></code> </p>
-        </td>
-        <td><p>Checks if provided parameter list describes a truncated lognormal distribution</p></td>
-      </tr><tr><td>
-          <p><code><a href="is_truncnormal_prior.html">is_truncnormal_prior()</a></code> </p>
-        </td>
-        <td><p>Checks if provided parameter list describes a truncated normal distribution</p></td>
-      </tr><tr><td>
-          <p><code><a href="is_uniform_prior.html">is_uniform_prior()</a></code> </p>
-        </td>
-        <td><p>Checks if provided parameter list describes a uniform distribution</p></td>
-      </tr><tr><td>
-          <p><code><a href="p_model_oldformat_drivers.html">p_model_oldformat_drivers</a></code> </p>
+          <p><code><a href="p_model_drivers.html">p_model_drivers</a></code> </p>
         </td>
         <td><p>rsofun P-model driver data</p></td>
       </tr><tr><td>
-          <p><code><a href="p_model_oldformat_validation.html">p_model_oldformat_validation</a></code> </p>
+          <p><code><a href="p_model_drivers_vcmax25.html">p_model_drivers_vcmax25</a></code> </p>
         </td>
-        <td><p>rsofun P-model GPP validation data</p></td>
+        <td><p>rsofun P-model driver data (for leaf traits)</p></td>
       </tr><tr><td>
-          <p><code><a href="pmodel_drivers.html">pmodel_drivers</a></code> </p>
-        </td>
-        <td><p>rsofun P-model driver data</p></td>
-      </tr><tr><td>
-          <p><code><a href="pmodel_output.html">pmodel_output</a></code> </p>
+          <p><code><a href="p_model_output.html">p_model_output</a></code> </p>
         </td>
         <td><p>rsofun P-model output data</p></td>
       </tr><tr><td>
-          <p><code><a href="pmodel_validation.html">pmodel_validation</a></code> </p>
+          <p><code><a href="p_model_output_vcmax25.html">p_model_output_vcmax25</a></code> </p>
         </td>
-        <td><p>rsofun P-model GPP and leaf D13C validation data</p></td>
+        <td><p>rsofun P-model output data (using vcmax25 drivers)</p></td>
+      </tr><tr><td>
+          <p><code><a href="p_model_validation.html">p_model_validation</a></code> </p>
+        </td>
+        <td><p>rsofun P-model GPP validation data</p></td>
+      </tr><tr><td>
+          <p><code><a href="p_model_validation_vcmax25.html">p_model_validation_vcmax25</a></code> </p>
+        </td>
+        <td><p>rsofun P-model Vcmax25 validation data</p></td>
       </tr><tr><td>
           <p><code><a href="run_biomee_f_bysite.html">run_biomee_f_bysite()</a></code> </p>
         </td>

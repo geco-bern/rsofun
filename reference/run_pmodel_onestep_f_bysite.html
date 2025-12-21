@@ -23,7 +23,7 @@ acclimation of photosynthesis."><meta name="twitter:card" content="summary"><!--
         <a class="external-link hidden-md hidden-lg" href="https://geco-group.org/">
           <img src="https://raw.githubusercontent.com/computationales/GECO_template/main/geco_logo_white_small.png" id="hexlogo" alt="GECO"></a>
         <a class="navbar-brand" href="../index.html">
-           <i>rsofun <small>v5.1.0.9001</small></i>
+           <i>rsofun <small>v5.1.0.9000</small></i>
         </a>
       </div>
     </div>
@@ -73,7 +73,7 @@ acclimation of photosynthesis.</p>
 
 
 <dl><dt id="arg-lc-">lc4<a class="anchor" aria-label="anchor" href="#arg-lc-"></a></dt>
-<dd><p>Logical specifying whether P-model simulation is for C4 (as opposed to C3). Defaults to <code>FALSE</code>.</p></dd>
+<dd><p>Locigical specifying whether P-model simulation is for C4 (as opposed to C3). Defaults to <code>FALSE</code>.</p></dd>
 
 
 <dt id="arg-forcing">forcing<a class="anchor" aria-label="anchor" href="#arg-forcing"></a></dt>
@@ -87,12 +87,12 @@ acclimation of photosynthesis.</p>
 <dt id="arg-makecheck">makecheck<a class="anchor" aria-label="anchor" href="#arg-makecheck"></a></dt>
 <dd><p>A logical specifying whether checks are performed
  to verify forcings and model parameters. <code>TRUE</code> by default.</p>
-<p>For further specifications of above inputs and examples see <code><a href="pmodel_drivers.html">pmodel_drivers</a></code></p></dd>
+<p>For further specifications of above inputs and examples see <code><a href="p_model_drivers.html">p_model_drivers</a></code> or <code><a href="p_model_drivers_vcmax25.html">p_model_drivers_vcmax25</a></code></p></dd>
 
 </dl></div>
     <div id="value">
     <h2>Value</h2>
-    <p>Model output is provided as a tidy dataframe (tibble), with columns:</p><dl><dt><code>vcmax</code></dt>
+    <p>Model output is provided as a tidy dataframe, with columns:</p><dl><dt><code>vcmax</code></dt>
 <dd><p>Maximum rate of RuBisCO carboxylation
       (Vcmax) (in mol C m\(^{-2}\) s\(^{-1}\)).</p></dd>
 
@@ -148,13 +148,13 @@ acclimation of photosynthesis.</p>
 <span class="r-in"><span>  kc_jmax            <span class="op">=</span> <span class="fl">0.41</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># Run the Fortran P-model</span></span></span>
+<span class="r-in"><span><span class="co"># Run the Fortran P-model </span></span></span>
 <span class="r-in"><span><span class="fu">run_pmodel_onestep_f_bysite</span><span class="op">(</span></span></span>
 <span class="r-in"><span>  lc4 <span class="op">=</span> <span class="cn">FALSE</span>,</span></span>
 <span class="r-in"><span>  forcing <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span></span>
 <span class="r-in"><span>    temp  <span class="op">=</span> <span class="fl">20</span>,           <span class="co"># temperature, deg C</span></span></span>
 <span class="r-in"><span>    vpd   <span class="op">=</span> <span class="fl">1000</span>,         <span class="co"># Pa,</span></span></span>
-<span class="r-in"><span>    ppfd  <span class="op">=</span> <span class="fl">300</span> <span class="op">/</span> <span class="fl">10</span><span class="op">^</span><span class="fl">6</span>,   <span class="co"># mol/m2/s</span></span></span>
+<span class="r-in"><span>    ppfd  <span class="op">=</span> <span class="fl">300</span><span class="op">/</span><span class="fl">10</span><span class="op">^</span><span class="fl">6</span>,     <span class="co"># mol/m2/s</span></span></span>
 <span class="r-in"><span>    co2   <span class="op">=</span> <span class="fl">400</span>,          <span class="co"># ppm,</span></span></span>
 <span class="r-in"><span>    patm  <span class="op">=</span> <span class="fl">101325</span>        <span class="co"># Pa</span></span></span>
 <span class="r-in"><span>  <span class="op">)</span>,</span></span>

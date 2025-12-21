@@ -45,7 +45,7 @@
         <a class="external-link hidden-md hidden-lg" href="https://geco-group.org/">
           <img src="https://raw.githubusercontent.com/computationales/GECO_template/main/geco_logo_white_small.png" id="hexlogo" alt="GECO"></a>
         <a class="navbar-brand" href="index.html">
-           <i>rsofun <small>v5.1.0.9001</small></i>
+           <i>rsofun <small>v5.1.0.9000</small></i>
         </a>
       </div>
     </div>
@@ -151,7 +151,7 @@
 <span></span>
 <span><span class="co"># run the model for these parameters</span></span>
 <span><span class="va">output</span> <span class="op">&lt;-</span> <span class="fu">rsofun</span><span class="fu">::</span><span class="fu"><a href="reference/runread_pmodel_f.html">runread_pmodel_f</a></span><span class="op">(</span></span>
-<span>  <span class="va">pmodel_drivers</span>,</span>
+<span>  <span class="va">p_model_drivers</span>,</span>
 <span>  par <span class="op">=</span> <span class="va">params_modl</span></span>
 <span>  <span class="op">)</span></span></code></pre></div>
 </div>
@@ -160,7 +160,7 @@
 </h3>
 <p>To optimize new parameters based upon driver data and a validation dataset we must first specify an optimization strategy and settings, as well as a cost function and parameter ranges.</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">settings_calib</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
+<code class="sourceCode R"><span><span class="va">settings</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
 <span>  method              <span class="op">=</span> <span class="st">"GenSA"</span>,</span>
 <span>  metric              <span class="op">=</span> <span class="va">cost_rmse_pmodel</span>,</span>
 <span>  control <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
@@ -175,35 +175,28 @@
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># calibrate the model and optimize free parameters</span></span>
 <span><span class="va">pars</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/calib_sofun.html">calib_sofun</a></span><span class="op">(</span></span>
-<span>    drivers <span class="op">=</span> <span class="va">pmodel_drivers</span>,  </span>
-<span>    obs <span class="op">=</span> <span class="va">pmodel_validation</span>,</span>
-<span>    settings_calib <span class="op">=</span> <span class="va">settings_calib</span>,</span>
+<span>    drivers <span class="op">=</span> <span class="va">p_model_drivers</span>,  </span>
+<span>    obs <span class="op">=</span> <span class="va">p_model_validation</span>,</span>
+<span>    settings <span class="op">=</span> <span class="va">settings</span>,</span>
 <span>    <span class="co"># extra arguments passed to the cost function:</span></span>
+<span>    targets <span class="op">=</span> <span class="st">"gpp"</span>,             <span class="co"># define target variable GPP</span></span>
 <span>    par_fixed <span class="op">=</span> <span class="va">params_modl</span><span class="op">[</span><span class="op">-</span><span class="fl">1</span><span class="op">]</span>  <span class="co"># fix non-calibrated parameters to previous </span></span>
 <span>                                 <span class="co"># values, removing kphio</span></span>
 <span>  <span class="op">)</span></span></code></pre></div>
 </div>
 </div>
 <div class="section level2">
-<h2 id="data-and-code-for-model-documentation-paper-paredes-et-al-2025">Data and code for model documentation paper (Paredes et al., 2025)<a class="anchor" aria-label="anchor" href="#data-and-code-for-model-documentation-paper-paredes-et-al-2025"></a>
+<h2 id="data-and-code-for-model-documentation-paper-paredes-et-al-in-rev">Data and code for model documentation paper (Paredes et al., in rev.)<a class="anchor" aria-label="anchor" href="#data-and-code-for-model-documentation-paper-paredes-et-al-in-rev"></a>
 </h2>
-<p>The model documentation paper is available at <a href="https://doi.org/10.5194/gmd-18-9855-2025" class="external-link uri">https://doi.org/10.5194/gmd-18-9855-2025</a> and can be cited as: Paredes, J. A., Bernhard, F., Hufkens, K., Marcadella, M., and Stocker, B. D.: rsofun v5.1: a model-data integration framework for simulating ecosystem processes, Geosci. Model Dev., 18, 9855–9878, <a href="https://doi.org/10.5194/gmd-18-9855-2025" class="external-link uri">https://doi.org/10.5194/gmd-18-9855-2025</a>, 2025.</p>
-<p>Code to reproduce the analysis and plots presented in the documentation paper is contained in the repository at <a href="https://github.com/geco-bern/rsofun_doc" class="external-link uri">https://github.com/geco-bern/rsofun_doc</a> and archived on Zenodo (<a href="https://doi.org/10.5281/zenodo.17204361" class="external-link uri">https://doi.org/10.5281/zenodo.17204361</a>, Bernhard and Stocker, 2025).</p>
-</div>
-<div class="section level2">
-<h2 id="data-for-rsofun-example-data-sets">Data for rsofun example data sets<a class="anchor" aria-label="anchor" href="#data-for-rsofun-example-data-sets"></a>
-</h2>
-<p>Versioned releases of the rsofun package are deposited on Zenodo (see badge at the top of the README file).</p>
-<p>Model forcing and evaluation data stems form the following sources: - The model forcing and evaluation data for GPP sites are based on the publicly available data, prepared by FluxDataKit v3.4.2 (<a href="https://doi.org/10.5281/zenodo.14808331" class="external-link uri">https://doi.org/10.5281/zenodo.14808331</a>, Hufkens and Stocker, 2025). - The model forcing for Δ sites are based on the publicly available WorldClim (<a href="https://doi.org/10.1002/joc.5086" class="external-link uri">https://doi.org/10.1002/joc.5086</a>, Fick and Hijmans, 2017), ETOPO1 (<a href="https://doi.org/10.7289/V5C8276M" class="external-link uri">https://doi.org/10.7289/V5C8276M</a>, NOAA National Geophysical Data Center, 2009), and Mauna Loa CO2 (<a href="https://doi.org/10.6075/J08W3BHW" class="external-link uri">https://doi.org/10.6075/J08W3BHW</a>, Keeling et al., 2017) data. - The model evaluation data for Δ sites are based on data associated with Cornwell et al. (2018) available at (<a href="https://doi.org/10.5281/zenodo.15239220" class="external-link uri">https://doi.org/10.5281/zenodo.15239220</a>, Cornwell, 2025).</p>
-<p>Scripts for generating these data are contained in the <code>rsofun_doc</code> repository (<a href="https://doi.org/10.5281/zenodo.17204361" class="external-link uri">https://doi.org/10.5281/zenodo.17204361</a>, Bernhard and Stocker, 2025) in the subdirectory <code>data-raw/</code>.</p>
+<p>Versioned releases of this repository are deposited on Zenodo (see badge at the top of the README file). Code to reproduce the analysis and plots presented here is contained in this repository (subdirectory <code>analysis/</code>) and is demonstrated on the model documentation website (<a href="https://geco-bern.github.io/rsofun/" class="external-link uri">https://geco-bern.github.io/rsofun/</a>, article ‘Sensitivity analysis and calibration interpretation’).</p>
+<p>The model forcing and evaluation data is based on the publicly available FLUXNET2015 data for the site FR-Pue, prepared by FluxDataKit v3.4.2 (10.5281/zenodo.14808331), taken here as a subset of the originally published data for years 2007-2012. It is accessible through the {rsofun} R package and contained as part of this repository (subdirectory <code>data/</code>) as CSV and as files. Outputs of the analysis presented here are archived in the <code>analysis/paper_results_files/</code> subfolder.</p>
+<p>The model documentation paper is currently under review. A preprint is available at: <a href="https://www.biorxiv.org/content/10.1101/2023.11.24.568574v3" class="external-link uri">https://www.biorxiv.org/content/10.1101/2023.11.24.568574v3</a></p>
 </div>
 <div class="section level2">
 <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a>
 </h2>
-<p>Paredes, J. A., Bernhard, F., Hufkens, K., Marcadella, M., and Stocker, B. D.: rsofun v5.1: a model-data integration framework for simulating ecosystem processes, Geosci. Model Dev., 18, 9855–9878, <a href="https://doi.org/10.5194/gmd-18-9855-2025" class="external-link uri">https://doi.org/10.5194/gmd-18-9855-2025</a>, 2025.</p>
 <p>Stocker, B. D., Wang, H., Smith, N. G., Harrison, S. P., Keenan, T. F., Sandoval, D., Davis, T., and Prentice, I. C.: P-model v1.0: an optimality-based light use efficiency model for simulating ecosystem gross primary production, Geosci. Model Dev., 13, 1545–1581, <a href="https://doi.org/10.5194/gmd-13-1545-2020" class="external-link uri">https://doi.org/10.5194/gmd-13-1545-2020</a>, 2020.</p>
-<p>Cornwell, W. K., Wright, I. J., Turner, J., Maire, V., Barbour, M. M., Cernusak, L. A., Dawson, T., Ellsworth, D., Farquhar, G. D., Griffiths, H., Keitel, C., Knohl, A., Reich, P. B., Williams, D. G., Bhaskar, R., Cornelissen, J. H. C., Richards, A., Schmidt, S., Valladares, F., … Santiago, L. S.: Climate and soils together regulate photosynthetic carbon isotope discrimination within C3 plants worldwide. Global Ecology and Biogeography, 27(9), 1056–1067. <a href="https://doi.org/10.1111/geb.12764" class="external-link uri">https://doi.org/10.1111/geb.12764</a>, 2018.</p>
-<p>Davis, T. W., Prentice, I. C., Stocker, B. D., Thomas, R. T., Whitley, R. J., Wang, H., Evans, B. J., Gallego-Sala, A. V., Sykes, M. T., and Cramer, W.: Simple process-led algorithms for simulating habitats (SPLASH v.1.0): robust indices of radiation, evapotranspiration and plant-available moisture, Geoscientific Model Development, 10, 689–708, <a href="doi:10.5194/gmd-10-689-2017" class="uri">doi:10.5194/gmd-10-689-2017</a>, URL <a href="http://www.geosci-model-dev.net/10/689/2017/" class="external-link uri">http://www.geosci-model-dev.net/10/689/2017/</a>, 2017.</p>
+<p>Davis, T. W., Prentice, I. C., Stocker, B. D., Thomas, R. T., Whitley, R. J., Wang, H., Evans, B. J., Gallego-Sala, A. V., Sykes, M. T., and Cramer, W.: Simple process-led algorithms for simulating habitats (SPLASH v.1.0): robust indices of radiation, evapotranspiration and plant-available moisture, Geoscientific Model Development, 10, 689–708, <a href="doi:10.5194/gmd-10-689-2017" class="uri">doi:10.5194/gmd-10-689-2017</a>, URL http: //www.geosci-model-dev.net/10/689/2017/, 2017.</p>
 <p>Weng, E. S., Malyshev, S., Lichstein, J. W., Farrior, C. E., Dybzinski, R., Zhang, T., Shevliakova, E., and Pacala, S. W.: Scaling from individual trees to forests in an Earth system modeling framework using a mathematically tractable model of height-structured competition, Biogeosciences, 12, 2655–2694, <a href="https://doi.org/10.5194/bg-12-2655-2015" class="external-link uri">https://doi.org/10.5194/bg-12-2655-2015</a>, 2015.</p>
 </div>
 <div class="section level2">

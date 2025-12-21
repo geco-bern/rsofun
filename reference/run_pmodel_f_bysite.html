@@ -21,7 +21,7 @@
         <a class="external-link hidden-md hidden-lg" href="https://geco-group.org/">
           <img src="https://raw.githubusercontent.com/computationales/GECO_template/main/geco_logo_white_small.png" id="hexlogo" alt="GECO"></a>
         <a class="navbar-brand" href="../index.html">
-           <i>rsofun <small>v5.1.0.9001</small></i>
+           <i>rsofun <small>v5.1.0.9000</small></i>
         </a>
       </div>
     </div>
@@ -81,7 +81,7 @@
 
 
 <dt id="arg-params-siml">params_siml<a class="anchor" aria-label="anchor" href="#arg-params-siml"></a></dt>
-<dd><p>Simulation parameters. See <code><a href="pmodel_drivers.html">pmodel_drivers</a></code></p></dd>
+<dd><p>Simulation parameters.</p></dd>
 
 
 <dt id="arg-site-info">site_info<a class="anchor" aria-label="anchor" href="#arg-site-info"></a></dt>
@@ -104,12 +104,12 @@ to verify forcings and model parameters. <code>TRUE</code> by default.</p></dd>
 <dt id="arg-verbose">verbose<a class="anchor" aria-label="anchor" href="#arg-verbose"></a></dt>
 <dd><p>A logical specifying whether to print warnings.
 Defaults to <code>TRUE</code>.</p>
-<p>For further specifications of above inputs and examples see <code><a href="pmodel_drivers.html">pmodel_drivers</a></code>.</p></dd>
+<p>For further specifications of above inputs and examples see <code><a href="p_model_drivers.html">p_model_drivers</a></code> or <code><a href="p_model_drivers_vcmax25.html">p_model_drivers_vcmax25</a></code></p></dd>
 
 </dl></div>
     <div id="value">
     <h2>Value</h2>
-    <p>Model output is provided as a tidy dataframe (tibble), with columns:</p><dl><dt><code>date</code></dt>
+    <p>Model output is provided as a tidy dataframe, with columns:</p><dl><dt><code>date</code></dt>
 <dd><p>Date of the observation in YYYY-MM-DD format.</p></dd>
 
   <dt><code>year_dec</code></dt>
@@ -242,15 +242,15 @@ exactly replicated.</p>
 <span class="r-in"><span>  kc_jmax            <span class="op">=</span> <span class="fl">0.41</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># Run the Fortran P-model</span></span></span>
+<span class="r-in"><span><span class="co"># Run the Fortran P-model </span></span></span>
 <span class="r-in"><span><span class="va">mod_output</span> <span class="op">&lt;-</span> <span class="fu">run_pmodel_f_bysite</span><span class="op">(</span></span></span>
 <span class="r-in"><span>  <span class="co"># unnest drivers example data</span></span></span>
-<span class="r-in"><span>  sitename <span class="op">=</span> <span class="va">pmodel_drivers</span><span class="op">$</span><span class="va">sitename</span><span class="op">[[</span><span class="fl">5</span><span class="op">]</span><span class="op">]</span>,</span></span>
-<span class="r-in"><span>  params_siml <span class="op">=</span> <span class="va">pmodel_drivers</span><span class="op">$</span><span class="va">params_siml</span><span class="op">[[</span><span class="fl">5</span><span class="op">]</span><span class="op">]</span>,</span></span>
-<span class="r-in"><span>  site_info <span class="op">=</span> <span class="va">pmodel_drivers</span><span class="op">$</span><span class="va">site_info</span><span class="op">[[</span><span class="fl">5</span><span class="op">]</span><span class="op">]</span>,</span></span>
-<span class="r-in"><span>  forcing <span class="op">=</span> <span class="va">pmodel_drivers</span><span class="op">$</span><span class="va">forcing</span><span class="op">[[</span><span class="fl">5</span><span class="op">]</span><span class="op">]</span>,</span></span>
+<span class="r-in"><span>  sitename <span class="op">=</span> <span class="va">p_model_drivers</span><span class="op">$</span><span class="va">sitename</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span>,</span></span>
+<span class="r-in"><span>  params_siml <span class="op">=</span> <span class="va">p_model_drivers</span><span class="op">$</span><span class="va">params_siml</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span>,</span></span>
+<span class="r-in"><span>  site_info <span class="op">=</span> <span class="va">p_model_drivers</span><span class="op">$</span><span class="va">site_info</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span>,</span></span>
+<span class="r-in"><span>  forcing <span class="op">=</span> <span class="va">p_model_drivers</span><span class="op">$</span><span class="va">forcing</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span>,</span></span>
 <span class="r-in"><span>  params_modl <span class="op">=</span> <span class="va">params_modl</span></span></span>
-<span class="r-in"><span><span class="op">)</span></span></span>
+<span class="r-in"><span> <span class="op">)</span></span></span>
 </code></pre></div>
     </div>
   </div>

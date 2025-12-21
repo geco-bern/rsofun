@@ -23,7 +23,7 @@ the root mean squared error (RMSE)."><meta name="twitter:card" content="summary"
         <a class="external-link hidden-md hidden-lg" href="https://geco-group.org/">
           <img src="https://raw.githubusercontent.com/computationales/GECO_template/main/geco_logo_white_small.png" id="hexlogo" alt="GECO"></a>
         <a class="navbar-brand" href="../index.html">
-           <i>rsofun <small>v5.1.0.9001</small></i>
+           <i>rsofun <small>v5.1.0.9000</small></i>
         </a>
       </div>
     </div>
@@ -69,9 +69,11 @@ the root mean squared error (RMSE).</p>
 <span>  <span class="va">par</span>,</span>
 <span>  <span class="va">obs</span>,</span>
 <span>  <span class="va">drivers</span>,</span>
-<span>  targets <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  <span class="va">targets</span>,</span>
 <span>  par_fixed <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  target_weights <span class="op">=</span> <span class="cn">NULL</span></span>
+<span>  target_weights <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  parallel <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  ncores <span class="op">=</span> <span class="fl">2</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -86,20 +88,20 @@ those described in <code><a href="runread_pmodel_f.html">runread_pmodel_f</a></c
 
 <dt id="arg-obs">obs<a class="anchor" aria-label="anchor" href="#arg-obs"></a></dt>
 <dd><p>A nested data.frame of observations, with columns <code>'sitename'</code>
-and <code>'data'</code> (see <code><a href="pmodel_validation.html">pmodel_validation</a></code> to check its structure).</p></dd>
+and <code>'data'</code> (see <code><a href="p_model_validation.html">p_model_validation</a></code> or <code><a href="p_model_validation_vcmax25.html">p_model_validation_vcmax25</a></code>
+to check their structure).</p></dd>
 
 
 <dt id="arg-drivers">drivers<a class="anchor" aria-label="anchor" href="#arg-drivers"></a></dt>
-<dd><p>A nested data.frame of driver data. See <code><a href="pmodel_drivers.html">pmodel_drivers</a></code>
+<dd><p>A nested data.frame of driver data. See <code><a href="p_model_drivers.html">p_model_drivers</a></code>
 for a description of the data structure.</p></dd>
 
 
 <dt id="arg-targets">targets<a class="anchor" aria-label="anchor" href="#arg-targets"></a></dt>
-<dd><p>(obsolete) A character vector indicating the target variables for which the
+<dd><p>A character vector indicating the target variables for which the
 optimization will be done and the RMSE computed. This string must be a column
-name of the <code>obs$data</code> data.frame belonging to the validation nested data.frame
-(for example 'gpp'). Now defaults to <code>NULL</code>, and use of a corresponding
-column <code>'targets'</code> in <code>obs</code> should be used instead.</p></dd>
+name of the <code>data</code> data.frame belonging to the validation nested data.frame
+(for example 'gpp').</p></dd>
 
 
 <dt id="arg-par-fixed">par_fixed<a class="anchor" aria-label="anchor" href="#arg-par-fixed"></a></dt>
@@ -113,6 +115,17 @@ parameters are passed on to <code><a href="runread_pmodel_f.html">runread_pmodel
 the RMSE if using several targets. By default (<code>target_weights = NULL</code>)
 the RMSE is computed separately for each target and then averaged. The provided
 weights are used to compute a weighted average of RMSE across targets.</p></dd>
+
+
+<dt id="arg-parallel">parallel<a class="anchor" aria-label="anchor" href="#arg-parallel"></a></dt>
+<dd><p>A logical specifying whether simulations are to be parallelised
+(sending data from a certain number of sites to each core). Defaults to
+<code>FALSE</code>.</p></dd>
+
+
+<dt id="arg-ncores">ncores<a class="anchor" aria-label="anchor" href="#arg-ncores"></a></dt>
+<dd><p>An integer specifying the number of cores used for parallel
+computing. Defaults to 2.</p></dd>
 
 </dl></div>
     <div id="value">
@@ -142,34 +155,20 @@ trait value predicted on that date.</p>
 <span class="r-in"><span><span class="co"># of model parameter values</span></span></span>
 <span class="r-in"><span><span class="co"># and example data</span></span></span>
 <span class="r-in"><span><span class="fu">cost_rmse_pmodel</span><span class="op">(</span></span></span>
-<span class="r-in"><span>  par <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.05</span>, <span class="op">-</span><span class="fl">0.01</span>, <span class="fl">0.5</span><span class="op">)</span>,  <span class="co"># kphio related parameters</span></span></span>
-<span class="r-in"><span>  obs <span class="op">=</span> <span class="va">pmodel_validation</span> <span class="op">|&gt;</span> <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">sitename</span> <span class="op">==</span> <span class="st">"FR-Pue"</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>  drivers <span class="op">=</span> <span class="va">pmodel_drivers</span> <span class="op">|&gt;</span> <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">sitename</span> <span class="op">==</span> <span class="st">"FR-Pue"</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>  par_fixed <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span></span>
-<span class="r-in"><span>    soilm_thetastar    <span class="op">=</span> <span class="fl">0.6</span> <span class="op">*</span> <span class="fl">240</span>,  <span class="co"># old setup with soil moisture stress</span></span></span>
-<span class="r-in"><span>    soilm_betao        <span class="op">=</span> <span class="fl">0.0</span>,</span></span>
-<span class="r-in"><span>    beta_unitcostratio <span class="op">=</span> <span class="fl">146.0</span>,</span></span>
-<span class="r-in"><span>    rd_to_vcmax        <span class="op">=</span> <span class="fl">0.014</span>,      <span class="co"># from Atkin et al. 2015 for C3 herbaceous</span></span></span>
-<span class="r-in"><span>    tau_acclim         <span class="op">=</span> <span class="fl">30.0</span>,</span></span>
-<span class="r-in"><span>    kc_jmax            <span class="op">=</span> <span class="fl">0.41</span></span></span>
-<span class="r-in"><span>  <span class="op">)</span></span></span>
+<span class="r-in"><span> par <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.05</span>, <span class="op">-</span><span class="fl">0.01</span>, <span class="fl">0.5</span><span class="op">)</span>,  <span class="co"># kphio related parameters</span></span></span>
+<span class="r-in"><span> obs <span class="op">=</span> <span class="va">p_model_validation</span>,</span></span>
+<span class="r-in"><span> drivers <span class="op">=</span> <span class="va">p_model_drivers</span>,</span></span>
+<span class="r-in"><span> targets <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">'gpp'</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span> par_fixed <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span>  soilm_thetastar    <span class="op">=</span> <span class="fl">0.6</span> <span class="op">*</span> <span class="fl">240</span>,  <span class="co"># old setup with soil moisture stress</span></span></span>
+<span class="r-in"><span>  soilm_betao        <span class="op">=</span> <span class="fl">0.0</span>,</span></span>
+<span class="r-in"><span>  beta_unitcostratio <span class="op">=</span> <span class="fl">146.0</span>,</span></span>
+<span class="r-in"><span>  rd_to_vcmax        <span class="op">=</span> <span class="fl">0.014</span>,      <span class="co"># from Atkin et al. 2015 for C3 herbaceous</span></span></span>
+<span class="r-in"><span>  tau_acclim         <span class="op">=</span> <span class="fl">30.0</span>,</span></span>
+<span class="r-in"><span>  kc_jmax            <span class="op">=</span> <span class="fl">0.41</span></span></span>
+<span class="r-in"><span> <span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 3.882951</span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="fu">cost_rmse_pmodel</span><span class="op">(</span></span></span>
-<span class="r-in"><span>  par <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.05</span>, <span class="op">-</span><span class="fl">0.01</span>, <span class="fl">0.5</span><span class="op">)</span>,  <span class="co"># kphio related parameters</span></span></span>
-<span class="r-in"><span>  obs <span class="op">=</span> <span class="va">pmodel_validation</span>,</span></span>
-<span class="r-in"><span>  drivers <span class="op">=</span> <span class="va">pmodel_drivers</span>,</span></span>
-<span class="r-in"><span>  par_fixed <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span></span>
-<span class="r-in"><span>    soilm_thetastar    <span class="op">=</span> <span class="fl">0.6</span> <span class="op">*</span> <span class="fl">240</span>,  <span class="co"># old setup with soil moisture stress</span></span></span>
-<span class="r-in"><span>    soilm_betao        <span class="op">=</span> <span class="fl">0.0</span>,</span></span>
-<span class="r-in"><span>    beta_unitcostratio <span class="op">=</span> <span class="fl">146.0</span>,</span></span>
-<span class="r-in"><span>    rd_to_vcmax        <span class="op">=</span> <span class="fl">0.014</span>,      <span class="co"># from Atkin et al. 2015 for C3 herbaceous</span></span></span>
-<span class="r-in"><span>    tau_acclim         <span class="op">=</span> <span class="fl">30.0</span>,</span></span>
-<span class="r-in"><span>    kc_jmax            <span class="op">=</span> <span class="fl">0.41</span></span></span>
-<span class="r-in"><span>  <span class="op">)</span></span></span>
-<span class="r-in"><span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 6646495</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 3.837109</span>
 </code></pre></div>
     </div>
   </div>

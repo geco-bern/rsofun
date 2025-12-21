@@ -43,7 +43,7 @@
         <a class="external-link hidden-md hidden-lg" href="https://geco-group.org/">
           <img src="https://raw.githubusercontent.com/computationales/GECO_template/main/geco_logo_white_small.png" id="hexlogo" alt="GECO"></a>
         <a class="navbar-brand" href="../index.html">
-           <i>rsofun <small>v5.1.0.9001</small></i>
+           <i>rsofun <small>v5.1.0.9000</small></i>
         </a>
       </div>
     </div>
@@ -80,7 +80,7 @@
     <div class="page-header toc-ignore">
       <h1 data-toc-skip>P-model usage</h1>
                         <h4 data-toc-skip class="author">Koen Hufkens,
-Josefa Arán, Fabian Bernhard, Benjamin Stocker</h4>
+Josefa Arán, Benjamin Stocker</h4>
             
       
       <small class="dont-index">Source: <a href="https://github.com/geco-bern/rsofun/blob/master/vignettes/pmodel_use.Rmd" class="external-link"><code>vignettes/pmodel_use.Rmd</code></a></small>
@@ -94,81 +94,65 @@ Josefa Arán, Fabian Bernhard, Benjamin Stocker</h4>
 simulation models. The <code>p-model</code> and <code>biomee</code>
 (which in part relies on p-model component). Here we give a short
 example on how to run the <code>p-model</code> on the included demo
-dataset to familiarize yourself with both the data structure and the
+datasets to familiarize yourself with both the data structure and the
 outputs.</p>
 <div class="section level2">
 <h2 id="demo-data">Demo data<a class="anchor" aria-label="anchor" href="#demo-data"></a>
 </h2>
-<p>The package includes a demo dataset to run and validate p-model
-output using GPP or D13C observations. These files can be directly
-loaded into your workspace by typing:</p>
+<p>The package includes two demo datasets to run and validate p-model
+output using GPP observations. These files can be directly loaded into
+your workspace by typing:</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/geco-bern/rsofun" class="external-link">rsofun</a></span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">pmodel_drivers</span></span>
-<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 20 × 4</span></span></span>
-<span><span class="co">#&gt;    sitename                params_siml       site_info        forcing         </span></span>
-<span><span class="co">#&gt;    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                   <span style="color: #949494; font-style: italic;">&lt;list&gt;</span>            <span style="color: #949494; font-style: italic;">&lt;list&gt;</span>           <span style="color: #949494; font-style: italic;">&lt;list&gt;</span>          </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 1</span> CH-Dav                  <span style="color: #949494;">&lt;tibble [1 × 12]&gt;</span> <span style="color: #949494;">&lt;tibble [1 × 4]&gt;</span> <span style="color: #949494;">&lt;tibble&gt;</span>        </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 2</span> CZ-BK1                  <span style="color: #949494;">&lt;tibble [1 × 12]&gt;</span> <span style="color: #949494;">&lt;tibble [1 × 4]&gt;</span> <span style="color: #949494;">&lt;tibble&gt;</span>        </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 3</span> DK-Sor                  <span style="color: #949494;">&lt;tibble [1 × 12]&gt;</span> <span style="color: #949494;">&lt;tibble [1 × 4]&gt;</span> <span style="color: #949494;">&lt;tibble&gt;</span>        </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 4</span> FI-Hyy                  <span style="color: #949494;">&lt;tibble [1 × 12]&gt;</span> <span style="color: #949494;">&lt;tibble [1 × 4]&gt;</span> <span style="color: #949494;">&lt;tibble&gt;</span>        </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 5</span> FR-Pue                  <span style="color: #949494;">&lt;tibble [1 × 12]&gt;</span> <span style="color: #949494;">&lt;tibble [1 × 4]&gt;</span> <span style="color: #949494;">&lt;tibble&gt;</span>        </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 6</span> GF-Guy                  <span style="color: #949494;">&lt;tibble [1 × 12]&gt;</span> <span style="color: #949494;">&lt;tibble [1 × 4]&gt;</span> <span style="color: #949494;">&lt;tibble&gt;</span>        </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 7</span> US-Ha1                  <span style="color: #949494;">&lt;tibble [1 × 12]&gt;</span> <span style="color: #949494;">&lt;tibble [1 × 4]&gt;</span> <span style="color: #949494;">&lt;tibble&gt;</span>        </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 8</span> US-PFa                  <span style="color: #949494;">&lt;tibble [1 × 12]&gt;</span> <span style="color: #949494;">&lt;tibble [1 × 4]&gt;</span> <span style="color: #949494;">&lt;tibble&gt;</span>        </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 9</span> lon_+010.52_lat_+051.08 <span style="color: #949494;">&lt;tibble [1 × 2]&gt;</span>  <span style="color: #949494;">&lt;tibble [1 × 4]&gt;</span> <span style="color: #949494;">&lt;tibble [1 × 5]&gt;</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">10</span> lon_+011.10_lat_+048.30 <span style="color: #949494;">&lt;tibble [1 × 2]&gt;</span>  <span style="color: #949494;">&lt;tibble [1 × 4]&gt;</span> <span style="color: #949494;">&lt;tibble [1 × 5]&gt;</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">11</span> lon_+112.58_lat_+023.13 <span style="color: #949494;">&lt;tibble [1 × 2]&gt;</span>  <span style="color: #949494;">&lt;tibble [1 × 4]&gt;</span> <span style="color: #949494;">&lt;tibble [1 × 5]&gt;</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">12</span> lon_+145.13_lat_-005.83 <span style="color: #949494;">&lt;tibble [1 × 2]&gt;</span>  <span style="color: #949494;">&lt;tibble [1 × 4]&gt;</span> <span style="color: #949494;">&lt;tibble [1 × 5]&gt;</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">13</span> lon_+146.13_lat_-032.97 <span style="color: #949494;">&lt;tibble [1 × 2]&gt;</span>  <span style="color: #949494;">&lt;tibble [1 × 4]&gt;</span> <span style="color: #949494;">&lt;tibble [1 × 5]&gt;</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">14</span> lon_+148.30_lat_-036.10 <span style="color: #949494;">&lt;tibble [1 × 2]&gt;</span>  <span style="color: #949494;">&lt;tibble [1 × 4]&gt;</span> <span style="color: #949494;">&lt;tibble [1 × 5]&gt;</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">15</span> lon_+153.00_lat_-026.85 <span style="color: #949494;">&lt;tibble [1 × 2]&gt;</span>  <span style="color: #949494;">&lt;tibble [1 × 4]&gt;</span> <span style="color: #949494;">&lt;tibble [1 × 5]&gt;</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">16</span> lon_-079.10_lat_+035.97 <span style="color: #949494;">&lt;tibble [1 × 2]&gt;</span>  <span style="color: #949494;">&lt;tibble [1 × 4]&gt;</span> <span style="color: #949494;">&lt;tibble [1 × 5]&gt;</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">17</span> lon_-116.45_lat_+047.16 <span style="color: #949494;">&lt;tibble [1 × 2]&gt;</span>  <span style="color: #949494;">&lt;tibble [1 × 4]&gt;</span> <span style="color: #949494;">&lt;tibble [1 × 5]&gt;</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">18</span> lon_-119.82_lat_+034.50 <span style="color: #949494;">&lt;tibble [1 × 2]&gt;</span>  <span style="color: #949494;">&lt;tibble [1 × 4]&gt;</span> <span style="color: #949494;">&lt;tibble [1 × 5]&gt;</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">19</span> lon_-122.98_lat_+038.40 <span style="color: #949494;">&lt;tibble [1 × 2]&gt;</span>  <span style="color: #949494;">&lt;tibble [1 × 4]&gt;</span> <span style="color: #949494;">&lt;tibble [1 × 5]&gt;</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">20</span> lon_-149.61_lat_+063.97 <span style="color: #949494;">&lt;tibble [1 × 2]&gt;</span>  <span style="color: #949494;">&lt;tibble [1 × 4]&gt;</span> <span style="color: #949494;">&lt;tibble [1 × 5]&gt;</span></span></span>
+<span><span class="co"># this is to deal with an error p_model_drivers.rds not being found </span></span>
+<span><span class="va">p_model_drivers</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 1 × 4</span></span></span>
+<span><span class="co">#&gt;   sitename params_siml       site_info        forcing              </span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;list&gt;</span>            <span style="color: #949494; font-style: italic;">&lt;list&gt;</span>           <span style="color: #949494; font-style: italic;">&lt;list&gt;</span>               </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> FR-Pue   <span style="color: #949494;">&lt;tibble [1 × 11]&gt;</span> <span style="color: #949494;">&lt;tibble [1 × 4]&gt;</span> <span style="color: #949494;">&lt;tibble [2,190 × 13]&gt;</span></span></span>
 <span></span>
-<span><span class="va">pmodel_validation</span></span>
-<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 20 × 3</span></span></span>
-<span><span class="co">#&gt;    sitename                targets   data                </span></span>
-<span><span class="co">#&gt;    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                   <span style="color: #949494; font-style: italic;">&lt;list&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;list&gt;</span>              </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 1</span> CH-Dav                  <span style="color: #949494;">&lt;chr [2]&gt;</span> <span style="color: #949494;">&lt;tibble [714 × 7]&gt;</span>  </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 2</span> CZ-BK1                  <span style="color: #949494;">&lt;chr [1]&gt;</span> <span style="color: #949494;">&lt;tibble [479 × 7]&gt;</span>  </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 3</span> DK-Sor                  <span style="color: #949494;">&lt;chr [1]&gt;</span> <span style="color: #949494;">&lt;tibble [720 × 7]&gt;</span>  </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 4</span> FI-Hyy                  <span style="color: #949494;">&lt;chr [1]&gt;</span> <span style="color: #949494;">&lt;tibble [704 × 7]&gt;</span>  </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 5</span> FR-Pue                  <span style="color: #949494;">&lt;chr [1]&gt;</span> <span style="color: #949494;">&lt;tibble [1,924 × 7]&gt;</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 6</span> GF-Guy                  <span style="color: #949494;">&lt;chr [1]&gt;</span> <span style="color: #949494;">&lt;tibble [319 × 7]&gt;</span>  </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 7</span> US-Ha1                  <span style="color: #949494;">&lt;chr [1]&gt;</span> <span style="color: #949494;">&lt;tibble [502 × 7]&gt;</span>  </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 8</span> US-PFa                  <span style="color: #949494;">&lt;chr [1]&gt;</span> <span style="color: #949494;">&lt;tibble [669 × 7]&gt;</span>  </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 9</span> lon_+010.52_lat_+051.08 <span style="color: #949494;">&lt;chr [1]&gt;</span> <span style="color: #949494;">&lt;tibble [8 × 2]&gt;</span>    </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">10</span> lon_+011.10_lat_+048.30 <span style="color: #949494;">&lt;chr [1]&gt;</span> <span style="color: #949494;">&lt;tibble [1 × 2]&gt;</span>    </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">11</span> lon_+112.58_lat_+023.13 <span style="color: #949494;">&lt;chr [1]&gt;</span> <span style="color: #949494;">&lt;tibble [94 × 2]&gt;</span>   </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">12</span> lon_+145.13_lat_-005.83 <span style="color: #949494;">&lt;chr [1]&gt;</span> <span style="color: #949494;">&lt;tibble [1 × 2]&gt;</span>    </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">13</span> lon_+146.13_lat_-032.97 <span style="color: #949494;">&lt;chr [1]&gt;</span> <span style="color: #949494;">&lt;tibble [19 × 2]&gt;</span>   </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">14</span> lon_+148.30_lat_-036.10 <span style="color: #949494;">&lt;chr [1]&gt;</span> <span style="color: #949494;">&lt;tibble [2 × 2]&gt;</span>    </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">15</span> lon_+153.00_lat_-026.85 <span style="color: #949494;">&lt;chr [1]&gt;</span> <span style="color: #949494;">&lt;tibble [25 × 2]&gt;</span>   </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">16</span> lon_-079.10_lat_+035.97 <span style="color: #949494;">&lt;chr [1]&gt;</span> <span style="color: #949494;">&lt;tibble [4 × 2]&gt;</span>    </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">17</span> lon_-116.45_lat_+047.16 <span style="color: #949494;">&lt;chr [1]&gt;</span> <span style="color: #949494;">&lt;tibble [18 × 2]&gt;</span>   </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">18</span> lon_-119.82_lat_+034.50 <span style="color: #949494;">&lt;chr [1]&gt;</span> <span style="color: #949494;">&lt;tibble [13 × 2]&gt;</span>   </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">19</span> lon_-122.98_lat_+038.40 <span style="color: #949494;">&lt;chr [1]&gt;</span> <span style="color: #949494;">&lt;tibble [1 × 2]&gt;</span>    </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">20</span> lon_-149.61_lat_+063.97 <span style="color: #949494;">&lt;chr [1]&gt;</span> <span style="color: #949494;">&lt;tibble [1 × 2]&gt;</span></span></span></code></pre></div>
-<p>These are real data from eight fluxnet sites (CH-Dav, CZ-BK1, DK-Sor,
-FI-Hyy, FR-Pue, GF-Guy, US-Ha1, US-PFa) and twelve sites with with leaf
-carbon isotope signatures D13C <a href="https://doi.org/10.5281/zenodo.15239220" class="external-link">(Cornwell, 2025)</a>.
-Information about data sources and information about data structure,
-variable names, and their meaning and units can be found in the
-reference pages of <code>pmodel_drivers</code> and
-<code>pmodel_validation</code>. We can use these data to run the model,
-together with observations of GPP or D13C
-(<code>pmodel_validation</code>) we can also calibrate
-<code>p-model</code> parameters. Since leaf traits are only measured
-once per site, the forcings used are average climate conditions during
-the growing seasons.</p>
-<p><del>For the remainder of this vignette, we will use the GPP fluxnet
-datasets. The workflow is exactly the same for leaf traits
-data.</del></p>
+<span><span class="va">p_model_validation</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 1 × 2</span></span></span>
+<span><span class="co">#&gt;   sitename data                </span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;list&gt;</span>              </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> FR-Pue   <span style="color: #949494;">&lt;tibble [2,190 × 3]&gt;</span></span></span></code></pre></div>
+<p>These are real data from the French FR-Pue fluxnet site. Information
+about data structure, variable names, and their meaning and units can be
+found in the reference pages of <code>p_model_drivers</code> and
+<code>p_model_validation</code>. We can use these data to run the model,
+together with observations of GPP we can also calibrate
+<code>p-model</code> parameters.</p>
+<p>Another two datasets are provided as an example to validate the model
+against leaf traits data, rather than fluxes. Measurements of Vcmax25
+(aggregated over species) for a subset of 4 sites from the GlobResp
+database (Atkin et al., 2015) are given in
+<code>p_model_validation_vcmax25</code> and the corresponding forcing
+for the P-model is given in <code>p_model_drivers_vcmax25</code>. Since
+leaf traits are only measured once per site, the forcing used is a
+single year of average climate (the average measurements between 2001
+and 2015 on each day of the year).</p>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">p_model_drivers_vcmax25</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 4 × 4</span></span></span>
+<span><span class="co">#&gt;   sitename             params_siml       site_info        forcing            </span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                <span style="color: #949494; font-style: italic;">&lt;list&gt;</span>            <span style="color: #949494; font-style: italic;">&lt;list&gt;</span>           <span style="color: #949494; font-style: italic;">&lt;list&gt;</span>             </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> Reichetal_Colorado   <span style="color: #949494;">&lt;tibble [1 × 11]&gt;</span> <span style="color: #949494;">&lt;tibble [1 × 6]&gt;</span> <span style="color: #949494;">&lt;tibble [365 × 13]&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> Reichetal_New_Mexico <span style="color: #949494;">&lt;tibble [1 × 11]&gt;</span> <span style="color: #949494;">&lt;tibble [1 × 6]&gt;</span> <span style="color: #949494;">&lt;tibble [365 × 13]&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> Reichetal_Venezuela  <span style="color: #949494;">&lt;tibble [1 × 11]&gt;</span> <span style="color: #949494;">&lt;tibble [1 × 6]&gt;</span> <span style="color: #949494;">&lt;tibble [365 × 13]&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> Reichetal_Wisconsin  <span style="color: #949494;">&lt;tibble [1 × 11]&gt;</span> <span style="color: #949494;">&lt;tibble [1 × 6]&gt;</span> <span style="color: #949494;">&lt;tibble [365 × 13]&gt;</span></span></span>
+<span></span>
+<span><span class="va">p_model_validation_vcmax25</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 4 × 2</span></span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># Groups:   sitename [4]</span></span></span>
+<span><span class="co">#&gt;   sitename             data            </span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                <span style="color: #949494; font-style: italic;">&lt;list&gt;</span>          </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> Reichetal_Colorado   <span style="color: #949494;">&lt;tibble [1 × 2]&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> Reichetal_New_Mexico <span style="color: #949494;">&lt;tibble [1 × 2]&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> Reichetal_Venezuela  <span style="color: #949494;">&lt;tibble [1 × 2]&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> Reichetal_Wisconsin  <span style="color: #949494;">&lt;tibble [1 × 2]&gt;</span></span></span></code></pre></div>
+<p>For the remainder of this vignette, we will use the GPP flux
+datasets. The workflow is exactly the same for leaf traits data.</p>
 <p>To get your raw data into the structure used within
 <code>rsofun</code>, please see R packages <a href="https://github.com/geco-bern/ingestr" class="external-link">ingestr</a> and <a href="https://github.com/geco-bern/FluxDataKit" class="external-link">FluxDataKit</a>.</p>
 </div>
@@ -178,17 +162,14 @@ data.</del></p>
 <p>With all data prepared we can run the P-model using
 <code><a href="../reference/runread_pmodel_f.html">runread_pmodel_f()</a></code>. This function takes the nested data
 structure and runs the model site by site, returning nested model output
-results matching the input drivers. Internally it calls for each site
-<code><a href="../reference/run_pmodel_f_bysite.html">run_pmodel_f_bysite()</a></code> or
-<code><a href="../reference/run_pmodel_onestep_f_bysite.html">run_pmodel_onestep_f_bysite()</a></code> (for latter refer to section
-‘One-step P-model call’ below).</p>
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+results matching the input drivers.</p>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Define model parameter values.</span></span>
 <span><span class="co"># Correspond to maximum a posteriori estimates from Bayesian calibration in</span></span>
-<span><span class="co"># analysis/02-bayesian-calibration.R. # TODO: replace this with geco-bern/analysis_doc repository</span></span>
+<span><span class="co"># analysis/02-bayesian-calibration.R.</span></span>
 <span><span class="va">params_modl</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
 <span>  kphio              <span class="op">=</span> <span class="fl">5.000000e-02</span>, <span class="co"># chosen to be too high for demonstration</span></span>
-<span>  kphio_par_a        <span class="op">=</span> <span class="op">-</span><span class="fl">2.289344e-03</span>,</span>
+<span>  kphio_par_a        <span class="op">=</span><span class="op">-</span><span class="fl">2.289344e-03</span>,</span>
 <span>  kphio_par_b        <span class="op">=</span> <span class="fl">1.525094e+01</span>,</span>
 <span>  soilm_thetastar    <span class="op">=</span> <span class="fl">1.577507e+02</span>,</span>
 <span>  soilm_betao        <span class="op">=</span> <span class="fl">1.169702e-04</span>,</span>
@@ -196,25 +177,19 @@ results matching the input drivers. Internally it calls for each site
 <span>  rd_to_vcmax        <span class="op">=</span> <span class="fl">0.014</span>,</span>
 <span>  tau_acclim         <span class="op">=</span> <span class="fl">20.0</span>,</span>
 <span>  kc_jmax            <span class="op">=</span> <span class="fl">0.41</span></span>
-<span><span class="op">)</span></span>
+<span>  <span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Define model drivers.</span></span>
-<span><span class="va">driver</span> <span class="op">&lt;-</span> <span class="fu">rsofun</span><span class="fu">::</span><span class="va"><a href="../reference/pmodel_drivers.html">pmodel_drivers</a></span> <span class="op">|&gt;</span></span>
-<span>  <span class="co"># subset only certain sites:</span></span>
-<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">sitename</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
-<span>    <span class="co"># i.e. only use sites where we request runs of the daily p-model (internally</span></span>
-<span>    <span class="co"># calling `run_pmodel_f_bysite`, and not `run_pmodel_onestep_f_bysite`)</span></span>
-<span>    <span class="st">"FR-Pue"</span>,</span>
-<span>    <span class="st">"CH-Dav"</span>, <span class="st">"CZ-BK1"</span>, <span class="st">"DK-Sor"</span>, <span class="st">"FI-Hyy"</span>, <span class="st">"GF-Guy"</span>, <span class="st">"US-Ha1"</span>, <span class="st">"US-PFa"</span><span class="op">)</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Run the model for these parameters and drivers.</span></span>
-<span><span class="va">output</span> <span class="op">&lt;-</span> <span class="fu">rsofun</span><span class="fu">::</span><span class="fu"><a href="../reference/runread_pmodel_f.html">runread_pmodel_f</a></span><span class="op">(</span><span class="va">driver</span>, par <span class="op">=</span> <span class="va">params_modl</span><span class="op">)</span></span></code></pre></div>
+<span><span class="co"># Run the model for these parameters.</span></span>
+<span><span class="va">output</span> <span class="op">&lt;-</span> <span class="fu">rsofun</span><span class="fu">::</span><span class="fu"><a href="../reference/runread_pmodel_f.html">runread_pmodel_f</a></span><span class="op">(</span></span>
+<span>  <span class="va">p_model_drivers</span>,</span>
+<span>  par <span class="op">=</span> <span class="va">params_modl</span></span>
+<span>  <span class="op">)</span></span></code></pre></div>
 <div class="section level3">
 <h3 id="plotting-output">Plotting output<a class="anchor" aria-label="anchor" href="#plotting-output"></a>
 </h3>
 <p>We can now visualize both the model output and the measured values
 together.</p>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Load libraries for plotting</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://dplyr.tidyverse.org" class="external-link">dplyr</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://tidyr.tidyverse.org" class="external-link">tidyr</a></span><span class="op">)</span></span>
@@ -223,18 +198,16 @@ together.</p>
 <span><span class="co"># Create data.frame for plotting</span></span>
 <span><span class="va">df_gpp_plot</span> <span class="op">&lt;-</span> <span class="va">output</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu">tidyr</span><span class="fu">::</span><span class="fu"><a href="https://tidyr.tidyverse.org/reference/unnest.html" class="external-link">unnest</a></span><span class="op">(</span><span class="va">data</span><span class="op">)</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">sitename</span>, <span class="va">date</span>, gpp_mod <span class="op">=</span> <span class="va">gpp</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">date</span>, gpp_mod <span class="op">=</span> <span class="va">gpp</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate-joins.html" class="external-link">left_join</a></span><span class="op">(</span></span>
-<span>    <span class="fu">rsofun</span><span class="fu">::</span><span class="va"><a href="../reference/pmodel_validation.html">pmodel_validation</a></span> <span class="op">|&gt;</span> <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">sitename</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
-<span>      <span class="st">"FR-Pue"</span>,</span>
-<span>      <span class="st">"CH-Dav"</span>, <span class="st">"CZ-BK1"</span>, <span class="st">"DK-Sor"</span>, <span class="st">"FI-Hyy"</span>, <span class="st">"GF-Guy"</span>, <span class="st">"US-Ha1"</span>, <span class="st">"US-PFa"</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>    <span class="va">p_model_validation</span> <span class="op">|&gt;</span></span>
 <span>      <span class="fu">tidyr</span><span class="fu">::</span><span class="fu"><a href="https://tidyr.tidyverse.org/reference/unnest.html" class="external-link">unnest</a></span><span class="op">(</span><span class="va">data</span><span class="op">)</span> <span class="op">|&gt;</span></span>
-<span>      <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">sitename</span>, <span class="va">date</span>, gpp_obs <span class="op">=</span> <span class="va">gpp</span><span class="op">)</span>,</span>
-<span>    by <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"sitename"</span>, <span class="st">"date"</span><span class="op">)</span></span>
-<span>  <span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>      <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">date</span>, gpp_obs <span class="op">=</span> <span class="va">gpp</span><span class="op">)</span>,</span>
+<span>    by <span class="op">=</span> <span class="st">"date"</span></span>
+<span>    <span class="op">)</span> <span class="op">|&gt;</span> </span>
 <span></span>
-<span>  <span class="co"># Plot only first year of each site</span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">sitename</span><span class="op">)</span> <span class="op">|&gt;</span> <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/slice.html" class="external-link">slice</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">365</span><span class="op">)</span></span>
+<span>  <span class="co"># Plot only first year</span></span>
+<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/slice.html" class="external-link">slice</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">365</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Plot GPP</span></span>
 <span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span>data <span class="op">=</span> <span class="va">df_gpp_plot</span><span class="op">)</span> <span class="op">+</span></span>
@@ -249,7 +222,6 @@ together.</p>
 <span>    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span></span>
 <span>      x <span class="op">=</span> <span class="va">date</span>,</span>
 <span>      y <span class="op">=</span> <span class="va">gpp_mod</span>,</span>
-<span>      group <span class="op">=</span> <span class="va">sitename</span>,</span>
 <span>      color <span class="op">=</span> <span class="st">"P-model"</span></span>
 <span>    <span class="op">)</span></span>
 <span>  <span class="op">)</span> <span class="op">+</span></span>
@@ -257,21 +229,19 @@ together.</p>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme.html" class="external-link">theme</a></span><span class="op">(</span></span>
 <span>    panel.grid.major.y <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">element_line</a></span><span class="op">(</span><span class="op">)</span>,</span>
 <span>    legend.position <span class="op">=</span> <span class="st">"bottom"</span></span>
-<span>  <span class="op">)</span> <span class="op">+</span></span>
+<span>    <span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span></span>
-<span>    x <span class="op">=</span> <span class="st">"Date"</span>,</span>
+<span>    x <span class="op">=</span> <span class="st">'Date'</span>,</span>
 <span>    y <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/expression.html" class="external-link">expression</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste</a></span><span class="op">(</span><span class="st">"GPP (g C m"</span><span class="op">^</span><span class="op">-</span><span class="fl">2</span>, <span class="st">"s"</span><span class="op">^</span><span class="op">-</span><span class="fl">1</span>, <span class="st">")"</span><span class="op">)</span><span class="op">)</span></span>
 <span>  <span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/facet_wrap.html" class="external-link">facet_wrap</a></span><span class="op">(</span><span class="op">~</span><span class="va">sitename</span>, scales <span class="op">=</span> <span class="st">"free_x"</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_date.html" class="external-link">scale_x_date</a></span><span class="op">(</span>date_labels <span class="op">=</span> <span class="st">"%Y\n%b"</span>, date_breaks <span class="op">=</span> <span class="st">"4 months"</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_manual.html" class="external-link">scale_color_manual</a></span><span class="op">(</span></span>
 <span>    <span class="cn">NULL</span>,</span>
 <span>    breaks <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Observations"</span>,</span>
-<span>      <span class="st">"P-model"</span><span class="op">)</span>,</span>
+<span>               <span class="st">"P-model"</span><span class="op">)</span>,</span>
 <span>    values <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"black"</span>, <span class="st">"tomato"</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Warning: Removed 383 rows containing missing values or values outside the scale range</span></span>
+<span><span class="co">#&gt; Warning: Removed 42 rows containing missing values or values outside the scale range</span></span>
 <span><span class="co">#&gt; (`geom_point()`).</span></span></code></pre></div>
-<p><img src="pmodel_use_files/figure-html/unnamed-chunk-3-1.png" class="r-plt" width="672" style="display: block; margin: auto;"></p>
+<p><img src="pmodel_use_files/figure-html/unnamed-chunk-4-1.png" class="r-plt" alt="" width="672" style="display: block; margin: auto;"></p>
 </div>
 </div>
 <div class="section level2">
@@ -280,14 +250,14 @@ together.</p>
 <p>To optimize new parameters based upon driver data and a validation
 dataset we must first specify an optimization strategy and settings, as
 well as a cost function and parameter ranges.</p>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">settings_calib</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">settings</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
 <span>  method <span class="op">=</span> <span class="st">"GenSA"</span>,</span>
 <span>  metric <span class="op">=</span> <span class="va">cost_rmse_pmodel</span>,</span>
 <span>  control <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>maxit <span class="op">=</span> <span class="fl">100</span><span class="op">)</span>,</span>
 <span>  par <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
-<span>    kphio <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>lower <span class="op">=</span> <span class="fl">0.02</span>, upper <span class="op">=</span> <span class="fl">0.2</span>, init <span class="op">=</span> <span class="fl">0.05</span><span class="op">)</span></span>
-<span>  <span class="op">)</span></span>
+<span>    kphio <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>lower<span class="op">=</span><span class="fl">0.02</span>, upper<span class="op">=</span><span class="fl">0.2</span>, init <span class="op">=</span> <span class="fl">0.05</span><span class="op">)</span></span>
+<span>    <span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 <p><code>rsofun</code> supports both optimization using the
 <code>GenSA</code> and <code>BayesianTools</code> packages. The above
@@ -317,42 +287,41 @@ observations specified. Extra arguments for the cost function (like what
 variable should be used as target to compute the root mean squared error
 (RMSE) and previous values for the parameters that aren’t calibrated,
 which are needed to run the P-model).</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># calibrate the model and optimize free parameters</span></span>
 <span><span class="va">pars</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/calib_sofun.html">calib_sofun</a></span><span class="op">(</span></span>
-<span>  drivers <span class="op">=</span> <span class="va">pmodel_drivers</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">sitename</span> <span class="op">==</span> <span class="st">"FR-Pue"</span><span class="op">)</span>,</span>
-<span>  obs     <span class="op">=</span> <span class="va">pmodel_validation</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">sitename</span> <span class="op">==</span> <span class="st">"FR-Pue"</span><span class="op">)</span>,</span>
-<span>  settings_calib <span class="op">=</span> <span class="va">settings_calib</span>,</span>
+<span>  drivers <span class="op">=</span> <span class="va">p_model_drivers</span>,  </span>
+<span>  obs <span class="op">=</span> <span class="va">p_model_validation</span>,</span>
+<span>  settings <span class="op">=</span> <span class="va">settings</span>,</span>
 <span>  <span class="co"># extra arguments passed to the cost function:</span></span>
-<span>  par_fixed <span class="op">=</span> <span class="va">params_modl</span><span class="op">[</span><span class="op">-</span><span class="fl">1</span><span class="op">]</span>  <span class="co"># fix non-calibrated parameters to previous</span></span>
-<span>  <span class="co"># values, removing kphio [-1]</span></span>
-<span><span class="op">)</span></span></code></pre></div>
+<span>  targets <span class="op">=</span> <span class="st">"gpp"</span>,             <span class="co"># define target variable GPP</span></span>
+<span>  par_fixed <span class="op">=</span> <span class="va">params_modl</span><span class="op">[</span><span class="op">-</span><span class="fl">1</span><span class="op">]</span>  <span class="co"># fix non-calibrated parameters to previous </span></span>
+<span>                               <span class="co"># values, removing kphio</span></span>
+<span>  <span class="op">)</span></span></code></pre></div>
 <p>When successful the optimized parameters can be used to run
 subsequent modelling efforts, in this case slightly improving the model
 fit over a more global parameter set.</p>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Update the parameter list with calibrated value</span></span>
 <span><span class="va">params_modl</span><span class="op">$</span><span class="va">kphio</span> <span class="op">&lt;-</span> <span class="va">pars</span><span class="op">$</span><span class="va">par</span><span class="op">[</span><span class="st">"kphio"</span><span class="op">]</span></span>
 <span></span>
 <span><span class="co"># Run the model for these parameters</span></span>
 <span><span class="va">output_new</span> <span class="op">&lt;-</span> <span class="fu">rsofun</span><span class="fu">::</span><span class="fu"><a href="../reference/runread_pmodel_f.html">runread_pmodel_f</a></span><span class="op">(</span></span>
-<span>  <span class="va">pmodel_drivers</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">sitename</span> <span class="op">==</span> <span class="st">"FR-Pue"</span><span class="op">)</span>,</span>
+<span>  <span class="va">p_model_drivers</span>,</span>
 <span>  par <span class="op">=</span> <span class="va">params_modl</span></span>
-<span><span class="op">)</span></span>
+<span>  <span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Update data.frame for plotting</span></span>
-<span><span class="va">df_gpp_plot_FRPue</span> <span class="op">&lt;-</span> <span class="va">df_gpp_plot</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="op">-</span><span class="fu"><a href="https://tidyselect.r-lib.org/reference/starts_with.html" class="external-link">starts_with</a></span><span class="op">(</span><span class="st">"gpp_calib"</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span><span class="va">df_gpp_plot</span> <span class="op">&lt;-</span> <span class="va">df_gpp_plot</span> <span class="op">|&gt;</span> </span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate-joins.html" class="external-link">left_join</a></span><span class="op">(</span></span>
 <span>    <span class="va">output_new</span> <span class="op">|&gt;</span></span>
 <span>      <span class="fu"><a href="https://tidyr.tidyverse.org/reference/unnest.html" class="external-link">unnest</a></span><span class="op">(</span><span class="va">data</span><span class="op">)</span> <span class="op">|&gt;</span></span>
-<span>      <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">sitename</span>, <span class="va">date</span>, gpp_calib <span class="op">=</span> <span class="va">gpp</span><span class="op">)</span>,</span>
-<span>    by <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"sitename"</span>, <span class="st">"date"</span><span class="op">)</span></span>
-<span>  <span class="op">)</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">sitename</span> <span class="op">==</span> <span class="st">"FR-Pue"</span><span class="op">)</span></span>
+<span>      <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">date</span>, gpp_calib <span class="op">=</span> <span class="va">gpp</span><span class="op">)</span>,</span>
+<span>    by <span class="op">=</span> <span class="st">"date"</span></span>
+<span>  <span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Plot GPP</span></span>
-<span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span>data <span class="op">=</span> <span class="va">df_gpp_plot_FRPue</span><span class="op">)</span> <span class="op">+</span></span>
+<span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span>data <span class="op">=</span> <span class="va">df_gpp_plot</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_point.html" class="external-link">geom_point</a></span><span class="op">(</span></span>
 <span>    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span></span>
 <span>      x <span class="op">=</span> <span class="va">date</span>,</span>
@@ -364,7 +333,6 @@ fit over a more global parameter set.</p>
 <span>    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span></span>
 <span>      x <span class="op">=</span> <span class="va">date</span>,</span>
 <span>      y <span class="op">=</span> <span class="va">gpp_mod</span>,</span>
-<span>      group <span class="op">=</span> <span class="va">sitename</span>,</span>
 <span>      color <span class="op">=</span> <span class="st">"P-model (uncalibrated)"</span></span>
 <span>    <span class="op">)</span></span>
 <span>  <span class="op">)</span> <span class="op">+</span></span>
@@ -372,7 +340,6 @@ fit over a more global parameter set.</p>
 <span>    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span></span>
 <span>      x <span class="op">=</span> <span class="va">date</span>,</span>
 <span>      y <span class="op">=</span> <span class="va">gpp_calib</span>,</span>
-<span>      group <span class="op">=</span> <span class="va">sitename</span>,</span>
 <span>      color <span class="op">=</span> <span class="st">"P-model (calibrated)"</span></span>
 <span>    <span class="op">)</span></span>
 <span>  <span class="op">)</span> <span class="op">+</span></span>
@@ -380,27 +347,25 @@ fit over a more global parameter set.</p>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme.html" class="external-link">theme</a></span><span class="op">(</span></span>
 <span>    panel.grid.major.y <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">element_line</a></span><span class="op">(</span><span class="op">)</span>,</span>
 <span>    legend.position <span class="op">=</span> <span class="st">"bottom"</span></span>
-<span>  <span class="op">)</span> <span class="op">+</span></span>
+<span>    <span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span></span>
-<span>    x <span class="op">=</span> <span class="st">"Date"</span>,</span>
+<span>    x <span class="op">=</span> <span class="st">'Date'</span>,</span>
 <span>    y <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/expression.html" class="external-link">expression</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste</a></span><span class="op">(</span><span class="st">"GPP (g C m"</span><span class="op">^</span><span class="op">-</span><span class="fl">2</span>, <span class="st">"s"</span><span class="op">^</span><span class="op">-</span><span class="fl">1</span>, <span class="st">")"</span><span class="op">)</span><span class="op">)</span></span>
 <span>  <span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/facet_wrap.html" class="external-link">facet_wrap</a></span><span class="op">(</span><span class="op">~</span><span class="va">sitename</span>, scales <span class="op">=</span> <span class="st">"free_x"</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_date.html" class="external-link">scale_x_date</a></span><span class="op">(</span>date_labels <span class="op">=</span> <span class="st">"%Y\n%b"</span>, date_breaks <span class="op">=</span> <span class="st">"4 months"</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_manual.html" class="external-link">scale_color_manual</a></span><span class="op">(</span></span>
 <span>    <span class="cn">NULL</span>,</span>
 <span>    breaks <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Observations"</span>,</span>
-<span>      <span class="st">"P-model (uncalibrated)"</span>,</span>
-<span>      <span class="st">"P-model (calibrated)"</span><span class="op">)</span>,</span>
+<span>               <span class="st">"P-model (uncalibrated)"</span>,</span>
+<span>               <span class="st">"P-model (calibrated)"</span><span class="op">)</span>,</span>
 <span>    values <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"black"</span>, <span class="st">"grey"</span>, <span class="st">"tomato"</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Warning: Removed 21 rows containing missing values or values outside the scale range</span></span>
+<span><span class="co">#&gt; Warning: Removed 42 rows containing missing values or values outside the scale range</span></span>
 <span><span class="co">#&gt; (`geom_point()`).</span></span></code></pre></div>
-<p><img src="pmodel_use_files/figure-html/unnamed-chunk-6-1.png" class="r-plt" width="672" style="display: block; margin: auto;"></p>
+<p><img src="pmodel_use_files/figure-html/unnamed-chunk-7-1.png" class="r-plt" alt="" width="672" style="display: block; margin: auto;"></p>
 <p>For details on the optimization settings we refer to the manuals of
 <a href="https://cran.r-project.org/package=GenSA" class="external-link">GenSA</a> and <a href="https://github.com/florianhartig/BayesianTools" class="external-link">BayesianTools</a>.</p>
 </div>
 <div class="section level2">
-<h2 id="running-one-step-p-model">Running One-step P-model<a class="anchor" aria-label="anchor" href="#running-one-step-p-model"></a>
+<h2 id="one-step-p-model-call">One-step P-model call<a class="anchor" aria-label="anchor" href="#one-step-p-model-call"></a>
 </h2>
 <p>For certain applications, the core theory of the P-model, predicting
 the acclimation of photosynthesis at the leaf-level, may be all that’s
@@ -413,17 +378,14 @@ may include simulations of leaf-level photosynthetic traits. The
 function <code><a href="../reference/run_pmodel_onestep_f_bysite.html">run_pmodel_onestep_f_bysite()</a></code> provides this
 functionality and further improves computational efficiency over a call
 to <code><a href="../reference/run_pmodel_f_bysite.html">run_pmodel_f_bysite()</a></code>. This is particularly useful when
-calibrating the model to photosynthetic traits data. Note that it can
-equally be run through <code>runread_pmodel()</code>, specifying
-<code>onestep == TRUE</code> in the column <code>params_siml</code> of
-the input driver.</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+calibrating the model to photosynthetic traits data.</p>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/run_pmodel_onestep_f_bysite.html">run_pmodel_onestep_f_bysite</a></span><span class="op">(</span></span>
 <span>  lc4 <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  forcing <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
 <span>    temp  <span class="op">=</span> <span class="fl">20</span>,           <span class="co"># temperature, deg C</span></span>
 <span>    vpd   <span class="op">=</span> <span class="fl">1000</span>,         <span class="co"># Pa,</span></span>
-<span>    ppfd  <span class="op">=</span> <span class="fl">300</span> <span class="op">/</span> <span class="fl">10</span><span class="op">^</span><span class="fl">6</span>,   <span class="co"># mol/m2/s</span></span>
+<span>    ppfd  <span class="op">=</span> <span class="fl">300</span><span class="op">/</span><span class="fl">10</span><span class="op">^</span><span class="fl">6</span>,     <span class="co"># mol/m2/s</span></span>
 <span>    co2   <span class="op">=</span> <span class="fl">400</span>,          <span class="co"># ppm,</span></span>
 <span>    patm  <span class="op">=</span> <span class="fl">101325</span>        <span class="co"># Pa</span></span>
 <span>  <span class="op">)</span>,</span>
@@ -453,19 +415,19 @@ consistent outputs with the latter. Using
 implementation across time-series and one-step model applications within
 the same package. Note that unit transformations as shown below is
 needed to obtain identical outputs.</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/geco-bern/rpmodel" class="external-link">rpmodel</a></span><span class="op">)</span></span>
 <span><span class="va">out_rpmodel</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/rpmodel/man/rpmodel.html" class="external-link">rpmodel</a></span><span class="op">(</span></span>
 <span>  tc             <span class="op">=</span> <span class="fl">20</span>,           <span class="co"># temperature, deg C</span></span>
 <span>  vpd            <span class="op">=</span> <span class="fl">1000</span>,         <span class="co"># Pa,</span></span>
 <span>  co2            <span class="op">=</span> <span class="fl">400</span>,          <span class="co"># ppm,</span></span>
 <span>  fapar          <span class="op">=</span> <span class="fl">1</span>,            <span class="co"># fraction,</span></span>
-<span>  ppfd           <span class="op">=</span> <span class="fl">300</span> <span class="op">/</span> <span class="fl">10</span><span class="op">^</span><span class="fl">6</span>,   <span class="co"># ~~mol/m2/d~~ or mol/m2/s</span></span>
+<span>  ppfd           <span class="op">=</span> <span class="fl">300</span><span class="op">/</span><span class="fl">10</span><span class="op">^</span><span class="fl">6</span>,     <span class="co"># ~~mol/m2/d~~ or mol/m2/s</span></span>
 <span>                                 <span class="co"># rpmodel docs state that units of ppfd define </span></span>
 <span>                                 <span class="co"># output units of: lue, gpp, vcmax, rd </span></span>
 <span>                                 <span class="co"># (as well as vcmax25, gs)</span></span>
 <span>  patm           <span class="op">=</span> <span class="fl">101325</span>,       <span class="co"># Pa</span></span>
-<span>  kphio          <span class="op">=</span> <span class="fl">0.04998</span>,      <span class="co"># quantum yield efficiency as calibrated</span></span>
+<span>  kphio          <span class="op">=</span> <span class="fl">0.04998</span>,      <span class="co"># quantum yield efficiency as calibrated </span></span>
 <span>                                 <span class="co"># for setup ORG by Stocker et al. 2020 GMD,</span></span>
 <span>  beta           <span class="op">=</span> <span class="fl">146.0</span>,        <span class="co"># unit cost ratio a/b,</span></span>
 <span>  c4             <span class="op">=</span> <span class="cn">FALSE</span>,</span>
@@ -473,16 +435,15 @@ needed to obtain identical outputs.</p>
 <span>  do_ftemp_kphio <span class="op">=</span> <span class="cn">FALSE</span>,        <span class="co"># corresponding to setup ORG</span></span>
 <span>  do_soilmstress <span class="op">=</span> <span class="cn">FALSE</span>,        <span class="co"># corresponding to setup ORG</span></span>
 <span>  verbose        <span class="op">=</span> <span class="cn">TRUE</span></span>
-<span><span class="op">)</span></span>
-<span></span>
+<span>  <span class="op">)</span></span>
+<span>  </span>
 <span><span class="co"># out_rpmodel</span></span>
-<span><span class="fu">tidyr</span><span class="fu">::</span><span class="fu"><a href="https://tibble.tidyverse.org/reference/as_tibble.html" class="external-link">as_tibble</a></span><span class="op">(</span><span class="va">out_rpmodel</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span><span class="fu">tidyr</span><span class="fu">::</span><span class="fu"><a href="https://tibble.tidyverse.org/reference/as_tibble.html" class="external-link">as_tibble</a></span><span class="op">(</span><span class="va">out_rpmodel</span><span class="op">)</span> <span class="op">|&gt;</span> </span>
 <span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">vcmax</span>, <span class="va">jmax</span>, <span class="va">vcmax25</span>, <span class="va">jmax25</span>, <span class="va">gs</span>, <span class="va">chi</span>, <span class="va">iwue</span>, <span class="va">rd</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="co"># bring units to same as output of run_pmodel_onestep_f_bysite()</span></span>
-<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span></span>
-<span>    gs   <span class="op">=</span> <span class="va">gs</span> <span class="op">/</span> <span class="fl">1</span> <span class="op">/</span> <span class="op">(</span><span class="fl">300</span> <span class="op">/</span> <span class="fl">10</span><span class="op">^</span><span class="fl">6</span><span class="op">)</span>, <span class="co"># divide by fapar (-) and by ppfd (mol/m2/s)</span></span>
-<span>    iwue <span class="op">=</span> <span class="va">iwue</span> <span class="op">/</span> <span class="fl">101325</span>,         <span class="co"># divide by patm (Pa)</span></span>
-<span>    rd   <span class="op">=</span> <span class="va">rd</span> <span class="op">*</span> <span class="fl">12</span>                <span class="co"># mutliply by c_molmass (gC/mol)</span></span>
+<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>gs   <span class="op">=</span> <span class="va">gs</span><span class="op">/</span><span class="fl">1</span><span class="op">/</span><span class="op">(</span><span class="fl">300</span><span class="op">/</span><span class="fl">10</span><span class="op">^</span><span class="fl">6</span><span class="op">)</span>, <span class="co"># divide by fapar (-) and by ppfd (mol/m2/s)</span></span>
+<span>                iwue <span class="op">=</span> <span class="va">iwue</span><span class="op">/</span><span class="fl">101325</span>,     <span class="co"># divide by patm (Pa)</span></span>
+<span>                rd   <span class="op">=</span> <span class="va">rd</span><span class="op">*</span><span class="fl">12</span>            <span class="co"># mutliply by c_molmass (gC/mol)</span></span>
 <span>  <span class="op">)</span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 1 × 8</span></span></span>
 <span><span class="co">#&gt;       vcmax      jmax   vcmax25    jmax25      gs   chi      iwue         rd</span></span>

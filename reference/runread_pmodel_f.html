@@ -21,7 +21,7 @@
         <a class="external-link hidden-md hidden-lg" href="https://geco-group.org/">
           <img src="https://raw.githubusercontent.com/computationales/GECO_template/main/geco_logo_white_small.png" id="hexlogo" alt="GECO"></a>
         <a class="navbar-brand" href="../index.html">
-           <i>rsofun <small>v5.1.0.9001</small></i>
+           <i>rsofun <small>v5.1.0.9000</small></i>
         </a>
       </div>
     </div>
@@ -70,12 +70,8 @@
 
 <dl><dt id="arg-drivers">drivers<a class="anchor" aria-label="anchor" href="#arg-drivers"></a></dt>
 <dd><p>A nested data frame with one row for each site and columns
-<code>sitename</code> and further columns
-<code>params_siml, site_info</code> and <code>forcing</code>. (<code>params_siml</code> contains
-the information whether or not to run the onestep or daily model through
-<code>TRUE/FALSE</code> in column <code>onestep</code>. It also contains parameters
-<code>lc4</code> in the case of <code>onestep==TRUE</code> and those for function
-<code><a href="run_pmodel_f_bysite.html">run_pmodel_f_bysite</a></code> in the case of <code>onestep==FALSE</code>.)</p></dd>
+named according to the arguments of function <code>runread_pmodel_f</code>.
+Namely <code>sitename, params_siml, site_info</code> and <code>forcing</code>.</p></dd>
 
 
 <dt id="arg-par">par<a class="anchor" aria-label="anchor" href="#arg-par"></a></dt>
@@ -130,7 +126,7 @@ to verify forcings and model parameters. <code>TRUE</code> by default.</p></dd>
 <dt id="arg-parallel">parallel<a class="anchor" aria-label="anchor" href="#arg-parallel"></a></dt>
 <dd><p>A logical specifying whether simulations are to be
 parallelised (sending data from a certain number of sites to each core).
-Defaults to <code>FALSE</code>. (Not applied to rows where <code>onestep==TRUE</code>.)</p></dd>
+Defaults to <code>FALSE</code>.</p></dd>
 
 
 <dt id="arg-ncores">ncores<a class="anchor" aria-label="anchor" href="#arg-ncores"></a></dt>
@@ -142,10 +138,10 @@ computing (by default <code>ncores = 2</code>).</p></dd>
     <h2>Value</h2>
     <p>A data frame (tibble) with one row for each site, site information
 stored in the nested column <code>site_info</code> and outputs stored in the nested
-column <code>data</code>. See <code><a href="run_pmodel_f_bysite.html">run_pmodel_f_bysite</a></code> and
-<code><a href="run_pmodel_onestep_f_bysite.html">run_pmodel_onestep_f_bysite</a></code> for a detailed
+column <code>data</code>. See <code><a href="run_pmodel_f_bysite.html">run_pmodel_f_bysite</a></code> for a detailed
 description of the outputs.
-Example outputs are provided as <code><a href="pmodel_output.html">pmodel_output</a></code>.</p>
+Example outputs are provided as <code><a href="biomee_p_model_output.html">biomee_p_model_output</a></code> and
+<code><a href="biomee_gs_leuning_output.html">biomee_gs_leuning_output</a></code>.</p>
     </div>
     <div id="details">
     <h2>Details</h2>
@@ -198,19 +194,11 @@ exactly replicated.</p>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Run the model for these parameters and the example drivers</span></span></span>
 <span class="r-in"><span><span class="va">output</span> <span class="op">&lt;-</span> <span class="fu">rsofun</span><span class="fu">::</span><span class="fu">runread_pmodel_f</span><span class="op">(</span></span></span>
-<span class="r-in"><span>  drivers <span class="op">=</span> <span class="fu">rsofun</span><span class="fu">::</span><span class="va"><a href="pmodel_drivers.html">pmodel_drivers</a></span>,</span></span>
+<span class="r-in"><span>  drivers <span class="op">=</span> <span class="fu">rsofun</span><span class="fu">::</span><span class="va"><a href="p_model_drivers.html">p_model_drivers</a></span>,</span></span>
 <span class="r-in"><span>  par <span class="op">=</span> <span class="va">params_modl</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">output</span> <span class="op">&lt;-</span> <span class="fu">rsofun</span><span class="fu">::</span><span class="fu">runread_pmodel_f</span><span class="op">(</span></span></span>
-<span class="r-in"><span>  drivers <span class="op">=</span> <span class="fu">rsofun</span><span class="fu">::</span><span class="va"><a href="pmodel_drivers.html">pmodel_drivers</a></span>,</span></span>
-<span class="r-in"><span>  par <span class="op">=</span> <span class="va">params_modl</span>, parallel <span class="op">=</span> <span class="cn">TRUE</span>, ncores <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Attaching package: ‘dplyr’</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> The following objects are masked from ‘package:stats’:</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span>     filter, lag</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> The following objects are masked from ‘package:base’:</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span>     intersect, setdiff, setequal, union</span>
+<span class="r-in"><span><span class="va">output_vcmax25</span> <span class="op">&lt;-</span> <span class="fu">rsofun</span><span class="fu">::</span><span class="fu">runread_pmodel_f</span><span class="op">(</span></span></span>
+<span class="r-in"><span>  drivers <span class="op">=</span> <span class="fu">rsofun</span><span class="fu">::</span><span class="va"><a href="p_model_drivers_vcmax25.html">p_model_drivers_vcmax25</a></span>,</span></span>
+<span class="r-in"><span>  par <span class="op">=</span> <span class="va">params_modl</span><span class="op">)</span></span></span>
 </code></pre></div>
     </div>
   </div>

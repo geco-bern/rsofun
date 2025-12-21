@@ -26,7 +26,7 @@ computes the RMSE for the biomee model fitting target variables
         <a class="external-link hidden-md hidden-lg" href="https://geco-group.org/">
           <img src="https://raw.githubusercontent.com/computationales/GECO_template/main/geco_logo_white_small.png" id="hexlogo" alt="GECO"></a>
         <a class="navbar-brand" href="../index.html">
-           <i>rsofun <small>v5.1.0.9001</small></i>
+           <i>rsofun <small>v5.1.0.9000</small></i>
         </a>
       </div>
     </div>
@@ -105,18 +105,17 @@ simulated values used to compute the RMSE.</p>
 
     <div id="ref-examples">
     <h2>Examples</h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># \donttest{</span></span></span>
-<span class="r-in"><span><span class="co"># do not run long-running simulations</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span> <span class="co"># do not run long-running simulations</span></span></span>
 <span class="r-in"><span><span class="co"># Compute RMSE for a set of</span></span></span>
 <span class="r-in"><span><span class="co"># model parameter values</span></span></span>
 <span class="r-in"><span><span class="co"># and example data</span></span></span>
 <span class="r-in"><span><span class="fu">cost_rmse_biomee</span><span class="op">(</span></span></span>
-<span class="r-in"><span>  par <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">3.5</span>, <span class="fl">3.5</span>, <span class="fl">1</span>, <span class="fl">1</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>  obs <span class="op">=</span> <span class="va">biomee_validation</span>,</span></span>
-<span class="r-in"><span>  drivers <span class="op">=</span> <span class="va">biomee_p_model_drivers</span></span></span>
+<span class="r-in"><span> par <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">3.5</span>, <span class="fl">3.5</span>, <span class="fl">1</span>, <span class="fl">1</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span> obs <span class="op">=</span> <span class="va">biomee_validation</span>,</span></span>
+<span class="r-in"><span> drivers <span class="op">=</span> <span class="va">biomee_p_model_drivers</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.2008596</span>
-<span class="r-in"><span><span class="co"># }</span></span></span>
+<span class="r-in"><span></span></span>
 </code></pre></div>
     </div>
   </div>

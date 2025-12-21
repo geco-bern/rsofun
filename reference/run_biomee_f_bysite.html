@@ -21,7 +21,7 @@
         <a class="external-link hidden-md hidden-lg" href="https://geco-group.org/">
           <img src="https://raw.githubusercontent.com/computationales/GECO_template/main/geco_logo_white_small.png" id="hexlogo" alt="GECO"></a>
         <a class="navbar-brand" href="../index.html">
-           <i>rsofun <small>v5.1.0.9001</small></i>
+           <i>rsofun <small>v5.1.0.9000</small></i>
         </a>
       </div>
     </div>
@@ -596,8 +596,7 @@ In most cases, it would be close to 1. It contains columns:</p><dl><dt><code>out
 
     <div id="ref-examples">
     <h2>Examples</h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># \donttest{</span></span></span>
-<span class="r-in"><span><span class="co"># do not run long-running simulations</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span> <span class="co"># do not run long-running simulations</span></span></span>
 <span class="r-in"><span><span class="co"># Example BiomeE model run</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Use example drivers data</span></span></span>
@@ -605,16 +604,16 @@ In most cases, it would be close to 1. It contains columns:</p><dl><dt><code>out
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Run BiomeE for the first site</span></span></span>
 <span class="r-in"><span><span class="va">mod_output</span> <span class="op">&lt;-</span> <span class="fu">run_biomee_f_bysite</span><span class="op">(</span></span></span>
-<span class="r-in"><span>  sitename <span class="op">=</span> <span class="va">drivers</span><span class="op">$</span><span class="va">sitename</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span>,</span></span>
-<span class="r-in"><span>  params_siml <span class="op">=</span> <span class="va">drivers</span><span class="op">$</span><span class="va">params_siml</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span>,</span></span>
-<span class="r-in"><span>  site_info <span class="op">=</span> <span class="va">drivers</span><span class="op">$</span><span class="va">site_info</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span>,</span></span>
-<span class="r-in"><span>  forcing <span class="op">=</span> <span class="va">drivers</span><span class="op">$</span><span class="va">forcing</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span>,</span></span>
-<span class="r-in"><span>  params_tile <span class="op">=</span> <span class="va">drivers</span><span class="op">$</span><span class="va">params_tile</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span>,</span></span>
-<span class="r-in"><span>  params_species <span class="op">=</span> <span class="va">drivers</span><span class="op">$</span><span class="va">params_species</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span>,</span></span>
-<span class="r-in"><span>  init_cohort <span class="op">=</span> <span class="va">drivers</span><span class="op">$</span><span class="va">init_cohort</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span>,</span></span>
-<span class="r-in"><span>  init_soil <span class="op">=</span> <span class="va">drivers</span><span class="op">$</span><span class="va">init_soil</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span></span></span>
+<span class="r-in"><span> sitename <span class="op">=</span> <span class="va">drivers</span><span class="op">$</span><span class="va">sitename</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span>,</span></span>
+<span class="r-in"><span> params_siml <span class="op">=</span> <span class="va">drivers</span><span class="op">$</span><span class="va">params_siml</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span>,</span></span>
+<span class="r-in"><span> site_info <span class="op">=</span> <span class="va">drivers</span><span class="op">$</span><span class="va">site_info</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span>,</span></span>
+<span class="r-in"><span> forcing <span class="op">=</span> <span class="va">drivers</span><span class="op">$</span><span class="va">forcing</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span>,</span></span>
+<span class="r-in"><span> params_tile <span class="op">=</span> <span class="va">drivers</span><span class="op">$</span><span class="va">params_tile</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span>,</span></span>
+<span class="r-in"><span> params_species <span class="op">=</span> <span class="va">drivers</span><span class="op">$</span><span class="va">params_species</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span>,</span></span>
+<span class="r-in"><span> init_cohort <span class="op">=</span> <span class="va">drivers</span><span class="op">$</span><span class="va">init_cohort</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span>,</span></span>
+<span class="r-in"><span> init_soil <span class="op">=</span> <span class="va">drivers</span><span class="op">$</span><span class="va">init_soil</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="co"># }</span></span></span>
+<span class="r-in"><span></span></span>
 </code></pre></div>
     </div>
   </div>

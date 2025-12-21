@@ -24,7 +24,7 @@ observed values and with standard deviation given as an input parameter
         <a class="external-link hidden-md hidden-lg" href="https://geco-group.org/">
           <img src="https://raw.githubusercontent.com/computationales/GECO_template/main/geco_logo_white_small.png" id="hexlogo" alt="GECO"></a>
         <a class="navbar-brand" href="../index.html">
-           <i>rsofun <small>v5.1.0.9001</small></i>
+           <i>rsofun <small>v5.1.0.9000</small></i>
         </a>
       </div>
     </div>
@@ -71,10 +71,10 @@ observed values and with standard deviation given as an input parameter
 <span>  <span class="va">par</span>,</span>
 <span>  <span class="va">obs</span>,</span>
 <span>  <span class="va">drivers</span>,</span>
+<span>  <span class="va">targets</span>,</span>
 <span>  par_fixed <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  parallel <span class="op">=</span> <span class="cn">FALSE</span>,</span>
-<span>  ncores <span class="op">=</span> <span class="fl">1</span>,</span>
-<span>  get_mod_obs <span class="op">=</span> <span class="va">get_mod_obs_pmodel</span></span>
+<span>  ncores <span class="op">=</span> <span class="fl">2</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -83,29 +83,35 @@ observed values and with standard deviation given as an input parameter
 
 
 <dl><dt id="arg-par">par<a class="anchor" aria-label="anchor" href="#arg-par"></a></dt>
-<dd><p>A named list for the parameters to be calibrated, including
-a subset of model parameters and error terms for each target variable (for
-example <code>'gpp_err'</code>).</p></dd>
+<dd><p>A named vector of values for the parameters to be calibrated, including
+a subset of model parameters (described in <code><a href="runread_pmodel_f.html">runread_pmodel_f</a></code>),
+in order, and error terms
+for each target variable (for example <code>'gpp_err'</code>), in the same order as
+the targets appear in <code>targets</code>.</p></dd>
 
 
 <dt id="arg-obs">obs<a class="anchor" aria-label="anchor" href="#arg-obs"></a></dt>
 <dd><p>A nested data.frame of observations, with columns <code>'sitename'</code>
-<code>'targets'</code>, and <code>'data'</code> (see <code><a href="pmodel_validation.html">pmodel_validation</a></code> to
-check its structure). <code>'targets'</code> indicates the target variable(s) for
-which the likelihood is computed, it must be a column name of the
-<code>'data'</code> data.frame and it must have an error term in either <code>'par'</code>
-or <code>'par_fixed'</code>.</p></dd>
+and <code>'data'</code> (see <code><a href="p_model_validation.html">p_model_validation</a></code> or <code><a href="p_model_validation_vcmax25.html">p_model_validation_vcmax25</a></code>
+to check their structure).</p></dd>
 
 
 <dt id="arg-drivers">drivers<a class="anchor" aria-label="anchor" href="#arg-drivers"></a></dt>
-<dd><p>A nested data.frame of driver data. See <code><a href="pmodel_drivers.html">pmodel_drivers</a></code>
+<dd><p>A nested data.frame of driver data. See <code><a href="p_model_drivers.html">p_model_drivers</a></code>
 for a description of the data structure.</p></dd>
+
+
+<dt id="arg-targets">targets<a class="anchor" aria-label="anchor" href="#arg-targets"></a></dt>
+<dd><p>A character vector indicating the target variables for which the
+optimization will be done and the RMSE computed. This string must be a column
+name of the <code>data</code> data.frame belonging to the validation nested data.frame
+(for example 'gpp').</p></dd>
 
 
 <dt id="arg-par-fixed">par_fixed<a class="anchor" aria-label="anchor" href="#arg-par-fixed"></a></dt>
 <dd><p>A named list of model parameter values to keep fixed during the
 calibration. These should complement the input <code>par</code> such that all model
-parameters are uniquely defined and passed on to <code><a href="runread_pmodel_f.html">runread_pmodel_f</a></code>.</p></dd>
+parameters are passed on to <code><a href="runread_pmodel_f.html">runread_pmodel_f</a></code>.</p></dd>
 
 
 <dt id="arg-parallel">parallel<a class="anchor" aria-label="anchor" href="#arg-parallel"></a></dt>
@@ -118,18 +124,14 @@ parameters are uniquely defined and passed on to <code><a href="runread_pmodel_f
 <dd><p>An integer specifying the number of cores used for parallel
 computing. Defaults to 2.</p></dd>
 
-
-<dt id="arg-get-mod-obs">get_mod_obs<a class="anchor" aria-label="anchor" href="#arg-get-mod-obs"></a></dt>
-<dd><p>Function running P-model and combining model outputs and
-observations (defaults to get_mod_obs_pmodel)</p></dd>
-
 </dl></div>
     <div id="value">
     <h2>Value</h2>
     <p>The log-likelihood of the observed target values, assuming that they
 are independent, normally distributed and centered on the predictions
-made by the P-model run with standard deviation given as input <code>par</code> e.g.
-<code>gpp_err</code>.</p>
+made by the P-model run with standard deviation given as input (via `par` because
+the error terms are estimated through the calibration with `BayesianTools`,
+as shown in the "Parameter calibration and cost functions" vignette).</p>
     </div>
     <div id="details">
     <h2>Details</h2>
@@ -138,33 +140,38 @@ function uses arguments <code>par</code> and <code>par_fixed</code> such that, i
 calibration routine, <code>par</code> can be updated by the optimizer and
 <code>par_fixed</code> are kept unchanged throughout calibration.</p>
 <p>If the validation data contains a "date" column (fluxes), the simulated target time series
-is compared to the observed values on those same dates (e.g. for GPP).</p>
+is compared to the observed values on those same dates (e.g. for GPP). Otherwise,
+there should only be one observed value per site (leaf traits), and the outputs
+(averaged over the growing season, weighted by predicted GPP) will be
+compared to this single value representative of the site (e.g. Vcmax25). As an exception,
+when the date of a trait measurement is available, it will be compared to the
+trait value predicted on that date.</p>
     </div>
 
     <div id="ref-examples">
     <h2>Examples</h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># Compute the likelihood for a set of</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># Compute the likelihood for a set of </span></span></span>
 <span class="r-in"><span><span class="co"># model parameter values involved in the</span></span></span>
-<span class="r-in"><span><span class="co"># temperature dependence of kphio</span></span></span>
+<span class="r-in"><span><span class="co"># temperature dependence of kphio </span></span></span>
 <span class="r-in"><span><span class="co"># and example data</span></span></span>
 <span class="r-in"><span><span class="fu">cost_likelihood_pmodel</span><span class="op">(</span></span></span>
-<span class="r-in"><span>  par <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>kphio       <span class="op">=</span> <span class="fl">0.05</span>,</span></span>
-<span class="r-in"><span>    kphio_par_a <span class="op">=</span> <span class="op">-</span><span class="fl">0.01</span>,</span></span>
-<span class="r-in"><span>    kphio_par_b <span class="op">=</span> <span class="fl">1</span>,</span></span>
-<span class="r-in"><span>    <span class="co"># error model parameters</span></span></span>
-<span class="r-in"><span>    err_gpp     <span class="op">=</span> <span class="fl">2</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>  obs <span class="op">=</span> <span class="va">pmodel_validation</span> <span class="op">|&gt;</span> <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">sitename</span> <span class="op">==</span> <span class="st">"FR-Pue"</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>  drivers <span class="op">=</span> <span class="va">pmodel_drivers</span> <span class="op">|&gt;</span> <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">sitename</span> <span class="op">==</span> <span class="st">"FR-Pue"</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>  par_fixed <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span></span>
-<span class="r-in"><span>    soilm_thetastar    <span class="op">=</span> <span class="fl">0.6</span> <span class="op">*</span> <span class="fl">240</span>,  <span class="co"># old setup with soil moisture stress</span></span></span>
-<span class="r-in"><span>    soilm_betao        <span class="op">=</span> <span class="fl">0.0</span>,</span></span>
-<span class="r-in"><span>    beta_unitcostratio <span class="op">=</span> <span class="fl">146.0</span>,</span></span>
-<span class="r-in"><span>    rd_to_vcmax        <span class="op">=</span> <span class="fl">0.014</span>,      <span class="co"># from Atkin et al. 2015 for C3 herbaceous</span></span></span>
-<span class="r-in"><span>    tau_acclim         <span class="op">=</span> <span class="fl">30.0</span>,</span></span>
-<span class="r-in"><span>    kc_jmax            <span class="op">=</span> <span class="fl">0.41</span></span></span>
-<span class="r-in"><span>  <span class="op">)</span></span></span>
+<span class="r-in"><span>par <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>kphio       <span class="op">=</span> <span class="fl">0.05</span>, </span></span>
+<span class="r-in"><span>        kphio_par_a <span class="op">=</span> <span class="op">-</span><span class="fl">0.01</span>, </span></span>
+<span class="r-in"><span>        kphio_par_b <span class="op">=</span> <span class="fl">1</span>,     <span class="co"># model parameters</span></span></span>
+<span class="r-in"><span>        err_gpp     <span class="op">=</span> <span class="fl">2</span><span class="op">)</span>,    <span class="co"># err_gpp</span></span></span>
+<span class="r-in"><span> obs <span class="op">=</span> <span class="va">p_model_validation</span>,</span></span>
+<span class="r-in"><span> drivers <span class="op">=</span> <span class="va">p_model_drivers</span>,</span></span>
+<span class="r-in"><span> targets <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">'gpp'</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span> par_fixed <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span>  soilm_thetastar    <span class="op">=</span> <span class="fl">0.6</span> <span class="op">*</span> <span class="fl">240</span>,  <span class="co"># old setup with soil moisture stress</span></span></span>
+<span class="r-in"><span>  soilm_betao        <span class="op">=</span> <span class="fl">0.0</span>,</span></span>
+<span class="r-in"><span>  beta_unitcostratio <span class="op">=</span> <span class="fl">146.0</span>,</span></span>
+<span class="r-in"><span>  rd_to_vcmax        <span class="op">=</span> <span class="fl">0.014</span>,      <span class="co"># from Atkin et al. 2015 for C3 herbaceous</span></span></span>
+<span class="r-in"><span>  tau_acclim         <span class="op">=</span> <span class="fl">30.0</span>,</span></span>
+<span class="r-in"><span>  kc_jmax            <span class="op">=</span> <span class="fl">0.41</span></span></span>
+<span class="r-in"><span> <span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] -6689.116</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] -6208.172</span>
 </code></pre></div>
     </div>
   </div>
