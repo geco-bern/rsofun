@@ -60,10 +60,11 @@ set.seed(2023)
 
 # run the model
 out <- runread_biomee_f(
-  biomee_gs_leuning_drivers,
-  makecheck = TRUE,
-  parallel = FALSE
-)
+     biomee_gs_leuning_drivers,
+     makecheck = TRUE,
+     parallel = FALSE
+     )
+
 ```
 ```{r eval = FALSE, include = FALSE}
 # store output since calibration isn't run
@@ -89,12 +90,12 @@ We can now visualize the model output.
 biomee_gs_leuning_output_annual_tile |>
   ggplot() +
   geom_line(aes(x = year, y = GPP)) +
-  theme_classic() + labs(x = "Year", y = "GPP")
+  theme_classic()+labs(x = "Year", y = "GPP")
 
 biomee_gs_leuning_output_annual_tile |>
   ggplot() +
   geom_line(aes(x = year, y = plantC)) +
-  theme_classic() + labs(x = "Year", y = "plantC")
+  theme_classic()+labs(x = "Year", y = "plantC")
 ```
 
 ## Running the BiomeEP model
@@ -112,10 +113,10 @@ head(biomee_p_model_drivers$forcing)
 ```{r eval = TRUE}
 # run the model
 out2 <- runread_biomee_f(
-  biomee_p_model_drivers,
-  makecheck = TRUE,
-  parallel = FALSE
-)
+     biomee_p_model_drivers,
+     makecheck = TRUE,
+     parallel = FALSE
+     )
 ```
 ```{r}
 # split out the annual data for visuals
@@ -141,16 +142,15 @@ biomee_p_model_output_annual_tile %>%
   theme_classic() +
   labs(x = "Year", y = "plantC")
 
-biomee_p_model_output_annual_cohorts %>%
-  group_by(cID, year) %>%
-  summarise(
-    dbh = mean(DBH),
-    npp_per_m2 = sum(NPP * density / 10000), .groups = "keep") %>%
-  ggplot(aes(x = dbh, y = npp_per_m2, fill = as.factor(year))) +
-  geom_bar(stat = "identity") +
-  theme_classic() + labs(x = "Cohort DBH (cm)", y = "NPP (kg C m-2)", fill = "Year") +
+biomee_p_model_output_annual_cohorts %>% 
+  group_by(cID,year) %>%
+  summarise(dbh = mean(DBH), 
+            npp_per_m2=sum(NPP*density/10000), .groups = "keep") %>% 
+  ggplot(aes(x=dbh,y=npp_per_m2,fill=as.factor(year))) +
+  geom_bar(stat="identity") +
+  theme_classic()+labs(x = "Cohort DBH (cm)", y = "NPP (kg C m-2)", fill="Year") +
   scale_fill_manual(values = c("grey50")) +
-  theme(legend.position = c(1.0, 1.0), legend.justification = c(1.0, 1.0))
+  theme(legend.position = c(1.0,1.0), legend.justification = c(1.0,1.0))
 ```
 
 ## Calibrating model parameters
@@ -167,14 +167,14 @@ settings <- list(
     verbose = TRUE
   ),
   par = list(
-    phiRL     = list(lower = 0.5, upper = 5,   init = 3.5),
-    LAI_light = list(lower = 2,   upper = 8,   init = 3.5),
-    tf_base   = list(lower = 0.5, upper = 1.5, init = 1),
-    par_mort  = list(lower = 0.005, upper = 4,   init = 0.5))
+      phiRL     = list(lower=0.5, upper=5,   init=3.5),
+      LAI_light = list(lower=2,   upper=8,   init=3.5),
+      tf_base   = list(lower=0.5, upper=1.5, init=1),
+      par_mort  = list(lower=0.005, upper=4,   init=0.5))
 )
 
 # Using BiomeEP (with P-model for photosynthesis)
-pars_all <- calib_sofun_legacy(
+pars_all <- calib_sofun(
   drivers = biomee_p_model_drivers,
   obs = biomee_validation,
   settings = settings
@@ -187,10 +187,10 @@ pars <- pars_all["par"]
 # saveRDS(pars_all, "files/biomee_use.Rmd__biomee_p_model_output___pars.RDS")
 # pars <- readRDS("files/biomee_use.Rmd__biomee_p_model_output___pars.RDS")["par"]
 pars <- list(
-  par = c(phiRL     = 1.27705864862701,
-    LAI_light = 5.62385280630643,
-    tf_base   = 0.504099730241379,
-    par_mort  = 0.0220552311561793
+  par = c(phiRL     = 1.27705864862701, 
+          LAI_light = 5.62385280630643, 
+          tf_base   = 0.504099730241379, 
+          par_mort  = 0.0220552311561793
 ))
 ```
 
@@ -207,10 +207,10 @@ drivers$params_siml[[1]]$spinupyears <- 600
 
 # run the model with new parameter values
 calibrated_out <- runread_biomee_f(
-  drivers,
-  makecheck = TRUE,
-  parallel = FALSE
-)
+     drivers,
+     makecheck = TRUE,
+     parallel = FALSE
+     )
 
 # split out the annual data
 biomee_p_model_calibratedOutput_annual_tile <- calibrated_out$data[[1]]$output_annual_tile
@@ -219,35 +219,35 @@ biomee_p_model_calibratedOutput_annual_tile <- calibrated_out$data[[1]]$output_a
 Finally, we can visually compare the two model runs. We plot the original model run in black and the run using the calibrated parameters in grey. The dashed line represents the validation data, i.e. the observed GPP and Biomass.
 ```{r fig.width=7}
 # unnest model output for our single site
-GPP_target <- biomee_validation$data[[1]] |>
-  dplyr::filter(variables == "GPP") |>
+GPP_target <- biomee_validation$data[[1]] |> 
+  dplyr::filter(variables=="GPP") |> 
   magrittr::extract2("targets_obs")
-plantC_target <- biomee_validation$data[[1]] |>
-  dplyr::filter(variables == "Biomass") |>
+plantC_target <- biomee_validation$data[[1]] |> 
+  dplyr::filter(variables=="Biomass") |> 
   magrittr::extract2("targets_obs")
 
 ggplot() +
   geom_line(data = biomee_p_model_output_annual_tile,
-    aes(x = year, y = GPP)) +
+            aes(x = year, y = GPP)) +
   geom_line(data = biomee_p_model_calibratedOutput_annual_tile,
-    aes(x = year, y = GPP),
-    color = "grey50") +
-  geom_hline(yintercept = GPP_target,
-    linetype = "dashed",
-    color = "grey50") +
-  theme_classic() +
+            aes(x = year, y = GPP),
+            color = "grey50") +
+  geom_hline(yintercept = GPP_target, 
+             linetype = "dashed",
+             color = "grey50") +
+  theme_classic() + 
   labs(x = "Year", y = "GPP")
 
 ggplot() +
   geom_line(data = biomee_p_model_output_annual_tile,
-    aes(x = year, y = plantC)) +
+            aes(x = year, y = plantC)) +
   geom_line(data = biomee_p_model_calibratedOutput_annual_tile,
-    aes(x = year, y = plantC),
-    color = "grey50") +
-  geom_hline(yintercept = plantC_target,
-    linetype = "dashed",
-    color = "grey50") +
-  theme_classic() +
+            aes(x = year, y = plantC),
+            color = "grey50") +
+  geom_hline(yintercept = plantC_target, 
+             linetype = "dashed", 
+             color = "grey50") +
+  theme_classic() + 
   labs(x = "Year", y = "plantC")
 ```
 
@@ -260,43 +260,41 @@ Note how the vegetation C pool reaches a steady state relatively fast, while the
 ``` {r eval = TRUE, fig.width=7}
 pl1 <- biomee_p_model_calibratedOutput_annual_tile %>%
   ggplot(aes(x = year)) +
-  geom_line(aes(y = plantC + soilC, color = "total C", linetype = "total C")) +
+  geom_line(aes(y = plantC+soilC, color = "total C", linetype = "total C")) +
   geom_line(aes(y = soilC,        color = "soil C",  linetype = "soil C")) +
   geom_line(aes(y = plantC,       color = "plant C", linetype = "plant C")) +
   # geom_hline(yintercept = plantC_target, linetype = "solid", color = "grey50") +
   theme_classic() +
-  scale_color_manual(values = c("total C" = "black",
-    "soil C" = "darkred",
-    "plant C" = "darkgreen")) +
-  scale_linetype_manual(values = c("total C" = 3,
-    "soil C" = 2,
-    "plant C" = 1)) +
-  labs(x = "Year", y = "kg C m-2", linetype = NULL, color = NULL) +
-  theme(legend.position = c(1, 0.5), legend.justification = c(1, 0.5))
+  scale_color_manual(values = c("total C"="black",
+                                "soil C" ="darkred",
+                                "plant C"="darkgreen")) +
+  scale_linetype_manual(values = c("total C"=3,
+                                   "soil C" =2,
+                                   "plant C"=1)) +
+  labs(x = "Year", y = "kg C m-2", linetype = NULL, color = NULL) + 
+  theme(legend.position = c(1,0.5), legend.justification = c(1,0.5))
 
 pl2 <- biomee_p_model_calibratedOutput_annual_tile %>%
   ggplot(aes(x = year)) +
   # geom_line(aes(y = NPP,          color = "plant: NPP", linetype = "plant: NPP")) +
   geom_line(aes(y = GPP,          color = "plant: GPP",           linetype = "plant: GPP")) +
-  geom_line(aes(y = GPP - Rauto,  color = "plant: NPP=GPP-Rauto", linetype = "plant: NPP=GPP-Rauto")) +
+  geom_line(aes(y = GPP-Rauto,    color = "plant: NPP=GPP-Rauto", linetype = "plant: NPP=GPP-Rauto")) +
   geom_line(aes(y = Rh,           color = "soil: Rh",             linetype = "soil: Rh")) +
-  geom_line(aes(y = NPP - Rh,     color = "total: NEE=NPP-Rh",    linetype = "total: NEE=NPP-Rh")) +
-  # geom_hline(yintercept = GPP_target, color = "grey50", linetype = "solid") +
+  geom_line(aes(y = NPP-Rh,       color = "total: NEE=NPP-Rh",    linetype = "total: NEE=NPP-Rh")) +
+  # geom_hline(yintercept = GPP_target, linetype = "solid", color = "grey50") +
   theme_classic() +
-  scale_color_manual(values = c(
-    "total: NEE=NPP-Rh"    = "black",
-    "soil: Rh"             = "darkred",
-    "plant: GPP"           = "darkgreen",
-    "plant: NPP"           = "darkgreen",
-    "plant: NPP=GPP-Rauto" = "darkgreen")) +
-  scale_linetype_manual(values = c(
-    "total: NEE=NPP-Rh"    = 3,
-    "soil: Rh"             = 2,
-    "plant: GPP"           = 1,
-    "plant: NPP"           = 2,
-    "plant: NPP=GPP-Rauto" = 2)) +
-  labs(x = "Year", y = "kg C m-2 yr-1", linetype = NULL, color = NULL) +
-  theme(legend.position = c(1, 0.5), legend.justification = c(1, 0.5))
+  scale_color_manual(values = c("total: NEE=NPP-Rh"   ="black",
+                                "soil: Rh"           ="darkred",
+                                "plant: GPP"          ="darkgreen",
+                                "plant: NPP"          ="darkgreen",
+                                "plant: NPP=GPP-Rauto"="darkgreen")) +
+    scale_linetype_manual(values = c("total: NEE=NPP-Rh"   =3,
+                                     "soil: Rh"           =2,
+                                     "plant: GPP"          =1,
+                                     "plant: NPP"          =2,
+                                     "plant: NPP=GPP-Rauto"=2)) +
+  labs(x = "Year", y = "kg C m-2 yr-1", linetype = NULL, color = NULL) + 
+  theme(legend.position = c(1,0.5), legend.justification = c(1,0.5))
 pl1
 pl2
 ```
@@ -308,18 +306,18 @@ If your analysis relies on nitrogen being in steady-state the spinupyears might 
 ``` {r eval = TRUE, fig.width=7}
 pl3 <- biomee_p_model_calibratedOutput_annual_tile %>%
   ggplot(aes(x = year)) +
-  geom_line(aes(y = plantN + soilN, color = "total N", linetype = "total N")) +
+  geom_line(aes(y = plantN+soilN, color = "total N", linetype = "total N")) +
   geom_line(aes(y = soilN,        color = "soil N",  linetype = "soil N")) +
   geom_line(aes(y = plantN,       color = "plant N", linetype = "plant N")) +
   theme_classic() +
-  scale_color_manual(values = c("total N" = "black",
-    "soil N" = "darkred",
-    "plant N" = "darkgreen")) +
-  scale_linetype_manual(values = c("total N" = 3,
-    "soil N" = 2,
-    "plant N" = 1)) +
-  labs(x = "Year", y = "kg N m-2", linetype = NULL, color = NULL) +
-  theme(legend.position = c(1, 0.5), legend.justification = c(1, 0.5))
+  scale_color_manual(values = c("total N"="black",
+                                "soil N" ="darkred",
+                                "plant N"="darkgreen")) +
+  scale_linetype_manual(values = c("total N"=3,
+                                   "soil N" =2,
+                                   "plant N"=1)) +
+  labs(x = "Year", y = "kg N m-2", linetype = NULL, color = NULL) + 
+  theme(legend.position = c(1,0.5), legend.justification = c(1,0.5))
 
 pl3
 ```

@@ -1,6 +1,6 @@
 ---
 title: "P-model usage"
-author: "Koen Hufkens, Josefa Arán, Fabian Bernhard, Benjamin Stocker"
+author: "Koen Hufkens, Josefa Arán, Benjamin Stocker"
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{P-model usage}
@@ -24,42 +24,46 @@ library(ggplot2)
 
 The `rsofun` package and framework includes two distinct simulation models. 
 The `p-model` and `biomee` (which in part relies on p-model component). 
-Here we give a short example on how to run the `p-model` on the included demo dataset to familiarize yourself with both the data structure and the outputs.
+Here we give a short example on how to run the `p-model` on the included demo datasets to familiarize yourself with both the data structure and the outputs.
 
 ## Demo data
 
-The package includes a demo dataset to run and validate p-model output using GPP or D13C observations. These files can be directly loaded into your workspace by typing:
+The package includes two demo datasets to run and validate p-model output using GPP observations. These files can be directly loaded into your workspace by typing:
 
 ```{r}
 library(rsofun)
 
-pmodel_drivers
+# this is to deal with an error p_model_drivers.rds not being found 
+p_model_drivers
 
-pmodel_validation
+p_model_validation
 ```
 
-These are real data from eight fluxnet sites (CH-Dav, CZ-BK1, DK-Sor, FI-Hyy, FR-Pue, GF-Guy, US-Ha1, US-PFa) 
-and twelve sites with with leaf carbon isotope signatures D13C [(Cornwell, 2025)](https://doi.org/10.5281/zenodo.15239220). 
-Information about data sources 
-and information about data structure, variable names, and their meaning and units can be found in the reference pages of `pmodel_drivers` and `pmodel_validation`.
-We can use these data to run the model, together with observations of GPP or D13C (`pmodel_validation`) we can also calibrate `p-model` parameters.
-Since leaf traits are only measured once per site, the forcings used are average climate conditions during the growing seasons.
+These are real data from the French FR-Pue fluxnet site. Information about data structure, variable names, and their meaning and units can be found in the reference pages of `p_model_drivers` and `p_model_validation`. We can use these data to run the model, together with observations of GPP we can also calibrate `p-model` parameters.
 
-~~For the remainder of this vignette, we will use the GPP fluxnet datasets. The workflow is exactly the same for leaf traits data.~~
+Another two datasets are provided as an example to validate the model against leaf traits data, rather than fluxes. Measurements of Vcmax25 (aggregated over species) for a subset of 4 sites from the GlobResp database (Atkin et al., 2015) are given in `p_model_validation_vcmax25` and the corresponding forcing for the P-model is given in `p_model_drivers_vcmax25`. Since leaf traits are only measured once per site, the forcing used is a single year of average climate (the average measurements between 2001 and 2015 on each day of the year).
+
+```{r}
+p_model_drivers_vcmax25
+
+p_model_validation_vcmax25
+```
+
+For the remainder of this vignette, we will use the GPP flux datasets. The workflow is exactly the same for leaf traits data.
 
 To get your raw data into the structure used within `rsofun`, please see R packages [ingestr](https://github.com/geco-bern/ingestr) and [FluxDataKit](https://github.com/geco-bern/FluxDataKit).
 
 ## Running model
 
-With all data prepared we can run the P-model using `runread_pmodel_f()`. This function takes the nested data structure and runs the model site by site, returning nested model output results matching the input drivers. Internally it calls for each site `run_pmodel_f_bysite()` or `run_pmodel_onestep_f_bysite()` (for latter refer to section 'One-step P-model call' below).
+With all data prepared we can run the P-model using `runread_pmodel_f()`. This function takes the nested data structure and runs the model site by site, returning nested model output results matching the input drivers.
 
 ```{r}
 # Define model parameter values.
 # Correspond to maximum a posteriori estimates from Bayesian calibration in
-# analysis/02-bayesian-calibration.R. # TODO: replace this with geco-bern/analysis_doc repository
+# analysis/02-bayesian-calibration.R.
 params_modl <- list(
   kphio              = 5.000000e-02, # chosen to be too high for demonstration
-  kphio_par_a        = -2.289344e-03,
+  kphio_par_a        =-2.289344e-03,
   kphio_par_b        = 1.525094e+01,
   soilm_thetastar    = 1.577507e+02,
   soilm_betao        = 1.169702e-04,
@@ -67,19 +71,13 @@ params_modl <- list(
   rd_to_vcmax        = 0.014,
   tau_acclim         = 20.0,
   kc_jmax            = 0.41
-)
+  )
 
-# Define model drivers.
-driver <- rsofun::pmodel_drivers |>
-  # subset only certain sites:
-  dplyr::filter(sitename %in% c(
-    # i.e. only use sites where we request runs of the daily p-model (internally
-    # calling `run_pmodel_f_bysite`, and not `run_pmodel_onestep_f_bysite`)
-    "FR-Pue",
-    "CH-Dav", "CZ-BK1", "DK-Sor", "FI-Hyy", "GF-Guy", "US-Ha1", "US-PFa"))
-
-# Run the model for these parameters and drivers.
-output <- rsofun::runread_pmodel_f(driver, par = params_modl)
+# Run the model for these parameters.
+output <- rsofun::runread_pmodel_f(
+  p_model_drivers,
+  par = params_modl
+  )
 ```
 
 ### Plotting output
@@ -95,18 +93,16 @@ library(ggplot2)
 # Create data.frame for plotting
 df_gpp_plot <- output |>
   tidyr::unnest(data) |>
-  dplyr::select(sitename, date, gpp_mod = gpp) |>
+  dplyr::select(date, gpp_mod = gpp) |>
   dplyr::left_join(
-    rsofun::pmodel_validation |> dplyr::filter(sitename %in% c(
-      "FR-Pue",
-      "CH-Dav", "CZ-BK1", "DK-Sor", "FI-Hyy", "GF-Guy", "US-Ha1", "US-PFa")) |>
+    p_model_validation |>
       tidyr::unnest(data) |>
-      dplyr::select(sitename, date, gpp_obs = gpp),
-    by = c("sitename", "date")
-  ) |>
+      dplyr::select(date, gpp_obs = gpp),
+    by = "date"
+    ) |> 
 
-  # Plot only first year of each site
-  group_by(sitename) |> dplyr::slice(1:365)
+  # Plot only first year
+  dplyr::slice(1:365)
 
 # Plot GPP
 ggplot(data = df_gpp_plot) +
@@ -121,7 +117,6 @@ ggplot(data = df_gpp_plot) +
     aes(
       x = date,
       y = gpp_mod,
-      group = sitename,
       color = "P-model"
     )
   ) +
@@ -129,17 +124,15 @@ ggplot(data = df_gpp_plot) +
   theme(
     panel.grid.major.y = element_line(),
     legend.position = "bottom"
-  ) +
+    ) +
   labs(
-    x = "Date",
+    x = 'Date',
     y = expression(paste("GPP (g C m"^-2, "s"^-1, ")"))
   ) +
-  facet_wrap(~sitename, scales = "free_x") +
-  scale_x_date(date_labels = "%Y\n%b", date_breaks = "4 months") +
   scale_color_manual(
     NULL,
     breaks = c("Observations",
-      "P-model"),
+               "P-model"),
     values = c("black", "tomato"))
 ```
 
@@ -148,13 +141,13 @@ ggplot(data = df_gpp_plot) +
 To optimize new parameters based upon driver data and a validation dataset we must first specify an optimization strategy and settings, as well as a cost function and parameter ranges.
 
 ```{r}
-settings_calib <- list(
+settings <- list(
   method = "GenSA",
   metric = cost_rmse_pmodel,
   control = list(maxit = 100),
   par = list(
-    kphio = list(lower = 0.02, upper = 0.2, init = 0.05)
-  )
+    kphio = list(lower=0.02, upper=0.2, init = 0.05)
+    )
 )
 ```
 
@@ -167,19 +160,20 @@ With all settings defined the optimization function `calib_sofun()` can be calle
 ```{r eval=FALSE}
 # calibrate the model and optimize free parameters
 pars <- calib_sofun(
-  drivers = pmodel_drivers |> filter(sitename == "FR-Pue"),
-  obs     = pmodel_validation |> filter(sitename == "FR-Pue"),
-  settings_calib = settings_calib,
+  drivers = p_model_drivers,  
+  obs = p_model_validation,
+  settings = settings,
   # extra arguments passed to the cost function:
-  par_fixed = params_modl[-1]  # fix non-calibrated parameters to previous
-  # values, removing kphio [-1]
-)
+  targets = "gpp",             # define target variable GPP
+  par_fixed = params_modl[-1]  # fix non-calibrated parameters to previous 
+                               # values, removing kphio
+  )
 ```
 
 ```{r simulate_calibration_run, include = FALSE}
 # fake variable as optimization isn't run
 pars <- list()
-pars$par["kphio"] <- 0.04424894
+pars$par["kphio"] <- 0.04095957
 ```
 When successful the optimized parameters can be used to run subsequent modelling efforts, in this case slightly improving the model fit over a more global parameter set.
 
@@ -189,23 +183,21 @@ params_modl$kphio <- pars$par["kphio"]
 
 # Run the model for these parameters
 output_new <- rsofun::runread_pmodel_f(
-  pmodel_drivers |> filter(sitename == "FR-Pue"),
+  p_model_drivers,
   par = params_modl
-)
+  )
 
 # Update data.frame for plotting
-df_gpp_plot_FRPue <- df_gpp_plot |>
-  select(-starts_with("gpp_calib")) |>
+df_gpp_plot <- df_gpp_plot |> 
   left_join(
     output_new |>
       unnest(data) |>
-      select(sitename, date, gpp_calib = gpp),
-    by = c("sitename", "date")
-  ) |>
-  filter(sitename == "FR-Pue")
+      select(date, gpp_calib = gpp),
+    by = "date"
+  )
 
 # Plot GPP
-ggplot(data = df_gpp_plot_FRPue) +
+ggplot(data = df_gpp_plot) +
   geom_point(
     aes(
       x = date,
@@ -217,7 +209,6 @@ ggplot(data = df_gpp_plot_FRPue) +
     aes(
       x = date,
       y = gpp_mod,
-      group = sitename,
       color = "P-model (uncalibrated)"
     )
   ) +
@@ -225,7 +216,6 @@ ggplot(data = df_gpp_plot_FRPue) +
     aes(
       x = date,
       y = gpp_calib,
-      group = sitename,
       color = "P-model (calibrated)"
     )
   ) +
@@ -233,26 +223,24 @@ ggplot(data = df_gpp_plot_FRPue) +
   theme(
     panel.grid.major.y = element_line(),
     legend.position = "bottom"
-  ) +
+    ) +
   labs(
-    x = "Date",
+    x = 'Date',
     y = expression(paste("GPP (g C m"^-2, "s"^-1, ")"))
   ) +
-  facet_wrap(~sitename, scales = "free_x") +
-  scale_x_date(date_labels = "%Y\n%b", date_breaks = "4 months") +
   scale_color_manual(
     NULL,
     breaks = c("Observations",
-      "P-model (uncalibrated)",
-      "P-model (calibrated)"),
+               "P-model (uncalibrated)",
+               "P-model (calibrated)"),
     values = c("black", "grey", "tomato"))
 ```
 
 For details on the optimization settings we refer to the manuals of [GenSA](https://cran.r-project.org/package=GenSA) and [BayesianTools](https://github.com/florianhartig/BayesianTools).
 
-## Running One-step P-model
+## One-step P-model call
 
-For certain applications, the core theory of the P-model, predicting the acclimation of photosynthesis at the leaf-level, may be all that's needed for simulations. {rsofun} also provides a stripped-down version of "one-step" P-model call. That is, without considering forcing (and output) time series, delayed acclimation, ecosystem-level up-scaled quantities, and the coupling with the water balance and related water limitation on photosynthesis. Applications of the stripped-down version may include simulations of leaf-level photosynthetic traits. The function `run_pmodel_onestep_f_bysite()` provides this functionality and further improves computational efficiency over a call to `run_pmodel_f_bysite()`. This is particularly useful when calibrating the model to photosynthetic traits data. Note that it can equally be run through `runread_pmodel()`, specifying `onestep == TRUE` in the column `params_siml` of the input driver.
+For certain applications, the core theory of the P-model, predicting the acclimation of photosynthesis at the leaf-level, may be all that's needed for simulations. {rsofun} also provides a stripped-down version of "one-step" P-model call. That is, without considering forcing (and output) time series, delayed acclimation, ecosystem-level up-scaled quantities, and the coupling with the water balance and related water limitation on photosynthesis. Applications of the stripped-down version may include simulations of leaf-level photosynthetic traits. The function `run_pmodel_onestep_f_bysite()` provides this functionality and further improves computational efficiency over a call to `run_pmodel_f_bysite()`. This is particularly useful when calibrating the model to photosynthetic traits data. 
 
 ```{r}
 run_pmodel_onestep_f_bysite(
@@ -260,7 +248,7 @@ run_pmodel_onestep_f_bysite(
   forcing = data.frame(
     temp  = 20,           # temperature, deg C
     vpd   = 1000,         # Pa,
-    ppfd  = 300 / 10^6,   # mol/m2/s
+    ppfd  = 300/10^6,     # mol/m2/s
     co2   = 400,          # ppm,
     patm  = 101325        # Pa
   ),
@@ -288,12 +276,12 @@ out_rpmodel <- rpmodel(
   vpd            = 1000,         # Pa,
   co2            = 400,          # ppm,
   fapar          = 1,            # fraction,
-  ppfd           = 300 / 10^6,   # ~~mol/m2/d~~ or mol/m2/s
+  ppfd           = 300/10^6,     # ~~mol/m2/d~~ or mol/m2/s
                                  # rpmodel docs state that units of ppfd define 
                                  # output units of: lue, gpp, vcmax, rd 
                                  # (as well as vcmax25, gs)
   patm           = 101325,       # Pa
-  kphio          = 0.04998,      # quantum yield efficiency as calibrated
+  kphio          = 0.04998,      # quantum yield efficiency as calibrated 
                                  # for setup ORG by Stocker et al. 2020 GMD,
   beta           = 146.0,        # unit cost ratio a/b,
   c4             = FALSE,
@@ -301,16 +289,15 @@ out_rpmodel <- rpmodel(
   do_ftemp_kphio = FALSE,        # corresponding to setup ORG
   do_soilmstress = FALSE,        # corresponding to setup ORG
   verbose        = TRUE
-)
-
+  )
+  
 # out_rpmodel
-tidyr::as_tibble(out_rpmodel) |>
+tidyr::as_tibble(out_rpmodel) |> 
   dplyr::select(vcmax, jmax, vcmax25, jmax25, gs, chi, iwue, rd) |>
   # bring units to same as output of run_pmodel_onestep_f_bysite()
-  dplyr::mutate(
-    gs   = gs / 1 / (300 / 10^6), # divide by fapar (-) and by ppfd (mol/m2/s)
-    iwue = iwue / 101325,         # divide by patm (Pa)
-    rd   = rd * 12                # mutliply by c_molmass (gC/mol)
+  dplyr::mutate(gs   = gs/1/(300/10^6), # divide by fapar (-) and by ppfd (mol/m2/s)
+                iwue = iwue/101325,     # divide by patm (Pa)
+                rd   = rd*12            # mutliply by c_molmass (gC/mol)
   )
 ```
 

@@ -13,7 +13,7 @@ biomee_p_model_drivers
 \description{
 Example driver data to run the BiomeE-model at the CH-LAE site
 using the P-model photosynthesis specification (and daily time step).
-It can also be used together with leaf trait data from CH-LAE (\code{\link{biomee_validation}})
+It can also be used together with leaf trait data from CH-LAE (\code{\link{biomee_validation}}) 
 to optimize model parameters.
 }
 \keyword{datasets}

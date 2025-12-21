@@ -8,7 +8,7 @@ library(rsofun)
 args <- commandArgs(trailingOnly = TRUE)
 
 # load data
-if (is.na(args[1])) {
+if (is.na(args[1])){
   load("data-raw/CH-LAE_forcing.rda")
 } else {
   load(args[1])
@@ -28,7 +28,7 @@ siteinfo <- tibble(
   igbp_land_use = "Mixed Forests",
   plant_functional_type = "Broadleaf trees")
 
-siteinfo <- siteinfo %>%
+siteinfo <- siteinfo %>% 
   dplyr::mutate(date_start = lubridate::ymd(paste0(year_start, "-01-01"))) %>%
   dplyr::mutate(date_end = lubridate::ymd(paste0(year_end, "-12-31")))
 
@@ -110,7 +110,7 @@ params_species <- tibble(
   maturalage        = c(0, 5, 5, 5, 5),               # (AgeRepro)
   v_seed            = rep(0.1, 5),
   # Mortality parameters
-  mortrate_d_c      = c(0.02, 0.01, 0.01, 0.01, 0.01), # canopy tree mortality rate, year-1 (r0mort_c)
+  mortrate_d_c      = c(0.02, 0.01, 0.01, 0.01, 0.01),# canopy tree mortality rate, year-1 (r0mort_c)
   mortrate_d_u      = c(4.0, 0.075, 0.075, 0.075, 0.075), # understory tree mortality rate, year-1 (A_sd)
   # Leaf parameters
   LMA               = c(0.02, 0.05, 0.17, 0.11, 0.1), # Leaf mass per unit area
@@ -131,7 +131,7 @@ params_species <- tibble(
   CNseed0           = rep(20, 5),
   Nfixrate0         = rep(0.0, 5),                    # 0.03 kgN kgRootC-1 yr-1
   NfixCost0         = c(0, 12, 12, 12, 12),           # N fixation carbon cost: 12 gC/gN
-  internal_gap_frac = rep(0.1, 5),
+  internal_gap_frac = rep(0.1,5),
   # calibratable params
   kphio             = rep(0.05, 5),
   phiRL             = c(0.7, 3.5, 3.5, 3.5, 3.5),     # Root/Leaf area ratio
@@ -157,7 +157,7 @@ init_cohort <- tibble(
   lu_index            = rep(0, 1)     # index land use (LU) containing this cohort. 0 (default) means any vegetated tile will contain a copy.
 )
 
-init_soil <- tibble( # list
+init_soil <- tibble( #list
   init_fast_soil_C    = 0.01,
   init_slow_soil_C    = 0.001,
   init_Nmineral       = 0.015,
@@ -167,15 +167,15 @@ init_soil <- tibble( # list
 rh_to_vpd <- function(temp, # Air temperature (deg C)
                       rh    # Relative humidity (< 1)
 ) {
-  esat <- 611.0 * exp((17.27 * temp) / (temp + 237.3))
-
+  esat <- 611.0 * exp( (17.27 * temp)/(temp + 237.3) )
+  
   return(esat * (1.0 - rh)) # VPD (Pa)
 }
 
 rad_to_ppfd <- function(rad   # Downwelling radiation (W m-2)
 ) {
   kcFCE <- 2.04 # from flux to energy conversion, umol/J (Meek et al., 1984)
-
+  
   return(rad * kcFCE * 1.0e-6)  # PPFD (mol m-2 s-1)
 }
 
@@ -190,15 +190,15 @@ build_forcing <- function(forcing_data, hourly) {
       lubridate::month(datehour),
       lubridate::day(datehour))
   forcing <- groups %>%
-    summarise_at(vars(1:13), list(~ mean(., na.rm = TRUE))) %>%
-    rename(month = `lubridate::month(datehour)`, day = `lubridate::day(datehour)`) %>%
+    summarise_at(vars(1:13), list(~mean(., na.rm = TRUE))) %>%
+    rename(month=`lubridate::month(datehour)`,day=`lubridate::day(datehour)`) %>%
     ungroup() %>%
-    rename(year = YEAR, hod = HOUR, rad = Swdown, temp = TEMP, rh = RH,
-      rain = RAIN, wind = WIND, patm = PRESSURE, co2 = aCO2_AW) %>%
-    mutate(date = make_date(year, month, day),
-      vpd = rh_to_vpd(temp, rh / 100.0),
-      ppfd = rad_to_ppfd(rad)) %>%
-    select(date, hod, temp, rain, vpd, ppfd, patm, wind, co2, )
+    rename(year=YEAR, hod=HOUR, rad=Swdown, temp=TEMP, rh=RH,
+           rain=RAIN, wind=WIND, patm=PRESSURE, co2=aCO2_AW) %>%
+    mutate(date = make_date(year,month,day),
+           vpd = rh_to_vpd(temp, rh / 100.0),
+           ppfd = rad_to_ppfd(rad)) %>%
+    select(date,hod,temp,rain,vpd,ppfd,patm,wind,co2,)
   return(forcing)
 }
 
@@ -222,8 +222,8 @@ forcing_gs_leuning <- build_forcing(forcingLAE, TRUE)
 biomee_gs_leuning_drivers <- build_driver(params_siml_gs_leuning, forcing_gs_leuning)
 
 save(biomee_gs_leuning_drivers,
-  file = "data/biomee_gs_leuning_drivers.rda",
-  compress = "xz")
+     file ="data/biomee_gs_leuning_drivers.rda",
+     compress = "xz")
 
 #---- p-model driver -----
 forcing_pmodel <- build_forcing(forcingLAE, FALSE)
@@ -231,23 +231,28 @@ forcing_pmodel <- build_forcing(forcingLAE, FALSE)
 biomee_p_model_drivers <- build_driver(params_siml_pmodel, forcing_pmodel)
 
 save(biomee_p_model_drivers,
-  file = "data/biomee_p_model_drivers.rda",
-  compress = "xz")
+     file ="data/biomee_p_model_drivers.rda",
+     compress = "xz")
 
 #---- p-model with LULUC driver -----
 biomee_p_model_luluc_drivers <- biomee_p_model_drivers
 lu_defs <- tibble(
-  name      = c("primary", "secondary"),
+  name      = c('primary', 'secondary'),
   fraction  = c(1.0, 0.0)
 )
 transitions <- c(0, 0, 0.4, 0)
 biomee_p_model_luluc_drivers$params_siml[[1]]$do_daily_diagnostics <- FALSE
 
 n_lu <- length(lu_defs$name)
-n_trans <- length(transitions) / n_lu^2
+n_trans <- length(transitions) / n_lu ^ 2
 biomee_p_model_luluc_drivers$init_lu[[1]] <- lu_defs
 biomee_p_model_luluc_drivers$luc_forcing[[1]]  <- array(transitions, c(n_lu, n_lu, n_trans))
 
 save(biomee_p_model_luluc_drivers,
-  file = "data/biomee_p_model_luluc_drivers.rda",
-  compress = "xz")
+     file ="data/biomee_p_model_luluc_drivers.rda",
+     compress = "xz")
+
+
+
+
+

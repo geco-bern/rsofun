@@ -20,6 +20,7 @@ knitr::opts_chunk$set(
 library(rsofun)
 library(dplyr)
 library(ggplot2)
+
 ```
 
 ## Philosophy
@@ -38,7 +39,7 @@ Each of the provided demo drivers contain only one sample site:
 
 ```{r}
 # call to the included p-model demo drivers
-rsofun::pmodel_drivers
+rsofun::p_model_drivers
 
 # call to the included BiomeE (p-model) demo drivers
 rsofun::biomee_p_model_drivers
@@ -59,8 +60,7 @@ rsofun::biomee_gs_leuning_drivers$site_info[[1]]
 Each model has its own specificities when it comes to the set of simulation parameters and forcing data.
 Please refer to the documentation for each model for an exhaustive list of parameters and data required by the model.
 
-- P-model (daily timeseries): `?run_pmodel_f_bysite`
-- P-model (onestep acclimation): `?run_pmodel_onestep_f_bysite`
+- P-model: `?run_pmodel_f_bysite`
 - BiomeE: `?run_biomee_f_bysite`
 
 ### Forcing data
@@ -75,7 +75,7 @@ Each model has a specific forcing data resolution:
 Forcing data present in the demo drivers can be used as examples:
 ```{r}
 # Detailed look at the forcing data for the P-model
-rsofun::pmodel_drivers$forcing[[1]]
+rsofun::p_model_drivers$forcing[[1]]
 ```
 
 ## Output data
@@ -88,7 +88,7 @@ The data structure for the output `data` is specific for each model.
 
 ### P-model
 
-For detailed information about the content of `data`, see `?runread_pmodel_f`.
+For detailed information about the content of `data`, see `?run_pmodel_f_bysite`.
 
 ### BiomeE
 

@@ -7,7 +7,7 @@
 # adding flags to reproduce NaN bug: PKG_FFLAGS = -frecursive -fbounds-check -fcheck=all -Wall -Wextra -pedantic -g -O0 -fbacktrace -ffpe-trap=invalid,zero,overflow -finit-real=snan -finit-integer=-9999999
 # building: R CMD build --no-manual --no-build-vignettes rsofun && R CMD INSTALL -c --preclean rsofun_5.0.0.9000.tar.gz 
 
-# NOTE: this link: https://stackoverflow.com/a/72580854 could potentially explain how to do it in the Docker where we see the error
+# TODO: this link: https://stackoverflow.com/a/72580854 could potentially explain how to do it in the Docker where we see the error
 #                  https://github.com/renkun-ken/vscode-rcpp-demo
 #                  https://github.com/renkun-ken/vscode-cpp11-demo
 

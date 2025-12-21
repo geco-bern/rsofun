@@ -7,44 +7,44 @@
 run_pmodel_onestep_f_bysite(lc4, forcing, params_modl, makecheck = TRUE)
 }
 \arguments{
-\item{lc4}{Logical specifying whether P-model simulation is for C4 (as opposed to C3). Defaults to \code{FALSE}.}
+\item{lc4}{Locigical specifying whether P-model simulation is for C4 (as opposed to C3). Defaults to \code{FALSE}.}
 
 \item{forcing}{A data frame of forcing climate data, used as input (single row).}
 
 \item{params_modl}{A named list of free (calibratable) model parameters. See \code{\link{runread_pmodel_f}}}
 
-\item{makecheck}{A logical specifying whether checks are performed
+\item{makecheck}{A logical specifying whether checks are performed 
  to verify forcings and model parameters. \code{TRUE} by default.
 
-For further specifications of above inputs and examples see \code{\link{pmodel_drivers}}}
+For further specifications of above inputs and examples see \code{\link{p_model_drivers}} or \code{\link{p_model_drivers_vcmax25}}}
 }
 \value{
-Model output is provided as a tidy dataframe (tibble), with columns:
+Model output is provided as a tidy dataframe, with columns:
 \describe{
-  \item{\code{vcmax}}{Maximum rate of RuBisCO carboxylation
+  \item{\code{vcmax}}{Maximum rate of RuBisCO carboxylation 
       (Vcmax) (in mol C m\eqn{^{-2}} s\eqn{^{-1}}).}
   \item{\code{jmax}}{Maximum rate of electron transport for RuBP regeneration
       (in mol CO\eqn{_2} m\eqn{^{-2}} s\eqn{^{-1}}).}
-  \item{\code{vcmax25}}{Maximum rate of carboxylation (Vcmax),
+  \item{\code{vcmax25}}{Maximum rate of carboxylation (Vcmax), 
       normalised to 25\eqn{^o}C (in mol C m\eqn{^{-2}} s\eqn{^{-1}}).}
-  \item{\code{jmax25}}{Maximum rate of electron transport, normalised to
+  \item{\code{jmax25}}{Maximum rate of electron transport, normalised to 
       25\eqn{^o}C (in mol C m\eqn{^{-2}} s\eqn{^{-1}}).}
-  \item{\code{gs_accl}}{Acclimated stomatal conductance (in
-      mol C (mol photons)\eqn{^{-1}} Pa\eqn{^{-1}}. (Multiply by
-      ppfd (mol photons m\eqn{^{-2}} d\eqn{^{-1}}) and fapar
+  \item{\code{gs_accl}}{Acclimated stomatal conductance (in 
+      mol C (mol photons)\eqn{^{-1}} Pa\eqn{^{-1}}. (Multiply by 
+      ppfd (mol photons m\eqn{^{-2}} d\eqn{^{-1}}) and fapar 
       to express per unit ground area and time.)}
   \item{\code{chi}}{Ratio of leaf-internal to ambient CO\eqn{_{2}}, ci:ca (unitless).}
-  \item{\code{iwue}}{Intrinsic water use efficiency (iWUE) (unitless,
+  \item{\code{iwue}}{Intrinsic water use efficiency (iWUE) (unitless, 
       multiply with patm (Pa) to get iWUE in Pa).}
-  \item{\code{rd}}{Dark respiration (Rd) in gC m\eqn{^{-2}} s\eqn{^{-1}}.
+  \item{\code{rd}}{Dark respiration (Rd) in gC m\eqn{^{-2}} s\eqn{^{-1}}. 
       (Multiply by 1/12 (mol C / gC) to convert to mol C m\eqn{^{-2}} s\eqn{^{-1}}.)}
-  \item{\code{bigdelta}}{13C isotope discrimination of leaf assimilates
+  \item{\code{bigdelta}}{13C isotope discrimination of leaf assimilates 
        against atmospheric signature (permil).}
   }
 }
 \description{
 Run P-model on a single site for a single time step. This does not include the simulation of ecosystem-level quantities,
-water limitation, nor a simulation of water fluxes. Instead, this corresponds to a leaf-level representation of the
+water limitation, nor a simulation of water fluxes. Instead, this corresponds to a leaf-level representation of the 
 acclimation of photosynthesis.
 }
 \details{
@@ -61,13 +61,13 @@ params_modl <- list(
   kc_jmax            = 0.41
 )
 
-# Run the Fortran P-model
+# Run the Fortran P-model 
 run_pmodel_onestep_f_bysite(
   lc4 = FALSE,
   forcing = data.frame(
     temp  = 20,           # temperature, deg C
     vpd   = 1000,         # Pa,
-    ppfd  = 300 / 10^6,   # mol/m2/s
+    ppfd  = 300/10^6,     # mol/m2/s
     co2   = 400,          # ppm,
     patm  = 101325        # Pa
   ),

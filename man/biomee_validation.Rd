@@ -21,6 +21,6 @@ biomee_validation
 }
 \description{
 Small example dataset of target observations (leaf trait data) at the CH-LAE site
-to optimize model parameters with the function \code{\link{calib_sofun_legacy}}
+to optimize model parameters with the function \code{\link{calib_sofun}}
 }
 \keyword{datasets}

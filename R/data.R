@@ -1,31 +1,15 @@
 #' rsofun P-model driver data
 #'
-#' Small dataset representing the driver to run the P-model at the FR-Pue site.
-#' Legacy data set. See details in the documentation of its replacement
-#' \code{\link{pmodel_drivers}}
-"p_model_oldformat_drivers"
-
-#' rsofun P-model GPP validation data
-#'
-#' Small example dataset of target observations (daily GPP flux data) to optimize
-#' model parameters with the function \code{\link{calib_sofun_legacy}}.
-#' Legacy data set. See details in the documentation of its replacement
-#' \code{\link{pmodel_validation}}
-"p_model_oldformat_validation"
-
-#' rsofun P-model driver data
-#'
-#' Small dataset representing the driver to run the P-model at the six Fluxnet
-#' sites and 5 sites with trait observations.
-#' It can be used together with daily GPP or ET flux time series data and
-#' trait data to optimize model parameters (see \code{\link{pmodel_validation}}).
+#' Small dataset representing the driver to run the P-model at the FR-Pue site. 
+#' It can also be used together with daily GPP flux time series data from CH-LAE 
+#' (\code{\link{p_model_validation}}) to optimize model parameters.
+#' To optimize model parameters to leaf traits data use the datasets \code{\link{p_model_drivers_vcmax25}} and \code{\link{p_model_validation_vcmax25}}.
 #'
 #' @format A tibble of driver data:
 #' \describe{
 #'   \item{sitename}{A character string containing the site name.}
-#'   \item{forcing}{A tibble of a time series of forcing climate data. Required
-#'   parameters differ for daily simulations or for onestep acclimation.
-#'   For daily simulations these include daily values of:
+#'   \item{forcing}{A tibble of a time series of forcing climate data, including
+#'   the following data:
 #'     \describe{
 #'       \item{date}{Date of the observation in YYYY-MM-DD format.}
 #'       \item{temp}{Daytime average air temperature in \eqn{^\circ}C.}
@@ -40,27 +24,15 @@
 #'       \item{rain}{Rain as precipitation in liquid form in mm s\eqn{^{-1}}.}
 #'       \item{tmin}{Daily minimum air temperature in \eqn{^\circ}C.}
 #'       \item{tmax}{Daily maximum air temperature in \eqn{^\circ}C.}
-#'       \item{wind}{Wind velocity (m s-1)}
 #'       \item{fapar}{Fraction of photosynthetic active radiation (fAPAR), taking
 #'      values between 0 and 1.}
 #'       \item{co2}{Atmospheric CO\eqn{_2} concentration in ppm.}
 #'       \item{ccov}{Cloud coverage in \%. This is only used when either PPFD or
 #'       net radiation are not prescribed.}
 #'       }
-#'   For onestep acclimation these include growing season averages (i.e. single
-#'   values) of:
-#'     \describe{
-#'       \item{temp}{Daytime average air temperature in \eqn{^\circ}C.}
-#'       \item{vpd}{Daytime average vapour pressure deficit in Pa.}
-#'       \item{ppfd}{Photosynthetic photon flux density (PPFD) in
-#'       mol m\eqn{^{-2}} s\eqn{^{-1}}.}
-#'       \item{patm}{Atmospheric pressure in Pa.}
-#'       \item{co2}{Atmospheric CO\eqn{_2} concentration in ppm.}
-#'     }
 #'   }
-#'   \item{params_siml}{A tibble of simulation parameters. Required parameters
-#'   differ for daily simulations or for onestep acclimation.
-#'   For daily simulations these include:
+#'   \item{params_siml}{A tibble of simulation parameters, including
+#'   the following data:
 #'     \describe{
 #'       \item{spinup}{A logical value indicating whether this simulation does spin-up.}
 #'       \item{spinupyears}{Number of spin-up years.}
@@ -74,14 +46,6 @@
 #'       \item{lgn3}{A logical value, \code{TRUE} if grass with C3 photosynthetic
 #'       pathway and N-fixing.}
 #'       \item{lgr4}{A logical value, \code{TRUE} if grass with C4 photosynthetic pathway.}
-#'       \item{onestep}{A logical value, \code{FALSE} to request daily simulations.
-#'       Defaults to \code{FALSE} if missing.}
-#'     }
-#'   For onestep acclimation these include:
-#'     \describe{
-#'       \item{lc4}{A logical value indicating whether to use C4 photosynthetic pathway.}
-#'       \item{onestep}{A logical value, \code{TRUE} to request onestep acclimation.
-#'       Defaults to \code{FALSE} if missing.}
 #'     }
 #'   }
 #'   \item{site_info}{A tibble containing site meta information.
@@ -90,93 +54,134 @@
 #'       \item{lon}{Longitude of the site location in degrees east.}
 #'       \item{lat}{Latitude of the site location in degrees north.}
 #'       \item{elv}{Elevation of the site location, in meters above sea level.}
-#'       \item{whc}{A numeric value for the rooting zone water holding capacity
-#'       (in mm). (Not needed if \code{onestep == "TRUE"}.)}
+#'       \item{whc}{A numeric value for the rooting zone water holding capacity (in mm)}
 #'     }
 #'   }
 #' }
-#'
-#' @source Pastorello, G., Trotta, C., Canfora, E. et al.
-#' The FLUXNET2015 dataset and the ONEFlux processing pipeline for eddy covariance data.
+#' 
+#' @source Pastorello, G., Trotta, C., Canfora, E. et al. 
+#' The FLUXNET2015 dataset and the ONEFlux processing pipeline for eddy covariance data. 
 #' Sci Data 7, 225 (2020). https://doi.org/10.1038/s41597-020-0534-3
-#'
-#' University of East Anglia Climatic Research Unit; Harris, I.C.; Jones, P.D.; Osborn, T. (2021):
-#' CRU TS4.05: Climatic Research Unit (CRU) Time-Series (TS) version 4.05 of high-resolution
-#' gridded data of month-by-month variation in climate (Jan. 1901- Dec. 2020).
-#' NERC EDS Centre for Environmental Data Analysis, date of citation.
+#' 
+#' University of East Anglia Climatic Research Unit; Harris, I.C.; Jones, P.D.; Osborn, T. (2021): 
+#' CRU TS4.05: Climatic Research Unit (CRU) Time-Series (TS) version 4.05 of high-resolution 
+#' gridded data of month-by-month variation in climate (Jan. 1901- Dec. 2020). 
+#' NERC EDS Centre for Environmental Data Analysis, date of citation. 
 #' https://catalogue.ceda.ac.uk/uuid/c26a65020a5e4b80b20018f148556681
-#'
-#' Weedon, G. P., G. Balsamo, N. Bellouin,S. Gomes, M. J. Best, and P. Viterbo(2014),
-#' The WFDEI meteorologicalforcing data set: WATCH Forcing Datamethodology applied
+#' 
+#' Weedon, G. P., G. Balsamo, N. Bellouin,S. Gomes, M. J. Best, and P. Viterbo(2014), 
+#' The WFDEI meteorologicalforcing data set: WATCH Forcing Datamethodology applied 
 #' to ERA-Interimreanalysis data,
 #' Water Resour. Res.,50,7505–7514, doi:10.1002/2014WR015638.
-#'
-#' Fick, S.E. and R.J. Hijmans, 2017. WorldClim 2: new 1km spatial resolution climate
+#' 
+#' Fick, S.E. and R.J. Hijmans, 2017. WorldClim 2: new 1km spatial resolution climate 
 #' surfaces for global land areas. International Journal of Climatology 37 (12): 4302-4315.
-"pmodel_drivers"
+"p_model_drivers"
 
-#' rsofun P-model GPP and leaf D13C validation data
+#' rsofun P-model GPP validation data
 #'
-#' Small example dataset of target observations (daily GPP flux data as well as
-#' leaf D13C data) to optimize
+#' Small example dataset of target observations (daily GPP flux data) to optimize 
 #' model parameters with the function \code{\link{calib_sofun}}
 #'
 #' @format A tibble of validation data:
 #' \describe{
 #'   \item{sitename}{A character string containing the site name (e.g. 'FR-Pue').}
-#'   \item{targets}{A single one-row tibble with a column for each target
-#'   containing TRUE or FALSE (or NA_logical)}
-#'   \item{data}{A single tibble or a list of tibbles with target observations.
-#'   For daily simulations this single tibble can contain daily values for:
+#'   \item{data}{A tibble [ 2,920 x 3 ] with time series for the following variables:
 #'     \describe{
 #'       \item{date}{Date vector with format YYYY-MM-DD.}
-#'       \item{gpp}{The observed Gross Primary Productivity (GPP) for each time stamp
+#'       \item{gpp}{The observed Gross Primary Productivity (GPP) for each time stamp 
 #'       (in gC m\eqn{^{-2}} d\eqn{^{-1}}).}
-#'       \item{gpp_qc}{A quality check indicator.}
-#'       \item{le}{Latent heat of exchange ...}
-#'       \item{...}{... etc.}
-#'     }
-#'   For onestep acclimation this can fore example include:
-#'     \describe{
-#'       \item{bigD13C}{A tibble containing observations of leaf D13C values.}
-#'       \item{Vcmax}{A tibble containing observations of Vcmax values.}
-#'       \item{Jmax}{A tibble containing observations of Jmax values.}
+#'       \item{gpp_unc}{The uncertainty of the GPP (in gC m\eqn{^{-2}} d\eqn{^{-1}}).}
 #'     }
 #'   }
 #' }
-#' @examples require(ggplot2)
-#' require(tidyr)
-#' p_model_oldformat_validation %>% tidyr::unnest(data)
-#' pmodel_validation |> tidyr::unnest_wider(targets, names_sep = "_")
-#' pmodel_validation |> dplyr::filter(grepl("^[A-Z]", sitename)) |> unnest(data)
-#' pmodel_validation |> dplyr::filter(grepl("lon", sitename)) |> unnest(data)
-#'
-#' @source Pastorello, G., Trotta, C., Canfora, E. et al.
-#' The FLUXNET2015 dataset and the ONEFlux processing pipeline for eddy covariance data.
+#' @examples require(ggplot2); require(tidyr)
+#' p_model_validation %>% tidyr::unnest(data) 
+#' 
+#' @source Pastorello, G., Trotta, C., Canfora, E. et al. 
+#' The FLUXNET2015 dataset and the ONEFlux processing pipeline for eddy covariance data. 
 #' Sci Data 7, 225 (2020). https://doi.org/10.1038/s41597-020-0534-3
+"p_model_validation"
+
+#' rsofun P-model driver data (for leaf traits)
 #'
-#' Cornwell, W. (2025). traitecoevo/leaf13C: V0.2.2 (Version v0.2.2)
-#' [Computer software]. Zenodo. https://doi.org/10.5281/zenodo.15239220
+#' Small dataset representing the driver to run the P-model at four separate sites. 
+#' It can also be used together with leaf traits data from these four sites
+#' (\code{\link{p_model_validation_vcmax25}}) to optimize model parameters.
+#' To optimize model parameters to GPP flux data use the datasets \code{\link{p_model_drivers}} and \code{\link{p_model_validation}}.
+#' 
+#' @format See \code{\link{p_model_drivers}}
+#' 
+#' @source Atkin, O. K., Bloomfield, K. J., Reich, P. B., Tjoelker, M. G., Asner, G. P., Bonal, D., et al. (2015). 
+#' Global variability in leaf respiration in relation to climate, plant functional types and leaf traits. 
+#' New Phytol. 206 (2), 614–636. doi:10.1111/nph.13253
+#' 
+#' University of East Anglia Climatic Research Unit; Harris, I.C.; Jones, P.D.; Osborn, T. (2021): 
+#' CRU TS4.05: Climatic Research Unit (CRU) Time-Series (TS) version 4.05 of high-resolution 
+#' gridded data of month-by-month variation in climate (Jan. 1901- Dec. 2020). 
+#' NERC EDS Centre for Environmental Data Analysis, date of citation. 
+#' https://catalogue.ceda.ac.uk/uuid/c26a65020a5e4b80b20018f148556681
+#' 
+#' Weedon, G. P., G. Balsamo, N. Bellouin,S. Gomes, M. J. Best, and P. Viterbo(2014), 
+#' The WFDEI meteorologicalforcing data set: WATCH Forcing Datamethodology applied 
+#' to ERA-Interimreanalysis data,
+#' Water Resour. Res.,50,7505–7514, doi:10.1002/2014WR015638.
+#' 
+#' Fick, S.E. and R.J. Hijmans, 2017. 
+#' WorldClim 2: new 1km spatial resolution climate surfaces for global land areas. 
+#' International Journal of Climatology 37 (12): 4302-4315.
+#' 
+#' C.D. Keeling, R.B. Bacastow, A.E. Bainbridge, C.A. Ekdahl, P.R. Guenther, and L.S. Waterman, (1976), 
+#' Atmospheric carbon dioxide variations at Mauna Loa Observatory, Hawaii, Tellus, vol. 28, 538-551
+"p_model_drivers_vcmax25"
+
+#' rsofun P-model Vcmax25 validation data
 #'
-#' Cornwell, William K., et al. “Climate and soils together regulate
-#' photosynthetic carbon isotope discrimination within C3 plants worldwide.”
-#' Global Ecology and Biogeography 27.9 (2018): 1056-1067.
-"pmodel_validation"
+#' Small example dataset of target observations (leaf trait data) to optimize 
+#' model parameters with the function \code{\link{calib_sofun}}
+#'
+#' @format A tibble of validation data:
+#' \describe{
+#'   \item{sitename}{A character string containing the site names (e.g. 'Reichetal_Colorado').}
+#'   \item{data}{A tibble [ 1 x 2 ] with observations for the following variables:
+#'     \describe{
+#'       \item{vcmax25}{The observed maximum rate of carboxylation (Vcmax), normalised 
+#'     to 25\eqn{^o} C (in mol C m\eqn{^{-2}} d\eqn{^{-1}}), aggregated over different plant species
+#'     in each site.}
+#'       \item{vcmax25_unc}{The uncertainty of the Vcmax25 (in mol C m\eqn{^{-2}} d\eqn{^{-1}}),
+#'       calculated as the standard deviation among Vcmax25 observations for
+#'       several species per site or as the total standard deviation across sites for
+#'       single-plant-species sites.}
+#'     }
+#'   }
+#' }
+#' @examples require(ggplot2); require(tidyr)
+#' p_model_validation_vcmax25 %>% tidyr::unnest(data) 
+#' 
+#' @source Atkin, O. K., Bloomfield, K. J., Reich, P. B., Tjoelker, M. G., Asner, G. P., Bonal, D., et al. (2015). 
+#' Global variability in leaf respiration in relation to climate, plant functional types and leaf traits. 
+#' New Phytol. 206 (2), 614–636. doi:10.1111/nph.13253
+"p_model_validation_vcmax25"
 
 #' rsofun P-model output data
 #'
-#' Example output dataset from a p-model run using \code{\link{pmodel_drivers}}.
-#' Results are stored as nested \code{tibble} in the column \code{data}.
-#' See \code{\link{run_pmodel_f_bysite}}
-#' and \code{\link{run_pmodel_onestep_f_bysite}} for a detailed
+#' Example output dataset from a p-model run using \code{\link{p_model_drivers}}
+#' See \code{\link{run_pmodel_f_bysite}} for a detailed 
 #' description of the outputs.
-"pmodel_output"
+"p_model_output"
+
+#' rsofun P-model output data (using vcmax25 drivers)
+#'
+#' Example output dataset from a p-model run using \code{\link{p_model_drivers_vcmax25}}
+#' See \code{\link{run_pmodel_f_bysite}} for a detailed 
+#' description of the outputs.
+"p_model_output_vcmax25"
 
 #' rsofun BiomeE driver data (Leuning photosynthesis model)
-#'
+#' 
 #' Example driver to run the BiomeE-model at the CH-LAE site
 #' using the Leuning photosynthesis specification (and half-hourly time step)
-#' It can also be used together with leaf trait data from CH-LAE (\code{\link{biomee_validation}})
+#' It can also be used together with leaf trait data from CH-LAE (\code{\link{biomee_validation}}) 
 #' to optimize model parameters.
 #'
 #' @format A tibble of driver data.
@@ -351,10 +356,10 @@
 "biomee_gs_leuning_drivers"
 
 #' rsofun BiomeE driver data (P-model photosynthesis model)
-#'
+#' 
 #' Example driver data to run the BiomeE-model at the CH-LAE site
 #' using the P-model photosynthesis specification (and daily time step).
-#' It can also be used together with leaf trait data from CH-LAE (\code{\link{biomee_validation}})
+#' It can also be used together with leaf trait data from CH-LAE (\code{\link{biomee_validation}}) 
 #' to optimize model parameters.
 #'
 #' @format See \code{\link{biomee_gs_leuning_drivers}}
@@ -376,7 +381,7 @@
 #' rsofun BiomeE targets validation data
 #'
 #' Small example dataset of target observations (leaf trait data) at the CH-LAE site
-#' to optimize model parameters with the function \code{\link{calib_sofun_legacy}}
+#' to optimize model parameters with the function \code{\link{calib_sofun}}
 #'
 #' @format A tibble of validation data:
 #' \describe{

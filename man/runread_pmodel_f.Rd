@@ -8,16 +8,12 @@ runread_pmodel_f(drivers, par, makecheck = TRUE, parallel = FALSE, ncores = 1)
 }
 \arguments{
 \item{drivers}{A nested data frame with one row for each site and columns
-\code{sitename} and further columns
-\code{params_siml, site_info} and \code{forcing}. (\code{params_siml} contains
-the information whether or not to run the onestep or daily model through
-\code{TRUE/FALSE} in column \code{onestep}. It also contains parameters
-\code{lc4} in the case of \code{onestep==TRUE} and those for function
-\code{\link{run_pmodel_f_bysite}} in the case of \code{onestep==FALSE}.)}
+named according to the arguments of function \code{\link{runread_pmodel_f}}.
+Namely \code{sitename, params_siml, site_info} and \code{forcing}.}
 
 \item{par}{A named list of free (calibratable) model parameters.
 \describe{
-  \item{kphio}{The quantum yield efficiency at optimal temperature \eqn{\varphi_0},
+  \item{kphio}{The quantum yield efficiency at optimal temperature \eqn{\varphi_0}, 
    in mol mol\eqn{^{-1}}.
    When temperature dependence is used, it corresponds to the multiplicative
    parameter \eqn{c} (see Details).}
@@ -26,43 +22,43 @@ the information whether or not to run the onestep or daily model through
    To disable the temperature dependence, set \code{kphio_par_a = 0}.}
   \item{kphio_par_b}{The optimal temperature parameter \eqn{b} of the temperature
    dependent quantum yield efficiency (see Details), in \eqn{^o}C.}
-  \item{soilm_thetastar}{The threshold parameter \eqn{\theta^{*}} in the
+  \item{soilm_thetastar}{The threshold parameter \eqn{\theta^{*}} in the 
    soil moisture stress function (see Details), given in mm.
    To turn off the soil moisture stress, set \code{soilm_thetastar = 0}.}
   \item{soilm_betao}{The intercept parameter \eqn{\beta_{0}} in the
-   soil moisture stress function (see Details). This is the parameter calibrated
+   soil moisture stress function (see Details). This is the parameter calibrated 
    in Stocker et al. 2020 GMD.}
   \item{beta_unitcostratio}{The unit cost of carboxylation, corresponding to
    \eqn{\beta = b / a'} in Eq. 3 of Stocker et al. 2020 GMD.}
   \item{rd_to_vcmax}{Ratio of Rdark (dark respiration) to Vcmax25.}
   \item{tau_acclim}{Acclimation time scale of photosynthesis, in days.}
   \item{kc_jmax}{Parameter for Jmax cost ratio (corresponding to c\eqn{^*} in
-  Stocker et al. 2020 GMD).}
+  Stocker et al. 2020 GMD).} 
 }}
 
-\item{makecheck}{A logical specifying whether checks are performed
+\item{makecheck}{A logical specifying whether checks are performed 
 to verify forcings and model parameters. \code{TRUE} by default.}
 
 \item{parallel}{A logical specifying whether simulations are to be
 parallelised (sending data from a certain number of sites to each core).
-Defaults to \code{FALSE}. (Not applied to rows where \code{onestep==TRUE}.)}
+Defaults to \code{FALSE}.}
 
 \item{ncores}{An integer specifying the number of cores used for parallel
 computing (by default \code{ncores = 2}).}
 }
 \value{
-A data frame (tibble) with one row for each site, site information
-stored in the nested column \code{site_info} and outputs stored in the nested
-column \code{data}. See \code{\link{run_pmodel_f_bysite}} and
-\code{\link{run_pmodel_onestep_f_bysite}} for a detailed
-description of the outputs.
-Example outputs are provided as \code{\link{pmodel_output}}.
+A data frame (tibble) with one row for each site, site information 
+stored in the nested column \code{site_info} and outputs stored in the nested 
+column \code{data}. See \code{\link{run_pmodel_f_bysite}} for a detailed 
+description of the outputs. 
+Example outputs are provided as \code{\link{biomee_p_model_output}} and
+\code{\link{biomee_gs_leuning_output}}.
 }
 \description{
 Runs P-model for multiple sites.
 }
 \details{
-Depending on the input model parameters, it's possible to run the
+Depending on the input model parameters, it's possible to run the 
 different P-model setups presented in Stocker et al. 2020 GMD. The P-model
 version implemented in this package allows more flexibility than the one
 presented in the paper, with the following functions:
@@ -73,26 +69,26 @@ The temperature dependence of the quantum yield efficiency is given by: \cr
 \eqn{\varphi_0 (T) = 1 } if \eqn{ c (1 + a (T - b)^2 ) \geq 1}. \cr
 The ORG setup can be reproduced by setting \code{kphio_par_a = 0}
 and calibrating the \code{kphio} parameter only.
-The BRC setup (which calibrates \eqn{c_L = \frac{a_L b_L}{4}} in Eq. 18) is more difficult to reproduce,
+The BRC setup (which calibrates \eqn{c_L = \frac{a_L b_L}{4}} in Eq. 18) is more difficult to reproduce, 
 since the temperature-dependency has been reformulated and a custom cost
 function would be necessary for calibration. The new parameters
 are related to \eqn{c_L} as follows: \cr
 \eqn{a = -0.0004919819} \cr
 \eqn{b = 32.35294} \cr
-\eqn{c = 0.6910823 c_L}
+\eqn{c = 0.6910823 c_L} 
 
 The soil moisture stress is implemented as \cr
-\eqn{\beta(\theta) = \frac{\beta_0 - 1}{{\theta^{*}}^2}
-   (\theta - \theta^{*})^2 + 1 } if
+\eqn{\beta(\theta) = \frac{\beta_0 - 1}{{\theta^{*}}^2} 
+   (\theta - \theta^{*})^2 + 1 } if 
    \eqn{ 0 \leq \theta \leq \theta^{*}} and \cr
 \eqn{\beta(\theta) = 1} if \eqn{ \theta > \theta^{*}}. \cr
 In Stocker et al. 2020 GMD, the threshold plant-available soil water is set as
-\eqn{\theta^{*}}
+\eqn{\theta^{*}} 
 \code{= 0.6 * whc} where \code{whc} is the site's water holding capacity. Also,
 the \eqn{\beta} reduction at low soil moisture (\eqn{\beta_0 = \beta(0)}) was parameterized
 as a linear function of mean aridity (Eq. 20 in Stocker et al. 2020 GMD) but is
-considered a constant model parameter in this package.
-Hence, the FULL calibration setup cannot be
+considered a constant model parameter in this package. 
+Hence, the FULL calibration setup cannot be 
 exactly replicated.
 }
 \examples{
@@ -111,9 +107,9 @@ params_modl <- list(
 
 # Run the model for these parameters and the example drivers
 output <- rsofun::runread_pmodel_f(
-  drivers = rsofun::pmodel_drivers,
+  drivers = rsofun::p_model_drivers,
   par = params_modl)
-output <- rsofun::runread_pmodel_f(
-  drivers = rsofun::pmodel_drivers,
-  par = params_modl, parallel = TRUE, ncores = 3)
+output_vcmax25 <- rsofun::runread_pmodel_f(
+  drivers = rsofun::p_model_drivers_vcmax25,
+  par = params_modl)
 }

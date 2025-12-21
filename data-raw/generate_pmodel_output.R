@@ -1,5 +1,5 @@
 #!/usr/bin/env Rscript
-devtools::load_all() # need to install rsofun package in case driver changed
+
 library(rsofun)
 
 # Define model parameter values from previous work
@@ -16,17 +16,18 @@ params_modl <- list(
 )
 
 # Run the model for these parameters and the example drivers
-# p_model_oldformat_output <- rsofun::runread_pmodel_f(
-#   drivers = rsofun::p_model_oldformat_drivers,
-#   par     = params_modl)
-#
-# save(p_model_oldformat_output,
-#      file ="data/p_model_oldformat_output.rda",
-#      compress = "xz")
-
-
-pmodel_output <- rsofun::runread_pmodel_f(
-  drivers = rsofun::pmodel_drivers,
+p_model_output <- rsofun::runread_pmodel_f(
+  drivers = rsofun::p_model_drivers,
   par     = params_modl)
-pmodel_output <- pmodel_output |> slice(c(1, 2, 4, 9, 10)) # reduce file size of pkg
-usethis::use_data(pmodel_output, overwrite = TRUE, compress = "xz")
+
+p_model_output_vcmax25 <- rsofun::runread_pmodel_f(
+  drivers = rsofun::p_model_drivers_vcmax25,
+  par = params_modl)
+
+save(p_model_output,
+     file ="data/p_model_output.rda",
+     compress = "xz")
+
+save(p_model_output_vcmax25,
+     file ="data/p_model_output_vcmax25.rda",
+     compress = "xz")

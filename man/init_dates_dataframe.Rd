@@ -39,7 +39,7 @@ by the dataframe. Defaults to 12.}
 \item{enddom}{An integer defining the end day-of-year of dates
 covered by the dataframe. Defaults to 31.}
 
-\item{noleap}{Whether leap years are ignored, that is, whether the 29\eqn{^{th}}
+\item{noleap}{Whether leap years are ignored, that is, whether the 29\eqn{^{th}} 
 of February is removed. Defaults to \code{FALSE}.}
 }
 \value{
@@ -47,8 +47,8 @@ A tibble with dates.
 }
 \description{
 Creates a tibble with rows for each date from \code{'yrstart'} to \code{'yrend'}
-in \code{'yyyy-mm-dd'} format. Intervals of dates are specified by argument
-\code{'freq'}.
+in \code{'yyyy-mm-dd'} format. Intervals of dates are specified by argument 
+\code{'freq'}. 
  ddf <- init_dates_dataframe(2000, 2003, startmoy=1, startdoy=1,
                              freq="days", endmoy=12, enddom=31, noleap=FALSE)
 }

@@ -29,19 +29,18 @@ Cost function for parameter calibration, which computes the root mean squared
 error (RMSE) between BiomeE simulations (using the input set of parameters)
 and observed target variables.
 Cost function for parameter calibration, which
-computes the RMSE for the biomee model fitting target variables
+computes the RMSE for the biomee model fitting target variables 
 \code{'GPP','LAI','Density'} and \code{'Biomass'} for a given set of parameters.
 }
 \examples{
-\donttest{
-# do not run long-running simulations
+\donttest{ # do not run long-running simulations
 # Compute RMSE for a set of
 # model parameter values
 # and example data
 cost_rmse_biomee(
-  par = c(3.5, 3.5, 1, 1),
-  obs = biomee_validation,
-  drivers = biomee_p_model_drivers
+ par = c(3.5, 3.5, 1, 1),
+ obs = biomee_validation,
+ drivers = biomee_p_model_drivers
 )
 }
 }

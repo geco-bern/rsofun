@@ -10,5 +10,4 @@ articles:
       - biomee_luluc
       - data_format
       - new_cost_function
-      - param_calib_multitarget
       - sensitivity_analysis

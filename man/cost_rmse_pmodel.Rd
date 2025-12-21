@@ -8,9 +8,11 @@ cost_rmse_pmodel(
   par,
   obs,
   drivers,
-  targets = NULL,
+  targets,
   par_fixed = NULL,
-  target_weights = NULL
+  target_weights = NULL,
+  parallel = FALSE,
+  ncores = 2
 )
 }
 \arguments{
@@ -18,16 +20,16 @@ cost_rmse_pmodel(
 those described in \code{\link{runread_pmodel_f}}, in order).}
 
 \item{obs}{A nested data.frame of observations, with columns \code{'sitename'}
-and \code{'data'} (see \code{\link{pmodel_validation}} to check its structure).}
+and \code{'data'} (see \code{\link{p_model_validation}} or \code{\link{p_model_validation_vcmax25}}
+to check their structure).}
 
-\item{drivers}{A nested data.frame of driver data. See \code{\link{pmodel_drivers}}
+\item{drivers}{A nested data.frame of driver data. See \code{\link{p_model_drivers}}
 for a description of the data structure.}
 
-\item{targets}{(obsolete) A character vector indicating the target variables for which the
-optimization will be done and the RMSE computed. This string must be a column
-name of the \code{obs$data} data.frame belonging to the validation nested data.frame
-(for example 'gpp'). Now defaults to \code{NULL}, and use of a corresponding
-column \code{'targets'} in \code{obs} should be used instead.}
+\item{targets}{A character vector indicating the target variables for which the
+optimization will be done and the RMSE computed. This string must be a column 
+name of the \code{data} data.frame belonging to the validation nested data.frame 
+(for example 'gpp').}
 
 \item{par_fixed}{A named list of model parameter values to keep fixed during the
 calibration. These should complement the input \code{par} such that all model
@@ -37,6 +39,13 @@ parameters are passed on to \code{\link{runread_pmodel_f}}.}
 the RMSE if using several targets. By default (\code{target_weights = NULL})
 the RMSE is computed separately for each target and then averaged. The provided
 weights are used to compute a weighted average of RMSE across targets.}
+
+\item{parallel}{A logical specifying whether simulations are to be parallelised
+(sending data from a certain number of sites to each core). Defaults to
+\code{FALSE}.}
+
+\item{ncores}{An integer specifying the number of cores used for parallel
+computing. Defaults to 2.}
 }
 \value{
 The root mean squared error (RMSE) between observed values and P-model
@@ -51,15 +60,15 @@ the root mean squared error (RMSE).
 \details{
 To run the P-model, all model parameters must be given. The cost
 function uses arguments \code{par} and \code{par_fixed} such that, in the
-calibration routine, \code{par} can be updated by the optimizer and
+calibration routine, \code{par} can be updated by the optimizer and 
 \code{par_fixed} are kept unchanged throughout calibration.
-
+  
 If the validation data contains a "date" column (fluxes), the simulated target time series
-is compared to the observed values on those same dates (e.g. for GPP). Otherwise,
-there should only be one observed value per site (leaf traits), and the outputs
-(averaged over the growing season, weighted by predicted GPP) will be
+is compared to the observed values on those same dates (e.g. for GPP). Otherwise, 
+there should only be one observed value per site (leaf traits), and the outputs 
+(averaged over the growing season, weighted by predicted GPP) will be 
 compared to this single value representative of the site (e.g. Vcmax25). As an exception,
-when the date of a trait measurement is available, it will be compared to the
+when the date of a trait measurement is available, it will be compared to the 
 trait value predicted on that date.
 }
 \examples{
@@ -67,30 +76,17 @@ trait value predicted on that date.
 # of model parameter values
 # and example data
 cost_rmse_pmodel(
-  par = c(0.05, -0.01, 0.5),  # kphio related parameters
-  obs = pmodel_validation |> dplyr::filter(sitename == "FR-Pue"),
-  drivers = pmodel_drivers |> dplyr::filter(sitename == "FR-Pue"),
-  par_fixed = list(
-    soilm_thetastar    = 0.6 * 240,  # old setup with soil moisture stress
-    soilm_betao        = 0.0,
-    beta_unitcostratio = 146.0,
-    rd_to_vcmax        = 0.014,      # from Atkin et al. 2015 for C3 herbaceous
-    tau_acclim         = 30.0,
-    kc_jmax            = 0.41
-  )
-)
-
-cost_rmse_pmodel(
-  par = c(0.05, -0.01, 0.5),  # kphio related parameters
-  obs = pmodel_validation,
-  drivers = pmodel_drivers,
-  par_fixed = list(
-    soilm_thetastar    = 0.6 * 240,  # old setup with soil moisture stress
-    soilm_betao        = 0.0,
-    beta_unitcostratio = 146.0,
-    rd_to_vcmax        = 0.014,      # from Atkin et al. 2015 for C3 herbaceous
-    tau_acclim         = 30.0,
-    kc_jmax            = 0.41
-  )
+ par = c(0.05, -0.01, 0.5),  # kphio related parameters
+ obs = p_model_validation,
+ drivers = p_model_drivers,
+ targets = c('gpp'),
+ par_fixed = list(
+  soilm_thetastar    = 0.6 * 240,  # old setup with soil moisture stress
+  soilm_betao        = 0.0,
+  beta_unitcostratio = 146.0,
+  rd_to_vcmax        = 0.014,      # from Atkin et al. 2015 for C3 herbaceous
+  tau_acclim         = 30.0,
+  kc_jmax            = 0.41
+ )
 )
 }

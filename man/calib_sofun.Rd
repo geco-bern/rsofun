@@ -2,35 +2,27 @@
 % Please edit documentation in R/calib_sofun.R
 \name{calib_sofun}
 \alias{calib_sofun}
-\title{Calibrates SOFUN model parameters (for parallelized applications)}
+\title{Calibrates SOFUN model parameters}
 \usage{
-calib_sofun(
-  drivers,
-  obs,
-  settings_calib,
-  optim_out = TRUE,
-  logpath = file.path(tempdir(), paste0("out_calib_", "my_calibration_name",
-    ".rds.log.txt")),
-  ...
-)
+calib_sofun(drivers, obs, settings, optim_out = TRUE, ...)
 }
 \arguments{
-\item{drivers}{A data frame with driver data. See \code{\link{pmodel_drivers}}
-for a description of the data structure. Additional columns can optionally be
-provided to \code{drivers} to control e.g. the processing within a
+\item{drivers}{A data frame with driver data. See \code{\link{p_model_drivers}}
+for a description of the data structure. Additional columns can optionally be 
+provided to \code{drivers} to control e.g. the processing within a 
 personalized cost function.}
 
 \item{obs}{A data frame containing observational data used for model
-calibration. See \code{\link{pmodel_validation}} for a description of the data
-structure. Additional columns can optionally be provided to \code{obs} to
+calibration. See \code{\link{p_model_validation}} for a description of the data
+structure. Additional columns can optionally be provided to \code{obs} to 
 control e.g. the processing within a personalized cost function.}
 
-\item{settings_calib}{A list containing model calibration settings.
+\item{settings}{A list containing model calibration settings. 
 See the 'P-model usage' vignette for more information and examples.
 \describe{
  \item{\code{method}}{A string indicating the optimization method, either \code{'GenSA'}
  or \code{'BayesianTools'}.}
- \item{\code{par}}{A list of model parameters. For each parameter, an initial value
+ \item{\code{par}}{A list of model parameters. For each parameter, an initial value 
  and lower and upper bounds should be provided. The calibratable parameters
  include model parameters 'kphio', 'kphio_par_a', 'kphio_par_b', 'soilm_thetastar',
  'soilm_betao', 'beta_costunitratio', 'rd_to_vcmax', 'tau_acclim', 'kc_jmax'
@@ -43,122 +35,64 @@ See the 'P-model usage' vignette for more information and examples.
  calibration' vignette for examples.}
  \item{\code{control}}{A list of arguments passed on to the optimization function.
  If \code{method = 'GenSA'}, see \link[GenSA]{GenSA}. If \code{method = 'BayesianTools'}
- the list should include at least \code{sampler_runMCMC} and \code{settings_runMCMC},
- see \link[BayesianTools:runMCMC]{BayesianTools::runMCMC}.
- For \code{method = 'BayesianTools'}, \code{n_parallel_nrChains} can optionally be
- used to specify the number of cores to be used for parallel sampling of chains.
- (If >=2 it overwrites \code{settings_runMCMC$nrChains.}, if 0 or 1 parallel 
- sampling is deactivated.}
+ the list should include at least \code{settings} and \code{sampler}, see
+ \link[BayesianTools:runMCMC]{BayesianTools::runMCMC}.}
 }}
 
-\item{optim_out}{A logical indicating whether the function returns and stores
-the raw output of the optimization functions (defaults to TRUE).}
-
-\item{logpath}{A path where a log-file is created and progress logged for
-parallel sampling, defaults to a temporary directory. The path is stored in
-the output object as simulation `name` and `logpath`. (Note that this argument
-is only used when parallelized sampling is requested.)}
+\item{optim_out}{A logical indicating whether the function returns the raw
+output of the optimization functions (defaults to TRUE).}
 
 \item{...}{Optional arguments, simply passed on to the cost function.}
 }
 \value{
-A named list containing the calibrated parameter vector `par`,
-the output object from the optimization `mod`, and additional identifier
-outputs `name`, `logpath`, and `walltime`. For more details on the `mod`
+A named list containing the calibrated parameter vector `par` and
+the output object from the optimization `mod`. For more details on this
 output and how to evaluate it, see \link[BayesianTools:runMCMC]{runMCMC} (also
 \href{https://florianhartig.github.io/BayesianTools/articles/BayesianTools.html}{this post})
-and \link[GenSA]{GenSA}. If parallel (`n_parallel_nrChains >= 2`) also a 
-logfile is created at `logpath`.
+and \link[GenSA]{GenSA}.
 }
 \description{
-Runs the requested model calibration and returns results
-}
-\details{
-This is the main function that handles the
+This is the main function that handles the 
 calibration of SOFUN model parameters.
 }
 \examples{
-# Calib 1: use Bayesian calibration approach with likelihood:
-# Define priors of model parameters that will be calibrated
-params_to_estimate <- list(
-  kphio           = list(lower = 0.02, upper = 0.15, init = 0.05),
-  err_gpp         = list(lower = 0.01, upper = 3, init = 0.8),
-  err_bigD13C     = list(lower = 0.5, upper = 4.0, init = 2.0)
-)
 # Fix model parameters that won't be calibrated
-params_fix       <- list(
+params_fix <- list(
   kphio_par_a        = 0,
-  kphio_par_b        = 25,
-  soilm_thetastar    = 0.6 * 240,
+  kphio_par_b        = 1.0,
+  soilm_thetastar    = 0.6*240,
   soilm_betao        = 0.01,
   beta_unitcostratio = 146,
   rd_to_vcmax        = 0.014,
   tau_acclim         = 30,
   kc_jmax            = 0.41
 )
-# Define calibration settings
-settings_calib <- list(
-  method  = "BayesianTools",
-  par     = params_to_estimate,
-  metric  = rsofun::cost_likelihood_pmodel,
-  control = list(
-    sampler_runMCMC = "DEzs",
-    settings_runMCMC = list(
-      burnin = 0,
-      iterations = 10,     # kept artificially low
-      nrChains = 1         # 2, # these are the independent chains
-    ),
-    n_parallel_nrChains = 1  # 2, this can be parallelized
-  )
-)
-# Run the calibration for GPP and D13C data
-drivers_to_use <- rsofun::pmodel_drivers    |>
-  dplyr::filter(sitename \%in\% c("FR-Pue", "lon_+146.13_lat_-032.97"))
-obs_to_use     <- rsofun::pmodel_validation |>
-  dplyr::filter(sitename \%in\% c("FR-Pue", "lon_+146.13_lat_-032.97"))
-calib_output <- rsofun::calib_sofun(
-  drivers = drivers_to_use,
-  obs     = obs_to_use,
-  settings_calib = settings_calib,
-  # extra arguments for the cost function
-  par_fixed = params_fix
-)
-calib_output$mod      # BayesianTools::mcmcSamplerList
-calib_output$par      # Named vector
-calib_output$walltime # Benchmarked time
-calib_output$runtime  # unused
-calib_output$name     # optionally used calibration name
-calib_output$fpath    # path of rds output
 
-# Calib 2: use GenSa optimization of RMSE
-# Calibrate the model and optimize the free parameters using demo datasets
-settings_calib_rmse <- list(
-  method = "GenSA",                   # minimizes the RMSE
-  metric = cost_rmse_pmodel,          # our cost function returning the RMSE
-  control = list( # control parameters for optimizer GenSA
-    maxit = 2),
-  par = list( # bounds for the parameter space
-    kphio = list(lower = 0.02, upper = 0.2, init = 0.05)
+# Define calibration settings
+settings <- list(
+  method = "BayesianTools",
+  par = list(
+    kphio = list(lower=0.04, upper=0.09, init=0.05),
+    err_gpp = list(lower = 0.01, upper = 4, init = 2)
+  ),
+  metric = rsofun::cost_likelihood_pmodel,
+  control = list(
+    sampler = "DEzs",
+    settings = list(
+      nrChains = 1,
+      burnin = 0,        
+      iterations = 50     # kept artificially low
+    )
   )
-)
-drivers_to_use <- pmodel_drivers
-obs_to_use     <- pmodel_validation
-pars_calib_rmse <- calib_sofun(
-  # calib_sofun arguments:
-  drivers  = drivers_to_use,
-  obs      = obs_to_use,
-  settings_calib = settings_calib_rmse,
-  # extra arguments passed to the cost function:
-  par_fixed = list( # fix all other parameters
-    kphio_par_a        = 0.0,        # set to zero to disable temperature-dependence
-    # of kphio, setup ORG
-    kphio_par_b        = 1.0,
-    soilm_thetastar    = 0.6 * 240,  # to recover paper setup with soil moisture stress
-    soilm_betao        = 0.0,
-    beta_unitcostratio = 146.0,
-    rd_to_vcmax        = 0.014,      # value from Atkin et al. 2015 for C3 herbaceous
-    tau_acclim         = 30.0,
-    kc_jmax            = 0.41
-  )
-)
+ )
+ 
+ # Run the calibration for GPP data
+ calib_output <- rsofun::calib_sofun(
+   drivers = rsofun::p_model_drivers,
+   obs = rsofun::p_model_validation,
+   settings = settings,
+   # extra arguments for the cost function
+   par_fixed = params_fix,
+   targets = c("gpp")
+ )
 }

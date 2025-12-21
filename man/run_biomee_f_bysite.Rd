@@ -45,13 +45,13 @@ For further specifications of above inputs and examples see \code{\link{biomee_g
 \item{makecheck}{A logical specifying whether checks are performed to verify forcings and model parameters. \code{TRUE} by default.}
 }
 \value{
-A data.frame with columns containing model output for each land unit (LU).
-See examples \code{\link{biomee_gs_leuning_output}}, \code{\link{biomee_p_model_output}}, or \code{\link{biomee_p_model_luluc_output}}.
+A data.frame with columns containing model output for each land unit (LU). 
+See examples \code{\link{biomee_gs_leuning_output}}, \code{\link{biomee_p_model_output}}, or \code{\link{biomee_p_model_luluc_output}}. 
 If only one land unit (LU) is simulated, the column is named 'data'.
 If multiple land units (LU) are simulated, the columns are named according to the LU names.
-If multiple land units (LU) are simulated, an additional column 'aggregated' contains output aggregating all tiles as
+If multiple land units (LU) are simulated, an additional column 'aggregated' contains output aggregating all tiles as 
 well as product pools.
-Model output for each land unit (LU) is provided as a list.
+Model output for each land unit (LU) is provided as a list. 
 Each list has elements: \code{output_daily_tile}, \code{output_annual_tile}, and \code{output_annual_cohorts}.
 Model output for the aggregated land units (LU) is provided as a list containing \code{output_daily_cell}.
 \describe{
@@ -170,8 +170,8 @@ Model output for the aggregated land units (LU) is provided as a list containing
     \item{dDBH}{Diameter growth of a tree in this cohort (cm yr\eqn{^{-1}}).}
     \item{height}{Tree height (m).}
     \item{age}{Age of the cohort (years).}
-    \item{BA}{Basal area a tree in this cohort (m\eqn{^2} tree\eqn{^{-1}}).}
-    \item{dBA}{Basal area increment of a tree in this cohort (m\eqn{^2} tree\eqn{^{-1}} yr\eqn{^{-1}}).}
+    \item{BA}{Basal area a tree in this cohort (m\eqn{^2} tree\eqn{^{-1}}).}         
+    \item{dBA}{Basal area increment of a tree in this cohort (m\eqn{^2} tree\eqn{^{-1}} yr\eqn{^{-1}}).}         
     \item{Acrown}{Crown area of a tree in this cohort (m\eqn{^2} tree\eqn{^{-1}}).}
     \item{Aleaf}{Total area of leaves (m\eqn{^2} tree\eqn{^{-1}}).}
     \item{wood}{Sum of sapwood and heartwood biomass of a tree in this cohort (kg C tree\eqn{^{-1}}).}
@@ -198,13 +198,13 @@ Model output for the aggregated land units (LU) is provided as a list containing
   }}
 }
 If there are multiple land units (LU) there will also be a column named `aggregated` containing a data.frame in the column
-`output_annual_cell` with annual outputs aggregating all tiles present in the simulation cell. Note that quantities per m2 refer to
-m2 of grid cell area, i.e. the full area of the BiomeE simulation. 'lu_fraction' refers to the sum of all the tiles,
-which must remain constant and which represents the fraction of the cell area that is not water/ice.
+`output_annual_cell` with annual outputs aggregating all tiles present in the simulation cell. Note that quantities per m2 refer to 
+m2 of grid cell area, i.e. the full area of the BiomeE simulation. 'lu_fraction' refers to the sum of all the tiles, 
+which must remain constant and which represents the fraction of the cell area that is not water/ice. 
 In most cases, it would be close to 1. It contains columns:
 \describe{
-  \item{\code{output_annual_cell}}{A data.frame with annual outputs aggregating all tiles present in the simulation cell. Note that quantities per m\eqn{^{2}} refer to m\eqn{^{2}} of grid cell
-                                   area, i.e. the full area of the BiomeE simulation. 'lu_fraction' refers to the sum of all the tiles, which must remain constant and which represents the
+  \item{\code{output_annual_cell}}{A data.frame with annual outputs aggregating all tiles present in the simulation cell. Note that quantities per m\eqn{^{2}} refer to m\eqn{^{2}} of grid cell 
+                                   area, i.e. the full area of the BiomeE simulation. 'lu_fraction' refers to the sum of all the tiles, which must remain constant and which represents the 
                                    fraction of the cell area that is not water/ice. In most cases, it would be close to 1.
     \describe{
     \item{all columns from 'output_yearly_tile'}{See above for output_yearly_tile, but now expressed per unit area of the BiomeE grid cell.}
@@ -226,8 +226,7 @@ In most cases, it would be close to 1. It contains columns:
 Run BiomeE Fortran model on single site.
 }
 \examples{
-\donttest{
-# do not run long-running simulations
+\donttest{ # do not run long-running simulations
 # Example BiomeE model run
 
 # Use example drivers data
@@ -235,14 +234,14 @@ drivers <- biomee_p_model_drivers
 
 # Run BiomeE for the first site
 mod_output <- run_biomee_f_bysite(
-  sitename = drivers$sitename[1],
-  params_siml = drivers$params_siml[[1]],
-  site_info = drivers$site_info[[1]],
-  forcing = drivers$forcing[[1]],
-  params_tile = drivers$params_tile[[1]],
-  params_species = drivers$params_species[[1]],
-  init_cohort = drivers$init_cohort[[1]],
-  init_soil = drivers$init_soil[[1]]
+ sitename = drivers$sitename[1],
+ params_siml = drivers$params_siml[[1]],
+ site_info = drivers$site_info[[1]],
+ forcing = drivers$forcing[[1]],
+ params_tile = drivers$params_tile[[1]],
+ params_species = drivers$params_species[[1]],
+ init_cohort = drivers$init_cohort[[1]],
+ init_soil = drivers$init_soil[[1]]
 )
 }
 }

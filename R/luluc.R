@@ -25,14 +25,15 @@
 #'
 #' # Building the transition matrix
 #' build_luc_matrix(list(pattern1, pattern2), 2, 6)
+
 # 'patterns' must be a list
-build_luc_matrix <- function(patterns, n_lu, n_years, out = vector()) {
+build_luc_matrix <- function(patterns, n_lu, n_years, out=vector()) {
   # Convenience method to prep the transitions
   prep_pattern <- function(pattern) {
-    if (length(pattern) %% n_lu^2 != 0) {
-      stop(paste0("Error: transition patterns should be a multiple of the square of the number of LUs (", n_lu, "*", n_lu, "), but got ", length(pattern), "."))
+    if (length(pattern) %% n_lu ^ 2 != 0) {
+      stop(paste0('Error: transition patterns should be a multiple of the square of the number of LUs (', n_lu, '*', n_lu, '), but got ', length(pattern), '.'))
     }
-    length(pattern) <- n_years * n_lu^2
+    length(pattern) <- n_years * n_lu ^ 2
     pattern[is.na(pattern)] <- 0
     return(pattern)
   }
