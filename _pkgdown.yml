@@ -11,3 +11,5 @@ articles:
       - data_format
       - new_cost_function
       - sensitivity_analysis
+development:
+  mode: auto
