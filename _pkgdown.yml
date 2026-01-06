@@ -1,6 +1,6 @@
 url: https://geco-bern.github.io/rsofun/
 template:
-  bootstrap: 5
+  bootstrap: 3
   package: gecotemplate
   params:
    mathjax: true
