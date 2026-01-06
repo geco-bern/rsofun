@@ -1,0 +1,489 @@
+# Parameter calibration and cost functions
+
+The `rsofun` package allows to calibrate parameters of the `pmodel` and
+`biomee` models via the
+[`calib_sofun()`](https://geco-bern.github.io/rsofun/dev/reference/calib_sofun.md)
+function. The implementation of the calibration is fairly flexible and
+can be adapted to a specific use-case via a tailor-made cost function
+(used as metrics for the optimization routines in
+[`calib_sofun()`](https://geco-bern.github.io/rsofun/dev/reference/calib_sofun.md)).
+The package provides a set of standard cost functions named `cost_*`,
+which can be used for a variety of calibrations (different sets of model
+parameters, using various target variables, etc.). Alternatively, it’s
+possible to write a more specific new cost function to be used together
+with
+[`calib_sofun()`](https://geco-bern.github.io/rsofun/dev/reference/calib_sofun.md).
+
+In this vignette, we go over some examples on how to use the `rsofun`
+cost functions for parameter calibration with
+[`calib_sofun()`](https://geco-bern.github.io/rsofun/dev/reference/calib_sofun.md)
+and how to write your own custom one from scratch.
+
+### Calibration to GPP using RMSE and GenSA optimizer
+
+A simple approach to parameter calibration is to find the parameter
+values that lead to the best prediction performance, in terms of the
+RMSE (root mean squared error). The function
+[`cost_rmse_pmodel()`](https://geco-bern.github.io/rsofun/dev/reference/cost_rmse_pmodel.md)
+runs the P-model internally to calculate the RMSE between predicted
+target values (in this case GPP) and the corresponding observations.
+
+The implementations of
+[`cost_rmse_pmodel()`](https://geco-bern.github.io/rsofun/dev/reference/cost_rmse_pmodel.md)
+and
+[`calib_sofun()`](https://geco-bern.github.io/rsofun/dev/reference/calib_sofun.md)
+allows flexibility in various ways. We can simultaneously calibrate a
+subset of model parameters and also replicate the different calibration
+setups in Stocker et al., 2020 GMD, simply by providing the appropriate
+inputs as `settings`, `par_fixed` and `targets` to
+[`calib_sofun()`](https://geco-bern.github.io/rsofun/dev/reference/calib_sofun.md).
+Since the P-model is run internally to make predictions, we must always
+specify the values of the model parameters that aren’t calibrated (via
+argument `par_fixed`). For example, following the `ORG` setup, only
+parameter `kphio` is calibrated with below code:
+
+``` r
+# Define calibration settings and parameter ranges from previous work
+settings_rmse <- list(
+  method = 'GenSA',                   # minimizes the RMSE
+  metric = cost_rmse_pmodel,          # our cost function returning the RMSE
+  control = list(                     # control parameters for optimizer GenSA
+    maxit = 100),                     
+  par = list(                         # bounds for the parameter space
+    kphio = list(lower=0.02, upper=0.2, init=0.05)
+  )
+)
+
+# Calibrate the model and optimize the free parameters using
+# demo datasets
+pars_calib_rmse <- calib_sofun(
+  # calib_sofun arguments:
+  drivers = p_model_drivers,  
+  obs = p_model_validation,
+  settings = settings_rmse,
+  # extra arguments passed to the cost function:
+  par_fixed = list(         # fix all other parameters
+    kphio_par_a        = 0.0,        # set to zero to disable temperature-dependence 
+                                     # of kphio, setup ORG
+    kphio_par_b        = 1.0,
+    soilm_thetastar    = 0.6 * 240,  # to recover paper setup with soil moisture stress
+    soilm_betao        = 0.0,
+    beta_unitcostratio = 146.0,
+    rd_to_vcmax        = 0.014,      # value from Atkin et al. 2015 for C3 herbaceous
+    tau_acclim         = 30.0,
+    kc_jmax            = 0.41
+  ),
+  targets = "gpp"           # define target variable GPP
+)
+```
+
+``` r
+pars_calib_rmse
+#> $par
+#>      kphio 
+#> 0.03580938 
+#> 
+#> $mod
+#> $mod$value
+#> [1] 1.20014
+#> 
+#> $mod$par
+#>      kphio 
+#> 0.03580938 
+#> 
+#> $mod$trace.mat
+#>      nb.steps temperature function.value current.minimum
+#> [1,]        1        5230       4.241255         1.20014
+#> 
+#> $mod$counts
+#> [1] 286
+```
+
+The output of
+[`calib_sofun()`](https://geco-bern.github.io/rsofun/dev/reference/calib_sofun.md)
+is a list containing the calibrated parameter values (element `par`) and
+the raw optimization output from the optimizer (element `mod`; here from
+`GenSA` or, as we see next, from
+[`BayesianTools::runMCMC`](https://rdrr.io/pkg/BayesianTools/man/runMCMC.html)).
+
+Note that the standard cost functions allow to calibrate to several
+targets (fluxes and leaf traits predicted by the P-model) simultaneously
+and to parallelize the simulations.
+
+### Calibration to GPP using a simple likelihood function and BayesianTools
+
+Let’s calibrate the parameters involved in the temperature dependency of
+the quantum yield efficiency, `kphio`, `kphio_par_a` and `kphio_par_b`.
+Taking a Bayesian calibration approach, we need to define a likelihood
+as cost function (we’ll use
+[`cost_likelihood_pmodel()`](https://geco-bern.github.io/rsofun/dev/reference/cost_likelihood_pmodel.md)).
+We assume that the target variable (`'gpp'`) follows a normal
+distribution centered at the observations and with its *unknown*
+standard deviation (`'err_gpp'`), that we need to add to the
+calibratable parameters. We also assume a uniform prior distribution for
+all calibratable parameters. By maximizing the log-likelihood, the MAP
+(maximum a posteriori) estimators for all 4 parameters are computed.
+With the functions
+[`cost_likelihood_pmodel()`](https://geco-bern.github.io/rsofun/dev/reference/cost_likelihood_pmodel.md)
+and
+[`calib_sofun()`](https://geco-bern.github.io/rsofun/dev/reference/calib_sofun.md),
+we can easily perform this type of calibration:
+
+``` r
+# Define calibration settings
+settings_likelihood <- list(
+  method = 'BayesianTools',
+  metric = cost_likelihood_pmodel,            # our cost function
+  control = list(                             # optimization control settings for 
+    sampler = 'DEzs',                           # BayesianTools::runMCMC
+    settings = list(
+      burnin = 1500,
+      iterations = 3000
+    )),
+  par = list(
+    kphio = list(lower = 0, upper = 0.2, init = 0.05),
+    kphio_par_a = list(lower = -0.5, upper = 0.5, init = -0.1),
+    kphio_par_b = list(lower = 10, upper = 40, init =25),
+    err_gpp = list(lower = 0.1, upper = 4, init = 0.8)
+  )
+)
+
+# Calibrate the model and optimize the free parameters using
+# demo datasets
+pars_calib_likelihood <- calib_sofun(
+  # calib_sofun arguments:
+  drivers = p_model_drivers,
+  obs = p_model_validation,
+  settings = settings_likelihood,
+  # extra arguments passed ot the cost function:
+  par_fixed = list(         # fix all other parameters
+    soilm_thetastar    = 0.6 * 240,  # to recover paper setup with soil moisture stress
+    soilm_betao        = 0.0,
+    beta_unitcostratio = 146.0,
+    rd_to_vcmax        = 0.014,      # value from Atkin et al. 2015 for C3 herbaceous
+    tau_acclim         = 30.0,
+    kc_jmax            = 0.41
+  ),
+  targets = "gpp"
+)
+```
+
+``` r
+pars_calib_likelihood
+#> $par
+#>        kphio  kphio_par_a  kphio_par_b      err_gpp 
+#>  0.036462810 -0.001859453 14.614170205  1.209760614 
+#> 
+#> $mod
+#> [1] "mcmcSampler - you can use the following methods to summarize, plot or reduce this class:"
+#> [1] plot    print   summary
+#> see '?methods' for accessing help and source code
+```
+
+Furthermore, there are equivalent cost functions available for the
+BiomeE model. Check out the reference pages for more details on how to
+use
+[`cost_likelihood_biomee()`](https://geco-bern.github.io/rsofun/dev/reference/cost_likelihood_biomee.md)
+and
+[`cost_rmse_biomee()`](https://geco-bern.github.io/rsofun/dev/reference/cost_rmse_biomee.md).
+
+### Calibration to GPP and Vcmax25 using the joint log-likelihood and BayesianTools
+
+You may be interested in calibrating the model to different target
+variables simultaneously, like flux and leaf trait measurements. Here we
+present an example, where we use
+[`cost_likelihood_pmodel()`](https://geco-bern.github.io/rsofun/dev/reference/cost_likelihood_pmodel.md)
+to compute the joint likelihood of all the targets specified (that is,
+by summing the log-likelihoods of GPP and Vcmax25) and ultimately
+calibrate the `kc_jmax` parameter. It would be possible to follow this
+workflow for several-target calibration also with RMSE as the
+optimization metric, using
+[`cost_rmse_pmodel()`](https://geco-bern.github.io/rsofun/dev/reference/cost_rmse_pmodel.md)
+and `GenSA` optimization.
+
+``` r
+# Define calibration settings for two targets
+settings_joint_likelihood <- list(
+  method = "BayesianTools",
+  metric = cost_likelihood_pmodel,
+  control = list(
+    sampler = "DEzs",
+    settings = list(
+      burnin = 1500,             # kept artificially low
+      iterations = 3000
+    )),
+  par = list(kc_jmax = list(lower = 0.2, upper = 0.8, init = 0.41),  # uniform priors
+             err_gpp = list(lower = 0.001, upper = 4, init = 1),
+             err_vcmax25 = list(lower = 0.000001, upper = 0.0001, init = 0.00001))
+)
+
+# Run the calibration on the concatenated data
+par_calib_join <- calib_sofun(
+  drivers = rbind(p_model_drivers,
+                  p_model_drivers_vcmax25), 
+  obs = rbind(p_model_validation,
+              p_model_validation_vcmax25), 
+  
+  settings = settings_joint_likelihood,
+  # arguments for the cost function
+  par_fixed = list(         # fix parameter value from previous calibration
+    kphio              = 0.041,
+    kphio_par_a        = 0.0,
+    kphio_par_b        = 16,
+    soilm_thetastar    = 0.6 * 240,  # to recover paper setup with soil moisture stress
+    soilm_betao        = 0.0,
+    beta_unitcostratio = 146.0,
+    rd_to_vcmax        = 0.014,      # value from Atkin et al. 2015 for C3 herbaceous
+    tau_acclim         = 30.0
+  ),    
+  targets = c('gpp', 'vcmax25')
+)
+```
+
+``` r
+par_calib_join
+#> $par
+#>      kc_jmax      err_gpp  err_vcmax25 
+#> 4.824008e-01 1.189628e+00 3.289346e-05 
+#> 
+#> $mod
+#> [1] "mcmcSampler - you can use the following methods to summarize, plot or reduce this class:"
+#> [1] plot    print   summary
+#> see '?methods' for accessing help and source code
+```
+
+Note that GPP predictions are directly compared to GPP observations on
+that day, but Vcmax25 predicted by the P-model (being a leaf trait) is
+averaged over the growing season and compared to a single Vcmax25
+observation taken per site.
+
+The cost functions provided in the package tell apart fluxes and leaf
+traits by the presence of a `"date"` column in the nested validation
+data frames `p_model_validation` and `p_model_validation_vcmax25`.
+
+### Write your custom cost function
+
+If the RMSE or log-likelihood (for one or several targets) cost
+functions that we provide do not fit your use case, you can easily write
+a custom one. In this section, we drive you through the main ideas with
+an example. To run the calibration, you can still use
+[`calib_sofun()`](https://geco-bern.github.io/rsofun/dev/reference/calib_sofun.md)
+in combination with your custom cost function.
+
+The routine
+[`calib_sofun()`](https://geco-bern.github.io/rsofun/dev/reference/calib_sofun.md)
+requires `drivers`, `obs` and `settings` as mandatory arguments. These
+provide data.frames with driver and observational data, as well as
+settings for the calibration. The optional argument `optim_out` defines
+if the raw optimization output should be returned. All other (optional)
+arguments to
+[`calib_sofun()`](https://geco-bern.github.io/rsofun/dev/reference/calib_sofun.md)
+are passed through to the cost function (e.g. `par_fixed` in above
+example). They can be used freely inside of your custom cost function,
+e.g. to control the simulation setup or the processing. On top of these
+optional arguments, it is also possible to extend the `drivers` and
+`obs` data.frames with additional columns that can be used freely for
+fine-grained control within your custom cost function.
+
+All cost functions must take at least three arguments:
+
+- `par`: A named vector of calibratable model parameters. In each
+  iteration of the optimization, a new set of values of `par` is used to
+  run the model and compute the cost.
+
+- `obs`: A data frame of observations, against which to compare the
+  simulation results.
+
+- `drivers`: A data frame of driver data, used to run the simulations.
+
+- Additional optional arguments can be used, An example would be model
+  parameter values that should be fixed across simulations, etc.
+
+Below we’ll walk you through the definition of a custom cost function.
+In this example, we’ll calibrate the soil moisture stress parameters and
+use the mean absolute error (MAE) as custom cost function.
+
+Since we are calibrating the parameters based on model outputs, the cost
+function will eventually need to run the P-model and compare its output
+to observed validation data.
+
+To get started we suggest to write a dummy cost function and use it
+together with
+[`calib_sofun()`](https://geco-bern.github.io/rsofun/dev/reference/calib_sofun.md)
+as shown below. Note that one way of developing the cost function would
+be to use a [`browser()`](https://rdrr.io/r/base/browser.html) statement
+during the development. It allows you to explore the variables that you
+have access to from within the cost function.
+
+``` r
+# Define the custom cost function to be used
+cost_mae <- function(par, obs, drivers, my_own_message){
+  # Your code
+  browser() # can facilitate the development, remove afterwards
+}
+
+# Define calibration settings and parameter ranges
+settings_mae <- list(
+  method = 'GenSA',
+  metric = cost_mae, # directly uses the custom cost function
+  control = list(
+    maxit = 100
+  ),
+  par = list(
+    soilm_thetastar = list(lower=0.0, upper=3000, init=0.6*240),
+    soilm_betao = list(lower=0, upper=1, init=0.2)
+  )
+)
+
+# Calibrate the model and optimize the free parameters
+pars_calib_mae <- calib_sofun(
+  drivers = p_model_drivers,
+  obs = p_model_validation,
+  settings = settings_mae,
+  # optional arguments if needed in the cost function
+  my_own_message = "Hi from inside the cost_mae function."
+)
+```
+
+During the optimization procedure, the cost function receives as
+argument a suggestion of the parameters `par`. This might be just a
+subset of all needed parameters (defined via `settings$par`). Thus to
+call
+[`runread_pmodel_f()`](https://geco-bern.github.io/rsofun/dev/reference/runread_pmodel_f.md)
+within the cost function, a full set of model parameters is needed.
+Here, we’ll hardcode the parameters that aren’t being calibrated inside
+the cost function. (Note, that in above examples they were passed as an
+additional argument `par_fixed`).
+
+``` r
+cost_mae <- function(par, obs, drivers, my_own_message){
+  
+  # Set values for the list of calibrated and non-calibrated model parameters
+  params_modl <- list(
+    kphio              = 0.09423773,
+    kphio_par_a        = 0.0,
+    kphio_par_b        = 25,
+    soilm_thetastar    = par[["soilm_thetastar"]],
+    soilm_betao        = par[["soilm_betao"]],
+    beta_unitcostratio = 146.0,
+    rd_to_vcmax        = 0.014,
+    tau_acclim         = 30.0,
+    kc_jmax            = 0.41
+  )
+  
+  # Run the model
+  df <- runread_pmodel_f(
+    drivers,
+    par = params_modl,
+    makecheck = TRUE,
+    parallel = FALSE
+  )
+  
+  # Your code to compute the cost
+  print(my_own_message) # useless, but showcases how to use additional arguments
+  browser() # can facilitate the development, remove afterwards
+}
+```
+
+The following chunk defines the final function. We clean the
+observations and model output and align the data according to site and
+date, to compute the mean absolute error (MAE) on GPP. Finally, the
+function should return a scalar value, in this case the MAE, which we
+want to minimize. Keep in mind that the GenSA optimization will minimize
+the cost, but with the BayesianTools method the cost (i.e. the
+likelihood) is always maximized.
+
+``` r
+cost_mae <- function(par, obs, drivers){
+
+  # Set values for the list of calibrated and non-calibrated model parameters
+  params_modl <- list(
+    kphio              = 0.09423773,
+    kphio_par_a        = 0.0,
+    kphio_par_b        = 25,
+    soilm_thetastar    = par[["soilm_thetastar"]],
+    soilm_betao        = par[["soilm_betao"]],
+    beta_unitcostratio = 146.0,
+    rd_to_vcmax        = 0.014,
+    tau_acclim         = 30.0,
+    kc_jmax            = 0.41
+  ) # Set values for the list of calibrated and non-calibrated model parameters
+  
+  
+  # Run the model
+  df <- runread_pmodel_f(
+    drivers = drivers,
+    par = params_modl,
+    makecheck = FALSE,
+    parallel = FALSE
+  )
+  
+  # Clean model output to compute cost
+  df <- df %>%
+    dplyr::select(sitename, data) %>%
+    tidyr::unnest(data)
+    
+  # Clean validation data to compute cost
+  obs <- obs %>%
+    dplyr::select(sitename, data) %>%
+    tidyr::unnest(data) %>%
+    dplyr::rename('gpp_obs' = 'gpp') # rename for later
+    
+  # Left join model output with observations by site and date
+  df <- dplyr::left_join(df, obs, by = c('sitename', 'date'))
+  
+  # Compute mean absolute error
+  cost <- mean(abs(df$gpp - df$gpp_obs), na.rm = TRUE)
+  
+  # Return the computed cost
+  return(cost)
+  # browser() # can facilitate the development, remove afterwards
+}
+```
+
+As a last step, let’s verify that the calibration procedure runs using
+this cost function.
+
+``` r
+# Define calibration settings and parameter ranges
+settings_mae <- list(
+  method = 'GenSA',
+  metric = cost_mae, # our cost function
+  control = list(
+    maxit = 100),
+  par = list(
+    soilm_thetastar = list(lower=0.0, upper=3000, init=0.6*240),
+    soilm_betao = list(lower=0, upper=1, init=0.2)
+  )
+)
+
+# Calibrate the model and optimize the free parameters
+pars_calib_mae <- calib_sofun(
+  drivers = p_model_drivers,
+  obs = p_model_validation,
+  settings = settings_mae
+)
+```
+
+``` r
+pars_calib_mae
+#> $par
+#> soilm_thetastar     soilm_betao 
+#>    2942.7566560       0.2649316 
+#> 
+#> $mod
+#> $mod$value
+#> [1] 1.072192
+#> 
+#> $mod$par
+#> soilm_thetastar     soilm_betao 
+#>    2942.7566560       0.2649316 
+#> 
+#> $mod$trace.mat
+#>      nb.steps temperature function.value current.minimum
+#> [1,]        1  5230.00000       3.918748        1.078549
+#> [2,]       37    30.00603       1.072921        1.072192
+#> 
+#> $mod$counts
+#> [1] 742
+```
