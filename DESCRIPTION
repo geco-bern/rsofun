@@ -90,3 +90,4 @@ Suggests:
 VignetteBuilder: knitr
 Encoding: UTF-8
 Config/testthat/edition: 3
+Config/Needs/website: geco-bern/GECO_documentation_template
