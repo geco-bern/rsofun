@@ -22,11 +22,11 @@
 <meta name="robots" content="noindex">
 <!-- Mathjax --><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.6/MathJax.js" async integrity="sha256-nlrDrBTHxJJlDDX22AS33xYI1OJHnGMDhiYMSe2U0e0=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.6/config/TeX-AMS-MML_HTMLorMML.js" async integrity="sha256-4zys9A4hMQmtq2EUL+JRoXc0NZi8jVJMzb8onewOaSQ=" crossorigin="anonymous"></script>
 </head>
-<body>
-    <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
+<body data-spy="scroll" data-target="#toc">
 
 
-    <div class="navbar navbar-default navbar-fixed-top" role="navigation">
+    <div class="container template-article">
+      <header><div class="navbar navbar-default navbar-fixed-top" role="navigation">
   <div class="container">
 
     <div class="navbar-header">
@@ -51,13 +51,21 @@
 
     <div id="navbar" class="navbar-collapse collapse">
       <ul class="nav navbar-nav navbar-right">
-<li class="nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
-<li class="active nav-item"><a class="nav-link" href="../articles/index.html">Articles</a></li>
-<li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
-        <li class="nav-item"><form class="form-inline" role="search">
- <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="../search.json">
-</form></li>
-<li class="nav-item"><a class="external-link nav-link" href="https://github.com/geco-bern/rsofun/" aria-label="GitHub"><span class="fa fab fa-github fa-lg"></span></a></li>
+<li>
+  <a href="../reference/index.html">Reference</a>
+</li>
+<li>
+  <a href="../articles/index.html">Articles</a>
+</li>
+<li>
+  <a href="../news/index.html">Changelog</a>
+</li>
+        <li>
+  <a href="https://github.com/geco-bern/rsofun/" class="external-link">
+    <span class="fab fa-github fa-lg"></span>
+
+  </a>
+</li>
       </ul>
 </div>
 <!--/.nav-collapse -->
@@ -66,21 +74,20 @@
 </div>
 <!--/.navbar -->
 
-    <div class="container template-article">
 
 
-
-
-<div class="row">
-  <main id="main" class="col-md-9"><div class="page-header">
-
-      <h1>Sensitivity analysis and calibration interpretation</h1>
+      </header><div class="row">
+  <div class="col-md-9 contents">
+    <div class="page-header toc-ignore">
+      <h1 data-toc-skip>Sensitivity analysis and calibration
+interpretation</h1>
                         <h4 data-toc-skip class="author">Josefa
 Arán</h4>
             
       
       <small class="dont-index">Source: <a href="https://github.com/geco-bern/rsofun/blob/master/vignettes/sensitivity_analysis.Rmd" class="external-link"><code>vignettes/sensitivity_analysis.Rmd</code></a></small>
-      <div class="d-none name"><code>sensitivity_analysis.Rmd</code></div>
+      <div class="hidden name"><code>sensitivity_analysis.Rmd</code></div>
+
     </div>
 
     
@@ -626,13 +633,17 @@ interval.</p>
 <!-- with standard deviation `err_gpp`. -->
 </div>
 </div>
-  </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
-    </nav></aside>
+  </div>
+
+  <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
+
+      </div>
+
 </div>
 
 
 
-    <footer><!-- begin footer --><div class="footer">
+      <footer><!-- begin footer --><div class="footer">
     <div class="container">
         <div class="row start bottom-8">
             <div class="col-xs-10">
@@ -671,8 +682,9 @@ interval.</p>
 </div>
 <!-- / end footer -->
 
-    </footer>
+      </footer>
 </div>
+
 
 
 
