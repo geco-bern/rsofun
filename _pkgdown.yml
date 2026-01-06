@@ -1,4 +1,6 @@
+url: https://geco-bern.github.io/rsofun/
 template:
+  bootstrap: 3
   package: gecotemplate
   params:
    mathjax: true
@@ -11,3 +13,5 @@ articles:
       - data_format
       - new_cost_function
       - sensitivity_analysis
+development:
+  mode: auto
