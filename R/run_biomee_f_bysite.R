@@ -200,11 +200,11 @@
 #' @useDynLib rsofun
 #'
 #' @examples
-#' \donttest{
+#' \donttest{ # do not run long-running simulations
 #' # Example BiomeE model run
 #' 
 #' # Use example drivers data
-#' drivers <- biomee_gs_leuning_drivers
+#' drivers <- biomee_p_model_drivers
 #' 
 #' # Run BiomeE for the first site
 #' mod_output <- run_biomee_f_bysite(

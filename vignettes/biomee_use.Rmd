@@ -55,7 +55,7 @@ biomee_gs_leuning_drivers$params_siml
 head(biomee_gs_leuning_drivers$forcing)
 ```
 
-```{r eval = TRUE}
+```{r eval = FALSE}
 set.seed(2023)
 
 # run the model
@@ -65,6 +65,16 @@ out <- runread_biomee_f(
      parallel = FALSE
      )
 
+```
+```{r eval = FALSE, include = FALSE}
+# store output since calibration isn't run
+saveRDS(out, "files/biomee_use.Rmd__out.RDS", compress = "xz")
+```
+```{r eval = TRUE, include = FALSE}
+# fake output since calibration isn't run
+out <- readRDS("files/biomee_use.Rmd__out.RDS")
+```
+```{r}
 # split out the annual data
 biomee_gs_leuning_output_annual_tile <- out$data[[1]]$output_annual_tile
 biomee_gs_leuning_output_annual_cohorts <- out$data[[1]]$output_annual_cohorts
@@ -102,17 +112,17 @@ head(biomee_p_model_drivers$forcing)
 
 ```{r eval = TRUE}
 # run the model
-out <- runread_biomee_f(
+out2 <- runread_biomee_f(
      biomee_p_model_drivers,
      makecheck = TRUE,
      parallel = FALSE
      )
-
-# split out the annual data for visuals
-biomee_p_model_output_annual_tile <- out$data[[1]]$output_annual_tile
-biomee_p_model_output_annual_cohorts <- out$data[[1]]$output_annual_cohorts
 ```
-
+```{r}
+# split out the annual data for visuals
+biomee_p_model_output_annual_tile <- out2$data[[1]]$output_annual_tile
+biomee_p_model_output_annual_cohorts <- out2$data[[1]]$output_annual_cohorts
+```
 ### Plotting output
 
 We can now visualize the model output.
@@ -177,10 +187,10 @@ pars <- pars_all["par"]
 # saveRDS(pars_all, "files/biomee_use.Rmd__biomee_p_model_output___pars.RDS")
 # pars <- readRDS("files/biomee_use.Rmd__biomee_p_model_output___pars.RDS")["par"]
 pars <- list(
-  par = c(phiRL     = 1.14732409800086,
-          LAI_light = 6.27111451155709,
-          tf_base   = 0.685873617014058,
-          par_mort  = 0.0889500145662122
+  par = c(phiRL     = 1.27705864862701, 
+          LAI_light = 5.62385280630643, 
+          tf_base   = 0.504099730241379, 
+          par_mort  = 0.0220552311561793
 ))
 ```
 

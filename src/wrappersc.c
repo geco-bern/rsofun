@@ -224,11 +224,11 @@ extern SEXP biomee_f_C(
 
     // Dimensions
     int pDims[4] = {50, nt_annual_trans, 35, n_lu};
-    SEXP dims = allocVector(INTSXP, 4);
+    SEXP dims = PROTECT( allocVector(INTSXP, 4) );
     // INTEGER(dims) is a int* which we initialise with pDims
     memcpy(INTEGER(dims), pDims, 4 * sizeof(int));
     // Allocate 4D array
-    SEXP output_annual_cohort_tile = PROTECT(allocArray(REALSXP, dims));
+    SEXP output_annual_cohort_tile = PROTECT( allocArray(REALSXP, dims) );
 
     SEXP output_annual_aggregated  = PROTECT( allocMatrix(REALSXP, nt_annual, 71) );
     /****************/
@@ -263,7 +263,7 @@ extern SEXP biomee_f_C(
     SET_VECTOR_ELT(out_list, 2, output_annual_cohort_tile);
     SET_VECTOR_ELT(out_list, 3, output_annual_aggregated);
 
-    UNPROTECT(5);
+    UNPROTECT(6);
 
     return out_list;
 }

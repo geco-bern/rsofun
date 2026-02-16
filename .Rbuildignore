@@ -19,7 +19,6 @@
 ^contact\.md$
 ^cran-comments\.md$
 ^review-notes\.md$
-
 # R Stuff
 ^.*\.Rproj$
 ^.*\.Renviron$
@@ -28,6 +27,6 @@
 ^.*-logo\..*$
 ^codemeta\.json$
 ^CRAN-SUBMISSION$
-
 # Debugging
 ^\.vscode$
+^CITATION\.cff$

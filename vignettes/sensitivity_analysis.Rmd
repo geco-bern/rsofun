@@ -162,7 +162,6 @@ morrisOut <- sensitivity::morris(
 ```
 
 ```{r simulate_morrisOut, include = FALSE}
-# TODO: get rid of this and always fully run the vignettes
 # fake output since Morris sensitivity isn't run
 # saveRDS(morrisOut, "files/sensitivity_analysis.Rmd__morrisOut.RDS")
 morrisOut <- readRDS("files/sensitivity_analysis.Rmd__morrisOut.RDS")

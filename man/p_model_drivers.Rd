@@ -16,8 +16,8 @@ A tibble of driver data:
       \item{vpd}{Daytime average vapour pressure deficit in Pa.}
       \item{ppfd}{Photosynthetic photon flux density (PPFD) in
       mol m\eqn{^{-2}} s\eqn{^{-1}}. If all values are NA, it indicates that
-      PPFD should be calculated by the SPLASH model.}
-      \item{netrad}{Net radiation in W m\eqn{^{-2}}. This is currently
+      PPFD should be calculated by the SPLASH model and column ccov.}
+      \item{netrad}{Net radiation in W m\eqn{^{-2}}. WARNING: This is currently
       ignored as a model forcing.}
       \item{patm}{Atmospheric pressure in Pa.}
       \item{snow}{Snow in water equivalents mm s\eqn{^{-1}}.}

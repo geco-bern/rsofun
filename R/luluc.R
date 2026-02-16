@@ -14,19 +14,17 @@
 #' @export
 #'
 #' @examples
-#' \donttest{
-#'   # Example of building a 6 year-long transition matix consisting of 6 times 2x2 matrices
+#' # Example of building a 6 year-long transition matix consisting of 6 times 2x2 matrices
 #'
-#'   # A one time transfer of 0.5 of the total cell fraction from LU 2 to LU 1
-#'   pattern1 <- c(0, 0, 0.5, 0)
-#'   # The null pattern (no transition)
-#'   null_pattern <- rep(0, 4)
-#'   # A repeated self-transition of 0.1 of the total cell fraction from LU 2 to LU 2 every other year
-#'   pattern2 <- rep(c(c(0, 0, 0, 0.1), null_pattern), 3)
+#' # A one time transfer of 0.5 of the total cell fraction from LU 2 to LU 1
+#' pattern1 <- c(0, 0, 0.5, 0)
+#' # The null pattern (no transition)
+#' null_pattern <- rep(0, 4)
+#' # A repeated self-transition of 0.1 of the total cell fraction from LU 2 to LU 2 every other year
+#' pattern2 <- rep(c(c(0, 0, 0, 0.1), null_pattern), 3)
 #'
-#'   # Building the transition matrix
-#'   build_luc_matrix(list(pattern1, pattern2), 2, 6)
-#' }
+#' # Building the transition matrix
+#' build_luc_matrix(list(pattern1, pattern2), 2, 6)
 
 # 'patterns' must be a list
 build_luc_matrix <- function(patterns, n_lu, n_years, out=vector()) {
