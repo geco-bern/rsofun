@@ -323,7 +323,7 @@ contains
       jmax = 0.0
       jmax25 = 0.0
     else
-      fact_jmaxlim = vcmax * (ci + 2.0 * gammastar) / (kphio * ppfd * (ci + kmm))
+        fact_jmaxlim = vcmax * (ci + 2.0 * gammastar) / (kphio * ppfd * (ci + kmm))
       ! print*,'fact_jmaxlim       ', fact_jmaxlim
       if (fact_jmaxlim >= 1 .or. fact_jmaxlim <= 0) then
         jmax = dummy
@@ -539,7 +539,7 @@ contains
     real :: xi                    ! relative cost parameter
     real :: gamma                 ! variable substitute
     real :: kappa                 ! variable substitute
-    real :: mc, mj=0, mjoc          ! ci-limitation factor Rubisco- and light-limited assimilation and their ratio, resp.
+    real :: mc, mj=0, mjoc        ! ci-limitation factor Rubisco- and light-limited assimilation and their ratio, resp.
 
     ! variable substitutes
     real :: vdcg, vacg, vbkg, vsr
