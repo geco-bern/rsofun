@@ -846,41 +846,41 @@ annual_tile_output <- function(raw_data, aggregated_LU = FALSE){
 
 annual_cohort_output <- function(raw_data){
   annual_values <- c(
-    "cohort",
-    "year",
-    "cID",
-    "PFT",
-    "layer",
-    "density",
-    "flayer",
-    "DBH",
-    "dDBH",
-    "height",
-    "age",
-    "BA",
-    "dBA",
-    "Acrown",
-    "Aleaf",
-    "NSC",
-    "seedC",
-    "leafC",
-    "rootC",
-    "sapwoodC",
-    "heartwoodC",
-    "NSN",
-    "treeG",
-    "fseed",
-    "fleaf",
-    "froot",
-    "fwood",
-    "NPP",
-    "GPP",
-    "Rauto",
-    "N_uptk",
-    "N_fxed",
-    "deathrate",
-    "n_deadtrees",
-    "c_deadtrees"
+    "cohort",      # ANNUAL_COHORTS_ID             =  1
+    "year",        # ANNUAL_COHORTS_YEAR           =  2
+    "cID",         # ANNUAL_COHORTS_CID            =  3
+    "PFT",         # ANNUAL_COHORTS_PFT            =  4
+    "layer",       # ANNUAL_COHORTS_LAYER          =  5
+    "density",     # ANNUAL_COHORTS_DENSITY        =  6
+    "flayer",      # ANNUAL_COHORTS_FLAYER         =  7
+    "DBH",         # ANNUAL_COHORTS_DBH            =  8
+    "dDBH",        # ANNUAL_COHORTS_DDBH           =  9
+    "height",      # ANNUAL_COHORTS_HEIGHT         = 10
+    "age",         # ANNUAL_COHORTS_AGE            = 11
+    "BA",          # ANNUAL_COHORTS_BA             = 12
+    "dBA",         # ANNUAL_COHORTS_DBA            = 13
+    "Acrown",      # ANNUAL_COHORTS_ACROWN         = 14
+    "Aleaf",       # ANNUAL_COHORTS_ALEAF          = 15
+    "NSC",         # ANNUAL_COHORTS_NCS            = 16
+    "seedC",       # NOTE: appears wrongly attributed: ANNUAL_COHORTS_NSN            = 17                                                         "NSN"
+    "leafC",       # NOTE: appears wrongly attributed: ANNUAL_COHORTS_SEED_C         = 18                                                         "seedC",        
+    "rootC",       # NOTE: appears wrongly attributed: ANNUAL_COHORTS_LEAF_C         = 19                                                         "leafC",       
+    "sapwoodC",    # NOTE: appears wrongly attributed: ANNUAL_COHORTS_ROOT_C         = 20                                                         "rootC",       
+    "heartwoodC",  # NOTE: appears wrongly attributed: ANNUAL_COHORTS_SW_C           = 21                                                         "sapwoodC",    
+    "NSN",         # NOTE: appears wrongly attributed: ANNUAL_COHORTS_HW_C           = 22 # TODO: check why "NSN" is down here. Shouldn't it be:  "heartwoodC", 
+    "treeG",       # ANNUAL_COHORTS_TREEG          = 23
+    "fseed",       # ANNUAL_COHORTS_FSEED          = 24
+    "fleaf",       # ANNUAL_COHORTS_FLEAF          = 25
+    "froot",       # ANNUAL_COHORTS_FROOT          = 26
+    "fwood",       # ANNUAL_COHORTS_FWOOD          = 27
+    "NPP",         # ANNUAL_COHORTS_NPP            = 28
+    "GPP",         # ANNUAL_COHORTS_GPP            = 29
+    "Rauto",       # ANNUAL_COHORTS_RESP           = 30
+    "N_uptk",      # ANNUAL_COHORTS_N_UPTK         = 31
+    "N_fxed",      # ANNUAL_COHORTS_N_FIX          = 32
+    "deathrate",   # ANNUAL_COHORTS_DEATHRATE      = 33
+    "n_deadtrees", # ANNUAL_COHORTS_N_LOSS         = 34
+    "c_deadtrees"  # ANNUAL_COHORTS_C_LOSS         = 35
   )
 
   dimensions <- dim(raw_data)
