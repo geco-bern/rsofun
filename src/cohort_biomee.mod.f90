@@ -373,8 +373,8 @@ contains
 
       sameSizeTree = (spdata(self%species)%lifeform > 0).and.  &
               (spdata(other%species)%lifeform > 0).and.  &
-              ((dbh_diff/(self_dbh + other_dbh) < 0.1 ) .or.  &
-                      (dbh_diff < 0.001))  ! it'll be always true for grasses
+              ((dbh_diff/(self_dbh + other_dbh) < 0.02 / 2 ) .or.  &            ! for TREES: if DBH difference <~ 2% (with 0.02 / 2)
+                      (dbh_diff < 0.001))  ! it'll be always true for grasses   ! for TREES: if DBH difference < 1mm
 
       sameSizeGrass= (spdata(self%species)%lifeform == 0) .and. &
               (spdata(other%species)%lifeform == 0) .and. &
