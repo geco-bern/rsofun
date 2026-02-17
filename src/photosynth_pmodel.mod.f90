@@ -127,6 +127,9 @@ contains
 
     type(outtype_chi) :: out_optchi
 
+    ! ! testing
+    ! real :: vcmax_gan, jmax_gan
+
     !-----------------------------------------------------------------------
     ! Calculate photosynthesis model parameters depending on temperature, pressure, and CO2.
     !-----------------------------------------------------------------------
@@ -230,6 +233,13 @@ contains
       vcmax = kphio * ppfd * out_optchi%mjoc * mprime / out_optchi%mj ! mol m-2 s-1
       !       (-)   * (mol m-2 s-1) *    (-) * (-)    / (-)
 
+      ! ! Test: agreement with Gan et al. formulation (their Eq. 16)
+      ! ! Yes, it is identical.
+      ! vcmax_gan = kphio * ppfd * (ci + kmm)/(ci + 2 * gammastar) * &
+      !   sqrt((1.0 - (kc_jmax * (ci + 2 * gammastar)/(ci - gammastar))**(2.0/3.0)))
+
+      ! print*,'vcmax, vcmax_gan ', vcmax, vcmax_gan
+
       ! xxx test
       ! print*,'out_optchi%mjoc : ', out_optchi%mjoc 
       ! print*,'mprime          : ', mprime
@@ -291,7 +301,7 @@ contains
     end if
 
     !-----------------------------------------------------------------------
-    ! Corrolary preditions (This is prelimirary!)
+    ! Corrolary preditions
     !-----------------------------------------------------------------------
     ! Vcmax25 (vcmax normalized to 25 deg C)
     ftemp_inst_vcmax  = calc_ftemp_inst_vcmax( tc, tc, tc_ref = 25.0 )
@@ -318,6 +328,11 @@ contains
       ftemp_inst_jmax  = calc_ftemp_inst_jmax(tc, tc, tc_home, tc_ref = 25.0 )
       jmax25  = jmax  / ftemp_inst_jmax
     end if
+
+    ! ! Test: agreement with Gan et al. formulation (their Eq. 17)
+    ! jmax_gan = 4.0 * kphio * ppfd / sqrt(1.0/(1.0 - (kc_jmax * (ci + 2.0 * gammastar)/(ci - gammastar))**(2.0/3.0)) - 1.0)
+    ! print*,'jmax, jmax_gan ', jmax, jmax_gan
+    ! ! Yes, it is identical.
 
     ! stomatal conductance to CO2, expressed per unit absorbed light
     if (c4) then
