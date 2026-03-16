@@ -74,7 +74,6 @@ params_tile <- tibble(
 
 params_species <- tibble(
   lifeform          = c(0, 1, 1, 1, 1),    # 0: grass; 1 Woody
-  phenotype         = c(0, 0, 1, 1, 1),    # 0: Deciduous; 1 Evergreen
   pt                = c(1, 0, 0, 0, 0),    # 0: C3; 1: C4
   # Root parameters
   alpha_FR          = rep(1.2, 5),
@@ -84,7 +83,6 @@ params_species <- tibble(
   Kw_root           = rep(3.5e-09, 5),
   leaf_size         = rep(0.04, 5),  ######### Unused
   # Photosynthesis parameters
-  Vmax              = rep(35.0E-6, 5),
   Vannual           = rep(1.2, 5),
   wet_leaf_dreg     = rep(0.3, 5),
   m_cond            = c(7.0, 7.0, 7.0, 7.0, 7.0), #
@@ -103,7 +101,6 @@ params_species <- tibble(
   thetaHT           = rep(0.5, 5),
   alphaCA           = rep(150, 5),
   thetaCA           = rep(1.5, 5),
-  alphaBM           = rep(5200, 5),
   thetaBM           = c(2.3, 2.36, 2.30, 2.54, 2.30),
   # Reproduction parameters
   seedlingsize      = rep(0.05, 5),                   # initial size of seedlings (s0_plant)
@@ -114,17 +111,14 @@ params_species <- tibble(
   mortrate_d_u      = c(4.0, 0.075, 0.075, 0.075, 0.075), # understory tree mortality rate, year-1 (A_sd)
   # Leaf parameters
   LMA               = c(0.02, 0.05, 0.17, 0.11, 0.1), # Leaf mass per unit area
-  leafLS            = rep(1, 5),
   LNbase            = c(1.2E-3, 0.8E-3, 0.8E-3, 0.8E-3, 0.8E-3), # kgN m-2 leaf, Vmax = 0.03125*LNbase
   CNleafsupport     = rep(80, 5),
   rho_wood          = c(150, 590, 370, 350, 300),     #
   taperfactor       = rep(0.75, 5),
-  lAImax            = rep(3.5, 5),                    # maximum crown LAI
   tauNSC            = rep(3, 5),
   fNSNmax           = rep(5, 5),
   phiCSA            = rep(0.25E-4, 5),                # ratio of Asap/Acrown
   # C/N ratios for plant pools
-  CNleaf0           = rep(25, 5),
   CNsw0             = rep(350, 5),
   CNwood0           = rep(350, 5),
   CNroot0           = rep(40, 5),

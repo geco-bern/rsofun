@@ -498,8 +498,9 @@ build_params_siml <- function(params_siml, forcing_years, makecheck){
 }
 
 build_params_species <- function(params_species){
-  # Ensure certain unused legacy parameters are provided as NA or NULL (not provided)
-  # and set them to NA. If any other value is received a warning is emitted.
+  # Ensure certain unused legacy parameters (if provided) are NA.
+  # If any other value is received an error is emitted.
+  # If not provided set them to NA.
   must_be_NA_or_missing <- c('phenotype','Vmax','alphaBM','leafLS','lAImax','CNleaf0')
   
   params_that_should_be_NA <- lapply(
@@ -514,7 +515,7 @@ build_params_species <- function(params_species){
     colnam <- colnames(params_that_should_be_NA)
     offending_species    <- paste0(unique(sort(offending[,'row'])), collapse = ", ") # species
     offending_parameters <- paste0(unique(colnam[offending[,'col']]), collapse = ", ") # parameter
-    warning(sprintf("Legacy parameters are unused and must be set to NA in 'params_species'.\nThis concerns parameters: (%s) and species (%s)",
+    stop(sprintf("Legacy parameters are unused and must be set to NA in 'params_species'.\nThis concerns parameters: (%s) and species (%s)",
                     offending_parameters, offending_species))
   }
   
@@ -689,7 +690,7 @@ prepare_params_tile <- function(params_tile){
 prepare_params_species <- function(params_species){
   params_species <- params_species %>% select(
     "lifeform",
-    "phenotype",
+    "phenotype", # NOTE: dummy parameter, must be NA
     "pt",
     "alpha_FR",
     "rho_FR",
@@ -697,7 +698,7 @@ prepare_params_species <- function(params_species){
     "root_zeta",
     "Kw_root",
     "leaf_size",
-    "Vmax",
+    "Vmax",  # NOTE: dummy parameter, must be NA
     "Vannual",
     "wet_leaf_dreg",
     "m_cond",
@@ -715,7 +716,7 @@ prepare_params_species <- function(params_species){
     "thetaHT",
     "alphaCA",
     "thetaCA",
-    "alphaBM",
+    "alphaBM",  # NOTE: dummy parameter, must be NA
     "thetaBM",
     "seedlingsize",
     "maturalage",
@@ -723,16 +724,16 @@ prepare_params_species <- function(params_species){
     "mortrate_d_c",
     "mortrate_d_u",
     "LMA",
-    "leafLS",
+    "leafLS",  # NOTE: dummy parameter, must be NA
     "LNbase",
     "CNleafsupport",
     "rho_wood",
     "taperfactor",
-    "lAImax",
+    "lAImax",  # NOTE: dummy parameter, must be NA
     "tauNSC",
     "fNSNmax",
     "phiCSA",
-    "CNleaf0",
+    "CNleaf0",  # NOTE: dummy parameter, must be NA
     "CNsw0",
     "CNwood0",
     "CNroot0",
