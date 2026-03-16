@@ -244,6 +244,8 @@ run_biomee_f_bysite <- function(
   # Add default parameters (backward compatibility layer)
   params_siml <- build_params_siml(params_siml, forcing_years, makecheck)
 
+  params_species <- build_params_species(params_species)
+  
   # Build LULUC parameters
   init_lu     <- build_init_lu(init_lu)
   luc_forcing <- build_luc_forcing(luc_forcing, nrow(init_lu))
@@ -493,6 +495,33 @@ build_params_siml <- function(params_siml, forcing_years, makecheck){
   }
 
   return(params_siml)
+}
+
+build_params_species <- function(params_species){
+  # Ensure certain unused legacy parameters are provided as NA or NULL (not provided)
+  # and set them to NA. If any other value is received a warning is emitted.
+  must_be_NA_or_missing <- c('phenotype','Vmax','alphaBM','leafLS','lAImax','CNleaf0')
+  
+  params_that_should_be_NA <- lapply(
+    seq_len(nrow(params_species)), 
+    function(it){
+      params_species[it,] |> dplyr::select(any_of(must_be_NA_or_missing))}
+    ) %>% bind_rows()
+  
+  if (any(!is.na(params_that_should_be_NA))){
+    offending <- which(!is.na(params_that_should_be_NA), arr.ind=TRUE, useNames = TRUE)
+    
+    colnam <- colnames(params_that_should_be_NA)
+    offending_species    <- paste0(unique(sort(offending[,'row'])), collapse = ", ") # species
+    offending_parameters <- paste0(unique(colnam[offending[,'col']]), collapse = ", ") # parameter
+    warning(sprintf("Legacy parameters are unused and must be set to NA in 'params_species'.\nThis concerns parameters: (%s) and species (%s)",
+                    offending_parameters, offending_species))
+  }
+  
+  # If parameters are missing add them as NA
+  params_species[, must_be_NA_or_missing] <- NA
+
+  return(params_species)
 }
 
 prepare_params_siml <- function(params_siml){

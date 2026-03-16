@@ -4,6 +4,10 @@
   `NSN`,`seedC`,`leafC`,`rootC`,`sapwoodC`,`heartwoodC`
   * Cohorts are now less aggressively merged. Merging criteria was simplified from
   relative to absolute DBH difference. Now merging if difference <= 0.01 m.
+  * Unused parameters in `params_species` for `run_biomee_f_bysite()` can now be omitted.
+  These legacy parameters are: `phenotype`,`Vmax`,`alphaBM`,`leafLS`,`lAImax`,`CNleaf0`.
+  They should now either be omitted or then set to NA. 
+  If these parameters are provided as non-NA a warning is emitted.
 
 # rsofun 5.1.0
 
