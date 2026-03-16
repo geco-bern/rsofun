@@ -1,4 +1,9 @@
 # rsofun (development version)
+* BiomeEP:
+  * Bugfix: annual, cohort-level output had mixed up column names for variables:
+  `NSN`,`seedC`,`leafC`,`rootC`,`sapwoodC`,`heartwoodC`
+  * Cohorts are now less aggressively merged. Merging criteria was simplified from
+  relative to absolute DBH difference. Now merging if difference <= 0.01 m.
 
 # rsofun 5.1.0
 

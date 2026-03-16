@@ -26,20 +26,12 @@ library("rsofun")
 To install the latest development release of the package run the following commands to install rsofun directly from GitHub:
 
 ``` r
-if(!require(remotes)){install.packages("remotes")}
-remotes::install_github("geco-bern/rsofun")
+if(!require(pak)){install.packages("pak")}
+pak::pak("geco-bern/rsofun")
 library("rsofun")
 ```
 
 **NOTE:** Installing from GitHub requires compilation of Fortran and C source code contained in {rsofun}. To enable compiling source code, install [Rtools](https://cran.r-project.org/bin/windows/Rtools/) on Windows, or [Xcode](https://developer.apple.com/xcode/) and the [GNU Fortran compiler on Mac](https://github.com/fxcoudert/gfortran-for-macOS) (see also 'Mandatory tools' [here](https://mac.r-project.org/tools/)). On Linux, the gfortran compiler is usually installed already.
-
-Vignettes are not rendered by default, if you want to include additional documentation please use:
-
-``` r
-if(!require(remotes)){install.packages("remotes")}
-remotes::install_github("geco-bern/rsofun", build_vignettes = TRUE)
-library("rsofun")
-```
 
 ### From source
 

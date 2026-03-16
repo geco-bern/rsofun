@@ -277,7 +277,7 @@
 #'       \item{thetaHT}{Coefficient for allometry (height = alphaHT * DBH_m ** thetaHT), in m m\eqn{^{-thetaHT}}.}
 #'       \item{alphaCA}{Coefficient for allometry (projected crown area = pi * (alphaCA * DBH_m) ** thetaCA), in m\eqn{^{2/thetaCA-1}}.}
 #'       \item{thetaCA}{Coefficient for allometry (projected crown area = pi * (alphaCA * DBH_m) ** thetaCA), unitless. Dybzinski (eq. G1) showed that thetaCA = theatBM - 1.}
-#'       \item{alphaBM}{Coefficient for allometry (biomass = alphaBM * DBH ** thetaBM), in kg C m\eqn{^{-thetaBM}}.}
+#'       \item{alphaBM}{TODO: unused. alphaBM is overwritten by: (alphaBM = rho_wood * taperfactor * pi/4.*alphaHT). Coefficient for allometry (biomass = alphaBM * DBH ** thetaBM), in kg C m\eqn{^{-thetaBM}}.}
 #'       \item{thetaBM}{Coefficient for allometry (biomass = alphaBM * DBH ** thetaBM), unitless. Dybzinski (eq. G1) showed that thetaCA = theatBM - 1.}
 #'     }}\item{The following columns pertaining to the \bold{reproduction parameters}:}{\describe{
 #'       \item{seedlingsize}{Initial size of seedlings, in kg C per individual.}

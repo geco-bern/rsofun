@@ -735,14 +735,15 @@ contains
     type(cohort_stack_item), pointer :: new ! new cohort
     type(cohort_stack_item), pointer :: it
     integer, dimension(NCohortMax) :: reproPFTs
-    type(orgpool), dimension(NCohortMax) :: seed ! seed pool of productible PFTs
-    integer :: nPFTs ! number of new cohorts to be created
+    type(orgpool), dimension(NCohortMax) :: seed ! seed pool of reproducing PFTs
+    integer :: nPFTs ! number of new cohorts to be created (one new cohort per PFT)
     integer :: pft_idx ! PFT index
     integer :: k ! new cohort indices
 
-    ! Looping through all reproductable cohorts and check if reproduction happens
-    reproPFTs = -999 ! the code of reproductive PFT
+    ! Looping through all cohorts and check if reproduction happens
+    reproPFTs = -999 ! the code of reproducing PFT
     nPFTs = 0
+    ! NOTE: since seed is an orgpool(), it initializes by design to zero
 
     ! We loop through each cohort and add C and N to species-specific seed pools
     ! whenever a cohort can reproduce
@@ -760,7 +761,7 @@ contains
         enddo
 
         if (pft_idx == 0) then ! when it is a new PFT, put it to the next place
-          nPFTs            = nPFTs + 1 ! update the number of reproducible PFTs
+          nPFTs            = nPFTs + 1 ! update the number of reproducing PFTs
           reproPFTs(nPFTs) = cc%species ! PFT number
           pft_idx = nPFTs
         endif
@@ -777,7 +778,7 @@ contains
     ! We build new cohorts for seedlings
     do k = 1, nPFTs
 
-      new => vegn%create_cohort()
+      new => vegn%create_cohort() ! NOTE: this could lead to more cohorts than `NCohortMax`
       cc => new%cohort
 
       ! update child cohort parameters

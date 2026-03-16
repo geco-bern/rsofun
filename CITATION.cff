@@ -70,7 +70,7 @@ abstract: '<h1>rsofun</h1>
   <p>To install the latest development release of the package run the following commands
   to install rsofun directly from GitHub:</p>
 
-  <p><code>if(!require(remotes)){install.packages("remotes")}</code><br><code>remotes::install_github("geco-bern/rsofun")</code><br><code>library("rsofun")</code><br><br></p>
+  <p><code>if(!require(pak)){install.packages("pak")}</code><br><code>pak::pak("geco-bern/rsofun")</code><br><code>library("rsofun")</code><br><br></p>
 
   <p>**NOTE:** Installing from GitHub requires compilation of Fortran and C source
   code contained in {rsofun}. To enable compiling source code, install <a href="https://cran.r-project.org/bin/windows/Rtools/">Rtools</a>
@@ -78,12 +78,6 @@ abstract: '<h1>rsofun</h1>
   href="https://github.com/fxcoudert/gfortran-for-macOS">GNU Fortran compiler on Mac</a>
   (see also ''Mandatory tools'' <a href="https://mac.r-project.org/tools/">here</a>).
   On Linux, the gfortran compiler is usually installed already.</p>
-
-  <p>Vignettes are not rendered by default, if you want to include additional documentation
-  please use:</p>
-
-  <p><code>if(!require(remotes)){install.packages("remotes")}</code><br><code>remotes::install_github("geco-bern/rsofun",
-  build_vignettes = TRUE)</code><br><code>library("rsofun")</code></p>
 
   <h3>From source&nbsp;</h3>
 

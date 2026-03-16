@@ -18,8 +18,7 @@ module md_vegetation_tile_biomee
   public :: params_species_biomee, cohort_type, vegn_tile_type, dampended_forcing_type
 
   !=============== Parameters ======================================================
-  integer, public, parameter :: NCohortMax = 50 ! maximum number of cohorts
-  integer, public, parameter :: out_max_cohorts      = NCohortMax
+  integer, public, parameter :: NCohortMax = 50 ! maximum number of cohorts that are output (there could be more but they would not be reported)
 
   !===== Model
   integer, public, parameter :: NLAYERS_MAX = 9     ! maximum number of canopy layers to be considered
@@ -165,7 +164,7 @@ module md_vegetation_tile_biomee
     !===== Reporting diagnostics
     real, dimension(nvars_annual_tile) :: out_annual_tile
     real, dimension(ndayyear, nvars_daily_tile) :: out_daily_tile
-    real, dimension(out_max_cohorts, nvars_annual_cohorts) :: out_annual_cohorts
+    real, dimension(NCohortMax, nvars_annual_cohorts) :: out_annual_cohorts
 
   contains
 
