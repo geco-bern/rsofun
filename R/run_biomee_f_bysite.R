@@ -234,47 +234,9 @@ run_biomee_f_bysite <- function(
 ){
   ndayyear <- 365
 
-  # Default value for tc_home
-  if ("tc_home" %in% names(site_info)) {
-    stop("Unexpectedly received site_info$tc_home; it should be calculated internally.")
-  }
-
-  conditionally_add_tmax <- function(df){
-    need_to_add_tmax <- !("tmax" %in% colnames(df))
-    if (need_to_add_tmax) {
-      df %>% dplyr::group_by(.data$date) %>%
-        dplyr::summarise(daily_tmax = max(.data$temp, na.rm = TRUE)) %>%
-        dplyr::ungroup()
-    } else {
-      df %>% dplyr::rename(daily_tmax = "tmax")
-    }
-  }
-  tc_home <- forcing %>%
-    # conditionally add daily max temp (if needed, e.g. when running "gs_leuning" with hourly forcing)
-    conditionally_add_tmax() %>%
-    # add grouping variables:
-    mutate(month = lubridate::month(.data$date), year = lubridate::year(.data$date)) %>%
-    # monthly means of daily maximum:
-    group_by(.data$year, .data$month) %>%
-    summarise(monthly_avg_daily_tmax = mean(.data$daily_tmax, na.rm = TRUE), .groups = "drop") %>%
-    # warmest month of each year:
-    group_by(year) %>%
-    summarise(t_warmest_month = max(.data$monthly_avg_daily_tmax)) %>%
-    # mean of yearly warmest months:
-    ungroup() %>%
-    summarise(tc_home = mean(.data$t_warmest_month, na.rm = TRUE)) %>%
-    # extract scalar value
-    dplyr::pull(.data$tc_home)
-
-    site_info$tc_home <- tc_home     # TODO: rather in site_info or in params_tile?
-    # params_tile$tc_home <- tc_home # TODO: rather in site_info or in params_tile?
-    
-  # Validate calculation
-  if (is.na(site_info$tc_home) || length(site_info$tc_home) == 0) {
-    warning("Calculated tc_home is NA or missing; defaulting to 25C.")
-    site_info$tc_home <- 25
-  }
-
+  # Add default value for tc_home
+  site_info <- build_site_info(site_info, forcing)
+  
   # record number of years in forcing data
   # frame to use as default values (unless provided othrwise as params_siml$nyeartrend)
   forcing_years <- nrow(forcing)/(ndayyear * params_siml$steps_per_day)
@@ -405,9 +367,55 @@ build_lu_out <- function(biomeeout, lu, trimmed_object){
 
 ###### Build and prepare inputs #######
 # build_xxx functions check the parameters/data and add default parameters
-# prepare_xxx functions preapre the data in a form that is expected by Fortran (i.e. arrays of numbers).
+# prepare_xxx functions prepare the data in a form that is expected by Fortran (i.e. arrays of numbers).
 # The use of 'select()' ensure that the data are sent in the right order (and that no column is missing).
 # In particular, we remove columns containing characters (to not encounter issues within Fortran).
+
+build_site_info <- function(site_info, forcing){
+  
+  # Add tc_home to site_info 
+  if ("tc_home" %in% names(site_info)) {
+    stop("Unexpectedly received site_info$tc_home; it should be calculated internally.")
+  }
+  # Compute tc_home
+  conditionally_add_tmax <- function(df){
+    need_to_add_tmax <- !("tmax" %in% colnames(df))
+    if (need_to_add_tmax) {
+      df %>% dplyr::group_by(.data$date) %>%
+        dplyr::summarise(daily_tmax = max(.data$temp, na.rm = TRUE)) %>%
+        dplyr::ungroup()
+    } else {
+      df %>% dplyr::rename(daily_tmax = "tmax")
+    }
+  }
+  tc_home <- forcing %>%
+    # conditionally add daily max temp (if needed, e.g. when running "gs_leuning" with hourly forcing)
+    conditionally_add_tmax() %>%
+    # add grouping variables:
+    mutate(month = lubridate::month(.data$date), year = lubridate::year(.data$date)) %>%
+    # monthly means of daily maximum:
+    group_by(.data$year, .data$month) %>%
+    summarise(monthly_avg_daily_tmax = mean(.data$daily_tmax, na.rm = TRUE), .groups = "drop") %>%
+    # warmest month of each year:
+    group_by(year) %>%
+    summarise(t_warmest_month = max(.data$monthly_avg_daily_tmax)) %>%
+    # mean of yearly warmest months:
+    ungroup() %>%
+    summarise(tc_home = mean(.data$t_warmest_month, na.rm = TRUE)) %>%
+    # extract scalar value
+    dplyr::pull(.data$tc_home)
+  
+  # Add to site_info
+  site_info$tc_home <- tc_home # TODO: alternatively this could be stored in params_tile instead of site_info.
+  
+  # Validate calculation
+  if (is.na(site_info$tc_home) || length(site_info$tc_home) == 0) {
+    warning("Calculated tc_home is NA or missing; defaulting to 25C.")
+    site_info$tc_home <- 25
+  }
+  
+  return(site_info)
+}
 
 build_params_siml <- function(params_siml, forcing_years, makecheck){
   `%nin%` <- Negate(`%in%`)
