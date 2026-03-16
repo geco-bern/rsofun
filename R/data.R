@@ -248,7 +248,7 @@
 #'     \describe{
 #'     \item{The following columns pertaining to the \bold{plant type}:}{\describe{
 #'       \item{lifeform}{Integer set to 0 for grasses and 1 for trees.}
-#'       \item{phenotype}{Integer set to 0 for deciduous and 1 for evergreen.}
+#'       \item{phenotype}{TODO: unused. phenotype is overwritten by on Fortran level. Integer set to 0 for deciduous and 1 for evergreen.}
 #'       \item{pt}{Integer indicating the type of plant according to photosynthesis: 0 for C3; 1 for C4}
 #'     }}\item{The following columns pertaining to the \bold{root parameters}:}{\describe{
 #'       \item{alpha_FR}{Fine root turnover rate (yr\eqn{^{-1}}).}
@@ -258,7 +258,7 @@
 #'       \item{Kw_root}{Fine root water conductivity (mol m\eqn{^{-2}} s\eqn{^{-1}} MPa\eqn{^{-1}}).}
 #'       \item{leaf_size}{Characteristic leaf size.}
 #'     }}\item{The following columns pertaining to the \bold{photosynthesis parameters}:}{\describe{
-#'       \item{Vmax}{Max RuBisCo rate, in mol m\eqn{^{-2}} s\eqn{^{-1}}.}
+#'       \item{Vmax}{TODO: unused. Vmax is overwritten by on Fortran level. Max RuBisCo rate, in mol m\eqn{^{-2}} s\eqn{^{-1}}.}
 #'       \item{Vannual}{Annual productivity per unit area at full sun (kg C m\eqn{^{-2}} year\eqn{^{-2}}).}
 #'       \item{wet_leaf_dreg}{Wet leaf photosynthesis down-regulation.}
 #'       \item{m_cond}{Factor of stomatal conductance.}
@@ -277,7 +277,7 @@
 #'       \item{thetaHT}{Coefficient for allometry (height = alphaHT * DBH_m ** thetaHT), in m m\eqn{^{-thetaHT}}.}
 #'       \item{alphaCA}{Coefficient for allometry (projected crown area = pi * (alphaCA * DBH_m) ** thetaCA), in m\eqn{^{2/thetaCA-1}}.}
 #'       \item{thetaCA}{Coefficient for allometry (projected crown area = pi * (alphaCA * DBH_m) ** thetaCA), unitless. Dybzinski (eq. G1) showed that thetaCA = theatBM - 1.}
-#'       \item{alphaBM}{TODO: unused. alphaBM is overwritten by: (alphaBM = rho_wood * taperfactor * pi/4.*alphaHT). Coefficient for allometry (biomass = alphaBM * DBH ** thetaBM), in kg C m\eqn{^{-thetaBM}}.}
+#'       \item{alphaBM}{TODO: unused. alphaBM is overwritten by on Fortran level. Coefficient for allometry (biomass = alphaBM * DBH ** thetaBM), in kg C m\eqn{^{-thetaBM}}.}
 #'       \item{thetaBM}{Coefficient for allometry (biomass = alphaBM * DBH ** thetaBM), unitless. Dybzinski (eq. G1) showed that thetaCA = theatBM - 1.}
 #'     }}\item{The following columns pertaining to the \bold{reproduction parameters}:}{\describe{
 #'       \item{seedlingsize}{Initial size of seedlings, in kg C per individual.}
@@ -288,17 +288,17 @@
 #'       \item{mortrate_d_u}{Understory tree mortality rate (yr\eqn{^{-1}}).}
 #'     }}\item{The following columns pertaining to the \bold{leaf parameters}:}{\describe{
 #'       \item{LMA}{Leaf mass per unit area (kg C m\eqn{^{-2}}).}
-#'       \item{leafLS}{TODO}
+#'       \item{leafLS}{TODO: unused. leafLS is overwritten by on Fortran level.}
 #'       \item{LNbase}{Basal leaf N per unit area, in kg N m\eqn{^{-2}}.}
 #'       \item{CNleafsupport}{TODO}
 #'       \item{rho_wood}{Wood density (kg C m\eqn{^{-3}}).}
 #'       \item{taperfactor}{TODO}
-#'       \item{lAImax}{Maximum crown LAI (leaf area index).}
+#'       \item{lAImax}{TODO: unused. lAImax is overwritten by on Fortran level. Maximum crown LAI (leaf area index).}
 #'       \item{tauNSC}{TODO}
 #'       \item{fNSmax}{Multiplier for NSNmax as sum of potential bl and br.}
 #'       \item{phiCSA}{Ratio of sapwood area to leaf area.}
 #'     }}\item{The following columns pertaining to the \bold{C/N ratios for plant pools}:}{\describe{
-#'       \item{CNleaf0}{TODO}
+#'       \item{CNleaf0}{TODO: unused. CNleaf0 is overwritten by on Fortran level. }
 #'       \item{CNsw0}{TODO}
 #'       \item{CNwood0}{TODO}
 #'       \item{CNroot0}{TODO}

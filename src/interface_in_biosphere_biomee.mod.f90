@@ -419,7 +419,7 @@ contains
     real(kind=c_double), dimension(nvars_params_species), intent(in) :: params_species
 
     self%lifeform           = int(  params_species(1))
-    self%phenotype          = int(  params_species(2))
+    ! self%phenotype          = int(  params_species(2)) ! overridden by ifelse(self%leafLS>1.0, 1, 0)
     self%pt                 = int(  params_species(3))
     self%alpha_FR           = real( params_species(4))
     self%rho_FR             = real( params_species(5))
@@ -427,7 +427,7 @@ contains
     self%root_zeta          = real( params_species(7))
     self%Kw_root            = real( params_species(8))
     self%leaf_size          = real( params_species(9))
-    self%Vmax               = real( params_species(10))
+    ! self%Vmax               = real( params_species(10)) ! overridden by 0.02 * self%LNbase
     self%Vannual            = real( params_species(11))
     self%wet_leaf_dreg      = real( params_species(12))
     self%m_cond             = real( params_species(13))
@@ -445,7 +445,7 @@ contains
     self%thetaHT            = real( params_species(25)) ! prescribed
     self%alphaCA            = real( params_species(26)) ! prescribed
     self%thetaCA            = real( params_species(27)) ! prescribed
-    self%alphaBM            = real( params_species(28)) ! prescribed ! TODO: not actually not prescribed, it is overwritten by alphaBM
+    ! self%alphaBM            = real( params_species(28)) ! overridden by self%rho_wood * self%taperfactor * PI/4. * self%alphaHT
     self%thetaBM            = real( params_species(29)) ! prescribed
     self%seedlingsize       = real( params_species(30))
     self%maturalage         = real( params_species(31))
@@ -453,16 +453,16 @@ contains
     self%mortrate_d_c       = real( params_species(33))
     self%mortrate_d_u       = real( params_species(34))
     self%LMA                = real( params_species(35)) ! prescribed
-    self%leafLS             = real( params_species(36))
+    ! self%leafLS             = real( params_species(36)) ! overridden by self%leafLS = c_LLS * self%LMA
     self%LNbase             = real( params_species(37))
     self%CNleafsupport      = real( params_species(38))
     self%rho_wood           = real( params_species(39)) ! prescribed
     self%taperfactor        = real( params_species(40))
-    ! self%lAImax             = real( params_species(41)) ! overriden
+    ! self%lAImax             = real( params_species(41)) ! overridden by MAX(0.5, self%LAI_light)
     self%tauNSC             = real( params_species(42))
     self%fNSNmax            = real( params_species(43))
     self%phiCSA             = real( params_species(44))
-    self%CNleaf0            = real( params_species(45))
+    ! self%CNleaf0            = real( params_species(45)) ! overridden by self%CNleaf0 = self%LMA/self%LNA
     self%CNsw0              = real( params_species(46))
     self%CNwood0            = real( params_species(47))
     self%CNroot0            = real( params_species(48))
@@ -474,6 +474,26 @@ contains
     self%phiRL              = real( params_species(54)) ! calibratable
     self%LAI_light          = real( params_species(55)) ! calibratable
 
+    ! Following parameters are not yet populated and will be initialized with init_pft_data():
+    ! integer :: phenotype                          ! phenology type: 0 for deciduous, 1 for evergreen
+    !===== Population level variables
+    ! real    :: LAImax, underLAImax                ! max. LAI - Overridden
+    !===== Root traits
+    ! real    :: root_frac(MAX_LEVELS)              ! root fraction
+    ! real    :: SRA                                ! specific fine root area, m2/kg C
+    !===== Leaf traits
+    ! real    :: leafLS                             ! leaf life span
+    ! real    :: alpha_L                            ! leaf turn over rate, (leaf longevity as a function of LMA)
+    ! real    :: LNA                                ! leaf Nitrogen per unit area, kg N/m2
+    ! real    :: Vmax                               ! max rubisco rate, mol m-2 s-1
+    !===== Allometry
+    ! real    :: alphaBM                            ! biomass = alphaBM * DBH ** thetaBM
+    !===== Vital rates
+    ! real    :: prob_g         = 1.0               ! germination probability
+    ! real    :: prob_e         = 1.0               ! establishment probability
+    !===== Default C/N ratios
+    ! real    :: CNleaf0
+    
     call self%init_pft_data()
 
   end subroutine populate_spec_data  
