@@ -7,12 +7,15 @@
 # adding flags to reproduce NaN bug: PKG_FFLAGS = -frecursive -fbounds-check -fcheck=all -Wall -Wextra -pedantic -g -O0 -fbacktrace -ffpe-trap=invalid,zero,overflow -finit-real=snan -finit-integer=-9999999
 # building: R CMD build --no-manual --no-build-vignettes rsofun && R CMD INSTALL -c --preclean rsofun_5.0.0.9000.tar.gz 
 
+# usethis::edit_r_makevars(scope = "project") # remove again any flags that we added
+
 # TODO: this link: https://stackoverflow.com/a/72580854 could potentially explain how to do it in the Docker where we see the error
 #                  https://github.com/renkun-ken/vscode-rcpp-demo
 #                  https://github.com/renkun-ken/vscode-cpp11-demo
 
-# FOR DEBUGGIN in the act:
+# FOR DEBUGGING in the act:
 # ~/bin/act -r -W '.github/workflows/test-coverage-debug.yaml'
+
 
 devtools::clean_dll()
 devtools::load_all()
@@ -20,20 +23,20 @@ devtools::load_all()
 # library(dplyr)
 # library(purrr)
 check_c13_bug <- function(){
-
+  
   library(tidyr)
   runread_pmodel_f(
     rsofun::p_model_drivers |> unnest(forcing) |> slice(1:365) |> nest(forcing = c(date:ccov)),
     par = list(kphio = 0.04998, kphio_par_a = 0.01, kphio_par_b = 1, soilm_thetastar = 144, 
-              soilm_betao = 0.01, beta_unitcostratio = 146, rd_to_vcmax = 0.014, 
-              tau_acclim = 30, kc_jmax = 0.41),
+               soilm_betao = 0.01, beta_unitcostratio = 146, rd_to_vcmax = 0.014, 
+               tau_acclim = 30, kc_jmax = 0.41),
     makecheck = TRUE,
     parallel = FALSE,
     ncores = 2
   )
-
+  
 }
-check_c13_bug()
+# check_c13_bug()
 
 
 check_NA_output <- function(){
@@ -58,4 +61,16 @@ check_NA_output <- function(){
   # print("output_annual_tile:"); print(tibble(res$data[[1]]$output_annual_tile))
   # print("output_annual_cohort:"); print(tibble(res$data[[1]]$output_annual_cohort))
 }
-check_NA_output()
+# check_NA_output()
+
+check_biomee_aggressive_merging <- function(){
+  #drivers <- readRDS(".vscode/drivers_debug_CZ-BK1.rds")
+  drivers <- readRDS(".vscode/drivers_debug_SolBeech.rds")
+  drivers$params_species[[1]]$mortrate_d_c <- 0
+  drivers$params_tile[[1]]$par_mort_under  <- 0
+  runread_biomee_f(drivers, makecheck = TRUE, ncores = 1)
+}
+res <- check_biomee_aggressive_merging()
+#res |> tidyr::unnest_wider(data)
+#
+#

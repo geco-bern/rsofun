@@ -6,9 +6,6 @@
 .DS_Store
 .idea
 
-# VS Code local settings
-.vscode/
-
 # act local config & secrets
 .actrc
 .secrets
