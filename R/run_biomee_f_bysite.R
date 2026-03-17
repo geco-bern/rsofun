@@ -243,7 +243,7 @@ run_biomee_f_bysite <- function(
 
   # Add default parameters (backward compatibility layer)
   params_siml <- build_params_siml(params_siml, forcing_years, makecheck)
-
+  params_tile <- build_params_tile(params_tile)
   params_species <- build_params_species(params_species)
   
   # Build LULUC parameters
@@ -497,6 +497,14 @@ build_params_siml <- function(params_siml, forcing_years, makecheck){
   return(params_siml)
 }
 
+build_params_tile <- function(params_tile){
+  # Default values (of formerly hard-coded)
+  `%nin%` <- Negate(`%in%`)
+  if ('tau_acclim' %nin% names(params_tile)) {
+    params_tile$tau_acclim <- 30.0  # days, acclimation time scale of p-model (vcmax, jmax)
+  }
+  return(params_tile)
+}
 build_params_species <- function(params_species){
   # Ensure certain unused legacy parameters (if provided) are NA.
   # If any other value is received an error is emitted.
@@ -522,6 +530,26 @@ build_params_species <- function(params_species){
   # If parameters are missing add them as NA
   params_species[, must_be_NA_or_missing] <- NA
 
+  # Default values (of formerly hard-coded)
+  `%nin%` <- Negate(`%in%`)
+  if ('kphio' %nin% names(params_species)) {
+    params_species$kphio <- 0.05  # ! quantum yield efficiency at optimal temperature, phi_0 (Stocker et al., 2020 GMD Eq. 10)
+  }
+  if ('beta' %nin% names(params_species)) {
+    params_species$beta <- 146.0 # unit cost of carboxylation
+  }
+  if ('rd_to_vcmax' %nin% names(params_species)) {
+    params_species$rd_to_vcmax <- 0.014 # Ratio of Rdark to Vcmax25, number from Atkin et al., 2015 for C3 herbaceous
+  }
+  if ('kc_jmax' %nin% names(params_species)) {
+    params_species$kc_jmax <- 0.41  # Jmax cost ratio
+  }
+  if ('kphio_par_a' %nin% names(params_species)) {
+    params_species$kphio_par_a <- 0.0   # shape parameter of temperature-dependency of quantum yield efficiency
+  }
+  if ('kphio_par_b' %nin% names(params_species)) {
+    params_species$kphio_par_b <- 25.0  # optimal temperature of quantum yield efficiency
+  }
   return(params_species)
 }
 
@@ -682,7 +710,8 @@ prepare_params_tile <- function(params_tile){
     "f_N_add",
     "tf_base",
     "par_mort",
-    "par_mort_under"
+    "par_mort_under",
+    "tau_acclim"
   )
   return(params_tile)
 }
@@ -743,7 +772,12 @@ prepare_params_species <- function(params_species){
     "internal_gap_frac",
     "kphio",
     "phiRL",
-    "LAI_light"
+    "LAI_light",
+    "beta",
+    "rd_to_vcmax",
+    "kc_jmax",
+    "kphio_par_a",
+    "kphio_par_b",
   )
   return(params_species)
 }

@@ -21,10 +21,10 @@ module md_interface_in_biomee
   !===== Number of parameters
   integer, public, parameter :: nvars_params_siml    = 11
   integer, public, parameter :: nvars_site_info      = 4
-  integer, public, parameter :: nvars_params_tile    = 19
+  integer, public, parameter :: nvars_params_tile    = 20
   integer, public, parameter :: nvars_init_soil      = 4
   integer, public, parameter :: nvars_init_cohorts   = 9
-  integer, public, parameter :: nvars_params_species = 55
+  integer, public, parameter :: nvars_params_species = 60
   integer, public, parameter :: nvars_init_lu        = 5
 
   type init_lu_biomee
@@ -415,9 +415,9 @@ contains
     self%par_mort_under           = real( params_tile(19) )
 
     ! GPP P-model parameters (no effect in gs_leuning option)
-    self%tau_acclim      = 30.0
-    !self%soilm_thetastar = 0.6 * 250 ! unused parameter
-    !self%soilm_betao     = 0.0       ! unused parameter
+    self%tau_acclim               = real( params_tile(20) )
+    !self%soilm_thetastar         = 0.6 * 250 ! unused parameter (not even in PMODEL)
+    !self%soilm_betao             = 0.0       ! unused parameter (not even in PMODEL)
 
   end subroutine populate_params_tile  
   
@@ -488,18 +488,17 @@ contains
     self%Nfixrate0          = real( params_species(50))
     self%NfixCost0          = real( params_species(51))
     self%internal_gap_frac  = real( params_species(52))
-    self%kphio              = real( params_species(53)) ! calibratable
-    self%phiRL              = real( params_species(54)) ! calibratable
-    self%LAI_light          = real( params_species(55)) ! calibratable
+    self%kphio              = real( params_species(53))
+    self%phiRL              = real( params_species(54))
+    self%LAI_light          = real( params_species(55))
 
     ! GPP P-model parameters (no effect in gs_leuning option)
-    self%beta            = 146.0 ! unit cost of carboxylation
-    self%rd_to_vcmax     = 0.014 ! Ratio of Rdark to Vcmax25, number from Atkin et al., 2015 for C3 herbaceous
-    self%kc_jmax         = 0.41  ! Jmax cost ratio
+    self%beta            = real( params_species(56))
+    self%rd_to_vcmax     = real( params_species(57))
+    self%kc_jmax         = real( params_species(58))
 
-    self%kphio           = 0.05  ! quantum yield efficiency at optimal temperature, phi_0 (Stocker et al., 2020 GMD Eq. 10)
-    self%kphio_par_a     = 0.0   ! shape parameter of temperature-dependency of quantum yield efficiency
-    self%kphio_par_b     = 25.0  ! optimal temperature of quantum yield efficiency
+    self%kphio_par_a     = real( params_species(59))
+    self%kphio_par_b     = real( params_species(60))
 
     ! Following parameters are not yet populated and will be initialized with init_pft_data():
     ! integer :: phenotype                          ! phenology type: 0 for deciduous, 1 for evergreen
