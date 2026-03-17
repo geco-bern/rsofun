@@ -15,29 +15,6 @@ module md_gpp_biomee
   private
   public gpp
 
-  !-----------------------------------------------------------------------
-  ! P-model parameters created here for pmodel option. takes no effect in gs_leuning option
-  !-----------------------------------------------------------------------
-  type paramstype_gpp
-    real :: beta = 146.0        ! Unit cost of carboxylation (dimensionless)
-
-    ! Apply identical temperature ramp parameter for all PFTs
-    real :: tau_acclim = 30.0   ! acclimation time scale of photosynthesis (d)
-    real :: soilm_thetastar = 0.6 * 250
-    real :: soilm_betao = 0.0
-
-    real :: rd_to_vcmax = 0.014 ! Ratio of Rdark to Vcmax25, number from Atkin et al., 2015 for C3 herbaceous
-    real :: kc_jmax = 0.41      ! Jmax cost ratio
-
-    ! these should be species-specific, temporary solution to put them here
-    real :: kphio = 0.05        ! quantum yield efficiency at optimal temperature, phi_0 (Stocker et al., 2020 GMD Eq. 10 and Eq. 20)
-    real :: kphio_par_a = 0.0   ! shape parameter of temperature-dependency of quantum yield efficiency
-    real :: kphio_par_b = 25.0  ! optimal temperature of quantum yield efficiency (deg C)
-
-  end type paramstype_gpp
-
-  type(paramstype_gpp) :: params_gpp
-
 contains
 
   subroutine gpp( forcing, vegn )
@@ -197,26 +174,17 @@ contains
         vegn%dampended_forcing%par = forcing%radiation
         vegn%dampended_forcing%initialized = .True.
       else
-        vegn%dampended_forcing%co2  = dampen_variability( forcing%CO2 * 1.0e6,        params_gpp%tau_acclim, &
+        vegn%dampended_forcing%co2  = dampen_variability( forcing%CO2 * 1.0e6,        inputs%params_tile%tau_acclim, &
                 vegn%dampended_forcing%co2 )
-        vegn%dampended_forcing%temp = dampen_variability( (forcing%TairC),  params_gpp%tau_acclim, &
+        vegn%dampended_forcing%temp = dampen_variability( (forcing%TairC),  inputs%params_tile%tau_acclim, &
                 vegn%dampended_forcing%temp)
         vegn%dampended_forcing%vpd  = dampen_variability( forcing%vpd,                &
-                params_gpp%tau_acclim, vegn%dampended_forcing%vpd )
+                inputs%params_tile%tau_acclim, vegn%dampended_forcing%vpd )
         vegn%dampended_forcing%patm = dampen_variability( forcing%P_air,              &
-                params_gpp%tau_acclim, vegn%dampended_forcing%patm )
+                inputs%params_tile%tau_acclim, vegn%dampended_forcing%patm )
         vegn%dampended_forcing%par = dampen_variability( forcing%radiation,              &
-                params_gpp%tau_acclim, vegn%dampended_forcing%par )
+                inputs%params_tile%tau_acclim, vegn%dampended_forcing%par )
       end if
-
-      !----------------------------------------------------------------
-      ! Instantaneous temperature effect on quantum yield efficiency
-      !----------------------------------------------------------------
-      kphio_temp = calc_kphio_temp( (forcing%TairC), &
-              .false., &    ! no C4
-              params_gpp%kphio, &
-              params_gpp%kphio_par_a, &
-              params_gpp%kphio_par_b )
 
       !----------------------------------------------------------------
       ! Photosynthesis for each cohort
@@ -228,8 +196,17 @@ contains
         cc => it%cohort
         i = i + 1
 
-        if (cc%status == LEAF_ON) then
+        associate ( sp => cc%sp() )
+        !----------------------------------------------------------------
+        ! Instantaneous temperature effect on quantum yield efficiency
+        !----------------------------------------------------------------
+        kphio_temp = calc_kphio_temp( (forcing%TairC), &
+                .false., &    ! no C4
+                sp%kphio, &
+                sp%kphio_par_a, &
+                sp%kphio_par_b )
 
+        if (cc%status == LEAF_ON) then  
           ! photosynthetically active radiation level at this layer
           par = f_light(cc%layer) * vegn%dampended_forcing%par * kfFEC * 1.0e-6
 
@@ -239,8 +216,8 @@ contains
           !----------------------------------------------------------------
           out_pmodel = pmodel(  &
                                 kphio          = kphio_temp, &
-                                beta           = params_gpp%beta, &
-                                kc_jmax        = params_gpp%kc_jmax, &
+                                beta           = sp%beta, & 
+                                kc_jmax        = sp%kc_jmax, &
                                 ppfd           = par, &
                                 co2            = vegn%dampended_forcing%co2, &
                                 tc             = vegn%dampended_forcing%temp, &
@@ -254,7 +231,7 @@ contains
 
           ! quantities per tree and cumulated over seconds in time step (kgC step-1 tree-1 )
           cc%fast_fluxes%gpp = par * fapar_tree(i) * out_pmodel%lue * cc%crownarea() * inputs%step_seconds * 1.0e-3
-          cc%resl = fapar_tree(i) * out_pmodel%vcmax25 * params_gpp%rd_to_vcmax * calc_ftemp_inst_rd( forcing%TairC ) &
+          cc%resl = fapar_tree(i) * out_pmodel%vcmax25 * sp%rd_to_vcmax * calc_ftemp_inst_rd( forcing%TairC ) &
             * cc%crownarea() * inputs%step_seconds * c_molmass * 1.0e-3
 
           ! Calculate isotopic 13C signature of recent assimilates, given atmospheric 13C signature and discrimination (bigdelta)
@@ -265,7 +242,7 @@ contains
             ( cc%fast_fluxes%bigdelta / 1000.0 + 1.0 ) !(e.g. eq 2; Brüggemann, 10.5194/bg-8-3457-2011)
 
         endif
-
+        end associate
         it => it%next()
       end do
 

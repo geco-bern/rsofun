@@ -76,6 +76,11 @@ module md_interface_in_biomee
     real   :: par_mort ! calibratable
     real   :: par_mort_under ! calibratable
   
+    !===== GPP P-model parameters (no effect in gs_leuning option)
+    real   :: tau_acclim
+    real   :: soilm_thetastar ! unused parameter
+    real   :: soilm_betao     ! unused parameter
+  
   contains
           
     procedure populate_params_tile
@@ -126,7 +131,6 @@ module md_interface_in_biomee
     real    :: alphaHT, thetaHT                   ! height = alphaHT * DBH ** thetaHT
     real    :: alphaCA, thetaCA                   ! crown area = alphaCA * DBH ** thetaCA
     real    :: alphaBM, thetaBM                   ! biomass = alphaBM * DBH ** thetaBM
-    real    :: kphio                              ! quantum yield efficiency calibratable
     real    :: phiRL                              ! ratio of fine root to leaf area calibratable
     real    :: phiCSA                             ! ratio of sapwood CSA to target leaf area
     real    :: tauNSC                             ! residence time of C in NSC (to define storage capacity)
@@ -161,6 +165,14 @@ module md_interface_in_biomee
     real    :: internal_gap_frac                  ! fraction of internal gaps in the canopy
 
     ! "internal" gaps are the gaps that are created within the canopy by the branch fall processes.
+
+    !===== GPP P-model parameters (no effect in gs_leuning option)
+    real    :: beta            ! unit cost of carboxylation
+    real    :: rd_to_vcmax     ! Ratio of Rdark to Vcmax25, number from Atkin et al., 2015 for C3 herbaceous
+    real    :: kc_jmax         ! Jmax cost ratio
+    real    :: kphio           ! quantum yield efficiency at optimal temperature, phi_0 (Stocker et al., 2020 GMD Eq. 10)
+    real    :: kphio_par_a     ! shape parameter of temperature-dependency of quantum yield efficiency
+    real    :: kphio_par_b     ! optimal temperature of quantum yield efficiency
 
     contains
 
@@ -401,6 +413,12 @@ contains
     self%tf_base                  = real( params_tile(17) )
     self%par_mort                 = real( params_tile(18) )
     self%par_mort_under           = real( params_tile(19) )
+
+    ! GPP P-model parameters (no effect in gs_leuning option)
+    self%tau_acclim      = 30.0
+    !self%soilm_thetastar = 0.6 * 250 ! unused parameter
+    !self%soilm_betao     = 0.0       ! unused parameter
+
   end subroutine populate_params_tile  
   
   subroutine populate_site_info(self, site_info)
@@ -473,6 +491,15 @@ contains
     self%kphio              = real( params_species(53)) ! calibratable
     self%phiRL              = real( params_species(54)) ! calibratable
     self%LAI_light          = real( params_species(55)) ! calibratable
+
+    ! GPP P-model parameters (no effect in gs_leuning option)
+    self%beta            = 146.0 ! unit cost of carboxylation
+    self%rd_to_vcmax     = 0.014 ! Ratio of Rdark to Vcmax25, number from Atkin et al., 2015 for C3 herbaceous
+    self%kc_jmax         = 0.41  ! Jmax cost ratio
+
+    self%kphio           = 0.05  ! quantum yield efficiency at optimal temperature, phi_0 (Stocker et al., 2020 GMD Eq. 10)
+    self%kphio_par_a     = 0.0   ! shape parameter of temperature-dependency of quantum yield efficiency
+    self%kphio_par_b     = 25.0  ! optimal temperature of quantum yield efficiency
 
     ! Following parameters are not yet populated and will be initialized with init_pft_data():
     ! integer :: phenotype                          ! phenology type: 0 for deciduous, 1 for evergreen
