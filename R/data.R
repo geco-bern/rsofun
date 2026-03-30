@@ -288,7 +288,7 @@
 #'       \item{mortrate_d_u}{Understory tree mortality rate (yr\eqn{^{-1}}).}
 #'     }}\item{The following columns pertaining to the \bold{leaf parameters}:}{\describe{
 #'       \item{LMA}{Leaf mass per unit area (kg C m\eqn{^{-2}}).}
-#'       \item{leafLS}{TODO: unused. leafLS is overwritten by on Fortran level.}
+#'       \item{leafLS}{Leaf life span, (yr). If leafLS > 1.0 year, phenotype is set to evergreen.}
 #'       \item{LNbase}{Basal leaf N per unit area, in kg N m\eqn{^{-2}}.}
 #'       \item{CNleafsupport}{TODO}
 #'       \item{rho_wood}{Wood density (kg C m\eqn{^{-3}}).}

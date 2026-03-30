@@ -509,7 +509,7 @@ build_params_species <- function(params_species){
   # Ensure certain unused legacy parameters (if provided) are NA.
   # If any other value is received an error is emitted.
   # If not provided set them to NA.
-  must_be_NA_or_missing <- c('phenotype','Vmax','alphaBM','leafLS','lAImax','CNleaf0')
+  must_be_NA_or_missing <- c('phenotype','Vmax','alphaBM','lAImax','CNleaf0')
   
   params_that_should_be_NA <- lapply(
     seq_len(nrow(params_species)), 
@@ -549,6 +549,9 @@ build_params_species <- function(params_species){
   }
   if ('kphio_par_b' %nin% names(params_species)) {
     params_species$kphio_par_b <- 25.0  # optimal temperature of quantum yield efficiency
+  }
+  if ('leafLS' %nin% names(params_species)) {
+    params_species$leafLS <- params_species$LMA * 28.57143 # = LMA * c_LLS
   }
   return(params_species)
 }
@@ -753,7 +756,7 @@ prepare_params_species <- function(params_species){
     "mortrate_d_c",
     "mortrate_d_u",
     "LMA",
-    "leafLS",  # NOTE: dummy parameter, must be NA
+    "leafLS",
     "LNbase",
     "CNleafsupport",
     "rho_wood",

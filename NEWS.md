@@ -5,8 +5,10 @@
   * Cohorts are now less aggressively merged. Merging criteria was simplified from
   relative to absolute DBH difference. Now merging if difference <= 0.01 m.
   * Removed dummy parameters in `params_species` for `run_biomee_f_bysite()`: 
-  `phenotype`,`Vmax`,`alphaBM`,`leafLS`,`lAImax`,`CNleaf0`.
+  `phenotype`,`Vmax`,`alphaBM`,`lAImax`,`CNleaf0`.
   If still provided, they must be NA, otherwise an error occurs.
+  * Activate `leafLS` as `params_species` parameter (was previously using hardcoded 
+  value of 28.57*LMA ≈ 1.4 to 4.9 years depending on LMA.).
 
 # rsofun 5.1.0
 

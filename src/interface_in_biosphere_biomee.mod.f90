@@ -468,7 +468,7 @@ contains
     self%mortrate_d_c       = real( params_species(33))
     self%mortrate_d_u       = real( params_species(34))
     self%LMA                = real( params_species(35)) ! prescribed
-    ! self%leafLS             = real( params_species(36)) ! overridden by self%leafLS = c_LLS * self%LMA
+    self%leafLS             = real( params_species(36))
     self%LNbase             = real( params_species(37))
     self%CNleafsupport      = real( params_species(38))
     self%rho_wood           = real( params_species(39)) ! prescribed
@@ -505,7 +505,6 @@ contains
     ! real    :: root_frac(MAX_LEVELS)              ! root fraction
     ! real    :: SRA                                ! specific fine root area, m2/kg C
     !===== Leaf traits
-    ! real    :: leafLS                             ! leaf life span
     ! real    :: alpha_L                            ! leaf turn over rate, (leaf longevity as a function of LMA)
     ! real    :: LNA                                ! leaf Nitrogen per unit area, kg N/m2
     ! real    :: Vmax                               ! max rubisco rate, mol m-2 s-1
