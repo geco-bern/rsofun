@@ -15,9 +15,6 @@ module md_interface_in_biomee
   integer, public, parameter :: MAX_LEVELS = 3  ! Soil layers, for soil water dynamics
   real, public, parameter ::  thksl(MAX_LEVELS) = (/0.05, 0.45, 1.5/)  ! m, thickness of soil layers
 
-  !===== Leaf life span
-  real, parameter  :: c_LLS = 28.57143    ! yr/ (kg C m-2), c_LLS=1/LMAs, where LMAs = 0.035
-
   !===== Number of parameters
   integer, public, parameter :: nvars_params_siml    = 11
   integer, public, parameter :: nvars_site_info      = 4
@@ -542,9 +539,7 @@ contains
     ! CN0 of leaves
     self%LNA = self%LNbase +  self%LMA/self%CNleafsupport
     self%CNleaf0 = self%LMA/self%LNA
-    ! Leaf life span as a function of LMA
-    self%leafLS = c_LLS * self%LMA
-    
+
     call self%init_derived_species_data()
 
   end subroutine init_pft_data
@@ -571,13 +566,16 @@ contains
       self%root_frac(j) = self%root_frac(j) + residual*thksl(j)/rdepth(MAX_LEVELS)
     enddo
 
+    ! Leaf life span as a function of LMA
+    self%leafLS = self%LMA / 0.035 ! 0.035 hardcoded
+    
     if(self%leafLS>1.0)then
       self%phenotype = 1
     else
       self%phenotype = 0
     endif
 
-    ! Leaf turnover rate, (leaf longevity as a function of LMA)
+    ! Leaf turnover rate
     self%alpha_L = 1.0/self%leafLS * self%phenotype
 
   end subroutine init_derived_species_data
