@@ -81,21 +81,16 @@ params_species <- tibble(
   root_r            = rep(2.9E-4, 5),
   root_zeta         = rep(0.29, 5),
   Kw_root           = rep(3.5e-09, 5),
-  leaf_size         = rep(0.04, 5),  ######### Unused
   # Photosynthesis parameters
-  Vannual           = rep(1.2, 5),
   wet_leaf_dreg     = rep(0.3, 5),
   m_cond            = c(7.0, 7.0, 7.0, 7.0, 7.0), #
   alpha_phot        = rep(0.06, 5),
-  gamma_L           = rep(0.02, 5),
   gamma_LN          = rep(70.5, 5),
   gamma_SW          = c(0.02, 0.08, 0.08, 0.08, 0.08), # Wood Acambium respiration rate (kgC/m2/yr)
   gamma_FR          = rep(12.0, 5),
   tk_crit           = rep(283.16, 5),
   tk_crit_on        = rep(280.16, 5),
   gdd_crit          = rep(280.0, 5),
-  betaON            = rep(0, 5), ######### Unused
-  betaOFF           = rep(0, 5), ######### Unused
   # Allometry parameters
   alphaHT           = rep(36, 5),
   thetaHT           = rep(0.5, 5),

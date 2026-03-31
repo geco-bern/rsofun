@@ -509,7 +509,7 @@ build_params_species <- function(params_species){
   # Ensure certain unused legacy parameters (if provided) are NA.
   # If any other value is received an error is emitted.
   # If not provided set them to NA.
-  must_be_NA_or_missing <- c('phenotype','Vmax','alphaBM','leafLS','lAImax','CNleaf0')
+  must_be_NA_or_missing <- c('phenotype','Vmax','alphaBM','leafLS','lAImax','CNleaf0','gamma_L','Vannual','betaOFF','betaON','leaf_size')
   
   params_that_should_be_NA <- lapply(
     seq_len(nrow(params_species)), 
@@ -726,21 +726,21 @@ prepare_params_species <- function(params_species){
     "root_r",
     "root_zeta",
     "Kw_root",
-    "leaf_size",
+    "leaf_size", # NOTE: dummy parameter, must be NA
     "Vmax",  # NOTE: dummy parameter, must be NA
-    "Vannual",
+    "Vannual",  # NOTE: dummy parameter, must be NA
     "wet_leaf_dreg",
     "m_cond",
     "alpha_phot",
-    "gamma_L",
+    "gamma_L",  # NOTE: dummy parameter, must be NA
     "gamma_LN",
     "gamma_SW",
     "gamma_FR",
     "tk_crit",
     "tk_crit_on",
     "gdd_crit",
-    "betaON",
-    "betaOFF",
+    "betaON",  # NOTE: dummy parameter, must be NA
+    "betaOFF",  # NOTE: dummy parameter, must be NA
     "alphaHT",
     "thetaHT",
     "alphaCA",
