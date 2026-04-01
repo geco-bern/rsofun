@@ -629,7 +629,7 @@ contains
 
           ! Understory mortality
           if (cc%layer > 1) then !
-            deathrate = inputs%params_tile%par_mort_under * sp%mortrate_d_u * &
+            deathrate = sp%mortrate_d_u * &
                      (1. + A_mort*exp(B_mort*dbh))/ &
                      (1. +        exp(B_mort*dbh))
 
@@ -654,7 +654,7 @@ contains
               ! sigmoid that has value A_mort+0.5 at dbh=0
               !         and decreases at high dbh to 1
               !         speed of decrease is given by B_mort
-              deathrate = inputs%params_tile%par_mort_under * sp%mortrate_d_u * &
+              deathrate = sp%mortrate_d_u * &
                      (1.0 + A_mort*exp(B_mort*dbh))/ &
                      (1.0 +        exp(B_mort*dbh))
 

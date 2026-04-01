@@ -74,7 +74,6 @@ module md_interface_in_biomee
     real   :: f_N_add
     real   :: tf_base  ! calibratable
     real   :: par_mort ! calibratable
-    real   :: par_mort_under ! calibratable
   
     !===== GPP P-model parameters (no effect in gs_leuning option)
     real   :: tau_acclim
@@ -412,10 +411,9 @@ contains
     self%f_N_add                  = real( params_tile(16) )
     self%tf_base                  = real( params_tile(17) )
     self%par_mort                 = real( params_tile(18) )
-    self%par_mort_under           = real( params_tile(19) )
 
     ! GPP P-model parameters (no effect in gs_leuning option)
-    self%tau_acclim               = real( params_tile(20) )
+    self%tau_acclim               = real( params_tile(19) )
     !self%soilm_thetastar         = 0.6 * 250 ! unused parameter (not even in PMODEL)
     !self%soilm_betao             = 0.0       ! unused parameter (not even in PMODEL)
 

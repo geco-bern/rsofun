@@ -241,8 +241,12 @@
 #'       \item{f_initialBSW}{Coefficient for setting up initial sapwood.}
 #'       \item{f_N_add}{Re-fill of N for sapwood.}
 #'       \item{tf_base}{Calibratable scalar for respiration, used to increase LUE levels.}
-#'       \item{par_mort}{Canopy mortality parameter.}
-#'       \item{par_mort_under}{Parameter for understory mortality.}
+#'       \item{par_mort}{Canopy mortality parameter. (Differently used depending 
+#'          on method_mortality and do_U_shaped_mortality:
+#'          CAI_max (m\eqn{^{2}} m\eqn{^{-2}}) if "const_selfthin",
+#'          multiplicative factor (-) if "cstarvation" (),
+#'          multiplicative factor (yr\eqn{^{-1}}\m{^{-1.5}}) (deathrate = par_mort * dbh ** 1.5) if 
+#'              )}
 #'     }}
 #'   \item{params_species}{A data.frame containing species-specific model parameters, with one species per row, including the following data:
 #'     \describe{

@@ -68,8 +68,7 @@ params_tile <- tibble(
   f_initialBSW      = 0.2,
   f_N_add           = 0.02,
   tf_base           = 1,
-  par_mort          = 1,
-  par_mort_under    = 1
+  par_mort          = 1
 )
 
 params_species <- tibble(

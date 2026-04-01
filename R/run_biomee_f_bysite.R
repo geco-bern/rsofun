@@ -710,7 +710,6 @@ prepare_params_tile <- function(params_tile){
     "f_N_add",
     "tf_base",
     "par_mort",
-    "par_mort_under",
     "tau_acclim"
   )
   return(params_tile)
