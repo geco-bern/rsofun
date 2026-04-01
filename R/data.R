@@ -279,7 +279,7 @@
 #'          (Differently used depending on method_mortality and do_U_shaped_mortality:
 #'          CAI_max (m\eqn{^{2}} m\eqn{^{-2}}) if "const_selfthin",
 #'          multiplicative factor (-) if "cstarvation" (),
-#'          multiplicative factor (yr\eqn{^{-1}}\m{^{-1.5}}) (deathrate = par_mort * dbh ** 1.5) if "dbh" and "do_U_shaped_mortality"
+#'          multiplicative factor (yr\eqn{^{-1}}m\eqn{^{-1.5}}) (deathrate = par_mort * dbh ** 1.5) if "dbh" and "do_U_shaped_mortality"
 #'              )}
 #'     }}
 #'       \item{mortrate_d_u}{Understory tree mortality rate (yr\eqn{^{-1}}).}
