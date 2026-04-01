@@ -574,10 +574,6 @@ contains
     ! real, parameter :: min_density = 1e-5 ! 2e-15 ! 1/m. If density is less than this number,
     ! then the entire cohort is killed; 2e-15 is approximately 1 individual per Earth
     real :: cCAI ! Cumulative CAI
-    real :: param_dbh_under 
-    real :: param_nsc_under
-    real :: param_dbh 
-    real :: param_nsc
     real :: CAI_max
     real :: dbh ! cache variable
 
@@ -631,28 +627,21 @@ contains
 
         if ((trim(inputs%params_siml%method_mortality) == "cstarvation")) then
 
-          ! set calibratable parameter
-          param_nsc_under = inputs%params_tile%par_mort_under
-          param_nsc       = inputs%params_tile%par_mort
-
           ! Understory mortality
           if (cc%layer > 1) then !
-            deathrate = param_nsc_under * sp%mortrate_d_u * &
+            deathrate = inputs%params_tile%par_mort_under * sp%mortrate_d_u * &
                      (1. + A_mort*exp(B_mort*dbh))/ &
                      (1. +        exp(B_mort*dbh))
 
           else  
             ! Canopy mortality
             if (cc%bl_max > 0) then
-              deathrate = param_nsc * 0.05 * (exp(-3.5*(cc%plabl%c12/cc%bl_max))/(0.01+exp(-3.5*(cc%plabl%c12/cc%bl_max)))) ! -3.5,-2.5,-2
+              deathrate = inputs%params_tile%par_mort * 0.05 * &
+                        (exp(-3.5*(cc%plabl%c12/cc%bl_max))/(0.01+exp(-3.5*(cc%plabl%c12/cc%bl_max)))) ! -3.5,-2.5,-2
             endif
           endif
 
         else if ((trim(inputs%params_siml%method_mortality) == "dbh")) then
-
-          ! set calibratable parameter
-          param_dbh_under = inputs%params_tile%par_mort_under
-          param_dbh       = inputs%params_tile%par_mort
 
           if (sp%lifeform == 0) then  ! for grasses
             if (cc%layer > 1) then
@@ -662,16 +651,19 @@ contains
             endif
           else                    ! for trees
             if (cc%layer > 1) then ! Understory layer mortality Weng 2015: deathrate = 0.075*(1+9*exp(-60*cc%dbh()))/(1+exp(-60*cc%dbh()))
-              deathrate = param_dbh_under * sp%mortrate_d_u * &
+              ! sigmoid that has value A_mort+0.5 at dbh=0
+              !         and decreases at high dbh to 1
+              !         speed of decrease is given by B_mort
+              deathrate = inputs%params_tile%par_mort_under * sp%mortrate_d_u * &
                      (1.0 + A_mort*exp(B_mort*dbh))/ &
                      (1.0 +        exp(B_mort*dbh))
 
             else  ! First layer mortality Weng 2015: deathrate = 0.01*(1+5*exp(4*(cc%dbh()-2)))/(1+exp(4*(cc%dbh()-2)))
               if (inputs%params_siml%do_U_shaped_mortality) then
-                ! deathrate = param_dbh * 0.1 *    &
+                ! deathrate = inputs%params_tile%par_mort * 0.1 *    &
                 !            (1.*exp(2.*(cc%dbh()-1))/  &
                 !            (1. + exp(2.*(cc%dbh()-1))))
-                deathrate = min(1.0, param_dbh * dbh ** 1.5) ! 1.5, 2.5, 5
+                deathrate = min(1.0, inputs%params_tile%par_mort * dbh ** 1.5) ! 1.5, 2.5, 5
               else
                 deathrate = sp%mortrate_d_c
               endif
