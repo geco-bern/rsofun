@@ -709,7 +709,6 @@ prepare_params_tile <- function(params_tile){
     "f_initialBSW",
     "f_N_add",
     "tf_base",
-    "par_mort",
     "tau_acclim"
   )
   return(params_tile)

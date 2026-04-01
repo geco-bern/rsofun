@@ -181,7 +181,7 @@ test_that("test likelihood/RMSE calculations with BiomeE", {
     phiRL     = c(6.59158648136072, 2.41828079945408, 4.51794087081216, 0.323927985038608), 
     LAI_light = c(4.83413460890297, 4.89137732107192, 6.25084221335128, 1.65691818702035), 
     tf_base   = c(0.986252965405583, 1.52580757206306, 0.278885046485811, 0.125027264398523), 
-    par_mort  = c(1.64211843877565, 0.579043845250271, 1.28934027748182, 1.11228716920596), 
+    mortrate_d_c = c(1.64211843877565, 0.579043845250271, 1.28934027748182, 1.11228716920596), 
     err_GPP   = c(2.9679689736967, 3.70911861001514, 1.16307689385489, 0.195016647893935)
   ) # TODO: in BiomeE output is uppercase GPP, but in p-model it is lowercase
   
@@ -190,21 +190,21 @@ test_that("test likelihood/RMSE calculations with BiomeE", {
   # test_params_BiomeE was created with:    phiRL              = 3.5,
   # test_params_BiomeE was created with:    LAI_light          = 3.5,
   # test_params_BiomeE was created with:    tf_base            = 1,
-  # test_params_BiomeE was created with:    par_mort           = 1,
+  # test_params_BiomeE was created with:    mortrate_d_c     = 1,
   # test_params_BiomeE was created with:    err_GPP          = 1
   # test_params_BiomeE was created with:  )
   # test_params_BiomeE was created with:  parBiomeE_cal_min <- c(
   # test_params_BiomeE was created with:    phiRL              = 0.1,
   # test_params_BiomeE was created with:    LAI_light          = 0.1,
   # test_params_BiomeE was created with:    tf_base            = 0.1,
-  # test_params_BiomeE was created with:    par_mort           = 0.1,
+  # test_params_BiomeE was created with:    mortrate_d_c     = 0.1,
   # test_params_BiomeE was created with:    err_GPP          = 0.01
   # test_params_BiomeE was created with:  )
   # test_params_BiomeE was created with:  parBiomeE_cal_max <- c(
   # test_params_BiomeE was created with:    phiRL              = 7.0,
   # test_params_BiomeE was created with:    LAI_light          = 7.0,
   # test_params_BiomeE was created with:    tf_base            = 2.0,
-  # test_params_BiomeE was created with:    par_mort           = 2.0,
+  # test_params_BiomeE was created with:    mortrate_d_c     = 2.0,
   # test_params_BiomeE was created with:    err_GPP          = 4
   # test_params_BiomeE was created with:  )
   # test_params_BiomeE was created with:  prior_BiomeE <- createUniformPrior(lower = parBiomeE_cal_min, upper = parBiomeE_cal_max, best = parBiomeE_cal_best)

@@ -593,7 +593,7 @@ contains
       end do
 
       ! set calibratable mortality parameter
-      CAI_max = inputs%params_tile%par_mort
+      CAI_max = 1.0 ! used to be calibrateable (Slight misuse of par_mort. Set to 1.0 (former default) instead of replacing with sp%mortrate_d_c.)
 
       ! This thinning method depends on the order of the cohorts (oldest cohorts tends to die first)
       ! We sort the cohorts by increasing height
@@ -636,7 +636,7 @@ contains
           else  
             ! Canopy mortality
             if (cc%bl_max > 0) then
-              deathrate = inputs%params_tile%par_mort * 0.05 * &
+              deathrate = sp%mortrate_d_c * &
                         (exp(-3.5*(cc%plabl%c12/cc%bl_max))/(0.01+exp(-3.5*(cc%plabl%c12/cc%bl_max)))) ! -3.5,-2.5,-2
             endif
           endif
@@ -660,10 +660,10 @@ contains
 
             else  ! First layer mortality Weng 2015: deathrate = 0.01*(1+5*exp(4*(cc%dbh()-2)))/(1+exp(4*(cc%dbh()-2)))
               if (inputs%params_siml%do_U_shaped_mortality) then
-                ! deathrate = inputs%params_tile%par_mort * 0.1 *    &
+                ! deathrate = sp%mortrate_d_c * 0.1 *    &
                 !            (1.*exp(2.*(cc%dbh()-1))/  &
                 !            (1. + exp(2.*(cc%dbh()-1))))
-                deathrate = min(1.0, inputs%params_tile%par_mort * dbh ** 1.5) ! 1.5, 2.5, 5
+                deathrate = min(1.0, sp%mortrate_d_c * dbh ** 1.5) ! 1.5, 2.5, 5
               else
                 deathrate = sp%mortrate_d_c
               endif

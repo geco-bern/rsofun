@@ -62,13 +62,6 @@ This data structure can be freely used for documenting the dataset, but must inc
       \item{f_initialBSW}{Coefficient for setting up initial sapwood.}
       \item{f_N_add}{Re-fill of N for sapwood.}
       \item{tf_base}{Calibratable scalar for respiration, used to increase LUE levels.}
-      \item{par_mort}{Canopy mortality parameter. (Differently used depending 
-         on method_mortality and do_U_shaped_mortality:
-         CAI_max (m\eqn{^{2}} m\eqn{^{-2}}) if "const_selfthin",
-         multiplicative factor (-) if "cstarvation" (),
-         multiplicative factor (yr\eqn{^{-1}}\m{^{-1.5}}) (deathrate = par_mort * dbh ** 1.5) if 
-             )}
-    }}
   \item{params_species}{A data.frame containing species-specific model parameters, with one species per row, including the following data:
     \describe{
     \item{The following columns pertaining to the \bold{plant type}:}{\describe{
@@ -103,7 +96,13 @@ This data structure can be freely used for documenting the dataset, but must inc
       \item{maturalage}{Age at which trees can reproduce (years).}
       \item{v_seed}{Fraction of G_SF to G_F.}
     }}\item{The following columns pertaining to the \bold{mortality parameters}:}{\describe{
-      \item{mortrate_d_c}{Canopy tree mortality rate (yr\eqn{^{-1}}).}
+      \item{mortrate_d_c}{Canopy tree mortality rate (yr\eqn{^{-1}}).
+         (Differently used depending on method_mortality and do_U_shaped_mortality:
+         CAI_max (m\eqn{^{2}} m\eqn{^{-2}}) if "const_selfthin",
+         multiplicative factor (-) if "cstarvation" (),
+         multiplicative factor (yr\eqn{^{-1}}\m{^{-1.5}}) (deathrate = par_mort * dbh ** 1.5) if "dbh" and "do_U_shaped_mortality"
+             )}
+    }}
       \item{mortrate_d_u}{Understory tree mortality rate (yr\eqn{^{-1}}).}
     }}\item{The following columns pertaining to the \bold{leaf parameters}:}{\describe{
       \item{LMA}{Leaf mass per unit area (kg C m\eqn{^{-2}}).}

@@ -8,8 +8,8 @@
   `phenotype`,`Vmax`,`alphaBM`,`leafLS`,`lAImax`,`CNleaf0`,`gamma_L`,`Vannual`,
   `betaON`,`betaOFF`, `leaf_size`.
   If still provided, they must be NA, otherwise an error occurs.
-  * Removed parameter `params_tile$par_mort_under`, whose effect can be fully specified by 
-  `params_species%mortrate_d_u` (for trees and for grasses)
+  * Removed parameter `params_tile$par_mort_under` and  `params_tile$par_mort`, whose effects can be fully specified by 
+  `params_species%mortrate_d_u` and `params_species%mortrate_d_c` (for trees and for grasses)
 * P-model:
   * no changes
 

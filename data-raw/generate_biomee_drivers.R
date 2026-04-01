@@ -67,8 +67,7 @@ params_tile <- tibble(
   retransN          = 0.0,
   f_initialBSW      = 0.2,
   f_N_add           = 0.02,
-  tf_base           = 1,
-  par_mort          = 1
+  tf_base           = 1
 )
 
 params_species <- tibble(
@@ -101,7 +100,11 @@ params_species <- tibble(
   maturalage        = c(0, 5, 5, 5, 5),               # (AgeRepro)
   v_seed            = rep(0.1, 5),
   # Mortality parameters
-  mortrate_d_c      = c(0.02, 0.01, 0.01, 0.01, 0.01),# canopy tree mortality rate, year-1 (r0mort_c)
+  mortrate_d_c      = c(0.02, 1.00, 1.00, 1.00, 1.00),    # canopy tree mortality parameter:
+                                                          # ([ ] rate:             year-1 if "cstarvation", and for grasses i.e. lifeform==0
+                                                          #  [x] rate per dbh^1.5: year-1 m-1.5 if "dbh"+do_U_shaped_mortality,
+                                                          #  [ ] CAI_max:          m2 m-2 if "const_selfthin"
+                                                          #  )
   mortrate_d_u      = c(4.0, 0.075, 0.075, 0.075, 0.075), # understory tree mortality rate, year-1 (A_sd)
   # Leaf parameters
   LMA               = c(0.02, 0.05, 0.17, 0.11, 0.1), # Leaf mass per unit area
