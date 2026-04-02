@@ -342,7 +342,8 @@ df_plot <- output |>
     by = join_by(date)
   )
 
-plot_eval(df_plot, is_gpp = FALSE)
+gg <- plot_eval(df_plot, is_gpp = FALSE)
+gg
 ```
 
 ### Gs-coupled diffusion ET

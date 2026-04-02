@@ -209,6 +209,7 @@ contains
         out_biosphere%latenth_soil(doy) = tile_fluxes(1)%canopy%daet_e_soil
         out_biosphere%dpsi(doy)    = tile_fluxes(1)%plant(1)%dpsi
         out_biosphere%psi_leaf(doy)    = tile_fluxes(1)%plant(1)%psi_leaf
+        out_biosphere%runoff(doy)    = tile_fluxes(1)%canopy%dro
 
         init_daily = .false.
 

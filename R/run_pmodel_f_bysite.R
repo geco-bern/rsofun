@@ -514,7 +514,9 @@ run_pmodel_f_bysite <- function( # TODO: Above docstring appears duplicated in r
           "le_canopy",
           "le_soil",
           "dpsi",
-          "psi_leaf")
+          "psi_leaf",
+          "runoff"
+        )
         ) %>%
       as_tibble(.name_repair = "check_unique") %>%
       dplyr::bind_cols(ddf,.)
@@ -543,7 +545,8 @@ run_pmodel_f_bysite <- function( # TODO: Above docstring appears duplicated in r
                   le_canopy = NA,
                   le_soil = NA,
                   dpsi = NA,
-                  psi_leaf = NA
+                  psi_leaf = NA,
+                  runoff = NA
                   )
   }
     

@@ -84,7 +84,7 @@ module md_interface_pmodel
     real, dimension(ndayyear) :: latenth_soil
     real, dimension(ndayyear) :: dpsi
     real, dimension(ndayyear) :: psi_leaf
-
+    real, dimension(ndayyear) :: runoff
   end type outtype_biosphere
 
 end module md_interface_pmodel
