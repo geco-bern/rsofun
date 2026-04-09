@@ -30,3 +30,5 @@
 # Debugging
 ^\.vscode$
 ^CITATION\.cff$
+^debug$
+^\.devcontainer$
