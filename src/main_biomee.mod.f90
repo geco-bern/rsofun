@@ -64,7 +64,7 @@ contains
     integer(kind=c_int), intent(in) :: n_params_species
     real(kind=c_double), dimension(n_params_species, nvars_params_species), intent(in) :: params_species
     integer(kind=c_int), intent(in) :: n_init_cohort
-    real(kind=c_double), dimension(n_init_cohort,nvars_init_cohorts),  intent(in)  :: init_cohort
+    real(kind=c_double), dimension(n_init_cohort, nvars_init_cohorts),  intent(in)  :: init_cohort
     real(kind=c_double), dimension(nvars_init_soil),   intent(in)  :: init_soil
     real(kind=c_double), dimension(nvars_params_tile), intent(in) :: params_tile
     real(kind=c_double), dimension(nvars_params_siml), intent(in) :: params_siml

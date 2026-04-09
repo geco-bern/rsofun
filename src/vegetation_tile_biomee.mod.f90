@@ -1059,6 +1059,7 @@ contains
         cc => new%cohort
         cc%species   = inputs%init_cohort(i)%init_cohort_species
         cc%density   = inputs%init_cohort(i)%init_cohort_density ! trees/m2
+        cc%age       = inputs%init_cohort(i)%init_cohort_age ! years
         cc%plabl%c12 = inputs%init_cohort(i)%init_cohort_nsc
         cc%psapw%c12 = inputs%init_cohort(i)%init_cohort_bsw
         cc%pwood%c12 = inputs%init_cohort(i)%init_cohort_bHW
@@ -1066,15 +1067,6 @@ contains
         cc%proot%c12 = inputs%init_cohort(i)%init_cohort_br
         cc%pseed%c12 = inputs%init_cohort(i)%init_cohort_seedC
         call cc%initialize_cohort_from_biomass()
-        
-        ! NOTE: create_cohort() initialize age at 0
-        !       If we initialize a vegetation structure, starting from an age older than 0 ensures reproduction from year 1 on.
-        ! NOTE: initialize_vegn_tile() is called when starting the simulation, but also when land use changes: new forest
-        !       is created
-        cc%age = inputs%params_species(cc%species)%maturalage
-        ! NOTE: alternatively, one could use a prescribed input:
-        ! cc%age = inputs%init_cohort(i)%init_cohort_age ! years
-        ! NOTE: alternatively, one could use an allometric relationship to link biomass to age.
 
       enddo
 

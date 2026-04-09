@@ -245,6 +245,9 @@ run_biomee_f_bysite <- function(
   params_siml <- build_params_siml(params_siml, forcing_years, makecheck)
   params_tile <- build_params_tile(params_tile)
   params_species <- build_params_species(params_species)
+  init_cohort <- build_init_cohort(init_cohort)
+  init_soil <- build_init_soil(init_soil)
+  forcing <- build_forcing(forcing)
   
   # Build LULUC parameters
   init_lu     <- build_init_lu(init_lu)
@@ -269,7 +272,7 @@ run_biomee_f_bysite <- function(
     site_info        = as.matrix(prepare_site_info(site_info)),
     params_tile      = as.matrix(prepare_params_tile(params_tile)),
     params_species   = as.matrix(prepare_params_species(params_species)),
-    init_cohort      = as.matrix(prepare_init_cohorts(init_cohort)),
+    init_cohort      = as.matrix(prepare_init_cohort(init_cohort)),
     init_soil        = as.matrix(prepare_init_soil(init_soil)),
     forcing          = as.matrix(prepare_forcing(forcing)),
     init_lu          = as.matrix(prepare_init_lu(init_lu)),
@@ -373,6 +376,8 @@ build_lu_out <- function(biomeeout, lu, trimmed_object){
 # The use of 'select()' ensure that the data are sent in the right order (and that no column is missing).
 # In particular, we remove columns containing characters (to not encounter issues within Fortran).
 
+`%nin%` <- Negate(`%in%`)
+
 build_site_info <- function(site_info, forcing){
   
   # Add tc_home to site_info 
@@ -420,7 +425,6 @@ build_site_info <- function(site_info, forcing){
 }
 
 build_params_siml <- function(params_siml, forcing_years, makecheck){
-  `%nin%` <- Negate(`%in%`)
   if ("spinup" %nin% names(params_siml))
     params_siml$spinup <- params_siml$spinupyears > 0
   else if (params_siml$spinup != (params_siml$spinupyears > 0)) {
@@ -499,7 +503,6 @@ build_params_siml <- function(params_siml, forcing_years, makecheck){
 
 build_params_tile <- function(params_tile){
   # Default values (of formerly hard-coded)
-  `%nin%` <- Negate(`%in%`)
   if ('tau_acclim' %nin% names(params_tile)) {
     params_tile$tau_acclim <- 30.0  # days, acclimation time scale of p-model (vcmax, jmax)
   }
@@ -531,7 +534,6 @@ build_params_species <- function(params_species){
   params_species[, must_be_NA_or_missing] <- NA
 
   # Default values (of formerly hard-coded)
-  `%nin%` <- Negate(`%in%`)
   if ('kphio' %nin% names(params_species)) {
     params_species$kphio <- 0.05  # ! quantum yield efficiency at optimal temperature, phi_0 (Stocker et al., 2020 GMD Eq. 10)
   }
@@ -551,6 +553,23 @@ build_params_species <- function(params_species){
     params_species$kphio_par_b <- 25.0  # optimal temperature of quantum yield efficiency
   }
   return(params_species)
+}
+
+build_init_cohort <- function(init_cohort){
+  if ('init_cohort_age' %nin% names(init_cohort)) {
+    init_cohort$init_cohort_age <- 0.0  # former default: initialize at 0 years old
+  }
+  return(init_cohort)
+}
+
+build_init_soil <- function(init_soil){
+  #browser() # currently build_init_soil has no-effect
+  return(init_soil)
+}
+
+build_forcing <- function(forcing){
+  #browser() # currently build_forcing has no-effect
+  return(forcing)
 }
 
 prepare_params_siml <- function(params_siml){
@@ -666,7 +685,7 @@ prepare_site_info <- function(site_info){
   return(site_info)
 }
 
-prepare_init_cohorts <- function(init_cohort){
+prepare_init_cohort <- function(init_cohort){
   if ('init_n_cohorts' %in% names(init_cohort)) {
     warning("Warning: Ignoring column 'init_n_cohorts' under 'init_cohort' in drivers. It has been phased out and should be removed from drivers.")
   }
@@ -678,6 +697,7 @@ prepare_init_cohorts <- function(init_cohort){
   init_cohort <- init_cohort %>% select(
     "init_cohort_species",
     "init_cohort_nindivs",
+    "init_cohort_age",
     "init_cohort_bl",
     "init_cohort_br",
     "init_cohort_bsw",

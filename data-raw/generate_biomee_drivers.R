@@ -139,6 +139,7 @@ params_species <- params_species[2:5, ] # NOTE: current drivers and outputs had 
 init_cohort <- tibble(
   init_cohort_species = rep(2, 1),    # indicates sps # 2 - Fagus sylvatica
   init_cohort_nindivs = rep(0.05, 1), # initial individual density, individual/m2 ! 1 indiv/m2 = 10.000 indiv/ha
+  init_cohort_age     = rep(0.0, 1),  # initial age, year
   init_cohort_bl      = rep(0.0, 1),  # initial biomass of leaves, kg C/individual
   init_cohort_br      = rep(0.0, 1),  # initial biomass of fine roots, kg C/individual
   init_cohort_bsw     = rep(0.05, 1), # initial biomass of sapwood, kg C/individual

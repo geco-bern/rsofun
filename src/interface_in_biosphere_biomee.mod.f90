@@ -23,7 +23,7 @@ module md_interface_in_biomee
   integer, public, parameter :: nvars_site_info      = 4
   integer, public, parameter :: nvars_params_tile    = 20
   integer, public, parameter :: nvars_init_soil      = 4
-  integer, public, parameter :: nvars_init_cohorts   = 9
+  integer, public, parameter :: nvars_init_cohorts   = 10
   integer, public, parameter :: nvars_params_species = 60
   integer, public, parameter :: nvars_init_lu        = 5
 
@@ -183,6 +183,7 @@ module md_interface_in_biomee
   type init_cohort_biomee
     integer :: init_cohort_species
     real    :: init_cohort_density
+    real    :: init_cohort_age
     real    :: init_cohort_bl
     real    :: init_cohort_br
     real    :: init_cohort_bsw
@@ -367,13 +368,14 @@ contains
 
     self%init_cohort_species = int( init_cohort(1))
     self%init_cohort_density = real(init_cohort(2))
-    self%init_cohort_bl      = real(init_cohort(3))
-    self%init_cohort_br      = real(init_cohort(4))
-    self%init_cohort_bsw     = real(init_cohort(5))
-    self%init_cohort_bHW     = real(init_cohort(6))
-    self%init_cohort_seedC   = real(init_cohort(7))
-    self%init_cohort_nsc     = real(init_cohort(8))
-    self%lu_index            = int( init_cohort(9))
+    self%init_cohort_age     = real(init_cohort(3))
+    self%init_cohort_bl      = real(init_cohort(4))
+    self%init_cohort_br      = real(init_cohort(5))
+    self%init_cohort_bsw     = real(init_cohort(6))
+    self%init_cohort_bHW     = real(init_cohort(7))
+    self%init_cohort_seedC   = real(init_cohort(8))
+    self%init_cohort_nsc     = real(init_cohort(9))
+    self%lu_index            = int( init_cohort(10))
   end subroutine populate_init_cohort
   
   subroutine populate_init_soil(self, init_soil)

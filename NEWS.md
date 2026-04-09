@@ -8,8 +8,12 @@
   `phenotype`,`Vmax`,`alphaBM`,`leafLS`,`lAImax`,`CNleaf0`,`gamma_L`,`Vannual`,
   `betaON`,`betaOFF`, `leaf_size`.
   If still provided, they must be NA, otherwise an error occurs.
-  * Removed parameter `params_tile$par_mort_under` and  `params_tile$par_mort`, whose effects can be fully specified by 
-  `params_species%mortrate_d_u` and `params_species%mortrate_d_c` (for trees and for grasses)
+  * Removed parameter `params_tile$par_mort_under` and  `params_tile$par_mort`, 
+  whose effects can be fully specified by `params_species$mortrate_d_u` and 
+  `params_species$mortrate_d_c` (for trees and for grasses)
+  * Added optional parameter `init_cohort$init_cohort_age` to specify a corresponding 
+  initial age distribution in years (default = 0). Default ensures backwards compatibility.
+  Age affects reproduction through `params_species$matural_age`
 * P-model:
   * no changes
 

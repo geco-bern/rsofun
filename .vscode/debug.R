@@ -75,6 +75,7 @@ check_biomee_aggressive_merging <- function(){
   drivers$params_species[[1]]$CNleaf0 <- NA
   drivers$params_species[[1]]$gamma_L <- NA
   drivers$params_species[[1]]$leaf_size <- NA
+  drivers$init_cohort[[1]]$init_cohort_age <- seq(nrow(drivers$init_cohort[[1]]), 1)
 
   runread_biomee_f(drivers, makecheck = TRUE, ncores = 1)
 }
