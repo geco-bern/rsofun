@@ -164,7 +164,7 @@ contains
 
         if (old_lu_fractions(j) <= 0 .and. lu_fractions(j) > 0) then
           ! If a tile had null fraction and has now non-null, we initialize it.
-          call lu%vegn%initialize_vegn_tile(j)
+          call lu%vegn%initialize_vegn_tile(j) ! NOTE: cohorts are initialized (following inputs%init_cohort) and age at maturalage instead of 0.
         else
           it => lu%vegn%cohorts()
           do while (associated(it))
