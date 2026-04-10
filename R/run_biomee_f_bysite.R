@@ -534,6 +534,7 @@ build_params_species <- function(params_species){
   params_species[, must_be_NA_or_missing] <- NA
 
   # Default values (of formerly hard-coded)
+  # TODO: add these to parameters documentation
   if ('kphio' %nin% names(params_species)) {
     params_species$kphio <- 0.05  # ! quantum yield efficiency at optimal temperature, phi_0 (Stocker et al., 2020 GMD Eq. 10)
   }

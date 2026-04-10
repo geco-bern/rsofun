@@ -21,7 +21,7 @@ module md_interface_in_biomee
   !===== Number of parameters
   integer, public, parameter :: nvars_params_siml    = 11
   integer, public, parameter :: nvars_site_info      = 4
-  integer, public, parameter :: nvars_params_tile    = 20
+  integer, public, parameter :: nvars_params_tile    = 18
   integer, public, parameter :: nvars_init_soil      = 4
   integer, public, parameter :: nvars_init_cohorts   = 10
   integer, public, parameter :: nvars_params_species = 60
@@ -132,14 +132,14 @@ module md_interface_in_biomee
     real    :: phiRL                              ! ratio of fine root to leaf area calibratable
     real    :: phiCSA                             ! ratio of sapwood CSA to target leaf area
     real    :: tauNSC                             ! residence time of C in NSC (to define storage capacity)
-    real    :: fNSNmax                            ! multilier for NSNmax
+    real    :: fNSNmax                            ! multiplier for NSNmax
 
     !===== Default C/N ratios
-    real    :: CNleaf0
-    real    :: CNroot0
-    real    :: CNsw0
-    real    :: CNwood0
-    real    :: CNseed0
+    real    :: CNroot0                            ! C/N ratios for plant pools (roots), in kg C kg N\eqn{^{-1}}
+    real    :: CNsw0                              ! C/N ratios for plant pools (sapwood), in kg C kg N\eqn{^{-1}}
+    real    :: CNwood0                            ! C/N ratios for plant pools (heartwood), in kg C kg N\eqn{^{-1}}
+    real    :: CNseed0                            ! C/N ratios for plant pools (seeds), in kg C kg N\eqn{^{-1}}
+    real    :: CNleaf0                            ! C/N ratio (derived from: CNleafsupport, LNbase, LMA)
 
     !===== Phenology
     real    :: tk_crit                            ! K, for turning OFF a growth season
@@ -538,8 +538,8 @@ contains
     self%Vmax = 0.02 * self%LNbase ! 0.03125 * sp%LNbase ! Vmax/LNbase= 25E-6/0.8E-3 = 0.03125 !
 
     ! CN0 of leaves
-    self%LNA = self%LNbase +  self%LMA/self%CNleafsupport
-    self%CNleaf0 = self%LMA/self%LNA
+    self%LNA = self%LNbase +  self%LMA/self%CNleafsupport ! LNbase is metabolic (Rubisco) and support is structural
+    self%CNleaf0 = self%LMA/self%LNA                      ! This is the total leaf (metabolic and structural)
     ! Leaf life span as a function of LMA
     self%leafLS = c_LLS * self%LMA
     

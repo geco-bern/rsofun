@@ -266,10 +266,10 @@
 #'       \item{betaOFF}{Critical soil moisture for phenology offset.}
 #'     }}\item{The following columns pertaining to the \bold{allometry parameters}:}{\describe{
 #'       \item{alphaHT}{Coefficient for allometry (height = alphaHT * DBH_m ** thetaHT), in m m\eqn{^{-thetaHT}}.}
-#'       \item{thetaHT}{Coefficient for allometry (height = alphaHT * DBH_m ** thetaHT), in m m\eqn{^{-thetaHT}}.}
+#'       \item{thetaHT}{Coefficient for allometry (height = alphaHT * DBH_m ** thetaHT), unitless.}
 #'       \item{alphaCA}{Coefficient for allometry (projected crown area = pi * (alphaCA * DBH_m) ** thetaCA), in m\eqn{^{2/thetaCA-1}}.}
-#'       \item{thetaCA}{Coefficient for allometry (projected crown area = pi * (alphaCA * DBH_m) ** thetaCA), unitless. Dybzinski (eq. G1) showed that thetaCA = theatBM - 1.}
-#'       \item{thetaBM}{Coefficient for allometry (biomass = alphaBM * DBH ** thetaBM), unitless. Dybzinski (eq. G1) showed that thetaCA = theatBM - 1.}
+#'       \item{thetaCA}{Coefficient for allometry (projected crown area = pi * (alphaCA * DBH_m) ** thetaCA), unitless. Dybzinski (eq. G1) showed that thetaCA = thetaBM - 1.}
+#'       \item{thetaBM}{Coefficient for allometry (biomass = alphaBM * DBH ** thetaBM), unitless. Dybzinski (eq. G1) showed that thetaCA = thetaBM - 1.}
 #'     }}\item{The following columns pertaining to the \bold{reproduction parameters}:}{\describe{
 #'       \item{seedlingsize}{Initial size of seedlings, in kg C per individual.}
 #'       \item{maturalage}{Age at which trees can reproduce (years).}
@@ -293,10 +293,10 @@
 #'       \item{fNSmax}{Multiplier for NSNmax as sum of potential bl and br.}
 #'       \item{phiCSA}{Ratio of sapwood area to leaf area.}
 #'     }}\item{The following columns pertaining to the \bold{C/N ratios for plant pools}:}{\describe{
-#'       \item{CNsw0}{TODO}
-#'       \item{CNwood0}{TODO}
-#'       \item{CNroot0}{TODO}
-#'       \item{CNseed0}{TODO}
+#'       \item{CNsw0}{C/N ratios for plant pools (sapwood), in kg C kg N\eqn{^{-1}}.}
+#'       \item{CNwood0}{C/N ratios for plant pools (heartwood), in kg C kg N\eqn{^{-1}}.}
+#'       \item{CNroot0}{C/N ratios for plant pools (roots), in kg C kg N\eqn{^{-1}}.}
+#'       \item{CNseed0}{C/N ratios for plant pools (seeds), in kg C kg N\eqn{^{-1}}.}
 #'       \item{Nfixrate0}{Reference N fixation rate (kg N kg C\eqn{^{-1}} root).}
 #'       \item{NfixCost0}{Carbon cost of N fixation (kg C kg N\eqn{^{-1}}).}
 #'       \item{internal_gap_frac}{TODO}
