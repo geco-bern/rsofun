@@ -14,6 +14,7 @@
   * Added optional parameter `init_cohort$init_cohort_age` to specify a corresponding 
   initial age distribution in years (default = 0). Default ensures backwards compatibility.
   Age affects reproduction through `params_species$matural_age`
+  * Added check that all `species$LMA` >= `params_tile$LMAmin`
 * P-model:
   * no changes
 

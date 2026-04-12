@@ -53,7 +53,7 @@ This data structure can be freely used for documenting the dataset, but must inc
       \item{K_nitrogen}{Mineral Nitrogen turnover rate (yr\eqn{^{-1}}).}
       \item{MLmixRatio}{Ratio of C and N returned to litters from microbes.}
       \item{etaN}{N loss rate through runoff (organic and mineral) (yr\eqn{^{-1}}).}
-      \item{LMAmin}{Minimum LMA, leaf mass per unit area, kg C m\eqn{^{-2}}.}
+      \item{LMAmin}{Minimum LMA, leaf mass per unit area, only of parts of the leaf that become fine litter (metabolic parts), kg C m\eqn{^{-2}}. Has to be smaller than LMA.}
       \item{fsc_fine}{Fraction of fast turnover carbon in fine biomass.}
       \item{fsc_wood}{Fraction of fast turnover carbon in wood biomass.}
       \item{GR_factor}{Growth respiration factor.}

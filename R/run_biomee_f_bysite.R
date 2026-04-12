@@ -244,7 +244,7 @@ run_biomee_f_bysite <- function(
   # Add default parameters (backward compatibility layer)
   params_siml <- build_params_siml(params_siml, forcing_years, makecheck)
   params_tile <- build_params_tile(params_tile)
-  params_species <- build_params_species(params_species)
+  params_species <- build_params_species(params_species, params_tile)
   init_cohort <- build_init_cohort(init_cohort)
   init_soil <- build_init_soil(init_soil)
   forcing <- build_forcing(forcing)
@@ -508,8 +508,13 @@ build_params_tile <- function(params_tile){
   }
   return(params_tile)
 }
-build_params_species <- function(params_species){
-  # Ensure certain unused legacy parameters (if provided) are NA.
+build_params_species <- function(params_species, params_tile_arg = NULL){
+  # a) Ensure params_species$LMA >= params_tileLMAmin
+  if (!is.null(params_tile_arg)){ # only check if provided
+    if (!all(params_species$LMA >= params_tile_arg$LMAmin)){stop("LMA of all species must be >= LMAmin")}
+  }
+
+  # b) Ensure certain unused legacy parameters (if provided) are NA.
   # If any other value is received an error is emitted.
   # If not provided set them to NA.
   must_be_NA_or_missing <- c('phenotype','Vmax','alphaBM','leafLS','lAImax','CNleaf0','gamma_L','Vannual','betaOFF','betaON','leaf_size')
