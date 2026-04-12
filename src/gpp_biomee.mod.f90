@@ -61,7 +61,6 @@ contains
     real, allocatable :: fapar_tree(:)                     ! tree-level fAPAR based on LAI within the crown
     real, dimension(nlayers_max-1) :: fapar_layer
     real, parameter :: kappa = 0.5                         ! light extinction coefficient of crown layers (Beer's law)
-    real, parameter :: f_gap = 0.1
 
     ! local variables used for P-model part
     real :: kphio_temp
@@ -83,9 +82,12 @@ contains
     do while (associated(it))
       cc => it%cohort
       i = i + 1
-      LAIlayer(cc%layer) = LAIlayer(cc%layer) + cc%leafarea() * cc%density / (1.0 - f_gap)
+
+      associate ( sp => cc%sp() )
+      LAIlayer(cc%layer) = LAIlayer(cc%layer) + cc%leafarea() * cc%density / (1.0 - sp%internal_gap_frac)
       fapar_tree(i) = 1.0 - exp(-kappa * cc%leafarea() / cc%crownarea())   ! at individual-level: cc%leafarea() represents leaf area index within the crown
       fapar_layer(cc%layer) = fapar_layer(cc%layer) + fapar_tree(i) * cc%crownarea() * cc%density
+      end associate
       it => it%next()
     end do
 
@@ -93,9 +95,9 @@ contains
     f_light(:) = 0.0
     f_light(1) = 1.0
     do i = 2, nlayers_max
-      ! f_light(i) = f_light(i-1) * (exp(-kappa * LAIlayer(i-1)) + f_gap)                     ! originally in LM3-PPA
-      ! f_light(i) = f_light(i-1) * ((1.0 - f_gap) * exp(-kappa * LAIlayer(i-1)) + f_gap)     ! corrected version, corresponding to original LM3-PPA approach
-      f_light(i) = f_light(i-1) * (1.0 - fapar_layer(i-1))                                    ! alternative version for conserving energy
+      ! f_light(i) = f_light(i-1) * (exp(-kappa * LAIlayer(i-1)) + sp%internal_gap_frac)                                    ! originally in LM3-PPA
+      ! f_light(i) = f_light(i-1) * ((1.0 - sp%internal_gap_frac) * exp(-kappa * LAIlayer(i-1)) + sp%internal_gap_frac)     ! corrected version, corresponding to original LM3-PPA approach
+      f_light(i) = f_light(i-1) * (1.0 - fapar_layer(i-1))                                                                  ! alternative version for conserving energy
     enddo
 
 
