@@ -128,6 +128,7 @@ module md_vegetation_tile_biomee
     real    :: evap                               ! Evaporation
     real    :: runoff                             ! Water runoff of the tile
     real    :: precp                              ! Precipitation
+    real    :: f_light_forest_floor               ! Fraction of light reaching forest floor, used to compute evaporation
 
     !=====  Daily fluxes, kg day-1 m-2
     real, private    :: dailyRh

@@ -85,7 +85,6 @@ contains
     !----- local var --------------
       type(cohort_type),pointer :: cc
       real    :: rainwater,W_deficit(MAX_LEVELS),W_add(MAX_LEVELS)
-      real    :: kappa  ! light extinction coefficient of corwn layers
       real    :: Esoil      ! soil surface evaporation, kg m-2 s-1
       real    :: Rsoilabs   ! W/m2
       real    :: Hgrownd    ! Ground heat flux, W/m2
@@ -100,12 +99,10 @@ contains
       real    :: rsoil  ! s m-1
       real    :: raero
       real    :: wsupply
-      real    :: LAI
       real    :: WaterBudgetL(MAX_LEVELS)
       integer :: i
       type(cohort_stack_item), pointer :: it
 
-      LAI = 0.0
       ! Water uptaken by roots, per timestep
       WaterBudgetL = 0.0
       it => vegn%cohorts()
@@ -120,18 +117,14 @@ contains
               WaterBudgetL(:) = WaterBudgetL(:) - cc%WupL(:)/wsupply * cc%fast_fluxes%trsp * cc%density
           endif
 
-          ! the surface of leaves per m2 of ground/tile
-          LAI = LAI + cc%leafarea() * cc%density
-
           it => it%next()
       end do ! all cohorts
 
     !! Soil surface evaporation
-    !    calculate kappa  ! light extinction coefficient of corwn layers
-         kappa = 0.75
-    !    thermodynamic parameters for air
+      ! Read light extinction computed previously:
+      Rsoilabs = forcing%radiation * vegn%f_light_forest_floor
 
-          Rsoilabs = forcing%radiation * exp(-kappa*LAI)
+    !    thermodynamic parameters for air
 
           Hgrownd = 0.0
           TairK = forcing%TairK

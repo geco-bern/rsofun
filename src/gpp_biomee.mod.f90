@@ -54,12 +54,12 @@ contains
     real   :: psyn                                         ! net photosynthesis, mol C/(m2 of leaves s)
     real   :: resp                                         ! leaf respiration, mol C/(m2 of leaves s)
     real   :: w_scale2, transp                             ! mol H20 per m2 of leaf per second
-    real   :: f_light(nlayers_max+1)                       ! incident light fraction at top of a given layer
+    real   :: f_light(nlayers_max+1)                       ! incident light fraction at top of a given layer (+1 to include the forest floor)
     real   :: LAIlayer(nlayers_max)                        ! leaf area index per layer, corrected for gaps (representative for the tree-covered fraction)
     real   :: accuCAI
     real   :: par                                          ! just for temporary use
     real, allocatable :: fapar_tree(:)                     ! tree-level fAPAR based on LAI within the crown
-    real, dimension(nlayers_max-1) :: fapar_layer
+    real, dimension(nlayers_max) :: fapar_layer
 
     ! local variables used for P-model part
     real :: kphio_temp
@@ -93,11 +93,12 @@ contains
     ! Get light received at each crown layer as a fraction of top-of-canopy -> f_light(layer) 
     f_light(:) = 0.0
     f_light(1) = 1.0
-    do i = 2, nlayers_max
+    do i = 2, nlayers_max+1 ! +1 to include the forest floor
       ! f_light(i) = f_light(i-1) * (exp(-sp%kappa * LAIlayer(i-1)) + sp%internal_gap_frac)                                    ! originally in LM3-PPA
       ! f_light(i) = f_light(i-1) * ((1.0 - sp%internal_gap_frac) * exp(-sp%kappa * LAIlayer(i-1)) + sp%internal_gap_frac)     ! corrected version, corresponding to original LM3-PPA approach
       f_light(i) = f_light(i-1) * (1.0 - fapar_layer(i-1))                                                                     ! alternative version for conserving energy
     enddo
+    vegn%f_light_forest_floor = f_light(nlayers_max+1) ! store result for computation of evaporation
 
 
     if (trim(inputs%params_siml%method_photosynth) == "gs_leuning") then
