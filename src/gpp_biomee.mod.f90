@@ -60,7 +60,7 @@ contains
     real   :: par                                          ! just for temporary use
     real, allocatable :: fapar_tree(:)                     ! tree-level fAPAR based on LAI within the crown
     real, dimension(nlayers_max-1) :: fapar_layer
-    real, parameter :: kappa = 0.5                         ! light extinction coefficient of crown layers
+    real, parameter :: kappa = 0.5                         ! light extinction coefficient of crown layers (Beer's law)
     real, parameter :: f_gap = 0.1
 
     ! local variables used for P-model part
@@ -229,6 +229,7 @@ contains
                                 method_jmaxlim = "wang17" &
                                 )
 
+          ! store the calculated photosynthesis, photorespiration, (transpiration (i.e. cc%fast_fluxes%trsp) is kept at initialized 0) for future use in growth
           ! quantities per tree and cumulated over seconds in time step (kgC step-1 tree-1 )
           cc%fast_fluxes%gpp = par * fapar_tree(i) * out_pmodel%lue * cc%crownarea() * inputs%step_seconds * 1.0e-3
           cc%resl = fapar_tree(i) * out_pmodel%vcmax25 * sp%rd_to_vcmax * calc_ftemp_inst_rd( forcing%TairC ) &

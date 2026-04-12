@@ -138,7 +138,7 @@ contains
 
   subroutine fetch_CN_for_growth( cc )
     !////////////////////////////////////////////////////////////////
-    ! Fetch C from labile C pool according to the demand of leaves and fine roots,
+    ! Fetch C from labile C pool according to the demand (pull) of leaves and fine roots,
     ! and the push of labile C pool
     ! DAILY call.
     ! added by Weng, 12-06-2016
@@ -147,13 +147,13 @@ contains
     type(cohort_type), intent(inout) :: cc
     
     ! local variables
-    real :: NSCtarget
+    ! real :: NSCtarget
     real :: C_push, C_pull
     real :: N_push, N_pull
-    real, parameter :: LFR_rate = 1.0  ! filling rate/day
+    real, parameter :: LFR_rate = 1.0  ! filling rate/day ! i.e. the fraction of the missing bl_max or br_max that can be filled up in a single day
 
     associate ( sp => cc%sp() )
-      NSCtarget = 3.0 * (cc%bl_max + cc%br_max)      ! kgC/tree
+      ! NSCtarget = 3.0 * (cc%bl_max + cc%br_max)      ! kgC/tree
       ! Fetch C from labile C pool if it is in the growing season
       if (cc%status == LEAF_ON) then ! growing season
         C_pull = LFR_rate * (Max(cc%bl_max - cc%pleaf%c12,0.0) +   &
@@ -187,14 +187,14 @@ contains
     type(cohort_type), pointer :: cc
     type(cohort_stack_item), pointer :: it
     real :: CSAsw  ! Sapwood cross sectional area, m2
-    real :: CSAwd  ! Heartwood cross sectional area, m2
-    real :: DBHwd  ! diameter of heartwood at breast height, m
+    real :: CSAhw  ! Heartwood cross sectional area, m2
+    real :: DBHhw  ! diameter of heartwood at breast height, m
     real :: BSWmax ! max sapwood biomass, kg C/individual
     real :: G_LFR  ! amount of carbon spent on leaf and root growth
     real :: dSeed ! allocation to seeds, Weng, 2016-11-26
     real :: dBL, dBR ! tendencies of leaf and root biomass, kgC/individual
     real :: dBSW ! tendency of sapwood biomass, kgC/individual
-    real :: dBHW ! tendency of wood biomass, kgC/individual
+    real :: dBHW ! tendency of heartwood biomass, kgC/individual
     real :: dNS    ! Nitrogen from SW to HW
     real :: BL_u, BL_c
     real :: LF_deficit, FR_deficit
@@ -321,15 +321,15 @@ contains
         ! convert sapwood to heartwood for woody plants ! Nitrogen from sapwood to heart wood
         if (sp%lifeform > 0) then
           CSAsw  = cc%bl_max/sp%LMA * sp%phiCSA * cc%height() ! with Plant hydraulics, Weng, 2016-11-30
-          CSAwd  = max(0.0, cc%basal_area() - CSAsw)
-          DBHwd  = 2.0 * sqrt(CSAwd/PI)
-          BSWmax = sp%alphaBM * (cc%dbh()**sp%thetaBM - DBHwd**sp%thetaBM)
+          CSAhw  = max(0.0, cc%basal_area() - CSAsw) ! part of basal_area that is not sapwood is heartwood
+          DBHhw  = 2.0 * sqrt(CSAhw/PI)
+          BSWmax = sp%alphaBM * (cc%dbh()**sp%thetaBM - DBHhw**sp%thetaBM)
           dBHW   = max(cc%psapw%c12 - BSWmax, 0.0)
           dNS    = dBHW / cc%psapw%c12 * cc%psapw%n14
 
-          ! update C and N of sapwood and wood
+          ! update C and N of sapwood and heartwood
           dHW_pool = orgpool(dBHW, cc%psapw%d13, dNS)
-          cc%pwood = cc%pwood + dHW_pool
+          cc%pwood = cc%pwood + dHW_pool 
           cc%psapw = cc%psapw - dHW_pool
 
         endif

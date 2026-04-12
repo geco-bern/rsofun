@@ -85,12 +85,17 @@ This data structure can be freely used for documenting the dataset, but must inc
       \item{gdd_crit}{Critical value of GDD5 for turning ON growth season.}
       \item{betaON}{Critical soil moisture for phenology onset.}
       \item{betaOFF}{Critical soil moisture for phenology offset.}
+      \item{kphio}{Quantum yield efficiency \eqn{\varphi_0}, in mol mol\eqn{^{-1}}.}
     }}\item{The following columns pertaining to the \bold{allometry parameters}:}{\describe{
       \item{alphaHT}{Coefficient for allometry (height = alphaHT * DBH_m ** thetaHT), in m m\eqn{^{-thetaHT}}.}
       \item{thetaHT}{Coefficient for allometry (height = alphaHT * DBH_m ** thetaHT), unitless.}
       \item{alphaCA}{Coefficient for allometry (projected crown area = pi * (alphaCA * DBH_m) ** thetaCA), in m\eqn{^{2/thetaCA-1}}.}
       \item{thetaCA}{Coefficient for allometry (projected crown area = pi * (alphaCA * DBH_m) ** thetaCA), unitless. Dybzinski (eq. G1) showed that thetaCA = thetaBM - 1.}
-      \item{thetaBM}{Coefficient for allometry (biomass = alphaBM * DBH ** thetaBM), unitless. Dybzinski (eq. G1) showed that thetaCA = thetaBM - 1.}
+      \item{thetaBM}{Coefficient for allometry (biomass = alphaBM * DBH ** thetaBM), unitless.}
+      \item{rho_wood}{Wood density (kg C m\eqn{^{-3}}). (Only used to derive alphaBM.)}
+      \item{taperfactor}{Multiplicative factor to correct the cylindric volume/mass calculated with DBH, unitless. E.g. for a cone taperfactor is 1/3 (V = 1/3 Pi * r^2 * HT).  (Only used to derive alphaBM.)}
+      \item{phiCSA}{Ratio of sapwood area to leaf area.}
+      \item{phiRL}{Ratio of fine root to leaf area.}
     }}\item{The following columns pertaining to the \bold{reproduction parameters}:}{\describe{
       \item{seedlingsize}{Initial size of seedlings, in kg C per individual.}
       \item{maturalage}{Age at which trees can reproduce (years).}
@@ -106,24 +111,19 @@ This data structure can be freely used for documenting the dataset, but must inc
       \item{mortrate_d_u}{Understory tree mortality rate (yr\eqn{^{-1}}).}
     }}\item{The following columns pertaining to the \bold{leaf parameters}:}{\describe{
       \item{LMA}{Leaf mass per unit area (kg C m\eqn{^{-2}}).}
-      \item{LNbase}{Basal leaf N per unit area, in kg N m\eqn{^{-2}}.}
-      \item{CNleafsupport}{TODO}
-      \item{rho_wood}{Wood density (kg C m\eqn{^{-3}}).}
-      \item{taperfactor}{TODO}
-      \item{tauNSC}{TODO}
+      \item{LNbase}{Basal leaf N per unit leaf area, in kg N m\eqn{^{-2}}. NOTE: it is used to represent the N content in metabolic parts of the leaf. (TODO: correct?)}
+      \item{CNleafsupport}{C/N ratio of the structural parts of the leaf (non-metabolic parts).}
+      \item{tauNSC}{Residence time of C in NSC (to define storage capacity), in years.}
       \item{fNSmax}{Multiplier for NSNmax as sum of potential bl and br.}
-      \item{phiCSA}{Ratio of sapwood area to leaf area.}
+      \item{internal_gap_frac}{Fraction of internal gaps in the canopy}
     }}\item{The following columns pertaining to the \bold{C/N ratios for plant pools}:}{\describe{
-      \item{CNsw0}{C/N ratios for plant pools (sapwood), in kg C kg N\eqn{^{-1}}.}
-      \item{CNwood0}{C/N ratios for plant pools (heartwood), in kg C kg N\eqn{^{-1}}.}
-      \item{CNroot0}{C/N ratios for plant pools (roots), in kg C kg N\eqn{^{-1}}.}
-      \item{CNseed0}{C/N ratios for plant pools (seeds), in kg C kg N\eqn{^{-1}}.}
+      \item{CNsw0}{C/N ratio of sapwood, in kg C kg N\eqn{^{-1}}.}
+      \item{CNwood0}{C/N ratio of heartwood, in kg C kg N\eqn{^{-1}}.}
+      \item{CNroot0}{C/N ratio of roots, in kg C kg N\eqn{^{-1}}.}
+      \item{CNseed0}{C/N ratio of seeds, in kg C kg N\eqn{^{-1}}.}
       \item{Nfixrate0}{Reference N fixation rate (kg N kg C\eqn{^{-1}} root).}
       \item{NfixCost0}{Carbon cost of N fixation (kg C kg N\eqn{^{-1}}).}
-      \item{internal_gap_frac}{TODO}
     }}\item{The following columns pertaining to the \bold{calibratable parameters}:}{\describe{
-      \item{kphio}{Quantum yield efficiency \eqn{\varphi_0}, in mol mol\eqn{^{-1}}.}
-      \item{phiRL}{Ratio of fine root to leaf area.}
       \item{LAI_light}{Maximum LAI limited by light.}
     }}}}
   \item{init_cohort}{A data.frame of initial cohort specifications, including

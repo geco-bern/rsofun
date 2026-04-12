@@ -533,8 +533,11 @@ contains
 
     ! calculate alphaBM parameter of allometry. note that rho_wood was re-introduced for this calculation ! TODO: note that this overwrites the parameter alphaBM
     self%alphaBM = self%rho_wood * self%taperfactor * PI/4. * self%alphaHT ! 5200
+    ! NOTE: definition of taperfactor is the multiplicative factor to correct the cylindric volume/mass calculated with DBH.
+    ! NOTE: e.g. for a cone the volume formula is: V = 1/3 Pi * r^2 * HT, i.e. for a cone the taperfactor is 1/3.
+    ! TODO: wouldn't this also require that we assume thetaBM == thetaHT ? Which is not enforced with current parameters.
 
-    ! Vmax as a function of LNbase
+    ! Vmax as a function of LNbase (max rubisco rate, mol m-2 s-1)
     self%Vmax = 0.02 * self%LNbase ! 0.03125 * sp%LNbase ! Vmax/LNbase= 25E-6/0.8E-3 = 0.03125 !
 
     ! CN0 of leaves
