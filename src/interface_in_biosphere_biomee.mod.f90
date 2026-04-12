@@ -21,10 +21,10 @@ module md_interface_in_biomee
   !===== Number of parameters
   integer, public, parameter :: nvars_params_siml    = 11
   integer, public, parameter :: nvars_site_info      = 4
-  integer, public, parameter :: nvars_params_tile    = 18
+  integer, public, parameter :: nvars_params_tile    = 20
   integer, public, parameter :: nvars_init_soil      = 4
   integer, public, parameter :: nvars_init_cohorts   = 10
-  integer, public, parameter :: nvars_params_species = 60
+  integer, public, parameter :: nvars_params_species = 65
   integer, public, parameter :: nvars_init_lu        = 5
 
   type init_lu_biomee
@@ -79,6 +79,8 @@ module md_interface_in_biomee
     real   :: soilm_thetastar ! unused parameter
     real   :: soilm_betao     ! unused parameter
   
+    real   :: CN0metabolicL
+    real   :: CN0structuralL
   contains
           
     procedure populate_params_tile
@@ -156,13 +158,17 @@ module md_interface_in_biomee
     real    :: prob_e         = 1.0               ! establishment probability
     real    :: mortrate_d_c                       ! yearly mortality rate in canopy
     real    :: mortrate_d_u                       ! yearly mortality rate in understory
-
+    real    :: A_mort
+    real    :: B_mort
+    
     !===== Population level variables
     real    :: LAImax, underLAImax                ! max. LAI - Overridden
     real    :: LAI_light                          ! light controlled maximum LAI
     real    :: internal_gap_frac                  ! fraction of internal gaps in the canopy
-
     ! "internal" gaps are the gaps that are created within the canopy by the branch fall processes.
+    real    :: kappa
+    real    :: extinct
+    real    :: f_LFR_max
 
     !===== GPP P-model parameters (no effect in gs_leuning option)
     real    :: beta            ! unit cost of carboxylation
@@ -416,6 +422,8 @@ contains
     self%tau_acclim               = real( params_tile(18) )
     !self%soilm_thetastar         = 0.6 * 250 ! unused parameter (not even in PMODEL)
     !self%soilm_betao             = 0.0       ! unused parameter (not even in PMODEL)
+    self%CN0metabolicL            = real( params_tile(19) )
+    self%CN0structuralL           = real( params_tile(20) )
 
   end subroutine populate_params_tile  
   
@@ -497,6 +505,12 @@ contains
 
     self%kphio_par_a     = real( params_species(59))
     self%kphio_par_b     = real( params_species(60))
+
+    self%extinct         = real( params_species(61))
+    self%kappa           = real( params_species(62))
+    self%A_mort          = real( params_species(63))
+    self%B_mort          = real( params_species(64))
+    self%f_LFR_max       = real( params_species(65))
 
     ! Following parameters are not yet populated and will be initialized with init_pft_data():
     ! integer :: phenotype                          ! phenology type: 0 for deciduous, 1 for evergreen

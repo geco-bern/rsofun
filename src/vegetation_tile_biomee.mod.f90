@@ -23,19 +23,6 @@ module md_vegetation_tile_biomee
   !===== Model
   integer, public, parameter :: NLAYERS_MAX = 9     ! maximum number of canopy layers to be considered
 
-  !===== Photosynthesis
-  real, public, parameter  :: extinct = 0.75        ! light extinction coefficient in the canopy for photosynthesis
-
-  !===== Soil SOM reference C/N ratios
-  real, parameter :: CN0metabolicL                       = 15.0
-  real, parameter :: CN0structuralL                      = 40.0
-
-  !===== fraction = mortrate_d_u * (1+A*exp(B*DBH))/(1+exp(B*DBH))
-  real, parameter  :: A_mort     = 9.0    ! A coefficient in understory mortality rate correction, 1/year
-  real, parameter  :: B_mort     = -60.0  ! B coefficient in understory mortality rate correction, 1/m
-
-  !===== Ensheng's growth parameters
-  real, parameter  :: f_LFR_max  = 0.85    ! max allocation to leaves and fine roots
 
   !===== Minimum cohort density
   real, public, parameter :: mindensity = 0.25E-4 ! Minimum cohort density
@@ -1078,8 +1065,8 @@ contains
     ! Initial Soil pools and environmental conditions
     self%psoil_fs%c12 = inputs%init_soil%init_fast_soil_C  ! fast soil carbon pool, (kg C/m2)
     self%psoil_sl%c12 = inputs%init_soil%init_slow_soil_C  ! slow soil carbon pool, (kg C/m2)
-    self%psoil_fs%n14 = self%psoil_fs%c12 / CN0metabolicL  ! fast soil nitrogen pool, (kg N/m2)
-    self%psoil_sl%n14 = self%psoil_sl%c12 / CN0structuralL ! slow soil nitrogen pool, (kg N/m2)
+    self%psoil_fs%n14 = self%psoil_fs%c12 / inputs%params_tile%CN0metabolicL  ! fast soil nitrogen pool, (kg N/m2)
+    self%psoil_sl%n14 = self%psoil_sl%c12 / inputs%params_tile%CN0structuralL ! slow soil nitrogen pool, (kg N/m2)
     self%inorg%n14    = inputs%init_soil%init_Nmineral     ! Mineral nitrogen pool, (kg N/m2)
     self%previousN    = self%inorg%n14
 

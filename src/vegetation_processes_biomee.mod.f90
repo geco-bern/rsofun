@@ -226,7 +226,7 @@ contains
         LF_deficit = max(0.0, cc%bl_max - cc%pleaf%c12)
         FR_deficit = max(0.0, cc%br_max - cc%proot%c12)
         G_LFR = max(min(LF_deficit + FR_deficit,  &
-          f_LFR_max  * cc%C_growth), 0.0)
+          sp%f_LFR_max  * cc%C_growth), 0.0)
 
         ! and distribute it between roots and leaves
         dBL  = min(G_LFR, max(0.0, &
@@ -630,8 +630,8 @@ contains
           ! Understory mortality
           if (cc%layer > 1) then !
             deathrate = sp%mortrate_d_u * &
-                     (1. + A_mort*exp(B_mort*dbh))/ &
-                     (1. +        exp(B_mort*dbh))
+                     (1. + sp%A_mort*exp(sp%B_mort*dbh))/ &
+                     (1. +           exp(sp%B_mort*dbh))
 
           else  
             ! Canopy mortality
@@ -655,8 +655,8 @@ contains
               !         and decreases at high dbh to 1
               !         speed of decrease is given by B_mort
               deathrate = sp%mortrate_d_u * &
-                     (1.0 + A_mort*exp(B_mort*dbh))/ &
-                     (1.0 +        exp(B_mort*dbh))
+                     (1.0 + sp%A_mort*exp(sp%B_mort*dbh))/ &
+                     (1.0 +           exp(sp%B_mort*dbh))
 
             else  ! First layer mortality Weng 2015: deathrate = 0.01*(1+5*exp(4*(cc%dbh()-2)))/(1+exp(4*(cc%dbh()-2)))
               if (inputs%params_siml%do_U_shaped_mortality) then
@@ -1169,8 +1169,8 @@ contains
     vegn%annualN   = vegn%annualN   + delta_N
 
     ! Check if soil C/N is above CN0
-    fast_N_free = MAX(0.0, vegn%psoil_fs%n14  - vegn%psoil_fs%c12/CN0metabolicL)
-    slow_N_free = MAX(0.0, vegn%psoil_sl%n14 - vegn%psoil_sl%c12/CN0structuralL)
+    fast_N_free = MAX(0.0, vegn%psoil_fs%n14  - vegn%psoil_fs%c12/inputs%params_tile%CN0metabolicL)
+    slow_N_free = MAX(0.0, vegn%psoil_sl%n14 - vegn%psoil_sl%c12/inputs%params_tile%CN0structuralL)
 
     vegn%psoil_fs%n14 = vegn%psoil_fs%n14 - fast_N_free
     vegn%psoil_sl%n14 = vegn%psoil_sl%n14 - slow_N_free

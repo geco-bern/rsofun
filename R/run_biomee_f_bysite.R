@@ -506,6 +506,12 @@ build_params_tile <- function(params_tile){
   if ('tau_acclim' %nin% names(params_tile)) {
     params_tile$tau_acclim <- 30.0  # days, acclimation time scale of p-model (vcmax, jmax)
   }
+  if ('CN0metabolicL' %nin% names(params_tile)) { # !===== Soil SOM reference C/N ratios
+    params_tile$CN0metabolicL <- 15.0 # Soil SOM reference C/N ratios (fast, i.e. metabolic part of litter)
+  }
+  if ('CN0structuralL' %nin% names(params_tile)) { # !===== Soil SOM reference C/N ratios
+    params_tile$CN0structuralL <- 40.0 # Soil SOM reference C/N ratios (fast, i.e. structural part of litter)
+  }
   return(params_tile)
 }
 build_params_species <- function(params_species, params_tile_arg = NULL){
@@ -557,6 +563,21 @@ build_params_species <- function(params_species, params_tile_arg = NULL){
   }
   if ('kphio_par_b' %nin% names(params_species)) {
     params_species$kphio_par_b <- 25.0  # optimal temperature of quantum yield efficiency
+  }
+  if ('extinct' %nin% names(params_species)) { # !===== Photosynthesis
+    params_species$extinct <- 0.75 # (TODO: same as kappa below) light extinction coefficient in the canopy for photosynthesis (Beer's law)
+  }
+  if ('kappa' %nin% names(params_species)) { # !===== Photosynthesis
+    params_species$kappa <- 0.5  # light extinction coefficient in the canopy for photosynthesis (Beer's law)
+  }
+  if ('A_mort' %nin% names(params_species)) {
+    params_species$A_mort <- 9.0 # A coefficient in understory mortality rate correction, year-1 (deathrate = mortrate_d_u * (1+A*exp(B*DBH))/(1+exp(B*DBH)))
+  }
+  if ('B_mort' %nin% names(params_species)) {
+    params_species$B_mort <- -60.0 # B coefficient in understory mortality rate correction, m-1 (deathrate = mortrate_d_u * (1+A*exp(B*DBH))/(1+exp(B*DBH)))
+  }
+  if ('f_LFR_max' %nin% names(params_species)) { # !===== Ensheng's growth parameters
+    params_species$f_LFR_max <- 0.85 # Max fraction of total C growth that is allocated to leaves and fine root (remaining C growth used for seeds and DBH growth)
   }
   return(params_species)
 }
@@ -735,7 +756,9 @@ prepare_params_tile <- function(params_tile){
     "f_initialBSW",
     "f_N_add",
     "tf_base",
-    "tau_acclim"
+    "tau_acclim",
+    "CN0metabolicL",
+    "CN0structuralL",
   )
   return(params_tile)
 }
@@ -802,6 +825,11 @@ prepare_params_species <- function(params_species){
     "kc_jmax",
     "kphio_par_a",
     "kphio_par_b",
+    "extinct",
+    "kappa", # TODO: extinct and kappa are actually the same parameter but used in different models with different default values
+    "A_mort",
+    "B_mort",
+    "f_LFR_max",
   )
   return(params_species)
 }

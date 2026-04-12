@@ -60,7 +60,6 @@ contains
     real   :: par                                          ! just for temporary use
     real, allocatable :: fapar_tree(:)                     ! tree-level fAPAR based on LAI within the crown
     real, dimension(nlayers_max-1) :: fapar_layer
-    real, parameter :: kappa = 0.5                         ! light extinction coefficient of crown layers (Beer's law)
 
     ! local variables used for P-model part
     real :: kphio_temp
@@ -85,7 +84,7 @@ contains
 
       associate ( sp => cc%sp() )
       LAIlayer(cc%layer) = LAIlayer(cc%layer) + cc%leafarea() * cc%density / (1.0 - sp%internal_gap_frac)
-      fapar_tree(i) = 1.0 - exp(-kappa * cc%leafarea() / cc%crownarea())   ! at individual-level: cc%leafarea() represents leaf area index within the crown
+      fapar_tree(i) = 1.0 - exp(-sp%kappa * cc%leafarea() / cc%crownarea())   ! at individual-level: cc%leafarea() represents leaf area index within the crown
       fapar_layer(cc%layer) = fapar_layer(cc%layer) + fapar_tree(i) * cc%crownarea() * cc%density
       end associate
       it => it%next()
@@ -95,9 +94,9 @@ contains
     f_light(:) = 0.0
     f_light(1) = 1.0
     do i = 2, nlayers_max
-      ! f_light(i) = f_light(i-1) * (exp(-kappa * LAIlayer(i-1)) + sp%internal_gap_frac)                                    ! originally in LM3-PPA
-      ! f_light(i) = f_light(i-1) * ((1.0 - sp%internal_gap_frac) * exp(-kappa * LAIlayer(i-1)) + sp%internal_gap_frac)     ! corrected version, corresponding to original LM3-PPA approach
-      f_light(i) = f_light(i-1) * (1.0 - fapar_layer(i-1))                                                                  ! alternative version for conserving energy
+      ! f_light(i) = f_light(i-1) * (exp(-sp%kappa * LAIlayer(i-1)) + sp%internal_gap_frac)                                    ! originally in LM3-PPA
+      ! f_light(i) = f_light(i-1) * ((1.0 - sp%internal_gap_frac) * exp(-sp%kappa * LAIlayer(i-1)) + sp%internal_gap_frac)     ! corrected version, corresponding to original LM3-PPA approach
+      f_light(i) = f_light(i-1) * (1.0 - fapar_layer(i-1))                                                                     ! alternative version for conserving energy
     enddo
 
 
@@ -141,7 +140,7 @@ contains
 
           call gs_leuning(rad_top, rad_net, TairK, cana_q, cc%lai(), &
             p_surf, water_supply, cc%species, sp%pt, &
-            cana_co2, extinct, fs+fw, &
+            cana_co2, sp%extinct, fs+fw, &
             psyn, resp, w_scale2, transp )
 
           ! store the calculated photosynthesis, photorespiration, and transpiration for future use in growth
