@@ -399,16 +399,16 @@ build_site_info <- function(site_info, forcing){
     # conditionally add daily max temp (if needed, e.g. when running "gs_leuning" with hourly forcing)
     conditionally_add_tmax() %>%
     # add grouping variables:
-    mutate(month = lubridate::month(.data$date), year = lubridate::year(.data$date)) %>%
+    dplyr::mutate(month = lubridate::month(.data$date), year = lubridate::year(.data$date)) %>%
     # monthly means of daily maximum:
-    group_by(.data$year, .data$month) %>%
-    summarise(monthly_avg_daily_tmax = mean(.data$daily_tmax, na.rm = TRUE), .groups = "drop") %>%
+    dplyr::group_by(.data$year, .data$month) %>%
+    dplyr::summarise(monthly_avg_daily_tmax = mean(.data$daily_tmax, na.rm = TRUE), .groups = "drop") %>%
     # warmest month of each year:
-    group_by(year) %>%
-    summarise(t_warmest_month = max(.data$monthly_avg_daily_tmax)) %>%
+    dplyr::group_by(year) %>%
+    dplyr::summarise(t_warmest_month = max(.data$monthly_avg_daily_tmax)) %>%
     # mean of yearly warmest months:
-    ungroup() %>%
-    summarise(tc_home = mean(.data$t_warmest_month, na.rm = TRUE)) %>%
+    dplyr::ungroup() %>%
+    dplyr::summarise(tc_home = mean(.data$t_warmest_month, na.rm = TRUE)) %>%
     # extract scalar value
     dplyr::pull(.data$tc_home)
   
@@ -600,7 +600,7 @@ build_forcing <- function(forcing){
 }
 
 prepare_params_siml <- function(params_siml){
-  params_siml <- params_siml %>% select(
+  params_siml <- params_siml %>% dplyr::select(
     "spinup", # Dummy argument
     "spinupyears",
     "recycle",
@@ -627,38 +627,38 @@ build_init_lu <- function(init_lu){
 
 prepare_init_lu <- function(init_lu){
   if(!'preset' %in% names(init_lu)) {
-    init_lu <- init_lu %>% mutate(preset = 'unmanaged')
+    init_lu <- init_lu %>% dplyr::mutate(preset = 'unmanaged')
   }
   if(!'extra_N_input' %in% names(init_lu)) {
-    init_lu <- init_lu %>% mutate('extra_N_input' = recode_values(
+    init_lu <- init_lu %>% dplyr::mutate('extra_N_input' = dplyr::recode_values(
       'preset',
       "cropland" ~ 0.01,
       default = 0.0
     ))
   }
   if(!'extra_turnover_rate' %in% names(init_lu)) {
-    init_lu <- init_lu %>% mutate('extra_turnover_rate' = recode_values(
+    init_lu <- init_lu %>% dplyr::mutate('extra_turnover_rate' = dplyr::recode_values(
       'preset',
       "cropland" ~ 0.2,
       default = 0.0
     ))
   }
   if(!'oxidized_litter_fraction' %in% names(init_lu)) {
-    init_lu <- init_lu %>% mutate('oxidized_litter_fraction' = recode_values(
+    init_lu <- init_lu %>% dplyr::mutate('oxidized_litter_fraction' = dplyr::recode_values(
       'preset',
       "cropland" ~ 0.9,
       "pasture" ~ 0.4,
       default = 0.0
     ))
   }
-  init_lu <- init_lu %>% mutate(
-    'vegetated' = recode_values(
+  init_lu <- init_lu %>% dplyr::mutate(
+    'vegetated' = dplyr::recode_values(
       'preset',
       "urban" ~ FALSE,
       default = TRUE
     )
   )
-  init_lu <- init_lu %>% select(
+  init_lu <- init_lu %>% dplyr::select(
     'fraction',
     'vegetated',
     'extra_N_input',
@@ -703,7 +703,7 @@ prepare_forcing <- function(forcing){
 }
 
 prepare_site_info <- function(site_info){
-  site_info <- site_info %>% select(
+  site_info <- site_info %>% dplyr::select(
     "lon",
     "lat",
     "elv",
@@ -718,10 +718,10 @@ prepare_init_cohort <- function(init_cohort){
   }
 
   if(!'lu_index' %in% names(init_cohort)) {
-    init_cohort <- init_cohort %>% mutate('lu_index' = 0)
+    init_cohort <- init_cohort %>% dplyr::mutate('lu_index' = 0)
   }
 
-  init_cohort <- init_cohort %>% select(
+  init_cohort <- init_cohort %>% dplyr::select(
     "init_cohort_species",
     "init_cohort_nindivs",
     "init_cohort_age",
@@ -738,7 +738,7 @@ prepare_init_cohort <- function(init_cohort){
 }
 
 prepare_params_tile <- function(params_tile){
-  params_tile <- params_tile %>% select(
+  params_tile <- params_tile %>% dplyr::select(
     "soiltype",
     "FLDCAP",
     "WILTPT",
@@ -764,7 +764,7 @@ prepare_params_tile <- function(params_tile){
 }
 
 prepare_params_species <- function(params_species){
-  params_species <- params_species %>% select(
+  params_species <- params_species %>% dplyr::select(
     "lifeform",
     "phenotype", # NOTE: dummy parameter, must be NA
     "pt",
@@ -835,7 +835,7 @@ prepare_params_species <- function(params_species){
 }
 
 prepare_init_soil <- function(init_soil){
-  init_soil <- init_soil %>% select(
+  init_soil <- init_soil %>% dplyr::select(
     "init_fast_soil_C",
     "init_slow_soil_C",
     "init_Nmineral",
