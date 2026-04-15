@@ -213,13 +213,16 @@ contains
       ! call biomass_allocation( cc )
       associate (sp => cc%sp())
 
-      if (cc%status == LEAF_ON) then
+      if (cc%status == LEAF_OFF .and. cc%C_growth > 0.0) then
+        call cc%plabl%add_carbon(cc%C_growth, cc%plabl%d13)
+        cc%resg = 0.0
+      elseif (cc%status == LEAF_ON) then
 
         !update leaf age 
         cc%leaf_age = cc%leaf_age + 1.0/365.0
         
         ! Get carbon from NSC pool. This sets cc%C_growth
-        call fetch_CN_for_growth( cc )
+        call fetch_CN_for_growth( cc )                           ! TODO: shouldn't this be called also when cc%status == LEAF_OFF
 
         ! Allocate carbon to the plant pools
         ! calculate the carbon spent on growth of leaves and roots
@@ -362,9 +365,6 @@ contains
           cc%br_max = sp%phiRL * cc%bl_max/(sp%LMA * sp%SRA)
         endif ! for grasses
 
-      elseif (cc%status == LEAF_OFF .and. cc%C_growth > 0.0) then
-        call cc%plabl%add_carbon(cc%C_growth, cc%plabl%d13)
-        cc%resg = 0.0
       endif
 
       ! reset carbon acculmulation terms
