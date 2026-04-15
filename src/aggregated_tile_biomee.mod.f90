@@ -57,7 +57,7 @@ contains
     do lu_idx = 1, nb_lu
       associate(lu => self%tiles(lu_idx))
         lu%fraction = lu_fractions(lu_idx)
-        if (lu%non_empty()) call lu%vegn%initialize_vegn_tile(lu_idx)
+        if (lu%non_empty()) call lu%vegn%initialize_vegn_tile(lu_idx) ! NOTE: cohorts of new simulation are initialized following inputs%init_cohort
       end associate
     end do
   end subroutine initialize
@@ -164,7 +164,9 @@ contains
 
         if (old_lu_fractions(j) <= 0 .and. lu_fractions(j) > 0) then
           ! If a tile had null fraction and has now non-null, we initialize it.
-          call lu%vegn%initialize_vegn_tile(j) ! NOTE: cohorts are initialized (following inputs%init_cohort) and age at maturalage instead of 0.
+          call lu%vegn%initialize_vegn_tile(j) 
+          ! NOTE: cohorts of new tiles are initialized following inputs%init_cohort, NOTE: for new tiles, age should be set at 0, instead of inputs%init_cohort
+          
         else
           it => lu%vegn%cohorts()
           do while (associated(it))

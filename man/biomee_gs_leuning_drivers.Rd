@@ -136,7 +136,7 @@ This data structure can be freely used for documenting the dataset, but must inc
       \item{init_cohort_bsw}{Initial biomass of sapwood, in kg C per individual.}
       \item{init_cohort_bHW}{Initial biomass of heartwood, in kg C per individual.}
       \item{init_cohort_seedC}{Initial biomass of seed, in kg C per individual.}
-      \item{init_cohort_nsc}{Initial non-structural biomass, in kg C per individual.}
+      \item{init_cohort_nsc}{Initial non-structural biomass, in kg C per individual. (optional, defaults to value derived from br_max and bl_max)}
       \item{lu_index}{Land use type this cohorts belongs to (given as index in init_lu aray). (optional)
        Default: 0 (attach to all LU types except thoses which do not accept vegetation -- cf  init_lu.vegetated).}
     }}

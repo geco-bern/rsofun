@@ -2,6 +2,9 @@
 * BiomeEP:
   * Bugfix: annual, cohort-level output had mixed up column names for variables:
   `NSN`,`seedC`,`leafC`,`rootC`,`sapwoodC`,`heartwoodC`
+  * Bugfix: `init_cohort$init_cohort_nsc` is now correctly taken into account. To 
+  remain backward-compatibale, it was made optional. To recover previous behavior 
+  do not provide this column.
   * Cohorts are now less aggressively merged. Merging criteria was simplified from
   relative to absolute DBH difference. Now merging if difference <= 0.01 m.
   * Removed dummy parameters in `params_species` for `run_biomee_f_bysite()`: 

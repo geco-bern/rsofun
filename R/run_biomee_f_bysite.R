@@ -245,7 +245,7 @@ run_biomee_f_bysite <- function(
   params_siml <- build_params_siml(params_siml, forcing_years, makecheck)
   params_tile <- build_params_tile(params_tile)
   params_species <- build_params_species(params_species, params_tile)
-  init_cohort <- build_init_cohort(init_cohort)
+  init_cohort    <- build_init_cohort(init_cohort, params_species)
   init_soil <- build_init_soil(init_soil)
   forcing <- build_forcing(forcing)
   
@@ -582,9 +582,44 @@ build_params_species <- function(params_species, params_tile_arg = NULL){
   return(params_species)
 }
 
-build_init_cohort <- function(init_cohort){
+build_init_cohort <- function(init_cohort, params_species){
   if ('init_cohort_age' %nin% names(init_cohort)) {
     init_cohort$init_cohort_age <- 0.0  # former default: initialize at 0 years old
+  }
+  
+  # This function is needed for defaults of initial NSC or NSN values (if not provided):
+  init_bl_max_br_max <- function(init_cohort, params_species){ # TODO: replace rsofun::
+    # This is now copied to R layer to recover previous default
+    btot <- with(init_cohort, init_cohort_bHW + init_cohort_bsw)
+    species_idx <- with(init_cohort, init_cohort_species)
+    
+    # get species params for calculation
+    alphaBM <- with(params_species[species_idx,],
+                    rho_wood * taperfactor * pi/4. * alphaHT)
+    thetaBM <- with(params_species[species_idx,], thetaBM)
+    alphaCA <- with(params_species[species_idx,], alphaCA)
+    thetaCA <- with(params_species[species_idx,], thetaCA)
+    LMA     <- with(params_species[species_idx,], LMA)
+    LAImax  <- with(params_species[species_idx,],
+                    max(0.5, LAI_light))
+    phiRL   <- with(params_species[species_idx,], phiRL)
+    SRA     <- with(params_species[species_idx,],
+                    2.0/(root_r * rho_FR))
+    
+    # calculate bl_max and br_max to derive previous default NSC or NSN:
+    DBH <- (btot / alphaBM)^( 1.0/thetaBM )
+    crownarea <- alphaCA * DBH^thetaCA
+    layer <- 1 # here we assume all cohorts are layer 1, ideally we would have to compute layers
+    
+    bl_max <- LMA   * LAImax     * crownarea / layer
+    br_max <- phiRL * LAImax/SRA * crownarea / layer
+    
+    return(list(bl_max = bl_max, br_max = br_max))
+  }
+  
+  if ('init_cohort_nsc' %nin% names(init_cohort)) {
+    res <- init_bl_max_br_max(init_cohort, params_species)
+    init_cohort$init_cohort_nsc <- 2.0 * (res$bl_max + res$br_max) # former default: initialize to value based on bl_max and br_max
   }
   return(init_cohort)
 }
