@@ -405,7 +405,7 @@ contains
     ! set bl_max, br_max parameters
     call self%init_bl_max_br_max()
 
-    self%plabl%c12 = 2.0 * (self%bl_max + self%br_max)
+    self%plabl%c12 = 2.0 * (self%bl_max + self%br_max) ! TODO: BUG: this overwrites our specified initial condition: init_cohort$init_cohort_nsc
 
     ! N pools
     self%plabl%n14 = 5.0 * (self%bl_max / sp%CNleaf0 + self%br_max / sp%CNroot0)
