@@ -113,7 +113,7 @@ module md_cohort
 
       procedure reset_cohort
       procedure initialize_cohort_from_biomass
-      procedure init_bl_br
+      procedure init_bl_max_br_max
       procedure can_be_merged_with
 
   end type cohort_type
@@ -402,7 +402,8 @@ contains
 
     sp = self%sp()
 
-    call self%init_bl_br()
+    ! set bl_max, br_max parameters
+    call self%init_bl_max_br_max()
 
     self%plabl%c12 = 2.0 * (self%bl_max + self%br_max)
 
@@ -416,7 +417,7 @@ contains
 
   end subroutine initialize_cohort_from_biomass
 
-  pure subroutine init_bl_br( self )
+  pure subroutine init_bl_max_br_max( self )
     !////////////////////////////////////////////////////////////////
     ! Initialize bl_max and br_max
     !---------------------------------------------------------------
@@ -437,6 +438,6 @@ contains
     self%bl_max = sp%LMA   * sp%LAImax        * crownarea / self%layer
     self%br_max = sp%phiRL * sp%LAImax/sp%SRA * crownarea / self%layer
 
-  end subroutine init_bl_br
+  end subroutine init_bl_max_br_max
 
 end module md_cohort

@@ -72,7 +72,7 @@ module md_interface_out_biomee
   integer, public, parameter :: ANNUAL_COHORTS_DBA            = 13
   integer, public, parameter :: ANNUAL_COHORTS_ACROWN         = 14
   integer, public, parameter :: ANNUAL_COHORTS_ALEAF          = 15
-  integer, public, parameter :: ANNUAL_COHORTS_NCS            = 16
+  integer, public, parameter :: ANNUAL_COHORTS_NSC            = 16
   integer, public, parameter :: ANNUAL_COHORTS_NSN            = 17
   integer, public, parameter :: ANNUAL_COHORTS_SEED_C         = 18
   integer, public, parameter :: ANNUAL_COHORTS_LEAF_C         = 19

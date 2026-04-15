@@ -523,7 +523,7 @@ contains
       do while (associated(it2))
         if (it1%cohort%can_be_merged_with(it2%cohort)) then
           it2 => self%merge_cohorts(it1, it2)
-          call it1%cohort%init_bl_br()
+          call it1%cohort%init_bl_max_br_max()
         else
           it2 => it2%next()
         end if
@@ -755,7 +755,7 @@ contains
     logical, intent(in) :: cohort_reporting
 
     ! local variables
-    real :: treeG, fseed, fleaf, froot, fwood, dDBH, BA, dBA
+    real :: treeG, fseed, fleaf, froot, fwood, dDBH, dBA
     real :: plantC, plantN, soilC, soilN
     type(cohort_type), pointer :: cc
     type(cohort_stack_item), pointer :: it
@@ -781,8 +781,7 @@ contains
         froot     = cc%NPProot / treeG
         fwood     = cc%NPPwood / treeG
         dDBH      = cc%dbh() - cc%DBH_ys !in m
-        BA        = cc%basal_area()
-        dBA       = BA - cc%BA_ys
+        dBA       = cc%basal_area() - cc%BA_ys
 
         if (i <= NCohortMax) then
 
@@ -797,11 +796,11 @@ contains
           self%out_annual_cohorts(i, ANNUAL_COHORTS_DDBH       ) = dDBH * 100           ! *100 to convert m in cm
           self%out_annual_cohorts(i, ANNUAL_COHORTS_HEIGHT     ) = cc%height()
           self%out_annual_cohorts(i, ANNUAL_COHORTS_AGE        ) = cc%age
-          self%out_annual_cohorts(i, ANNUAL_COHORTS_BA         ) = BA
+          self%out_annual_cohorts(i, ANNUAL_COHORTS_BA         ) = cc%basal_area()
           self%out_annual_cohorts(i, ANNUAL_COHORTS_DBA        ) = dBA
           self%out_annual_cohorts(i, ANNUAL_COHORTS_ACROWN     ) = cc%crownarea()
           self%out_annual_cohorts(i, ANNUAL_COHORTS_ALEAF      ) = cc%leafarea()
-          self%out_annual_cohorts(i, ANNUAL_COHORTS_NCS        ) = cc%plabl%c12
+          self%out_annual_cohorts(i, ANNUAL_COHORTS_NSC        ) = cc%plabl%c12
           self%out_annual_cohorts(i, ANNUAL_COHORTS_NSN        ) = cc%plabl%n14
           self%out_annual_cohorts(i, ANNUAL_COHORTS_SEED_C     ) = cc%pseed%c12
           self%out_annual_cohorts(i, ANNUAL_COHORTS_LEAF_C     ) = cc%pleaf%c12

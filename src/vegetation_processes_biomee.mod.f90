@@ -168,7 +168,7 @@ contains
       else ! non-growing season
         cc%C_growth = 0.0
         cc%N_growth = 0.0
-        cc%resg     = 0.0
+        cc%resg     = 0.0  !  daily growth respiration
       endif
     end associate
 
@@ -221,7 +221,7 @@ contains
         !update leaf age 
         cc%leaf_age = cc%leaf_age + 1.0/365.0
         
-        ! Get carbon from NSC pool. This sets cc%C_growth
+        ! Get carbon from NSC pool. fetch_CN_for_growth() sets cc%C_growth, cc%N_growth, (and (unused) also sets cc%resg=0 if no leaves)
         call fetch_CN_for_growth( cc )                           ! TODO: shouldn't this be called also when cc%status == LEAF_OFF
 
         ! Allocate carbon to the plant pools
@@ -302,7 +302,7 @@ contains
         call cc%pseed%add_carbon(dSeed, cc%plabl%d13)
         call cc%plabl%add_c12(- dBR - dBL - dSeed - dBSW)
         cc%leaf_age = (1.0 - dBL/cc%pleaf%c12) * cc%leaf_age !NEW
-        cc%resg = 0.5 * (dBR + dBL + dSeed + dBSW) !  daily
+        cc%resg = 0.5 * (dBR + dBL + dSeed + dBSW) !  daily growth respiration
 
         ! update nitrogen pools, Nitrogen allocation
         call cc%pleaf%add_n14(dBL / sp%CNleaf0)
@@ -395,7 +395,7 @@ contains
 
     do_relayer = .false.
 
-    ! update vegn GDD and tk_pheno
+    ! update vegn GDD and tk_pheno (only used for cohorts with phenotype == 0)
     vegn%gdd      = vegn%gdd + max(0.0, vegn%tk_daily - 278.15)
     vegn%tk_pheno = vegn%tk_pheno * 0.8 + vegn%tk_daily * 0.2
 
@@ -461,7 +461,7 @@ contains
         cc%NPProot = cc%NPProot + cc%proot%c12
         cc%NPPwood = cc%NPPwood + cc%psapw%c12 + cc%pwood%c12
 
-        call cc%init_bl_br()
+        call cc%init_bl_max_br_max()
 
       endif
       end associate
@@ -781,9 +781,9 @@ contains
 
       cc%species    = reproPFTs(k)
 
-      call cc%init_bl_br()
+      call cc%init_bl_max_br_max() ! initialize bl_max and br_max of seedlings.
 
-      ! Carbon pools
+      ! Carbon pools of a fresh seedling
       cc%pleaf%c12 = 0.0 * sp%seedlingsize
       cc%proot%c12 = 0.1 * sp%seedlingsize
       cc%psapw%c12 = inputs%params_tile%f_initialBSW * sp%seedlingsize

@@ -130,7 +130,7 @@ module md_interface_in_biomee
     !===== Allometry
     real    :: alphaHT, thetaHT                   ! height = alphaHT * DBH ** thetaHT
     real    :: alphaCA, thetaCA                   ! crown area = alphaCA * DBH ** thetaCA
-    real    :: alphaBM, thetaBM                   ! biomass = alphaBM * DBH ** thetaBM
+    real    :: alphaBM, thetaBM                   ! biomass = alphaBM * DBH ** thetaBM (only of total woody biomass carbon (bole, branches, coarse roots))
     real    :: phiRL                              ! ratio of fine root to leaf area calibratable
     real    :: phiCSA                             ! ratio of sapwood CSA to target leaf area
     real    :: tauNSC                             ! residence time of C in NSC (to define storage capacity)
@@ -547,9 +547,11 @@ contains
 
     ! calculate alphaBM parameter of allometry. note that rho_wood was re-introduced for this calculation ! TODO: note that this overwrites the parameter alphaBM
     self%alphaBM = self%rho_wood * self%taperfactor * PI/4. * self%alphaHT ! 5200
+    !              (kgC/tree / m)* (-)              *       * m / m^thetaHT          => alphaBM is in kgC/tree / m^(thetaHT+2)
     ! NOTE: definition of taperfactor is the multiplicative factor to correct the cylindric volume/mass calculated with DBH.
     ! NOTE: e.g. for a cone the volume formula is: V = 1/3 Pi * r^2 * HT, i.e. for a cone the taperfactor is 1/3.
-    ! TODO: wouldn't this also require that we assume thetaBM == thetaHT ? Which is not enforced with current parameters.
+    ! TODO: wouldn't this also require that we assume thetaBM == thetaHT + 2 (eqA2, Weng et al. 2015)? Which is not enforced with current parameters.
+    !       
 
     ! Vmax as a function of LNbase (max rubisco rate, mol m-2 s-1)
     self%Vmax = 0.02 * self%LNbase ! 0.03125 * sp%LNbase ! Vmax/LNbase= 25E-6/0.8E-3 = 0.03125 !
