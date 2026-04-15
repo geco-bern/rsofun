@@ -1053,7 +1053,7 @@ contains
         cc%pleaf%c12 = inputs%init_cohort(i)%init_cohort_bl
         cc%proot%c12 = inputs%init_cohort(i)%init_cohort_br
         cc%pseed%c12 = inputs%init_cohort(i)%init_cohort_seedC
-        call cc%initialize_cohort_from_biomass() ! TODO: BUG: this overwrites cc%plabl%c12
+        call cc%initialize_cohort_from_biomass()
 
       enddo
 

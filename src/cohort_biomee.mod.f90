@@ -430,11 +430,11 @@ contains
 
     crownarea = self%crownarea()
 
-    ! calculations of bl_max and br_max are here only for the sake of the
-    ! diagnostics, because otherwise those fields are inherited from the
-    ! parent cohort and produce spike in the output, even though these spurious
-    ! values are not used by the model
-    self%bl_max = sp%LMA   * sp%LAImax        * crownarea / self%layer
+    ! calculations of bl_max and br_max are used as target values for leaf and
+    ! root growth. They affect how much carbon is pulled from NSC towards growth
+    ! BUG: Given that bl_max and br_max depend on crownarea() they should increase with wood biomass (pwood+psapw) 
+    ! along the lifetime of a cohort. However, they are set only at the beginning of the simulation. TODO: solve this
+    self%bl_max = sp%LMA   * sp%LAImax        * crownarea / self%layer  
     self%br_max = sp%phiRL * sp%LAImax/sp%SRA * crownarea / self%layer
 
   end subroutine init_bl_max_br_max

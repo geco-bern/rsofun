@@ -156,10 +156,8 @@ contains
       ! NSCtarget = 3.0 * (cc%bl_max + cc%br_max)      ! kgC/tree
       ! Fetch C from labile C pool if it is in the growing season
       if (cc%status == LEAF_ON) then ! growing season
-        C_pull = LFR_rate * (Max(cc%bl_max - cc%pleaf%c12,0.0) +   &
-          Max(cc%br_max - cc%proot%c12,0.0))
-        N_pull = LFR_rate * (Max(cc%bl_max - cc%pleaf%c12,0.0)/sp%CNleaf0 +  &
-          Max(cc%br_max - cc%proot%c12,0.0)/sp%CNroot0)
+        C_pull = LFR_rate * (Max(cc%bl_max - cc%pleaf%c12,0.0           ) +  Max(cc%br_max - cc%proot%c12,0.0)           )
+        N_pull = LFR_rate * (Max(cc%bl_max - cc%pleaf%c12,0.0)/sp%CNleaf0 +  Max(cc%br_max - cc%proot%c12,0.0)/sp%CNroot0)
         C_push = cc%plabl%c12 / (ndayyear * sp%tauNSC) ! max(cc%plabl%c12-NSCtarget, 0.0)/(ndayyear*sp%tauNSC)
         N_push = cc%plabl%n14 / (ndayyear * sp%tauNSC) ! 4.0 * C_push/sp%CNsw0  !
         cc%N_growth = Min(max(0.02 * cc%plabl%n14,0.0), N_pull + N_push)
