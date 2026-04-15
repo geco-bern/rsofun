@@ -214,8 +214,8 @@ contains
       associate (sp => cc%sp())
 
       if (cc%status == LEAF_OFF .and. cc%C_growth > 0.0) then
-        call cc%plabl%add_carbon(cc%C_growth, cc%plabl%d13)
-        cc%resg = 0.0
+        call cc%plabl%add_carbon(cc%C_growth, cc%plabl%d13) ! if no leaves put C_growth back into plabl
+        cc%resg = 0.0  !  daily growth respiration
       elseif (cc%status == LEAF_ON) then
 
         !update leaf age 

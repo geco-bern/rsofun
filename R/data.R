@@ -259,18 +259,16 @@
 #'       \item{gamma_LN}{Leaf respiration coefficient per unit N.}
 #'       \item{gamma_SW}{Sapwood respiration rate, in kg C m\eqn{^{-2}} yr\eqn{^{-1}}.}
 #'       \item{gamma_FR}{Fine root respiration rate, kg C kg C\eqn{^{-1}} yr\eqn{^{-1}}.}
-#'       \item{tk_crit}{Critical temperature triggerng offset of phenology, in Kelvin.}
-#'       \item{tk_crit_on}{Critical temperature triggerng onset of phenology, in Kelvin.}
-#'       \item{gdd_crit}{Critical value of GDD5 for turning ON growth season.}
-#'       \item{betaON}{Critical soil moisture for phenology onset.}
-#'       \item{betaOFF}{Critical soil moisture for phenology offset.}
+#'       \item{tk_crit}{Critical temperature triggering offset of leaf phenology (unused with evergreen), in Kelvin.}
+#'       \item{tk_crit_on}{Critical temperature triggering onset of leaf phenology (unused with evergreen), in Kelvin.}
+#'       \item{gdd_crit}{Critical value of GDD5 for turning ON leaf phenology (unused with evergreen).}
 #'       \item{kphio}{Quantum yield efficiency \eqn{\varphi_0}, in mol mol\eqn{^{-1}}.}
 #'     }}\item{The following columns pertaining to the \bold{allometry parameters}:}{\describe{
 #'       \item{alphaHT}{Coefficient for allometry (height = alphaHT * DBH_m ** thetaHT), in m m\eqn{^{-thetaHT}}.}
 #'       \item{thetaHT}{Coefficient for allometry (height = alphaHT * DBH_m ** thetaHT), unitless.}
+#'       \item{thetaBM}{Coefficient for allometry (biomass = alphaBM * DBH ** thetaBM), unitless. Since alphaBM is derived from alphaHT, it makes sense to also ensure thetaBM = thetaHT + 2.}
 #'       \item{alphaCA}{Coefficient for allometry (projected crown area = pi * (alphaCA * DBH_m) ** thetaCA), in m\eqn{^{2/thetaCA-1}}.}
 #'       \item{thetaCA}{Coefficient for allometry (projected crown area = pi * (alphaCA * DBH_m) ** thetaCA), unitless. Dybzinski (eq. G1) showed that thetaCA = thetaBM - 1.}
-#'       \item{thetaBM}{Coefficient for allometry (biomass = alphaBM * DBH ** thetaBM), unitless.}
 #'       \item{rho_wood}{Wood density (kg C m\eqn{^{-3}}). (Only used to derive alphaBM.)}
 #'       \item{taperfactor}{Multiplicative factor to correct the cylindric volume/mass calculated with DBH, unitless. E.g. for a cone taperfactor is 1/3 (V = 1/3 Pi * r^2 * HT).  (Only used to derive alphaBM.)}
 #'       \item{phiCSA}{Ratio of sapwood area to leaf area.}

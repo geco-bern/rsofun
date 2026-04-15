@@ -101,12 +101,12 @@ module md_interface_in_biomee
     real    :: LNA                                ! leaf Nitrogen per unit area, kg N/m2
     real    :: LNbase                             ! basal leaf Nitrogen per unit area, kg N/m2, (Rubisco)
     real    :: CNleafsupport                      ! leaf structural tissues, 175
-    real    :: leaf_size             ! unused     ! characteristic leaf size
+    ! real    :: leaf_size             ! unused     ! characteristic leaf size
     real    :: alpha_phot                         ! photosynthesis efficiency
     real    :: m_cond                             ! factor of stomatal conductance
     real    :: Vmax                               ! max rubisco rate, mol m-2 s-1
-    real    :: Vannual               ! unused     ! annual productivity per unit area at full fun (kgC m-2 yr-1)
-    real    :: gamma_L               ! unused     ! leaf respiration coeficient (per yr)
+    ! real    :: Vannual               ! unused     ! annual productivity per unit area at full fun (kgC m-2 yr-1)
+    ! real    :: gamma_L               ! unused     ! leaf respiration coeficient (per yr)
     real    :: gamma_LN                           ! leaf respiration coeficient per unit N
     real    :: wet_leaf_dreg                      ! wet leaf photosynthesis down-regulation
 
@@ -144,9 +144,9 @@ module md_interface_in_biomee
     real    :: CNleaf0                            ! C/N ratio (derived from: CNleafsupport, LNbase, LMA)
 
     !===== Phenology
-    real    :: tk_crit                            ! K, for turning OFF a growth season
-    real    :: tk_crit_on                         ! K, for turning ON a growth season
-    real    :: gdd_crit                           ! K, critical value of GDD5 for turning ON growth season
+    real    :: tk_crit                            ! K, for turning OFF a leaf phenology
+    real    :: tk_crit_on                         ! K, for turning ON a leaf phenology
+    real    :: gdd_crit                           ! K, critical value of GDD5 for turning ON leaf phenology
     real    :: betaON                ! unused     ! Critical soil moisture for PhenoON
     real    :: betaOFF               ! unused     ! Critical soil moisture for PhenoOFF
 
@@ -450,21 +450,21 @@ contains
     self%root_r             = real( params_species(6))
     self%root_zeta          = real( params_species(7))
     self%Kw_root            = real( params_species(8))
-    self%leaf_size          = real( params_species(9))    ! unused
+    ! self%leaf_size          = real( params_species(9))    ! unused
     ! self%Vmax               = real( params_species(10)) ! overridden by 0.02 * self%LNbase
-    self%Vannual            = real( params_species(11))   ! unused
+    ! self%Vannual            = real( params_species(11))   ! unused
     self%wet_leaf_dreg      = real( params_species(12))
     self%m_cond             = real( params_species(13))
     self%alpha_phot         = real( params_species(14))
-    self%gamma_L            = real( params_species(15))   ! unused
+    ! self%gamma_L            = real( params_species(15))   ! unused
     self%gamma_LN           = real( params_species(16))
     self%gamma_SW           = real( params_species(17))
     self%gamma_FR           = real( params_species(18))
     self%tk_crit            = real( params_species(19))
     self%tk_crit_on         = real( params_species(20))
     self%gdd_crit           = real( params_species(21))
-    self%betaON             = real( params_species(22))   ! unused
-    self%betaOFF            = real( params_species(23))   ! unused
+    ! self%betaON             = real( params_species(22))   ! unused
+    ! self%betaOFF            = real( params_species(23))   ! unused
     self%alphaHT            = real( params_species(24)) ! prescribed
     self%thetaHT            = real( params_species(25)) ! prescribed
     self%alphaCA            = real( params_species(26)) ! prescribed
