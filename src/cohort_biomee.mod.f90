@@ -112,7 +112,6 @@ module md_cohort
       !========== Other member procedures
 
       procedure reset_cohort
-      procedure initialize_cohort_from_biomass
       procedure init_bl_max_br_max
       procedure can_be_merged_with
 
@@ -390,31 +389,6 @@ contains
   !----------------------------------------------------------------
   ! Other helper functions
   !----------------------------------------------------------------
-
-  pure subroutine initialize_cohort_from_biomass(self)
-    !////////////////////////////////////////////////////////////////
-    ! Calculate initial biomass
-    !---------------------------------------------------------------
-    class(cohort_type), intent(inout) :: self
-
-    ! Local variable
-    type(params_species_biomee) :: sp
-
-    sp = self%sp()
-
-    ! set bl_max, br_max parameters
-    call self%init_bl_max_br_max()
-
-
-    ! N pools
-    self%plabl%n14 = 5.0 * (self%bl_max / sp%CNleaf0 + self%br_max / sp%CNroot0)
-    self%pleaf%n14 = self%pleaf%c12 / sp%CNleaf0
-    self%proot%n14 = self%proot%c12 / sp%CNroot0
-    self%psapw%n14 = self%psapw%c12 / sp%CNsw0
-    self%pwood%n14 = self%pwood%c12 / sp%CNwood0
-    self%pseed%n14 = self%pseed%c12 / sp%CNseed0
-
-  end subroutine initialize_cohort_from_biomass
 
   pure subroutine init_bl_max_br_max( self )
     !////////////////////////////////////////////////////////////////

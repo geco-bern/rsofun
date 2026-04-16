@@ -1026,6 +1026,7 @@ contains
     integer :: i, init_n_cohorts
     type(cohort_type), pointer :: cc
     type(cohort_stack_item), pointer :: new
+    type(params_species_biomee) :: sp
 
     ! Initialize lu_index
     self%lu_index = lu_index
@@ -1044,16 +1045,35 @@ contains
 
         new => self%create_cohort()
         cc => new%cohort
-        cc%species   = inputs%init_cohort(i)%init_cohort_species
+                cc%species   = inputs%init_cohort(i)%init_cohort_species
         cc%density   = inputs%init_cohort(i)%init_cohort_density ! trees/m2
         cc%age       = inputs%init_cohort(i)%init_cohort_age ! years
+
+        sp = cc%sp() ! careful this uses cc%species, ensure it is done after setting cc%species
+
+        ! C pools
         cc%plabl%c12 = inputs%init_cohort(i)%init_cohort_nsc
         cc%psapw%c12 = inputs%init_cohort(i)%init_cohort_bsw
         cc%pwood%c12 = inputs%init_cohort(i)%init_cohort_bHW
         cc%pleaf%c12 = inputs%init_cohort(i)%init_cohort_bl
         cc%proot%c12 = inputs%init_cohort(i)%init_cohort_br
         cc%pseed%c12 = inputs%init_cohort(i)%init_cohort_seedC
-        call cc%initialize_cohort_from_biomass()
+
+        ! set bl_max, br_max parameters ( to initialize non-structural N: plabl%n14)
+        call cc%init_bl_max_br_max()
+
+        ! N pools
+        cc%plabl%n14 = 5.0 * (cc%bl_max / sp%CNleaf0 + cc%br_max / sp%CNroot0)   ! TODO: refrain from using parameters for initialization, rather use init_cohort to allow restart
+        cc%pleaf%n14 = cc%pleaf%c12 / sp%CNleaf0                                 ! TODO: refrain from using parameters for initialization, rather use init_cohort to allow restart
+        cc%proot%n14 = cc%proot%c12 / sp%CNroot0                                 ! TODO: refrain from using parameters for initialization, rather use init_cohort to allow restart
+        cc%psapw%n14 = cc%psapw%c12 / sp%CNsw0                                   ! TODO: refrain from using parameters for initialization, rather use init_cohort to allow restart
+        cc%pwood%n14 = cc%pwood%c12 / sp%CNwood0                                 ! TODO: refrain from using parameters for initialization, rather use init_cohort to allow restart
+        cc%pseed%n14 = cc%pseed%c12 / sp%CNseed0                                 ! TODO: refrain from using parameters for initialization, rather use init_cohort to allow restart
+        ! previously this was: 
+        ! cc%plabl%c12 = 2.0 * (cc%bl_max + cc%br_max)                            ! Note: This BUG was removed: this overwrites the specified initial condition: init_cohort$init_cohort_nsc
+        ! cc%plabl%n14 = 5.0 * (cc%bl_max / sp%CNleaf0 + cc%br_max / sp%CNroot0)  ! Note: All the n14, should still be initialized with values from init_cohort instead of using CN-ratios. This would allow to properly restart a simulation.
+        ! ! alternative approach: CNlabl0 = 2/5 * (cc%bl_max + cc%br_max) / (cc%bl_max/sp%CNleaf0 + cc%br_max/sp%CNroot0) ! using former formulation of plabl_c12 and plabl_n14
+        ! ! alternative approach: cc%plabl%n14 = cc%plabl%c12 / CNlabl0
 
       enddo
 
