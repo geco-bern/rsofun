@@ -23,7 +23,7 @@ module md_interface_in_biomee
   integer, public, parameter :: nvars_site_info      = 4
   integer, public, parameter :: nvars_params_tile    = 20
   integer, public, parameter :: nvars_init_soil      = 4
-  integer, public, parameter :: nvars_init_cohorts   = 10
+  integer, public, parameter :: nvars_init_cohorts   = 16
   integer, public, parameter :: nvars_params_species = 65
   integer, public, parameter :: nvars_init_lu        = 5
 
@@ -196,6 +196,12 @@ module md_interface_in_biomee
     real    :: init_cohort_bHW
     real    :: init_cohort_seedC
     real    :: init_cohort_nsc
+    real    :: init_cohort_bl_n14
+    real    :: init_cohort_br_n14
+    real    :: init_cohort_bsw_n14
+    real    :: init_cohort_bHW_n14
+    real    :: init_cohort_seedC_n14
+    real    :: init_cohort_nsc_n14
     integer :: lu_index ! Which land use (LU) should this cohort be used for. Given as the index in 'init_lu' array.
 
   contains
@@ -372,16 +378,22 @@ contains
     class(init_cohort_biomee), intent(inout) :: self
     real(kind=c_double), dimension(nvars_init_cohorts), intent(in) :: init_cohort
 
-    self%init_cohort_species = int( init_cohort(1))
-    self%init_cohort_density = real(init_cohort(2))
-    self%init_cohort_age     = real(init_cohort(3))
-    self%init_cohort_bl      = real(init_cohort(4))
-    self%init_cohort_br      = real(init_cohort(5))
-    self%init_cohort_bsw     = real(init_cohort(6))
-    self%init_cohort_bHW     = real(init_cohort(7))
-    self%init_cohort_seedC   = real(init_cohort(8))
-    self%init_cohort_nsc     = real(init_cohort(9))
-    self%lu_index            = int( init_cohort(10))
+    self%init_cohort_species   = int( init_cohort(1))
+    self%init_cohort_density   = real(init_cohort(2))
+    self%init_cohort_age       = real(init_cohort(3))
+    self%init_cohort_bl        = real(init_cohort(4))
+    self%init_cohort_br        = real(init_cohort(5))
+    self%init_cohort_bsw       = real(init_cohort(6))
+    self%init_cohort_bHW       = real(init_cohort(7))
+    self%init_cohort_seedC     = real(init_cohort(8))
+    self%init_cohort_nsc       = real(init_cohort(9))
+    self%init_cohort_bl_n14    = real(init_cohort(10))
+    self%init_cohort_br_n14    = real(init_cohort(11))
+    self%init_cohort_bsw_n14   = real(init_cohort(12))
+    self%init_cohort_bHW_n14   = real(init_cohort(13))
+    self%init_cohort_seedC_n14 = real(init_cohort(14))
+    self%init_cohort_nsc_n14   = real(init_cohort(15))
+    self%lu_index              = int( init_cohort(16))
   end subroutine populate_init_cohort
   
   subroutine populate_init_soil(self, init_soil)

@@ -17,6 +17,10 @@
   * Added optional parameter `init_cohort$init_cohort_age` to specify a corresponding 
   initial age distribution in years (default = 0). Default ensures backwards compatibility.
   Age affects reproduction through `params_species$matural_age`
+  * Added optional parameter to `init_cohort`, to enable specification of initial
+  nitrogen pools. Namely: `init_cohort_bl_n14`, `init_cohort_br_n14`,
+  `init_cohort_bsw_n14`,`init_cohort_bHW_n14`,`init_cohort_seedC_n14`,
+  `init_cohort_nsc_n14``. If not provided, default values ensure backwards compatibility.
   * Added check that all `species$LMA` >= `params_tile$LMAmin`
 * P-model:
   * no changes

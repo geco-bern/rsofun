@@ -617,10 +617,44 @@ build_init_cohort <- function(init_cohort, params_species){
     return(list(bl_max = bl_max, br_max = br_max))
   }
   
+  # set default initial C values of vegetation pools
+  res <- init_bl_max_br_max(init_cohort, params_species)
   if ('init_cohort_nsc' %nin% names(init_cohort)) {
-    res <- init_bl_max_br_max(init_cohort, params_species)
+    
     init_cohort$init_cohort_nsc <- 2.0 * (res$bl_max + res$br_max) # former default: initialize to value based on bl_max and br_max
   }
+
+  # set default initial N values of vegetation pools
+  species_idx <- init_cohort$init_cohort_species
+  curr_CNroot0 <- params_species[species_idx,]$CNroot0
+  curr_CNsw0   <- params_species[species_idx,]$CNsw0
+  curr_CNwood0 <- params_species[species_idx,]$CNwood0
+  curr_CNseed0 <- params_species[species_idx,]$CNseed0
+  curr_CNleaf0 <- with(params_species[species_idx,],
+                       # This is now copied to R layer to recover previous default
+                       {LNA = LNbase + LMA/CNleafsupport
+                       CNleaf0 = LMA/LNA
+                       CNleaf0})
+  
+  if ('init_cohort_nsc_n14' %nin% names(init_cohort)) { # init_cohort_nsn
+    init_cohort$init_cohort_nsc_n14 <- 5.0 * (res$bl_max/curr_CNleaf0 + res$br_max/curr_CNroot0) # former default: initialize to value based on bl_max and br_max
+  }
+  if ('init_cohort_bl_n14' %nin% names(init_cohort)) { # TODO: rename to clearer: init_cohort_pleaf_n14
+    init_cohort$init_cohort_bl_n14 = init_cohort$init_cohort_bl / curr_CNleaf0       # former default
+  }
+  if ('init_cohort_br_n14' %nin% names(init_cohort)) { # init_cohort_proot_n14
+    init_cohort$init_cohort_br_n14 = init_cohort$init_cohort_br / curr_CNroot0       # former default
+  }
+  if ('init_cohort_bsw_n14' %nin% names(init_cohort)) { # init_cohort_psapw_n14
+    init_cohort$init_cohort_bsw_n14 = init_cohort$init_cohort_bsw / curr_CNsw0       # former default
+  }
+  if ('init_cohort_bHW_n14' %nin% names(init_cohort)) { # init_cohort_pwood_n14
+    init_cohort$init_cohort_bHW_n14 = init_cohort$init_cohort_bHW / curr_CNwood0     # former default
+  }
+  if ('init_cohort_seedC_n14' %nin% names(init_cohort)) { # init_cohort_pseed_n14
+    init_cohort$init_cohort_seedC_n14 = init_cohort$init_cohort_seedC / curr_CNseed0 # former default
+  }
+  
   return(init_cohort)
 }
 
@@ -760,12 +794,21 @@ prepare_init_cohort <- function(init_cohort){
     "init_cohort_species",
     "init_cohort_nindivs",
     "init_cohort_age",
+    # initial carbon pools in vegetation:
     "init_cohort_bl",
     "init_cohort_br",
     "init_cohort_bsw",
     "init_cohort_bHW",
     "init_cohort_seedC",
     "init_cohort_nsc",
+    # initial nitrogen pools in vegetation:
+    "init_cohort_bl_n14",
+    "init_cohort_br_n14",
+    "init_cohort_bsw_n14",
+    "init_cohort_bHW_n14",
+    "init_cohort_seedC_n14",
+    "init_cohort_nsc_n14",
+    # land use:
     "lu_index"
   )
 
