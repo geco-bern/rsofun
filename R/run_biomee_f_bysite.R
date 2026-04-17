@@ -246,7 +246,7 @@ run_biomee_f_bysite <- function(
   params_tile <- build_params_tile(params_tile)
   params_species <- build_params_species(params_species, params_tile)
   init_cohort    <- build_init_cohort(init_cohort, params_species)
-  init_soil <- build_init_soil(init_soil)
+  init_soil <- build_init_soil(init_soil, init_cohort, params_tile)
   forcing <- build_forcing(forcing)
   
   # Build LULUC parameters
@@ -658,8 +658,41 @@ build_init_cohort <- function(init_cohort, params_species){
   return(init_cohort)
 }
 
-build_init_soil <- function(init_soil){
-  #browser() # currently build_init_soil has no-effect
+build_init_soil <- function(init_soil, init_cohort, params_tile){
+  if ('init_fast_soil_N' %nin% names(init_soil)) {
+    init_soil$init_fast_soil_N = init_soil$init_fast_soil_C / params_tile$CN0metabolicL # former default
+  }
+  if ('init_slow_soil_N' %nin% names(init_soil)) {
+    init_soil$init_slow_soil_N = init_soil$init_slow_soil_C / params_tile$CN0structuralL # former default
+  }
+  if ('init_pmicr_C' %nin% names(init_soil)) {
+    init_soil$init_pmicr_C = 0.0 # former default
+  }
+  if ('init_pmicr_d13C' %nin% names(init_soil)) {
+    init_soil$init_pmicr_d13C = -9999.0 # former default
+  }
+  if ('init_pmicr_N' %nin% names(init_soil)) {
+    init_soil$init_pmicr_N = 0.0 # former default
+  }
+  if ('init_wcl1' %nin% names(init_soil)) {
+    init_soil$init_wcl1 = params_tile$FLDCAP # former default
+  }
+  if ('init_wcl2' %nin% names(init_soil)) {
+    init_soil$init_wcl2 = params_tile$FLDCAP # former default
+  }
+  if ('init_wcl3' %nin% names(init_soil)) {
+    init_soil$init_wcl3 = params_tile$FLDCAP # former default
+  }
+  if ('init_N0_ecosystem' %nin% names(init_soil)) { # this is used for nitrogen workaround
+    Ntot_soil <- init_soil$init_pmicr_N + init_soil$init_fast_soil_N + init_soil$init_slow_soil_N + init_soil$init_Nmineral # kgN/m2
+    N_in_each_cohort <- with(init_cohort,
+         init_cohort_nindivs * # tree/m2
+           (init_cohort_nsc_n14 + init_cohort_bl_n14 + init_cohort_br_n14 +     # kgN per tree
+            init_cohort_bsw_n14 + init_cohort_bHW_n14 + init_cohort_seedC_n14))
+    Ntot_plant <- sum(N_in_each_cohort)
+    Ntot <- Ntot_soil + Ntot_plant
+    init_soil$init_N0_ecosystem = Ntot # former default: sum of the initialized soil and plant pools
+  }
   return(init_soil)
 }
 
@@ -917,7 +950,16 @@ prepare_init_soil <- function(init_soil){
     "init_fast_soil_C",
     "init_slow_soil_C",
     "init_Nmineral",
-    "N_input"
+    "N_input", 
+    "init_fast_soil_N", 
+    "init_slow_soil_N", 
+    "init_pmicr_C", 
+    "init_pmicr_d13C", 
+    "init_pmicr_N", 
+    "init_wcl1", 
+    "init_wcl2", 
+    "init_wcl3",
+    "init_N0_ecosystem"
   )
 }
 

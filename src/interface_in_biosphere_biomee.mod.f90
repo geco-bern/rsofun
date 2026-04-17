@@ -11,7 +11,7 @@ module md_interface_in_biomee
   private
   public  inputs, interface_in_biosphere_biomee, params_species_biomee, init_lu_biomee
 
-  !===== Soil water hydrualics
+  !===== Soil water hydraulics
   integer, public, parameter :: MAX_LEVELS = 3  ! Soil layers, for soil water dynamics
   real, public, parameter ::  thksl(MAX_LEVELS) = (/0.05, 0.45, 1.5/)  ! m, thickness of soil layers
 
@@ -22,7 +22,7 @@ module md_interface_in_biomee
   integer, public, parameter :: nvars_params_siml    = 11
   integer, public, parameter :: nvars_site_info      = 4
   integer, public, parameter :: nvars_params_tile    = 20
-  integer, public, parameter :: nvars_init_soil      = 4
+  integer, public, parameter :: nvars_init_soil      = 13
   integer, public, parameter :: nvars_init_cohorts   = 16
   integer, public, parameter :: nvars_params_species = 65
   integer, public, parameter :: nvars_init_lu        = 5
@@ -215,6 +215,15 @@ module md_interface_in_biomee
     real :: init_slow_soil_C
     real :: init_Nmineral
     real :: N_input
+    real :: init_fast_soil_N
+    real :: init_slow_soil_N
+    real :: init_pmicr_C
+    real :: init_pmicr_d13C
+    real :: init_pmicr_N
+    real :: init_wcl1
+    real :: init_wcl2
+    real :: init_wcl3
+    real :: init_N0_ecosystem
     
   contains
     
@@ -405,6 +414,16 @@ contains
     self%init_slow_soil_C         = real( init_soil(2) )
     self%init_Nmineral            = real( init_soil(3) )
     self%N_input                  = real( init_soil(4) )
+    self%init_fast_soil_N         = real( init_soil(5) )
+    self%init_slow_soil_N         = real( init_soil(6) )
+    self%init_pmicr_C             = real( init_soil(7) )
+    self%init_pmicr_d13C          = real( init_soil(8) )
+    self%init_pmicr_N             = real( init_soil(9) )
+    self%init_wcl1                = real( init_soil(10))
+    self%init_wcl2                = real( init_soil(11))
+    self%init_wcl3                = real( init_soil(12))
+    self%init_N0_ecosystem        = real( init_soil(13))
+    
   end subroutine populate_init_soil
   
   subroutine populate_params_tile(self, params_tile)

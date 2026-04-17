@@ -316,12 +316,12 @@
 #'       \item{init_cohort_bHW}{Initial biomass of heartwood, in kg C per individual.}
 #'       \item{init_cohort_seedC}{Initial biomass of seed, in kg C per individual.}
 #'       \item{init_cohort_nsc}{Initial non-structural biomass, in kg C per individual. (optional, defaults to value derived from br_max and bl_max)}
-#'       \item{init_cohort_bl_n14}{Initial nitorgen in leaf, in kg N per individual.        (optional, defaults to C biomass * CN-ratio)}
-#'       \item{init_cohort_br_n14}{Initial nitorgen in fine root, in Ng C per individual.   (optional, defaults to C biomass * CN-ratio)}
-#'       \item{init_cohort_bsw_n14}{Initial nitorgen in sapwood, in kg N per individual.    (optional, defaults to C biomass * CN-ratio)}
-#'       \item{init_cohort_bHW_n14}{Initial nitorgen in heartwood, in kg N per individual.  (optional, defaults to C biomass * CN-ratio)}
-#'       \item{init_cohort_seedC_n14}{Initial nitorgen in seed, in kg N per individual.     (optional, defaults to C biomass * CN-ratio)}
-#'       \item{init_cohort_nsc_n14}{Initial non-structural biomass, in kg C per individual. (optional, defaults to value derived from br_max and bl_max)}
+#'       \item{init_cohort_bl_n14}{Initial nitrogen in leaf, in kg N per individual.        (optional, defaults to C biomass * CN-ratio)}
+#'       \item{init_cohort_br_n14}{Initial nitrogen in fine root, in kg N per individual.   (optional, defaults to C biomass * CN-ratio)}
+#'       \item{init_cohort_bsw_n14}{Initial nitrogen in sapwood, in kg N per individual.    (optional, defaults to C biomass * CN-ratio)}
+#'       \item{init_cohort_bHW_n14}{Initial nitrogen in heartwood, in kg N per individual.  (optional, defaults to C biomass * CN-ratio)}
+#'       \item{init_cohort_seedC_n14}{Initial nitrogen in seed, in kg N per individual.     (optional, defaults to C biomass * CN-ratio)}
+#'       \item{init_cohort_nsc_n14}{Initial non-structural biomass, in kg N per individual. (optional, defaults to value derived from br_max and bl_max)}
 #'       \item{lu_index}{Land use type this cohorts belongs to (given as index in init_lu aray). (optional)
 #'        Default: 0 (attach to all LU types except thoses which do not accept vegetation -- cf  init_lu.vegetated).}
 #'     }}
@@ -332,6 +332,15 @@
 #'       \item{init_slow_soil_C}{Initial slow soil carbon, in kg C m\eqn{^{-2}}.}
 #'       \item{init_Nmineral}{Mineral nitrogen pool, in kg N m\eqn{^{-2}}.}
 #'       \item{N_input}{Annual nitrogen input to soil N pool, in kg N m\eqn{^{-2}} yr\eqn{^{-1}}.}
+#'       \item{init_fast_soil_N}{Initial fast soil nitrogen, in kg N m\eqn{^{-2}}.                     (optional, defaults to C biomass * CN-ratio)}
+#'       \item{init_slow_soil_N}{Initial slow soil nitrogen, in kg N m\eqn{^{-2}}.                     (optional, defaults to C biomass * CN-ratio)}
+#'       \item{init_pmicr_C}{Initial carbon in soil microbial biomass, in kg C m\eqn{^{-2}}.           (optional, defaults to 0.0)}
+#'       \item{init_pmicr_d13C}{Initial d13C signature in soil microbial biomass, in permil.           (optional, defaults to -9999)}
+#'       \item{init_pmicr_N}{Initial nitrogen in soil microbial biomass, in kg N m\eqn{^{-2}}.         (optional, defaults to 0.0)}
+#'       \item{init_wcl1}{Initial volumetric water content of soil layer 1, in m\eqn{^{3}}m\eqn{^{-3}}. (optional, defaults to field capacity)}
+#'       \item{init_wcl2}{Initial volumetric water content of soil layer 2, in m\eqn{^{3}}m\eqn{^{-3}}. (optional, defaults to field capacity)}
+#'       \item{init_wcl3}{Initial volumetric water content of soil layer 3, in m\eqn{^{3}}m\eqn{^{-3}}. (optional, defaults to field capacity)}
+#'       \item{init_N0_ecosystem}{Initial total amount of nitrogen in ecosystem (only used for nitrogen workaround), in kg N m\eqn{^{-2}}. (optional, defaults to sum of soil and plant pools.) Might not be needed.}
 #'     }}
 #'   \item{init_lu}{A data.frame of initial land unit (LU) specifications, including
 #'     the following data:

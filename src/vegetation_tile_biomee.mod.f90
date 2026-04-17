@@ -119,7 +119,6 @@ module md_vegetation_tile_biomee
     real    :: N_P2S_yr           ! N turnover (plant to soil) (kg N m-2 yr-1)
 
     !=====  Memory
-    real    :: previousN          ! weighted annual available N
     real    :: initialN0          ! initial available N (kg N m-2)
 
     !=====  Fast fluxes, kg m-2 timestep-1
@@ -225,7 +224,7 @@ contains
     !---------------------------------------------------------------
     class(vegn_tile_type), intent(in) :: self
 
-    soilwater  = SUM(self%wcl(:)*thksl(:)*1000.0)
+    soilwater  = SUM(self%wcl(:)*thksl(:)*1000.0) ! in m*1000 = m3/m2 *1000 = kg/m2
 
   end function soilwater
 
@@ -1079,20 +1078,23 @@ contains
     ! Initial Soil pools and environmental conditions
     self%psoil_fs%c12 = inputs%init_soil%init_fast_soil_C  ! fast soil carbon pool, (kg C/m2)
     self%psoil_sl%c12 = inputs%init_soil%init_slow_soil_C  ! slow soil carbon pool, (kg C/m2)
-    self%psoil_fs%n14 = self%psoil_fs%c12 / inputs%params_tile%CN0metabolicL  ! fast soil nitrogen pool, (kg N/m2)
-    self%psoil_sl%n14 = self%psoil_sl%c12 / inputs%params_tile%CN0structuralL ! slow soil nitrogen pool, (kg N/m2)
+    self%psoil_fs%n14 = inputs%init_soil%init_fast_soil_N ! fast soil nitrogen pool, (kg N/m2)
+    self%psoil_sl%n14 = inputs%init_soil%init_slow_soil_N ! slow soil nitrogen pool, (kg N/m2)
     self%inorg%n14    = inputs%init_soil%init_Nmineral     ! Mineral nitrogen pool, (kg N/m2)
-    self%previousN    = self%inorg%n14
 
     ! debug: adding microbial biomass initialisation
-    self%pmicr = orgpool() ! to do: add to: inputs%init_soil%xxxxx
+    self%pmicr = orgpool(inputs%init_soil%init_pmicr_C,   &
+                         inputs%init_soil%init_pmicr_d13C, &
+                         inputs%init_soil%init_pmicr_N)
 
-    ! Initialize soil volumetric water conent with field capacity (maximum soil moisture to start with)
-    self%wcl = inputs%params_tile%FLDCAP
+    ! Initialize soil volumetric water content
+    self%wcl = (/inputs%init_soil%init_wcl1, inputs%init_soil%init_wcl2, inputs%init_soil%init_wcl3/)
 
-    call self%aggregate_cohorts()
+    ! Initialize initialN0, that is used for nitrogen workaround: keep the N in the system constant at this value
+    self%initialN0 = inputs%init_soil%init_N0_ecosystem
 
-    self%initialN0 =  self%totN
+    !call self%aggregate_cohorts()
+    !self%initialN0 =  self%totN
 
   end subroutine initialize_vegn_tile
 
