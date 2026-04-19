@@ -176,7 +176,7 @@ contains
             cc%density = (cc%density   * (old_lu_fractions(j) - lost(j))) / lu_fractions(j)
             it => it%next()
           end do
-          call lu%vegn%aggregate_cohorts() ! We aggregate to get the right density
+          call lu%vegn%aggregate_pools_across_cohorts() ! We aggregate to get the right density
         end if
 
         ! Subtract the lost quantities, add transfered ones, and normalize with the new fraction

@@ -51,7 +51,7 @@ module md_vegetation_tile_biomee
     integer, private :: lu_index   ! Which land use (LU) this tile represents. Given as the index in 'init_lu' array.
 
     !========================= Cohort aggreation ===========================!
-    ! Attention: variables aggregated from cohorts are only usable after having run aggregate_cohorts()
+    ! Attention: variables aggregated from cohorts are only usable after having run aggregate_pools_across_cohorts()
     real             :: density                            ! density (tree/m2)
     real, private    :: LAI                                ! leaf area index (surface of leaves per m2 of ground/tile)
     real, private    :: CAI                                ! crown area index (surface of the projected crown mer m2 of ground/tile)
@@ -198,7 +198,7 @@ module md_vegetation_tile_biomee
 
     procedure plant2soil
     procedure initialize_vegn_tile
-    procedure :: aggregate_cohorts
+    procedure :: aggregate_pools_across_cohorts
     procedure :: lu_props
 
     !========= Private helper methods
@@ -206,7 +206,6 @@ module md_vegetation_tile_biomee
     procedure, private :: recover_N_balance
     procedure, private :: merge_cohorts
     procedure, private :: split_cohort
-    procedure, private :: aggregate_pools
     procedure, private :: zero_daily_diagnostics
     procedure, private :: kill_cohort
 
@@ -691,7 +690,7 @@ contains
     enddo
 
     if (daily_reporting) then
-      call self%aggregate_cohorts()
+      call self%aggregate_pools_across_cohorts()
 
       self%out_daily_tile(idoy, DAILY_TILE_YEAR       ) = iyears
       self%out_daily_tile(idoy, DAILY_TILE_DOY        ) = idoy
@@ -830,7 +829,7 @@ contains
 
     enddo
 
-    call self%aggregate_cohorts()
+    call self%aggregate_pools_across_cohorts()
 
     pool = self%pplant()
     plantC = pool%c12
@@ -1093,7 +1092,7 @@ contains
     ! Initialize initialN0, that is used for nitrogen workaround: keep the N in the system constant at this value
     self%initialN0 = inputs%init_soil%init_N0_ecosystem
 
-    !call self%aggregate_cohorts()
+    !call self%aggregate_pools_across_cohorts()
     !self%initialN0 =  self%totN
 
   end subroutine initialize_vegn_tile
@@ -1102,15 +1101,17 @@ contains
   ! Private helper methods
   !----------------------------------------------------------------
 
-  subroutine aggregate_pools( self )
+  subroutine aggregate_pools_across_cohorts( self )
     !////////////////////////////////////////////////////////////////////////
-    ! Compute tile-level pools from aggregation of pools from all living cohorts.
+    ! Update tile-level variables from aggration across living cohorts.
     !------------------------------------------------------------------------
     class(vegn_tile_type), intent(inout) :: self
 
     ! local variables
     type(cohort_type), pointer :: cc
     type(cohort_stack_item), pointer :: it !iterator
+    real :: dbh ! cache variable
+    type(orgpool) :: total_pool
 
     ! State variables
     self%plabl = orgpool()
@@ -1136,20 +1137,11 @@ contains
 
     enddo
 
-  end subroutine aggregate_pools
+    total_pool = self%pplant() + self%psoil() ! pplant requires updated pools: plabl,pseed,pleaf,proot,psapw,pwood and pmicr,psoil_fs,psoil_sl,inorg
+    self%totC = total_pool%c12
+    self%totN = total_pool%n14
 
-  subroutine aggregate_cohorts( self )
-    !////////////////////////////////////////////////////////////////////////
-    ! Update tile-level variables from aggration of living cohorts.
-    !------------------------------------------------------------------------
-    class(vegn_tile_type), intent(inout) :: self
-
-    ! local variables
-    type(cohort_type), pointer :: cc
-    type(cohort_stack_item), pointer :: it !iterator
-    real :: dbh ! cache variable
-    type(orgpool) :: total_pool
-
+    ! Derived quantities on tile level
     self%LAI          = 0.0
     self%CAI          = 0.0
     self%density      = 0.0
@@ -1163,12 +1155,6 @@ contains
     self%NPPL         = 0.0
     self%NPPW         = 0.0
     self%m_turnover   = 0.0
-
-    call self%aggregate_pools()
-
-    total_pool = self%pplant() + self%psoil()
-    self%totC = total_pool%c12
-    self%totN = total_pool%n14
 
     it => self%cohorts()
     do while (associated(it))
@@ -1204,7 +1190,7 @@ contains
     if (self%density12 > 0.0) self%DBH12 = self%DBH12 / self%density12
     if (self%density12 > 0.0) self%QMD12   = sqrt(self%QMD12 / self%density12)
 
-  end subroutine aggregate_cohorts
+  end subroutine aggregate_pools_across_cohorts
 
   function lu_props(self) result(res)
     !////////////////////////////////////////////////////////////////////////
