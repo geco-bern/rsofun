@@ -1044,7 +1044,7 @@ contains
 
         ! If this cohorts init does not belong to the land use type of this vegetation tile, we move on to the next item.
         ! If the cohort's registered lu_index is negative, it belongs to all LU types (except urban)
-        if (inputs%init_cohort(i)%lu_index > 0 .and. self%lu_index /= i) cycle
+        if (inputs%init_cohort(i)%lu_index > 0 .and. self%lu_index /= inputs%init_cohort(i)%lu_index) cycle
 
         new => self%create_cohort()
         cc => new%cohort
