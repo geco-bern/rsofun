@@ -55,7 +55,7 @@ module md_interface_out_biomee
 
   !=============== Cohorts
 
-  integer, public, parameter :: nvars_annual_cohorts = 35
+  integer, public, parameter :: nvars_annual_cohorts = 40
 
   integer, public, parameter :: ANNUAL_COHORTS_ID             =  1
   integer, public, parameter :: ANNUAL_COHORTS_YEAR           =  2
@@ -92,6 +92,11 @@ module md_interface_out_biomee
   integer, public, parameter :: ANNUAL_COHORTS_DEATHRATE      = 33
   integer, public, parameter :: ANNUAL_COHORTS_N_LOSS         = 34
   integer, public, parameter :: ANNUAL_COHORTS_C_LOSS         = 35
+  integer, public, parameter :: ANNUAL_COHORTS_SEED_N         = 36
+  integer, public, parameter :: ANNUAL_COHORTS_LEAF_N         = 37
+  integer, public, parameter :: ANNUAL_COHORTS_ROOT_N         = 38
+  integer, public, parameter :: ANNUAL_COHORTS_SW_N           = 39
+  integer, public, parameter :: ANNUAL_COHORTS_HW_N           = 40
 
 
   !=============== Annual tile

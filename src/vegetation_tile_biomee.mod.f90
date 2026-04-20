@@ -818,6 +818,11 @@ contains
           self%out_annual_cohorts(i, ANNUAL_COHORTS_DEATHRATE  ) = 0
           self%out_annual_cohorts(i, ANNUAL_COHORTS_N_LOSS     ) = 0
           self%out_annual_cohorts(i, ANNUAL_COHORTS_C_LOSS     ) = 0
+          self%out_annual_cohorts(i, ANNUAL_COHORTS_SEED_N     ) = cc%pseed%n14
+          self%out_annual_cohorts(i, ANNUAL_COHORTS_LEAF_N     ) = cc%pleaf%n14
+          self%out_annual_cohorts(i, ANNUAL_COHORTS_ROOT_N     ) = cc%proot%n14
+          self%out_annual_cohorts(i, ANNUAL_COHORTS_SW_N       ) = cc%psapw%n14
+          self%out_annual_cohorts(i, ANNUAL_COHORTS_HW_N       ) = cc%pwood%n14
 
         end if
 

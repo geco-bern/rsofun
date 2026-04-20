@@ -5,6 +5,8 @@
   * Bugfix: `init_cohort$init_cohort_nsc` is now correctly taken into account. To 
   remain backward-compatible, it was made optional. To recover previous behavior 
   do not provide this column.
+  * Added missing state variables to in `output_annual_cohorts`:
+  `seedN`,`leafN`,`rootN`,`sapwoodN`,`heartwoodN` (note d13C currently still not output)
   * Cohorts are now less aggressively merged. Merging criteria was simplified from
   relative to absolute DBH difference. Now merging if difference <= 0.01 m.
   * Removed dummy parameters in `params_species` for `run_biomee_f_bysite()`: 

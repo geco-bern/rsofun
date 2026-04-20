@@ -155,6 +155,11 @@
 #'     \item{rootC}{Biomass of fine roots of a tree in this cohort (kg C tree\eqn{^{-1}}).}
 #'     \item{sapwoodC}{Biomass of sapwood of a tree in this cohort (kg C tree\eqn{^{-1}}).}
 #'     \item{heartwoodC}{Biomass of heartwood of a tree in this cohort (kg C tree\eqn{^{-1}}).}
+#'     \item{seedN}{Nitrogen content in seeds of a tree in this cohort (kg N tree\eqn{^{-1}}).}
+#'     \item{leafN}{Nitrogen content in leaves of a tree in this cohort (kg N tree\eqn{^{-1}}).}
+#'     \item{rootN}{Nitrogen content in fine roots of a tree in this cohort (kg N tree\eqn{^{-1}}).}
+#'     \item{sapwoodN}{Nitrogen content in sapwood of a tree in this cohort (kg N tree\eqn{^{-1}}).}
+#'     \item{heartwoodN}{Nitrogen content in heartwood of a tree in this cohort (kg N tree\eqn{^{-1}}).}
 #'     \item{NSN}{Non-structural nitrogen of a tree in this cohort (kg N tree\eqn{^{-1}}).}
 #'     \item{treeG}{Total growth of a tree, including carbon allocated to seeds, leaves, fine roots, and sapwood (kg C tree\eqn{^{-1}} yr\eqn{^{-1}}).}
 #'     \item{fseed}{Fraction of carbon allocated to seeds to total growth.}
@@ -1124,7 +1129,12 @@ annual_cohort_output <- function(raw_data){
     "N_fxed",      # ANNUAL_COHORTS_N_FIX          = 32
     "deathrate",   # ANNUAL_COHORTS_DEATHRATE      = 33
     "n_deadtrees", # ANNUAL_COHORTS_N_LOSS         = 34
-    "c_deadtrees"  # ANNUAL_COHORTS_C_LOSS         = 35
+    "c_deadtrees", # ANNUAL_COHORTS_C_LOSS         = 35
+    "seedN",       # ANNUAL_COHORTS_SEED_N         = 36
+    "leafN",       # ANNUAL_COHORTS_LEAF_N         = 37
+    "rootN",       # ANNUAL_COHORTS_ROOT_N         = 38
+    "sapwoodN",    # ANNUAL_COHORTS_SW_N           = 39
+    "heartwoodN"   # ANNUAL_COHORTS_HW_N           = 40
   )
 
   dimensions <- dim(raw_data)
