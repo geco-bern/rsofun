@@ -2,32 +2,11 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "(gdb) Launch - Lenovo Laptop",
-      "type": "cppdbg",
-      "request": "launch",
-      "program": "/Library/Frameworks/R.framework/Resources/bin/exec/R",
-      "args": ["--vanilla","-e","source('.vscode/debug.R')"],
-      "stopAtEntry": false,
-      "cwd": "${workspaceFolder}",
-      "targetArchitecture": "arm64",
-      "environment": [
-          {"name":"R_HOME", "value":"/Library/Frameworks/R.framework/Resources"}],
-        "setupCommands": [
-          { "description": "Enable pretty-printing for gdb",
-            "text": "-enable-pretty-printing",
-            "ignoreFailures": true},
-          {"description": "Set target architecture to aarch64",
-            "text": "set architecture aarch64",
-            "ignoreFailures": false}
-        ],
-      // "preLaunchTask": "build R pkg (for debugging)"
-    },
-    {
       "name": "(gdb) Launch - MacBook Air M4 (in Docker container, following perplexity.ai)",
       "type": "cppdbg",
       "request": "launch",
       "program": "/usr/local/lib/R/bin/exec/R",
-      "args": ["--vanilla", "-e", "source('${workspaceFolder}/.vscode/debug.R')"],
+      "args": ["--vanilla", "-e", "source('${workspaceFolder}/.debug/debug.R')"],
       "stopAtEntry": false,
       "cwd": "${workspaceFolder}",
       "environment": [
@@ -47,11 +26,32 @@
       "miDebuggerPath": "/usr/bin/gdb",
     },
     {
+      "name": "(gdb) Launch - Lenovo Laptop",
+      "type": "cppdbg",
+      "request": "launch",
+      "program": "/Library/Frameworks/R.framework/Resources/bin/exec/R",
+      "args": ["--vanilla","-e","source('.debug/debug.R')"],
+      "stopAtEntry": false,
+      "cwd": "${workspaceFolder}",
+      "targetArchitecture": "arm64",
+      "environment": [
+          {"name":"R_HOME", "value":"/Library/Frameworks/R.framework/Resources"}],
+        "setupCommands": [
+          { "description": "Enable pretty-printing for gdb",
+            "text": "-enable-pretty-printing",
+            "ignoreFailures": true},
+          {"description": "Set target architecture to aarch64",
+            "text": "set architecture aarch64",
+            "ignoreFailures": false}
+        ],
+      // "preLaunchTask": "build R pkg (for debugging)"
+    },
+    {
       "name": "(lldb) Launch R - MacBook Air M4",
       "type": "lldb",
       "request": "launch",
       "program": "/Library/Frameworks/R.framework/Resources/bin/exec/R",
-      "args": ["--vanilla", "-e", "source('.vscode/debug.R')"],
+      "args": ["--vanilla", "-e", "source('.debug/debug.R')"],
       "env": {"R_HOME" : "/Library/Frameworks/R.framework/Resources"},
       "terminal": "console",
       "stopOnEntry": false

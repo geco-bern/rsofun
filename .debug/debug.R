@@ -64,22 +64,38 @@ check_NA_output <- function(){
 # check_NA_output()
 
 check_biomee_aggressive_merging <- function(){
-  #drivers <- readRDS(".vscode/drivers_debug_CZ-BK1.rds")
-  drivers <- readRDS(".vscode/drivers_debug_SolBeech.rds")
-  drivers$params_species[[1]]$mortrate_d_c <- 0
-  drivers$params_tile[[1]]$par_mort_under  <- 0
-  drivers$params_species[[1]]$phenotype <- NA
-  drivers$params_species[[1]]$Vmax <- NA
-  drivers$params_species[[1]]$leafLS <- NA
-  drivers$params_species[[1]]$lAImax <- NA
-  drivers$params_species[[1]]$CNleaf0 <- NA
-  drivers$params_species[[1]]$gamma_L <- NA
-  drivers$params_species[[1]]$leaf_size <- NA
-  drivers$init_cohort[[1]]$init_cohort_age <- seq(nrow(drivers$init_cohort[[1]]), 1)
+  #drivers <- readRDS(".debug/drivers_debug_SolBeech.rds")
+  sitename <- "CZ-BK1"
+  #drivers <- readRDS(paste0(".debug/drivers_debug_transient_",sitename,"_",Sys.Date(),".rds"))
+  drivers <- readRDS(paste0(".debug/drivers_debug_transient_",sitename,"_","2026-04-15",".rds"))
 
   runread_biomee_f(drivers, makecheck = TRUE, ncores = 1)
 }
-res <- check_biomee_aggressive_merging()
+# res <- check_biomee_aggressive_merging()
 #res |> tidyr::unnest_wider(data)
 #
 #
+
+
+
+check_biomass_loss_when_reinitializing <- function(){
+  bug_list <- readRDS(".debug/bug_1.RDS")
+  #bug_list <- readRDS(".debug/bug_2.RDS")
+  run_biomee_f_bysite(
+          sitename       = bug_list$sitename,
+          params_siml    = bug_list$params_siml,
+          site_info      = bug_list$site_info,
+          forcing        = bug_list$forcing,
+          params_tile    = bug_list$params_tile,
+          params_species = bug_list$params_species,
+          init_cohort    = bug_list$init_cohort,
+          init_soil      = bug_list$init_soil,
+          init_lu        = bug_list$init_lu,
+          luc_forcing    = bug_list$luc_forcing,
+          makecheck      = bug_list$makecheck)
+
+
+  readRDS(".debug/bug_1.RDS")$init_cohort
+  readRDS(".debug/bug_2.RDS")$init_cohort
+}
+check_biomass_loss_when_reinitializing()
