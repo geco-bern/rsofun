@@ -394,7 +394,6 @@ contains
     do_relayer = .false.
 
     ! update vegn GDD and tk_pheno (only used for cohorts with phenotype == 0)
-    vegn%gdd      = vegn%gdd + max(0.0, vegn%tk_daily - 278.15)
     vegn%tk_pheno = vegn%tk_pheno * 0.8 + vegn%tk_daily * 0.2
 
     ! ON and OFF of phenology: change the indicator of growing season for deciduous
@@ -485,7 +484,6 @@ contains
       if (TURN_OFF_life) then
         cc%status = LEAF_OFF  ! Turn off a growing season
         cc%gdd   = 0.0        ! Start to counting a new cycle of GDD
-        vegn%gdd = 0.0
       endif
 
       ! leaf fall

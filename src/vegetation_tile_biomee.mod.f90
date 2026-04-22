@@ -103,7 +103,6 @@ module md_vegetation_tile_biomee
     ! Note, these fields do not follow the usual annual cycle (january-january)
     ! so they are not reset in zero_diagnostics
     real    :: tk_daily           = 0.0           ! 24h average temperature (Kelvin)
-    real    :: gdd                = 0.0           ! growing degree-days
     real    :: tk_pheno           = 0.0           ! smoothed canopy air temperature for phenology (Kelvin)
     real    :: tc_soil            = 0.0           ! Daily soil temperature in (deg C)
 

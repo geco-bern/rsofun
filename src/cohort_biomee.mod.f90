@@ -38,7 +38,7 @@ module md_cohort
     real :: age           = 0.0          ! age of cohort, years
     real :: topyear       = 0.0          ! number of years the cohort is in top layer
 
-    !===== Biological prognostic variables
+    !===== Biological state variables (prognostic)
     real    :: gdd        = 0.0          ! growing degree-day (phenology)
     integer :: status     = LEAF_OFF     ! growth status of plant
     real :: leaf_age   = 0.0          ! leaf age (years)
