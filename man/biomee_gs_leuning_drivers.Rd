@@ -53,7 +53,7 @@ This data structure can be freely used for documenting the dataset, but must inc
       \item{K_nitrogen}{Mineral Nitrogen turnover rate (yr\eqn{^{-1}}).}
       \item{MLmixRatio}{Ratio of C and N returned to litters from microbes.}
       \item{etaN}{N loss rate through runoff (organic and mineral) (yr\eqn{^{-1}}).}
-      \item{LMAmin}{Minimum LMA, leaf mass per unit area, kg C m\eqn{^{-2}}.}
+      \item{LMAmin}{Minimum LMA, leaf mass per unit area, only of parts of the leaf that become fine litter (metabolic parts), kg C m\eqn{^{-2}}. Has to be smaller than LMA.}
       \item{fsc_fine}{Fraction of fast turnover carbon in fine biomass.}
       \item{fsc_wood}{Fraction of fast turnover carbon in wood biomass.}
       \item{GR_factor}{Growth respiration factor.}
@@ -62,14 +62,10 @@ This data structure can be freely used for documenting the dataset, but must inc
       \item{f_initialBSW}{Coefficient for setting up initial sapwood.}
       \item{f_N_add}{Re-fill of N for sapwood.}
       \item{tf_base}{Calibratable scalar for respiration, used to increase LUE levels.}
-      \item{par_mort}{Canopy mortality parameter.}
-      \item{par_mort_under}{Parameter for understory mortality.}
-    }}
   \item{params_species}{A data.frame containing species-specific model parameters, with one species per row, including the following data:
     \describe{
     \item{The following columns pertaining to the \bold{plant type}:}{\describe{
       \item{lifeform}{Integer set to 0 for grasses and 1 for trees.}
-      \item{phenotype}{Integer set to 0 for deciduous and 1 for evergreen.}
       \item{pt}{Integer indicating the type of plant according to photosynthesis: 0 for C3; 1 for C4}
     }}\item{The following columns pertaining to the \bold{root parameters}:}{\describe{
       \item{alpha_FR}{Fine root turnover rate (yr\eqn{^{-1}}).}
@@ -77,73 +73,77 @@ This data structure can be freely used for documenting the dataset, but must inc
       \item{root_r}{Radius of the fine roots, in m.}
       \item{root_zeta}{e-folding parameter of root vertical distribution, in m.}
       \item{Kw_root}{Fine root water conductivity (mol m\eqn{^{-2}} s\eqn{^{-1}} MPa\eqn{^{-1}}).}
-      \item{leaf_size}{Characteristic leaf size.}
     }}\item{The following columns pertaining to the \bold{photosynthesis parameters}:}{\describe{
-      \item{Vmax}{Max RuBisCo rate, in mol m\eqn{^{-2}} s\eqn{^{-1}}.}
-      \item{Vannual}{Annual productivity per unit area at full sun (kg C m\eqn{^{-2}} year\eqn{^{-2}}).}
       \item{wet_leaf_dreg}{Wet leaf photosynthesis down-regulation.}
       \item{m_cond}{Factor of stomatal conductance.}
       \item{alpha_phot}{Photosynthesis efficiency.}
-      \item{gamma_L}{Leaf respiration coefficient, in yr\eqn{^{-1}}.}
       \item{gamma_LN}{Leaf respiration coefficient per unit N.}
       \item{gamma_SW}{Sapwood respiration rate, in kg C m\eqn{^{-2}} yr\eqn{^{-1}}.}
       \item{gamma_FR}{Fine root respiration rate, kg C kg C\eqn{^{-1}} yr\eqn{^{-1}}.}
-      \item{tk_crit}{Critical temperature triggerng offset of phenology, in Kelvin.}
-      \item{tk_crit_on}{Critical temperature triggerng onset of phenology, in Kelvin.}
-      \item{gdd_crit}{Critical value of GDD5 for turning ON growth season.}
-      \item{betaON}{Critical soil moisture for phenology onset.}
-      \item{betaOFF}{Critical soil moisture for phenology offset.}
+      \item{tk_crit}{Critical temperature triggering offset of leaf phenology (unused with evergreen), in Kelvin.}
+      \item{tk_crit_on}{Critical temperature triggering onset of leaf phenology (unused with evergreen), in Kelvin.}
+      \item{gdd_crit}{Critical value of GDD5 for turning ON leaf phenology (unused with evergreen).}
+      \item{kphio}{Quantum yield efficiency \eqn{\varphi_0}, in mol mol\eqn{^{-1}}.}
     }}\item{The following columns pertaining to the \bold{allometry parameters}:}{\describe{
       \item{alphaHT}{Coefficient for allometry (height = alphaHT * DBH_m ** thetaHT), in m m\eqn{^{-thetaHT}}.}
-      \item{thetaHT}{Coefficient for allometry (height = alphaHT * DBH_m ** thetaHT), in m m\eqn{^{-thetaHT}}.}
+      \item{thetaHT}{Coefficient for allometry (height = alphaHT * DBH_m ** thetaHT), unitless.}
+      \item{thetaBM}{Coefficient for allometry (biomass = alphaBM * DBH ** thetaBM), unitless. Since alphaBM is derived from alphaHT, it makes sense to also ensure thetaBM = thetaHT + 2.}
       \item{alphaCA}{Coefficient for allometry (projected crown area = pi * (alphaCA * DBH_m) ** thetaCA), in m\eqn{^{2/thetaCA-1}}.}
-      \item{thetaCA}{Coefficient for allometry (projected crown area = pi * (alphaCA * DBH_m) ** thetaCA), unitless. Dybzinski (eq. G1) showed that thetaCA = theatBM - 1.}
-      \item{alphaBM}{Coefficient for allometry (biomass = alphaBM * DBH ** thetaBM), in kg C m\eqn{^{-thetaBM}}.}
-      \item{thetaBM}{Coefficient for allometry (biomass = alphaBM * DBH ** thetaBM), unitless. Dybzinski (eq. G1) showed that thetaCA = theatBM - 1.}
+      \item{thetaCA}{Coefficient for allometry (projected crown area = pi * (alphaCA * DBH_m) ** thetaCA), unitless. Dybzinski (eq. G1) showed that thetaCA = thetaBM - 1.}
+      \item{rho_wood}{Wood density (kg C m\eqn{^{-3}}). (Only used to derive alphaBM.)}
+      \item{taperfactor}{Multiplicative factor to correct the cylindric volume/mass calculated with DBH, unitless. E.g. for a cone taperfactor is 1/3 (V = 1/3 Pi * r^2 * HT).  (Only used to derive alphaBM.)}
+      \item{phiCSA}{Ratio of sapwood area to leaf area.}
+      \item{phiRL}{Ratio of fine root to leaf area.}
     }}\item{The following columns pertaining to the \bold{reproduction parameters}:}{\describe{
       \item{seedlingsize}{Initial size of seedlings, in kg C per individual.}
       \item{maturalage}{Age at which trees can reproduce (years).}
       \item{v_seed}{Fraction of G_SF to G_F.}
     }}\item{The following columns pertaining to the \bold{mortality parameters}:}{\describe{
-      \item{mortrate_d_c}{Canopy tree mortality rate (yr\eqn{^{-1}}).}
+      \item{mortrate_d_c}{Canopy tree mortality rate (yr\eqn{^{-1}}).
+         (Differently used depending on method_mortality and do_U_shaped_mortality:
+         CAI_max (m\eqn{^{2}} m\eqn{^{-2}}) if "const_selfthin",
+         multiplicative factor (-) if "cstarvation" (),
+         multiplicative factor (yr\eqn{^{-1}}m\eqn{^{-1.5}}) (deathrate = par_mort * dbh ** 1.5) if "dbh" and "do_U_shaped_mortality"
+             )}
+    }}
       \item{mortrate_d_u}{Understory tree mortality rate (yr\eqn{^{-1}}).}
     }}\item{The following columns pertaining to the \bold{leaf parameters}:}{\describe{
       \item{LMA}{Leaf mass per unit area (kg C m\eqn{^{-2}}).}
-      \item{leafLS}{TODO}
-      \item{LNbase}{Basal leaf N per unit area, in kg N m\eqn{^{-2}}.}
-      \item{CNleafsupport}{TODO}
-      \item{rho_wood}{Wood density (kg C m\eqn{^{-3}}).}
-      \item{taperfactor}{TODO}
-      \item{lAImax}{Maximum crown LAI (leaf area index).}
-      \item{tauNSC}{TODO}
+      \item{LNbase}{Basal leaf N per unit leaf area, in kg N m\eqn{^{-2}}. NOTE: it is used to represent the N content in metabolic parts of the leaf. (TODO: correct?)}
+      \item{CNleafsupport}{C/N ratio of the structural parts of the leaf (non-metabolic parts).}
+      \item{tauNSC}{Residence time of C in NSC (to define storage capacity), in years.}
       \item{fNSmax}{Multiplier for NSNmax as sum of potential bl and br.}
-      \item{phiCSA}{Ratio of sapwood area to leaf area.}
+      \item{internal_gap_frac}{Fraction of internal gaps in the canopy}
     }}\item{The following columns pertaining to the \bold{C/N ratios for plant pools}:}{\describe{
-      \item{CNleaf0}{TODO}
-      \item{CNsw0}{TODO}
-      \item{CNwood0}{TODO}
-      \item{CNroot0}{TODO}
-      \item{CNseed0}{TODO}
+      \item{CNsw0}{C/N ratio of sapwood, in kg C kg N\eqn{^{-1}}.}
+      \item{CNwood0}{C/N ratio of heartwood, in kg C kg N\eqn{^{-1}}.}
+      \item{CNroot0}{C/N ratio of roots, in kg C kg N\eqn{^{-1}}.}
+      \item{CNseed0}{C/N ratio of seeds, in kg C kg N\eqn{^{-1}}.}
       \item{Nfixrate0}{Reference N fixation rate (kg N kg C\eqn{^{-1}} root).}
       \item{NfixCost0}{Carbon cost of N fixation (kg C kg N\eqn{^{-1}}).}
-      \item{internal_gap_frac}{TODO}
     }}\item{The following columns pertaining to the \bold{calibratable parameters}:}{\describe{
-      \item{kphio}{Quantum yield efficiency \eqn{\varphi_0}, in mol mol\eqn{^{-1}}.}
-      \item{phiRL}{Ratio of fine root to leaf area.}
       \item{LAI_light}{Maximum LAI limited by light.}
     }}}}
   \item{init_cohort}{A data.frame of initial cohort specifications, including
   the following data:
     \describe{
       \item{init_cohort_species}{Index of a species described in param_species.}
+      \item{init_cohort_age}{Initial tree/cohort age, in yr. (optional)
+       Default: 0.}
       \item{init_cohort_nindivs}{Initial individual density, in individuals per m\eqn{^{2}}.}
       \item{init_cohort_bl}{Initial biomass of leaf, in kg C per individual.}
       \item{init_cohort_br}{Initial biomass of fine root, in kg C per individual.}
       \item{init_cohort_bsw}{Initial biomass of sapwood, in kg C per individual.}
       \item{init_cohort_bHW}{Initial biomass of heartwood, in kg C per individual.}
       \item{init_cohort_seedC}{Initial biomass of seed, in kg C per individual.}
-      \item{init_cohort_nsc}{Initial non-structural biomass, in kg C per individual.}
-      \item{lu_index}{Land use type this cohorts belongs to (given as index in init_lu aray).
+      \item{init_cohort_nsc}{Initial non-structural biomass, in kg C per individual. (optional, defaults to value derived from br_max and bl_max)}
+      \item{init_cohort_bl_n14}{Initial nitrogen in leaf, in kg N per individual.        (optional, defaults to C biomass * CN-ratio)}
+      \item{init_cohort_br_n14}{Initial nitrogen in fine root, in kg N per individual.   (optional, defaults to C biomass * CN-ratio)}
+      \item{init_cohort_bsw_n14}{Initial nitrogen in sapwood, in kg N per individual.    (optional, defaults to C biomass * CN-ratio)}
+      \item{init_cohort_bHW_n14}{Initial nitrogen in heartwood, in kg N per individual.  (optional, defaults to C biomass * CN-ratio)}
+      \item{init_cohort_seedC_n14}{Initial nitrogen in seed, in kg N per individual.     (optional, defaults to C biomass * CN-ratio)}
+      \item{init_cohort_nsc_n14}{Initial non-structural biomass, in kg N per individual. (optional, defaults to value derived from br_max and bl_max)}
+      \item{lu_index}{Land use type this cohorts belongs to (given as index in init_lu aray). (optional)
        Default: 0 (attach to all LU types except thoses which do not accept vegetation -- cf  init_lu.vegetated).}
     }}
   \item{init_soil}{A data.frame of initial soil pools, including
@@ -153,6 +153,15 @@ This data structure can be freely used for documenting the dataset, but must inc
       \item{init_slow_soil_C}{Initial slow soil carbon, in kg C m\eqn{^{-2}}.}
       \item{init_Nmineral}{Mineral nitrogen pool, in kg N m\eqn{^{-2}}.}
       \item{N_input}{Annual nitrogen input to soil N pool, in kg N m\eqn{^{-2}} yr\eqn{^{-1}}.}
+      \item{init_fast_soil_N}{Initial fast soil nitrogen, in kg N m\eqn{^{-2}}.                     (optional, defaults to C biomass * CN-ratio)}
+      \item{init_slow_soil_N}{Initial slow soil nitrogen, in kg N m\eqn{^{-2}}.                     (optional, defaults to C biomass * CN-ratio)}
+      \item{init_pmicr_C}{Initial carbon in soil microbial biomass, in kg C m\eqn{^{-2}}.           (optional, defaults to 0.0)}
+      \item{init_pmicr_d13C}{Initial d13C signature in soil microbial biomass, in permil.           (optional, defaults to -9999)}
+      \item{init_pmicr_N}{Initial nitrogen in soil microbial biomass, in kg N m\eqn{^{-2}}.         (optional, defaults to 0.0)}
+      \item{init_wcl1}{Initial volumetric water content of soil layer 1, in m\eqn{^{3}}m\eqn{^{-3}}. (optional, defaults to field capacity)}
+      \item{init_wcl2}{Initial volumetric water content of soil layer 2, in m\eqn{^{3}}m\eqn{^{-3}}. (optional, defaults to field capacity)}
+      \item{init_wcl3}{Initial volumetric water content of soil layer 3, in m\eqn{^{3}}m\eqn{^{-3}}. (optional, defaults to field capacity)}
+      \item{init_N0_ecosystem}{Initial total amount of nitrogen in ecosystem (only used for nitrogen workaround), in kg N m\eqn{^{-2}}. (optional, defaults to sum of soil and plant pools.) Might not be needed.}
     }}
   \item{init_lu}{A data.frame of initial land unit (LU) specifications, including
     the following data:

@@ -38,7 +38,7 @@ module md_cohort
     real :: age           = 0.0          ! age of cohort, years
     real :: topyear       = 0.0          ! number of years the cohort is in top layer
 
-    !===== Biological prognostic variables
+    !===== Biological state variables (prognostic)
     real    :: gdd        = 0.0          ! growing degree-day (phenology)
     integer :: status     = LEAF_OFF     ! growth status of plant
     real :: leaf_age   = 0.0          ! leaf age (years)
@@ -112,8 +112,7 @@ module md_cohort
       !========== Other member procedures
 
       procedure reset_cohort
-      procedure initialize_cohort_from_biomass
-      procedure init_bl_br
+      procedure init_bl_max_br_max
       procedure can_be_merged_with
 
   end type cohort_type
@@ -391,34 +390,9 @@ contains
   ! Other helper functions
   !----------------------------------------------------------------
 
-  pure subroutine initialize_cohort_from_biomass(self)
+  pure subroutine init_bl_max_br_max( self )
     !////////////////////////////////////////////////////////////////
-    ! Calculate initial biomass
-    !---------------------------------------------------------------
-    class(cohort_type), intent(inout) :: self
-
-    ! Local variable
-    type(params_species_biomee) :: sp
-
-    sp = self%sp()
-
-    call self%init_bl_br()
-
-    self%plabl%c12 = 2.0 * (self%bl_max + self%br_max)
-
-    ! N pools
-    self%plabl%n14 = 5.0 * (self%bl_max / sp%CNleaf0 + self%br_max / sp%CNroot0)
-    self%pleaf%n14 = self%pleaf%c12 / sp%CNleaf0
-    self%proot%n14 = self%proot%c12 / sp%CNroot0
-    self%psapw%n14 = self%psapw%c12 / sp%CNsw0
-    self%pwood%n14 = self%pwood%c12 / sp%CNwood0
-    self%pseed%n14 = self%pseed%c12 / sp%CNseed0
-
-  end subroutine initialize_cohort_from_biomass
-
-  pure subroutine init_bl_br( self )
-    !////////////////////////////////////////////////////////////////
-    ! Initialize bl_max and br_max
+    ! Derive bl_max and br_max from crownarea
     !---------------------------------------------------------------
     class(cohort_type), intent(inout) :: self
 
@@ -430,13 +404,14 @@ contains
 
     crownarea = self%crownarea()
 
-    ! calculations of bl_max and br_max are here only for the sake of the
-    ! diagnostics, because otherwise those fields are inherited from the
-    ! parent cohort and produce spike in the output, even though these spurious
-    ! values are not used by the model
-    self%bl_max = sp%LMA   * sp%LAImax        * crownarea / self%layer
+    ! calculations of bl_max and br_max are used as target values for leaf and
+    ! root growth. They affect how much carbon is pulled from NSC towards growth
+    ! BUG: Given that bl_max and br_max depend on crownarea() they should increase with wood biomass (pwood+psapw) 
+    ! along the lifetime of a cohort. However, they are set only at the beginning of the simulation. TODO: solve this
+    ! NO, we call init_bl_max_br_max each year when doing vegn_phenology()
+    self%bl_max = sp%LMA   * sp%LAImax        * crownarea / self%layer  
     self%br_max = sp%phiRL * sp%LAImax/sp%SRA * crownarea / self%layer
 
-  end subroutine init_bl_br
+  end subroutine init_bl_max_br_max
 
 end module md_cohort

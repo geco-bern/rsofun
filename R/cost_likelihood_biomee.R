@@ -60,7 +60,7 @@ cost_likelihood_biomee <- function(
   drivers$params_species[[1]]$phiRL[]  <- par[1]
   drivers$params_species[[1]]$LAI_light[]  <- par[2]
   drivers$params_tile[[1]]$tf_base <- par[3]
-  drivers$params_tile[[1]]$par_mort <- par[4]
+  drivers$params_species[[1]]$mortrate_d_c <- par[4] # overwrite all species-rows
   
   # run model
   df <- runread_biomee_f(

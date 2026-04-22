@@ -138,7 +138,7 @@ contains
 
   subroutine fetch_CN_for_growth( cc )
     !////////////////////////////////////////////////////////////////
-    ! Fetch C from labile C pool according to the demand of leaves and fine roots,
+    ! Fetch C from labile C pool according to the demand (pull) of leaves and fine roots,
     ! and the push of labile C pool
     ! DAILY call.
     ! added by Weng, 12-06-2016
@@ -147,19 +147,17 @@ contains
     type(cohort_type), intent(inout) :: cc
     
     ! local variables
-    real :: NSCtarget
+    ! real :: NSCtarget
     real :: C_push, C_pull
     real :: N_push, N_pull
-    real, parameter :: LFR_rate = 1.0  ! filling rate/day
+    real, parameter :: LFR_rate = 1.0  ! filling rate/day ! i.e. the fraction of the missing bl_max or br_max that can be filled up in a single day
 
     associate ( sp => cc%sp() )
-      NSCtarget = 3.0 * (cc%bl_max + cc%br_max)      ! kgC/tree
+      ! NSCtarget = 3.0 * (cc%bl_max + cc%br_max)      ! kgC/tree
       ! Fetch C from labile C pool if it is in the growing season
       if (cc%status == LEAF_ON) then ! growing season
-        C_pull = LFR_rate * (Max(cc%bl_max - cc%pleaf%c12,0.0) +   &
-          Max(cc%br_max - cc%proot%c12,0.0))
-        N_pull = LFR_rate * (Max(cc%bl_max - cc%pleaf%c12,0.0)/sp%CNleaf0 +  &
-          Max(cc%br_max - cc%proot%c12,0.0)/sp%CNroot0)
+        C_pull = LFR_rate * (Max(cc%bl_max - cc%pleaf%c12,0.0           ) +  Max(cc%br_max - cc%proot%c12,0.0)           )
+        N_pull = LFR_rate * (Max(cc%bl_max - cc%pleaf%c12,0.0)/sp%CNleaf0 +  Max(cc%br_max - cc%proot%c12,0.0)/sp%CNroot0)
         C_push = cc%plabl%c12 / (ndayyear * sp%tauNSC) ! max(cc%plabl%c12-NSCtarget, 0.0)/(ndayyear*sp%tauNSC)
         N_push = cc%plabl%n14 / (ndayyear * sp%tauNSC) ! 4.0 * C_push/sp%CNsw0  !
         cc%N_growth = Min(max(0.02 * cc%plabl%n14,0.0), N_pull + N_push)
@@ -168,7 +166,7 @@ contains
       else ! non-growing season
         cc%C_growth = 0.0
         cc%N_growth = 0.0
-        cc%resg     = 0.0
+        cc%resg     = 0.0  !  daily growth respiration
       endif
     end associate
 
@@ -187,14 +185,14 @@ contains
     type(cohort_type), pointer :: cc
     type(cohort_stack_item), pointer :: it
     real :: CSAsw  ! Sapwood cross sectional area, m2
-    real :: CSAwd  ! Heartwood cross sectional area, m2
-    real :: DBHwd  ! diameter of heartwood at breast height, m
+    real :: CSAhw  ! Heartwood cross sectional area, m2
+    real :: DBHhw  ! diameter of heartwood at breast height, m
     real :: BSWmax ! max sapwood biomass, kg C/individual
     real :: G_LFR  ! amount of carbon spent on leaf and root growth
     real :: dSeed ! allocation to seeds, Weng, 2016-11-26
     real :: dBL, dBR ! tendencies of leaf and root biomass, kgC/individual
     real :: dBSW ! tendency of sapwood biomass, kgC/individual
-    real :: dBHW ! tendency of wood biomass, kgC/individual
+    real :: dBHW ! tendency of heartwood biomass, kgC/individual
     real :: dNS    ! Nitrogen from SW to HW
     real :: BL_u, BL_c
     real :: LF_deficit, FR_deficit
@@ -213,20 +211,23 @@ contains
       ! call biomass_allocation( cc )
       associate (sp => cc%sp())
 
-      if (cc%status == LEAF_ON) then
+      if (cc%status == LEAF_OFF .and. cc%C_growth > 0.0) then
+        call cc%plabl%add_carbon(cc%C_growth, cc%plabl%d13) ! if no leaves put C_growth back into plabl
+        cc%resg = 0.0  !  daily growth respiration
+      elseif (cc%status == LEAF_ON) then
 
         !update leaf age 
         cc%leaf_age = cc%leaf_age + 1.0/365.0
         
-        ! Get carbon from NSC pool. This sets cc%C_growth
-        call fetch_CN_for_growth( cc )
+        ! Get carbon from NSC pool. fetch_CN_for_growth() sets cc%C_growth, cc%N_growth, (and (unused) also sets cc%resg=0 if no leaves)
+        call fetch_CN_for_growth( cc )                           ! TODO: shouldn't this be called also when cc%status == LEAF_OFF
 
         ! Allocate carbon to the plant pools
         ! calculate the carbon spent on growth of leaves and roots
         LF_deficit = max(0.0, cc%bl_max - cc%pleaf%c12)
         FR_deficit = max(0.0, cc%br_max - cc%proot%c12)
         G_LFR = max(min(LF_deficit + FR_deficit,  &
-          f_LFR_max  * cc%C_growth), 0.0)
+          sp%f_LFR_max  * cc%C_growth), 0.0)
 
         ! and distribute it between roots and leaves
         dBL  = min(G_LFR, max(0.0, &
@@ -299,7 +300,7 @@ contains
         call cc%pseed%add_carbon(dSeed, cc%plabl%d13)
         call cc%plabl%add_c12(- dBR - dBL - dSeed - dBSW)
         cc%leaf_age = (1.0 - dBL/cc%pleaf%c12) * cc%leaf_age !NEW
-        cc%resg = 0.5 * (dBR + dBL + dSeed + dBSW) !  daily
+        cc%resg = 0.5 * (dBR + dBL + dSeed + dBSW) !  daily growth respiration
 
         ! update nitrogen pools, Nitrogen allocation
         call cc%pleaf%add_n14(dBL / sp%CNleaf0)
@@ -321,15 +322,15 @@ contains
         ! convert sapwood to heartwood for woody plants ! Nitrogen from sapwood to heart wood
         if (sp%lifeform > 0) then
           CSAsw  = cc%bl_max/sp%LMA * sp%phiCSA * cc%height() ! with Plant hydraulics, Weng, 2016-11-30
-          CSAwd  = max(0.0, cc%basal_area() - CSAsw)
-          DBHwd  = 2.0 * sqrt(CSAwd/PI)
-          BSWmax = sp%alphaBM * (cc%dbh()**sp%thetaBM - DBHwd**sp%thetaBM)
+          CSAhw  = max(0.0, cc%basal_area() - CSAsw) ! part of basal_area that is not sapwood is heartwood
+          DBHhw  = 2.0 * sqrt(CSAhw/PI)
+          BSWmax = sp%alphaBM * (cc%dbh()**sp%thetaBM - DBHhw**sp%thetaBM)
           dBHW   = max(cc%psapw%c12 - BSWmax, 0.0)
           dNS    = dBHW / cc%psapw%c12 * cc%psapw%n14
 
-          ! update C and N of sapwood and wood
+          ! update C and N of sapwood and heartwood
           dHW_pool = orgpool(dBHW, cc%psapw%d13, dNS)
-          cc%pwood = cc%pwood + dHW_pool
+          cc%pwood = cc%pwood + dHW_pool 
           cc%psapw = cc%psapw - dHW_pool
 
         endif
@@ -362,9 +363,6 @@ contains
           cc%br_max = sp%phiRL * cc%bl_max/(sp%LMA * sp%SRA)
         endif ! for grasses
 
-      elseif (cc%status == LEAF_OFF .and. cc%C_growth > 0.0) then
-        call cc%plabl%add_carbon(cc%C_growth, cc%plabl%d13)
-        cc%resg = 0.0
       endif
 
       ! reset carbon acculmulation terms
@@ -395,8 +393,7 @@ contains
 
     do_relayer = .false.
 
-    ! update vegn GDD and tk_pheno
-    vegn%gdd      = vegn%gdd + max(0.0, vegn%tk_daily - 278.15)
+    ! update vegn GDD and tk_pheno (only used for cohorts with phenotype == 0)
     vegn%tk_pheno = vegn%tk_pheno * 0.8 + vegn%tk_daily * 0.2
 
     ! ON and OFF of phenology: change the indicator of growing season for deciduous
@@ -461,7 +458,7 @@ contains
         cc%NPProot = cc%NPProot + cc%proot%c12
         cc%NPPwood = cc%NPPwood + cc%psapw%c12 + cc%pwood%c12
 
-        call cc%init_bl_br()
+        call cc%init_bl_max_br_max()
 
       endif
       end associate
@@ -487,7 +484,6 @@ contains
       if (TURN_OFF_life) then
         cc%status = LEAF_OFF  ! Turn off a growing season
         cc%gdd   = 0.0        ! Start to counting a new cycle of GDD
-        vegn%gdd = 0.0
       endif
 
       ! leaf fall
@@ -511,8 +507,8 @@ contains
 
     ! local variables
     real :: dBL, dBR, dNL, dNR, dBStem, dNStem      ! per day
-    real, parameter :: leaf_fall_rate = 0.05    ! per day
-    real, parameter :: root_mort_rate = 0.025   ! per day
+    real, parameter :: leaf_fall_rate = 0.05    ! per day   ! TODO: expose these to R?
+    real, parameter :: root_mort_rate = 0.025   ! per day   ! TODO: expose these to R?
 
     ! End a growing season: leaves fall for deciduous
     associate (sp => cc%sp() )
@@ -574,10 +570,6 @@ contains
     ! real, parameter :: min_density = 1e-5 ! 2e-15 ! 1/m. If density is less than this number,
     ! then the entire cohort is killed; 2e-15 is approximately 1 individual per Earth
     real :: cCAI ! Cumulative CAI
-    real :: param_dbh_under 
-    real :: param_nsc_under
-    real :: param_dbh 
-    real :: param_nsc
     real :: CAI_max
     real :: dbh ! cache variable
 
@@ -597,7 +589,7 @@ contains
       end do
 
       ! set calibratable mortality parameter
-      CAI_max = inputs%params_tile%par_mort
+      CAI_max = 1.0 ! used to be calibrateable (Slight misuse of par_mort. Set to 1.0 (former default) instead of replacing with sp%mortrate_d_c.)
 
       ! This thinning method depends on the order of the cohorts (oldest cohorts tends to die first)
       ! We sort the cohorts by increasing height
@@ -631,28 +623,21 @@ contains
 
         if ((trim(inputs%params_siml%method_mortality) == "cstarvation")) then
 
-          ! set calibratable parameter
-          param_nsc_under = inputs%params_tile%par_mort_under
-          param_nsc       = inputs%params_tile%par_mort
-
           ! Understory mortality
           if (cc%layer > 1) then !
-            deathrate = param_nsc_under * sp%mortrate_d_u * &
-                     (1. + A_mort*exp(B_mort*dbh))/ &
-                     (1. +        exp(B_mort*dbh))
+            deathrate = sp%mortrate_d_u * &
+                     (1. + sp%A_mort*exp(sp%B_mort*dbh))/ &
+                     (1. +           exp(sp%B_mort*dbh))
 
           else  
             ! Canopy mortality
             if (cc%bl_max > 0) then
-              deathrate = param_nsc * 0.05 * (exp(-3.5*(cc%plabl%c12/cc%bl_max))/(0.01+exp(-3.5*(cc%plabl%c12/cc%bl_max)))) ! -3.5,-2.5,-2
+              deathrate = sp%mortrate_d_c * &
+                        (exp(-3.5*(cc%plabl%c12/cc%bl_max))/(0.01+exp(-3.5*(cc%plabl%c12/cc%bl_max)))) ! -3.5,-2.5,-2
             endif
           endif
 
         else if ((trim(inputs%params_siml%method_mortality) == "dbh")) then
-
-          ! set calibratable parameter
-          param_dbh_under = inputs%params_tile%par_mort_under
-          param_dbh       = inputs%params_tile%par_mort
 
           if (sp%lifeform == 0) then  ! for grasses
             if (cc%layer > 1) then
@@ -662,16 +647,19 @@ contains
             endif
           else                    ! for trees
             if (cc%layer > 1) then ! Understory layer mortality Weng 2015: deathrate = 0.075*(1+9*exp(-60*cc%dbh()))/(1+exp(-60*cc%dbh()))
-              deathrate = param_dbh_under * sp%mortrate_d_u * &
-                     (1.0 + A_mort*exp(B_mort*dbh))/ &
-                     (1.0 +        exp(B_mort*dbh))
+              ! sigmoid that has value A_mort+0.5 at dbh=0
+              !         and decreases at high dbh to 1
+              !         speed of decrease is given by B_mort
+              deathrate = sp%mortrate_d_u * &
+                     (1.0 + sp%A_mort*exp(sp%B_mort*dbh))/ &
+                     (1.0 +           exp(sp%B_mort*dbh))
 
             else  ! First layer mortality Weng 2015: deathrate = 0.01*(1+5*exp(4*(cc%dbh()-2)))/(1+exp(4*(cc%dbh()-2)))
               if (inputs%params_siml%do_U_shaped_mortality) then
-                ! deathrate = param_dbh * 0.1 *    &
+                ! deathrate = sp%mortrate_d_c * 0.1 *    &
                 !            (1.*exp(2.*(cc%dbh()-1))/  &
                 !            (1. + exp(2.*(cc%dbh()-1))))
-                deathrate = min(1.0, param_dbh * dbh ** 1.5) ! 1.5, 2.5, 5
+                deathrate = min(1.0, sp%mortrate_d_c * dbh ** 1.5) ! 1.5, 2.5, 5
               else
                 deathrate = sp%mortrate_d_c
               endif
@@ -789,9 +777,9 @@ contains
 
       cc%species    = reproPFTs(k)
 
-      call cc%init_bl_br()
+      call cc%init_bl_max_br_max() ! initialize bl_max and br_max of seedlings.
 
-      ! Carbon pools
+      ! Carbon pools of a fresh seedling
       cc%pleaf%c12 = 0.0 * sp%seedlingsize
       cc%proot%c12 = 0.1 * sp%seedlingsize
       cc%psapw%c12 = inputs%params_tile%f_initialBSW * sp%seedlingsize
@@ -999,8 +987,8 @@ contains
     type(cohort_type), pointer :: cc
     type(cohort_stack_item), pointer :: it
 
-    real, parameter :: rho_N_up0 = 0.1 ! hourly N uptake rate, fraction of the total mineral N
-    real, parameter :: N_roots0  = 0.4 ! root biomass at half max N-uptake rate, kg C m-2
+    real, parameter :: rho_N_up0 = 0.1 ! hourly N uptake rate, fraction of the total mineral N    ! TODO: expose these to R?
+    real, parameter :: N_roots0  = 0.4 ! root biomass at half max N-uptake rate, kg C m-2         ! TODO: expose these to R?
 
     real    :: totNup    ! kgN m-2
     real    :: avgNup
@@ -1077,17 +1065,17 @@ contains
     !----------------------------------------------------------------------
     type(vegn_tile_type), intent(inout) :: vegn
 
-    real, parameter :: CUE0=0.4  ! default microbial CUE
-    real, parameter :: phoMicrobial = 2.5 ! turnover rate of microbes (yr-1)
-    real, parameter :: CNm = 10.0  ! Microbial C/N ratio
-    real, parameter :: fNM=0.0  ! mineral N available for microbes
+    real, parameter :: CUE0=0.4  ! default microbial CUE                               ! TODO: expose these to R?
+    real, parameter :: phoMicrobial = 2.5 ! turnover rate of microbes (yr-1)           ! TODO: expose these to R?
+    real, parameter :: CNm = 10.0  ! Microbial C/N ratio                               ! TODO: expose these to R?
+    real, parameter :: fNM=0.0  ! mineral N available for microbes                     ! TODO: expose these to R?
     real :: CUEfast,CUEslow
     real :: NforM
     real :: micr_C_loss, fast_L_loss, slow_L_loss
     real :: N_loss
     real :: DON_fast,DON_slow,DON_loss ! Dissolved organic N loss, kg N m-2 step-1
-    real, parameter :: runoff = 0.2    ! kg m-2 /step
-    real, parameter :: fDON = 0.25     ! fractio of DON production in decomposition
+    real, parameter :: runoff = 0.2    ! kg m-2 /step                                  ! TODO: expose these to R?
+    real, parameter :: fDON = 0.25     ! fractio of DON production in decomposition    ! TODO: expose these to R?
     real :: fast_N_free 
     real :: slow_N_free 
     real :: CNfast, CNslow
@@ -1177,8 +1165,8 @@ contains
     vegn%annualN   = vegn%annualN   + delta_N
 
     ! Check if soil C/N is above CN0
-    fast_N_free = MAX(0.0, vegn%psoil_fs%n14  - vegn%psoil_fs%c12/CN0metabolicL)
-    slow_N_free = MAX(0.0, vegn%psoil_sl%n14 - vegn%psoil_sl%c12/CN0structuralL)
+    fast_N_free = MAX(0.0, vegn%psoil_fs%n14  - vegn%psoil_fs%c12/inputs%params_tile%CN0metabolicL)
+    slow_N_free = MAX(0.0, vegn%psoil_sl%n14 - vegn%psoil_sl%c12/inputs%params_tile%CN0structuralL)
 
     vegn%psoil_fs%n14 = vegn%psoil_fs%n14 - fast_N_free
     vegn%psoil_sl%n14 = vegn%psoil_sl%n14 - slow_N_free

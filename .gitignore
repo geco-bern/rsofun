@@ -5,9 +5,7 @@
 .Ruserdata
 .DS_Store
 .idea
-
-# VS Code local settings
-.vscode/
+.debug
 
 # act local config & secrets
 .actrc

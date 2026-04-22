@@ -181,6 +181,11 @@ Model output for the aggregated land units (LU) is provided as a list containing
     \item{rootC}{Biomass of fine roots of a tree in this cohort (kg C tree\eqn{^{-1}}).}
     \item{sapwoodC}{Biomass of sapwood of a tree in this cohort (kg C tree\eqn{^{-1}}).}
     \item{heartwoodC}{Biomass of heartwood of a tree in this cohort (kg C tree\eqn{^{-1}}).}
+    \item{seedN}{Nitrogen content in seeds of a tree in this cohort (kg N tree\eqn{^{-1}}).}
+    \item{leafN}{Nitrogen content in leaves of a tree in this cohort (kg N tree\eqn{^{-1}}).}
+    \item{rootN}{Nitrogen content in fine roots of a tree in this cohort (kg N tree\eqn{^{-1}}).}
+    \item{sapwoodN}{Nitrogen content in sapwood of a tree in this cohort (kg N tree\eqn{^{-1}}).}
+    \item{heartwoodN}{Nitrogen content in heartwood of a tree in this cohort (kg N tree\eqn{^{-1}}).}
     \item{NSN}{Non-structural nitrogen of a tree in this cohort (kg N tree\eqn{^{-1}}).}
     \item{treeG}{Total growth of a tree, including carbon allocated to seeds, leaves, fine roots, and sapwood (kg C tree\eqn{^{-1}} yr\eqn{^{-1}}).}
     \item{fseed}{Fraction of carbon allocated to seeds to total growth.}
