@@ -507,8 +507,8 @@ contains
 
     ! local variables
     real :: dBL, dBR, dNL, dNR, dBStem, dNStem      ! per day
-    real, parameter :: leaf_fall_rate = 0.05    ! per day
-    real, parameter :: root_mort_rate = 0.025   ! per day
+    real, parameter :: leaf_fall_rate = 0.05    ! per day   ! TODO: expose these to R?
+    real, parameter :: root_mort_rate = 0.025   ! per day   ! TODO: expose these to R?
 
     ! End a growing season: leaves fall for deciduous
     associate (sp => cc%sp() )
@@ -987,8 +987,8 @@ contains
     type(cohort_type), pointer :: cc
     type(cohort_stack_item), pointer :: it
 
-    real, parameter :: rho_N_up0 = 0.1 ! hourly N uptake rate, fraction of the total mineral N
-    real, parameter :: N_roots0  = 0.4 ! root biomass at half max N-uptake rate, kg C m-2
+    real, parameter :: rho_N_up0 = 0.1 ! hourly N uptake rate, fraction of the total mineral N    ! TODO: expose these to R?
+    real, parameter :: N_roots0  = 0.4 ! root biomass at half max N-uptake rate, kg C m-2         ! TODO: expose these to R?
 
     real    :: totNup    ! kgN m-2
     real    :: avgNup
@@ -1065,17 +1065,17 @@ contains
     !----------------------------------------------------------------------
     type(vegn_tile_type), intent(inout) :: vegn
 
-    real, parameter :: CUE0=0.4  ! default microbial CUE
-    real, parameter :: phoMicrobial = 2.5 ! turnover rate of microbes (yr-1)
-    real, parameter :: CNm = 10.0  ! Microbial C/N ratio
-    real, parameter :: fNM=0.0  ! mineral N available for microbes
+    real, parameter :: CUE0=0.4  ! default microbial CUE                               ! TODO: expose these to R?
+    real, parameter :: phoMicrobial = 2.5 ! turnover rate of microbes (yr-1)           ! TODO: expose these to R?
+    real, parameter :: CNm = 10.0  ! Microbial C/N ratio                               ! TODO: expose these to R?
+    real, parameter :: fNM=0.0  ! mineral N available for microbes                     ! TODO: expose these to R?
     real :: CUEfast,CUEslow
     real :: NforM
     real :: micr_C_loss, fast_L_loss, slow_L_loss
     real :: N_loss
     real :: DON_fast,DON_slow,DON_loss ! Dissolved organic N loss, kg N m-2 step-1
-    real, parameter :: runoff = 0.2    ! kg m-2 /step
-    real, parameter :: fDON = 0.25     ! fractio of DON production in decomposition
+    real, parameter :: runoff = 0.2    ! kg m-2 /step                                  ! TODO: expose these to R?
+    real, parameter :: fDON = 0.25     ! fractio of DON production in decomposition    ! TODO: expose these to R?
     real :: fast_N_free 
     real :: slow_N_free 
     real :: CNfast, CNslow

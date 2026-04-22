@@ -392,7 +392,7 @@ contains
 
   pure subroutine init_bl_max_br_max( self )
     !////////////////////////////////////////////////////////////////
-    ! Initialize bl_max and br_max
+    ! Derive bl_max and br_max from crownarea
     !---------------------------------------------------------------
     class(cohort_type), intent(inout) :: self
 
@@ -408,6 +408,7 @@ contains
     ! root growth. They affect how much carbon is pulled from NSC towards growth
     ! BUG: Given that bl_max and br_max depend on crownarea() they should increase with wood biomass (pwood+psapw) 
     ! along the lifetime of a cohort. However, they are set only at the beginning of the simulation. TODO: solve this
+    ! NO, we call init_bl_max_br_max each year when doing vegn_phenology()
     self%bl_max = sp%LMA   * sp%LAImax        * crownarea / self%layer  
     self%br_max = sp%phiRL * sp%LAImax/sp%SRA * crownarea / self%layer
 
