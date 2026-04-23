@@ -234,7 +234,7 @@ extern SEXP biomee_f_C(
 
     SEXP output_annual_aggregated  = PROTECT( allocMatrix(REALSXP, nt_annual, 71) );
     SEXP output_restart_cohorts    = PROTECT( alloc3DArray(REALSXP, 50, 24, n_lu) );
-    SEXP output_restart_soil       = PROTECT( allocMatrix(REALSXP, 15, n_lu) );
+    SEXP output_restart_soil       = PROTECT( allocMatrix(REALSXP, 14, n_lu) );
     /****************/
 
     // Fortran subroutine call
