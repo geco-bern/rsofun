@@ -696,6 +696,7 @@ contains
       self%out_daily_tile(idoy, DAILY_TILE_YEAR       ) = iyears
       self%out_daily_tile(idoy, DAILY_TILE_DOY        ) = idoy
       self%out_daily_tile(idoy, DAILY_TILE_TK         ) = self%tk_daily
+      self%out_daily_tile(idoy, DAILY_TILE_TKSOIL      ) = self%tc_soil + kTkelvin
       self%out_daily_tile(idoy, DAILY_TILE_PRCP       ) = self%dailyPrcp
       self%out_daily_tile(idoy, DAILY_TILE_SOIL_W     ) = self%soilwater()
       self%out_daily_tile(idoy, DAILY_TILE_TRSP       ) = self%daily_fluxes%trsp

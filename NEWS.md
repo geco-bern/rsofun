@@ -29,6 +29,7 @@
   `init_pmicr_d13C`, `init_pmicr_N`, `init_wcl1`, `init_wcl2`, `init_wcl3`, `init_N0_ecosystem`. 
   If not provided, default values ensure backwards compatibility.
   * Added check that all `species$LMA` >= `params_tile$LMAmin`
+  * Added `output_daily_tile$Tksoil`, i.e. daily output of soil temperature
 * P-model:
   * no changes
 

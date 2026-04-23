@@ -35,6 +35,7 @@
 #'       \item{year}{Year of the simulation.}
 #'       \item{doy}{Day of the year.}
 #'       \item{Tk}{Air temperature (Kelvin).}
+#'       \item{Tksoil}{Dampened soil temperature (Kelvin).}
 #'       \item{Prcp}{Precipitation (mm m\eqn{^{-2}} day\eqn{^{-1}}).}
 #'       \item{SoilWater}{Soil water content in root zone (kg m\eqn{^{-2}}).}
 #'       \item{Transp}{Transpiration (mm m\eqn{^{2-}} day\eqn{^{-1}}).}
@@ -1025,6 +1026,7 @@ daily_tile_output <- function(raw_data){
     "year",
     "doy",
     "Tk",
+    "Tksoil",
     "Prcp",
     "SoilWater",
     "Transp",

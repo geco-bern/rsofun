@@ -221,7 +221,7 @@ extern SEXP biomee_f_C(
     SEXP out_list = PROTECT( allocVector(VECSXP, 6) );
 
     /******* Output sub-lists *******/
-    SEXP output_daily_tile             = PROTECT( alloc3DArray(REALSXP, nt_daily,  36, n_lu) );
+    SEXP output_daily_tile             = PROTECT( alloc3DArray(REALSXP, nt_daily,  37, n_lu) );
     SEXP output_annual_tile            = PROTECT( alloc3DArray(REALSXP, nt_annual, 61, n_lu) );
 
     // Dimensions
