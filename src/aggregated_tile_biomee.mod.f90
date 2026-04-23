@@ -10,6 +10,7 @@ module md_aggregated_tile_biomee
   use md_interface_out_biomee
   use md_cohort
   use md_cohort_linked_list, only: cohort_stack_item
+  use, intrinsic :: iso_c_binding, only: c_double
 
   implicit none
 
@@ -30,6 +31,7 @@ module md_aggregated_tile_biomee
       procedure populate_outarrays
       procedure populate_outcohorts
       procedure populate_outdaily
+      procedure populate_restart_state
 
   end type aggregated_tile
 
@@ -320,6 +322,22 @@ contains
     output_annual_aggregated(AGGREGATED_TILE_ANNUAL_PROD_LOSS_2_N ) = dble(prod_loss%n14)    
 
   end subroutine populate_outarrays
+
+  subroutine populate_restart_state(self, output_restart_cohorts, output_restart_soil)
+    class(aggregated_tile), intent(in) :: self
+    real(kind=c_double), dimension(:, :, :), intent(out) :: output_restart_cohorts
+    real(kind=c_double), dimension(:, :), intent(out) :: output_restart_soil
+
+    integer :: lu_idx
+
+    do lu_idx = 1, self%n_lu()
+      associate(lu => self%tiles(lu_idx))
+        if (lu%non_empty()) then
+          call lu%vegn%export_restart_state(output_restart_cohorts(:, :, lu_idx), output_restart_soil(:, lu_idx))
+        end if
+      end associate
+    end do
+  end subroutine populate_restart_state
 
   subroutine populate_outcohorts(self, output_annual_cohorts)
     use, intrinsic :: iso_fortran_env, dp=>real64

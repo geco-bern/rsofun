@@ -174,7 +174,9 @@ void F77_NAME(biomee_f)(
     double *output_daily_tile,
     double *output_annual_tile,
     double *output_annual_cohorts,
-    double *output_annual_aggregated
+    double *output_annual_aggregated,
+    double *output_restart_cohorts,
+    double *output_restart_soil
   );
 
 // C wrapper function for biomee
@@ -216,7 +218,7 @@ extern SEXP biomee_f_C(
 
 
     // Output list
-    SEXP out_list = PROTECT( allocVector(VECSXP, 4) );
+    SEXP out_list = PROTECT( allocVector(VECSXP, 6) );
 
     /******* Output sub-lists *******/
     SEXP output_daily_tile             = PROTECT( alloc3DArray(REALSXP, nt_daily,  36, n_lu) );
@@ -231,6 +233,8 @@ extern SEXP biomee_f_C(
     SEXP output_annual_cohort_tile = PROTECT( allocArray(REALSXP, dims) );
 
     SEXP output_annual_aggregated  = PROTECT( allocMatrix(REALSXP, nt_annual, 71) );
+    SEXP output_restart_cohorts    = PROTECT( alloc3DArray(REALSXP, 50, 24, n_lu) );
+    SEXP output_restart_soil       = PROTECT( allocMatrix(REALSXP, 15, n_lu) );
     /****************/
 
     // Fortran subroutine call
@@ -255,15 +259,19 @@ extern SEXP biomee_f_C(
         REAL(output_daily_tile),
         REAL(output_annual_tile),
         REAL(output_annual_cohort_tile),
-        REAL(output_annual_aggregated)
+        REAL(output_annual_aggregated),
+        REAL(output_restart_cohorts),
+        REAL(output_restart_soil)
         );
 
     SET_VECTOR_ELT(out_list, 0, output_daily_tile);
     SET_VECTOR_ELT(out_list, 1, output_annual_tile);
     SET_VECTOR_ELT(out_list, 2, output_annual_cohort_tile);
     SET_VECTOR_ELT(out_list, 3, output_annual_aggregated);
+    SET_VECTOR_ELT(out_list, 4, output_restart_cohorts);
+    SET_VECTOR_ELT(out_list, 5, output_restart_soil);
 
-    UNPROTECT(6);
+    UNPROTECT(8);
 
     return out_list;
 }

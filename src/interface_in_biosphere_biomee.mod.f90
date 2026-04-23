@@ -22,8 +22,8 @@ module md_interface_in_biomee
   integer, public, parameter :: nvars_params_siml    = 11
   integer, public, parameter :: nvars_site_info      = 4
   integer, public, parameter :: nvars_params_tile    = 20
-  integer, public, parameter :: nvars_init_soil      = 13
-  integer, public, parameter :: nvars_init_cohorts   = 16
+  integer, public, parameter :: nvars_init_soil      = 14
+  integer, public, parameter :: nvars_init_cohorts   = 24
   integer, public, parameter :: nvars_params_species = 65
   integer, public, parameter :: nvars_init_lu        = 5
 
@@ -203,6 +203,14 @@ module md_interface_in_biomee
     real    :: init_cohort_seedC_n14
     real    :: init_cohort_nsc_n14
     integer :: lu_index ! Which land use (LU) should this cohort be used for. Given as the index in 'init_lu' array.
+    integer :: restart_status
+    integer :: restart_layer
+    integer :: restart_firstlayer
+    real    :: restart_gdd
+    real    :: restart_leaf_age
+    real    :: restart_topyear
+    real    :: restart_bl_max
+    real    :: restart_br_max
 
   contains
     
@@ -224,6 +232,8 @@ module md_interface_in_biomee
     real :: init_wcl2
     real :: init_wcl3
     real :: init_N0_ecosystem
+    real :: restart_tk_pheno
+    ! real :: restart_vegn_gdd
     
   contains
     
@@ -403,6 +413,14 @@ contains
     self%init_cohort_seedC_n14 = real(init_cohort(14))
     self%init_cohort_nsc_n14   = real(init_cohort(15))
     self%lu_index              = int( init_cohort(16))
+    self%restart_status        = int( init_cohort(17))
+    self%restart_layer         = int( init_cohort(18))
+    self%restart_firstlayer    = int( init_cohort(19))
+    self%restart_gdd           = real(init_cohort(20))
+    self%restart_leaf_age      = real(init_cohort(21))
+    self%restart_topyear       = real(init_cohort(22))
+    self%restart_bl_max        = real(init_cohort(23))
+    self%restart_br_max        = real(init_cohort(24))
   end subroutine populate_init_cohort
   
   subroutine populate_init_soil(self, init_soil)
@@ -423,6 +441,8 @@ contains
     self%init_wcl2                = real( init_soil(11))
     self%init_wcl3                = real( init_soil(12))
     self%init_N0_ecosystem        = real( init_soil(13))
+    self%restart_tk_pheno         = real( init_soil(14))
+    ! self%restart_vegn_gdd         = real( init_soil(15))
     
   end subroutine populate_init_soil
   
