@@ -601,14 +601,14 @@ contains
     self%n_deadtrees  = 0.0
     self%c_deadtrees  = 0.0
     self%m_turnover   = 0.0
-    self%totseed      = orgpool()
-    self%totNewC      = orgpool()
+    self%totseed      = orgpool() ! initializes with zero
+    self%totNewC      = orgpool() ! initializes with zero
 
 
     ! We reset the cohorts internal state
     it => self%cohorts()
     do while (associated(it))
-      call it%cohort%reset_cohort()
+      call it%cohort%reset_cohort_fluxes()
       it => it%next()
     end do
 
@@ -621,7 +621,7 @@ contains
     ! Reset dauly diagnostic variables
     class(vegn_tile_type), intent(inout) :: self
 
-    self%daily_fluxes = common_fluxes()
+    self%daily_fluxes = common_fluxes() ! initializes with zero
     self%dailyRh   = 0.0
     self%dailyPrcp = 0.0
     self%dailyEvap = 0.0
@@ -780,7 +780,7 @@ contains
         froot     = cc%NPProot / treeG
         fwood     = cc%NPPwood / treeG
         dDBH      = cc%dbh() - cc%DBH_ys !in m
-        dBA       = cc%basal_area() - cc%BA_ys
+        dBA       = cc%basal_area() - cc%BA_ys ! _ys: year start
 
         if (i <= NCohortMax) then
 

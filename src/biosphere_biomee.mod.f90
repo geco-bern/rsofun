@@ -39,20 +39,17 @@ contains
     integer :: doy         ! Day of year
     integer :: dayloop_idx, fastloop_idx, simu_steps
     real, dimension(ndayyear) :: daily_temp  ! Daily temperatures (average) in Kelvin
-    real, dimension(size(climate)) :: tair
-
-    tair = climate(:)%TairK
 
     !----------------------------------------------------------------
     ! INITIALISATIONS
     !----------------------------------------------------------------
-    ! Compute averaged daily temperatures
-    call aggregate(daily_temp, tair, inputs%steps_per_day)
-
     !===== Reset diagnostics and counters
     simu_steps = 0 ! fast loop
     doy = 0
     call vegn%zero_diagnostics()
+
+    ! Compute averaged daily temperatures
+    call aggregate(daily_temp, climate(:)%TairK, inputs%steps_per_day) ! save result to daily_temp
 
     !----------------------------------------------------------------
     ! LOOP THROUGH DAYS
