@@ -9,7 +9,7 @@ module md_biosphere_biomee
   use md_vegetation_processes_biomee
   use md_soil_biomee
   use md_forcing_biomee
-  use md_soiltemp, only: air_to_soil_temp
+  use md_soiltemp, only: air_to_soil_temp_biomee
   use, intrinsic :: iso_c_binding, only: c_double
   
   implicit none
@@ -63,7 +63,7 @@ contains
 
       ! Compute daily air and soil temperature
       vegn%tk_daily = daily_temp(doy)
-      vegn%tc_soil  = air_to_soil_temp( &
+      vegn%tc_soil  = air_to_soil_temp_biomee( &
               vegn%thetaS(), &
               daily_temp - kTkelvin, &
               doy, &
