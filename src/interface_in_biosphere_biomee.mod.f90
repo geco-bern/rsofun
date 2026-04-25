@@ -67,7 +67,7 @@ module md_interface_in_biomee
     real   :: LMAmin
     real   :: fsc_fine
     real   :: fsc_wood
-    real   :: GR_factor
+    ! real   :: GR_factor       ! unused parameter
     real   :: l_fract
     real   :: retransN
     real   :: f_initialBSW
@@ -76,8 +76,8 @@ module md_interface_in_biomee
   
     !===== GPP P-model parameters (no effect in gs_leuning option)
     real   :: tau_acclim
-    real   :: soilm_thetastar ! unused parameter
-    real   :: soilm_betao     ! unused parameter
+    ! real   :: soilm_thetastar ! unused parameter
+    ! real   :: soilm_betao     ! unused parameter
   
     real   :: CN0metabolicL
     real   :: CN0structuralL
@@ -462,7 +462,7 @@ contains
     self%LMAmin                   = real( params_tile(9)  )
     self%fsc_fine                 = real( params_tile(10) )
     self%fsc_wood                 = real( params_tile(11) )
-    self%GR_factor                = real( params_tile(12) )
+    ! self%GR_factor                = real( params_tile(12) )    ! unused
     self%l_fract                  = real( params_tile(13) )
     self%retransN                 = real( params_tile(14) )
     self%f_initialBSW             = real( params_tile(15) )

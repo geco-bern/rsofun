@@ -56,7 +56,6 @@ This data structure can be freely used for documenting the dataset, but must inc
       \item{LMAmin}{Minimum LMA, leaf mass per unit area, only of parts of the leaf that become fine litter (metabolic parts), kg C m\eqn{^{-2}}. Has to be smaller than LMA.}
       \item{fsc_fine}{Fraction of fast turnover carbon in fine biomass.}
       \item{fsc_wood}{Fraction of fast turnover carbon in wood biomass.}
-      \item{GR_factor}{Growth respiration factor.}
       \item{l_fract}{Fraction of the carbon retained after leaf drop.}
       \item{retransN}{Retranslocation coefficient of nitrogen.}
       \item{f_initialBSW}{Coefficient for setting up initial sapwood.}

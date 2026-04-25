@@ -520,6 +520,26 @@ build_params_siml <- function(params_siml, forcing_years, makecheck){
 }
 
 build_params_tile <- function(params_tile){
+  # a) Ensure certain unused legacy parameters (if provided) are NA.
+  # If any other value is received an error is emitted.
+  # If not provided set them to NA.
+  must_be_NA_or_missing <- c('GR_factor')
+  params_that_should_be_NA <- lapply(seq_len(nrow(params_tile)), function(it){
+      params_tile[it,] |> dplyr::select(any_of(must_be_NA_or_missing))}) %>% bind_rows()
+  
+  if (any(!is.na(params_that_should_be_NA))){
+    offending <- which(!is.na(params_that_should_be_NA), arr.ind=TRUE, useNames = TRUE)
+    
+    colnam <- colnames(params_that_should_be_NA)
+    offending_species    <- paste0(unique(sort(offending[,'row'])), collapse = ", ") # species
+    offending_parameters <- paste0(unique(colnam[offending[,'col']]), collapse = ", ") # parameter
+    stop(sprintf("Legacy parameters are unused and must be set to NA in 'params_tile'.\nThis concerns parameters: (%s) and species (%s)",
+                    offending_parameters, offending_species))
+  }
+  
+  # If parameters are missing add them as NA
+  params_tile[, must_be_NA_or_missing] <- NA
+
   # Default values (of formerly hard-coded)
   if ('tau_acclim' %nin% names(params_tile)) {
     params_tile$tau_acclim <- 30.0  # days, acclimation time scale of p-model (vcmax, jmax)
@@ -542,12 +562,8 @@ build_params_species <- function(params_species, params_tile_arg = NULL){
   # If any other value is received an error is emitted.
   # If not provided set them to NA.
   must_be_NA_or_missing <- c('phenotype','Vmax','alphaBM','leafLS','lAImax','CNleaf0','gamma_L','Vannual','betaOFF','betaON','leaf_size')
-  
-  params_that_should_be_NA <- lapply(
-    seq_len(nrow(params_species)), 
-    function(it){
-      params_species[it,] |> dplyr::select(any_of(must_be_NA_or_missing))}
-    ) %>% bind_rows()
+  params_that_should_be_NA <- lapply((nrow(params_species)), function(it){
+      params_species[it,] |> dplyr::select(any_of(must_be_NA_or_missing))}) %>% bind_rows()
   
   if (any(!is.na(params_that_should_be_NA))){
     offending <- which(!is.na(params_that_should_be_NA), arr.ind=TRUE, useNames = TRUE)
@@ -918,7 +934,7 @@ prepare_params_tile <- function(params_tile){
     "LMAmin",
     "fsc_fine",
     "fsc_wood",
-    "GR_factor",
+    "GR_factor", # NOTE: dummy parameter, must be NA
     "l_fract",
     "retransN",
     "f_initialBSW",

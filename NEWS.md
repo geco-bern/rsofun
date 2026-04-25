@@ -12,7 +12,7 @@
   relative to absolute DBH difference. Now merging if difference <= 0.01 m.
   * Removed dummy parameters in `params_species` for `run_biomee_f_bysite()`: 
   `phenotype`,`Vmax`,`alphaBM`,`leafLS`,`lAImax`,`CNleaf0`,`gamma_L`,`Vannual`,
-  `betaON`,`betaOFF`, `leaf_size`.
+  `betaON`,`betaOFF`, `leaf_size` and in `params_tile`: `GR_factor`.
   If still provided, they must be NA, otherwise an error occurs.
   * Removed parameter in `params_tile`  for `run_biomee_f_bysite()`: `par_mort_under` 
   and `par_mort`. Their effects can be fully specified by 

@@ -62,7 +62,6 @@ params_tile <- tibble(
   LMAmin            = 0.02,
   fsc_fine          = 1.0,
   fsc_wood          = 0.0,
-  GR_factor         = 0.33,
   l_fract           = 0.0,
   retransN          = 0.0,
   f_initialBSW      = 0.2,
