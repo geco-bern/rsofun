@@ -52,7 +52,8 @@ If multiple land units (LU) are simulated, the columns are named according to th
 If multiple land units (LU) are simulated, an additional column 'aggregated' contains output aggregating all tiles as 
 well as product pools.
 Model output for each land unit (LU) is provided as a list. 
-Each list has elements: \code{output_daily_tile}, \code{output_annual_tile}, and \code{output_annual_cohorts}.
+Each list has elements: \code{output_daily_tile}, \code{output_annual_tile}, \code{output_annual_cohorts},
+\code{restart_init_cohort}, and \code{restart_init_soil}.
 Model output for the aggregated land units (LU) is provided as a list containing \code{output_daily_cell}.
 \describe{
   \item{\code{output_daily_tile}}{A data.frame with daily outputs at tile level.
@@ -60,14 +61,15 @@ Model output for the aggregated land units (LU) is provided as a list containing
       \item{year}{Year of the simulation.}
       \item{doy}{Day of the year.}
       \item{Tk}{Air temperature (Kelvin).}
+      \item{Tksoil}{Dampened soil temperature (Kelvin).}
       \item{Prcp}{Precipitation (mm m\eqn{^{-2}} day\eqn{^{-1}}).}
       \item{SoilWater}{Soil water content in root zone (kg m\eqn{^{-2}}).}
       \item{Transp}{Transpiration (mm m\eqn{^{2-}} day\eqn{^{-1}}).}
       \item{Evap}{Evaporation (mm m\eqn{^{-2}} day\eqn{^{-1}}).}
       \item{Runoff}{Water runoff (mm m\eqn{^{-2}} day\eqn{^{-1}}).}
-      \item{ws1}{Volumetric soil water content for layer 1.}
-      \item{ws2}{Volumetric soil water content for layer 2.}
-      \item{ws3}{Volumetric soil water content for layer 3.}
+      \item{ws1}{Soil water content for layer 1 (mm = kg H2O m\eqn{^{-2}}).}
+      \item{ws2}{Soil water content for layer 2 (mm = kg H2O m\eqn{^{-2}}).}
+      \item{ws3}{Soil water content for layer 3 (mm = kg H2O m\eqn{^{-2}}).}
       \item{LAI}{Leaf area index (m\eqn{^2}/m\eqn{^2}).}
       \item{NPP}{Net primary productivity (kg C m\eqn{^{-2}} day\eqn{^{-1}}).}
       \item{GPP}{Gross primary production (kg C m\eqn{^{-2}} day\eqn{^{-1}}).}
@@ -201,6 +203,11 @@ Model output for the aggregated land units (LU) is provided as a list containing
     \item{n_deadtrees}{Plant to soil N flux due to mortality, including natural mortality, starvation and any other processes causing a loss of individuals in general  (kg N yr\eqn{^{-1}} m\eqn{^{-2}}).}
     \item{c_deadtrees}{Plant to soil C flux due to mortality, including natural mortality, starvation and any other processes causing a loss of individuals in general  (kg C yr\eqn{^{-1}} m\eqn{^{-2}}).}
   }}
+  \item{\code{restart_init_cohort}}{A data.frame that can be passed back as \code{init_cohort} for a restart run.
+    It contains the initialized pools together with restart-only cohort state such as phenology status, canopy layer,
+    GDD, leaf age, and the stored \code{bl_max}/\code{br_max} targets.}
+  \item{\code{restart_init_soil}}{A one-row data.frame that can be passed back as \code{init_soil} for a restart run.
+    It contains the soil pools together with the tile-level phenology restart state currently used during initialization.}
 }
 If there are multiple land units (LU) there will also be a column named `aggregated` containing a data.frame in the column
 `output_annual_cell` with annual outputs aggregating all tiles present in the simulation cell. Note that quantities per m2 refer to 

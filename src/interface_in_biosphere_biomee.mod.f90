@@ -16,14 +16,16 @@ module md_interface_in_biomee
   real, public, parameter ::  thksl(MAX_LEVELS) = (/0.05, 0.45, 1.5/)  ! m, thickness of soil layers
 
   !===== Leaf life span
-  real, parameter  :: c_LLS = 28.57143    ! yr/ (kg C m-2), c_LLS=1/LMAs, where LMAs = 0.035
+  real, parameter  :: c_LLS = 28.57143    ! yr/ (kg C m-2), c_LLS=1yr/LMAs, where LMAs = 0.035 kgC/m2, i.e. 
+                                          ! leaves with 0.035 are approximated with a lifespan of 1 
+                                          ! year (NOTE: can lead to non-compatible LMA and phenotype parameters)
 
   !===== Number of parameters
   integer, public, parameter :: nvars_params_siml    = 11
   integer, public, parameter :: nvars_site_info      = 4
   integer, public, parameter :: nvars_params_tile    = 20
-  integer, public, parameter :: nvars_init_soil      = 13
-  integer, public, parameter :: nvars_init_cohorts   = 16
+  integer, public, parameter :: nvars_init_soil      = 14
+  integer, public, parameter :: nvars_init_cohorts   = 24
   integer, public, parameter :: nvars_params_species = 65
   integer, public, parameter :: nvars_init_lu        = 5
 
@@ -67,7 +69,7 @@ module md_interface_in_biomee
     real   :: LMAmin
     real   :: fsc_fine
     real   :: fsc_wood
-    real   :: GR_factor
+    ! real   :: GR_factor       ! unused parameter
     real   :: l_fract
     real   :: retransN
     real   :: f_initialBSW
@@ -76,8 +78,8 @@ module md_interface_in_biomee
   
     !===== GPP P-model parameters (no effect in gs_leuning option)
     real   :: tau_acclim
-    real   :: soilm_thetastar ! unused parameter
-    real   :: soilm_betao     ! unused parameter
+    ! real   :: soilm_thetastar ! unused parameter
+    ! real   :: soilm_betao     ! unused parameter
   
     real   :: CN0metabolicL
     real   :: CN0structuralL
@@ -203,6 +205,14 @@ module md_interface_in_biomee
     real    :: init_cohort_seedC_n14
     real    :: init_cohort_nsc_n14
     integer :: lu_index ! Which land use (LU) should this cohort be used for. Given as the index in 'init_lu' array.
+    integer :: restart_status
+    integer :: restart_layer
+    integer :: restart_firstlayer
+    real    :: restart_gdd
+    real    :: restart_leaf_age
+    real    :: restart_topyear
+    real    :: restart_bl_max
+    real    :: restart_br_max
 
   contains
     
@@ -224,6 +234,8 @@ module md_interface_in_biomee
     real :: init_wcl2
     real :: init_wcl3
     real :: init_N0_ecosystem
+    real :: restart_tk_pheno
+    ! real :: restart_vegn_gdd
     
   contains
     
@@ -403,6 +415,14 @@ contains
     self%init_cohort_seedC_n14 = real(init_cohort(14))
     self%init_cohort_nsc_n14   = real(init_cohort(15))
     self%lu_index              = int( init_cohort(16))
+    self%restart_status        = int( init_cohort(17))
+    self%restart_layer         = int( init_cohort(18))
+    self%restart_firstlayer    = int( init_cohort(19))
+    self%restart_gdd           = real(init_cohort(20))
+    self%restart_leaf_age      = real(init_cohort(21))
+    self%restart_topyear       = real(init_cohort(22))
+    self%restart_bl_max        = real(init_cohort(23))
+    self%restart_br_max        = real(init_cohort(24))
   end subroutine populate_init_cohort
   
   subroutine populate_init_soil(self, init_soil)
@@ -423,6 +443,8 @@ contains
     self%init_wcl2                = real( init_soil(11))
     self%init_wcl3                = real( init_soil(12))
     self%init_N0_ecosystem        = real( init_soil(13))
+    self%restart_tk_pheno         = real( init_soil(14))
+    ! self%restart_vegn_gdd         = real( init_soil(15))
     
   end subroutine populate_init_soil
   
@@ -442,7 +464,7 @@ contains
     self%LMAmin                   = real( params_tile(9)  )
     self%fsc_fine                 = real( params_tile(10) )
     self%fsc_wood                 = real( params_tile(11) )
-    self%GR_factor                = real( params_tile(12) )
+    ! self%GR_factor                = real( params_tile(12) )    ! unused
     self%l_fract                  = real( params_tile(13) )
     self%retransN                 = real( params_tile(14) )
     self%f_initialBSW             = real( params_tile(15) )
@@ -474,7 +496,7 @@ contains
     real(kind=c_double), dimension(nvars_params_species), intent(in) :: params_species
 
     self%lifeform           = int(  params_species(1))
-    ! self%phenotype          = int(  params_species(2)) ! overridden by ifelse(self%leafLS>1.0, 1, 0)
+    self%phenotype          = int(  params_species(2))
     self%pt                 = int(  params_species(3))
     self%alpha_FR           = real( params_species(4))
     self%rho_FR             = real( params_species(5))
@@ -544,7 +566,6 @@ contains
     self%f_LFR_max       = real( params_species(65))
 
     ! Following parameters are not yet populated and will be initialized with init_pft_data():
-    ! integer :: phenotype                          ! phenology type: 0 for deciduous, 1 for evergreen
     !===== Population level variables
     ! real    :: LAImax, underLAImax                ! max. LAI - Overridden
     !===== Root traits
@@ -619,14 +640,8 @@ contains
       self%root_frac(j) = self%root_frac(j) + residual*thksl(j)/rdepth(MAX_LEVELS)
     enddo
 
-    if(self%leafLS>1.0)then
-      self%phenotype = 1
-    else
-      self%phenotype = 0
-    endif
-
-    ! Leaf turnover rate, (leaf longevity as a function of LMA)
-    self%alpha_L = 1.0/self%leafLS * self%phenotype
+    ! Leaf turnover rate
+    self%alpha_L = 1.0/self%leafLS * self%phenotype ! unneeded for deciduous (phenotype=0)
 
   end subroutine init_derived_species_data
 

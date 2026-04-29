@@ -12,7 +12,7 @@ module md_biosphere_pmodel
     getpar_modl_tile, diag_daily
   use md_plant_pmodel, only: getpar_modl_plant
   use md_sofunutils, only: calc_patm
-  use md_soiltemp, only: soiltemp
+  use md_soiltemp, only: soiltemp_pmodel
   use md_track_vegetation_d13c, only: track_vegetation_d13c
 
   implicit none
@@ -161,8 +161,8 @@ contains
         !----------------------------------------------------------------
         ! calculate soil temperature
         !----------------------------------------------------------------
-        ! if (verbose) print*, 'calling soiltemp() ... '
-        call soiltemp(&
+        ! if (verbose) print*, 'calling soiltemp_pmodel() ... '
+        call soiltemp_pmodel(&
                       tile(:)%soil, &
                       myinterface%climate(:)%dtemp, &
                       doy, &

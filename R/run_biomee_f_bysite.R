@@ -26,7 +26,8 @@
 #' If multiple land units (LU) are simulated, an additional column 'aggregated' contains output aggregating all tiles as 
 #' well as product pools.
 #' Model output for each land unit (LU) is provided as a list. 
-#' Each list has elements: \code{output_daily_tile}, \code{output_annual_tile}, and \code{output_annual_cohorts}.
+#' Each list has elements: \code{output_daily_tile}, \code{output_annual_tile}, \code{output_annual_cohorts},
+#' \code{restart_init_cohort}, and \code{restart_init_soil}.
 #' Model output for the aggregated land units (LU) is provided as a list containing \code{output_daily_cell}.
 #' \describe{
 #'   \item{\code{output_daily_tile}}{A data.frame with daily outputs at tile level.
@@ -34,14 +35,15 @@
 #'       \item{year}{Year of the simulation.}
 #'       \item{doy}{Day of the year.}
 #'       \item{Tk}{Air temperature (Kelvin).}
+#'       \item{Tksoil}{Dampened soil temperature (Kelvin).}
 #'       \item{Prcp}{Precipitation (mm m\eqn{^{-2}} day\eqn{^{-1}}).}
 #'       \item{SoilWater}{Soil water content in root zone (kg m\eqn{^{-2}}).}
 #'       \item{Transp}{Transpiration (mm m\eqn{^{2-}} day\eqn{^{-1}}).}
 #'       \item{Evap}{Evaporation (mm m\eqn{^{-2}} day\eqn{^{-1}}).}
 #'       \item{Runoff}{Water runoff (mm m\eqn{^{-2}} day\eqn{^{-1}}).}
-#'       \item{ws1}{Volumetric soil water content for layer 1.}
-#'       \item{ws2}{Volumetric soil water content for layer 2.}
-#'       \item{ws3}{Volumetric soil water content for layer 3.}
+#'       \item{ws1}{Soil water content for layer 1 (mm = kg H2O m\eqn{^{-2}}).}
+#'       \item{ws2}{Soil water content for layer 2 (mm = kg H2O m\eqn{^{-2}}).}
+#'       \item{ws3}{Soil water content for layer 3 (mm = kg H2O m\eqn{^{-2}}).}
 #'       \item{LAI}{Leaf area index (m\eqn{^2}/m\eqn{^2}).}
 #'       \item{NPP}{Net primary productivity (kg C m\eqn{^{-2}} day\eqn{^{-1}}).}
 #'       \item{GPP}{Gross primary production (kg C m\eqn{^{-2}} day\eqn{^{-1}}).}
@@ -175,6 +177,11 @@
 #'     \item{n_deadtrees}{Plant to soil N flux due to mortality, including natural mortality, starvation and any other processes causing a loss of individuals in general  (kg N yr\eqn{^{-1}} m\eqn{^{-2}}).}
 #'     \item{c_deadtrees}{Plant to soil C flux due to mortality, including natural mortality, starvation and any other processes causing a loss of individuals in general  (kg C yr\eqn{^{-1}} m\eqn{^{-2}}).}
 #'   }}
+#'   \item{\code{restart_init_cohort}}{A data.frame that can be passed back as \code{init_cohort} for a restart run.
+#'     It contains the initialized pools together with restart-only cohort state such as phenology status, canopy layer,
+#'     GDD, leaf age, and the stored \code{bl_max}/\code{br_max} targets.}
+#'   \item{\code{restart_init_soil}}{A one-row data.frame that can be passed back as \code{init_soil} for a restart run.
+#'     It contains the soil pools together with the tile-level phenology restart state currently used during initialization.}
 #' }
 #' If there are multiple land units (LU) there will also be a column named `aggregated` containing a data.frame in the column
 #' `output_annual_cell` with annual outputs aggregating all tiles present in the simulation cell. Note that quantities per m2 refer to 
@@ -365,11 +372,17 @@ build_lu_out <- function(biomeeout, lu, trimmed_object){
   # annual cohorts
   output_annual_cohorts <- annual_cohort_output(biomeeout[[3]][,,,lu,drop=FALSE])
 
+  # restart state
+  restart_init_cohort <- restart_cohort_output(biomeeout[[5]][,,lu,drop=FALSE])
+  restart_init_soil <- restart_soil_output(biomeeout[[6]][,lu,drop=FALSE])
+
   # format the output in a structured list
   out_lu <- list(
     output_daily_tile = output_daily_tile,
     output_annual_tile = output_annual_tile,
-    output_annual_cohorts = output_annual_cohorts
+    output_annual_cohorts = output_annual_cohorts,
+    restart_init_cohort = restart_init_cohort,
+    restart_init_soil = restart_init_soil
   )
 
   return(out_lu)
@@ -507,6 +520,26 @@ build_params_siml <- function(params_siml, forcing_years, makecheck){
 }
 
 build_params_tile <- function(params_tile){
+  # a) Ensure certain unused legacy parameters (if provided) are NA.
+  # If any other value is received an error is emitted.
+  # If not provided set them to NA.
+  must_be_NA_or_missing <- c('GR_factor')
+  params_that_should_be_NA <- lapply(seq_len(nrow(params_tile)), function(it){
+      params_tile[it,] |> dplyr::select(any_of(must_be_NA_or_missing))}) %>% bind_rows()
+  
+  if (any(!is.na(params_that_should_be_NA))){
+    offending <- which(!is.na(params_that_should_be_NA), arr.ind=TRUE, useNames = TRUE)
+    
+    colnam <- colnames(params_that_should_be_NA)
+    offending_species    <- paste0(unique(sort(offending[,'row'])), collapse = ", ") # species
+    offending_parameters <- paste0(unique(colnam[offending[,'col']]), collapse = ", ") # parameter
+    stop(sprintf("Legacy parameters are unused and must be set to NA in 'params_tile'.\nThis concerns parameters: (%s) and species (%s)",
+                    offending_parameters, offending_species))
+  }
+  
+  # If parameters are missing add them as NA
+  params_tile[, must_be_NA_or_missing] <- NA
+
   # Default values (of formerly hard-coded)
   if ('tau_acclim' %nin% names(params_tile)) {
     params_tile$tau_acclim <- 30.0  # days, acclimation time scale of p-model (vcmax, jmax)
@@ -528,13 +561,9 @@ build_params_species <- function(params_species, params_tile_arg = NULL){
   # b) Ensure certain unused legacy parameters (if provided) are NA.
   # If any other value is received an error is emitted.
   # If not provided set them to NA.
-  must_be_NA_or_missing <- c('phenotype','Vmax','alphaBM','leafLS','lAImax','CNleaf0','gamma_L','Vannual','betaOFF','betaON','leaf_size')
-  
-  params_that_should_be_NA <- lapply(
-    seq_len(nrow(params_species)), 
-    function(it){
-      params_species[it,] |> dplyr::select(any_of(must_be_NA_or_missing))}
-    ) %>% bind_rows()
+  must_be_NA_or_missing <- c('Vmax','alphaBM','leafLS','lAImax','CNleaf0','gamma_L','Vannual','betaOFF','betaON','leaf_size')
+  params_that_should_be_NA <- lapply((nrow(params_species)), function(it){
+      params_species[it,] |> dplyr::select(any_of(must_be_NA_or_missing))}) %>% bind_rows()
   
   if (any(!is.na(params_that_should_be_NA))){
     offending <- which(!is.na(params_that_should_be_NA), arr.ind=TRUE, useNames = TRUE)
@@ -644,19 +673,43 @@ build_init_cohort <- function(init_cohort, params_species){
   if ('init_cohort_nsc_n14' %nin% names(init_cohort)) { # init_cohort_nsn
     init_cohort$init_cohort_nsc_n14 <- 5.0 * (res$bl_max/curr_CNleaf0 + res$br_max/curr_CNroot0) # former default: initialize to value based on bl_max and br_max
   }
+  if ('restart_status' %nin% names(init_cohort)) {
+    init_cohort$restart_status <- -9999.0
+  }
+  if ('restart_layer' %nin% names(init_cohort)) {
+    init_cohort$restart_layer <- -9999.0
+  }
+  if ('restart_firstlayer' %nin% names(init_cohort)) {
+    init_cohort$restart_firstlayer <- -9999.0
+  }
+  if ('restart_gdd' %nin% names(init_cohort)) {
+    init_cohort$restart_gdd <- NA_real_
+  }
+  if ('restart_leaf_age' %nin% names(init_cohort)) {
+    init_cohort$restart_leaf_age <- NA_real_
+  }
+  if ('restart_topyear' %nin% names(init_cohort)) {
+    init_cohort$restart_topyear <- NA_real_
+  }
+  if ('restart_bl_max' %nin% names(init_cohort)) {
+    init_cohort$restart_bl_max <- NA_real_
+  }
+  if ('restart_br_max' %nin% names(init_cohort)) {
+    init_cohort$restart_br_max <- NA_real_
+  }
   if ('init_cohort_bl_n14' %nin% names(init_cohort)) { # TODO: rename to clearer: init_cohort_pleaf_n14
     init_cohort$init_cohort_bl_n14 = init_cohort$init_cohort_bl / curr_CNleaf0       # former default
   }
-  if ('init_cohort_br_n14' %nin% names(init_cohort)) { # init_cohort_proot_n14
+  if ('init_cohort_br_n14' %nin% names(init_cohort)) { # TODO: rename to clearer: init_cohort_proot_n14
     init_cohort$init_cohort_br_n14 = init_cohort$init_cohort_br / curr_CNroot0       # former default
   }
-  if ('init_cohort_bsw_n14' %nin% names(init_cohort)) { # init_cohort_psapw_n14
+  if ('init_cohort_bsw_n14' %nin% names(init_cohort)) { #TODO: rename to clearer:  init_cohort_psapw_n14
     init_cohort$init_cohort_bsw_n14 = init_cohort$init_cohort_bsw / curr_CNsw0       # former default
   }
-  if ('init_cohort_bHW_n14' %nin% names(init_cohort)) { # init_cohort_pwood_n14
+  if ('init_cohort_bHW_n14' %nin% names(init_cohort)) { # TODO: rename to clearer: init_cohort_pwood_n14
     init_cohort$init_cohort_bHW_n14 = init_cohort$init_cohort_bHW / curr_CNwood0     # former default
   }
-  if ('init_cohort_seedC_n14' %nin% names(init_cohort)) { # init_cohort_pseed_n14
+  if ('init_cohort_seedC_n14' %nin% names(init_cohort)) { # TODO: rename to clearer: init_cohort_pseed_n14
     init_cohort$init_cohort_seedC_n14 = init_cohort$init_cohort_seedC / curr_CNseed0 # former default
   }
   
@@ -698,6 +751,12 @@ build_init_soil <- function(init_soil, init_cohort, params_tile){
     Ntot <- Ntot_soil + Ntot_plant
     init_soil$init_N0_ecosystem = Ntot # former default: sum of the initialized soil and plant pools
   }
+  if ('restart_tk_pheno' %nin% names(init_soil)) {
+    init_soil$restart_tk_pheno <- NA_real_
+  }
+  # if ('restart_vegn_gdd' %nin% names(init_soil)) {
+  #   init_soil$restart_vegn_gdd <- NA_real_
+  # }
   return(init_soil)
 }
 
@@ -847,7 +906,16 @@ prepare_init_cohort <- function(init_cohort){
     "init_cohort_seedC_n14",
     "init_cohort_nsc_n14",
     # land use:
-    "lu_index"
+    "lu_index",
+    # optional restart state:
+    "restart_status",
+    "restart_layer",
+    "restart_firstlayer",
+    "restart_gdd",
+    "restart_leaf_age",
+    "restart_topyear",
+    "restart_bl_max",
+    "restart_br_max"
   )
 
   return(init_cohort)
@@ -866,7 +934,7 @@ prepare_params_tile <- function(params_tile){
     "LMAmin",
     "fsc_fine",
     "fsc_wood",
-    "GR_factor",
+    "GR_factor", # NOTE: dummy parameter, must be NA
     "l_fract",
     "retransN",
     "f_initialBSW",
@@ -882,7 +950,7 @@ prepare_params_tile <- function(params_tile){
 prepare_params_species <- function(params_species){
   params_species <- params_species %>% dplyr::select(
     "lifeform",
-    "phenotype", # NOTE: dummy parameter, must be NA
+    "phenotype",
     "pt",
     "alpha_FR",
     "rho_FR",
@@ -974,6 +1042,7 @@ daily_tile_output <- function(raw_data){
     "year",
     "doy",
     "Tk",
+    "Tksoil",
     "Prcp",
     "SoilWater",
     "Transp",
@@ -1091,6 +1160,72 @@ annual_tile_output <- function(raw_data, aggregated_LU = FALSE){
   }
   colnames(df) <- col_names
   return(df)
+}
+
+restart_cohort_output <- function(raw_data){
+  df <- as.data.frame(raw_data[, , 1, drop = TRUE])
+  colnames(df) <- c(
+    "init_cohort_species",
+    "init_cohort_nindivs",
+    "init_cohort_age",
+    "init_cohort_bl",
+    "init_cohort_br",
+    "init_cohort_bsw",
+    "init_cohort_bHW",
+    "init_cohort_seedC",
+    "init_cohort_nsc",
+    "init_cohort_bl_n14",
+    "init_cohort_br_n14",
+    "init_cohort_bsw_n14",
+    "init_cohort_bHW_n14",
+    "init_cohort_seedC_n14",
+    "init_cohort_nsc_n14",
+    "lu_index",
+    "restart_status",
+    "restart_layer",
+    "restart_firstlayer",
+    "restart_gdd",
+    "restart_leaf_age",
+    "restart_topyear",
+    "restart_bl_max",
+    "restart_br_max"
+  )
+
+  df <- df[!is.na(df$init_cohort_species), , drop = FALSE]
+
+  if (nrow(df) > 0) {
+    df$init_cohort_species <- as.integer(df$init_cohort_species)
+    df$lu_index <- as.integer(df$lu_index)
+    df$restart_status <- as.integer(df$restart_status)
+    df$restart_layer <- as.integer(df$restart_layer)
+    df$restart_firstlayer <- as.integer(df$restart_firstlayer)
+  }
+
+  df
+}
+
+restart_soil_output <- function(raw_data){
+  values <- as.numeric(raw_data[, 1])
+  df <- as.data.frame(as.list(values))
+  colnames(df) <- c(
+    "init_fast_soil_C",
+    "init_slow_soil_C",
+    "init_Nmineral",
+    "N_input",
+    "init_fast_soil_N",
+    "init_slow_soil_N",
+    "init_pmicr_C",
+    "init_pmicr_d13C",
+    "init_pmicr_N",
+    "init_wcl1",
+    "init_wcl2",
+    "init_wcl3",
+    "init_N0_ecosystem",
+    "restart_tk_pheno"
+    #"restart_vegn_gdd"
+  )
+  
+  df
 }
 
 annual_cohort_output <- function(raw_data){

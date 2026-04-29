@@ -1,5 +1,6 @@
 # rsofun (development version)
 * BiomeEP:
+  * Bugfix: `phenotype` is now correctly taking into account, decoupling it from `LMA` (#329)
   * Bugfix: annual, cohort-level output had mixed up column names for variables:
   `NSN`,`seedC`,`leafC`,`rootC`,`sapwoodC`,`heartwoodC`
   * Bugfix: `init_cohort$init_cohort_nsc` is now correctly taken into account. To 
@@ -11,8 +12,8 @@
   * Cohorts are now less aggressively merged. Merging criteria was simplified from
   relative to absolute DBH difference. Now merging if difference <= 0.01 m.
   * Removed dummy parameters in `params_species` for `run_biomee_f_bysite()`: 
-  `phenotype`,`Vmax`,`alphaBM`,`leafLS`,`lAImax`,`CNleaf0`,`gamma_L`,`Vannual`,
-  `betaON`,`betaOFF`, `leaf_size`.
+  `Vmax`,`alphaBM`,`leafLS`,`lAImax`,`CNleaf0`,`gamma_L`,`Vannual`,
+  `betaON`,`betaOFF`, `leaf_size` and in `params_tile`: `GR_factor`.
   If still provided, they must be NA, otherwise an error occurs.
   * Removed parameter in `params_tile`  for `run_biomee_f_bysite()`: `par_mort_under` 
   and `par_mort`. Their effects can be fully specified by 
@@ -29,6 +30,7 @@
   `init_pmicr_d13C`, `init_pmicr_N`, `init_wcl1`, `init_wcl2`, `init_wcl3`, `init_N0_ecosystem`. 
   If not provided, default values ensure backwards compatibility.
   * Added check that all `species$LMA` >= `params_tile$LMAmin`
+  * Added `output_daily_tile$Tksoil`, i.e. daily output of soil temperature
 * P-model:
   * no changes
 

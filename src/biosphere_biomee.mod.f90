@@ -9,7 +9,7 @@ module md_biosphere_biomee
   use md_vegetation_processes_biomee
   use md_soil_biomee
   use md_forcing_biomee
-  use md_soiltemp, only: air_to_soil_temp
+  use md_soiltemp, only: air_to_soil_temp_biomee
   use, intrinsic :: iso_c_binding, only: c_double
   
   implicit none
@@ -39,20 +39,17 @@ contains
     integer :: doy         ! Day of year
     integer :: dayloop_idx, fastloop_idx, simu_steps
     real, dimension(ndayyear) :: daily_temp  ! Daily temperatures (average) in Kelvin
-    real, dimension(size(climate)) :: tair
-
-    tair = climate(:)%TairK
 
     !----------------------------------------------------------------
     ! INITIALISATIONS
     !----------------------------------------------------------------
-    ! Compute averaged daily temperatures
-    call aggregate(daily_temp, tair, inputs%steps_per_day)
-
     !===== Reset diagnostics and counters
     simu_steps = 0 ! fast loop
     doy = 0
     call vegn%zero_diagnostics()
+
+    ! Compute averaged daily temperatures
+    call aggregate(daily_temp, climate(:)%TairK, inputs%steps_per_day) ! save result to daily_temp
 
     !----------------------------------------------------------------
     ! LOOP THROUGH DAYS
@@ -63,7 +60,7 @@ contains
 
       ! Compute daily air and soil temperature
       vegn%tk_daily = daily_temp(doy)
-      vegn%tc_soil  = air_to_soil_temp( &
+      vegn%tc_soil  = air_to_soil_temp_biomee( &
               vegn%thetaS(), &
               daily_temp - kTkelvin, &
               doy, &

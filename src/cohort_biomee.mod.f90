@@ -41,7 +41,7 @@ module md_cohort
     !===== Biological state variables (prognostic)
     real    :: gdd        = 0.0          ! growing degree-day (phenology)
     integer :: status     = LEAF_OFF     ! growth status of plant
-    real :: leaf_age   = 0.0          ! leaf age (years)
+    real :: leaf_age      = 0.0          ! leaf age (years)
 
     !===== Organic pools, kg tree-1
     type(orgpool) :: pleaf               ! leaf biomass
@@ -111,7 +111,7 @@ module md_cohort
 
       !========== Other member procedures
 
-      procedure reset_cohort
+      procedure reset_cohort_fluxes
       procedure init_bl_max_br_max
       procedure can_be_merged_with
 
@@ -310,15 +310,15 @@ contains
 
   end subroutine merge_in
 
-  pure subroutine reset_cohort(self)
+  pure subroutine reset_cohort_fluxes(self)
     !////////////////////////////////////////////////////////////////
     ! Reset cohort temporary data (used yearly)
     !---------------------------------------------------------------
     class(cohort_type), intent(inout) :: self
 
     ! Save last year's values
-    self%DBH_ys        = self%dbh()
-    self%BA_ys         = basal_area(self)
+    self%DBH_ys        = self%dbh()       ! _ys: year start
+    self%BA_ys         = basal_area(self) ! _ys: year start
 
     self%WupL(:)       = 0.0
 
@@ -342,7 +342,7 @@ contains
 
     self%m_turnover    = 0.0
     self%deathrate     = 0.0
-  end subroutine reset_cohort
+  end subroutine reset_cohort_fluxes
 
   function can_be_merged_with(self, other) result(res)
     !////////////////////////////////////////////////////////////////

@@ -56,7 +56,6 @@ This data structure can be freely used for documenting the dataset, but must inc
       \item{LMAmin}{Minimum LMA, leaf mass per unit area, only of parts of the leaf that become fine litter (metabolic parts), kg C m\eqn{^{-2}}. Has to be smaller than LMA.}
       \item{fsc_fine}{Fraction of fast turnover carbon in fine biomass.}
       \item{fsc_wood}{Fraction of fast turnover carbon in wood biomass.}
-      \item{GR_factor}{Growth respiration factor.}
       \item{l_fract}{Fraction of the carbon retained after leaf drop.}
       \item{retransN}{Retranslocation coefficient of nitrogen.}
       \item{f_initialBSW}{Coefficient for setting up initial sapwood.}
@@ -145,6 +144,14 @@ This data structure can be freely used for documenting the dataset, but must inc
       \item{init_cohort_nsc_n14}{Initial non-structural biomass, in kg N per individual. (optional, defaults to value derived from br_max and bl_max)}
       \item{lu_index}{Land use type this cohorts belongs to (given as index in init_lu aray). (optional)
        Default: 0 (attach to all LU types except thoses which do not accept vegetation -- cf  init_lu.vegetated).}
+      \item{restart_status}{Restart phenology status for the cohort (`0` = leaf-off, `1` = leaf-on). Optional; when omitted, a cold-start default is used.}
+      \item{restart_layer}{Restart canopy layer for the cohort. Optional; when omitted, cohorts are relayered as in a cold start.}
+      \item{restart_firstlayer}{Restart flag indicating whether the cohort has previously occupied the top layer. Optional.}
+      \item{restart_gdd}{Restart growing degree days stored on the cohort. Optional.}
+      \item{restart_leaf_age}{Restart leaf age, in years. Optional.}
+      \item{restart_topyear}{Restart count of years spent in the top canopy layer. Optional.}
+      \item{restart_bl_max}{Restart target leaf biomass (`bl_max`), in kg C per individual. Optional.}
+      \item{restart_br_max}{Restart target fine-root biomass (`br_max`), in kg C per individual. Optional.}
     }}
   \item{init_soil}{A data.frame of initial soil pools, including
   the following data:
@@ -162,6 +169,8 @@ This data structure can be freely used for documenting the dataset, but must inc
       \item{init_wcl2}{Initial volumetric water content of soil layer 2, in m\eqn{^{3}}m\eqn{^{-3}}. (optional, defaults to field capacity)}
       \item{init_wcl3}{Initial volumetric water content of soil layer 3, in m\eqn{^{3}}m\eqn{^{-3}}. (optional, defaults to field capacity)}
       \item{init_N0_ecosystem}{Initial total amount of nitrogen in ecosystem (only used for nitrogen workaround), in kg N m\eqn{^{-2}}. (optional, defaults to sum of soil and plant pools.) Might not be needed.}
+      \item{restart_tk_pheno}{Restart smoothed phenology temperature, in Kelvin. Optional.}
+      ### \item{restart_vegn_gdd}{Restart tile-level growing degree days. Optional.}
     }}
   \item{init_lu}{A data.frame of initial land unit (LU) specifications, including
     the following data:

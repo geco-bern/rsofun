@@ -13,44 +13,45 @@ module md_interface_out_biomee
 
   !=============== Daily
 
-  integer, public, parameter :: nvars_daily_tile     = 36
+  integer, public, parameter :: nvars_daily_tile     = 37
 
   integer, public, parameter :: DAILY_TILE_YEAR               =  1
   integer, public, parameter :: DAILY_TILE_DOY                =  2
   integer, public, parameter :: DAILY_TILE_TK                 =  3
-  integer, public, parameter :: DAILY_TILE_PRCP               =  4
-  integer, public, parameter :: DAILY_TILE_SOIL_W             =  5
-  integer, public, parameter :: DAILY_TILE_TRSP               =  6
-  integer, public, parameter :: DAILY_TILE_EVAP               =  7
-  integer, public, parameter :: DAILY_TILE_RUNOFF             =  8
-  integer, public, parameter :: DAILY_TILE_WS1                =  9
-  integer, public, parameter :: DAILY_TILE_WS2                = 10
-  integer, public, parameter :: DAILY_TILE_WS3                = 11
-  integer, public, parameter :: DAILY_TILE_LAI                = 12
-  integer, public, parameter :: DAILY_TILE_NPP                = 13
-  integer, public, parameter :: DAILY_TILE_GPP                = 14
-  integer, public, parameter :: DAILY_TILE_RESP               = 15
-  integer, public, parameter :: DAILY_TILE_RH                 = 16
-  integer, public, parameter :: DAILY_TILE_NSC                = 17
-  integer, public, parameter :: DAILY_TILE_SEED_C             = 18
-  integer, public, parameter :: DAILY_TILE_LEAF_C             = 19
-  integer, public, parameter :: DAILY_TILE_ROOT_C             = 20
-  integer, public, parameter :: DAILY_TILE_SWC                = 21
-  integer, public, parameter :: DAILY_TILE_HWC                = 22
-  integer, public, parameter :: DAILY_TILE_NSN                = 23
-  integer, public, parameter :: DAILY_TILE_SEED_N             = 24
-  integer, public, parameter :: DAILY_TILE_LEAF_N             = 25
-  integer, public, parameter :: DAILY_TILE_ROOT_N             = 26
-  integer, public, parameter :: DAILY_TILE_SW_N               = 27
-  integer, public, parameter :: DAILY_TILE_HW_N               = 28
-  integer, public, parameter :: DAILY_TILE_MCRB_C             = 29
-  integer, public, parameter :: DAILY_TILE_FASTSOM            = 30
-  integer, public, parameter :: DAILY_TILE_SLOWSOM            = 31
-  integer, public, parameter :: DAILY_TILE_MCRB_N             = 32
-  integer, public, parameter :: DAILY_TILE_FS_N               = 33
-  integer, public, parameter :: DAILY_TILE_SL_N               = 34
-  integer, public, parameter :: DAILY_TILE_INORG_N            = 35
-  integer, public, parameter :: DAILY_TILE_N_UPTK             = 36
+  integer, public, parameter :: DAILY_TILE_TKSOIL             =  4
+  integer, public, parameter :: DAILY_TILE_PRCP               =  5
+  integer, public, parameter :: DAILY_TILE_SOIL_W             =  6
+  integer, public, parameter :: DAILY_TILE_TRSP               =  7
+  integer, public, parameter :: DAILY_TILE_EVAP               =  8
+  integer, public, parameter :: DAILY_TILE_RUNOFF             =  9
+  integer, public, parameter :: DAILY_TILE_WS1                = 10
+  integer, public, parameter :: DAILY_TILE_WS2                = 11
+  integer, public, parameter :: DAILY_TILE_WS3                = 12
+  integer, public, parameter :: DAILY_TILE_LAI                = 13
+  integer, public, parameter :: DAILY_TILE_NPP                = 14
+  integer, public, parameter :: DAILY_TILE_GPP                = 15
+  integer, public, parameter :: DAILY_TILE_RESP               = 16
+  integer, public, parameter :: DAILY_TILE_RH                 = 17
+  integer, public, parameter :: DAILY_TILE_NSC                = 18
+  integer, public, parameter :: DAILY_TILE_SEED_C             = 19
+  integer, public, parameter :: DAILY_TILE_LEAF_C             = 20
+  integer, public, parameter :: DAILY_TILE_ROOT_C             = 21
+  integer, public, parameter :: DAILY_TILE_SWC                = 22
+  integer, public, parameter :: DAILY_TILE_HWC                = 23
+  integer, public, parameter :: DAILY_TILE_NSN                = 24
+  integer, public, parameter :: DAILY_TILE_SEED_N             = 25
+  integer, public, parameter :: DAILY_TILE_LEAF_N             = 26
+  integer, public, parameter :: DAILY_TILE_ROOT_N             = 27
+  integer, public, parameter :: DAILY_TILE_SW_N               = 28
+  integer, public, parameter :: DAILY_TILE_HW_N               = 29
+  integer, public, parameter :: DAILY_TILE_MCRB_C             = 30
+  integer, public, parameter :: DAILY_TILE_FASTSOM            = 31
+  integer, public, parameter :: DAILY_TILE_SLOWSOM            = 32
+  integer, public, parameter :: DAILY_TILE_MCRB_N             = 33
+  integer, public, parameter :: DAILY_TILE_FS_N               = 34
+  integer, public, parameter :: DAILY_TILE_SL_N               = 35
+  integer, public, parameter :: DAILY_TILE_INORG_N            = 36
+  integer, public, parameter :: DAILY_TILE_N_UPTK             = 37
 
 
   !=============== Cohorts

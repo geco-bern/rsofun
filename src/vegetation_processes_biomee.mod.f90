@@ -338,8 +338,9 @@ contains
         ! update bl_max and br_max daily
         BL_c = sp%LMA * sp%LAImax * cc%crownarea() * &
                 (1.0-sp%internal_gap_frac) / cc%layer
-        BL_u = sp%LMA*cc%crownarea()*(1.0-sp%internal_gap_frac) * &
-                sp%underLAImax
+        BL_u = sp%LMA * sp%underLAImax * cc%crownarea() * &
+                (1.0-sp%internal_gap_frac)
+                
 
         if (cc%layer == 1) cc%topyear = cc%topyear + 1.0 / 365.0
 

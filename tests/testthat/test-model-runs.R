@@ -608,3 +608,48 @@ test_that("Check net C (and N) balances without/with land-use-change", {
   )
   
 })
+
+
+test_that("BiomeEP repeated restart == single simulation", {
+  skip() # TODO: remove this again
+  drv <- rsofun::biomee_p_model_drivers
+  # 
+  drv$params_siml[[1]]$spinupyears <- 0
+  drv$params_siml[[1]]$do_daily_diagnostics <- FALSE
+  drv$params_siml[[1]]$nyeartrend <- 2
+  out_full <- run_biomee_f_bysite(sitename = drv$sitename,
+                                  params_siml = drv$params_siml[[1]],
+                                  site_info = drv$site_info[[1]],
+                                  forcing = drv$forcing[[1]],
+                                  params_tile = drv$params_tile[[1]],
+                                  params_species = drv$params_species[[1]],
+                                  init_cohort = drv$init_cohort[[1]],
+                                  init_soil = drv$init_soil[[1]])
+  drv1 <- drv
+  drv1$params_siml[[1]]$nyeartrend <- 1
+  out_y1 <- run_biomee_f_bysite(sitename = drv1$sitename,
+                                params_siml = drv1$params_siml[[1]],
+                                site_info = drv1$site_info[[1]],
+                                forcing = drv1$forcing[[1]],
+                                params_tile = drv1$params_tile[[1]],
+                                params_species = drv1$params_species[[1]],
+                                init_cohort = drv1$init_cohort[[1]],
+                                init_soil = drv1$init_soil[[1]])
+  drv2 <- drv
+  drv2$params_siml[[1]]$nyeartrend <- 1
+  drv2$init_cohort[[1]] <- out_y1$data$restart_init_cohort
+  drv2$init_soil[[1]] <- out_y1$data$restart_init_soil
+  out_restart <- run_biomee_f_bysite(sitename = drv2$sitename,
+                                     params_siml = drv2$params_siml[[1]],
+                                     site_info = drv2$site_info[[1]],
+                                     forcing = drv2$forcing[[1]],
+                                     params_tile = drv2$params_tile[[1]],
+                                     params_species = drv2$params_species[[1]],
+                                     init_cohort = drv2$init_cohort[[1]],
+                                     init_soil = drv2$init_soil[[1]])
+  
+  testthat::expect_equal(ignore_attr = TRUE, tolerance = 1e-4, 
+    out_full$data$output_annual_tile[2,]   |> select(-year),
+    out_restart$data$output_annual_tile[1,]|> select(-year))
+  
+})

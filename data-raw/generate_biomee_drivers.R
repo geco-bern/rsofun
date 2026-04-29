@@ -62,7 +62,6 @@ params_tile <- tibble(
   LMAmin            = 0.02,
   fsc_fine          = 1.0,
   fsc_wood          = 0.0,
-  GR_factor         = 0.33,
   l_fract           = 0.0,
   retransN          = 0.0,
   f_initialBSW      = 0.2,
@@ -72,6 +71,7 @@ params_tile <- tibble(
 
 params_species <- tibble(
   lifeform          = c(0, 1, 1, 1, 1),    # 0: grass; 1 Woody
+  phenotype         = c(0, 1, 1, 1, 1),    # 0: Deciduous; 1 Evergreen
   pt                = c(1, 0, 0, 0, 0),    # 0: C3; 1: C4
   # Root parameters
   alpha_FR          = rep(1.2, 5),
