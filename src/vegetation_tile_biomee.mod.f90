@@ -1044,6 +1044,7 @@ contains
     logical :: has_restart_state
     type(cohort_type), pointer :: cc
     type(cohort_stack_item), pointer :: new
+    type(params_species_biomee) :: sp
 
     ! Initialize lu_index
     self%lu_index = lu_index
@@ -1066,6 +1067,8 @@ contains
         cc%species   = inputs%init_cohort(i)%init_cohort_species
         cc%density   = inputs%init_cohort(i)%init_cohort_density ! trees/m2
         cc%age       = inputs%init_cohort(i)%init_cohort_age ! years
+
+        sp = cc%sp() ! careful this uses cc%species, ensure cc%sp() is called only after setting cc%species
 
         ! C pools
         cc%plabl%c12 = inputs%init_cohort(i)%init_cohort_nsc
@@ -1123,6 +1126,7 @@ contains
           ! Cold starts still derive these targets from the initialized structure.
           call cc%init_bl_max_br_max()
         end if
+
       enddo
 
       ! Split initial layer in smaller layers (if it is full)

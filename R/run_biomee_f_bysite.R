@@ -561,7 +561,7 @@ build_params_species <- function(params_species, params_tile_arg = NULL){
   # b) Ensure certain unused legacy parameters (if provided) are NA.
   # If any other value is received an error is emitted.
   # If not provided set them to NA.
-  must_be_NA_or_missing <- c('phenotype','Vmax','alphaBM','leafLS','lAImax','CNleaf0','gamma_L','Vannual','betaOFF','betaON','leaf_size')
+  must_be_NA_or_missing <- c('Vmax','alphaBM','leafLS','lAImax','CNleaf0','gamma_L','Vannual','betaOFF','betaON','leaf_size')
   params_that_should_be_NA <- lapply((nrow(params_species)), function(it){
       params_species[it,] |> dplyr::select(any_of(must_be_NA_or_missing))}) %>% bind_rows()
   
@@ -950,7 +950,7 @@ prepare_params_tile <- function(params_tile){
 prepare_params_species <- function(params_species){
   params_species <- params_species %>% dplyr::select(
     "lifeform",
-    "phenotype", # NOTE: dummy parameter, must be NA
+    "phenotype",
     "pt",
     "alpha_FR",
     "rho_FR",

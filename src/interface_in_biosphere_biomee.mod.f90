@@ -16,7 +16,9 @@ module md_interface_in_biomee
   real, public, parameter ::  thksl(MAX_LEVELS) = (/0.05, 0.45, 1.5/)  ! m, thickness of soil layers
 
   !===== Leaf life span
-  real, parameter  :: c_LLS = 28.57143    ! yr/ (kg C m-2), c_LLS=1/LMAs, where LMAs = 0.035
+  real, parameter  :: c_LLS = 28.57143    ! yr/ (kg C m-2), c_LLS=1yr/LMAs, where LMAs = 0.035 kgC/m2, i.e. 
+                                          ! leaves with 0.035 are approximated with a lifespan of 1 
+                                          ! year (NOTE: can lead to non-compatible LMA and phenotype parameters)
 
   !===== Number of parameters
   integer, public, parameter :: nvars_params_siml    = 11
@@ -494,7 +496,7 @@ contains
     real(kind=c_double), dimension(nvars_params_species), intent(in) :: params_species
 
     self%lifeform           = int(  params_species(1))
-    ! self%phenotype          = int(  params_species(2)) ! overridden by ifelse(self%leafLS>1.0, 1, 0)
+    self%phenotype          = int(  params_species(2))
     self%pt                 = int(  params_species(3))
     self%alpha_FR           = real( params_species(4))
     self%rho_FR             = real( params_species(5))
@@ -564,7 +566,6 @@ contains
     self%f_LFR_max       = real( params_species(65))
 
     ! Following parameters are not yet populated and will be initialized with init_pft_data():
-    ! integer :: phenotype                          ! phenology type: 0 for deciduous, 1 for evergreen
     !===== Population level variables
     ! real    :: LAImax, underLAImax                ! max. LAI - Overridden
     !===== Root traits
@@ -639,14 +640,8 @@ contains
       self%root_frac(j) = self%root_frac(j) + residual*thksl(j)/rdepth(MAX_LEVELS)
     enddo
 
-    if(self%leafLS>1.0)then
-      self%phenotype = 1
-    else
-      self%phenotype = 0
-    endif
-
-    ! Leaf turnover rate, (leaf longevity as a function of LMA)
-    self%alpha_L = 1.0/self%leafLS * self%phenotype
+    ! Leaf turnover rate
+    self%alpha_L = 1.0/self%leafLS * self%phenotype ! unneeded for deciduous (phenotype=0)
 
   end subroutine init_derived_species_data
 
