@@ -41,7 +41,7 @@ module md_cohort
     !===== Biological state variables (prognostic)
     real    :: gdd        = 0.0          ! growing degree-day (phenology)
     integer :: status     = LEAF_OFF     ! growth status of plant
-    real :: leaf_age   = 0.0          ! leaf age (years)
+    real :: leaf_age      = 0.0          ! leaf age (years)
 
     !===== Organic pools, kg tree-1
     type(orgpool) :: pleaf               ! leaf biomass
