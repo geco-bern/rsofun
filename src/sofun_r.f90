@@ -294,7 +294,7 @@ contains
     integer(kind=c_int),  intent(in) :: nt ! number of time steps
     real(kind=c_double),  dimension(83), intent(in) :: par  ! Model parameters
     real(kind=c_double),  dimension(nt,17), intent(in) :: forcing  ! temp = 1, rain = 2, vpd = 3, ppfd = 4, netrad = 5, fsun = 6, snow = 7, co2 = 8, fapar = 9, patm = 10, tmin = 11, tmax = 12, fharv = 13, dno3 = 14, dnh4 = 15, cseed = 16, nseed = 17
-    real(kind=c_double),  dimension(nt,52), intent(out) :: output
+    real(kind=c_double),  dimension(nt,61), intent(out) :: output
 
     ! local variables
     type(outtype_biosphere), dimension(ndayyear) :: out_biosphere  ! holds all the output used for calculating the cost or maximum likelihood function
@@ -542,10 +542,28 @@ contains
         output(idx_start:idx_end,46) = dble(out_biosphere(:)%npp_root )
         output(idx_start:idx_end,47) = dble(out_biosphere(:)%npp_wood )
         output(idx_start:idx_end,48) = dble(out_biosphere(:)%asat )
-        output(idx_start:idx_end,49) = dble(out_biosphere(:)%x1 )
-        output(idx_start:idx_end,50) = dble(out_biosphere(:)%x2 )
-        output(idx_start:idx_end,51) = dble(out_biosphere(:)%x3 )
-        output(idx_start:idx_end,52) = dble(out_biosphere(:)%x4 )
+        output(idx_start:idx_end,49) = dble(out_biosphere(:)%cwood )
+        output(idx_start:idx_end,50) = dble(out_biosphere(:)%nwood )
+        output(idx_start:idx_end,51) = dble(out_biosphere(:)%rleaf )
+        output(idx_start:idx_end,52) = dble(out_biosphere(:)%rwood )
+        output(idx_start:idx_end,53) = dble(out_biosphere(:)%rroot )
+        output(idx_start:idx_end,54) = dble(out_biosphere(:)%rcex )
+        output(idx_start:idx_end,55) = dble(out_biosphere(:)%rhet )
+        output(idx_start:idx_end,56) = dble(out_biosphere(:)%cresv )
+        output(idx_start:idx_end,57) = dble(out_biosphere(:)%nresv )
+        output(idx_start:idx_end,58) = dble(out_biosphere(:)%rgrow )
+        output(idx_start:idx_end,59) = dble(out_biosphere(:)%npp_seed )
+        output(idx_start:idx_end,60) = dble(out_biosphere(:)%dclabl )
+        output(idx_start:idx_end,61) = dble(out_biosphere(:)%dnlabl )
+        output(idx_start:idx_end,62) = dble(out_biosphere(:)%dnleaf )
+        output(idx_start:idx_end,63) = dble(out_biosphere(:)%dnroot )
+        output(idx_start:idx_end,64) = dble(out_biosphere(:)%dnwood )
+        output(idx_start:idx_end,65) = dble(out_biosphere(:)%dnseed )
+        output(idx_start:idx_end,66) = dble(out_biosphere(:)%nresorb )
+        output(idx_start:idx_end,67) = dble(out_biosphere(:)%x1 )
+        output(idx_start:idx_end,68) = dble(out_biosphere(:)%x2 )
+        output(idx_start:idx_end,69) = dble(out_biosphere(:)%x3 )
+        output(idx_start:idx_end,70) = dble(out_biosphere(:)%x4 )
 
       end if
 

@@ -63,7 +63,7 @@ contains
                               params_plant%r_root, &
                               climate%dtemp &
                               ) &
-           + calc_resp_maint( tile(lu)%plant(pft)%psapw%c%c12, &
+           + calc_resp_maint( tile(lu)%plant(pft)%pwood%c%c12, &  ! will have to do this more clever, using Huiying's approach
                               params_plant%r_sapw, &
                               climate%dtemp &
                               ) &
@@ -84,7 +84,6 @@ contains
         ! transfer required C from reserves to labile
         f_resv_to_labl = creq - cavl
         print*,'refilling labile, frac_avl ', frac_avl
-
         tile(lu)%plant(pft)%plabl%c%c12 = tile(lu)%plant(pft)%plabl%c%c12 + f_resv_to_labl
         if (.not. myinterface%steering%spinup_reserves) then
           tile(lu)%plant(pft)%presv%c%c12 = tile(lu)%plant(pft)%presv%c%c12 - f_resv_to_labl
@@ -111,7 +110,8 @@ contains
                                                               )
       if (params_pft_plant(pft)%tree) then
         tile_fluxes(lu)%plant(pft)%drsapw = frac_avl * &
-                                              calc_resp_maint(  tile(lu)%plant(pft)%psapw%c%c12, &
+                                              ! not distinguishing sapwood from wood
+                                              calc_resp_maint(  tile(lu)%plant(pft)%pwood%c%c12, &
                                                                 params_plant%r_sapw, &
                                                                 climate%dtemp &
                                                                 )

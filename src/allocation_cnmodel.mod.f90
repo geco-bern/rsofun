@@ -69,8 +69,10 @@ contains
     real :: dcleaf
     real :: dnleaf
     real :: dcroot
-    ! real :: dcseed
-    ! real :: dnseed
+    real :: dcwood 
+    real :: dnwood
+    real :: dcseed
+    real :: dnseed
     real :: dnroot
     real :: drgrow
     real :: dclabl
@@ -94,11 +96,11 @@ contains
     real, dimension(nlu,npft,len_resp_vec), save :: resp_vec
     real :: frac_for_resp
 
-    real    :: cavl, navl, req, c_req, n_req, c_acq, n_acq
+    real    :: req, c_req, n_req, c_acq, n_acq
     logical, save :: firstcall_cnbal = .true.
     integer, parameter :: len_cnbal_vec = 365
 
-    real, dimension(nlu,npft,len_cnbal_vec), save :: g_net_vec, r_rex_vec, n_acq_vec, c_a_l_vec, c_a_r_vec, n_con_vec !, c_a_s_vec
+    real, dimension(nlu,npft,len_cnbal_vec), save :: g_net_vec, r_rex_vec, n_acq_vec, c_a_l_vec, c_a_r_vec, n_con_vec, c_a_s_vec
 
     real :: psi_c           ! return on leaf investment
     real :: psi_n           ! return on root investment
@@ -112,16 +114,14 @@ contains
     integer, parameter :: len_luep_vec = ndayyear
     integer, parameter :: len_rrum_vec = ndayyear
     integer, parameter :: len_rduf_vec = ndayyear
-    integer, parameter :: len_navl_vec = ndayyear
     integer, parameter :: len_cn_vec   = ndayyear
     
-    real, dimension(nlu,len_navl_vec),      save :: no3_vec
-    real, dimension(nlu,len_navl_vec),      save :: nh4_vec
     real, dimension(nlu,npft,len_luep_vec), save :: luep_vec
     real, dimension(nlu,npft,len_rduf_vec), save :: rduf_vec
     real, dimension(nlu,npft,len_rrum_vec), save :: rrum_vec
     real, dimension(nlu,npft,len_cn_vec),   save :: cn_vec
 
+    real, parameter :: f_seed = 0.0
     real, parameter :: par_resv = 0.1   ! scales reserves pool (controlling risk avoidance)
     real, parameter :: par_labl = 0.1   ! scales labile pool (controlling risk avoidance)
     real :: c_labl_target     ! target size of labile pool (g C m-2)
@@ -137,6 +137,7 @@ contains
 
     ! xxx debug
     real :: tmp
+    real :: frac_leaf_test
 
     ! xxx verbose
     logical, parameter :: verbose = .true.
@@ -151,14 +152,6 @@ contains
       if ( tile(lu)%plant(pft)%plabl%c%c12 > eps .and. tile(lu)%plant(pft)%plabl%n%n14 > eps ) then
 
         if (params_pft_plant(pft)%grass) then
-
-          ! initialise (to make sure)
-          dcleaf = 0.0
-          dcroot = 0.0
-          ! dcseed = 0.0
-          ! dnseed = 0.0
-          drgrow = 0.0
-
           !------------------------------------------------------------------
           ! Update leaf traits
           !------------------------------------------------------------------
@@ -188,28 +181,65 @@ contains
             avl%c%c12 = min(avl%c%c12, max_dcleaf_n_constraint, max_dcroot_n_constraint)
           end if
 
-          ! amount to be allocated as real number
-          ! dcseed = f_seed * params_plant%growtheff * avl%c%c12
-          ! dnseed = min(avl%n%n14, dcseed * params_pft_plant(pft)%r_ntoc_seed)
+          !------------------------------------------------------------------
+          ! Set allocation fraction to wood
+          !------------------------------------------------------------------
+          dcwood = params_allocation%frac_wood * avl%c%c12
+          dnwood = dcwood * params_pft_plant(pft)%r_ntoc_wood
+          avl%c%c12 = (1.0 - params_allocation%frac_wood) * avl%c%c12
 
+          !------------------------------------------------------------------
+          ! Set allocation to seeds
+          !------------------------------------------------------------------
+          dcseed = f_seed * params_plant%growtheff * avl%c%c12
+          dnseed = min(avl%n%n14, dcseed * params_pft_plant(pft)%r_ntoc_seed)
+
+          !------------------------------------------------------------------
+          ! Set remaining allocation fractions to leaves and roots (after wood)
+          !------------------------------------------------------------------
+          ! print*,'clabl, avl, frac_leaf: ', tile(lu)%plant(pft)%plabl%c%c12, avl%c%c12, frac_leaf
+
+          ! leaf allocation fraction was determined in the previous time step (dcleaf is a "save variable")
           dcleaf = frac_leaf         * params_plant%growtheff * avl%c%c12
           dcroot = (1.0 - frac_leaf) * params_plant%growtheff * avl%c%c12
           dnroot = dcroot * params_pft_plant(pft)%r_ntoc_root
 
-          tile_fluxes(lu)%plant(pft)%debug4 = tile(lu)%plant(pft)%pheno%level_veggrowth
+          ! print*,'dcleaf, dcroot ', dcleaf, dcroot
 
-          ! !-------------------------------------------------------------------
-          ! ! SEED ALLOCATION
-          ! !-------------------------------------------------------------------
-          ! call orgmv( orgpool( carbon( dcseed ), nitrogen( dnseed )  ) , &
-          !             tile(lu)%plant(pft)%plabl, &
-          !             tile(lu)%plant(pft)%pseed &
-          !             )
+          tile_fluxes(lu)%plant(pft)%debug4 = tile(lu)%plant(pft)%pheno%level_veggrowth 
+
+          !-------------------------------------------------------------------
+          ! SEED ALLOCATION
+          !-------------------------------------------------------------------
+          call orgmv( orgpool( carbon( dcseed ), nitrogen( dnseed )  ) , &
+                      tile(lu)%plant(pft)%plabl, &
+                      tile(lu)%plant(pft)%pseed &
+                      )
           
-          ! ! ... and remove growth respiration from labile C, update growth respiration
-          ! dclabl = (1.0 / params_plant%growtheff) * dcseed
-          ! tile(lu)%plant(pft)%plabl%c%c12 = tile(lu)%plant(pft)%plabl%c%c12 - dclabl
-          ! tile_fluxes(lu)%plant(pft)%drgrow = tile_fluxes(lu)%plant(pft)%drgrow + dclabl - dcseed
+          ! ... and remove growth respiration from labile C, update growth respiration
+          dclabl = (1.0 / params_plant%growtheff) * dcseed
+          tile(lu)%plant(pft)%plabl%c%c12 = tile(lu)%plant(pft)%plabl%c%c12 - dclabl
+          tile_fluxes(lu)%plant(pft)%drgrow = tile_fluxes(lu)%plant(pft)%drgrow + dclabl - dcseed
+
+          !-------------------------------------------------------------------
+          ! WOOD ALLOCATION
+          !-------------------------------------------------------------------
+          if (dcwood > 0.0) then
+
+            call allocate_wood( &
+              pft, &
+              dcwood, &
+              dnroot, &
+              tile(lu)%plant(pft)%pwood%c%c12, &
+              tile(lu)%plant(pft)%pwood%n%n14, &
+              tile(lu)%plant(pft)%plabl%c%c12, &
+              tile(lu)%plant(pft)%plabl%n%n14, &
+              tile_fluxes(lu)%plant(pft)%drgrow, &
+              myinterface%steering%closed_nbal, &
+              tile_fluxes(lu)%plant(pft)%dnup_fix &
+              )
+
+          end if
 
           !-------------------------------------------------------------------
           ! LEAF ALLOCATION
@@ -289,8 +319,8 @@ contains
 
       else
 
-          ! dcseed = 0.0
-          ! dnseed = 0.0
+          dcseed = 0.0
+          dnseed = 0.0
           dcleaf = 0.0
           dcroot = 0.0
           dnleaf = 0.0
@@ -312,7 +342,7 @@ contains
         n_acq_vec(lu,pft,:) = tile_fluxes(lu)%plant(pft)%dnup%n14
         c_a_l_vec(lu,pft,:) = dcleaf
         c_a_r_vec(lu,pft,:) = dcroot
-        ! c_a_s_vec(lu,pft,:) = dcseed
+        c_a_s_vec(lu,pft,:) = dcseed
         n_con_vec(lu,pft,:) = dnleaf + dnroot ! + dnseed
 
         if (pft == npft .and. lu == nlu) firstcall_cnbal = .false.
@@ -324,7 +354,7 @@ contains
         n_acq_vec(lu,pft,1:(len_cnbal_vec-1)) = n_acq_vec(lu,pft,2:len_cnbal_vec)
         c_a_l_vec(lu,pft,1:(len_cnbal_vec-1)) = c_a_l_vec(lu,pft,2:len_cnbal_vec)
         c_a_r_vec(lu,pft,1:(len_cnbal_vec-1)) = c_a_r_vec(lu,pft,2:len_cnbal_vec)
-        ! c_a_s_vec(lu,pft,1:(len_cnbal_vec-1)) = c_a_s_vec(lu,pft,2:len_cnbal_vec)
+        c_a_s_vec(lu,pft,1:(len_cnbal_vec-1)) = c_a_s_vec(lu,pft,2:len_cnbal_vec)
         n_con_vec(lu,pft,1:(len_cnbal_vec-1)) = n_con_vec(lu,pft,2:len_cnbal_vec)
 
         g_net_vec(lu,pft,len_cnbal_vec) = tile_fluxes(lu)%plant(pft)%dgpp - tile_fluxes(lu)%plant(pft)%drd
@@ -334,7 +364,7 @@ contains
         n_acq_vec(lu,pft,len_cnbal_vec) = tile_fluxes(lu)%plant(pft)%dnup%n14
         c_a_l_vec(lu,pft,len_cnbal_vec) = dcleaf
         c_a_r_vec(lu,pft,len_cnbal_vec) = dcroot
-        ! c_a_s_vec(lu,pft,len_cnbal_vec) = dcseed
+        c_a_s_vec(lu,pft,len_cnbal_vec) = dcseed
         n_con_vec(lu,pft,len_cnbal_vec) = dnleaf + dnroot ! + dnseed
 
       end if
@@ -348,7 +378,7 @@ contains
       psi_n = sum( n_acq_vec(lu,pft,:) ) / sum( c_a_r_vec(lu,pft,:) )
 
       ! sum of C consumed to satisfy all biomass production and respiration, including growth respiration, of past N days
-      c_con = (1.0 / params_plant%growtheff) * sum( c_a_l_vec(lu,pft,:) + c_a_r_vec(lu,pft,:) ) & ! + c_a_s_vec(lu,pft,:) ) &
+      c_con = (1.0 / params_plant%growtheff) * sum( c_a_l_vec(lu,pft,:) + c_a_r_vec(lu,pft,:) + c_a_s_vec(lu,pft,:) ) &
               + sum( r_rex_vec(lu,pft,:) )
 
       ! sum of N consumed to satisfy all biomass production of past N days minus excess N
@@ -369,7 +399,10 @@ contains
       ! => solve for x (frac_leaf below)
       ! c_consumed is c_req; n_consumed is n_con
       if ( myinterface%steering%dofree_alloc ) then
-        frac_leaf = 1.0 / (psi_c * n_con_corr / (psi_n * c_con) + 1.0)
+        ! frac_leaf = 1.0 / (psi_c * n_con_corr / (psi_n * c_con) + 1.0)
+
+        ! with wood allocation:
+        frac_leaf = psi_n * c_con * (1.0 - params_allocation%frac_wood) / (psi_c * n_con_corr + psi_n * c_con)
       end if
       ! tile_fluxes(lu)%plant(pft)%debug3 = 1.0 / (psi_c * n_con_corr / (psi_n * c_con) + 1.0)
 
@@ -398,7 +431,7 @@ contains
       ! to leaves, roots, and seeds
       c_resv_target = par_resv * (sum( c_a_l_vec(lu,pft,:) ) &
                       + sum( c_a_r_vec(lu,pft,:) ) &
-                      ! + sum( c_a_s_vec(lu,pft,:) ) &
+                      + sum( c_a_s_vec(lu,pft,:) ) &
                       )
 
       ! ! during reserves spinup phase, keep them at their target value all the time
@@ -455,19 +488,23 @@ contains
       !-------------------------------------------------------------------
       tile_fluxes(lu)%plant(pft)%dnpp = cminus( tile_fluxes(lu)%plant(pft)%dnpp, carbon( tile_fluxes(lu)%plant(pft)%drgrow ) )
 
-      ! record for today
-      tile_fluxes(lu)%plant(pft)%alloc_leaf = orgpool( carbon( dcleaf ), nitrogen( dnleaf ) )
-      tile_fluxes(lu)%plant(pft)%alloc_root = orgpool( carbon( dcroot ), nitrogen( dnroot ) )
+      ! ! record for today
+      ! tile_fluxes(lu)%plant(pft)%alloc_leaf = orgpool( carbon( dcleaf ), nitrogen( dnleaf ) )
+      ! tile_fluxes(lu)%plant(pft)%alloc_root = orgpool( carbon( dcroot ), nitrogen( dnroot ) )
       ! tile_fluxes(lu)%plant(pft)%alloc_seed = orgpool( carbon( dcseed ), nitrogen( dnseed ) )
-      call orginit( tile_fluxes(lu)%plant(pft)%alloc_sapw )
-      call orginit( tile_fluxes(lu)%plant(pft)%alloc_wood )
+      ! call orginit( tile_fluxes(lu)%plant(pft)%alloc_sapw )
+      ! call orginit( tile_fluxes(lu)%plant(pft)%alloc_wood )
 
       !-------------------------------------------------------------------
       ! Record for output
       !-------------------------------------------------------------------
-      tile_fluxes(lu)%plant(pft)%npp_leaf = dcleaf
-      tile_fluxes(lu)%plant(pft)%npp_root = dcroot
-      tile_fluxes(lu)%plant(pft)%npp_wood = 0.0
+      tile_fluxes(lu)%plant(pft)%npp_leaf = orgpool( carbon(dcleaf), nitrogen( dnleaf ) )
+      tile_fluxes(lu)%plant(pft)%npp_root = orgpool( carbon(dcroot), nitrogen( dnroot ) )
+      tile_fluxes(lu)%plant(pft)%npp_wood = orgpool( carbon(dcwood), nitrogen( dnwood ) )
+      tile_fluxes(lu)%plant(pft)%npp_seed = orgpool( carbon(dcseed), nitrogen( dnseed ) )
+
+      ! provisional BP
+      tile_fluxes(lu)%plant(pft)%debug2 = dcleaf + dcroot + dcwood + dcseed
 
     end do pftloop
 
@@ -593,6 +630,7 @@ contains
     rgrow = rgrow + dclabl - mydcroot
 
     if ( clabl < -1.0 * eps ) then
+      ! print*,'clabl after root allocation: ', clabl
       stop 'ALLOCATE_ROOT: trying to remove too much from labile pool: root C'
     else if ( clabl < 0.0 ) then
       ! numerical imprecision
@@ -613,6 +651,64 @@ contains
     end if
 
   end subroutine allocate_root
+
+
+  subroutine allocate_wood( pft, mydcwood, mydnwood, cwood, nwood, clabl, nlabl, rgrow, closed_nbal, nfix )
+    !///////////////////////////////////////////////////////////////////
+    ! WOOD ALLOCATION
+    ! Sequence of steps:
+    ! - determine wood C and N increments based on remaining labile C and N
+    ! - update wood C and N
+    ! - update labile C and N
+    !-------------------------------------------------------------------
+    ! arguments
+    integer, intent(in) :: pft
+    real, intent(in)   :: mydcwood
+    real, intent(in)   :: mydnwood
+    real, intent(inout) :: cwood, nwood
+    real, intent(inout) :: clabl, nlabl
+    real, intent(inout)  :: rgrow
+    logical, intent(in) :: closed_nbal
+    real, intent(inout)  :: nfix
+
+    ! local variables
+    real :: dclabl
+
+    ! update wood pools
+    cwood = cwood + mydcwood
+    nwood = nwood + mydnwood
+
+    ! depletion of labile C pool is enhanced by growth respiration
+    dclabl = (1.0 / params_plant%growtheff) * mydcwood
+
+    ! substract from labile pools
+    clabl  = clabl - dclabl
+    nlabl  = nlabl - mydnwood
+
+    ! growth respiration
+    rgrow = rgrow + dclabl - mydcwood
+
+    if ( clabl < -1.0 * eps ) then
+      stop 'ALLOCATE_WOOD: trying to remove too much from labile pool: wood C'
+    else if ( clabl < 0.0 ) then
+      ! numerical imprecision
+      ! print*,'numerical imprecision?'
+      ! stop 'allocate wood'
+      clabl = 0.0
+    end if
+
+    if (closed_nbal) then
+      if ( nlabl < -1.0 * eps ) then
+        stop 'ALLOCATE_WOOD: trying to remove too much from labile pool: wood N'
+      else if ( nlabl < 0.0 ) then
+        ! more N used for wood growth than available in labile N pool
+        ! assume an implied (unspecified) N source, accounted as N fixation
+        nfix = nfix - nlabl
+        nlabl = 0.0
+      end if
+    end if
+
+  end subroutine allocate_wood
 
 
   function calc_ft_growth( xx ) result( yy )
@@ -642,8 +738,9 @@ contains
     ! moving from labile to reserves.
     !-----------------------------------------------------------
     real, intent(in) :: c_labl, c_resv, c_labl_target, c_resv_target, f_max
+    real, parameter :: lambda_store = 10.0
     real :: out
-    out = max(0.0, 1.0 - c_resv / c_resv_target) * f_max / (1.0 + exp(-10.0 * (c_labl / c_labl_target - 1.5)))
+    out = max(0.0, 1.0 - c_resv / c_resv_target) * f_max / (1.0 + exp(-lambda_store * (c_labl / c_labl_target - 1.5)))
   end function calc_l2r
 
 

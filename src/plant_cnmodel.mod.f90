@@ -54,18 +54,20 @@ module md_plant_cnmodel
 
     ! new for cnmodel
     real    :: k_decay_leaf        ! base leaf decay constant [year-1]
-    real    :: k_decay_sapw        ! sapwood decay constant [year-1]
+    real    :: k_decay_sapw        ! (sap)wood decay constant [year-1]
     real    :: k_decay_root        ! root decay constant [year-1]
     real    :: k_decay_labl        ! labile pool decay constant [year-1]
     real    :: r_cton_root         ! C:N ratio in roots (gC/gN)
     real    :: r_ntoc_root         ! N:C ratio in roots (inverse of 'r_cton_root', gN/gC)
+    real    :: r_cton_wood         ! C:N ratio in wood (gC/gN)
+    real    :: r_ntoc_wood         ! N:C ratio in wood (gC/gN)
     real    :: r_cton_seed         ! C:N ratio in seeds (gC/gN)
     real    :: r_ntoc_seed         ! N:C ratio in seeds (gN/gC)
     real    :: nv_vcmax25          ! relationship between Vcmax25 and metabolic leaf N (including N in other enzymes - assumed to scale with Vcmax25)
     real    :: ncw_min             ! y-axis intersection in the relationship of non-metabolic versus metabolic N per leaf area    
     real    :: r_n_cw_v            ! slope in the relationship of non-metabolic versus metabolic N per leaf area              
     real    :: r_ctostructn_leaf   ! constant ratio of C to structural N (mol C / mol N)
-
+    
   end type params_pft_plant_type
 
   type(params_pft_plant_type), dimension(npft) :: params_pft_plant
@@ -121,13 +123,12 @@ module md_plant_cnmodel
     logical :: fill_seeds       ! switch to change from seed filling to growth period
 
     ! pools
-    type(orgpool) :: pleaf     ! leaf biomass (=lm_ind)
-    type(orgpool) :: proot     ! root biomass (=rm_ind)
-    type(orgpool) :: psapw     ! sapwood biomass (=sm_ind)
-    type(orgpool) :: pwood     ! heartwood (non-living) biomass (=hm_ind)
-    type(orgpool) :: plabl     ! labile pool, temporary storage of N and C (=bm_inc but contains also N)
-    type(orgpool) :: pseed     ! seed pool
+    type(orgpool) :: pleaf     ! leaf biomass
+    type(orgpool) :: proot     ! root biomass
+    type(orgpool) :: pwood     ! woody biomass
+    type(orgpool) :: plabl     ! labile pool
     type(orgpool) :: presv     ! reserves pool
+    type(orgpool) :: pseed     ! seed pool
 
     ! phenology
     type(pheno_type) :: pheno  ! phenology state, daily updated
@@ -153,6 +154,8 @@ module md_plant_cnmodel
     real :: drsapw   ! sapwood maintenance respiration, no explicit isotopic signature as it is identical to the signature of GPP [gC/m2/d]
     real :: drgrow   ! growth respiration (growth+maintenance resp. of all compartments), no explicit isotopic signature as it is identical to the signature of GPP [gC/m2/d]
     real :: dcex     ! labile C exudation for N uptake, no explicit isotopic signature as it is identical to the signature of GPP [gC/m2/d]
+
+    type(orgpool) :: dlabl     ! labile turnover, doesn't appear as NPP, therefore needs to be accounted for separately [gC/m2/d]
     
     type(carbon)   :: dnpp     ! daily net primary production (gpp-ra, npp=bp+cex) [gC/m2/d]
     type(nitrogen) :: dnup     ! daily N uptake [gN/m2/d]
@@ -160,7 +163,7 @@ module md_plant_cnmodel
     real :: dnup_pas          ! daily N uptake by passsive uptake (transpiration) [gN/m2/d]
     real :: dnup_act          ! daily N uptake by active uptake [gN/m2/d]
     real :: dnup_fix          ! daily N uptake by plant symbiotic N fixation [gN/m2/d]
-    real :: dnup_ret          ! daily N "uptake" by plant symbiotic N fixation [gN/m2/d]
+    real :: dnup_res          ! daily N resorption [gN/m2/d]
 
     real :: vcmax25           ! acclimated Vcmax, normalised to 25 deg C (mol CO2 m-2 s-1)
     real :: jmax25            ! acclimated Jmax, normalised to 25 deg C (mol CO2 m-2 s-1)
@@ -173,9 +176,10 @@ module md_plant_cnmodel
     real :: lue               ! light use efficiency (gC m-2 mol-1)
     real :: vcmax25_unitfapar ! acclimated Vcmax per unit fAPAR, normalised to 25 deg C (mol CO2 m-2 s-1)
 
-    real :: npp_leaf          ! carbon allocated to leaves (g C m-2 d-1)
-    real :: npp_root          ! carbon allocated to roots (g C m-2 d-1)
-    real :: npp_wood          ! carbon allocated to wood (sapwood (g C m-2 d-1))
+    type(orgpool) :: npp_leaf          ! carbon and nitrogen allocated to leaves (g m-2 d-1)
+    type(orgpool) :: npp_root          ! carbon and nitrogen allocated to roots (g m-2 d-1)
+    type(orgpool) :: npp_wood          ! carbon and nitrogen allocated to wood (sapwood (g m-2 d-1))
+    type(orgpool) :: npp_seed          ! carbon and nitrogen allocated to seeds (g m-2 d-1)
 
     real :: debug1             ! write anything into this
     real :: debug2             ! write anything into this
@@ -184,7 +188,7 @@ module md_plant_cnmodel
 
     type(orgpool) :: dharv    ! daily total biomass harvest (g m-2 d-1)
 
-    type(orgpool) :: alloc_leaf, alloc_root, alloc_sapw, alloc_wood, alloc_seed
+    ! type(orgpool) :: alloc_leaf, alloc_root, alloc_sapw, alloc_wood, alloc_seed
 
   end type plant_fluxes_type
 
@@ -273,6 +277,7 @@ contains
           gamma * params_plant%kbeer + &
           beta * calc_wapr( arg_to_lambertw, 0, nerror, 9999 ) &
         )
+
     else
 
       lai = 0.0
@@ -396,7 +401,7 @@ contains
     plant%narea_metabolic  = plant%narea_metabolic_canopy / plant%lai_ind   ! g N m-2-leaf
     plant%narea_structural = plant%narea_structural_canopy / plant%lai_ind  ! g N m-2-leaf
     plant%narea            = plant%narea_canopy / plant%lai_ind ! g N m-2-leaf
-    plant%lma              = plant%leafc_canopy / plant%lai_ind 
+    plant%lma              = plant%leafc_canopy / plant%lai_ind ! g C m-2-leaf
 
     ! additional traits
     plant%nmass            = plant%narea / ( plant%lma / c_content_of_biomass )
@@ -618,8 +623,15 @@ contains
     ! root decay constant [days], read in as [years-1], central value: 1.04 (Shan et al., 1993; see Li et al., 2014)  
     out_getpftparams%k_decay_root = myinterface%params_calib%k_decay_root / ndayyear 
 
+    ! wood decay constant [days], read in as [years-1], 1.0/100 
+    out_getpftparams%k_decay_sapw = myinterface%params_calib%k_decay_sapw / ndayyear 
+
     ! root decay constant [days], read in as [years-1], central value: 1.04 (Shan et al., 1993; see Li et al., 2014)  
     out_getpftparams%k_decay_labl = myinterface%params_calib%k_decay_labl / ndayyear 
+
+    ! wood C:N and N:C ratio (gC/gN and gN/gC)
+    out_getpftparams%r_cton_wood = myinterface%params_calib%r_cton_wood
+    out_getpftparams%r_ntoc_wood = 1.0 / out_getpftparams%r_cton_wood
 
     ! root C:N and N:C ratio (gC/gN and gN/gC)
     out_getpftparams%r_cton_root = myinterface%params_calib%r_cton_root
@@ -696,7 +708,6 @@ contains
       plant(pft)%pftno = pft
       call orginit( plant(pft)%pleaf )
       call orginit( plant(pft)%proot )
-      call orginit( plant(pft)%psapw )
       call orginit( plant(pft)%pwood )
       call orginit( plant(pft)%plabl )
       call orginit( plant(pft)%pseed )
@@ -760,7 +771,7 @@ contains
     plant_fluxes(:)%dnup_pas = 0.0
     plant_fluxes(:)%dnup_act = 0.0
     plant_fluxes(:)%dnup_fix = 0.0
-    plant_fluxes(:)%dnup_ret = 0.0
+    plant_fluxes(:)%dnup_res = 0.0
     plant_fluxes(:)%vcmax25 = 0.0
     plant_fluxes(:)%jmax25 = 0.0
     plant_fluxes(:)%vcmax = 0.0
@@ -771,18 +782,19 @@ contains
     plant_fluxes(:)%asat = 0.0
     plant_fluxes(:)%lue = 0.0
     plant_fluxes(:)%vcmax25_unitfapar = 0.0
-    plant_fluxes(:)%npp_leaf = 0.0
-    plant_fluxes(:)%npp_root = 0.0
-    plant_fluxes(:)%npp_wood = 0.0
 
     do pft=1,npft
       call orginit( plant_fluxes(pft)%dharv )
-      call orginit( plant_fluxes(pft)%alloc_leaf )
-      call orginit( plant_fluxes(pft)%alloc_root )
-      call orginit( plant_fluxes(pft)%alloc_sapw )
-      call orginit( plant_fluxes(pft)%alloc_wood )
+      ! call orginit( plant_fluxes(pft)%alloc_leaf )
+      ! call orginit( plant_fluxes(pft)%alloc_root )
+      ! call orginit( plant_fluxes(pft)%alloc_sapw )
+      ! call orginit( plant_fluxes(pft)%alloc_wood )
       call cinit(   plant_fluxes(pft)%dnpp )
       call ninit(   plant_fluxes(pft)%dnup )
+      call orginit( plant_fluxes(pft)%npp_leaf )
+      call orginit( plant_fluxes(pft)%npp_root )
+      call orginit( plant_fluxes(pft)%npp_wood )
+      call orginit( plant_fluxes(pft)%npp_seed )
     end do
 
   end subroutine init_plant_fluxes
@@ -801,7 +813,7 @@ contains
     real                         :: ref_temp_local  ! local copy of ref_temp
 
     ! for lloyd and taylor method
-    real, parameter :: E0 = 308.56      ! Activation Energy
+    real, parameter :: E0 = 308.56      ! Activation Energy [J]
     real, parameter :: T0 = 227.13      ! calibration temperature [K]
     real, parameter :: Tzero = 273.15   ! 0°C = 273.15 K 
 

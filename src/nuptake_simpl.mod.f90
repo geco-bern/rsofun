@@ -70,7 +70,6 @@ contains
       tile_fluxes(lu)%plant(pft)%dnup_pas = 0.0
       tile_fluxes(lu)%plant(pft)%dnup_act = dnup           
       tile_fluxes(lu)%plant(pft)%dnup_fix = 0.0  
-      tile_fluxes(lu)%plant(pft)%dnup_ret = 0.0
 
       !--------------------------------------------------------------------------
       ! N acquisition to labile pool
@@ -96,6 +95,8 @@ contains
 
     nup = calc_vn( ninorg ) * croot / (params_nuptake%kc + croot)
 
+    ! print*,'nuptake: Croot saturation ', croot / (params_nuptake%kc + croot)
+
   end function calc_dnup
 
 
@@ -110,6 +111,8 @@ contains
     real :: vn
 
     vn = params_nuptake%vmax * ninorg / (params_nuptake%kv + ninorg)
+
+    ! print*,'nuptake: Ninorg saturation ', ninorg / (params_nuptake%kv + ninorg)
 
   end function calc_vn
 

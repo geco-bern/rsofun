@@ -325,9 +325,12 @@ df <- expand.grid(croot = seq(from = 1, to = 1000, by = 10),
 gg_simpl <- ggplot(df, aes(croot, ninorg)) + 
   geom_tile(aes(fill = fnup)) +
   geom_contour(aes(z = fnup), color = "grey50") +
-  scale_fill_scico(palette = 'roma') +
+  scale_fill_scico(palette = 'roma', 
+                   name = expression(paste("(gN m"^-2,"d"^-1,")"))) +
   theme_classic() +
-  labs(title = "N uptake", x = "Croot", y = "Ninorg")
+  labs(title = "N uptake", 
+       x = expression(paste("Root C (gC m"^-2,")")), 
+       y = expression(paste("Inorganic soil N (gN m"^-2,")")))
 gg_simpl
 ```
 
@@ -348,8 +351,8 @@ df_exp <- readr::read_csv(paste0(here::here(), "/data/df_exp_co2.csv"))
 # as it is
 par <- list(
   kc = 250,
-  kv = 10,
-  vmax = 0.15
+  kv = 5,
+  vmax = 0.2
 )
 
 # could be
@@ -386,12 +389,18 @@ df <- expand.grid(croot = seq(from = 1, to = 500, by = 10),
 
 ggplot(df, aes(croot, ninorg)) + 
   geom_tile(aes(fill = fnup)) +
-  geom_contour(aes(z = fnup), color = "grey50") +
-  scale_fill_scico(palette = 'roma') +
+  geom_contour(aes(z = fnup), color = "grey50", linewidth = 0.2) +
+  scale_fill_scico(palette = 'roma', 
+                   name = expression(paste("gN m"^-2,"d"^-1))) +
   theme_classic() +
   labs(title = "N uptake", x = "Croot", y = "Ninorg") +
-  geom_point(data = df_exp |> 
-               rename(ninorg = n_inorg,
-                      fnup = nup),
-             aes(croot, ninorg))
+  # geom_point(data = df_exp |> 
+  #              rename(ninorg = n_inorg,
+  #                     fnup = nup),
+  #            aes(croot, ninorg)) +
+  labs(title = "N uptake", 
+       x = expression(paste("Root C (gC m"^-2,")")), 
+       y = expression(paste("Inorganic soil N (gN m"^-2,")")))
+
+ggsave(here::here("fig/n_uptake.pdf"), width = 5, height = 3)
 ```

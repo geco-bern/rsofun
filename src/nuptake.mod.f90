@@ -36,7 +36,7 @@ module md_nuptake
   real, dimension(npft) :: dccost           ! daily mean C cost of N uptake [gC/gN] 
   real, dimension(npft) :: dnup_pas         ! daily passive N uptake [gN/m2/d]
   real, dimension(npft) :: dnup_act         ! daily active N uptake [gN/m2/d]  
-  real, dimension(npft) :: dnup_ret         ! daily N uptake [gN/m2/d]
+  real, dimension(npft) :: dnup_res         ! daily N uptake [gN/m2/d]
 
   type outtype_calc_dnup
     real :: act_nh4                         ! NH4 acquisition by active uptake [gN/m2/d]
@@ -52,7 +52,7 @@ module md_nuptake
   ! real, allocatable, dimension(:,:,:) :: outdnup_pas
   ! real, allocatable, dimension(:,:,:) :: outdnup_act
   ! real, allocatable, dimension(:,:,:) :: outdnup_fix
-  ! real, allocatable, dimension(:,:,:) :: outdnup_ret
+  ! real, allocatable, dimension(:,:,:) :: outdnup_res
 
 
 contains
@@ -153,7 +153,7 @@ contains
       tile_fluxes(lu)%plant(pft)%dnup_pas = n_uptake_pass
       tile_fluxes(lu)%plant(pft)%dnup_act = out_calc_dnup%act_no3 + out_calc_dnup%act_nh4                
       tile_fluxes(lu)%plant(pft)%dnup_fix = out_calc_dnup%fix  
-      tile_fluxes(lu)%plant(pft)%dnup_ret = n_uptake_retrans
+      tile_fluxes(lu)%plant(pft)%dnup_res = n_uptake_retrans
 
       if (tile_fluxes(lu)%plant(pft)%dnup%n14 > 0.0) then
         dccost(pft) = dmean_cost       
@@ -342,7 +342,7 @@ contains
     !----------------------------------------------------------------
     dnup_pas(:)    = 0.0
     dnup_act(:)    = 0.0
-    dnup_ret(:)    = 0.0
+    dnup_res(:)    = 0.0
 
   end subroutine initdaily_nuptake
 

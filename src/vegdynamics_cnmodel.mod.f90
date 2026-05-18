@@ -45,8 +45,9 @@ contains
       end if
 
       ! add seed C and N to labile pool
-      call sowing_daily( tile(lu)%plant(pft), myinterface%landuse(doy)%cseed, myinterface%landuse(doy)%nseed )
-
+      if (.not. myinterface%steering%closed_nbal) then
+        call sowing_daily( tile(lu)%plant(pft), myinterface%landuse(doy)%cseed, myinterface%landuse(doy)%nseed )
+      end if
     end do
 
 

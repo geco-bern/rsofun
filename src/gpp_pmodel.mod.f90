@@ -147,7 +147,7 @@ contains
       ! acclimated to slowly varying conditions
       !----------------------------------------------------------------
       if (tile(lu)%plant(pft)%fpc_grid > 0.0 .and. &      ! PFT is present
-          grid%dayl > 0.0 .and.                    &      ! no arctic night
+          tile_fluxes(lu)%canopy%dayl > 0.0 .and.  &      ! no arctic night
           temp_memory > -5.0 ) then                       ! minimum temp threshold to avoid fpe
 
         !================================================================

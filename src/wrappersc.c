@@ -171,7 +171,7 @@ extern SEXP cnmodel_f_C(
 
     // Specify output matrix dimension
     // 2nd agument to allocMatrix is number of rows, 3rd is number of columns
-    SEXP output = PROTECT( allocMatrix(REALSXP, nt, 52) );
+    SEXP output = PROTECT( allocMatrix(REALSXP, nt, 70) );
 
     // Fortran subroutine call
     F77_CALL(cnmodel_f)(

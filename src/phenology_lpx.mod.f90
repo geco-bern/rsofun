@@ -70,20 +70,22 @@ contains
       !----------------------------------------------------------------
       ! Low-temperature effect on quantum yield efficiency and grass growth
       !----------------------------------------------------------------
-      ! call calc_ftemp_kphio_coldhard( &
-      !   dtemp, &
-      !   dtmin, &
-      !   tile(lu)%plant(pft)%pheno%level_coldacclim, &   ! value updated (inout)
-      !   tile(lu)%gdd, &                                 ! value updated (inout)
-      !   params_pft_pheno(pft)%kphio_par_a, &
-      !   params_pft_pheno(pft)%kphio_par_b, &
-      !   params_pft_pheno(pft)%kphio_par_c, &
-      !   params_pft_pheno(pft)%kphio_par_d, &
-      !   params_pft_pheno(pft)%kphio_par_e &
-      ! )
+      call calc_ftemp_kphio_coldhard( &
+        dtemp, &
+        dtmin, &
+        tile(lu)%plant(pft)%pheno%level_coldacclim, &   ! value updated (inout)
+        tile(lu)%gdd, &                                 ! value updated (inout)
+        params_pft_pheno(pft)%kphio_par_a, &
+        params_pft_pheno(pft)%kphio_par_b, &
+        params_pft_pheno(pft)%kphio_par_c, &
+        params_pft_pheno(pft)%kphio_par_d, &
+        params_pft_pheno(pft)%kphio_par_e &
+      )
 
-      ! xxx try: for schematic step-change simulations
-      tile(lu)%plant(pft)%pheno%level_coldacclim = 1.0
+      tile_fluxes(lu)%plant(pft)%debug1 = tile(lu)%plant(pft)%pheno%level_coldacclim
+
+      ! ! xxx try: for schematic step-change simulations
+      ! tile(lu)%plant(pft)%pheno%level_coldacclim = 1.0
 
       !----------------------------------------------------------------
       ! Insolation-driven phenophases of grass growth (switching from 

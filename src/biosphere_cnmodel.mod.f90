@@ -218,7 +218,7 @@ contains
         if (verbose) print*, '              with state variables:'
         if (verbose) print*, '              pleaf = ', tile(1)%plant(1)%pleaf
         if (verbose) print*, '              proot = ', tile(1)%plant(1)%proot
-        if (verbose) print*, '              psapw = ', tile(1)%plant(1)%psapw
+        if (verbose) print*, '              pwood = ', tile(1)%plant(1)%pwood
         if (verbose) print*, '              plabl = ', tile(1)%plant(1)%plabl
         if (verbose) cbal1 = tile(1)%plant(1)%plabl%c%c12
         !----------------------------------------------------------------
@@ -289,7 +289,7 @@ contains
                                         tile(1)%plant(1)%pseed )
         if (verbose) orgtmp2 = orgplus( tile(1)%soil%plitt_af, tile(1)%soil%plitt_as, tile(1)%soil%plitt_bg )
         !----------------------------------------------------------------
-        call turnover( tile(:), doy )
+        call turnover( tile(:), tile_fluxes(:), doy )
         !----------------------------------------------------------------
         if (verbose) print*, '              ==> returned: '
         if (verbose) print*, '              lai   = ', tile(1)%plant(1)%lai_ind
@@ -343,10 +343,10 @@ contains
         if (baltest .and. abs(orgbal1%n%n14) > eps) stop 'balance not satisfied for N'
         if (verbose) print*, '... done'
 
-        ! !----------------------------------------------------------------
-        ! ! litter and soil decomposition and N mineralisation
-        ! !----------------------------------------------------------------
-        ! if (verbose) print*, 'calling littersom() ... '
+        !----------------------------------------------------------------
+        ! litter and soil decomposition and N mineralisation
+        !----------------------------------------------------------------
+        if (verbose) print*, 'calling littersom() ... '
         if (verbose) print*, '              with state variables:'
         if (verbose) print*, '              plitt tot=  ', orgplus( tile(1)%soil%plitt_af, tile(1)%soil%plitt_as, &
                                                                     tile(1)%soil%plitt_bg )

@@ -131,6 +131,7 @@ module md_tile_pmodel
     ! radiation
     real :: ppfd_splash
     real :: dra              ! daily top-of-atmosphere solar radiation (J/m^2/d)
+    real :: dayl              ! day length (s)
 
     ! ! annual
     ! !----------------------------------------------------------------
