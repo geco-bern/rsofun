@@ -60,7 +60,7 @@ License: GPL-3
 Depends:
     R (>= 4.1.0)
 Imports:
-    dplyr,
+    dplyr (>= 1.2.0),
     purrr,
     tidyr,
     magrittr,
@@ -78,7 +78,7 @@ LazyData: true
 LazyDataCompression: xz
 ByteCompile: true
 NeedsCompilation: yes
-RoxygenNote: 7.3.2
+RoxygenNote: 7.3.3
 Suggests:
     covr,
     constructive,

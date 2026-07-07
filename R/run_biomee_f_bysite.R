@@ -517,32 +517,32 @@ prepare_init_lu <- function(init_lu) {
     init_lu <- init_lu %>% mutate(preset = "unmanaged")
   }
   if (!"extra_N_input" %in% names(init_lu)) {
-    init_lu <- init_lu %>% mutate("extra_N_input" = case_match(
+    init_lu <- init_lu %>% dplyr::mutate("extra_N_input" = dplyr::recode_values(
       "preset",
       "cropland" ~ 0.01,
-      .default = 0.0
+      default = 0.0
     ))
   }
   if (!"extra_turnover_rate" %in% names(init_lu)) {
-    init_lu <- init_lu %>% mutate("extra_turnover_rate" = case_match(
+    init_lu <- init_lu %>% dplyr::mutate("extra_turnover_rate" = dplyr::recode_values(
       "preset",
       "cropland" ~ 0.2,
-      .default = 0.0
+      default = 0.0
     ))
   }
   if (!"oxidized_litter_fraction" %in% names(init_lu)) {
-    init_lu <- init_lu %>% mutate("oxidized_litter_fraction" = case_match(
+    init_lu <- init_lu %>% dplyr::mutate("oxidized_litter_fraction" = dplyr::recode_values(
       "preset",
       "cropland" ~ 0.9,
       "pasture" ~ 0.4,
-      .default = 0.0
+      default = 0.0
     ))
   }
-  init_lu <- init_lu %>% mutate(
-    "vegetated" = case_match(
+  init_lu <- init_lu %>% dplyr::mutate(
+    "vegetated" = dplyr::recode_values(
       "preset",
       "urban" ~ FALSE,
-      .default = TRUE
+      default = TRUE
     )
   )
   init_lu <- init_lu %>% select(
