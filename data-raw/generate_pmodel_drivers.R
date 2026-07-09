@@ -242,7 +242,7 @@ cornwell_tbl <- bind_rows(
   # vj_tbl    # NOTE: de-activate this to generate data for package
   ) |> 
   group_by(sitename) |> mutate(id = 1:n(), source = "cornwell") |> # NOTE: if we include VJ as in rsofun_doc use: "cornwell-or-smith"
-  nest(data = any_of(c("id", "bigD13C_obs_permil", "vj_obs__", "bigD13C_metadata", "vj_metadata")))
+  nest(data = any_of(c("id", "bigD13C", "vj_obs", "bigD13C_metadata", "vj_metadata")))
 pmodel_validation_subset3 <- bind_rows(
   cornwell_tbl,
   fluxnet_tbl |>
