@@ -98,10 +98,10 @@
 #'
 #' # Run the model for these parameters and the example drivers
 #' output <- rsofun::runread_pmodel_f(
-#'   drivers = rsofun::pmodel_drivers,
+#'   drivers = rsofun::pmodel_drivers |> dplyr::slice(1),
 #'   par = params_modl)
 #' output <- rsofun::runread_pmodel_f(
-#'   drivers = rsofun::pmodel_drivers,
+#'   drivers = rsofun::pmodel_drivers |> dplyr::slice(1),
 #'   par = params_modl, parallel = TRUE, ncores = 3)
 runread_pmodel_f <- function(
     drivers,

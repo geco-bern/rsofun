@@ -128,8 +128,10 @@
 #'     kphio = list(lower = 0.02, upper = 0.2, init = 0.05)
 #'   )
 #' )
-#' drivers_to_use <- pmodel_drivers
-#' obs_to_use     <- pmodel_validation
+#' drivers_to_use <- rsofun::pmodel_drivers    |>
+#'   dplyr::filter(sitename %in% c("FR-Pue", "lon_+146.13_lat_-032.97"))
+#' obs_to_use     <- rsofun::pmodel_validation |>
+#'   dplyr::filter(sitename %in% c("FR-Pue", "lon_+146.13_lat_-032.97"))
 #' pars_calib_rmse <- calib_sofun(
 #'   # calib_sofun arguments:
 #'   drivers  = drivers_to_use,
