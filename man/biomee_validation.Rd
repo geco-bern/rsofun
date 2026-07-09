@@ -3,7 +3,7 @@
 \docType{data}
 \name{biomee_validation}
 \alias{biomee_validation}
-\title{rsofun BiomeE targets validation data}
+\title{rsofun BiomeE validation data}
 \format{
 A tibble of validation data:
 \describe{

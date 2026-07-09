@@ -1,6 +1,6 @@
 ---
 title: "Parameter calibration (P-Model) to multiple targets (GPP, bigD13C)"
-author: "Josefa Arán, Fabian Bernhard"
+author: "Fabian Bernhard, Josefa Arán"
 output: 
   rmarkdown::html_vignette:
     code_folding: show
@@ -82,6 +82,7 @@ par_calib_join <- calib_sofun(
   obs      = obs,
   settings_calib = settings_joint_likelihood,
   # arguments for the cost function
+  targets = c("gpp"="fluxnet", "bigD13C"="cornwell"),
   par_fixed = params_fixed
 )
 ```
@@ -89,14 +90,14 @@ par_calib_join <- calib_sofun(
 ```{r eval = FALSE, include = FALSE}
 # store output since calibration isn't run at each vignette rendering
 saveRDS(par_calib_join,
-  "files/param_calib_multitarget.Rmd__par_calib_join.RDS",
+  "vignettes/files/param_calib_multitarget.Rmd__par_calib_join.RDS",
   compress = "xz")
 ```
 
 ```{r include = FALSE}
 # fake output since calibration isn't run
 par_calib_join <- readRDS(
-  "files/param_calib_multitarget.Rmd__par_calib_join.RDS")
+  "files/param_calib_multitarget.Rmd__par_calib_join.RDS") # NOTE: for rendering remove prefix "vignettes/"
 ```
 
 Calibration with `calib_sofun` returns an object that contains the 
@@ -112,28 +113,33 @@ Note that GPP predictions are directly compared to GPP observations on that day,
 but the leaf trait bigD13C is predicted by the P-model as "onestep" prediction 
 for average conditions over the growing season and compared to the (multiple) 
 bigD13C observations taken across trees per site. 
-This is specified by the arguments `drivers` and `obs`.
+This is specified by the arguments `drivers`, `obs`, and `targets`.
 Namely, it is specified 
 by the column `params_siml$onestep` within `drivers`, which can be `FALSE` (for 
 daily simulation) or `TRUE` (for onestep acclimation), 
 by the corresponding column `forcing` containing daily or average conditions,
-and by the column `targets` specified for each simulation site (i.e. each row in `drivers` and `obs`).
+and by the column `source` specified for each simulation site (i.e. each row in `obs`)
+which is used by the `targets` argument to specify what variable to calibrate from each source data set.
 
 For more details, unfold the code below or check the documentation of `pmodel_drivers` and `pmodel_validation`.
 
 ```{r}
 #| class.source = 'fold-hide'
 
-# Note the columns: 'targets', and 'data' (containing observations)
-pmodel_validation |> tidyr::unnest_wider(targets, names_sep = "_")
-pmodel_validation |> dplyr::filter(grepl("lon", sitename)) |>  tidyr::unnest(data)
-pmodel_validation |> dplyr::filter(grepl("^[A-Z]", sitename)) |> tidyr::unnest(data)
+# Note the column 'data' (containing observations)
+pmodel_validation
 
-pmodel_drivers |> dplyr::filter(grepl("lon", sitename)) |>  tidyr::unnest(forcing)
-pmodel_drivers |> dplyr::filter(grepl("^[A-Z]", sitename)) |> tidyr::unnest(forcing)
+cornwell_sites <- pmodel_validation$sitename[pmodel_validation$source == "cornwell"]
+fluxnet_sites  <- pmodel_validation$sitename[pmodel_validation$source == "fluxnet"]
 
-pmodel_drivers |> dplyr::filter(grepl("lon", sitename)) |>  tidyr::unnest(params_siml)
-pmodel_drivers |> dplyr::filter(grepl("^[A-Z]", sitename)) |> tidyr::unnest(params_siml)
+pmodel_validation |> dplyr::filter(source == "cornwell") |>  tidyr::unnest(data)
+pmodel_validation |> dplyr::filter(source == "fluxnet")  |> tidyr::unnest(data)
+
+pmodel_drivers |> dplyr::filter(sitename %in% cornwell_sites) |> tidyr::unnest(forcing)
+pmodel_drivers |> dplyr::filter(sitename %in% fluxnet_sites)  |> tidyr::unnest(forcing)
+
+pmodel_drivers |> dplyr::filter(sitename %in% cornwell_sites) |>  tidyr::unnest(params_siml)
+pmodel_drivers |> dplyr::filter(sitename %in% fluxnet_sites)  |> tidyr::unnest(params_siml)
 ```
 
 ### Calibrating multiple GPP and D13C sites
@@ -251,7 +257,7 @@ setup_rsofun_calibration <- function(scenario) {
 
   ## Setup the data (drivers and obs) for the three calibration scenarios ----
 
-  # Subset different combination sites to dfeine target variables.
+  # Subset different combination sites to define target variables.
   # For easier handling do this in combined drivobs-object.
   drivobs_train_bigD13C_vj_gpp <- dplyr::inner_join(
     train_drivers,
@@ -263,7 +269,7 @@ setup_rsofun_calibration <- function(scenario) {
     test_obs,
     by = join_by(sitename))
 
-  all_potential_targets <- unique(unlist(drivobs_train_bigD13C_vj_gpp$targets))
+  all_potential_targets <- c("bigD13C" = "cornwell", "gpp" = "fluxnet", "le" = "fluxnet")
   if (scenario %in% c(223, 224, 225, 229, 230, 231)) { # GPP and traits data
     targets_to_keep <- c("gpp", "bigD13C")
   } else if (scenario %in% c(226)) {       # only traits data, either both, or vj only, or bigD13C only
@@ -274,13 +280,13 @@ setup_rsofun_calibration <- function(scenario) {
   } else {
     stop(sprintf("Unsupported scenario: %d", scenario))
   }
-  stopifnot(all(targets_to_keep %in% all_potential_targets))
+  stopifnot(all(targets_to_keep %in% names(all_potential_targets)))
 
+  targets_to_request <- all_potential_targets[targets_to_keep]
+  
   drivobs_train <- drivobs_train_bigD13C_vj_gpp |>
     # keep only sites with targets we want
-    dplyr::rowwise() |> dplyr::filter(any(targets_to_keep %in% .data$targets)) |> dplyr::ungroup() |>
-    # remove other unwanted target specifications from sites we keep (e.g. ET observations for a site with GPP and ET)
-    dplyr::mutate(targets = list(intersect(targets, targets_to_keep))) |> dplyr::ungroup()
+    dplyr::filter(source %in% unname(targets_to_request))
 
   drivobs_test <- drivobs_test_bigD13C_vj_gpp ## for the test data set keep all
 
@@ -288,6 +294,7 @@ setup_rsofun_calibration <- function(scenario) {
   return(list(
     drivobs_train = drivobs_train,
     drivobs_test = drivobs_test,
+    targets = targets_to_request,
     par_fixed = par_to_fix,
     par = par_to_estimate
   ))
@@ -321,7 +328,7 @@ run_mcmc_rsofun <- function(
     n_parallel_independent  = 3, # number of cores for parallelization of independent chains     https://cran.r-project.org/web/packages/BayesianTools/vignettes/InterfacingAModel.html#running-several-mcmcs-in-parallel
     outpath = "data",
     suffix_str = "",
-    sampler_runMCMC = "DREAMzs"
+    sampler = "DREAMzs"
     ) {
   # Setup simulation model
   res <- setup_rsofun_calibration(scenario = curr_calibration_scenario)
@@ -329,6 +336,7 @@ run_mcmc_rsofun <- function(
   # res$drivobs_test
   # res$par_fixed
   # res$par
+  # res$targets
 
   # Load loglikelihood (e.g. if using a tailor-made one, instead of package-provided):
   # source("R/calibration_helpers.R", echo = FALSE)
@@ -336,7 +344,7 @@ run_mcmc_rsofun <- function(
 
   # Setup MCMC          # uses drivobs_train, not drivobs_test
   driver_to_use_for_mcmc <- select(res$drivobs_train, sitename, params_siml, site_info, forcing)
-  obs_to_use_for_mcmc    <- select(res$drivobs_train, sitename, targets, data)
+  obs_to_use_for_mcmc    <- select(res$drivobs_train, sitename, source, data)
 
   calib_sofun_settings <- list(
     method = "BayesianTools",
@@ -367,6 +375,7 @@ run_mcmc_rsofun <- function(
     settings_calib = calib_sofun_settings,
     logpath   = logpath,
     # other arguments for the cost function
+    targets = res$targets,
     par_fixed = res$par_fixed
   )
   ## Store result object to file: ----
@@ -379,6 +388,7 @@ run_mcmc_rsofun <- function(
   timings <- tibble(
     setup       = curr_calibration_scenario,
     name        = gsub(".rds.log.txt", "", out_calib$name),
+    resultfile  = rds_path,
     # sampling options:
     sampler        = calib_sofun_settings$control$sampler_runMCMC,
     burnin         = burnin,
@@ -387,7 +397,7 @@ run_mcmc_rsofun <- function(
     n_chains_inner = n_chains_within_sampler,
     # performance results:
     cores          = n_parallel_independent,
-    walltime       = out_calib$walltime # ,
+    walltime       = out_calib$walltime,
     # logfile        = out_calib$logpath
   )
   return(timings)
@@ -430,7 +440,7 @@ df_timings226 <- run_mcmc_rsofun(226, suffix_str = "setup_226",
   # parallelization
   n_parallel_independent    = 1
 )
-# 2025-12-16 10:49:52.217434: start sampling of out_calib_setup_226.rds
+# 2026-07-09 10:39:19.622351: start sampling of out_calib_setup_226.rds
 # runMCMC terminated after 4.39500000000407seconds00 . Current logp  -389.1087 -421.1468 -396.6275 Please wait!
 # runMCMC terminated after 3.95499999998719seconds00 . Current logp  -377.7371 -379.5134 -377.3347 Please wait!
 # ...
@@ -447,7 +457,7 @@ df_timings231 <- run_mcmc_rsofun(231, suffix_str = "setup_231",
   # parallelization
   n_parallel_independent    = 1
 )
-# 2025-12-16 10:51:14.211219: start sampling of out_calib_setup_231.rds
+# 2026-07-09 10:39:53.032407: start sampling of out_calib_setup_231.rds
 # Running DREAM-MCMC, chain  1 iteration 300 of 600 . Current logp  -14645.97 -14571.83 -15471.88 Please wait!
 # runMCMC terminated after 16.8090000000084seconds00 . Current logp  -14616.55 -14462.62 -14529.8 Please wait!
 # Running DREAM-MCMC, chain  2 iteration 300 of 600 . Current logp  -16760.01 -15828.73 -14948.44 Please wait!
@@ -466,10 +476,10 @@ df_timings231p <- run_mcmc_rsofun(231, suffix_str = "setup_231_parallel",
   # parallelization
   n_parallel_independent    = 8     # here now we parallelize the 8 chains to 8 cores
 )
-# 2025-12-16 10:52:17.880666: start sampling of out_calib_setup_231_parallel.rds
+# 2026-07-09 10:42:24.395628: start sampling of out_calib_setup_231_parallel.rds
 # Writing MCMC sampling log to: files/param_calib_multitarget//calibrations/out_calib_setup_231_parallel.rds.log.txt
 # ...
-# 2025-12-16 10:55:56.813577: end   sampling of out_calib_setup_231_parallel.rds.log.txt.
+# 2026-07-09 10:43:07.689861: end   sampling of out_calib_setup_231_parallel.rds.log.txt.
 # Written *.rds-output to: files/param_calib_multitarget//calibrations/out_calib_setup_231_parallel.rds
 ```
 ```{r eval = FALSE, include = FALSE}
@@ -485,7 +495,7 @@ saveRDS(calib_timings,
 ```{r eval = TRUE, include = FALSE}
 # fake output since calibration was run previous to vignette rendering
 calib_timings <- readRDS(
-  "files/param_calib_multitarget.Rmd__calib_timings.RDS")
+  "files/param_calib_multitarget.Rmd__calib_timings.RDS") # NOTE: for rendering remove prefix "vignettes/"
 ```
 ```{r}
 #| class.source = 'fold-hide'
@@ -495,7 +505,8 @@ calib_timings <- readRDS(
 #   df_timings231p)
 knitr::kable(calib_timings |>
   dplyr::mutate(name = gsub(".rds.log.txt", "", name)) |>
-  dplyr::mutate(resultfile = gsub("vignettes/", "", resultfile))
+  dplyr::mutate(resultfile = gsub("vignettes/files/param_calib_multitarget//", "", resultfile)) |>
+  dplyr::select(-"resultfile", "resultfile")
 )
 ```
 Note how the parallelized version reduced the walltime by 4x. 
@@ -506,18 +517,18 @@ Since MCMC sampling can be long running tasks, the resulting MCMC sampling
 chains are stored to disk, so that they can easily be recovered in a later R 
 session for an analysis similar to the one below.
 
-During the paralell MCMC sampling the workers don't send output to the console.
+During the parallel MCMC sampling the workers don't send output to the console.
 This is why a logfile is created and progress can be checked there.
 The above example resulted in a common log file of all eight workers:
 ```
-starting worker pid=43576 on localhost:11353 at 11:15:05.976
-starting worker pid=43589 on localhost:11353 at 11:15:06.058
-starting worker pid=43602 on localhost:11353 at 11:15:06.142
-starting worker pid=43615 on localhost:11353 at 11:15:06.224
-starting worker pid=43628 on localhost:11353 at 11:15:06.306
-starting worker pid=43641 on localhost:11353 at 11:15:06.389
-starting worker pid=43654 on localhost:11353 at 11:15:06.476
-starting worker pid=43668 on localhost:11353 at 11:15:06.570
+starting worker pid=91053 on localhost:11767 at 10:42:24.511
+starting worker pid=91066 on localhost:11767 at 10:42:24.598
+starting worker pid=91079 on localhost:11767 at 10:42:24.687
+starting worker pid=91092 on localhost:11767 at 10:42:24.769
+starting worker pid=91105 on localhost:11767 at 10:42:24.854
+starting worker pid=91118 on localhost:11767 at 10:42:24.941
+starting worker pid=91131 on localhost:11767 at 10:42:25.025
+starting worker pid=91144 on localhost:11767 at 10:42:25.108
 Loading required package: rsofun
 loaded rsofun and set parent environment
 ...
@@ -526,9 +537,9 @@ loaded rsofun and set parent environment
  Running DREAM-MCMC, chain  1 iteration 300 of 600 . Current logp  -14739.4 ... Please wait! 
 ...
  Running DREAM-MCMC, chain  1 iteration 600 of 600 . Current logp  -14654.7 ... Please wait! 
-runMCMC terminated after 36.634seconds
+runMCMC terminated after 32.359seconds
  Running DREAM-MCMC, chain  1 iteration 600 of 600 . Current logp  -14927.0 ... Please wait! 
-runMCMC terminated after 40.068seconds
+runMCMC terminated after 35.474seconds
 ```
 
 #### Analyze model calibration
@@ -803,13 +814,13 @@ run_prediction_rsofun <- function(
     curr_driver <- bind_rows(res$drivobs_train, res$drivobs_test) |>
       select(sitename, params_siml, site_info, forcing)
     curr_obs    <- bind_rows(res$drivobs_train, res$drivobs_test) |>
-      select(sitename, targets, data)
+      select(sitename, source, data)
   } else if (prediction == "train") {
     curr_driver <- select(res$drivobs_train, sitename, params_siml, site_info, forcing)
-    curr_obs    <- select(res$drivobs_train, sitename, targets, data)
+    curr_obs    <- select(res$drivobs_train, sitename, source, data)
   } else if (prediction == "test") {
     curr_driver <- select(res$drivobs_test, sitename, params_siml, site_info, forcing)
-    curr_obs    <- select(res$drivobs_test, sitename, targets, data)
+    curr_obs    <- select(res$drivobs_test, sitename, source, data)
     stopifnot(nrow(curr_obs) > 0)
   }
 
@@ -832,6 +843,7 @@ predict_sofun_parallelized <- function(
     drivers,
     obs,
     settings,
+    targets,
     par_fixed,
     par_df = NULL) {
   # Set number of cores if not specified
@@ -842,7 +854,7 @@ predict_sofun_parallelized <- function(
   settings$n_cores <- min(nrow(par_df), settings$n_cores)
 
   # Function to run prediction for a single parameter set
-  run_pmodel_single_prediction <- function(par, par_fixed, drivers, obs) {
+  run_pmodel_single_prediction <- function(par, par_fixed, targets, drivers, obs) {
     # Function that runs the P-model for a sample of parameters
     # but does not add the observation error
 
@@ -853,7 +865,21 @@ predict_sofun_parallelized <- function(
     # A) Include current parameters ----
     stopifnot(length(intersect(names(par), names(par_fixed))) == 0) # no overlap
     params_modl <- c(par, par_fixed)
-
+    
+    # B1) append column targets to obs data.frame: (code copy from cost_likelihood)
+    #   This ensures that variant that requires targets as function argument can be 
+    #   run with the code below (which was written with targets as a column of obs defined as:
+    #       \item{targets}{A single one-row tibble with a column for each target
+    #                      containing TRUE or FALSE (or NA_logical)}
+    targets = c( 
+      "gpp"     = "fluxnet",   # NOTE: hardcoding TODO: remove
+      "le"      = "fluxnet",   # NOTE: hardcoding TODO: remove
+      "bigD13C" = "cornwell",  # NOTE: hardcoding TODO: remove
+      "vj"      = "cornwell")  # NOTE: hardcoding TODO: remove
+    targets_df <- tidyr::tibble(target = names(targets), source = unname(targets)) |> # or use enframe(..., name = "target", value = "source")
+      dplyr::group_by(source) |> dplyr::summarise(targets = unique(list(target)))
+    obs <- dplyr::left_join(obs, targets_df, by = dplyr::join_by("source")) |> dplyr::select(-"source")
+  
     # B,C) Run model and bring together with observed ----
     df_pred_vs_obs <- rsofun:::get_mod_obs_pmodel(
       drivers,
@@ -895,6 +921,7 @@ predict_sofun_parallelized <- function(
       ~ run_pmodel_single_prediction(
         par = .x,
         par_fixed,
+        targets,
         drivers,
         obs
       )
@@ -971,29 +998,31 @@ df_predict_231p_bigD13C_sampled <- apply_bias_correction_and_sample_error(
   df_predict_bigD13C,
   N_sample_error = N_sample_error)
 ```
-```{R}
+```{r, eval = FALSE, include = TRUE}
 #| class.source = 'fold-hide'
 # Save predictions to plot with separate script:
 # FOR STORAGE REASONS unnest the obs_metadata and save different targets separately:
-# out_prediction_template <- file.path("files/param_calib_multitarget/",
-#                                       "predictions", "pred_231p_XXX.rds")
-# dir.create(dirname(out_prediction_template), showWarnings = FALSE)
-# fname_out_gpp     <- gsub("_XXX",
-#                           paste0(    "_gpp_sampled_N", N_sample_error, "errors"),
-#                           out_prediction_template)
-# fname_out_bigD13C <- gsub("_XXX",
-#                           paste0("_bigD13C_sampled_N", N_sample_error, "errors"),
-#                           out_prediction_template)
-# df_predict_231p_gpp_sampled     |>
-#   select(posterior_sample_id,error_sample_id,is_train0_test1,is_MAP,sitename,target,obs,   date,err_par_bias,err_par_sd,mod_no_err,mod_biasremoved_no_err,mod_biasremoved_with_err) |>
-#   saveRDS(fname_out_gpp,     compress = "xz")
-# df_predict_231p_bigD13C_sampled |>
-#   select(posterior_sample_id,error_sample_id,is_train0_test1,is_MAP,sitename,target,obs,id,     err_par_bias,err_par_sd,mod_no_err,mod_biasremoved_no_err,mod_biasremoved_with_err) |>
-#   saveRDS(fname_out_bigD13C, compress = "xz")
-
+out_prediction_template <- file.path("vignettes/files/param_calib_multitarget/",
+                                      "predictions", "pred_231p_XXX.rds")
+dir.create(dirname(out_prediction_template), showWarnings = FALSE)
+fname_out_gpp     <- gsub("_XXX",
+                          paste0(    "_gpp_sampled_N", N_sample_error, "errors"),
+                          out_prediction_template)
+fname_out_bigD13C <- gsub("_XXX",
+                          paste0("_bigD13C_sampled_N", N_sample_error, "errors"),
+                          out_prediction_template)
+df_predict_231p_gpp_sampled     |>
+  select(posterior_sample_id,error_sample_id,is_train0_test1,is_MAP,sitename,target,obs,   date,err_par_bias,err_par_sd,mod_no_err,mod_biasremoved_no_err,mod_biasremoved_with_err) |>
+  saveRDS(fname_out_gpp,     compress = "xz")
+df_predict_231p_bigD13C_sampled |>
+  select(posterior_sample_id,error_sample_id,is_train0_test1,is_MAP,sitename,target,obs,id,     err_par_bias,err_par_sd,mod_no_err,mod_biasremoved_no_err,mod_biasremoved_with_err) |>
+  saveRDS(fname_out_bigD13C, compress = "xz")
+```
+```{r, eval = TRUE, include = TRUE}
+#| class.source = 'fold-hide'
 # Load predictions for plotting with separate script:
-# df_predict_231p_gpp_sampled     <- readRDS("files/param_calib_multitarget//predictions/pred_231p_gpp_sampled_N3errors.rds")
-# df_predict_231p_bigD13C_sampled <- readRDS("files/param_calib_multitarget//predictions/pred_231p_bigD13C_sampled_N3errors.rds")
+df_predict_231p_gpp_sampled     <- readRDS("files/param_calib_multitarget//predictions/pred_231p_gpp_sampled_N3errors.rds")      # NOTE: for rendering remove prefix "vignettes/"
+df_predict_231p_bigD13C_sampled <- readRDS("files/param_calib_multitarget//predictions/pred_231p_bigD13C_sampled_N3errors.rds")  # NOTE: for rendering remove prefix "vignettes/"
 # df_predict_231p_bigD13C_sampled <- readr::read_rds(paste0("/storage/scratch/giub_geco/fbernhard/rsofun_doc_outputs/data/predictions/out_predict_",n_post,"_30000burnin__out_calib__scen222_DREAMzs-100000-0iter_8x3chains_on_CPU8x1_continued.rds_vj_sampled",n_err,".rds"))
 # df_predict_231p_gpp_sampled     <- readr::read_rds(paste0("/storage/scratch/giub_geco/fbernhard/rsofun_doc_outputs/data/predictions/out_predict_",n_post,"_30000burnin__out_calib__scen222_DREAMzs-100000-0iter_8x3chains_on_CPU8x1_continued.rds_gpp_sampled",n_err,".rds"))
 ```
@@ -1276,12 +1305,12 @@ pl_timeseries_gpp
 ```{r eval = FALSE, include = FALSE}
 # store output since prediction isn't run when vignette is rendered
 ggplot2::ggsave(
-  filename = "files/param_calib_multitarget/predictions/pl_timeseries_gpp.png",
+  filename = "vignettes/files/param_calib_multitarget/predictions/pl_timeseries_gpp.png",
   plot = pl_timeseries_gpp, width = 7, height = 7, dpi = 100)
 ```
 ```{r eval = TRUE, include = TRUE}
 # fake output since prediction was run previous to vignette rendering
-knitr::include_graphics("files/param_calib_multitarget/predictions/pl_timeseries_gpp.png",
+knitr::include_graphics("files/param_calib_multitarget/predictions/pl_timeseries_gpp.png", # NOTE: for rendering remove prefix "vignettes/"
   dpi = 100)
 ```
 
@@ -1343,12 +1372,12 @@ pl_scatter_comparison
 ```{r eval = FALSE, include = FALSE}
 # store output since prediction isn't run when vignette is rendered
 ggplot2::ggsave(
-  filename = "files/param_calib_multitarget/predictions/pl_scatter_comparison.png",
+  filename = "vignettes/files/param_calib_multitarget/predictions/pl_scatter_comparison.png",
   plot = pl_scatter_comparison, width = 7, height = 4, dpi = 150)
 ```
 ```{r eval = TRUE, include = TRUE}
 # fake output since prediction was run previous to vignette rendering
-knitr::include_graphics("files/param_calib_multitarget/predictions/pl_scatter_comparison.png",
+knitr::include_graphics("files/param_calib_multitarget/predictions/pl_scatter_comparison.png", # NOTE: for rendering remove prefix "vignettes/"
   dpi = 150)
 ```
 

@@ -184,32 +184,73 @@ pmodel_drivers <- bind_rows(pmodel_drivers_subset_daily,
 
 # pmodel_validation processing:
 # A) subset sites, variables
-pmodel_validation_subset <- pmodel_validation_allsites |>
+pmodel_validation_subset1 <- pmodel_validation_allsites |>
   # remove 'run_model' from validation data set (we implicitly use targets)
   dplyr::select(-run_model) |>
   # subset sites
   dplyr::filter(sitename %in% sites_to_keep) |>
   # subset variables
+  # only keep sites with targets bigD13C or gpp (i.e. filter out vj only sites)
   tidyr::unnest_wider(targets) |>
-  dplyr::select(-vj) |>
-  # only keep sites with targets bigD13C or gpp
-  dplyr::filter(gpp | bigD13C) |>
+  # dplyr::filter(                      gpp | bigD13C | vj) |> # NOTE: re-activate this to check if code works with vj
+  dplyr::select(-vj) |> dplyr::filter(gpp | bigD13C) |>    # NOTE: re-activate this to generate data for package
   # nest targets again into a one-row tibble:
-  nest(targets = c("bigD13C", "gpp")) |>
+  nest(targets = any_of(c("bigD13C", "gpp", "vj"))) |>
   dplyr::select(sitename, targets, data)
 
-# B) transform targets from a named list into a
-named_boolean_list_to_vector <- function(lst) {
-  # transform a named list,
-  # e.g. list(bigD13C = FALSE, gpp = TRUE, et = TRUE) into list("gpp")
-  names(lst)[unlist(lst) == TRUE]
-}
-pmodel_validation_subset <- pmodel_validation_subset |>
-  dplyr::mutate(targets = purrr::map(
-    targets,
-    named_boolean_list_to_vector))
+# B) format validation data set
+#    NOTE: it was decided to
+#           - specify targets as argument to calib_sofun (thus removing it from the validation data set)
+#           - have a column "source" allowing to specify what data should be kept for calibration
+#           - have only one nested level (in the column `data`) in the validation data set
+pmodel_validation_subset2 <- pmodel_validation_subset1 |> 
+  # filter(sitename %in% c("lon_-079.10_lat_+035.97",     # for development test with sites that have vj and bigD13C
+  #                        "lon_+153.00_lat_-026.85",
+  #                        "CH-Dav")) |>
+  # get rid of target specification in validation data set (instead it will be 
+  # specified as argument to calib_sofun) and re-organize observational data:
+  dplyr::select(-targets) |> 
+  tidyr::unnest(data) |> tidyr::nest(fluxnet = c(date, gpp, gpp_qc, nee, nee_qc, le, le_qc)) |>
+  # set elements of column fluxnet to NULL where there are no observation (currently still a 1x7 tibble)
+  dplyr::rowwise() |> dplyr::mutate(fluxnet = if_else(all(is.na(fluxnet)), list(NULL), list(fluxnet)))
+  #   # A tibble: 3 × 4
+  #   sitename                bigD13C             vj                 fluxnet             
+  #   <chr>                   <list>              <list>             <list>              
+  # 1 CH-Dav                  <NULL>              <NULL>             <tibble [7,822 × 7]>
+  # 2 lon_+153.00_lat_-026.85 <gropd_df [25 × 6]> <NULL>             <NULL>    
+  # 3 lon_-079.10_lat_+035.97 <gropd_df [4 × 6]>  <gropd_df [7 × 9]> <NULL>   
 
-# C) subset dates to reduce file size
+# unnest bigD13C and vj and combine by appending rows:
+bigD13C_tbl <- pmodel_validation_subset2 |>
+  dplyr::select(sitename, bigD13C) |>
+  tidyr::unnest(bigD13C) |>
+  tidyr::nest(bigD13C_metadata = c(species, year, Nobs, Nyears, Ndates)) |>
+  dplyr::rename(bigD13C = bigD13C_obs_permil) # for consistency with gpp, nee, le (that have no units in header)
+vj_tbl <- pmodel_validation_subset2 |>
+  dplyr::select(sitename, vj) |>
+  tidyr::unnest(vj) |>
+  tidyr::nest(vj_metadata = c(genus, species, year, vcmax_obs_molm2s, jmax_obs_molm2s, Nobs, Nyears, Ndates)) |>
+  dplyr::rename(vj = vj_obs__) # for consistency with gpp, nee, le (that have no units in header)
+
+# also unnest fluxnet data (containing multiple variables
+fluxnet_tbl <- pmodel_validation_subset2 |>
+  select(sitename, fluxnet) |> unnest(fluxnet)
+
+# bring together
+cornwell_tbl <- bind_rows(
+  bigD13C_tbl,
+  # vj_tbl    # NOTE: de-activate this to generate data for package
+  ) |> 
+  group_by(sitename) |> mutate(id = 1:n(), source = "cornwell") |> # NOTE: if we include VJ as in rsofun_doc use: "cornwell-or-smith"
+  nest(data = any_of(c("id", "bigD13C_obs_permil", "vj_obs__", "bigD13C_metadata", "vj_metadata")))
+pmodel_validation_subset3 <- bind_rows(
+  cornwell_tbl,
+  fluxnet_tbl |>
+    mutate(source = "fluxnet") |> 
+    nest(data = any_of(c("date", "gpp","gpp_qc","nee","nee_qc","le","le_qc")))
+)
+
+# C) subset dates of fluxnet data to reduce file size
 # remove unneded dates from observations (i.e. those outside of the driver dates) :
 # C1) find which years are available in driver
 drivers_available <- pmodel_drivers |>
@@ -225,30 +266,35 @@ drivers_available <- pmodel_drivers |>
   dplyr::select(sitename, forcing_years_available)
 
 # C2) subset gpp runs
-pmodel_validation_subset_gppYears <- pmodel_validation_subset |>
+pmodel_validation_subset_gppYears <- pmodel_validation_subset3 |>
   # dplyr::rowwise() |> filter("gpp" %in% targets) |> dplyr::ungroup() |>
   inner_join(drivers_available, by = join_by(sitename)) |>
-  unnest(data) |>
+  dplyr::filter(source == "fluxnet") |>
+  tidyr::unnest(data) |>
   dplyr::mutate(obs_year = lubridate::year(date)) |>
-  dplyr::rowwise() |> filter(obs_year %in% forcing_years_available) |> dplyr::ungroup() |>
+  dplyr::rowwise() |> dplyr::filter(obs_year %in% forcing_years_available) |> dplyr::ungroup() |>
   dplyr::select(-obs_year, -forcing_years_available) |>
-  nest(data = -c(sitename, targets))
+  tidyr::nest(data = -c(sitename, source))
 
-# C3) define two targets for Davos CH-Dav:
-pmodel_validation_subset_gppYears$targets[[
-  which(pmodel_validation_subset_gppYears$sitename == "CH-Dav")]] <- c("gpp", "le")
+
+# # C3) define two targets for Davos CH-Dav: (NOTE: dropped with the use of targets as argument to calib_sofun())
+# pmodel_validation_subset_gppYears$targets[[
+#   which(pmodel_validation_subset_gppYears$sitename == "CH-Dav")]] <- c("gpp", "le")
 
 # D) remove unneeded leaf-trait observations (vj) and format bigD13C
-pmodel_validation_subset_bigD13C <- pmodel_validation_subset |>
-  dplyr::rowwise() |> filter("bigD13C" %in% targets) |> dplyr::ungroup() |>
-  # filter(run_model == "onestep") |>
-  unnest(data) |> dplyr::select(-vj) |> unnest(bigD13C) |> tidyr::unite(col = "id", c("year", "species")) |>
-  dplyr::select(sitename, targets, id, bigD13C = bigD13C_obs_permil) |>
-  nest(data = c("id", "bigD13C"))
+pmodel_validation_subset_bigD13C <- pmodel_validation_subset3 |>
+  dplyr::filter(source != "fluxnet") |>
+  tidyr::unnest(data) |> dplyr::select(-any_of(c("vj_obs__", "vj", "vj_metadata"))) |>
+  dplyr::select(sitename, source, id, bigD13C) |>
+  tidyr::nest(data = c("id", "bigD13C"))
+
 
 # E) finalize validation observations
 pmodel_validation <- bind_rows(pmodel_validation_subset_gppYears,
                                pmodel_validation_subset_bigD13C)
+pmodel_drivers
+pmodel_validation
+
 
 # store as rda into the package
 usethis::use_data(pmodel_drivers,    overwrite = TRUE, compress = "xz")

@@ -15,11 +15,10 @@
 #' and \code{'data'} (see \code{\link{pmodel_validation}} to check its structure).
 #' @param drivers A nested data.frame of driver data. See \code{\link{pmodel_drivers}}
 #' for a description of the data structure.
-#' @param targets (obsolete) A character vector indicating the target variables for which the
-#' optimization will be done and the RMSE computed. This string must be a column
-#' name of the \code{obs$data} data.frame belonging to the validation nested data.frame
-#' (for example 'gpp'). Now defaults to \code{NULL}, and use of a corresponding
-#' column \code{'targets'} in \code{obs} should be used instead.
+#' @param targets A character vector indicating the target variables for which the
+#' likelihood is computed. The names must be column 
+#' name(s) of the \code{'obs$data'} data.frame and they must have error term(s) in either \code{'par'}
+#' or \code{'par_fixed'}.
 #' @param par_fixed A named list of model parameter values to keep fixed during the
 #' calibration. These should complement the input \code{par} such that all model
 #' parameters are passed on to \code{\link{runread_pmodel_f}}.
@@ -62,6 +61,7 @@
 #'     err_gpp     = 2),    # err_gpp
 #'   obs = pmodel_validation |> dplyr::filter(sitename == "FR-Pue"),
 #'   drivers = pmodel_drivers |> dplyr::filter(sitename == "FR-Pue"),
+#'   targets = c("gpp"), # NOTE: the old legacy format of targets
 #'   par_fixed = list(
 #'     soilm_thetastar    = 0.6 * 240,  # old setup with soil moisture stress
 #'     soilm_betao        = 0.0,
@@ -80,6 +80,7 @@
 #'     err_bigD13C = 2),
 #'   obs = pmodel_validation,
 #'   drivers = pmodel_drivers,
+#'   targets = c("gpp", "le", "bigD13C"), # NOTE: the old legacy format of targets
 #'   par_fixed = list(
 #'     soilm_thetastar    = 0.6 * 240,  # old setup with soil moisture stress
 #'     soilm_betao        = 0.0,
@@ -93,8 +94,7 @@ cost_likelihood_pmodel_legacy <- function(
     par,   # model parameters & error terms for each target
     obs,
     drivers,
-    targets = NULL,     # legacy argument, targets should now be specified
-    # for each row in the obs data.frame(). See pmodel_validation
+    targets,
     par_fixed = NULL,   # non-calibrated model parameters
     parallel = FALSE,
     ncores = 2
@@ -114,26 +114,15 @@ cost_likelihood_pmodel_legacy <- function(
     drivers <- drivers |> dplyr::mutate(
       params_siml = purrr::map(.data$params_siml, ~ mutate(.x, onestep = FALSE)))
   }
-  if (!is.null(targets)) {
-    # for backwards compatibility, use provided argument 'targets' for all rows
-    # of observation data.frame()
-    # Error if data.frame also specifies targets per row, resulting in ambiguity
-    if ("targets" %in% names(obs)) {
-      stop(
-        "Provided calibration targets as argument 'targets' and as column in obs data.frame(). Only one is allowed")
-    }
-    # insert targets into row of obs
-    obs <- obs |> rowwise() |> mutate(targets = list(targets)) |>
-      select("sitename", "targets", "data")
+  if ("targets" %in% names(obs)) {
+    stop(
+      "Provided calibration targets as column in obs data.frame(). Please only provide as argument 'targets' to calib_sofun() or cost function.")
   }
-
   ## generate a list of all calibration targets (across all obs rows)
-  targets <- obs |>
-    dplyr::ungroup() |> dplyr::select(targets) |> tidyr::unnest(targets) |>
-    magrittr::extract2("targets") |> unique()
+  requested_targets <- targets
 
   ## check input parameters
-  if ((length(par) + length(par_fixed)) != (9 + length(targets))) {
+  if ((length(par) + length(par_fixed)) != (9 + length(requested_targets))) {
     stop("Error: Input calibratable and fixed parameters (par and par_fixed)
     do not match length of the required P-model parameters and target error terms.")
   }
@@ -178,7 +167,7 @@ cost_likelihood_pmodel_legacy <- function(
     tidyr::unnest(data) |>
     dplyr::rename(any_of(c("bigD13C" = "bigD13C_mod_permil"))) |>
     # always keep gpp, since is used to get average trait prediction
-    dplyr::select("sitename", any_of(unique(c("date", "gpp", targets)))) |>
+    dplyr::select("sitename", any_of(unique(c("date", "gpp", requested_targets)))) |>
     dplyr::rename_with(
       .cols = -any_of(c("sitename", "date")),
       .fn = paste0,
@@ -196,10 +185,10 @@ cost_likelihood_pmodel_legacy <- function(
     obs_flux <- obs[is_flux, ] |>
       dplyr::select(sitename, data) |>
       tidyr::unnest(data) |>
-      dplyr::select(any_of(c("sitename", "date", targets)))
+      dplyr::select(any_of(c("sitename", "date", requested_targets)))
 
     if (ncol(obs_flux) < 3) {
-      warning("Dated observations (fluxes) are missing for the chosen targets.")
+      warning("Dated observations (fluxes) are missing for the requested targets.")
       df_flux <- data.frame()
     } else {
       # Join P-model output and flux observations
@@ -220,10 +209,10 @@ cost_likelihood_pmodel_legacy <- function(
     obs_trait <- obs[!is_flux, ] |>
       dplyr::select(sitename, data) |>
       tidyr::unnest(data) |>
-      dplyr::select(any_of(c("sitename", targets)))
+      dplyr::select(any_of(c("sitename", requested_targets)))
 
     if (ncol(obs_trait) < 2) {
-      warning("Non-dated observations (traits) are missing for the chosen targets.")
+      warning("Non-dated observations (traits) are missing for the requested targets.")
       df_trait <- data.frame()
     } else {
       # Join output and trait observations
@@ -243,9 +232,9 @@ cost_likelihood_pmodel_legacy <- function(
     df_trait <- data.frame()
   }
 
-  # loop over targets
-  ll <- lapply(seq(length(targets)), function(i) {
-    target <- targets[i]
+  # loop over requested targets
+  ll <- lapply(seq(length(requested_targets)), function(i) {
+    target <- requested_targets[i]
     # get observations and predicted target values, without NA
     if (target %in% colnames(df_flux)) {
       df_target <- df_flux[, c(paste0(target, "_mod"), target)] |>
@@ -263,7 +252,7 @@ cost_likelihood_pmodel_legacy <- function(
     ll <- sum(stats::dnorm(
       df_target[[paste0(target, "_mod")]],
       mean = df_target[[target]],
-      sd = par[length(par) - length(targets) + i],
+      sd = par[length(par) - length(requested_targets) + i],
       log = TRUE
     ))
   }) |>

@@ -80,8 +80,6 @@ test_that("test GPP calibration routine p-model (BT, likelihood maximization)", 
 
   settings_calib <- list(
     method              = "bayesiantools",
-    targets             = c("gpp"),
-    sitenames           = "FR-Pue",
     metric              = rsofun::cost_likelihood_pmodel,
     control = list(
       sampler_runMCMC = "DEzs",
@@ -97,11 +95,12 @@ test_that("test GPP calibration routine p-model (BT, likelihood maximization)", 
     )
   )
 
-  pars <- rsofun::calib_sofun(
+  pars <- calib_sofun(
     drivers = drivers,
     obs = obs,
     settings_calib = settings_calib,
     # extra arguments for the cost function
+    targets = c("gpp" = "fluxnet"),
     par_fixed = params_fix,
     parallel = FALSE,
     ncores = 1
@@ -118,8 +117,6 @@ test_that("test GPP calibration routine p-model (GenSA, rmse, all params)", {
 
   settings_calib <- list(
     method              = "gensa",
-    targets             = c("gpp"),
-    sitenames           = "FR-Pue",
     metric              = rsofun::cost_rmse_pmodel,
     control = list(
       maxit = 2
@@ -141,7 +138,9 @@ test_that("test GPP calibration routine p-model (GenSA, rmse, all params)", {
     drivers = drivers,
     obs = obs,
     settings_calib = settings_calib,
-    optim_out = FALSE
+    optim_out = FALSE,
+    # extra arguments for the cost function
+    targets = c("gpp" = "fluxnet")
   )
 
   # test for correctly returned values
@@ -194,6 +193,7 @@ test_that("test GPP/bigDelta13C calibration routine p-model (BT, likelihood, all
     obs,
     settings_calib = settings_calib,
     # extra arguments for the cost function
+    targets = c("gpp" = "fluxnet", "bigD13C" = "cornwell"),
     par_fixed = params_fix,
     optim_out = FALSE
   )
@@ -238,6 +238,7 @@ test_that("test GPP/bigDelta13C calibration routine p-model (GenSA, rmse)", {
     obs      = obs_to_use,
     settings_calib = settings_calib_rmse,
     # extra arguments passed to the cost function:
+    targets = c("gpp" = "fluxnet", "bigD13C" = "cornwell"),
     par_fixed = params_fix
   )
 

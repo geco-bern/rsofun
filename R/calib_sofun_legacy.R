@@ -83,6 +83,7 @@
 #'   obs     = rsofun::pmodel_validation |> dplyr::filter(sitename == "FR-Pue"),
 #'   settings = settings,
 #'   # extra arguments for the cost function
+#'   targets = c("gpp" = "fluxnet"),
 #'   par_fixed = params_fix
 #' )
 calib_sofun_legacy <- function(

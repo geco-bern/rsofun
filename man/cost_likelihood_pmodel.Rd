@@ -9,6 +9,7 @@ cost_likelihood_pmodel(
   par,
   obs,
   drivers,
+  targets,
   par_fixed = NULL,
   parallel = FALSE,
   ncores = 1,
@@ -21,14 +22,18 @@ a subset of model parameters and error terms for each target variable (for
 example \code{'gpp_err'}).}
 
 \item{obs}{A nested data.frame of observations, with columns \code{'sitename'}
-\code{'targets'}, and \code{'data'} (see \code{\link{pmodel_validation}} to
-check its structure). \code{'targets'} indicates the target variable(s) for
-which the likelihood is computed, it must be a column name of the
-\code{'data'} data.frame and it must have an error term in either \code{'par'}
-or \code{'par_fixed'}.}
+and \code{'data'} (see \code{\link{pmodel_validation}} to
+check its structure).}
 
 \item{drivers}{A nested data.frame of driver data. See \code{\link{pmodel_drivers}}
 for a description of the data structure.}
+
+\item{targets}{A named character vector indicating the target variable(s) for
+which the likelihood is computed. 
+The names of \code{'target'} indicate target variables, while the values indicate the source data set to be used.
+The values must be present in the \code{'obs$source'} column.
+The names must be column name(s) of the \code{'obs$data'} data.frame and they must have error term(s) in either \code{'par'}
+or \code{'par_fixed'}.}
 
 \item{par_fixed}{A named list of model parameter values to keep fixed during the
 calibration. These should complement the input \code{par} such that all model
@@ -78,6 +83,7 @@ cost_likelihood_pmodel(
     err_gpp     = 2),
   obs = pmodel_validation |> dplyr::filter(sitename == "FR-Pue"),
   drivers = pmodel_drivers |> dplyr::filter(sitename == "FR-Pue"),
+  targets = c("gpp" = "fluxnet"),
   par_fixed = list(
     soilm_thetastar    = 0.6 * 240,  # old setup with soil moisture stress
     soilm_betao        = 0.0,

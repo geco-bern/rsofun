@@ -10,13 +10,16 @@
 #' a subset of model parameters and error terms for each target variable (for
 #' example \code{'gpp_err'}).
 #' @param obs A nested data.frame of observations, with columns \code{'sitename'}
-#' \code{'targets'}, and \code{'data'} (see \code{\link{pmodel_validation}} to
-#' check its structure). \code{'targets'} indicates the target variable(s) for
-#' which the likelihood is computed, it must be a column name of the
-#' \code{'data'} data.frame and it must have an error term in either \code{'par'}
-#' or \code{'par_fixed'}.
+#' and \code{'data'} (see \code{\link{pmodel_validation}} to
+#' check its structure).
 #' @param drivers A nested data.frame of driver data. See \code{\link{pmodel_drivers}}
 #' for a description of the data structure.
+#' @param targets A named character vector indicating the target variable(s) for
+#' which the likelihood is computed. 
+#' The names of \code{'target'} indicate target variables, while the values indicate the source data set to be used.
+#' The values must be present in the \code{'obs$source'} column.
+#' The names must be column name(s) of the \code{'obs$data'} data.frame and they must have error term(s) in either \code{'par'}
+#' or \code{'par_fixed'}.
 #' @param par_fixed A named list of model parameter values to keep fixed during the
 #' calibration. These should complement the input \code{par} such that all model
 #' parameters are uniquely defined and passed on to \code{\link{runread_pmodel_f}}.
@@ -56,6 +59,7 @@
 #'     err_gpp     = 2),
 #'   obs = pmodel_validation |> dplyr::filter(sitename == "FR-Pue"),
 #'   drivers = pmodel_drivers |> dplyr::filter(sitename == "FR-Pue"),
+#'   targets = c("gpp" = "fluxnet"),
 #'   par_fixed = list(
 #'     soilm_thetastar    = 0.6 * 240,  # old setup with soil moisture stress
 #'     soilm_betao        = 0.0,
@@ -69,6 +73,7 @@ cost_likelihood_pmodel <- function(
     par,   # model parameters & error terms for each target
     obs,
     drivers,
+    targets,
     par_fixed = NULL,   # non-calibrated model parameters
     parallel  = FALSE,
     ncores    = 1,
@@ -81,7 +86,46 @@ cost_likelihood_pmodel <- function(
   stopifnot(nrow(obs) > 0)     # ensure some observation data are provided
   stopifnot(nrow(drivers) > 0) # ensure some driver data are provided
 
-  requested_targets    <- unique(tidyr::unnest(obs, "targets")$targets)
+  # Error if data.frame also specifies targets per row. (This corresponds to a now outdated format.)
+  if ("targets" %in% names(obs)) {
+    stop(
+      "Provided calibration targets as column in obs data.frame(). Please only provide as argument 'targets' to calib_sofun() or cost function.")
+  }
+  
+  # append column targets to obs data.frame:
+  #   This ensures that variant that requires targets as function argument can be 
+  #   run with the code below (which was written with targets as a column of obs defined as:
+  #       \item{targets}{A single one-row tibble with a column for each target
+  #                      containing TRUE or FALSE (or NA_logical)}
+  # i) transform named_vector in a data.frame to be joined:
+      # FOR DEVELOPMENT: targets = c("gpp"     = "fluxnet",
+      # FOR DEVELOPMENT:             "le"      = "fluxnet",
+      # FOR DEVELOPMENT:             "bigD13C" = "cornwell",
+      # FOR DEVELOPMENT:             "vj"      = "cornwell")
+  # OLD FORMATTING: targets_df <- tibble::enframe(targets, name = "target", value = "source") %>%
+  # OLD FORMATTING:   dplyr::mutate(calibrate = TRUE) %>%
+  # OLD FORMATTING:   tidyr::pivot_wider( names_from = target, values_from = calibrate, values_fill = FALSE) |> 
+  # OLD FORMATTING:   tidyr::nest(targets = any_of(names(targets))) |> # any_of(c("bigD13C", "gpp", "vj", "le")))
+  targets_df <- tidyr::tibble(target = names(targets), source = unname(targets)) |> # or use enframe(..., name = "target", value = "source")
+      dplyr::group_by(source) |> dplyr::summarise(targets = unique(list(.data$target)))
+  # ii) join data.frame
+  # first do some checks:
+  ajto <- dplyr::anti_join(targets_df, obs, by = dplyr::join_by("source"))
+  ajot <- dplyr::anti_join(obs, targets_df, by = dplyr::join_by("source"))
+  if (nrow(ajto) > 0){
+    stop("The argument 'targets' specified sources that are not present in validation data set:", 
+         "\n  Sources:  '", paste0(ajto$source, collapse = ","), "'")
+  }
+  if (nrow(ajot) > 0){
+    stop("The validation data contains data for sources not requested by the argument 'targets'.", 
+         "\n  Please remove them from the validation and driver data to avoid unnecessary simulations.",
+         "\n  Sources:  '", paste0(ajot$source, collapse = ","), "'")
+  }
+  # then do join:
+  obs <- dplyr::left_join(obs, targets_df, by = dplyr::join_by("source")) |> dplyr::select(-"source")
+  
+  requested_targets <- unlist(lapply(obs$targets, names))
+
   # check that targets have an error term in \code{'par'}.
   provided_error_terms <- c(
     gsub("^err_", "", grep("^err_", names(par), value = TRUE)),

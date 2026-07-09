@@ -124,8 +124,8 @@
 #' @format A tibble of validation data:
 #' \describe{
 #'   \item{sitename}{A character string containing the site name (e.g. 'FR-Pue').}
-#'   \item{targets}{A single one-row tibble with a column for each target
-#'   containing TRUE or FALSE (or NA_logical)}
+#'   \item{source}{A character string containing the name of the data source.
+#'   It can be used for specifying which data sets to use for calibration.}
 #'   \item{data}{A single tibble or a list of tibbles with target observations.
 #'   For daily simulations this single tibble can contain daily values for:
 #'     \describe{
@@ -147,7 +147,6 @@
 #' @examples require(ggplot2)
 #' require(tidyr)
 #' p_model_oldformat_validation %>% tidyr::unnest(data)
-#' pmodel_validation |> tidyr::unnest_wider(targets, names_sep = "_")
 #' pmodel_validation |> dplyr::filter(grepl("^[A-Z]", sitename)) |> unnest(data)
 #' pmodel_validation |> dplyr::filter(grepl("lon", sitename)) |> unnest(data)
 #'
@@ -373,7 +372,7 @@
 #' @inherit biomee_gs_leuning_drivers source
 "biomee_p_model_luluc_drivers"
 
-#' rsofun BiomeE targets validation data
+#' rsofun BiomeE validation data
 #'
 #' Small example dataset of target observations (leaf trait data) at the CH-LAE site
 #' to optimize model parameters with the function \code{\link{calib_sofun_legacy}}

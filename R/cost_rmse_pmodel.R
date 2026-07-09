@@ -10,11 +10,11 @@
 #' and \code{'data'} (see \code{\link{pmodel_validation}} to check its structure).
 #' @param drivers A nested data.frame of driver data. See \code{\link{pmodel_drivers}}
 #' for a description of the data structure.
-#' @param targets (obsolete) A character vector indicating the target variables for which the
-#' optimization will be done and the RMSE computed. This string must be a column
-#' name of the \code{obs$data} data.frame belonging to the validation nested data.frame
-#' (for example 'gpp'). Now defaults to \code{NULL}, and use of a corresponding
-#' column \code{'targets'} in \code{obs} should be used instead.
+#' @param targets A named character vector indicating the target variable(s) for
+#' which the RMSE is computed. 
+#' The names of \code{'target'} indicate target variables, while the values indicate the source data set to be used.
+#' The values must be present in the \code{'obs$source'} column.
+#' The names must be column name(s) of the \code{'obs$data'} data.frame.
 #' @param par_fixed A named list of model parameter values to keep fixed during the
 #' calibration. These should complement the input \code{par} such that all model
 #' parameters are passed on to \code{\link{runread_pmodel_f}}.
@@ -50,6 +50,7 @@
 #'   par = c(0.05, -0.01, 0.5),  # kphio related parameters
 #'   obs = pmodel_validation |> dplyr::filter(sitename == "FR-Pue"),
 #'   drivers = pmodel_drivers |> dplyr::filter(sitename == "FR-Pue"),
+#'   targets = c("gpp" = "fluxnet"),
 #'   par_fixed = list(
 #'     soilm_thetastar    = 0.6 * 240,  # old setup with soil moisture stress
 #'     soilm_betao        = 0.0,
@@ -64,6 +65,7 @@
 #'   par = c(0.05, -0.01, 0.5),  # kphio related parameters
 #'   obs = pmodel_validation,
 #'   drivers = pmodel_drivers,
+#'   targets = c("gpp" = "fluxnet"),
 #'   par_fixed = list(
 #'     soilm_thetastar    = 0.6 * 240,  # old setup with soil moisture stress
 #'     soilm_betao        = 0.0,
@@ -77,8 +79,7 @@ cost_rmse_pmodel <- function(
     par,  # ordered vector of model parameters
     obs,
     drivers,
-    targets = NULL,     # legacy argument, targets should now be specified
-    # for each row in the obs data.frame(). See pmodel_validation
+    targets,
     par_fixed = NULL, # non-calibrated model parameters
     target_weights = NULL # if using several targets, how are the individual
     #                      # RMSE weighted? named vector
@@ -97,23 +98,15 @@ cost_rmse_pmodel <- function(
     drivers <- drivers |> dplyr::mutate(
       params_siml = purrr::map(.data$params_siml, ~ mutate(.x, onestep = FALSE)))
   }
-  if (!is.null(targets)) {
-    # for backwards compatibility, use provided argument 'targets' for all rows
-    # of observation data.frame()
-    # Error if data.frame also specifies targets per row, resulting in ambiguity
-    if ("targets" %in% names(obs)) {
-      stop(
-        "Provided calibration targets as argument 'targets' and as column in obs data.frame(). Only one is allowed")
-    }
-    # insert targets into row of obs
-    obs <- obs |> rowwise() |> mutate(targets = list(targets)) |>
-      select("sitename", "targets", "data")
+  
+  # Error if data.frame also specifies targets per row. (This corresponds to a now outdated format.)
+  if ("targets" %in% names(obs)) {
+    stop(
+      "Provided calibration targets as column in obs data.frame(). Please only provide as argument 'targets' to calib_sofun() or cost function.")
   }
-
+  
   ## generate a list of all calibration targets (across all obs rows)
-  targets <- obs |>
-    dplyr::ungroup() |> dplyr::select(targets) |> tidyr::unnest(targets) |>
-    magrittr::extract2("targets") |> unique()
+  requested_targets <- names(targets)
 
   ## check input parameters
   if ((length(par) + length(par_fixed)) != 9) {
@@ -158,7 +151,7 @@ cost_rmse_pmodel <- function(
     tidyr::unnest(data) |>
     dplyr::rename(any_of(c("bigD13C" = "bigD13C_mod_permil"))) |>
     # always keep gpp, since is used to get average trait prediction
-    dplyr::select("sitename", any_of(unique(c("date", "gpp", targets)))) |>
+    dplyr::select("sitename", any_of(unique(c("date", "gpp", requested_targets)))) |>
     dplyr::rename_with(
       .cols = -any_of(c("sitename", "date")),
       .fn = paste0,
@@ -176,7 +169,7 @@ cost_rmse_pmodel <- function(
     obs_flux <- obs[is_flux, ] |>
       dplyr::select(sitename, data) |>
       tidyr::unnest(data) |>
-      dplyr::select(any_of(c("sitename", "date", targets)))
+      dplyr::select(any_of(c("sitename", "date", requested_targets)))
 
     if (ncol(obs_flux) < 3) {
       warning("Dated observations (fluxes) are missing for the chosen targets.")
@@ -200,7 +193,7 @@ cost_rmse_pmodel <- function(
     obs_trait <- obs[!is_flux, ] |>
       dplyr::select(sitename, data) |>
       tidyr::unnest(data) |>
-      dplyr::select(any_of(c("sitename", targets)))
+      dplyr::select(any_of(c("sitename", requested_targets)))
 
     if (ncol(obs_trait) < 2) {
       warning("Non-dated observations (traits) are missing for the chosen targets.")
@@ -226,7 +219,7 @@ cost_rmse_pmodel <- function(
   }
 
   # Calculate cost (RMSE) per target
-  rmse <- lapply(targets, function(target) {
+  rmse <- lapply(requested_targets, function(target) {
     if (target %in% colnames(df_flux)) {
       error <- (df_flux[[target]] - df_flux[[paste0(target, "_mod")]])^2
     } else {
@@ -240,9 +233,9 @@ cost_rmse_pmodel <- function(
   }) |>
     unlist()
 
-  names(rmse) <- targets
+  names(rmse) <- requested_targets
 
-  # Aggregate RMSE over targets (weighted average)
+  # Aggregate RMSE over requested_targets (weighted average)
   # target_weights <- c("bigD13C" = 0.2, "gpp" = 1, "le" = 0.1)
   if (!is.null(target_weights)) {
     stopifnot(sort(names(rmse)) == sort(names(target_weights)))

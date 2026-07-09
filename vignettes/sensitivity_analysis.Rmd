@@ -62,7 +62,8 @@ ll_pmodel <- function(
   rsofun::cost_likelihood_pmodel( # reuse likelihood cost function
     as.list(par_v),
     obs     = rsofun::pmodel_validation |> filter(sitename == "FR-Pue"),
-    drivers = rsofun::pmodel_drivers    |> filter(sitename == "FR-Pue")
+    drivers = rsofun::pmodel_drivers    |> filter(sitename == "FR-Pue"),
+    targets = c("gpp" = "fluxnet")
   )
 }
 
@@ -163,8 +164,8 @@ morrisOut <- sensitivity::morris(
 
 ```{r simulate_morrisOut, include = FALSE}
 # fake output since Morris sensitivity isn't run
-# saveRDS(morrisOut, "files/sensitivity_analysis.Rmd__morrisOut.RDS")
-morrisOut <- readRDS("files/sensitivity_analysis.Rmd__morrisOut.RDS")
+# saveRDS(morrisOut, "vignettes/files/sensitivity_analysis.Rmd__morrisOut.RDS")
+morrisOut <- readRDS("files/sensitivity_analysis.Rmd__morrisOut.RDS")  # NOTE: for rendering remove prefix "vignettes/"
 ```
 
 The analysis evaluates the variability of the target function, i.e. the 
@@ -281,16 +282,17 @@ par_calib <- calib_sofun(
   drivers = pmodel_drivers |> dplyr::filter(sitename == "FR-Pue"),
   obs     = pmodel_validation |> dplyr::filter(sitename == "FR-Pue"),
   settings_calib = settings_calib,
-  par_fixed = par_fixed
+  par_fixed = par_fixed,
+  targets = c("gpp" = "fluxnet")
 )
-saveRDS(par_calib, "files/sensitivity_analysis.Rmd__par_calib.RDS", compress = "xz")
+saveRDS(par_calib, "vignettes/files/sensitivity_analysis.Rmd__par_calib.RDS", compress = "xz")
 
 # This code takes 15 minutes to run
 ```
 
 ```{r simulate_par_calib, include = FALSE}
 # fake output since calibration isn't run
-par_calib <- readRDS("files/sensitivity_analysis.Rmd__par_calib.RDS")
+par_calib <- readRDS("files/sensitivity_analysis.Rmd__par_calib.RDS") # NOTE: for rendering remove prefix "vignettes/"
 ```
 
 `BayesianTools` makes it easy to produce the trace plot of the MCMC chains and the posterior density plot for the parameters. Trace plots show the time series of the sampled chains, which should reach a stationary state. One can also choose a burnin visually, to discard the early iterations and keep only the samples from the stationary distribution to which they converge. We set \code{burnin = 3000} above from previous runs, and those iterations are not shown by the following trace plot. The samples after the burnin period should be used for inference.
@@ -445,8 +447,8 @@ pmodel_run_MAP <- run_pmodel_add_error(
 
 ```{r simulate_pmodel_runs, include = FALSE}
 # fake output since calibration isn't run
-# saveRDS(pmodel_runs, file = "files/sensitivity_analysis.Rmd__pmodel_runs.RDS")
-pmodel_runs <- readRDS("files/sensitivity_analysis.Rmd__pmodel_runs.RDS")
+# saveRDS(pmodel_runs, file = "vignettes/files/sensitivity_analysis.Rmd__pmodel_runs.RDS")
+pmodel_runs <- readRDS("files/sensitivity_analysis.Rmd__pmodel_runs.RDS")  # NOTE: for rendering remove prefix "vignettes/"
 ```
 
 Below we plot the first year of observed GPP (in black) against the predicted 

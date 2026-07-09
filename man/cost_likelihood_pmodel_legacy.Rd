@@ -9,7 +9,7 @@ cost_likelihood_pmodel_legacy(
   par,
   obs,
   drivers,
-  targets = NULL,
+  targets,
   par_fixed = NULL,
   parallel = FALSE,
   ncores = 2
@@ -28,11 +28,10 @@ and \code{'data'} (see \code{\link{pmodel_validation}} to check its structure).}
 \item{drivers}{A nested data.frame of driver data. See \code{\link{pmodel_drivers}}
 for a description of the data structure.}
 
-\item{targets}{(obsolete) A character vector indicating the target variables for which the
-optimization will be done and the RMSE computed. This string must be a column
-name of the \code{obs$data} data.frame belonging to the validation nested data.frame
-(for example 'gpp'). Now defaults to \code{NULL}, and use of a corresponding
-column \code{'targets'} in \code{obs} should be used instead.}
+\item{targets}{A character vector indicating the target variables for which the
+likelihood is computed. The names must be column 
+name(s) of the \code{'obs$data'} data.frame and they must have error term(s) in either \code{'par'}
+or \code{'par_fixed'}.}
 
 \item{par_fixed}{A named list of model parameter values to keep fixed during the
 calibration. These should complement the input \code{par} such that all model
@@ -84,6 +83,7 @@ cost_likelihood_pmodel_legacy(
     err_gpp     = 2),    # err_gpp
   obs = pmodel_validation |> dplyr::filter(sitename == "FR-Pue"),
   drivers = pmodel_drivers |> dplyr::filter(sitename == "FR-Pue"),
+  targets = c("gpp"), # NOTE: the old legacy format of targets
   par_fixed = list(
     soilm_thetastar    = 0.6 * 240,  # old setup with soil moisture stress
     soilm_betao        = 0.0,
@@ -102,6 +102,7 @@ cost_likelihood_pmodel_legacy(
     err_bigD13C = 2),
   obs = pmodel_validation,
   drivers = pmodel_drivers,
+  targets = c("gpp", "le", "bigD13C"), # NOTE: the old legacy format of targets
   par_fixed = list(
     soilm_thetastar    = 0.6 * 240,  # old setup with soil moisture stress
     soilm_betao        = 0.0,

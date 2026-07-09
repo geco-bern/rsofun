@@ -63,8 +63,9 @@ test_that("test likelihood/RMSE calculations with pmodel", {
   ll_values <- apply(test_params_pmodel, 1, function(par_v) { # par_v is a named vector
     rsofun::cost_likelihood_pmodel( # likelihood cost function from package
       par     = as.list(par_v),                      # par: should be a named list
-      obs     = rsofun::pmodel_validation |> filter(sitename == "FR-Pue"), # obs: example data from package
-      drivers = rsofun::pmodel_drivers |> filter(sitename == "FR-Pue"), # drivers: example data from package
+      obs     = rsofun::pmodel_validation |> dplyr::filter(sitename == "FR-Pue"), # obs: example data from package
+      drivers = rsofun::pmodel_drivers |> dplyr::filter(sitename == "FR-Pue"), # drivers: example data from package
+      targets = c("gpp" = "fluxnet"),
       par_fixed = NULL)
   })
   testthat::expect_equal(
@@ -83,8 +84,8 @@ test_that("test likelihood/RMSE calculations with pmodel", {
   ll_values_legacy <- apply(test_params_pmodel |> dplyr::select(-err_bigD13C, -err_le), 1, function(par_v) { # par_v is a named vector
     rsofun::cost_likelihood_pmodel_legacy( # likelihood cost function from package
       par     = par_v,                  # par: should be a named vector (for legacy)
-      obs     = rsofun::pmodel_validation |> filter(sitename == "FR-Pue") |> dplyr::select(-targets), # obs: example data from package
-      drivers = rsofun::pmodel_drivers |> filter(sitename == "FR-Pue"), # drivers: example data from package
+      obs     = rsofun::pmodel_validation |> dplyr::filter(sitename == "FR-Pue") |> dplyr::select(-source), # obs: example data from package
+      drivers = rsofun::pmodel_drivers |> dplyr::filter(sitename == "FR-Pue"), # drivers: example data from package
       targets = c("gpp"), # this uses legacy arguments
       par_fixed = NULL)
   })
@@ -95,8 +96,9 @@ test_that("test likelihood/RMSE calculations with pmodel", {
   rmse_values <- apply(dplyr::select(test_params_pmodel, -err_gpp, -err_bigD13C, -err_le), 1, function(par_v) { # par_v is a named vector
     rsofun::cost_rmse_pmodel(
       par = par_v,                      # par: should be a named vector
-      obs = rsofun::pmodel_validation |> filter(sitename == "FR-Pue"), # obs: example data from package
-      drivers = rsofun::pmodel_drivers |> filter(sitename == "FR-Pue"), # drivers: example data from package
+      obs = rsofun::pmodel_validation |> dplyr::filter(sitename == "FR-Pue"), # obs: example data from package
+      drivers = rsofun::pmodel_drivers |> dplyr::filter(sitename == "FR-Pue"), # drivers: example data from package
+      targets = c("gpp" = "fluxnet"),
       par_fixed = NULL
     )
   })
@@ -119,32 +121,31 @@ test_that("test likelihood/RMSE calculations with pmodel", {
   obs     <- pmodel_validation |> dplyr::filter(sitename %in% c("CH-Dav", "lon_+010.52_lat_+051.08"))
   drivers <- pmodel_drivers    |> dplyr::filter(sitename %in% c("CH-Dav", "lon_+010.52_lat_+051.08"))
 
-  obs_D13C <- obs |> mutate(targets = lapply(targets, \(x) setdiff(x, c("gpp", "le"))))      # remove gpp and le
-  obs_GPP  <- obs |> mutate(targets = lapply(targets, \(x) setdiff(x, c("le", "bigD13C"))))  # remove le and D13C
-  obs_LE   <- obs |> mutate(targets = lapply(targets, \(x) setdiff(x, c("gpp", "bigD13C")))) # remove gpp and D13C
-
   # D13C only
   ll_values2 <- apply(dplyr::select(test_params_pmodel, -err_gpp, -err_le), 1, function(par_v) { # par_v is a named vector
     rsofun::cost_likelihood_pmodel( # likelihood cost function from package
       par     = as.list(par_v),
-      obs     = obs_D13C,
+      obs     = obs |> dplyr::filter(source %in% "cornwell"),
       drivers = drivers,
+      targets = c("bigD13C" = "cornwell")
     )
   })
   # LE only
   ll_values3 <- apply(dplyr::select(test_params_pmodel, -err_bigD13C, -err_gpp), 1, function(par_v) {
     rsofun::cost_likelihood_pmodel(
       par     = as.list(par_v),
-      obs     = obs_LE,
+      obs     = obs |> dplyr::filter(source %in% "fluxnet"),
       drivers = drivers,
+      targets = c("le" = "fluxnet")
     )
   })
   # GPP only
   ll_values4 <- apply(dplyr::select(test_params_pmodel, -err_bigD13C, -err_le), 1, function(par_v) {
     rsofun::cost_likelihood_pmodel(
       par     = as.list(par_v),
-      obs     = obs_GPP,
+      obs     = obs |> dplyr::filter(source %in% "fluxnet"),
       drivers = drivers,
+      targets = c("gpp" = "fluxnet")
     )
   })
   # All together
@@ -153,6 +154,7 @@ test_that("test likelihood/RMSE calculations with pmodel", {
       par     = as.list(par_v),
       obs     = obs,
       drivers = drivers,
+      targets = c("gpp" = "fluxnet", "le" = "fluxnet", "bigD13C" = "cornwell")
     )
   })
 
@@ -225,17 +227,18 @@ test_that("test likelihood/RMSE calculations with pmodel", {
     err_le      = 2e8,
     err_bigD13C = 4
   )
-  par_D13C <- par[-c(4, 5)]
-  obs_D13C <- obs |> mutate(targets = lapply(targets, \(x) setdiff(x, c("gpp", "le"))))      # remove gpp and le
-  par_GPP  <- par[-c(5, 6)]
-  obs_GPP  <- obs |> mutate(targets = lapply(targets, \(x) setdiff(x, c("le", "bigD13C"))))  # remove le and D13C
-  par_LE   <- par[-c(4, 6)]
-  obs_LE   <- obs |> mutate(targets = lapply(targets, \(x) setdiff(x, c("gpp", "bigD13C")))) # remove gpp and D13C
+  targets_all <- c("bigD13C" = "cornwell", "gpp" = "fluxnet", "le" = "fluxnet")
+  targets_D13C = c("bigD13C" = "cornwell")
+  targets_GPP = c("gpp" = "fluxnet")
+  targets_LE = c("le" = "fluxnet")
+  obs_D13C <- obs |> dplyr::filter(source %in% "cornwell")
+  obs_GPP <- obs |> dplyr::filter(source %in% "fluxnet")
+  obs_LE <- obs |> dplyr::filter(source %in% "fluxnet")
 
-  ll_all  <- cost_likelihood_pmodel(par, obs, drivers, par_fixed)
-  ll_D13C <- cost_likelihood_pmodel(par_D13C, obs_D13C, drivers, par_fixed)
-  ll_GPP  <- cost_likelihood_pmodel(par_GPP,  obs_GPP,  drivers, par_fixed)
-  ll_LE   <- cost_likelihood_pmodel(par_LE,   obs_LE,   drivers, par_fixed)
+  ll_all  <- cost_likelihood_pmodel(par, obs,      drivers, targets_all, par_fixed)
+  ll_D13C <- cost_likelihood_pmodel(par, obs_D13C, drivers, targets_D13C, par_fixed)
+  ll_GPP  <- cost_likelihood_pmodel(par, obs_GPP,  drivers, targets_GPP,  par_fixed)
+  ll_LE   <- cost_likelihood_pmodel(par, obs_LE,   drivers, targets_LE,   par_fixed)
 
   testthat::expect_equal(ll_all, ll_D13C + ll_GPP + ll_LE)
 })

@@ -8,7 +8,7 @@ cost_rmse_pmodel(
   par,
   obs,
   drivers,
-  targets = NULL,
+  targets,
   par_fixed = NULL,
   target_weights = NULL
 )
@@ -23,11 +23,11 @@ and \code{'data'} (see \code{\link{pmodel_validation}} to check its structure).}
 \item{drivers}{A nested data.frame of driver data. See \code{\link{pmodel_drivers}}
 for a description of the data structure.}
 
-\item{targets}{(obsolete) A character vector indicating the target variables for which the
-optimization will be done and the RMSE computed. This string must be a column
-name of the \code{obs$data} data.frame belonging to the validation nested data.frame
-(for example 'gpp'). Now defaults to \code{NULL}, and use of a corresponding
-column \code{'targets'} in \code{obs} should be used instead.}
+\item{targets}{A named character vector indicating the target variable(s) for
+which the RMSE is computed. 
+The names of \code{'target'} indicate target variables, while the values indicate the source data set to be used.
+The values must be present in the \code{'obs$source'} column.
+The names must be column name(s) of the \code{'obs$data'} data.frame.}
 
 \item{par_fixed}{A named list of model parameter values to keep fixed during the
 calibration. These should complement the input \code{par} such that all model
@@ -70,6 +70,7 @@ cost_rmse_pmodel(
   par = c(0.05, -0.01, 0.5),  # kphio related parameters
   obs = pmodel_validation |> dplyr::filter(sitename == "FR-Pue"),
   drivers = pmodel_drivers |> dplyr::filter(sitename == "FR-Pue"),
+  targets = c("gpp" = "fluxnet"),
   par_fixed = list(
     soilm_thetastar    = 0.6 * 240,  # old setup with soil moisture stress
     soilm_betao        = 0.0,
@@ -84,6 +85,7 @@ cost_rmse_pmodel(
   par = c(0.05, -0.01, 0.5),  # kphio related parameters
   obs = pmodel_validation,
   drivers = pmodel_drivers,
+  targets = c("gpp" = "fluxnet"),
   par_fixed = list(
     soilm_thetastar    = 0.6 * 240,  # old setup with soil moisture stress
     soilm_betao        = 0.0,

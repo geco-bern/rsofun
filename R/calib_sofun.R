@@ -107,6 +107,7 @@
 #'   obs     = obs_to_use,
 #'   settings_calib = settings_calib,
 #'   # extra arguments for the cost function
+#'   targets = c("gpp" = "fluxnet", "bigD13C" = "cornwell"),
 #'   par_fixed = params_fix
 #' )
 #' calib_output$mod      # BayesianTools::mcmcSamplerList
@@ -135,6 +136,7 @@
 #'   obs      = obs_to_use,
 #'   settings_calib = settings_calib_rmse,
 #'   # extra arguments passed to the cost function:
+#'   targets = c("gpp" = "fluxnet", "bigD13C" = "cornwell"),
 #'   par_fixed = list( # fix all other parameters
 #'     kphio_par_a        = 0.0,        # set to zero to disable temperature-dependence
 #'     # of kphio, setup ORG
@@ -171,6 +173,15 @@ calib_sofun <- function(
                    " Have now used 'settings' for backwards compatibility."))
     settings_calib <- eval.parent(mc$settings)
   }
+  
+  # warn if drivers and obs are incompatible (make some basic checks)
+  stopifnot(nrow(drivers) == nrow(obs))
+  stopifnot(all(drivers$sitename == obs$sitename))
+  stopifnot(all(
+    unlist(lapply(drivers$params_siml, ncol)) ==
+      dplyr::recode_values(obs$source, 
+                           from = c("fluxnet", "cornwell"), 
+                           to = c(12,2))))
   
   #--- GenSA or BayesianTools----
   if (tolower(settings_calib$method) == "gensa") {

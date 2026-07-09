@@ -121,6 +121,7 @@ calib_output <- rsofun::calib_sofun(
   obs     = obs_to_use,
   settings_calib = settings_calib,
   # extra arguments for the cost function
+  targets = c("gpp" = "fluxnet", "bigD13C" = "cornwell"),
   par_fixed = params_fix
 )
 calib_output$mod      # BayesianTools::mcmcSamplerList
@@ -149,6 +150,7 @@ pars_calib_rmse <- calib_sofun(
   obs      = obs_to_use,
   settings_calib = settings_calib_rmse,
   # extra arguments passed to the cost function:
+  targets = c("gpp" = "fluxnet", "bigD13C" = "cornwell"),
   par_fixed = list( # fix all other parameters
     kphio_par_a        = 0.0,        # set to zero to disable temperature-dependence
     # of kphio, setup ORG

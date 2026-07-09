@@ -18,7 +18,7 @@
   `df |> rowwise() |> filter("vcmax_mod_molm2s" %in% names(data)) |> ungroup()` or
   `df |> rowwise() |> filter("date" %in% names(data)) |> ungroup()`
   * `pmodel_drivers` and `pmodel_validation` contain now additional sites and a 
-  range of `daily` as well as `onestep` model runs. Note that the data of 
+  mix of `daily` as well as `onestep` model runs. Note that the data of 
   site `FR-Pue` were updated in FDK, so that the forcing data has slightly 
   changed and also `whc` of `FR-Pue` was modified from 432 to 260 mm.
   * The old `p_model_drivers_vcmax25` and `p_model_validation_vcmax25` were 
@@ -46,25 +46,23 @@
   and (for calibration) should have a corresponding row in `pmodel_validation`.
   The example data set for `FR-Pue` now contains non-zero `ccov`, previously this was set to `0`.
 * New validation (i.e. observation) data.frame format for P-model: 
-  containing a new column `targets` determining which
+  A new column `source` is required and determines in combination with the 
+  `targets` argument of `calib_sofun()` which variables are fitted .
   variable(s) is/are the target of the corresponding line.
+  
   Each row in `pmodel_validation` corresponds to a model run
   and should have a corresponding row in `pmodel_drivers`.
+  Whether a row is a `onestep`-row or a `daily`-row is determined by the 
+  corresponding row in the driver data.frame `pmodel_drivers`.
   
   For each row, the column `data` contains a single 
   `data.frame()` with a column `id` (`onestep`-row) or `date` (`daily`-row) 
-  and additional columns for each target (e.g. `gpp` or `nee` or `le`). These 
-  column names must correspond with names provided as a list of strings under `targets`.
-  They should also be consistent with the value of `params_siml$onestep` in the 
-  corresponding driver row.
-  
-  The format of the `data`-column involves some assumptions: 
-  namely for `daily`-rows it assumes that each target variable is available on 
-  the same dates as all others 
-  and for `onestep`-rows it assumes that multiple target variables have the same 
-  number of observations in each `data_frame()`. (NOTE: this can in the future be relaxed
-  by defining NA or other fill values, or alternatively use nested data.frames - 
-  i.e. one for each target value.)
+  and additional columns for each target (e.g. `bigD13C_obs_permil` or `vj_obs__` 
+  for a `onestep`-row or `gpp_obs` or `nee_obs` or `le_obs` for a `daily`-row). 
+  The first part of these column names must correspond with names provided by 
+  argument `targets` as a named vector. The target variables can contain NA if a 
+  given variable is not available, they are then simply unused for the cost 
+  function.
   
 * Note for future: ideally, validation data and drivers could be a single data.frame.
   This would be ideal for calibration, since each row in the validation data.frame() must have a
@@ -110,8 +108,8 @@
   
   # bring new to old format:
   rsofun::pmodel_validation |> dplyr::filter(sitename == "FR-Pue") |> 
-    # remove new column 'targets'
-    dplyr::select(-targets) |>
+    # remove new column 'source'
+    dplyr::select(-source) |>
     # remove new columns inside of 'data':
     tidyr::unnest(data) |>
     dplyr::select(-c(gpp_qc, nee, nee_qc, le, le_qc)) |>
@@ -122,15 +120,15 @@
   
   # bring old to new format:
   rsofun::p_model_oldformat_validation |> 
-    # add new column 'targets'
-    dplyr::mutate(targets = list(c("gpp"))) |>
+    # add new column 'source'
+    dplyr::mutate(source = "fluxnet") |>
     # add new columns inside of 'data':
     tidyr::unnest(data) |>
     dplyr::select(-gpp_unc) |>
     dplyr::mutate(gpp_qc = 1, nee = NA, nee_qc = NA, le = NA, le_qc = NA) |>
     tidyr::nest(data = c('date', 'gpp','gpp_qc','nee','nee_qc','le','le_qc')) |>
     # order columns
-    dplyr::select(sitename, targets, data)
+    dplyr::select(sitename, source, data)
   ```
 
 * Note that driver and validation data format for biomee has not changed. But 
