@@ -11,6 +11,7 @@
   `run_pmodel_onestep_f_bysite()`. Thus also requires a new data format for the
   `drivers` and `obs` arguments. See below under (non-)breaking changes for the new
   format. The old likelihood function is still available as `cost_likelihood_pmodel_legacy()`.
+  * Rewritten `cost_rmse_pmodel()` similarly as `cost_likelihood_pmodel()` (see above).
   * `runread_pmodel()` can now run onestep and daily model thanks to the new 
   `drivers` format. If the old format is used it is implicitly assuming daily 
   runs were requested. Output of `runread_pmodel()` can be split based on columns 
@@ -32,6 +33,9 @@
 * `calib_sofun()` has been renamed to `calib_sofun_legacy()`, and a new 
   `calib_sofun()` has been written (see new features above). For P-model calibration 
   it is fully backwards compatible. For BiomeE calibration this still needs to be tested.
+* `cost_likelihood_pmodel()` has been renamed to `cost_likelihood_pmodel_legacy()`. Both
+  `cost_likelihood_pmodel()` and `cost_rmse_pmodel()` have been rewritten for the updated
+  data.frame format, now simulating daily- or onestep-model.
   
 ## Non-Breaking changes
 * New driver data.frame format for P-model: now containing the information which
