@@ -92,41 +92,8 @@ cost_likelihood_pmodel <- function(
       "Provided calibration targets as column in obs data.frame(). Please only provide as argument 'targets' to calib_sofun() or cost function.")
   }
   
-  # append column targets to obs data.frame:
-  #   This ensures that variant that requires targets as function argument can be 
-  #   run with the code below (which was written with targets as a column of obs defined as:
-  #       \item{targets}{A single one-row tibble with a column for each target
-  #                      containing TRUE or FALSE (or NA_logical)}
-  # i) transform named_vector in a data.frame to be joined:
-      # FOR DEVELOPMENT: targets = c("gpp"     = "fluxnet",
-      # FOR DEVELOPMENT:             "le"      = "fluxnet",
-      # FOR DEVELOPMENT:             "bigD13C" = "cornwell",
-      # FOR DEVELOPMENT:             "vj"      = "cornwell")
-  # OLD FORMATTING: targets_df <- tibble::enframe(targets, name = "target", value = "source") %>%
-  # OLD FORMATTING:   dplyr::mutate(calibrate = TRUE) %>%
-  # OLD FORMATTING:   tidyr::pivot_wider( names_from = target, values_from = calibrate, values_fill = FALSE) |> 
-  # OLD FORMATTING:   tidyr::nest(targets = any_of(names(targets))) |> # any_of(c("bigD13C", "gpp", "vj", "le")))
-  targets_df <- tidyr::tibble(target = names(targets), source = unname(targets)) |> # or use enframe(..., name = "target", value = "source")
-      dplyr::group_by(source) |> dplyr::summarise(targets = unique(list(.data$target)))
-  # ii) join data.frame
-  # first do some checks:
-  ajto <- dplyr::anti_join(targets_df, obs, by = dplyr::join_by("source"))
-  ajot <- dplyr::anti_join(obs, targets_df, by = dplyr::join_by("source"))
-  if (nrow(ajto) > 0){
-    stop("The argument 'targets' specified sources that are not present in validation data set:", 
-         "\n  Sources:  '", paste0(ajto$source, collapse = ","), "'")
-  }
-  if (nrow(ajot) > 0){
-    stop("The validation data contains data for sources not requested by the argument 'targets'.", 
-         "\n  Please remove them from the validation and driver data to avoid unnecessary simulations.",
-         "\n  Sources:  '", paste0(ajot$source, collapse = ","), "'")
-  }
-  # then do join:
-  obs <- dplyr::left_join(obs, targets_df, by = dplyr::join_by("source")) |> dplyr::select(-"source")
-  
-  requested_targets <- unlist(lapply(obs$targets, names))
-
   # check that targets have an error term in \code{'par'}.
+  requested_targets <- names(targets)
   provided_error_terms <- c(
     gsub("^err_", "", grep("^err_", names(par), value = TRUE)),
     gsub("^err_", "", grep("^err_", names(par_fixed), value = TRUE)))
@@ -157,6 +124,8 @@ cost_likelihood_pmodel <- function(
   ## run the time series model for gpp/le/... time series
   ## run the onestep model for traits
   df_mod_obs <- get_mod_obs(drivers, obs, params_modl_and_err, parallel, ncores)
+  # subset only requested targets:
+  df_mod_obs <- df_mod_obs |> dplyr::filter(.data$target %in% requested_targets)
 
   # D) Compute likelihood ----
   # ll_normal            <- function(obs,mod,sd){stats::dnorm(            x=obs, mean = mod,                sd    = sd, log = TRUE)} # TODO: err_par_sd must be positive
@@ -171,8 +140,8 @@ cost_likelihood_pmodel <- function(
 
   # compute ll
   df_ll <- df_mod_obs |>
-    group_by(.data$target, .data$err_par_sd, .data$err_par_bias, .data$err_par_scale) |>
-    mutate(ll = ll_normalAdditScaled(
+    dplyr::group_by(.data$target, .data$err_par_sd, .data$err_par_bias, .data$err_par_scale) |>
+    dplyr::mutate(ll = ll_normalAdditScaled(
       .data$obs, .data$mod, .data$err_par_sd, .data$err_par_bias, .data$err_par_scale)
     ) #|>
   # select('sitename','target','mod','obs',
@@ -194,7 +163,9 @@ cost_likelihood_pmodel <- function(
 #'
 #' The get_mod_obs function performs a P-model run for the input drivers and
 #' model parameter values, and collects and combines the model output with the
-#' observations.
+#' observations. It provides output for all possible targets (defined by the 
+#' error terms provided in params_modl_and_err) and must be subset for 
+#' requested targets by the calling cost_function.
 #'
 #' @param drivers A nested data.frame of driver data. See \code{\link{pmodel_drivers}}
 #' for a description of the data structure.
@@ -225,13 +196,14 @@ get_mod_obs_pmodel <- function(
     parallel  = parallel,
     ncores    = ncores
   )
-  df_daily   <- df |> rowwise() |> filter("date" %in% names(.data$data)) |> ungroup()
-  df_onestep <- df |> rowwise() |> filter("vcmax_mod_molm2s" %in% names(.data$data)) |> ungroup()
+  df_daily   <- df |> dplyr::rowwise() |> dplyr::filter("date" %in% names(.data$data)) |> dplyr::ungroup()
+  df_onestep <- df |> dplyr::rowwise() |> dplyr::filter("vcmax_mod_molm2s" %in% names(.data$data)) |> dplyr::ungroup()
 
   # C) Bring together modelled and observed ----
 
-  # NOTE: calibration targets can be controlled by providing no forcing and
-  #       observation data for certain targets
+  # NOTE: calibration targets can be controlled by with the argument 'targets' 
+  #       when calling the cost function or alternatively by providing no forcing and
+  #       observation data for certain targets for certain sites
   # NOTE: in that case some of the tibbles() will be empty (i.e. nrow() == 0)
   # NOTE: the unnesting operation does not work in case, since there is no
   #       nested element to infer the column names and column types
@@ -240,10 +212,10 @@ get_mod_obs_pmodel <- function(
     if (nrow(df) == 0) {
       df |>
         # replace the unspecified column with expected columns
-        select(!where(\(cl){
+        dplyr::select(!where(\(cl){
           class(cl) == "vctrs_unspecified"
         })) |>
-        cross_join(expected_columns)
+        dplyr::cross_join(expected_columns)
     } else {
       df
     }
@@ -253,8 +225,9 @@ get_mod_obs_pmodel <- function(
     dplyr::full_join,
     dplyr::left_join)
   df_mod_obs_daily <- obs |>
-    dplyr::filter(.data$sitename %in% df_daily$sitename) |> # this drops onestep rows for a potential full_join
-    dplyr::select("sitename", "targets", "data") |>
+    dplyr::filter(.data$source %in% c("fluxnet") &            # this assumes all fluxnet observations require daily model run
+                    .data$sitename %in% df_daily$sitename) |> # this drops onestep rows for a potential full_join
+    dplyr::select("sitename", "data") |>
     tidyr::unnest(c("data")) |>
     # make this work gracefully in case nrow=0
     ensure_cols_defined(tibble(date = as.Date(character()))) |>
@@ -263,52 +236,52 @@ get_mod_obs_pmodel <- function(
       df_daily |>
         tidyr::unnest("data") |>
         # make this work gracefully in case nrow=0
-        ensure_cols_defined(tibble(date = as.Date(character()), gpp = numeric(), le = numeric())) |>
-        select("sitename", "date", gpp_mod = "gpp", le_mod = "le"),
+        ensure_cols_defined(tidyr::tibble(date = as.Date(character()), gpp = numeric(), le = numeric())) |>
+        dplyr::select("sitename", "date", gpp_mod = "gpp", le_mod = "le"),
       by = dplyr::join_by("sitename", "date")) |>
     # nest again
-    tidyr::nest(modobs = -c("sitename", "targets"))
+    tidyr::nest(modobs = -c("sitename"))
 
   df_mod_obs_onestep <- obs |>
-    dplyr::filter(.data$sitename %in% df_onestep$sitename) |> # this drops daily rows
-    select("sitename", "targets", "data") |>
+    dplyr::filter(.data$source %in% c("cornwell") &           # this assumes all cornwell observations require onestep model run
+                    .data$sitename %in% df_onestep$sitename) |> # this drops daily rows
+    dplyr::select("sitename", "data") |>
     tidyr::unnest("data") |>
     # make this work gracefully in case nrow=0
-    ensure_cols_defined(tibble(bigD13C = list(), vj = list())) |>
+    ensure_cols_defined(tidyr::tibble(bigD13C = list(), vj = list())) |>
     # join the modelled data
-    left_join(
+    dplyr::left_join(
       df_onestep |>
         tidyr::unnest("data") |>
         # make this work gracefully in case nrow=0
         ensure_cols_defined(
-          tibble(vcmax_mod_molm2s = list(),
+          tidyr::tibble(vcmax_mod_molm2s = list(),
                  jmax_mod_molm2s = list(),
                  bigD13C_mod_permil = list()
         )) |> # vj_mod__ = list())
-        select("sitename", "vcmax_mod_molm2s", "jmax_mod_molm2s", "bigD13C_mod_permil"), # , 'vj_mod__'
+        dplyr::select("sitename", "vcmax_mod_molm2s", "jmax_mod_molm2s", "bigD13C_mod_permil"), # , 'vj_mod__'
       by = dplyr::join_by("sitename")) |>
     # nest again
-    tidyr::nest(modobs = -c("sitename", "targets"))
+    tidyr::nest(modobs = -c("sitename"))
 
   # combine into single data.frame
-  targets        <- gsub("^err_", "", grep("^err_", names(params_modl_and_err), value = TRUE))
+  available_targets  <- gsub("^err_", "", grep("^err_", names(params_modl_and_err), value = TRUE))
   # targets_biases <- grep("^errbias", names(params_modl_and_err), value = TRUE)
   # targets_scales <- grep("^errscale", names(params_modl_and_err), value = TRUE)
-
-  list_df_mod_obs <- lapply(targets, function(curr_target) {
+  list_df_mod_obs <- lapply(available_targets, function(curr_target) {
     if (curr_target %in% c("gpp", "le")) { # hardcode certain variables to daily model output
 
       df_mod_obs_daily |>
-        # subset only rows that indicate this target:
-        dplyr::rowwise() |> dplyr::filter(curr_target %in% .data$targets) |> dplyr::ungroup() |>
+        # OLD CODE (now with separate argument `target` as named vector all rows of this source are used):# subset only rows that indicate this target:
+        # OLD CODE (now with separate argument `target` as named vector all rows of this source are used):dplyr::rowwise() |> dplyr::filter(curr_target %in% .data$targets) |> dplyr::ungroup() |>
         tidyr::unnest("modobs") |>
         # make this work gracefully in case nrow=0
         ensure_cols_defined(
-          tibble(date    = lubridate::Date(),
-                 le_mod  = numeric(), 
-                 le      = numeric(), 
-                 gpp_mod = numeric(), 
-                 gpp     = numeric())) |>
+          tidyr::tibble(date    = lubridate::Date(),
+                        le_mod  = numeric(), 
+                        le      = numeric(), 
+                        gpp_mod = numeric(), 
+                        gpp     = numeric())) |>
         # keep everything needed to compute loglikelihood:
         dplyr::mutate(target        = curr_target,
                       obs           = .data[[curr_target]],
@@ -327,14 +300,14 @@ get_mod_obs_pmodel <- function(
     } else if (curr_target %in% c("bigD13C", "vj")) { # hardcode certain variables to onestep model output
 
       df_mod_obs_onestep |>
-        # subset only rows that indicate this target:
-        dplyr::rowwise() |> dplyr::filter(curr_target %in% .data$targets) |> dplyr::ungroup() |>
+        # OLD CODE (now with separate argument `target` as named vector all rows of this source are used):# subset only rows that indicate this target:
+        # OLD CODE (now with separate argument `target` as named vector all rows of this source are used):dplyr::rowwise() |> dplyr::filter(curr_target %in% .data$targets) |> dplyr::ungroup() |>
         tidyr::unnest("modobs") |>
         # make this work gracefully in case nrow=0
         ensure_cols_defined(
-          tibble(id                 = character(),
-                 bigD13C_mod_permil = numeric(),
-                 bigD13C            = numeric())) |>
+          tidyr::tibble(id                 = character(),
+                        bigD13C_mod_permil = numeric(),
+                        bigD13C            = numeric())) |>
         # fix naming
         dplyr::rename(all_of(c(bigD13C_mod = "bigD13C_mod_permil"))) |> # NOTE: this was bigD13C_mod_permil
         # keep everything needed to compute loglikelihood:
@@ -354,7 +327,7 @@ get_mod_obs_pmodel <- function(
       stop(paste0("Target '", curr_target, "' is unsupported by get_mod_obs()."))
     }
   })
-  df_mod_obs <- bind_rows(list_df_mod_obs)
-
+  df_mod_obs <- dplyr::bind_rows(list_df_mod_obs) # NOTE: this includes also non-requested targets
+  
   return(df_mod_obs)
 }

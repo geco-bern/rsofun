@@ -36,5 +36,7 @@ is available.}
 \description{
 The get_mod_obs function performs a P-model run for the input drivers and
 model parameter values, and collects and combines the model output with the
-observations.
+observations. It provides output for all possible targets (defined by the 
+error terms provided in params_modl_and_err) and must be subset for 
+requested targets by the calling cost_function.
 }
