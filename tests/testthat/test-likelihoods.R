@@ -93,11 +93,12 @@ test_that("test likelihood/RMSE calculations with pmodel", {
 
 
   # Test rsofun::cost_rmse_pmodel()
+  # 1) GPP
   rmse_values <- apply(dplyr::select(test_params_pmodel, -err_gpp, -err_bigD13C, -err_le), 1, function(par_v) { # par_v is a named vector
     rsofun::cost_rmse_pmodel(
       par = par_v,                      # par: should be a named vector
-      obs = rsofun::pmodel_validation |> dplyr::filter(sitename == "FR-Pue"), # obs: example data from package
-      drivers = rsofun::pmodel_drivers |> dplyr::filter(sitename == "FR-Pue"), # drivers: example data from package
+      obs     = rsofun::pmodel_validation |> dplyr::filter(sitename == "FR-Pue"), # obs: example data from package
+      drivers = rsofun::pmodel_drivers    |> dplyr::filter(sitename == "FR-Pue"), # drivers: example data from package
       targets = c("gpp" = "fluxnet"),
       par_fixed = NULL
     )
@@ -114,12 +115,57 @@ test_that("test likelihood/RMSE calculations with pmodel", {
       1.30002711468356
     )
   )
+  # 2) bigD13C
+  rmse_values2 <- apply(dplyr::select(test_params_pmodel, -err_gpp, -err_bigD13C, -err_le), 1, function(par_v) { # par_v is a named vector
+    rsofun::cost_rmse_pmodel(
+      par = par_v,                      # par: should be a named vector
+      obs     = rsofun::pmodel_validation |> dplyr::filter(sitename == "lon_+010.52_lat_+051.08"), # obs: example data from package
+      drivers = rsofun::pmodel_drivers    |> dplyr::filter(sitename == "lon_+010.52_lat_+051.08"), # drivers: example data from package
+      targets = c("bigD13C" = "cornwell"),
+      par_fixed = NULL
+    )
+  })
+  testthat::expect_equal(
+    tolerance = 1e-4,
+    object = rmse_values2,
+    # expected was generated with dput(rmse_values2)
+    expected = c(
+      0.815822255463133, 
+      0.743384842623502, 
+      0.712877879821563, 
+      0.820387489019883, 
+      0.711225137751086
+    )
+  )
+  # 3) bigD13C and gpp
+  rmse_values3 <- apply(dplyr::select(test_params_pmodel, -err_gpp, -err_bigD13C, -err_le), 1, function(par_v) { # par_v is a named vector
+    rsofun::cost_rmse_pmodel(
+      par = par_v,                      # par: should be a named vector
+      obs     = rsofun::pmodel_validation |> dplyr::filter(sitename %in% c("FR-Pue","lon_+010.52_lat_+051.08")), # obs: example data from package
+      drivers = rsofun::pmodel_drivers    |> dplyr::filter(sitename %in% c("FR-Pue","lon_+010.52_lat_+051.08")), # drivers: example data from package
+      targets = c("bigD13C" = "cornwell", "gpp" = "fluxnet"),
+      par_fixed = NULL
+    )
+  })
+  testthat::expect_equal(
+    tolerance = 1e-4,
+    object = rmse_values3,
+    # expected was generated with dput(rmse_values3)
+    expected = c(
+      1.21535325049915, 
+      1.50714427506582, 
+      4.50681761764882, 
+      7.87736412476335, 
+      1.00562612621732
+    )
+  )
+  testthat::expect_equal(rmse_values3, rmse_values2*0.5 + rmse_values*0.5) # equally weighted RMSE
 
 
 
   # Also test D13C and LE targets and multi-target loglikelihoods:
-  obs     <- pmodel_validation |> dplyr::filter(sitename %in% c("CH-Dav", "lon_+010.52_lat_+051.08"))
-  drivers <- pmodel_drivers    |> dplyr::filter(sitename %in% c("CH-Dav", "lon_+010.52_lat_+051.08"))
+  obs     <- rsofun::pmodel_validation |> dplyr::filter(sitename %in% c("CH-Dav", "lon_+010.52_lat_+051.08"))
+  drivers <- rsofun::pmodel_drivers    |> dplyr::filter(sitename %in% c("CH-Dav", "lon_+010.52_lat_+051.08"))
 
   # D13C only
   ll_values2 <- apply(dplyr::select(test_params_pmodel, -err_gpp, -err_le), 1, function(par_v) { # par_v is a named vector

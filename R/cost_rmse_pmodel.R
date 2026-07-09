@@ -61,20 +61,6 @@
 #'   )
 #' )
 #'
-#' cost_rmse_pmodel(
-#'   par = c(0.05, -0.01, 0.5),  # kphio related parameters
-#'   obs = pmodel_validation,
-#'   drivers = pmodel_drivers,
-#'   targets = c("gpp" = "fluxnet"),
-#'   par_fixed = list(
-#'     soilm_thetastar    = 0.6 * 240,  # old setup with soil moisture stress
-#'     soilm_betao        = 0.0,
-#'     beta_unitcostratio = 146.0,
-#'     rd_to_vcmax        = 0.014,      # from Atkin et al. 2015 for C3 herbaceous
-#'     tau_acclim         = 30.0,
-#'     kc_jmax            = 0.41
-#'   )
-#' )
 cost_rmse_pmodel <- function(
     par,  # ordered vector of model parameters
     obs,
@@ -127,8 +113,8 @@ cost_rmse_pmodel <- function(
     i <- 1 # start counter
     for (par_name in calib_param_names) {
       if (is.null(par_fixed[[par_name]])) {
-        params_modl[[par_name]] <- par[i]   # use calibrated par value
-        i <- i + 1                          # counter of calibrated params
+        params_modl[[par_name]] <- unname(par[i])   # use calibrated par value
+        i <- i + 1                                  # counter of calibrated params
       } else {
         params_modl[[par_name]] <- par_fixed[[par_name]]  # use fixed par value
       }
@@ -157,12 +143,12 @@ cost_rmse_pmodel <- function(
       .fn = paste0,
       "_mod")
 
-  # separate validation data into fluxes and traits, site by site
+  # separate validation data into fluxes (daily model) and traits (onestep model), site by site
   is_flux <- apply(obs, 1, function(x) {
     "date" %in% colnames(x$data)
   })
 
-  if (sum(is_flux) > 0) {
+  if (sum(is_flux) > 0) { # for daily model
     flux_sites <- obs$sitename[is_flux]
 
     # Unnest flux observations for our targets
@@ -186,7 +172,7 @@ cost_rmse_pmodel <- function(
     df_flux <- data.frame()
   }
 
-  if (sum(!is_flux) > 0) {
+  if (sum(!is_flux) > 0) { # for onestep model
     trait_sites <- obs$sitename[!is_flux]
 
     # Unnest trait observations for our targets
@@ -199,16 +185,9 @@ cost_rmse_pmodel <- function(
       warning("Non-dated observations (traits) are missing for the chosen targets.")
       df_trait <- data.frame()
     } else {
-      # Join output and trait observations
+      # Join onestep model output and trait observations
       df_trait <- df |>
         dplyr::filter(sitename %in% trait_sites) |>
-        dplyr::group_by(sitename) |>
-        # get within-site average
-        # dplyr::summarise(bigD13C_mod = mean(.data$bigD13C_mod_permil)) |>
-        # get growing season average traits (currently not limited to growing season)
-        dplyr::summarise(across(ends_with("_mod") & !starts_with("gpp"),
-          ~ sum(.x * gpp_mod / sum(gpp_mod)),
-          .names = "{.col}")) |>
         dplyr::left_join(
           obs_trait,
           by = c("sitename")        # compare yearly averages rather than daily obs

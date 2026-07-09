@@ -125,27 +125,27 @@
 #'   control = list( # control parameters for optimizer GenSA
 #'     maxit = 2),
 #'   par = list( # bounds for the parameter space
-#'     kphio = list(lower = 0.02, upper = 0.2, init = 0.05)
+#'     beta_unitcostratio = list(lower = 100, upper = 200, init = 130.0)
 #'   )
 #' )
 #' drivers_to_use <- rsofun::pmodel_drivers    |>
-#'   dplyr::filter(sitename %in% c("FR-Pue", "lon_+146.13_lat_-032.97"))
+#'   dplyr::filter(sitename %in% c("lon_+146.13_lat_-032.97"))
 #' obs_to_use     <- rsofun::pmodel_validation |>
-#'   dplyr::filter(sitename %in% c("FR-Pue", "lon_+146.13_lat_-032.97"))
+#'   dplyr::filter(sitename %in% c("lon_+146.13_lat_-032.97"))
 #' pars_calib_rmse <- calib_sofun(
 #'   # calib_sofun arguments:
 #'   drivers  = drivers_to_use,
 #'   obs      = obs_to_use,
 #'   settings_calib = settings_calib_rmse,
 #'   # extra arguments passed to the cost function:
-#'   targets = c("gpp" = "fluxnet", "bigD13C" = "cornwell"),
+#'   targets = c("bigD13C" = "cornwall"),
 #'   par_fixed = list( # fix all other parameters
+#'     kphio              = 0.09,       # set to zero to disable temperature-dependence
 #'     kphio_par_a        = 0.0,        # set to zero to disable temperature-dependence
 #'     # of kphio, setup ORG
 #'     kphio_par_b        = 1.0,
 #'     soilm_thetastar    = 0.6 * 240,  # to recover paper setup with soil moisture stress
 #'     soilm_betao        = 0.0,
-#'     beta_unitcostratio = 146.0,
 #'     rd_to_vcmax        = 0.014,      # value from Atkin et al. 2015 for C3 herbaceous
 #'     tau_acclim         = 30.0,
 #'     kc_jmax            = 0.41
