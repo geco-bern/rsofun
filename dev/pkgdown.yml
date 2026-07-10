@@ -1,14 +1,15 @@
-pandoc: 3.1.11
-pkgdown: 2.2.0
+pandoc: 3.8.3
+pkgdown: 2.2.1
 pkgdown_sha: ~
 articles:
   biomee_luluc: biomee_luluc.html
   biomee_use: biomee_use.html
   data_format: data_format.html
   new_cost_function: new_cost_function.html
+  param_calib_multitarget: param_calib_multitarget.html
   pmodel_use: pmodel_use.html
   sensitivity_analysis: sensitivity_analysis.html
-last_built: 2026-02-17T11:18Z
+last_built: 2026-07-10T07:56Z
 urls:
   reference: https://geco-bern.github.io/rsofun/reference
   article: https://geco-bern.github.io/rsofun/articles
