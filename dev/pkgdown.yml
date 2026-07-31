@@ -9,7 +9,7 @@ articles:
   param_calib_multitarget: param_calib_multitarget.html
   pmodel_use: pmodel_use.html
   sensitivity_analysis: sensitivity_analysis.html
-last_built: 2026-07-31T10:33Z
+last_built: 2026-07-31T13:07Z
 urls:
   reference: https://geco-bern.github.io/rsofun/reference
   article: https://geco-bern.github.io/rsofun/articles
