@@ -49,6 +49,19 @@ jobs:
           needs: check
           cache-version: 2
 
+      # macOS runner: cache might restore binaries linked against a different TBB.
+      # To avoid: "*.so ... Symbol not found ... Expected in ... RcppParallel/lib/libtbb.dylib",
+      # rebuild these from source:
+      - name: Rebuild TBB-sensitive packages (macOS)
+        if: runner.os == 'macOS'
+        shell: Rscript {0}
+        run: |
+          lib <- .libPaths()[1]
+          for (p in c("stringfish", "RcppParallel", "qs2")) {
+            unlink(file.path(lib, p), recursive = TRUE, force = TRUE)
+          }
+          install.packages(c("RcppParallel", "stringfish", "qs2"), type = "source")
+
       - uses: r-lib/actions/check-r-package@v2
         with:
           upload-snapshots: true
