@@ -46,7 +46,7 @@ module md_gpp_pmodel
 
 contains
 
-  subroutine gpp( tile, tile_fluxes, co2, climate, grid, init, in_ppfd, tc_home)
+  subroutine gpp( tile, tile_fluxes, co2, climate, init, in_ppfd, tc_home)
     !//////////////////////////////////////////////////////////////////
     ! Wrapper function to call to P-model. 
     ! Calculates meteorological conditions with memory based on daily
@@ -62,7 +62,7 @@ contains
     type(tile_fluxes_type), dimension(nlu), intent(inout) :: tile_fluxes
     real, intent(in)    :: co2                               ! atmospheric CO2 (ppm)
     type(climate_type)  :: climate
-    type(gridtype)      :: grid
+    ! type(gridtype)      :: grid (unused)
     logical, intent(in) :: init                              ! is true on the very first simulation day (first subroutine call of each gridcell)
     logical, intent(in) :: in_ppfd                           ! whether to use PPFD from forcing or from SPLASH output
     real, intent(in)    :: tc_home                           ! long-term mean max temp of the warmest month (deg C)
