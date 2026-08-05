@@ -11,7 +11,7 @@ module md_gpp_pmodel
   use md_sofunutils, only: radians
   use md_grid, only: gridtype
   use md_photosynth, only: pmodel, zero_pmodel, outtype_pmodel, calc_ftemp_inst_vcmax, calc_ftemp_inst_jmax, &
-    calc_ftemp_inst_rd, calc_kphio_temp, calc_soilmstress, calc_bigdelta
+    calc_ftemp_inst_rd, calc_kphio_temp, calc_coldacclim, calc_soilmstress, calc_bigdelta
 
   implicit none
 
@@ -27,12 +27,11 @@ module md_gpp_pmodel
     real :: soilm_betao
     real :: rd_to_vcmax  ! Ratio of Rdark to Vcmax25, number from Atkin et al., 2015 for C3 herbaceous
     real :: tau_acclim   ! acclimation time scale of photosynthesis (d)
-    real :: tau_acclim_tempstress
-    real :: par_shape_tempstress
-    real :: kphio_par_d
-    real :: kphio_par_e
-    real :: kphio_par_c
-    real :: kphio_par_b
+    real :: kc_jmax
+    real :: coldacclim_par_a
+    real :: coldacclim_par_b
+    real :: coldacclim_par_c
+    real :: coldacclim_par_d
   end type paramstype_gpp
 
   ! PFT-DEPENDENT PARAMETERS
@@ -82,6 +81,8 @@ contains
     real, save :: temp_memory
     real, save :: patm_memory
     real, save :: ppfd_memory
+    real, save :: gdd
+    real, save :: level_hard
     integer, save :: count
 
     !----------------------------------------------------------------
@@ -103,6 +104,8 @@ contains
       vpd_memory  = climate_acclimation%dvpd
       patm_memory = climate_acclimation%dpatm
       ppfd_memory = climate_acclimation%dppfd
+      gdd = 0.0
+      level_hard = 1.0
     end if 
 
     count = count + 1
@@ -115,6 +118,23 @@ contains
 
     tk = climate_acclimation%dtemp + kTkelvin
 
+    ! Update the cold-hardening state once per day. A zero-valued parameter
+    ! set disables cold acclimation and preserves the previous model behavior.
+    if (any(abs([params_gpp%coldacclim_par_a, params_gpp%coldacclim_par_b, &
+                 params_gpp%coldacclim_par_c, params_gpp%coldacclim_par_d]) > eps)) then
+      call calc_coldacclim( &
+        climate%dtemp, &
+        climate%dtmin, &
+        level_hard, &
+        gdd, &
+        params_gpp%coldacclim_par_a, &
+        params_gpp%coldacclim_par_b, &
+        params_gpp%coldacclim_par_c, &
+        params_gpp%coldacclim_par_d &
+        )
+    else
+      level_hard = 1.0
+    end if
 
     pftloop: do pft=1,npft
       
@@ -124,7 +144,7 @@ contains
       ! Low-temperature effect on quantum yield efficiency: updates 
       ! coldhardiness acclimation factor 'level_hard' (0-1). 
       !----------------------------------------------------------------
-      ! take the instananeously varying temperature for governing quantum yield variations
+      ! take the instantaneously varying temperature for governing quantum yield variations
       if (abs(params_pft_gpp(pft)%kphio_par_a) < eps) then
         kphio_temp = params_pft_gpp(pft)%kphio
       else
@@ -134,8 +154,6 @@ contains
                                       params_pft_gpp(pft)%kphio_par_a, &
                                       params_pft_gpp(pft)%kphio_par_b )
       end if
-      ! TODO: add here also effect of calc_ftemp_kphio_coldhard()... xxx
-
       !----------------------------------------------------------------
       ! P-model call to get a list of variables that are 
       ! acclimated to slowly varying conditions
@@ -358,12 +376,10 @@ contains
 
     ! Re-interpreted soil moisture stress parameter, previously thetastar = 0.6
     params_gpp%soilm_thetastar = myinterface%params_calib%soilm_thetastar
-    ! temperature stress time scale is calibratable
-    params_gpp%kphio_par_a = myinterface%params_calib%kphio_par_a
-    params_gpp%kphio_par_b = myinterface%params_calib%kphio_par_b
-    params_gpp%kphio_par_c = myinterface%params_calib%kphio_par_c
-    params_gpp%kphio_par_d = myinterface%params_calib%kphio_par_d
-    params_gpp%kphio_par_e = myinterface%params_calib%kphio_par_e     ! parameter defining GDD base in dehardening function (deg C)
+    params_gpp%coldacclim_par_a = myinterface%params_calib%coldacclim_par_a
+    params_gpp%coldacclim_par_b = myinterface%params_calib%coldacclim_par_b
+    params_gpp%coldacclim_par_c = myinterface%params_calib%coldacclim_par_c
+    params_gpp%coldacclim_par_d = myinterface%params_calib%coldacclim_par_d
 
     ! Re-interpreted soil moisture stress parameter, previosly determined by Eq. 22
     params_gpp%soilm_betao = myinterface%params_calib%soilm_betao

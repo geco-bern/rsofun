@@ -204,7 +204,7 @@ contains
     real(kind=c_double),  intent(in) :: whc
     real(kind=c_double),  intent(in) :: tc_home
     integer(kind=c_int),  intent(in) :: nt ! number of time steps
-    real(kind=c_double),  dimension(9), intent(in) :: par  ! free (calibratable) model parameters
+    real(kind=c_double),  dimension(13), intent(in) :: par  ! free (calibratable) model parameters
     real(kind=c_double),  dimension(nt,12), intent(in) :: forcing  ! array containing all temporally varying forcing data (rows: time steps; columns: 1=air temperature, 2=rainfall, 3=vpd, 4=ppfd, 5=net radiation, 6=sunshine fraction, 7=snowfall, 8=co2, 9=fapar, 10=patm, 11=tmin, 12=tmax) 
     real(kind=c_double),  dimension(nt,21), intent(out) :: output
 
@@ -270,6 +270,10 @@ contains
     myinterface%params_calib%rd_to_vcmax        = real(par(7)) ! (-/-), ratio of rd to Vcmax
     myinterface%params_calib%tau_acclim         = real(par(8))
     myinterface%params_calib%kc_jmax            = real(par(9)) ! (-), jmax cost ratio, a.k.a c*
+    myinterface%params_calib%coldacclim_par_a   = real(par(10))
+    myinterface%params_calib%coldacclim_par_b   = real(par(11))
+    myinterface%params_calib%coldacclim_par_c   = real(par(12))
+    myinterface%params_calib%coldacclim_par_d   = real(par(13))
     
     !----------------------------------------------------------------
     ! GET VEGETATION COVER (fractional projective cover by PFT)

@@ -131,6 +131,24 @@ run_pmodel_f_bysite <- function(
   # base state, always execute the call
   continue <- TRUE
 
+  # TODO: adopt the default parameter approach from the BiomeEP part of the code (e.g.
+  #       use build_xx functions. Ctrl-F for:
+  #     # build_xxx functions check the parameters/data and add default parameters )
+
+  # Cold acclimation is opt-in. Supplying none of these parameters preserves
+  # the model behavior from before their introduction.
+  coldacclim_defaults <- list(
+    coldacclim_par_a = 0.0,
+    coldacclim_par_b = 0.0,
+    coldacclim_par_c = 0.0,
+    coldacclim_par_d = 0.0
+  )
+  for (parameter_name in names(coldacclim_defaults)) {
+    if (is.null(params_modl[[parameter_name]])) {
+      params_modl[[parameter_name]] <- coldacclim_defaults[[parameter_name]]
+    }
+  }
+
   # record first year and number of years in forcing data
   # frame (may need to overwrite later) to use as default values
   ndayyear <- 365
@@ -302,12 +320,16 @@ run_pmodel_f_bysite <- function(
     }
 
     # model parameters to check
-    if (sum(names(params_modl) %in% c(
+    expected_params_modl <- c(
       "kphio", "kphio_par_a", "kphio_par_b",
       "soilm_thetastar", "soilm_betao",
       "beta_unitcostratio", "rd_to_vcmax",
-      "tau_acclim", "kc_jmax")
-    ) != 9) {
+      "tau_acclim", "kc_jmax",
+      "coldacclim_par_a", "coldacclim_par_b",
+      "coldacclim_par_c", "coldacclim_par_d"
+    )
+    if (!setequal(names(params_modl), expected_params_modl) ||
+        length(params_modl) != length(expected_params_modl)) {
       warning(" Returning a dummy data frame. Incorrect model parameters.")
       continue <- FALSE
     }
@@ -363,7 +385,11 @@ run_pmodel_f_bysite <- function(
         as.numeric(params_modl$beta_unitcostratio),
         as.numeric(params_modl$rd_to_vcmax),
         as.numeric(params_modl$tau_acclim),
-        as.numeric(params_modl$kc_jmax)),
+        as.numeric(params_modl$kc_jmax),
+        as.numeric(params_modl$coldacclim_par_a),
+        as.numeric(params_modl$coldacclim_par_b),
+        as.numeric(params_modl$coldacclim_par_c),
+        as.numeric(params_modl$coldacclim_par_d)),
       forcing                   = as.matrix(forcing)
     )
   } else {

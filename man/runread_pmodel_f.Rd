@@ -38,6 +38,14 @@ the information whether or not to run the onestep or daily model through
   \item{tau_acclim}{Acclimation time scale of photosynthesis, in days.}
   \item{kc_jmax}{Parameter for Jmax cost ratio (corresponding to c\eqn{^*} in
   Stocker et al. 2020 GMD).}
+  \item{coldacclim_par_a}{Location parameter of the minimum-temperature
+   hardening response.}
+  \item{coldacclim_par_b}{Slope parameter of the minimum-temperature
+   hardening response.}
+  \item{coldacclim_par_c}{Growing-degree-day threshold parameter of the
+   dehardening response.}
+  \item{coldacclim_par_d}{Slope parameter of the growing-degree-day
+   dehardening response.}
 }}
 
 \item{makecheck}{A logical specifying whether checks are performed
@@ -73,6 +81,9 @@ The temperature dependence of the quantum yield efficiency is given by: \cr
 \eqn{\varphi_0 (T) = 1 } if \eqn{ c (1 + a (T - b)^2 ) \geq 1}. \cr
 The ORG setup can be reproduced by setting \code{kphio_par_a = 0}
 and calibrating the \code{kphio} parameter only.
+Cold acclimation is applied only to daily simulations. It is disabled when
+the four \code{coldacclim_par_*} parameters are omitted or all set to zero,
+preserving results from versions before this functionality was introduced.
 The BRC setup (which calibrates \eqn{c_L = \frac{a_L b_L}{4}} in Eq. 18) is more difficult to reproduce,
 since the temperature-dependency has been reformulated and a custom cost
 function would be necessary for calibration. The new parameters

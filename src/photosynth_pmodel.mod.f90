@@ -11,7 +11,7 @@ module md_photosynth
 
   private
   public pmodel, zero_pmodel, outtype_pmodel, calc_ftemp_inst_jmax, calc_ftemp_inst_vcmax, &
-    calc_ftemp_inst_rd, calc_kphio_temp, calc_soilmstress, calc_bigdelta
+    calc_ftemp_inst_rd, calc_kphio_temp, calc_coldacclim, calc_soilmstress, calc_bigdelta
 
   !----------------------------------------------------------------
   ! MODULE-SPECIFIC, PRIVATE VARIABLES
@@ -765,21 +765,17 @@ contains
   end function calc_kphio_temp
 
 
-  subroutine calc_ftemp_kphio_coldhard(tc, tmin, level_hard, gdd, kphio_par_a, kphio_par_b, kphio_par_c, kphio_par_d, ftemp)
+  subroutine calc_coldacclim(tc, tmin, level_hard, gdd, &
+    coldacclim_par_a, coldacclim_par_b, coldacclim_par_c, coldacclim_par_d)
     !////////////////////////////////////////////////////////////////
-    ! Calculates the low temperature stress function assuming no stress
-    ! at 10 deg C and above and declining below based on a calibratable
-    ! parameter and a quadratic function.
+    ! Updates a cold-acclimation factor using logistic hardening and
+    ! dehardening responses to minimum temperature and growing degree days.
     !----------------------------------------------------------------
     ! arguments
     real, intent(in)    :: tc             ! daily mean air temperature in degrees celsius (deg C)
     real, intent(in)    :: tmin           ! daily minimum air temperature in degrees celsius (deg C)
-    real, intent(inout) :: level_hard     ! level (temperature) to which cold hardening is adjusted (deg C)
-    real, intent(inout) :: gdd            ! growing degree days (deg)
-    real, intent(in)    :: kphio_par_a    ! unitless shape parameter for hardening function
-    real, intent(in)    :: kphio_par_b    ! unitless shape parameter for hardening function
-    real, intent(in)    :: kphio_par_c    ! unitless shape parameter for dehardening function
-    real, intent(in)    :: kphio_par_d    ! unitless shape parameter for dehardening function
+    real, intent(inout) :: level_hard     ! cold-acclimation factor (0-1)
+    real, intent(inout) :: gdd            ! growing degree days (deg C d)
     real, intent(in)    :: coldacclim_par_a    ! unitless shape parameter for hardening function
     real, intent(in)    :: coldacclim_par_b    ! unitless shape parameter for hardening function
     real, intent(in)    :: coldacclim_par_c    ! unitless shape parameter for dehardening function
@@ -797,7 +793,7 @@ contains
       level_hard = level_hard_new
 
       ! re-start recovery
-      gdd = 0
+      gdd = 0.0
 
     end if
     
@@ -825,9 +821,8 @@ contains
     ! local variables
     real :: xx
 
-    xx = (-1.0) * tmin
-    xx = kphio_par_b * xx + kphio_par_a
-    ! TODO: add (xx = coldacclim_par_b * (xx + coldacclim_par_a))
+    xx = coldacclim_par_b * (-tmin + coldacclim_par_a)
+    xx = max(-80.0, min(80.0, xx))
     ftemp = 1.0 / (1.0 + exp(xx))
 
   end function f_hardening
@@ -848,8 +843,8 @@ contains
     ! local variables
     real :: xx
 
-    xx = (-1.0) * gdd
-    xx = kphio_par_d * (xx - kphio_par_c)
+    xx = coldacclim_par_d * (-gdd + coldacclim_par_c)
+    xx = max(-80.0, min(80.0, xx))
     ftemp = 1.0 / (1.0 + exp(xx))
 
   end function f_dehardening
