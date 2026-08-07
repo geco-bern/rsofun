@@ -131,6 +131,12 @@ run_pmodel_f_bysite <- function(
   # base state, always execute the call
   continue <- TRUE
 
+  # Add default parameters (backward compatibility layer).
+  params_modl <- build_params_modl_pmodel(params_modl, makecheck)
+  if(is.null(params_modl)) {
+    continue <- FALSE
+  }
+
   # record first year and number of years in forcing data
   # frame (may need to overwrite later) to use as default values
   ndayyear <- 365
@@ -165,7 +171,7 @@ run_pmodel_f_bysite <- function(
     as.integer() %>%
     abs()
 
-  # Default value for tc_home
+  # Default value for tc_home # TODO: move this into a build_site_info_pmodel() function
   if ("tc_home" %in% names(site_info)) {
     stop("Unexpectedly received site_info$tc_home; it should be calculated internally.")
   }
@@ -206,7 +212,7 @@ run_pmodel_f_bysite <- function(
 
   # re-define units and naming of forcing dataframe
   # keep the order of columns - it's critical for Fortran (reading by column number)
-  forcing_features <- c(
+  forcing_features <- c( # TODO: move this ordering/defaulting to the build_forcing_pmodel() function.
     "temp",
     "rain",
     "vpd",
@@ -228,7 +234,7 @@ run_pmodel_f_bysite <- function(
       all_of(forcing_features)
     )
 
-  # validate input
+  # validate input (# TODO: move these checks to build_forcing_pmodel() and build_params_siml_pmodel() functions )
   if (makecheck) {
 
     is.nanull <- function(x) ifelse(any(is.null(x), is.na(x)), TRUE, FALSE)
@@ -301,16 +307,6 @@ run_pmodel_f_bysite <- function(
       continue <- FALSE
     }
 
-    # model parameters to check
-    if (sum(names(params_modl) %in% c(
-      "kphio", "kphio_par_a", "kphio_par_b",
-      "soilm_thetastar", "soilm_betao",
-      "beta_unitcostratio", "rd_to_vcmax",
-      "tau_acclim", "kc_jmax")
-    ) != 9) {
-      warning(" Returning a dummy data frame. Incorrect model parameters.")
-      continue <- FALSE
-    }
   }
 
   if (continue) {
@@ -354,17 +350,8 @@ run_pmodel_f_bysite <- function(
       whc                       = as.numeric(site_info$whc),
       tc_home                   = as.numeric(site_info$tc_home),
       n                         = as.integer(nrow(forcing)), # number of rows in matrix (pre-allocation of memory)
-      par                       = c(
-        as.numeric(params_modl$kphio), # model parameters as vector in order
-        as.numeric(params_modl$kphio_par_a),
-        as.numeric(params_modl$kphio_par_b),
-        as.numeric(params_modl$soilm_thetastar),
-        as.numeric(params_modl$soilm_betao),
-        as.numeric(params_modl$beta_unitcostratio),
-        as.numeric(params_modl$rd_to_vcmax),
-        as.numeric(params_modl$tau_acclim),
-        as.numeric(params_modl$kc_jmax)),
-      forcing                   = as.matrix(forcing)
+      par                       = prepare_params_modl_pmodel(params_modl),
+      forcing                   = prepare_forcing_pmodel(forcing)
     )
   } else {
     pmodelout <- NA_real_
@@ -373,6 +360,61 @@ run_pmodel_f_bysite <- function(
   out <- build_out_pmodel(pmodelout, params_siml$firstyeartrend, params_siml$nyeartrend)
 
   return(out)
+}
+
+# Build and prepare model parameters ---------------------------------------
+# build_xxx functions check inputs and add default parameters.
+# prepare_xxx functions arrange inputs as expected by Fortran.
+build_params_modl_pmodel <- function(params_modl, makecheck) {
+  `%nin%` <- Negate(`%in%`)
+  
+  # Default values
+  coldacclim_defaults <- list(
+    coldacclim_par_a = 0.0,
+    coldacclim_par_b = 0.0,
+    coldacclim_par_c = 0.0,
+    coldacclim_par_d = 0.0
+  )
+  for (parameter_name in names(coldacclim_defaults)) {
+    if (parameter_name %nin% names(params_modl)) {
+      params_modl[[parameter_name]] <- coldacclim_defaults[[parameter_name]]
+    }
+  }
+
+  # model parameters to check
+  pmodel_params_order <- c(
+    "kphio", "kphio_par_a", "kphio_par_b",
+    "soilm_thetastar", "soilm_betao",
+    "beta_unitcostratio", "rd_to_vcmax",
+    "tau_acclim", "kc_jmax",
+    "coldacclim_par_a", "coldacclim_par_b",
+    "coldacclim_par_c", "coldacclim_par_d"
+  )
+  continue__ <- TRUE
+  if (makecheck){ # make parameter check if requested
+    if (!setequal(names(params_modl), pmodel_params_order) ||
+        length(params_modl) != length(pmodel_params_order)) {
+      warning(" Returning a dummy data frame. Incorrect model parameters.")
+      continue__ <- FALSE
+    }
+  }
+
+  # If it passed check
+  # bring vector into correct order (legacy code for backwards compatibility)
+  if (continue__) {
+    params_modl <- params_modl[pmodel_params_order]
+  } else {
+    params_modl <- NULL
+  }
+  return(params_modl) # return value is NULL if continue should be set to FALSE
+}
+
+prepare_params_modl_pmodel <- function(params_modl) {
+  # model parameters as vector
+  as.numeric(unlist(params_modl, use.names = FALSE))
+}
+prepare_forcing_pmodel <- function(forcing) {
+  as.matrix(forcing)
 }
 
 

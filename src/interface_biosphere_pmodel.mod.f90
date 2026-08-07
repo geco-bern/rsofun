@@ -26,8 +26,11 @@ module md_interface_pmodel
     real :: rd_to_vcmax
     real :: tau_acclim
     real :: kc_jmax
+    real :: coldacclim_par_a
+    real :: coldacclim_par_b
+    real :: coldacclim_par_c
+    real :: coldacclim_par_d
   end type paramstype_calib  
-
 
   type interfacetype_biosphere
     integer                                 :: year

@@ -11,7 +11,7 @@ module md_photosynth
 
   private
   public pmodel, zero_pmodel, outtype_pmodel, calc_ftemp_inst_jmax, calc_ftemp_inst_vcmax, &
-    calc_ftemp_inst_rd, calc_kphio_temp, calc_soilmstress, calc_bigdelta
+    calc_ftemp_inst_rd, calc_kphio_temp, calc_coldacclim, calc_soilmstress, calc_bigdelta
 
   !----------------------------------------------------------------
   ! MODULE-SPECIFIC, PRIVATE VARIABLES
@@ -750,6 +750,7 @@ contains
     real :: kphio_temp
 
     if (c4) then
+      ! C4 photosynthesis
       kphio_temp = kphio * (-0.008 + 0.00375 * dtemp - 0.58e-4 * dtemp**2) * 8.0 ! Based on calibrated values by Shirley
       if (kphio_temp < 0.0) then
         kphio_temp = 0.0
@@ -757,15 +758,96 @@ contains
         kphio_temp = kphio_temp
       end if    
     else
-
-      
+      ! C3 photosynthesis
       kphio_temp = kphio * max(0.0, min(1.0, (1.0 + kphio_par_a * (dtemp - kphio_par_b)**2)))
 
-      ! old:
-      ! kphio_temp = kphio * (0.352 + 0.022 * dtemp - 3.4e-4 * dtemp**2)  ! Based on Bernacchi et al., 2003
+    end if
+  end function calc_kphio_temp
+
+
+  subroutine calc_coldacclim(tc, tmin, level_hard, gdd, &
+    coldacclim_par_a, coldacclim_par_b, coldacclim_par_c, coldacclim_par_d)
+    !////////////////////////////////////////////////////////////////
+    ! Updates a cold-acclimation factor using logistic hardening and
+    ! dehardening responses to minimum temperature and growing degree days.
+    !----------------------------------------------------------------
+    ! arguments
+    real, intent(in)    :: tc             ! daily mean air temperature in degrees celsius (deg C)
+    real, intent(in)    :: tmin           ! daily minimum air temperature in degrees celsius (deg C)
+    real, intent(inout) :: level_hard     ! cold-acclimation factor (0-1)
+    real, intent(inout) :: gdd            ! growing degree days (deg C d)
+    real, intent(in)    :: coldacclim_par_a    ! unitless shape parameter for hardening function
+    real, intent(in)    :: coldacclim_par_b    ! unitless shape parameter for hardening function
+    real, intent(in)    :: coldacclim_par_c    ! unitless shape parameter for dehardening function
+    real, intent(in)    :: coldacclim_par_d    ! unitless shape parameter for dehardening function
+
+    ! local variable
+    real :: level_hard_new
+
+    ! determine hardening level - responds instantaneously to minimum temperature
+    level_hard_new = f_hardening(tmin, coldacclim_par_a, coldacclim_par_b)
+
+    if (level_hard_new < level_hard) then
+
+      ! entering deeper hardening
+      level_hard = level_hard_new
+
+      ! re-start recovery
+      gdd = 0.0
+
     end if
     
-  end function calc_kphio_temp
+    ! accumulate growing degree days (GDD) with a fixed threshold of 5 deg.
+    gdd = gdd + max(0.0, (tc - 5.0))
+
+    ! de-harden based on GDD. f_stress = 1: no stress
+    level_hard = level_hard + (1.0 - level_hard) * f_dehardening(gdd, coldacclim_par_c, coldacclim_par_d)
+
+  end subroutine calc_coldacclim
+
+
+  function f_hardening(tmin, coldacclim_par_a, coldacclim_par_b) result(ftemp)
+    !////////////////////////////////////////////////////////////////
+    ! Hardening function of instantaneous temperature
+    !----------------------------------------------------------------
+    ! arguments
+    real, intent(in)    :: tmin           ! daily minimum air temperature in degrees celsius (deg C)
+    real, intent(in)    :: coldacclim_par_a    ! unitless shape parameter for hardening function
+    real, intent(in)    :: coldacclim_par_b    ! unitless shape parameter for hardening function
+
+    ! function return variable
+    real :: ftemp
+
+    ! local variables
+    real :: xx
+
+    xx = coldacclim_par_b * (-tmin + coldacclim_par_a)
+    xx = max(-80.0, min(80.0, xx))
+    ftemp = 1.0 / (1.0 + exp(xx))
+
+  end function f_hardening
+
+
+  function f_dehardening(gdd, coldacclim_par_c, coldacclim_par_d) result(ftemp)
+    !////////////////////////////////////////////////////////////////
+    ! De-hardening function of temperature sum (cumulative degree days)
+    !----------------------------------------------------------------
+    ! arguments
+    real, intent(in)    :: gdd            ! cumulative degree days (deg C)
+    real, intent(in)    :: coldacclim_par_c    ! unitless shape parameter for dehardening function
+    real, intent(in)    :: coldacclim_par_d    ! unitless shape parameter for dehardening function
+
+    ! function return variable
+    real :: ftemp
+
+    ! local variables
+    real :: xx
+
+    xx = coldacclim_par_d * (-gdd + coldacclim_par_c)
+    xx = max(-80.0, min(80.0, xx))
+    ftemp = 1.0 / (1.0 + exp(xx))
+
+  end function f_dehardening
 
 
   function calc_ftemp_inst_rd( tc ) result( fr )

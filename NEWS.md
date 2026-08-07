@@ -2,6 +2,12 @@
 
 ## New features
 * P-model:
+  * `run_pmodel_f_bysite()` supports optional cold acclimation of quantum yield
+  efficiency through the parameters `coldacclim_par_a`, `coldacclim_par_b`,
+  `coldacclim_par_c`, and `coldacclim_par_d`. For backwards compatibility,
+  parameters that are not provided default to zero. Cold acclimation is disabled
+  when all four parameters are zero, preserving previous model behaviour.
+  * The daily P-model output includes snow water equivalents in `snow`.
   * Rewritten `calib_sofun()` that can handle more diverse prior 
   distributions of the parameters to estimate (see internal function 
   `createMixedPrior()`) and that can parallelize multiple the MCMC chains.

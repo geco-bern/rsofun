@@ -11,7 +11,7 @@ module md_gpp_pmodel
   use md_sofunutils, only: radians
   use md_grid, only: gridtype
   use md_photosynth, only: pmodel, zero_pmodel, outtype_pmodel, calc_ftemp_inst_vcmax, calc_ftemp_inst_jmax, &
-    calc_ftemp_inst_rd, calc_kphio_temp, calc_soilmstress, calc_bigdelta
+    calc_ftemp_inst_rd, calc_kphio_temp, calc_coldacclim, calc_soilmstress, calc_bigdelta
 
   implicit none
 
@@ -27,9 +27,11 @@ module md_gpp_pmodel
     real :: soilm_betao
     real :: rd_to_vcmax  ! Ratio of Rdark to Vcmax25, number from Atkin et al., 2015 for C3 herbaceous
     real :: tau_acclim   ! acclimation time scale of photosynthesis (d)
-    real :: tau_acclim_tempstress
-    real :: par_shape_tempstress
     real :: kc_jmax
+    real :: coldacclim_par_a
+    real :: coldacclim_par_b
+    real :: coldacclim_par_c
+    real :: coldacclim_par_d
   end type paramstype_gpp
 
   ! PFT-DEPENDENT PARAMETERS
@@ -44,7 +46,7 @@ module md_gpp_pmodel
 
 contains
 
-  subroutine gpp( tile, tile_fluxes, co2, climate, grid, init, in_ppfd, tc_home)
+  subroutine gpp( tile, tile_fluxes, co2, climate, init, in_ppfd, tc_home)
     !//////////////////////////////////////////////////////////////////
     ! Wrapper function to call to P-model. 
     ! Calculates meteorological conditions with memory based on daily
@@ -60,7 +62,7 @@ contains
     type(tile_fluxes_type), dimension(nlu), intent(inout) :: tile_fluxes
     real, intent(in)    :: co2                               ! atmospheric CO2 (ppm)
     type(climate_type)  :: climate
-    type(gridtype)      :: grid
+    ! type(gridtype)      :: grid (unused)
     logical, intent(in) :: init                              ! is true on the very first simulation day (first subroutine call of each gridcell)
     logical, intent(in) :: in_ppfd                           ! whether to use PPFD from forcing or from SPLASH output
     real, intent(in)    :: tc_home                           ! long-term mean max temp of the warmest month (deg C)
@@ -73,12 +75,15 @@ contains
     real       :: soilmstress
     real       :: kphio_temp          ! quantum yield efficiency after temperature influence
     real       :: tk
+    logical    :: coldacclim_enabled
 
     real, save :: co2_memory
     real, save :: vpd_memory
     real, save :: temp_memory
     real, save :: patm_memory
     real, save :: ppfd_memory
+    real, save :: gdd
+    real, save :: level_hard
     integer, save :: count
 
     !----------------------------------------------------------------
@@ -100,6 +105,8 @@ contains
       vpd_memory  = climate_acclimation%dvpd
       patm_memory = climate_acclimation%dpatm
       ppfd_memory = climate_acclimation%dppfd
+      gdd = 0.0
+      level_hard = 1.0
     end if 
 
     count = count + 1
@@ -112,15 +119,38 @@ contains
 
     tk = climate_acclimation%dtemp + kTkelvin
 
+    ! Update the cold-hardening state once per day. A zero-valued parameter
+    ! set disables cold acclimation and preserves the previous model behavior.
+    coldacclim_enabled = any(abs([ &
+      params_gpp%coldacclim_par_a, params_gpp%coldacclim_par_b, &
+      params_gpp%coldacclim_par_c, params_gpp%coldacclim_par_d &
+      ]) > eps)
+
+    if (coldacclim_enabled) then
+      ! this updates level_hard
+      call calc_coldacclim( &
+        climate%dtemp, &
+        climate%dtmin, &
+        level_hard, &
+        gdd, &
+        params_gpp%coldacclim_par_a, &
+        params_gpp%coldacclim_par_b, &
+        params_gpp%coldacclim_par_c, &
+        params_gpp%coldacclim_par_d &
+        )
+    else
+      level_hard = 1.0
+    end if
 
     pftloop: do pft=1,npft
       
       lu = 1
     
       !----------------------------------------------------------------
-      ! Low-temperature effect on quantum yield efficiency 
+      ! Low-temperature effect on quantum yield efficiency: updates 
+      ! coldhardiness acclimation factor 'level_hard' (0-1). 
       !----------------------------------------------------------------
-      ! take the instananeously varying temperature for governing quantum yield variations
+      ! take the instantaneously varying temperature for governing quantum yield variations
       if (abs(params_pft_gpp(pft)%kphio_par_a) < eps) then
         kphio_temp = params_pft_gpp(pft)%kphio
       else
@@ -130,21 +160,21 @@ contains
                                       params_pft_gpp(pft)%kphio_par_a, &
                                       params_pft_gpp(pft)%kphio_par_b )
       end if
-      
       !----------------------------------------------------------------
       ! P-model call to get a list of variables that are 
       ! acclimated to slowly varying conditions
       !----------------------------------------------------------------
-      if (tile(lu)%plant(pft)%fpc_grid > 0.0 .and. &      ! PFT is present
-          grid%dayl > 0.0 .and.                    &      ! no arctic night
-          temp_memory > -5.0 ) then                       ! minimum temp threshold to avoid fpe
+      if (tile(lu)%plant(pft)%fpc_grid > 0.0 .and. &                       ! PFT is present
+          ((coldacclim_enabled       .and. temp_memory > -30.0) .or. &     ! minimum temp (-30 or -5 with/without hardening)
+           (.not. coldacclim_enabled .and. temp_memory > -5.0 .and. myinterface%grid%dayl > 0.0))) then
+                                                                           ! no arctic night (dayl>0.0)
 
         !================================================================
         ! P-model call to get acclimated quantities as a function of the
         ! damped climate forcing.
         !----------------------------------------------------------------
         out_pmodel = pmodel(  &
-                              kphio          = kphio_temp, &
+                              kphio          = kphio_temp * level_hard, &
                               beta           = params_gpp%beta, &
                               kc_jmax        = params_gpp%kc_jmax, &
                               ppfd           = ppfd_memory, &
@@ -354,6 +384,10 @@ contains
 
     ! Re-interpreted soil moisture stress parameter, previously thetastar = 0.6
     params_gpp%soilm_thetastar = myinterface%params_calib%soilm_thetastar
+    params_gpp%coldacclim_par_a = myinterface%params_calib%coldacclim_par_a
+    params_gpp%coldacclim_par_b = myinterface%params_calib%coldacclim_par_b
+    params_gpp%coldacclim_par_c = myinterface%params_calib%coldacclim_par_c
+    params_gpp%coldacclim_par_d = myinterface%params_calib%coldacclim_par_d
 
     ! Re-interpreted soil moisture stress parameter, previosly determined by Eq. 22
     params_gpp%soilm_betao = myinterface%params_calib%soilm_betao
