@@ -171,7 +171,7 @@ run_pmodel_f_bysite <- function(
     as.integer() %>%
     abs()
 
-  # Default value for tc_home
+  # Default value for tc_home # TODO: move this into a build_site_info_pmodel() function
   if ("tc_home" %in% names(site_info)) {
     stop("Unexpectedly received site_info$tc_home; it should be calculated internally.")
   }
@@ -212,7 +212,7 @@ run_pmodel_f_bysite <- function(
 
   # re-define units and naming of forcing dataframe
   # keep the order of columns - it's critical for Fortran (reading by column number)
-  forcing_features <- c(
+  forcing_features <- c( # TODO: move this ordering/defaulting to the build_forcing_pmodel() function.
     "temp",
     "rain",
     "vpd",
@@ -234,7 +234,7 @@ run_pmodel_f_bysite <- function(
       all_of(forcing_features)
     )
 
-  # validate input
+  # validate input (# TODO: move these checks to build_forcing_pmodel() and build_params_siml_pmodel() functions )
   if (makecheck) {
 
     is.nanull <- function(x) ifelse(any(is.null(x), is.na(x)), TRUE, FALSE)

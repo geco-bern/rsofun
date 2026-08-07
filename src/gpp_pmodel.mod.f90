@@ -164,9 +164,10 @@ contains
       ! P-model call to get a list of variables that are 
       ! acclimated to slowly varying conditions
       !----------------------------------------------------------------
-      if (tile(lu)%plant(pft)%fpc_grid > 0.0 .and. &
-          ((coldacclim_enabled       .and. temp_memory > -30.0) .or. &
+      if (tile(lu)%plant(pft)%fpc_grid > 0.0 .and. &                       ! PFT is present
+          ((coldacclim_enabled       .and. temp_memory > -30.0) .or. &     ! minimum temp (-30 or -5 with/without hardening)
            (.not. coldacclim_enabled .and. temp_memory > -5.0 .and. myinterface%grid%dayl > 0.0))) then
+                                                                           ! no arctic night (dayl>0.0)
 
         !================================================================
         ! P-model call to get acclimated quantities as a function of the

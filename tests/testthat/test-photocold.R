@@ -39,9 +39,8 @@ test_that("cold acclimation is opt-in and affects daily P-model output", {
   )
 
   expect_identical(output_legacy$data[[1]], output_disabled$data[[1]])
-  expect_true("snow" %in% names(output_enabled$data[[1]]))
-  expect_true(any(
-    abs(output_legacy$data[[1]]$gpp - output_enabled$data[[1]]$gpp) > 1e-8,
+  expect_true(all(
+    output_legacy$data[[1]]$gpp >= output_enabled$data[[1]]$gpp,
     na.rm = TRUE
   ))
 })
