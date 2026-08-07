@@ -75,6 +75,7 @@ contains
     real       :: soilmstress
     real       :: kphio_temp          ! quantum yield efficiency after temperature influence
     real       :: tk
+    logical    :: coldacclim_enabled
 
     real, save :: co2_memory
     real, save :: vpd_memory
@@ -120,8 +121,13 @@ contains
 
     ! Update the cold-hardening state once per day. A zero-valued parameter
     ! set disables cold acclimation and preserves the previous model behavior.
-    if (any(abs([params_gpp%coldacclim_par_a, params_gpp%coldacclim_par_b, &
-                 params_gpp%coldacclim_par_c, params_gpp%coldacclim_par_d]) > eps)) then
+    coldacclim_enabled = any(abs([ &
+      params_gpp%coldacclim_par_a, params_gpp%coldacclim_par_b, &
+      params_gpp%coldacclim_par_c, params_gpp%coldacclim_par_d &
+      ]) > eps)
+
+    if (coldacclim_enabled) then
+      ! this updates level_hard
       call calc_coldacclim( &
         climate%dtemp, &
         climate%dtmin, &
@@ -158,8 +164,9 @@ contains
       ! P-model call to get a list of variables that are 
       ! acclimated to slowly varying conditions
       !----------------------------------------------------------------
-      if (tile(lu)%plant(pft)%fpc_grid > 0.0 .and. &      ! PFT is present
-          temp_memory > -30.0 ) then                      ! minimum temp threshold to avoid fpe
+      if (tile(lu)%plant(pft)%fpc_grid > 0.0 .and. &
+          ((coldacclim_enabled       .and. temp_memory > -30.0) .or. &
+           (.not. coldacclim_enabled .and. temp_memory > -5.0 .and. myinterface%grid%dayl > 0.0))) then
 
         !================================================================
         ! P-model call to get acclimated quantities as a function of the
