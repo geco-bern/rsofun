@@ -15,16 +15,17 @@ module md_forcing_pmodel
     getclimate, getco2, getfapar, get_fpc_grid, vegcover_type
 
   type climate_type
-    real(kind=sp) :: dtemp  ! daily mean air temperature, deg C
+    real(kind=sp) :: dtemp  ! daytime mean air temperature, deg C
     real(kind=sp) :: dtmin  ! daily minimum air temperature, deg C
     real(kind=sp) :: dtmax  ! daily maximum air temperature, deg C
-    real(kind=sp) :: dprec  ! mm d-1
-    real(kind=sp) :: dsnow  ! mm d-1 water equivalents
+    real(kind=sp) :: dprec  ! mm s-1
+    real(kind=sp) :: dsnow  ! mm s-1 water equivalents
     real(kind=sp) :: dfsun  ! unitless
     real(kind=sp) :: dvpd   ! Pa
-    real(kind=sp) :: dppfd  ! mol m-2 d-1
+    real(kind=sp) :: dppfd  ! mol m-2 s-1
     real(kind=sp) :: dnetrad! W m-2
     real(kind=sp) :: dpatm  ! Pa
+    real(kind=sp) :: d13c_atm ! atmospheric delta-13C isotopic signature, permil
   end type climate_type
 
   type vegcover_type
@@ -59,20 +60,24 @@ contains
     logical, intent(in) :: in_netrad
 
     ! local variables
-    integer :: idx_start, idx_end
-    integer, dimension(2) :: shape_forcing
+    integer :: idx_start, idx_end, forcing_years, idx
 
     ! function return variable
     type( climate_type ), dimension(ndayyear) :: out_climate
 
-    idx_start = (climateyear_idx - 1) * ndayyear + 1
+    forcing_years = size(forcing(:, 1)) / ndayyear
+    ! If we are simulating more years than the forcing array contains,
+    ! We repeat the last year of the forcing.
+    idx = MIN(climateyear_idx, forcing_years)
+
+    idx_start = (idx - 1) * ndayyear + 1
     idx_end   = idx_start + ndayyear - 1
     
     ! Test if forcing dimensions are correct
-    shape_forcing = shape(forcing)
-    if (idx_end > shape_forcing(1)) then
+    ! shape_forcing = shape(forcing)
+    ! if (idx_end > shape_forcing(1)) then
       ! stop 'forcing array size does not have enough rows.'
-    end if
+    ! end if
 
     ! warning: column indices in forcing array are hard coded
     out_climate(:)%dtemp   = real(forcing(idx_start:idx_end, 1))
@@ -89,15 +94,13 @@ contains
     else
       out_climate(:)%dnetrad = dummy
     end if
-    if ( in_netrad .and. in_ppfd ) then
-      out_climate(:)%dfsun = dummy
-    else
-      out_climate(:)%dfsun = real(forcing(idx_start:idx_end, 6))
-    end if
+    out_climate(:)%dfsun   = real(forcing(idx_start:idx_end, 6))
     out_climate(:)%dsnow   = real(forcing(idx_start:idx_end, 7))
     out_climate(:)%dpatm   = real(forcing(idx_start:idx_end, 10))
     out_climate(:)%dtmin   = real(forcing(idx_start:idx_end, 11))
     out_climate(:)%dtmax   = real(forcing(idx_start:idx_end, 12))
+    
+    out_climate(:)%d13c_atm = real(forcing(idx_start:idx_end, 13))
 
   end function getclimate
 
@@ -117,11 +120,16 @@ contains
 
     ! local variables 
     integer :: readyear_idx
-    integer :: idx_start, idx_end
+    integer :: idx_start, idx_end, forcing_years, idx
 
     readyear_idx = forcingyear - firstyeartrend + 1
 
-    idx_start = (readyear_idx - 1) * ndayyear + 1
+    forcing_years = size(forcing(:, 1)) / ndayyear
+    ! If we are simulating more years than the forcing array contains,
+    ! We repeat the last year of the forcing.
+    idx = MIN(readyear_idx, forcing_years)
+
+    idx_start = (idx - 1) * ndayyear + 1
     idx_end   = idx_start + ndayyear - 1
 
     pco2 = sum(real(forcing(idx_start:idx_end, 8)))/ndayyear
@@ -142,9 +150,14 @@ contains
     type( vegcover_type ), dimension(ndayyear) :: out_vegcover
 
     ! local variables 
-    integer :: idx_start, idx_end
+    integer :: idx_start, idx_end, forcing_years, idx
 
-    idx_start = (forcingyear_idx - 1) * ndayyear + 1
+    forcing_years = size(forcing(:, 1)) / ndayyear
+    ! If we are simulating more years than the forcing array contains,
+    ! We repeat the last year of the forcing.
+    idx = MIN(forcingyear_idx, forcing_years)
+
+    idx_start = (idx - 1) * ndayyear + 1
     idx_end   = idx_start + ndayyear - 1
 
     out_vegcover(:)%dfapar = real(forcing(idx_start:idx_end, 9))
@@ -172,11 +185,11 @@ contains
     ! 9: WET: type12 = "permanent wetlands" ;
     ! 10:CRO: type13 + type15 = "croplands" + "cropland (natural vegetation mosaic)";
     !----------------------------------------------------------------
-    use md_params_siml_pmodel, only: paramstype_siml
+    use md_params_siml_pmodel, only: paramstype_siml_pmodel
     use md_params_core, only: npft
 
     ! arguments
-    type( paramstype_siml ), intent(in) :: params_siml
+    type( paramstype_siml_pmodel ), intent(in) :: params_siml
 
     ! function return variable
     real, dimension(npft) :: fpc_grid_field

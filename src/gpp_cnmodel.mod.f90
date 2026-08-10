@@ -167,6 +167,7 @@ contains
                               tc             = temp_memory, &
                               vpd            = vpd_memory, &
                               patm           = patm_memory, &
+                              tc_home        = temp_memory, &
                               c4             = params_pft_plant(pft)%c4, &
                               method_optci   = "prentice14", &
                               method_jmaxlim = "wang17" &
@@ -191,8 +192,7 @@ contains
       !----------------------------------------------------------------
       soilmstress = calc_soilmstress( tile(1)%soil%phy%wcont, &
                                       params_gpp%soilm_thetastar, &
-                                      params_gpp%soilm_betao, &
-                                      params_pft_plant(1)%grass )
+                                      params_gpp%soilm_betao )
 
       ! xxx debug
       soilmstress = 1.0
@@ -230,8 +230,9 @@ contains
       tile_fluxes(lu)%plant(pft)%asat    = out_pmodel%asat
 
       ! quantities with instantaneous temperature response
-      tile_fluxes(lu)%plant(pft)%vcmax = calc_ftemp_inst_vcmax( climate%dtemp, climate%dtemp, tcref = 25.0 ) * out_pmodel%vcmax25
-      tile_fluxes(lu)%plant(pft)%jmax  = calc_ftemp_inst_jmax(  climate%dtemp, climate%dtemp, tcref = 25.0 ) * out_pmodel%jmax25
+      tile_fluxes(lu)%plant(pft)%vcmax = calc_ftemp_inst_vcmax( climate%dtemp, climate%dtemp, tc_ref = 25.0 ) * out_pmodel%vcmax25
+      tile_fluxes(lu)%plant(pft)%jmax  = calc_ftemp_inst_jmax( climate%dtemp, climate%dtemp, &
+                                                              tc_home = temp_memory, tc_ref = 25.0 ) * out_pmodel%jmax25
 
       !----------------------------------------------------------------
       ! Save quantities used for allocation

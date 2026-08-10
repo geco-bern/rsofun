@@ -1,10 +1,10 @@
 Package: rsofun
 Title: The P-Model and BiomeE Modelling Framework
-Version: 4.4.1
+Version: 5.1.0.9001
 Authors@R: c(
             person(
-              family = "Benjamin",
-              given = "Stocker",
+              family = "Stocker",
+              given = "Benjamin",
               email = "benjamin.stocker@gmail.com",
               comment = c(ORCID = "0000-0003-2697-9096"),
               role = c("aut", "cre")),
@@ -27,11 +27,23 @@ Authors@R: c(
                comment = c(ORCID = "0000-0002-3593-5557"),
                role = c("ctb")),
             person(
+               family = "Marcadella",
+               given = "Mayeul",
+               email = "mayeul.marcadella@gmail.com",
+               comment = c(ORCID = "0000-0001-8555-3808"),
+               role = c("ctb")),
+            person(
                family = "Weng",
                given = "Ensheng",
                email = "wengensheng@gmail.com",
                comment = c(ORCID = "0000-0002-1858-4847"),
                role = c("ctb")),
+            person(
+              family = "Bernhard",
+              given = "Fabian",
+              email = "fabian.bernhard@alumni.epfl.ch",
+              role = c("aut"),
+              comment = c(ORCID = "0000-0003-0338-0961")),
             person(given = "Geocomputation and Earth Observation, University of Bern",
                 role = c("cph", "fnd"))
            )
@@ -42,34 +54,45 @@ Description: Implements the Simulating Optimal FUNctioning framework for
               (Davis et al. (2017) <doi:10.5194/gmd-10-689-2017>)
               and BiomeE (Weng et al. (2015)
               <doi:10.5194/bg-12-2655-2015>).
-URL: https://github.com/geco-bern/rsofun
+URL: https://github.com/geco-bern/rsofun, https://geco-bern.github.io/rsofun/
 BugReports: https://github.com/geco-bern/rsofun/issues
 License: GPL-3
 Depends:
     R (>= 4.1.0)
 Imports:
-    dplyr,
+    dplyr (>= 1.2.0),
     purrr,
     tidyr,
     magrittr,
     GenSA,
     BayesianTools,
+    lubridate,
     multidplyr,
     stats,
-    utils
+    utils,
+    doParallel,
+    msm,
+    foreach,
+    methods
 LazyData: true
 LazyDataCompression: xz
 ByteCompile: true
 NeedsCompilation: yes
 Suggests:
     covr,
+    constructive,
+    cowplot,
     rcmdcheck,
-    testthat,
+    testthat (>= 3.0.0),
     rmarkdown,
     ggplot2,
     knitr,
     sensitivity,
-    cowplot
+    rpmodel,
+    rlang,
+    khroma,
+    yardstick
 VignetteBuilder: knitr
 Encoding: UTF-8
+Config/testthat/edition: 3
 Config/roxygen2/version: 8.0.0

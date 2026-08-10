@@ -1,40 +1,70 @@
 #' rsofun P-model driver data
 #'
-#' Small tests dataset to validate if compiled code
-#' and optimization routines can run
+#' Small dataset representing the driver to run the P-model at the FR-Pue site.
+#' Legacy data set. See details in the documentation of its replacement
+#' \code{\link{pmodel_drivers}}
+"p_model_oldformat_drivers"
+
+#' rsofun P-model GPP validation data
+#'
+#' Small example dataset of target observations (daily GPP flux data) to optimize
+#' model parameters with the function \code{\link{calib_sofun_legacy}}.
+#' Legacy data set. See details in the documentation of its replacement
+#' \code{\link{pmodel_validation}}
+"p_model_oldformat_validation"
+
+#' rsofun P-model driver data
+#'
+#' Small dataset representing the driver to run the P-model at the six Fluxnet
+#' sites and 5 sites with trait observations.
+#' It can be used together with daily GPP or ET flux time series data and
+#' trait data to optimize model parameters (see \code{\link{pmodel_validation}}).
 #'
 #' @format A tibble of driver data:
 #' \describe{
 #'   \item{sitename}{A character string containing the site name.}
-#'   \item{forcing}{A tibble of a time series of forcing climate data, including 
-#'   the following variables:
+#'   \item{forcing}{A tibble of a time series of forcing climate data. Required
+#'   parameters differ for daily simulations or for onestep acclimation.
+#'   For daily simulations these include daily values of:
 #'     \describe{
 #'       \item{date}{Date of the observation in YYYY-MM-DD format.}
 #'       \item{temp}{Daytime average air temperature in \eqn{^\circ}C.}
 #'       \item{vpd}{Daytime average vapour pressure deficit in Pa.}
-#'       \item{ppfd}{Photosynthetic photon flux density (PPFD) in 
+#'       \item{ppfd}{Photosynthetic photon flux density (PPFD) in
 #'       mol m\eqn{^{-2}} s\eqn{^{-1}}. If all values are NA, it indicates that
-#'       PPFD should be calculated by the SPLASH model.}
-#'       \item{netrad}{Net radiation in W m\eqn{^{-2}}. If all values are NA,
-#'       it indicates that net radiation should be calculated by the SPLASH
-#'       model.}
+#'       PPFD should be calculated by the SPLASH model and column ccov.}
+#'       \item{netrad}{Net radiation in W m\eqn{^{-2}}. WARNING: This is currently
+#'       ignored as a model forcing.}
 #'       \item{patm}{Atmospheric pressure in Pa.}
 #'       \item{snow}{Snow in water equivalents mm s\eqn{^{-1}}.}
 #'       \item{rain}{Rain as precipitation in liquid form in mm s\eqn{^{-1}}.}
 #'       \item{tmin}{Daily minimum air temperature in \eqn{^\circ}C.}
 #'       \item{tmax}{Daily maximum air temperature in \eqn{^\circ}C.}
+#'       \item{wind}{Wind velocity (m s-1)}
 #'       \item{fapar}{Fraction of photosynthetic active radiation (fAPAR), taking
 #'      values between 0 and 1.}
-#'       \item{co2}{Atmospheric CO\eqn{_2} concentration.}
+#'       \item{co2}{Atmospheric CO\eqn{_2} concentration in ppm.}
 #'       \item{ccov}{Cloud coverage in \%. This is only used when either PPFD or
 #'       net radiation are not prescribed.}
 #'       }
+#'   For onestep acclimation these include growing season averages (i.e. single
+#'   values) of:
+#'     \describe{
+#'       \item{temp}{Daytime average air temperature in \eqn{^\circ}C.}
+#'       \item{vpd}{Daytime average vapour pressure deficit in Pa.}
+#'       \item{ppfd}{Photosynthetic photon flux density (PPFD) in
+#'       mol m\eqn{^{-2}} s\eqn{^{-1}}.}
+#'       \item{patm}{Atmospheric pressure in Pa.}
+#'       \item{co2}{Atmospheric CO\eqn{_2} concentration in ppm.}
+#'     }
 #'   }
-#'   \item{params_siml}{A tibble of simulation parameters.
+#'   \item{params_siml}{A tibble of simulation parameters. Required parameters
+#'   differ for daily simulations or for onestep acclimation.
+#'   For daily simulations these include:
 #'     \describe{
 #'       \item{spinup}{A logical value indicating whether this simulation does spin-up.}
 #'       \item{spinupyears}{Number of spin-up years.}
-#'       \item{recycle}{Length of standard recycling period, in days.}
+#'       \item{recycle}{Number of first N years of forcing data.frame that are recycled for spin-up.}
 #'       \item{outdt}{An integer indicating the output periodicity.}
 #'       \item{ltre}{A logical value, \code{TRUE} if evergreen tree.}
 #'       \item{ltne}{A logical value, \code{TRUE} if evergreen tree and N-fixing.}
@@ -44,253 +74,334 @@
 #'       \item{lgn3}{A logical value, \code{TRUE} if grass with C3 photosynthetic
 #'       pathway and N-fixing.}
 #'       \item{lgr4}{A logical value, \code{TRUE} if grass with C4 photosynthetic pathway.}
+#'       \item{onestep}{A logical value, \code{FALSE} to request daily simulations.
+#'       Defaults to \code{FALSE} if missing.}
+#'     }
+#'   For onestep acclimation these include:
+#'     \describe{
+#'       \item{lc4}{A logical value indicating whether to use C4 photosynthetic pathway.}
+#'       \item{onestep}{A logical value, \code{TRUE} to request onestep acclimation.
+#'       Defaults to \code{FALSE} if missing.}
 #'     }
 #'   }
 #'   \item{site_info}{A tibble containing site meta information.
+#' This data structure can be freely used for documenting the dataset, but must include at least the following data:
 #'     \describe{
 #'       \item{lon}{Longitude of the site location in degrees east.}
 #'       \item{lat}{Latitude of the site location in degrees north.}
 #'       \item{elv}{Elevation of the site location, in meters above sea level.}
-#'       \item{whc}{A numeric value for the rooting zone water holding capacity (in mm)}
+#'       \item{whc}{A numeric value for the rooting zone water holding capacity
+#'       (in mm). (Not needed if \code{onestep == "TRUE"}.)}
 #'     }
 #'   }
 #' }
-#' 
-#' @source Pastorello, G., Trotta, C., Canfora, E. et al. 
-#' The FLUXNET2015 dataset and the ONEFlux processing pipeline for eddy covariance data. 
+#'
+#' @source Pastorello, G., Trotta, C., Canfora, E. et al.
+#' The FLUXNET2015 dataset and the ONEFlux processing pipeline for eddy covariance data.
 #' Sci Data 7, 225 (2020). https://doi.org/10.1038/s41597-020-0534-3
-#' 
-#' University of East Anglia Climatic Research Unit; Harris, I.C.; Jones, P.D.; Osborn, T. (2021): 
-#' CRU TS4.05: Climatic Research Unit (CRU) Time-Series (TS) version 4.05 of high-resolution 
-#' gridded data of month-by-month variation in climate (Jan. 1901- Dec. 2020). 
-#' NERC EDS Centre for Environmental Data Analysis, date of citation. 
+#'
+#' University of East Anglia Climatic Research Unit; Harris, I.C.; Jones, P.D.; Osborn, T. (2021):
+#' CRU TS4.05: Climatic Research Unit (CRU) Time-Series (TS) version 4.05 of high-resolution
+#' gridded data of month-by-month variation in climate (Jan. 1901- Dec. 2020).
+#' NERC EDS Centre for Environmental Data Analysis, date of citation.
 #' https://catalogue.ceda.ac.uk/uuid/c26a65020a5e4b80b20018f148556681
-#' 
-#' Weedon, G. P., G. Balsamo, N. Bellouin,S. Gomes, M. J. Best, and P. Viterbo(2014), 
-#' The WFDEI meteorologicalforcing data set: WATCH Forcing Datamethodology applied 
+#'
+#' Weedon, G. P., G. Balsamo, N. Bellouin,S. Gomes, M. J. Best, and P. Viterbo(2014),
+#' The WFDEI meteorologicalforcing data set: WATCH Forcing Datamethodology applied
 #' to ERA-Interimreanalysis data,
 #' Water Resour. Res.,50,7505–7514, doi:10.1002/2014WR015638.
-#' 
-#' Fick, S.E. and R.J. Hijmans, 2017. WorldClim 2: new 1km spatial resolution climate 
-#' surfaces for global land areas. International Journal of Climatology 37 (12): 4302-4315.
-"p_model_drivers"
-
-#' SOFUN p-model GPP validation data
 #'
-#' Small tests dataset to validate 
-#' calibration routines for a time series of fluxes.
+#' Fick, S.E. and R.J. Hijmans, 2017. WorldClim 2: new 1km spatial resolution climate
+#' surfaces for global land areas. International Journal of Climatology 37 (12): 4302-4315.
+"pmodel_drivers"
+
+#' rsofun P-model GPP and leaf D13C validation data
+#'
+#' Small example dataset of target observations (daily GPP flux data as well as
+#' leaf D13C data) to optimize
+#' model parameters with the function \code{\link{calib_sofun}}
 #'
 #' @format A tibble of validation data:
 #' \describe{
 #'   \item{sitename}{A character string containing the site name (e.g. 'FR-Pue').}
-#'   \item{data}{A tibble [ 2,920 x 3 ] with time series for the following variables:
+#'   \item{source}{A character string containing the name of the data source.
+#'   It can be used for specifying which data sets to use for calibration.}
+#'   \item{data}{A single tibble or a list of tibbles with target observations.
+#'   For daily simulations this single tibble can contain daily values for:
 #'     \describe{
 #'       \item{date}{Date vector with format YYYY-MM-DD.}
-#'       \item{gpp}{The observed Gross Primary Productivity (GPP) for each time stamp 
+#'       \item{gpp}{The observed Gross Primary Productivity (GPP) for each time stamp
 #'       (in gC m\eqn{^{-2}} d\eqn{^{-1}}).}
-#'       \item{gpp_unc}{The uncertainty of the GPP (in gC m\eqn{^{-2}} d\eqn{^{-1}}).}
+#'       \item{gpp_qc}{A quality check indicator.}
+#'       \item{le}{Latent heat of exchange ...}
+#'       \item{...}{... etc.}
+#'     }
+#'   For onestep acclimation this can fore example include:
+#'     \describe{
+#'       \item{bigD13C}{A tibble containing observations of leaf D13C values.}
+#'       \item{Vcmax}{A tibble containing observations of Vcmax values.}
+#'       \item{Jmax}{A tibble containing observations of Jmax values.}
 #'     }
 #'   }
 #' }
-#' @examples require(ggplot2); require(tidyr)
-#' p_model_validation %>% tidyr::unnest(data) 
-#' 
-#' @source Pastorello, G., Trotta, C., Canfora, E. et al. 
-#' The FLUXNET2015 dataset and the ONEFlux processing pipeline for eddy covariance data. 
+#' @examples require(ggplot2)
+#' require(tidyr)
+#' p_model_oldformat_validation %>% tidyr::unnest(data)
+#' pmodel_validation |> dplyr::filter(grepl("^[A-Z]", sitename)) |> unnest(data)
+#' pmodel_validation |> dplyr::filter(grepl("lon", sitename)) |> unnest(data)
+#'
+#' @source Pastorello, G., Trotta, C., Canfora, E. et al.
+#' The FLUXNET2015 dataset and the ONEFlux processing pipeline for eddy covariance data.
 #' Sci Data 7, 225 (2020). https://doi.org/10.1038/s41597-020-0534-3
-"p_model_validation"
+#'
+#' Cornwell, W. (2025). traitecoevo/leaf13C: V0.2.2 (Version v0.2.2)
+#' [Computer software]. Zenodo. https://doi.org/10.5281/zenodo.15239220
+#'
+#' Cornwell, William K., et al. “Climate and soils together regulate
+#' photosynthetic carbon isotope discrimination within C3 plants worldwide.”
+#' Global Ecology and Biogeography 27.9 (2018): 1056-1067.
+"pmodel_validation"
 
-#' rsofun p-model driver data (for leaf traits)
+#' rsofun P-model output data
 #'
-#' Small tests dataset to validate if compiled code
-#' and optimization routines can run for leaf traits data
-#'
-#' @format A tibble of model driver data:
-#' \describe{
-#'   \item{sitename}{A character string containing the site names.}
-#'   \item{forcing}{A tibble of forcing climate data for an "average" year, 
-#'   including the following variables:
-#'     \describe{
-#'       \item{date}{Date in YYYY-MM-DD format (here representative of the day of the year instead
-#'       of the date of observation).}
-#'       \item{temp}{Air temperature in \eqn{^\circ}C.}
-#'       \item{vpd}{Vapour pressure deficit in Pa.}
-#'       \item{ppfd}{Photosynthetic photon flux density (PPFD) in 
-#'       mol m\eqn{^{-2}} s\eqn{^{-1}}. If all values are NA, it indicates that
-#'       PPFD should be calculated by the SPLASH model.}
-#'       \item{netrad}{Net radiation in W m\eqn{^{-2}}. If all values are NA,
-#'       it indicates that net radiation should be calculated by the SPLASH
-#'       model.}
-#'       \item{patm}{Atmospheric pressure in Pa.}
-#'       \item{ccov}{Cloud coverage in \%. This is only used when either PPFD or
-#'       net radiation are not prescribed.}
-#'       \item{snow}{Snow in mm d\eqn{^{-1}}.}
-#'       \item{rain}{Rain in mm d\eqn{^{-1}}.}
-#'       \item{fapar}{Fraction of photosynthetic active radiation (fAPAR), taking
-#'      values between 0 and 1.}
-#'       \item{co2}{Annually varying observed atmospheric CO\eqn{_2}, identical 
-#'       across sites.}
-#'       \item{tmin}{Daily minimum air temperature in \eqn{^\circ}C (set equal to temp).}
-#'       \item{tmax}{Daily maximum air temperature in \eqn{^\circ}C.(set equal to temp).}
-#'       }
-#'   }
-#'   \item{params_siml}{A tibble containing simulation parameters.
-#'     \describe{
-#'       \item{spinup}{A logical value indicating whether this simulation does spin-up.}
-#'       \item{spinupyears}{Number of spin-up years.}
-#'       \item{recycle}{Length of standard recycling period, in days.}
-#'       \item{outdt}{An integer indicating the output periodicity.}
-#'       \item{ltre}{A logical value, \code{TRUE} if evergreen tree.}
-#'       \item{ltne}{A logical value, \code{TRUE} if evergreen tree and N-fixing.}
-#'       \item{ltrd}{A logical value, \code{TRUE} if deciduous tree.}
-#'       \item{ltnd}{A logical value, \code{TRUE} if deciduous tree and N-fixing.}
-#'       \item{lgr3}{A logical value, \code{TRUE} if grass with C3 photosynthetic pathway.}
-#'       \item{lgn3}{A logical value, \code{TRUE} if grass with C3 photosynthetic
-#'       pathway and N-fixing.}
-#'       \item{lgr4}{A logical value, \code{TRUE} if grass with C4 photosynthetic pathway.}
-#'     }
-#'   }
-#'   \item{site_info}{A tibble containing site meta information.
-#'     \describe{
-#'       \item{lon}{Longitud of the site location.}
-#'       \item{lat}{Latitude of the site location.}
-#'       \item{elv}{Elevation of the site location, in meters.}
-#'       \item{whc}{A numeric value for the root zone water holding capacity (in mm), used for 
-#'       simulating the soil water balance.}
-#'     }
-#'   }
-#' }
-#' 
-#' @source Atkin, O. K., Bloomfield, K. J., Reich, P. B., Tjoelker, M. G., Asner, G. P., Bonal, D., et al. (2015). 
-#' Global variability in leaf respiration in relation to climate, plant functional types and leaf traits. 
-#' New Phytol. 206 (2), 614–636. doi:10.1111/nph.13253
-#' 
-#' University of East Anglia Climatic Research Unit; Harris, I.C.; Jones, P.D.; Osborn, T. (2021): 
-#' CRU TS4.05: Climatic Research Unit (CRU) Time-Series (TS) version 4.05 of high-resolution 
-#' gridded data of month-by-month variation in climate (Jan. 1901- Dec. 2020). 
-#' NERC EDS Centre for Environmental Data Analysis, date of citation. 
-#' https://catalogue.ceda.ac.uk/uuid/c26a65020a5e4b80b20018f148556681
-#' 
-#' Weedon, G. P., G. Balsamo, N. Bellouin,S. Gomes, M. J. Best, and P. Viterbo(2014), 
-#' The WFDEI meteorologicalforcing data set: WATCH Forcing Datamethodology applied 
-#' to ERA-Interimreanalysis data,
-#' Water Resour. Res.,50,7505–7514, doi:10.1002/2014WR015638.
-#' 
-#' Fick, S.E. and R.J. Hijmans, 2017. 
-#' WorldClim 2: new 1km spatial resolution climate surfaces for global land areas. 
-#' International Journal of Climatology 37 (12): 4302-4315.
-#' 
-#' C.D. Keeling, R.B. Bacastow, A.E. Bainbridge, C.A. Ekdahl, P.R. Guenther, and L.S. Waterman, (1976), 
-#' Atmospheric carbon dioxide variations at Mauna Loa Observatory, Hawaii, Tellus, vol. 28, 538-551
-"p_model_drivers_vcmax25"
+#' Example output dataset from a p-model run using \code{\link{pmodel_drivers}}.
+#' Results are stored as nested \code{tibble} in the column \code{data}.
+#' See \code{\link{run_pmodel_f_bysite}}
+#' and \code{\link{run_pmodel_onestep_f_bysite}} for a detailed
+#' description of the outputs.
+"pmodel_output"
 
-#' SOFUN p-model Vcmax25 validation data
+#' rsofun BiomeE driver data (Leuning photosynthesis model)
 #'
-#' Small tests dataset to validate 
-#' calibration routines for leaf traits.
+#' Example driver to run the BiomeE-model at the CH-LAE site
+#' using the Leuning photosynthesis specification (and half-hourly time step)
+#' It can also be used together with leaf trait data from CH-LAE (\code{\link{biomee_validation}})
+#' to optimize model parameters.
 #'
-#' @format A tibble of validation data:
+#' @format A tibble of driver data.
 #' \describe{
-#'   \item{sitename}{A character string containing the site names (e.g. 'Reichetal_Colorado').}
-#'   \item{data}{A tibble [ 1 x 2 ] with observations for the following variables:
+#'   \item{sitename}{Site name}
+#'   \item{params_siml}{Simulation parameters as a data.frame, including
+#'   the following data:
 #'     \describe{
-#'       \item{vcmax25}{The observed maximum rate of carboxylation (Vcmax), normalised 
-#'     to 25\eqn{^o} C (in mol C m\eqn{^{-2}} d\eqn{^{-1}}), aggregated over different plant species
-#'     in each site.}
-#'       \item{vcmax25_unc}{The uncertainty of the Vcmax25 (in mol C m\eqn{^{-2}} d\eqn{^{-1}}),
-#'       calculated as the standard deviation among Vcmax25 observations for
-#'       several species per site or as the total standard deviation across sites for
-#'       single-plant-species sites.}
-#'     }
-#'   }
-#' }
-#' @examples require(ggplot2); require(tidyr)
-#' p_model_validation_vcmax25 %>% tidyr::unnest(data) 
-#' 
-#' @source Atkin, O. K., Bloomfield, K. J., Reich, P. B., Tjoelker, M. G., Asner, G. P., Bonal, D., et al. (2015). 
-#' Global variability in leaf respiration in relation to climate, plant functional types and leaf traits. 
-#' New Phytol. 206 (2), 614–636. doi:10.1111/nph.13253
-"p_model_validation_vcmax25"
-
-#' rsofun BiomeE driver data
-#'
-#' Small tests dataset to validate if compiled code
-#' and optimization routines can run using the
-#' p-model specifications
-#'
-#' @format A tibble of driver data:
-#' \describe{
-#'   \item{sitename}{site name}
-#'   \item{params_siml}{model parameters}
-#'   \item{site_info}{site information}
-#'   \item{soil_texture}{soil texture data}
-#'   \item{forcing}{forcing data}
-#' }
-"biomee_p_model_drivers"
-
-#' rsofun BiomeE driver data
-#'
-#' Small tests dataset to validate if compiled code
-#' and optimization routines can run using the
-#' Leuning specifications
-#'
-#' @format A tibble of driver data:
-#' \describe{
-#'   \item{sitename}{site name}
-#'   \item{params_siml}{model parameters}
-#'   \item{site_info}{site information}
-#'   \item{soil_texture}{soil texture data}
-#'   \item{forcing}{forcing data}
+#'       \item{spinup}{Flag indicating whether this simulation does spin-up (deprecated).}
+#'       \item{spinupyears}{Number of spin-up years. Set to 0 for no spinup.}
+#'       \item{recycle}{Number of first N years of forcing data.frame that are recycled for spin-up.}
+#'       \item{firstyeartrend}{Year of first transient year (AD) (optional). Is only used to set years in output data frames. Defaults to 0 if not provided.}
+#'       \item{nyeartrend}{Number of transient years (optional). Determines the length of simulation output after spin-up. Defaults to number of years contained in the forcing data. (If longer than forcing data, last year of forcing is repeated until the end (spin-down).)}
+#'       \item{steps_per_day}{Time resolution of the forcing (day-1).}
+#'       \item{do_U_shaped_mortality}{Flag indicating whether U-shaped mortality is used.}
+#'       \item{do_closedN_run}{Flag indicating whether doing N closed runs to recover N balance enforcing 0.2 kg N m-2 in the inorganic N pool.}
+#'       \item{method_photosynth}{String specifying the method of photosynthesis used in the model, either "pmodel" or "gs_leuning".document()}
+#'       \item{method_mortality}{String indicating the type of mortality in the
+#'         model. One of the following: "dbh" is size-dependent mortality, "const_selfthin"
+#'         is constant self thinning (in development), "cstarvation" is carbon starvation, and
+#'         "growthrate" is growth rate dependent mortality.}
+#'       \item{do_daily_diagnostics}{Whether to output daily diagnostics ('output_daily_tile'). Default: True.}
+#'     }}
+#'   \item{site_info}{Site meta info in a data.frame.
+#' This data structure can be freely used for documenting the dataset, but must include at least the following data:
+#'     \describe{
+#'       \item{lon}{Longitude of the site location in degrees east.}
+#'       \item{lat}{Latitude of the site location in degrees north.}
+#'       \item{elv}{Elevation of the site location, in meters above sea level.}
+#'     }}
+#'   \item{forcing}{Forcing data.frame used as input
+#'     \describe{
+#'       \item{ppfd}{Photosynthetic photon flux density (mol m-2 s-1)}
+#'       \item{tair}{Air temperature (deg C)}
+#'       \item{vpd}{Vapor pressure deficit (Pa)}
+#'       \item{rain}{Precipitation (kgH2O m-2 s-1 == mm s-1)}
+#'       \item{wind}{Wind velocity (m s-1)}
+#'       \item{pair}{Atmospheric pressure (Pa)}
+#'       \item{co2}{Atmospheric CO\eqn{_2} concentration in ppm.}
+#'     }}
+#'   \item{params_tile}{Tile-level model parameters, into a single row data.frame, including the following data:
+#'     \describe{
+#'       \item{soiltype}{Integer indicating the type of soil: Sand = 1, LoamySand = 2, SandyLoam = 3, SiltLoam = 4, FrittedClay = 5, Loam = 6, Clay = 7.}
+#'       \item{FLDCAP}{Field capacity (vol/vol). Water remaining in a soil after it has been thoroughly saturated and allowed to drain freely.}
+#'       \item{WILTPT}{Wilting point (vol/vol). Water content of a soil at which plants wilt and fail to recover.}
+#'       \item{K1}{Fast soil C decomposition rate (yr\eqn{^{-1}}).}
+#'       \item{K2}{Slow soil C decomposition rate (yr\eqn{^{-1}}).}
+#'       \item{K_nitrogen}{Mineral Nitrogen turnover rate (yr\eqn{^{-1}}).}
+#'       \item{MLmixRatio}{Ratio of C and N returned to litters from microbes.}
+#'       \item{etaN}{N loss rate through runoff (organic and mineral) (yr\eqn{^{-1}}).}
+#'       \item{LMAmin}{Minimum LMA, leaf mass per unit area, kg C m\eqn{^{-2}}.}
+#'       \item{fsc_fine}{Fraction of fast turnover carbon in fine biomass.}
+#'       \item{fsc_wood}{Fraction of fast turnover carbon in wood biomass.}
+#'       \item{GR_factor}{Growth respiration factor.}
+#'       \item{l_fract}{Fraction of the carbon retained after leaf drop.}
+#'       \item{retransN}{Retranslocation coefficient of nitrogen.}
+#'       \item{f_initialBSW}{Coefficient for setting up initial sapwood.}
+#'       \item{f_N_add}{Re-fill of N for sapwood.}
+#'       \item{tf_base}{Calibratable scalar for respiration, used to increase LUE levels.}
+#'       \item{par_mort}{Canopy mortality parameter.}
+#'       \item{par_mort_under}{Parameter for understory mortality.}
+#'     }}
+#'   \item{params_species}{A data.frame containing species-specific model parameters, with one species per row, including the following data:
+#'     \describe{
+#'     \item{The following columns pertaining to the \bold{plant type}:}{\describe{
+#'       \item{lifeform}{Integer set to 0 for grasses and 1 for trees.}
+#'       \item{phenotype}{Integer set to 0 for deciduous and 1 for evergreen.}
+#'       \item{pt}{Integer indicating the type of plant according to photosynthesis: 0 for C3; 1 for C4}
+#'     }}\item{The following columns pertaining to the \bold{root parameters}:}{\describe{
+#'       \item{alpha_FR}{Fine root turnover rate (yr\eqn{^{-1}}).}
+#'       \item{rho_FR}{Material density of fine roots (kg C m\eqn{^{-3}}).}
+#'       \item{root_r}{Radius of the fine roots, in m.}
+#'       \item{root_zeta}{e-folding parameter of root vertical distribution, in m.}
+#'       \item{Kw_root}{Fine root water conductivity (mol m\eqn{^{-2}} s\eqn{^{-1}} MPa\eqn{^{-1}}).}
+#'       \item{leaf_size}{Characteristic leaf size.}
+#'     }}\item{The following columns pertaining to the \bold{photosynthesis parameters}:}{\describe{
+#'       \item{Vmax}{Max RuBisCo rate, in mol m\eqn{^{-2}} s\eqn{^{-1}}.}
+#'       \item{Vannual}{Annual productivity per unit area at full sun (kg C m\eqn{^{-2}} year\eqn{^{-2}}).}
+#'       \item{wet_leaf_dreg}{Wet leaf photosynthesis down-regulation.}
+#'       \item{m_cond}{Factor of stomatal conductance.}
+#'       \item{alpha_phot}{Photosynthesis efficiency.}
+#'       \item{gamma_L}{Leaf respiration coefficient, in yr\eqn{^{-1}}.}
+#'       \item{gamma_LN}{Leaf respiration coefficient per unit N.}
+#'       \item{gamma_SW}{Sapwood respiration rate, in kg C m\eqn{^{-2}} yr\eqn{^{-1}}.}
+#'       \item{gamma_FR}{Fine root respiration rate, kg C kg C\eqn{^{-1}} yr\eqn{^{-1}}.}
+#'       \item{tk_crit}{Critical temperature triggerng offset of phenology, in Kelvin.}
+#'       \item{tk_crit_on}{Critical temperature triggerng onset of phenology, in Kelvin.}
+#'       \item{gdd_crit}{Critical value of GDD5 for turning ON growth season.}
+#'       \item{betaON}{Critical soil moisture for phenology onset.}
+#'       \item{betaOFF}{Critical soil moisture for phenology offset.}
+#'     }}\item{The following columns pertaining to the \bold{allometry parameters}:}{\describe{
+#'       \item{alphaHT}{Coefficient for allometry (height = alphaHT * DBH_m ** thetaHT), in m m\eqn{^{-thetaHT}}.}
+#'       \item{thetaHT}{Coefficient for allometry (height = alphaHT * DBH_m ** thetaHT), in m m\eqn{^{-thetaHT}}.}
+#'       \item{alphaCA}{Coefficient for allometry (projected crown area = pi * (alphaCA * DBH_m) ** thetaCA), in m\eqn{^{2/thetaCA-1}}.}
+#'       \item{thetaCA}{Coefficient for allometry (projected crown area = pi * (alphaCA * DBH_m) ** thetaCA), unitless. Dybzinski (eq. G1) showed that thetaCA = theatBM - 1.}
+#'       \item{alphaBM}{Coefficient for allometry (biomass = alphaBM * DBH ** thetaBM), in kg C m\eqn{^{-thetaBM}}.}
+#'       \item{thetaBM}{Coefficient for allometry (biomass = alphaBM * DBH ** thetaBM), unitless. Dybzinski (eq. G1) showed that thetaCA = theatBM - 1.}
+#'     }}\item{The following columns pertaining to the \bold{reproduction parameters}:}{\describe{
+#'       \item{seedlingsize}{Initial size of seedlings, in kg C per individual.}
+#'       \item{maturalage}{Age at which trees can reproduce (years).}
+#'       \item{v_seed}{Fraction of G_SF to G_F.}
+#'     }}\item{The following columns pertaining to the \bold{mortality parameters}:}{\describe{
+#'       \item{mortrate_d_c}{Canopy tree mortality rate (yr\eqn{^{-1}}).}
+#'       \item{mortrate_d_u}{Understory tree mortality rate (yr\eqn{^{-1}}).}
+#'     }}\item{The following columns pertaining to the \bold{leaf parameters}:}{\describe{
+#'       \item{LMA}{Leaf mass per unit area (kg C m\eqn{^{-2}}).}
+#'       \item{leafLS}{TODO}
+#'       \item{LNbase}{Basal leaf N per unit area, in kg N m\eqn{^{-2}}.}
+#'       \item{CNleafsupport}{TODO}
+#'       \item{rho_wood}{Wood density (kg C m\eqn{^{-3}}).}
+#'       \item{taperfactor}{TODO}
+#'       \item{lAImax}{Maximum crown LAI (leaf area index).}
+#'       \item{tauNSC}{TODO}
+#'       \item{fNSmax}{Multiplier for NSNmax as sum of potential bl and br.}
+#'       \item{phiCSA}{Ratio of sapwood area to leaf area.}
+#'     }}\item{The following columns pertaining to the \bold{C/N ratios for plant pools}:}{\describe{
+#'       \item{CNleaf0}{TODO}
+#'       \item{CNsw0}{TODO}
+#'       \item{CNwood0}{TODO}
+#'       \item{CNroot0}{TODO}
+#'       \item{CNseed0}{TODO}
+#'       \item{Nfixrate0}{Reference N fixation rate (kg N kg C\eqn{^{-1}} root).}
+#'       \item{NfixCost0}{Carbon cost of N fixation (kg C kg N\eqn{^{-1}}).}
+#'       \item{internal_gap_frac}{TODO}
+#'     }}\item{The following columns pertaining to the \bold{calibratable parameters}:}{\describe{
+#'       \item{kphio}{Quantum yield efficiency \eqn{\varphi_0}, in mol mol\eqn{^{-1}}.}
+#'       \item{phiRL}{Ratio of fine root to leaf area.}
+#'       \item{LAI_light}{Maximum LAI limited by light.}
+#'     }}}}
+#'   \item{init_cohort}{A data.frame of initial cohort specifications, including
+#'   the following data:
+#'     \describe{
+#'       \item{init_cohort_species}{Index of a species described in param_species.}
+#'       \item{init_cohort_nindivs}{Initial individual density, in individuals per m\eqn{^{2}}.}
+#'       \item{init_cohort_bl}{Initial biomass of leaf, in kg C per individual.}
+#'       \item{init_cohort_br}{Initial biomass of fine root, in kg C per individual.}
+#'       \item{init_cohort_bsw}{Initial biomass of sapwood, in kg C per individual.}
+#'       \item{init_cohort_bHW}{Initial biomass of heartwood, in kg C per individual.}
+#'       \item{init_cohort_seedC}{Initial biomass of seed, in kg C per individual.}
+#'       \item{init_cohort_nsc}{Initial non-structural biomass, in kg C per individual.}
+#'       \item{lu_index}{Land use type this cohorts belongs to (given as index in init_lu aray).
+#'        Default: 0 (attach to all LU types except thoses which do not accept vegetation -- cf  init_lu.vegetated).}
+#'     }}
+#'   \item{init_soil}{A data.frame of initial soil pools, including
+#'   the following data:
+#'     \describe{
+#'       \item{init_fast_soil_C}{Initial fast soil carbon, in kg C m\eqn{^{-2}}.}
+#'       \item{init_slow_soil_C}{Initial slow soil carbon, in kg C m\eqn{^{-2}}.}
+#'       \item{init_Nmineral}{Mineral nitrogen pool, in kg N m\eqn{^{-2}}.}
+#'       \item{N_input}{Annual nitrogen input to soil N pool, in kg N m\eqn{^{-2}} yr\eqn{^{-1}}.}
+#'     }}
+#'   \item{init_lu}{A data.frame of initial land unit (LU) specifications, including
+#'     the following data:
+#'     \describe{
+#'       \item{fraction}{Initial grid cell fraction occupied by this LU, dimensionless (0 to 1) or m\eqn{^{-2}} LU area per m\eqn{^{-2}} grid cell area.
+#'         The sum of all fractions is typically equal to 1, but may be less in which case the difference is the fraction of the grid cell occupied by ice/water.}
+#'       \item{preset}{Predefined land use type (optional). One of: 'unmanaged', 'urban', 'cropland', 'pasture'. See below for meaning of these presets. Leave empty to not use any preset.}
+#'       \item{vegetated}{Whether this LU accepts vegetation. Default for preset 'urban': False, default for other presets: True.}
+#'       \item{extra_N_input}{Additional inorg N supply (to account for N fertiliser application), in kg m-2 yr-1. Default for preset 'cropland': 0.01, default other presets: 0.}
+#'       \item{extra_turnover_rate}{Additional soil turnover rate (to account for soil management such as tillage), dimensionless. Default for preset 'cropland': 0.2, default for other presets: 0.}
+#'       \item{oxidized_litter_fraction}{Fraction of above-ground turnover that is directly oxidized (crop and grass harvest), dimensionless.
+#'         Default for preset 'cropland': 0.9, default for preset 'pasture': 0.4, default for other presets: 0.}
+#'     }}
+#'   \item{luc_forcing}{Array of land use change (LUC) used during transient phase.
+#'      During spinup, the initial land unit fractions are used (i.e. no transition).
+#'      If there are more transient years than provided LUC data, the last state is maintained until the end of the transient phase (i.e. no transition).
+#'      The array is a nxn square matrix, where n is the number of LU (i.e. dimension of init_lu).
+#'      Each entry f(i, j) expresses the grid cell fraction of LU i (row) being transfered to LU j (column).
+#'      I.e. same units as \code{init_lu$fraction}.
+#'      Self transitions are allowed, meaning that a part of the land unit is clear cut, but the area remains in the same land use.}
 #' }
 "biomee_gs_leuning_drivers"
 
-#' rsofun BiomeE GPP validation data
+#' rsofun BiomeE driver data (P-model photosynthesis model)
 #'
-#' Small tests dataset to validate 
-#' calibration routines
+#' Example driver data to run the BiomeE-model at the CH-LAE site
+#' using the P-model photosynthesis specification (and daily time step).
+#' It can also be used together with leaf trait data from CH-LAE (\code{\link{biomee_validation}})
+#' to optimize model parameters.
 #'
-#' @format A tibble of driver data:
+#' @format See \code{\link{biomee_gs_leuning_drivers}}
+#'
+#' @inherit biomee_gs_leuning_drivers source
+"biomee_p_model_drivers"
+
+#' rsofun BiomeE driver data (P-model photosynthesis model) with LULUC
+#'
+#' Example driver data to run the BiomeE-model at the CH-LAE site
+#' using the P-model photosynthesis specification (and daily time step).
+#' It provides an example of land use change (LUC).
+#'
+#' @format See \code{\link{biomee_gs_leuning_drivers}}
+#'
+#' @inherit biomee_gs_leuning_drivers source
+"biomee_p_model_luluc_drivers"
+
+#' rsofun BiomeE validation data
+#'
+#' Small example dataset of target observations (leaf trait data) at the CH-LAE site
+#' to optimize model parameters with the function \code{\link{calib_sofun_legacy}}
+#'
+#' @format A tibble of validation data:
 #' \describe{
 #'   \item{sitename}{site name}
-#'   \item{data}{validation dta}
+#'   \item{data}{validation data}
 #' }
+#'
+#' @source Lukas Hörtnagl,  Werner Eugster,  Nina Buchmann,  Eugenie Paul-Limoges,  Sophia Etzold,  Matthias Haeni,  Peter Pluess,  Thomas Baur  (2004-2014)
+#' FLUXNET2015 CH-Lae Laegern,
+#' Dataset. https://doi.org/10.18140/FLX/1440134
 "biomee_validation"
 
-#' rsofun BiomeE GPP validation data
+#' rsofun BiomeE (gs_leuning) output data
 #'
-#' Small tests dataset to validate 
-#' calibration routines
-#'
-#' @format A tibble of driver data:
-#' \describe{
-#'   \item{sitename}{site name}
-#'   \item{data}{validation dta}
-#' }
-"biomee_validation_2"
-
-
-#' rsofun BiomeE GPP validation data
-#'
-#' Small tests dataset to validate 
-#' calibration routines
-#'
-#' @format A tibble of driver data:
-#' \describe{
-#'   \item{sitename}{site name}
-#'   \item{data}{validation dta}
-#' }
-"biomee_p_model_output"
-
-
-#' rsofun BiomeE GPP validation data
-#'
-#' Small tests dataset to validate 
-#' calibration routines
-#'
-#' @format A tibble of driver data:
-#' \describe{
-#'   \item{sitename}{site name}
-#'   \item{data}{validation dta}
-#' }
+#' Example output dataset from a BiomeE-model run using divers \code{\link{biomee_gs_leuning_drivers}}
+#' See \code{\link{runread_biomee_f}} and \code{\link{run_biomee_f_bysite}} for a detailed description of the outputs.
 "biomee_gs_leuning_output"
 
+#' rsofun BiomeE (P-model) output data
+#'
+#' Example output dataset from a BiomeE-model run using divers \code{\link{biomee_p_model_drivers}}
+#' See \code{\link{runread_biomee_f}} and \code{\link{run_biomee_f_bysite}} for a detailed description of the outputs.
+"biomee_p_model_output"
+
+#' rsofun BiomeE (P-model) output data
+#'
+#' Example output dataset from a BiomeE-model run using divers \code{\link{biomee_p_model_luluc_drivers}}
+#' See \code{\link{runread_biomee_f}} and \code{\link{run_biomee_f_bysite}} for a detailed description of the outputs.
+"biomee_p_model_luluc_output"

@@ -1,6 +1,6 @@
 [![R build status](https://github.com/geco-bern/rsofun/workflows/R-CMD-check/badge.svg)](https://github.com/geco-bern/rsofun/actions)
 [![codecov](https://codecov.io/gh/geco-bern/rsofun/branch/master/graph/badge.svg)](https://app.codecov.io/gh/geco-bern/rsofun)
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.3712928.svg)](https://doi.org/10.5281/zenodo.3712928)
+[![DOI](https://zenodo.org/badge/154527907.svg)](https://doi.org/10.5281/zenodo.3712928)
 
 # rsofun
 
@@ -35,6 +35,7 @@ library("rsofun")
  
 **NOTE:** Installing from GitHub requires compilation of Fortran and C source code contained in {rsofun}. To enable compiling source code, install [Rtools](https://cran.r-project.org/bin/windows/Rtools/) on Windows, or [Xcode](https://developer.apple.com/xcode/) and the [GNU Fortran compiler on Mac](https://github.com/fxcoudert/gfortran-for-macOS) (see also 'Mandatory tools' [here](https://mac.r-project.org/tools/)). On Linux, the gfortran compiler is usually installed already.
 
+**NOTE:** Installing from GitHub requires compilation of Fortran and C source code contained in {rsofun}. To enable compiling source code, install [Rtools](https://cran.r-project.org/bin/windows/Rtools/) on Windows, or [Xcode](https://developer.apple.com/xcode/) and the [GNU Fortran compiler on Mac](https://github.com/fxcoudert/gfortran-for-macOS) (see also 'Mandatory tools' [here](https://mac.r-project.org/tools/)). On Linux, the gfortran compiler is usually installed already.
 
 Vignettes are not rendered by default, if you want to include additional documentation please use:
 
@@ -43,6 +44,18 @@ if(!require(remotes)){install.packages("remotes")}
 remotes::install_github("geco-bern/rsofun", build_vignettes = TRUE)
 library("rsofun")
 ```
+
+### From source
+
+Assuming `rsofun` is the location of the source directory, on can build the R package (with extension .tar.gz) from the command line using:
+```bash
+R CMD build --no-manual --no-build-vignettes rsofun
+```
+The package can then be installed with:
+```bash
+R CMD INSTALL -c --preclean  *.tar.gz
+```
+, where the star `*` can be replaced by the name of the package produced at the previous step.
 
 ## Use
 
@@ -69,7 +82,7 @@ params_modl <- list(
 
 # run the model for these parameters
 output <- rsofun::runread_pmodel_f(
-  p_model_drivers,
+  pmodel_drivers,
   par = params_modl
   )
 ```
@@ -79,7 +92,7 @@ output <- rsofun::runread_pmodel_f(
 To optimize new parameters based upon driver data and a validation dataset we must first specify an optimization strategy and settings, as well as a cost function and parameter ranges.
 
 ``` r
-settings <- list(
+settings_calib <- list(
   method              = "GenSA",
   metric              = cost_rmse_pmodel,
   control = list(
@@ -99,24 +112,63 @@ With all settings defined the optimization function `calib_sofun()` can be calle
 ``` r
 # calibrate the model and optimize free parameters
 pars <- calib_sofun(
-    drivers = p_model_drivers,  
-    obs = p_model_validation,
-    settings = settings,
+    drivers = pmodel_drivers,  
+    obs = pmodel_validation,
+    settings_calib = settings_calib,
     # extra arguments passed to the cost function:
-    targets = "gpp",             # define target variable GPP
     par_fixed = params_modl[-1]  # fix non-calibrated parameters to previous 
                                  # values, removing kphio
   )
 ```
 
+## Data and code for model documentation paper (Paredes et al., 2025)
+The model documentation paper is available at https://doi.org/10.5194/gmd-18-9855-2025 
+and can be cited as:
+Paredes, J. A., Bernhard, F., Hufkens, K., Marcadella, M., and Stocker, B. D.: 
+rsofun v5.1: a model-data integration framework for simulating ecosystem processes, 
+Geosci. Model Dev., 18, 9855–9878, https://doi.org/10.5194/gmd-18-9855-2025, 2025.
+
+Code to reproduce the analysis and plots presented in the documentation paper is 
+contained in the repository at https://github.com/geco-bern/rsofun_doc and 
+archived on Zenodo (https://doi.org/10.5281/zenodo.17204361, Bernhard and 
+Stocker, 2025).
+
+
+## Data for rsofun example data sets
+Versioned releases of the rsofun package are deposited on Zenodo 
+(see badge at the top of the README file). 
+
+Model forcing and evaluation data stems form the following sources:
+- The model forcing and evaluation data for GPP sites are based on the publicly 
+available data, prepared by FluxDataKit v3.4.2 
+(https://doi.org/10.5281/zenodo.14808331, Hufkens and Stocker, 2025). 
+- The model forcing for Δ sites are based on the publicly available WorldClim 
+(https://doi.org/10.1002/joc.5086, Fick and Hijmans, 2017), 
+ETOPO1 (https://doi.org/10.7289/V5C8276M, NOAA National Geophysical Data Center, 
+2009), and Mauna Loa CO2 (https://doi.org/10.6075/J08W3BHW, Keeling et al., 2017) 
+data. 
+- The model evaluation data for Δ sites are based on data associated with Cornwell 
+et al. (2018) available at (https://doi.org/10.5281/zenodo.15239220, Cornwell, 2025). 
+
+Scripts for generating these data are contained in the `rsofun_doc` repository 
+(https://doi.org/10.5281/zenodo.17204361, Bernhard and Stocker, 2025) in the subdirectory `data-raw/`.
+
+
 ## References
+
+Paredes, J. A., Bernhard, F., Hufkens, K., Marcadella, M., and Stocker, B. D.: rsofun v5.1: a model-data integration framework for simulating ecosystem processes, Geosci. Model Dev., 18, 9855–9878, https://doi.org/10.5194/gmd-18-9855-2025, 2025.
 
 Stocker, B. D., Wang, H., Smith, N. G., Harrison, S. P., Keenan, T. F., Sandoval, D., Davis, T., and Prentice, I. C.: P-model v1.0: an optimality-based light use efficiency model for simulating ecosystem gross primary production, Geosci. Model Dev., 13, 1545–1581, https://doi.org/10.5194/gmd-13-1545-2020, 2020.
 
-Davis, T. W., Prentice, I. C., Stocker, B. D., Thomas, R. T., Whitley, R. J., Wang, H., Evans, B. J., Gallego-Sala, A. V., Sykes, M. T., and Cramer, W.: Simple process-led algorithms for simulating habitats (SPLASH v.1.0): robust indices of radiation, evapotranspiration and plant-available moisture, Geoscientific Model Development, 10, 689–708, doi:10.5194/gmd-10-689-2017, URL http: //www.geosci-model-dev.net/10/689/2017/, 2017.
+Cornwell, W. K., Wright, I. J., Turner, J., Maire, V., Barbour, M. M., Cernusak, L. A., Dawson, T., Ellsworth, D., Farquhar, G. D., Griffiths, H., Keitel, C., Knohl, A., Reich, P. B., Williams, D. G., Bhaskar, R., Cornelissen, J. H. C., Richards, A., Schmidt, S., Valladares, F., … Santiago, L. S.: Climate and soils together regulate photosynthetic carbon isotope discrimination within C3 plants worldwide. Global Ecology and Biogeography, 27(9), 1056–1067. https://doi.org/10.1111/geb.12764, 2018.
+
+Davis, T. W., Prentice, I. C., Stocker, B. D., Thomas, R. T., Whitley, R. J., Wang, H., Evans, B. J., Gallego-Sala, A. V., Sykes, M. T., and Cramer, W.: Simple process-led algorithms for simulating habitats (SPLASH v.1.0): robust indices of radiation, evapotranspiration and plant-available moisture, Geoscientific Model Development, 10, 689–708, doi:10.5194/gmd-10-689-2017, URL http://www.geosci-model-dev.net/10/689/2017/, 2017.
 
 Weng, E. S., Malyshev, S., Lichstein, J. W., Farrior, C. E., Dybzinski, R., Zhang, T., Shevliakova, E., and Pacala, S. W.: Scaling from individual trees to forests in an Earth system modeling framework using a mathematically tractable model of height-structured competition, Biogeosciences, 12, 2655–2694, https://doi.org/10.5194/bg-12-2655-2015, 2015.
 
+
+
 ## Acknowledgements
 
-The {rsofun} is part of the LEMONTREE project and funded by Schmidt Futures and under the umbrella of the Virtual Earth System Research Institute (VESRI).
+The {rsofun} is part of the LEMONTREE project and funded by Schmidt Futures and under the umbrella of the Virtual Earth System Research Institute (VESRI). 
+

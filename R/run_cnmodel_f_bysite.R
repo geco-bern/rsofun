@@ -176,6 +176,9 @@ run_cnmodel_f_bysite <- function(
   
   # base state, always execute the call
   continue <- TRUE
+
+  # Treat NULL inputs and values containing NA/NaN as missing.
+  is.nanull <- function(x) is.null(x) || anyNA(x)
   
   # record first year and number of years in forcing data 
   # frame (may need to overwrite later)

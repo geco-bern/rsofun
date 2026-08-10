@@ -2,6 +2,7 @@
 title: "Running the C-only model at CH-Oe1"
 author: "Benjamin Stocker"
 output: rmarkdown::html_vignette
+code-fold: true
 vignette: >
   %\VignetteIndexEntry{Running the C-only model at CH-Oe1}
   %\VignetteEngine{knitr::rmarkdown}
@@ -510,10 +511,6 @@ plot_grid(
 
 ## Evaluation
 
-### NEE
-
-#### Time series
-
 ```{r}
 ddf_modobs <- ddf |>
   transmute(
@@ -535,31 +532,6 @@ ddf_modobs <- ddf |>
       )
   ) |>
   mutate(reco_obs = nee_obs + gpp_obs)
-
-ddf_modobs |>
-  pivot_longer(
-    c(nee_mod, nee_obs),
-    names_to = "source",
-    values_to = "nee"
-  ) |>
-  ggplot(aes(date, nee, color = source)) +
-  geom_line() +
-  scale_color_manual(
-    name = "",
-    values = c(
-      nee_obs = "black",
-      nee_mod = "red"
-    ),
-    labels = c(
-      nee_obs = "Observed",
-      nee_mod = "Modelled"
-    )
-  ) +
-  labs(
-    x = "",
-    y = expression(paste("NEE (gC m"^-2, " d"^-1, ")"))
-  ) +
-  theme_bw()
 ```
 
 ### GPP
@@ -745,6 +717,37 @@ msc_reco |>
   theme_classic()
 ```
 
+### NEE
+
+#### Time series
+
+```{r}
+ddf_modobs |>
+  pivot_longer(
+    c(nee_mod, nee_obs),
+    names_to = "source",
+    values_to = "nee"
+  ) |>
+  ggplot(aes(date, nee, color = source)) +
+  geom_line() +
+  scale_color_manual(
+    name = "",
+    values = c(
+      nee_obs = "black",
+      nee_mod = "red"
+    ),
+    labels = c(
+      nee_obs = "Observed",
+      nee_mod = "Modelled"
+    )
+  ) +
+  labs(
+    x = "",
+    y = expression(paste("NEE (gC m"^-2, " d"^-1, ")"))
+  ) +
+  theme_bw()
+```
+
 #### Mean seasonal cycle
 
 ```{r}
@@ -803,3 +806,4 @@ msc_nee |>
   ) +
   theme_classic()
 ```
+

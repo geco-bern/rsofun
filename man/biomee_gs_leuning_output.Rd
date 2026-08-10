@@ -3,19 +3,15 @@
 \docType{data}
 \name{biomee_gs_leuning_output}
 \alias{biomee_gs_leuning_output}
-\title{rsofun BiomeE GPP validation data}
+\title{rsofun BiomeE (gs_leuning) output data}
 \format{
-A tibble of driver data:
-\describe{
-  \item{sitename}{site name}
-  \item{data}{validation dta}
-}
+An object of class \code{tbl_df} (inherits from \code{tbl}, \code{data.frame}) with 1 rows and 2 columns.
 }
 \usage{
 biomee_gs_leuning_output
 }
 \description{
-Small tests dataset to validate 
-calibration routines
+Example output dataset from a BiomeE-model run using divers \code{\link{biomee_gs_leuning_drivers}}
+See \code{\link{runread_biomee_f}} and \code{\link{run_biomee_f_bysite}} for a detailed description of the outputs.
 }
 \keyword{datasets}

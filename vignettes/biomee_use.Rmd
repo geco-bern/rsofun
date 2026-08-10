@@ -1,6 +1,6 @@
 ---
 title: "BiomeE usage"
-author: "Koen Hufkens, Josefa Arán"
+author: "Koen Hufkens, Josefa Arán, Fabian Bernhard"
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{BiomeE usage}
@@ -19,11 +19,15 @@ library(dplyr)
 library(ggplot2)
 ```
 
-The `rsofun` package and framework includes two main models. The `pmodel` and `biomee` (which in part relies on pmodel component). Here we give a short example on how to run the `biomee` model on the included demo datasets to familiarize yourself with both the data structure and the outputs.
+The `rsofun` package and framework includes two distinct simulation models. 
+The `p-model` and `biomee` (which in part relies on p-model component). 
+Below we give a short example on how to run the `biomee` model on the included demo datasets to familiarize yourself with both the data structure and the outputs.
 
 ## Demo data
 
-The package includes two demo datasets to run and validate pmodel output. These files can be directly loaded into your workspace by typing:
+The package includes two demo datasets to run simulations at the site CH-LAE with either the P-model or Leuning photosynthesis models.
+See below under 'Two model approaches' for a brief description of the differences.
+These demo files can be directly loaded into your workspace by typing:
 
 ```{r eval = FALSE}
 library(rsofun)
@@ -33,7 +37,7 @@ biomee_p_model_drivers
 biomee_validation
 ```
 
-These are real data from the Swiss CH-Lae fluxnet site. We can use these data to run the model, together with observations of GPP we can also parameterize `biomee` parameters.
+These are real data from the Swiss CH-LAE fluxnet site. We can use these data to run the model, together with observations of GPP we can also parameterize `biomee` parameters.
 
 # Two model approaches
 
@@ -55,23 +59,24 @@ head(biomee_gs_leuning_drivers$forcing)
 set.seed(2023)
 
 # run the model
-biomee_gs_leuning_output <- runread_biomee_f(
-     biomee_gs_leuning_drivers,
-     makecheck = TRUE,
-     parallel = FALSE
-     )
-
+out <- runread_biomee_f(
+  biomee_gs_leuning_drivers,
+  makecheck = TRUE,
+  parallel = FALSE
+)
+```
+```{r eval = FALSE, include = FALSE}
+# store output since calibration isn't run
+saveRDS(out, "files/biomee_use.Rmd__out.RDS", compress = "xz")
+```
+```{r eval = TRUE, include = FALSE}
+# fake output since calibration isn't run
+out <- readRDS("files/biomee_use.Rmd__out.RDS")
+```
+```{r}
 # split out the annual data
-biomee_gs_leuning_output <- biomee_gs_leuning_output$data[[1]]$output_annual_tile
-```
-
-```{r echo = FALSE, eval = FALSE}
-# Save output
-save(biomee_gs_leuning_output, file = "files/biomee_gs_leuning_output.rda")
-```
-
-```{r echo = FALSE}
-load("files/biomee_gs_leuning_output.rda")
+biomee_gs_leuning_output_annual_tile <- out$data[[1]]$output_annual_tile
+biomee_gs_leuning_output_annual_cohorts <- out$data[[1]]$output_annual_cohorts
 ```
 
 ### Plotting output
@@ -81,21 +86,20 @@ We can now visualize the model output.
 ```{r fig.width=7}
 # we only have one site so we'll unnest
 # the main model output
-cowplot::plot_grid(
-  biomee_gs_leuning_output |>
-    ggplot() +
-    geom_line(aes(x = year, y = GPP)) +
-    theme_classic()+labs(x = "Year", y = "GPP"),
-  biomee_gs_leuning_output |>
-    ggplot() +
-    geom_line(aes(x = year, y = plantC)) +
-    theme_classic()+labs(x = "Year", y = "plantC")
-)
+biomee_gs_leuning_output_annual_tile |>
+  ggplot() +
+  geom_line(aes(x = year, y = GPP)) +
+  theme_classic() + labs(x = "Year", y = "GPP")
+
+biomee_gs_leuning_output_annual_tile |>
+  ggplot() +
+  geom_line(aes(x = year, y = plantC)) +
+  theme_classic() + labs(x = "Year", y = "plantC")
 ```
 
-## Running the BiomeE model with P-model photosynthesis
+## Running the BiomeEP model
 
-Running the fast P-model implementation.
+Running BiomeE with P-model photosynthesis.
 
 ```{r}
 # print parameter settings
@@ -105,27 +109,19 @@ biomee_p_model_drivers$params_siml
 head(biomee_p_model_drivers$forcing)
 ```
 
-```{r eval = FALSE}
+```{r eval = TRUE}
 # run the model
-biomee_p_model_output <- runread_biomee_f(
-     biomee_p_model_drivers,
-     makecheck = TRUE,
-     parallel = FALSE
-     )
-
+out2 <- runread_biomee_f(
+  biomee_p_model_drivers,
+  makecheck = TRUE,
+  parallel = FALSE
+)
+```
+```{r}
 # split out the annual data for visuals
-biomee_p_model_output <- biomee_p_model_output$data[[1]]$output_annual_tile
+biomee_p_model_output_annual_tile <- out2$data[[1]]$output_annual_tile
+biomee_p_model_output_annual_cohorts <- out2$data[[1]]$output_annual_cohorts
 ```
-
-```{r echo = FALSE, eval = FALSE}
-# Save output
-save(biomee_p_model_output, file = "files/biomee_p_model_output.rda")
-```
-
-```{r echo = FALSE}
-load("files/biomee_p_model_output.rda")
-```
-
 ### Plotting output
 
 We can now visualize the model output.
@@ -133,17 +129,28 @@ We can now visualize the model output.
 ```{r fig.width=7}
 # we only have one site so we'll unnest
 # the main model output
+biomee_p_model_output_annual_tile %>%
+  ggplot() +
+  geom_line(aes(x = year, y = GPP)) +
+  theme_classic() +
+  labs(x = "Year", y = "GPP")
 
-cowplot::plot_grid(
-  biomee_p_model_output %>% 
-    ggplot() +
-    geom_line(aes(x = year, y = GPP)) +
-    theme_classic()+labs(x = "Year", y = "GPP"),
-  biomee_p_model_output %>% 
-    ggplot() +
-    geom_line(aes(x = year, y = plantC)) +
-    theme_classic()+labs(x = "Year", y = "plantC")
-)
+biomee_p_model_output_annual_tile %>%
+  ggplot() +
+  geom_line(aes(x = year, y = plantC)) +
+  theme_classic() +
+  labs(x = "Year", y = "plantC")
+
+biomee_p_model_output_annual_cohorts %>%
+  group_by(cID, year) %>%
+  summarise(
+    dbh = mean(DBH),
+    npp_per_m2 = sum(NPP * density / 10000), .groups = "keep") %>%
+  ggplot(aes(x = dbh, y = npp_per_m2, fill = as.factor(year))) +
+  geom_bar(stat = "identity") +
+  theme_classic() + labs(x = "Cohort DBH (cm)", y = "NPP (kg C m-2)", fill = "Year") +
+  scale_fill_manual(values = c("grey50")) +
+  theme(legend.position = c(1.0, 1.0), legend.justification = c(1.0, 1.0))
 ```
 
 ## Calibrating model parameters
@@ -153,37 +160,42 @@ To optimize new parameters based upon driver data and a validation dataset we mu
 ```{r eval = FALSE}
 # Mortality as DBH
 settings <- list(
-  method              = "GenSA",
-  metric              = cost_rmse_biomee,
+  method = "GenSA",
+  metric = cost_rmse_biomee,
   control = list(
-    maxit = 10
+    maxit = 10,
+    verbose = TRUE
   ),
   par = list(
-      phiRL = list(lower=0.5, upper=5, init=3.5),
-      LAI_light = list(lower=2, upper=5, init=3.5),
-      tf_base = list(lower=0.5, upper=1.5, init=1),
-      par_mort = list(lower=0.1, upper=2, init=1))
+    phiRL     = list(lower = 0.5, upper = 5,   init = 3.5),
+    LAI_light = list(lower = 2,   upper = 8,   init = 3.5),
+    tf_base   = list(lower = 0.5, upper = 1.5, init = 1),
+    par_mort  = list(lower = 0.005, upper = 4,   init = 0.5))
 )
 
-pars <- calib_sofun(
-  drivers = biomee_gs_leuning_drivers,
-  obs = biomee_validation_2,
+# Using BiomeEP (with P-model for photosynthesis)
+pars_all <- calib_sofun_legacy(
+  drivers = biomee_p_model_drivers,
+  obs = biomee_validation,
   settings = settings
 )
+pars <- pars_all["par"]
 ```
 
-```{r echo = FALSE}
-# Take values from the chunk before, which was run locally
+```{r include = FALSE}
+# fake output since calibration isn't run
+# saveRDS(pars_all, "files/biomee_use.Rmd__biomee_p_model_output___pars.RDS")
+# pars <- readRDS("files/biomee_use.Rmd__biomee_p_model_output___pars.RDS")["par"]
 pars <- list(
-  par = c(phiRL = 0.9709220,
-          LAI_light = 4.5722199,
-          tf_base = 0.5849346,
-          par_mort = 1.5779371)
-)
+  par = c(phiRL     = 1.27705864862701,
+    LAI_light = 5.62385280630643,
+    tf_base   = 0.504099730241379,
+    par_mort  = 0.0220552311561793
+))
 ```
 
 Using the calibrated parameter values, we can run again the BiomeE simulations.
-```{r eval = FALSE}
+```{r eval = TRUE}
 # replace parameter values by calibration output
 drivers <- biomee_p_model_drivers
 drivers$params_species[[1]]$phiRL[]  <- pars$par[1]
@@ -191,54 +203,123 @@ drivers$params_species[[1]]$LAI_light[]  <- pars$par[2]
 drivers$params_tile[[1]]$tf_base <- pars$par[3]
 drivers$params_tile[[1]]$par_mort <- pars$par[4]
 
+drivers$params_siml[[1]]$spinupyears <- 600
+
 # run the model with new parameter values
-biomee_p_model_output_calib <- runread_biomee_f(
-     drivers,
-     makecheck = TRUE,
-     parallel = FALSE
-     )
+calibrated_out <- runread_biomee_f(
+  drivers,
+  makecheck = TRUE,
+  parallel = FALSE
+)
 
 # split out the annual data
-biomee_p_model_output_calib <- biomee_p_model_output_calib$data[[1]]$output_annual_tile
-```
-
-```{r echo = FALSE, eval = FALSE}
-# Save output
-save(biomee_p_model_output_calib, file = "files/biomee_p_model_output_calib.rda")
-```
-
-```{r echo = FALSE}
-load("files/biomee_p_model_output_calib.rda")
+biomee_p_model_calibratedOutput_annual_tile <- calibrated_out$data[[1]]$output_annual_tile
 ```
 
 Finally, we can visually compare the two model runs. We plot the original model run in black and the run using the calibrated parameters in grey. The dashed line represents the validation data, i.e. the observed GPP and Biomass.
 ```{r fig.width=7}
 # unnest model output for our single site
-cowplot::plot_grid(
-  ggplot() +
-    geom_line(data = biomee_p_model_output,
-              aes(x = year, y = GPP)) +
-    geom_line(data = biomee_p_model_output_calib,
-              aes(x = year, y = GPP),
-              color = "grey50") +
-    theme_classic() + 
-    labs(x = "Year", y = "GPP") +
-    geom_hline(yintercept = biomee_validation_2$data[[1]]$targets_obs[1],
-                lty=2),        # plot observation
-  
-  ggplot() +
-    geom_line(data = biomee_p_model_output,
-              aes(x = year, y = plantC)) +
-    geom_line(data = biomee_p_model_output_calib,
-              aes(x = year, y = plantC),
-              color = "grey50") +
-    theme_classic() + 
-    labs(x = "Year", y = "plantC") +
-    geom_hline(yintercept = biomee_validation_2$data[[1]]$targets_obs[4],
-               lty = 2)        # plot observation
-)
+GPP_target <- biomee_validation$data[[1]] |>
+  dplyr::filter(variables == "GPP") |>
+  magrittr::extract2("targets_obs")
+plantC_target <- biomee_validation$data[[1]] |>
+  dplyr::filter(variables == "Biomass") |>
+  magrittr::extract2("targets_obs")
 
+ggplot() +
+  geom_line(data = biomee_p_model_output_annual_tile,
+    aes(x = year, y = GPP)) +
+  geom_line(data = biomee_p_model_calibratedOutput_annual_tile,
+    aes(x = year, y = GPP),
+    color = "grey50") +
+  geom_hline(yintercept = GPP_target,
+    linetype = "dashed",
+    color = "grey50") +
+  theme_classic() +
+  labs(x = "Year", y = "GPP")
 
+ggplot() +
+  geom_line(data = biomee_p_model_output_annual_tile,
+    aes(x = year, y = plantC)) +
+  geom_line(data = biomee_p_model_calibratedOutput_annual_tile,
+    aes(x = year, y = plantC),
+    color = "grey50") +
+  geom_hline(yintercept = plantC_target,
+    linetype = "dashed",
+    color = "grey50") +
+  theme_classic() +
+  labs(x = "Year", y = "plantC")
+```
 
+## Validating model output
 
+To ensure behavior of the calibrated model is as expected its output should be validated with different consistency checks. 
+One possible check is to ensure that it reached the expected steady state conditions and that no trend is present in total carbon.
+Note how the vegetation C pool reaches a steady state relatively fast, while the soil C pool takes more time:
+
+``` {r eval = TRUE, fig.width=7}
+pl1 <- biomee_p_model_calibratedOutput_annual_tile %>%
+  ggplot(aes(x = year)) +
+  geom_line(aes(y = plantC + soilC, color = "total C", linetype = "total C")) +
+  geom_line(aes(y = soilC,        color = "soil C",  linetype = "soil C")) +
+  geom_line(aes(y = plantC,       color = "plant C", linetype = "plant C")) +
+  # geom_hline(yintercept = plantC_target, linetype = "solid", color = "grey50") +
+  theme_classic() +
+  scale_color_manual(values = c("total C" = "black",
+    "soil C" = "darkred",
+    "plant C" = "darkgreen")) +
+  scale_linetype_manual(values = c("total C" = 3,
+    "soil C" = 2,
+    "plant C" = 1)) +
+  labs(x = "Year", y = "kg C m-2", linetype = NULL, color = NULL) +
+  theme(legend.position = c(1, 0.5), legend.justification = c(1, 0.5))
+
+pl2 <- biomee_p_model_calibratedOutput_annual_tile %>%
+  ggplot(aes(x = year)) +
+  # geom_line(aes(y = NPP,          color = "plant: NPP", linetype = "plant: NPP")) +
+  geom_line(aes(y = GPP,          color = "plant: GPP",           linetype = "plant: GPP")) +
+  geom_line(aes(y = GPP - Rauto,  color = "plant: NPP=GPP-Rauto", linetype = "plant: NPP=GPP-Rauto")) +
+  geom_line(aes(y = Rh,           color = "soil: Rh",             linetype = "soil: Rh")) +
+  geom_line(aes(y = NPP - Rh,     color = "total: NEE=NPP-Rh",    linetype = "total: NEE=NPP-Rh")) +
+  # geom_hline(yintercept = GPP_target, color = "grey50", linetype = "solid") +
+  theme_classic() +
+  scale_color_manual(values = c(
+    "total: NEE=NPP-Rh"    = "black",
+    "soil: Rh"             = "darkred",
+    "plant: GPP"           = "darkgreen",
+    "plant: NPP"           = "darkgreen",
+    "plant: NPP=GPP-Rauto" = "darkgreen")) +
+  scale_linetype_manual(values = c(
+    "total: NEE=NPP-Rh"    = 3,
+    "soil: Rh"             = 2,
+    "plant: GPP"           = 1,
+    "plant: NPP"           = 2,
+    "plant: NPP=GPP-Rauto" = 2)) +
+  labs(x = "Year", y = "kg C m-2 yr-1", linetype = NULL, color = NULL) +
+  theme(legend.position = c(1, 0.5), legend.justification = c(1, 0.5))
+pl1
+pl2
+```
+
+Note that for the carbon cycle the steady state assumption appears to be good. 
+However, for the nitrogen cycle we see that.
+If your analysis relies on nitrogen being in steady-state the spinupyears might need to be increased.
+
+``` {r eval = TRUE, fig.width=7}
+pl3 <- biomee_p_model_calibratedOutput_annual_tile %>%
+  ggplot(aes(x = year)) +
+  geom_line(aes(y = plantN + soilN, color = "total N", linetype = "total N")) +
+  geom_line(aes(y = soilN,        color = "soil N",  linetype = "soil N")) +
+  geom_line(aes(y = plantN,       color = "plant N", linetype = "plant N")) +
+  theme_classic() +
+  scale_color_manual(values = c("total N" = "black",
+    "soil N" = "darkred",
+    "plant N" = "darkgreen")) +
+  scale_linetype_manual(values = c("total N" = 3,
+    "soil N" = 2,
+    "plant N" = 1)) +
+  labs(x = "Year", y = "kg N m-2", linetype = NULL, color = NULL) +
+  theme(legend.position = c(1, 0.5), legend.justification = c(1, 0.5))
+
+pl3
 ```

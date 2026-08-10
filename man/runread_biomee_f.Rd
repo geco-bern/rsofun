@@ -4,36 +4,43 @@
 \alias{runread_biomee_f}
 \title{Run BiomeE}
 \usage{
-runread_biomee_f(drivers, makecheck = TRUE, parallel = FALSE, ncores = 2)
+runread_biomee_f(drivers, makecheck = TRUE, parallel = FALSE, ncores = 1)
 }
 \arguments{
 \item{drivers}{A nested data frame with one row for each site and columns
-named according to the arguments of function `runread_biomee_f_bysite()`}
+named according to the arguments of function \code{\link{run_biomee_f_bysite}}.
+Namely \code{sitename, params_siml, site_info, forcing, params_tile, 
+params_species, init_cohort} and \code{init_soil}.}
 
-\item{makecheck}{A logical specifying whether checks are performed to verify
-forcings.}
+\item{makecheck}{A logical specifying whether checks are performed 
+to verify forcings and model parameters. \code{TRUE} by default.}
 
-\item{parallel}{A logical specifying whether simulations are to be 
-parallelised (sending data from a certain number of sites to each core). 
-Defaults to \code{FALSE}.}
+\item{parallel}{Deprecated. Use ncores instead.}
 
 \item{ncores}{An integer specifying the number of cores used for parallel 
-computing. Defaults to 2.}
+computing (sites processed in parallel). Default: 1 (no parallel execution).}
 }
 \value{
-A tibble with one row for each site and model outputs stored 
-in the nested column \code{data}. See `run_biomee_f_bysite()` for a
-description of the BiomeE output variables.
+A data frame (tibble) with one row for each site.
+The columns are the site information \code{site_info} and one column per land unit (LU) in addition to an aggregated output \code{aggregated}.
+By default, the only LU is named \code{data} and \code{aggregated} is not present since aggregating one LU is not useful.
+When multiple LU are configured (using \code{init_lu}), the columns are named using the LU name provided in \code{init_lu}.
+See \code{\link{run_biomee_f_bysite}} for a detailed description of the outputs.
+Example outputs are provided as \code{\link{biomee_p_model_output}} and \code{\link{biomee_p_model_luluc_output}}.
 }
 \description{
-Runs the BiomeE model and loads output in once.
+Runs BiomeE model for multiple sites.
 }
 \examples{
-\donttest{
 # Example BiomeE model run
-
-mod_output <- runread_biomee_f(
+\donttest{ # do not run long-running simulations
+runread_biomee_f(
+  drivers = biomee_p_model_drivers
+)
+\dontrun{ # do not run this long-running example at all, only *show* example
+runread_biomee_f(
   drivers = biomee_gs_leuning_drivers
 )
+}
 }
 }

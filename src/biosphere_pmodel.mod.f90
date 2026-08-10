@@ -9,10 +9,12 @@ module md_biosphere_pmodel
   use md_waterbal_pmodel, only: waterbal, solar, getpar_modl_waterbal
   use md_gpp_pmodel, only: getpar_modl_gpp, gpp
   use md_vegdynamics_pmodel, only: vegdynamics
-  use md_tile_pmodel, only: tile_type, tile_fluxes_type, initglobal_tile, initdaily_tile_fluxes, &
-    getpar_modl_tile, diag_daily, diag_annual, init_annual
+  use md_tile_pmodel, only: tile_type, tile_fluxes_type, init_tile, initdaily_tile_fluxes, &
+    getpar_modl_tile, diag_daily
   use md_plant_pmodel, only: getpar_modl_plant
   use md_sofunutils, only: calc_patm
+  use md_soiltemp, only: soiltemp
+  use md_track_vegetation_d13c, only: track_vegetation_d13c
 
   implicit none
 
@@ -40,12 +42,12 @@ contains
     ! local variables
     integer :: dm, moy, doy
     logical, save           :: init_daily            ! is true only on the first day of the simulation 
-    logical, parameter      :: verbose = .false.     ! change by hand for debugging etc.
+    ! logical, parameter      :: verbose = .false.     ! change by hand for debugging etc.
 
     !----------------------------------------------------------------
     ! INITIALISATIONS
     !----------------------------------------------------------------
-    if (myinterface%steering%init) then
+    if (myinterface%steering_state%init) then
 
       ! set to true on first simulation year and first day
       init_daily = .true.
@@ -64,16 +66,16 @@ contains
       !----------------------------------------------------------------
       ! Initialise pool variables and/or read from restart file (not implemented)
       !----------------------------------------------------------------
-      ! if (verbose) print*, 'initglobal_() ...'
-      call initglobal_tile( tile(:) )
+      ! if (verbose) print*, 'init_() ...'
+      call init_tile( tile(:) )
       ! if (verbose) print*, '... done'
 
     endif 
 
-    !----------------------------------------------------------------
-    ! Set annual sums to zero
-    !----------------------------------------------------------------
-    call init_annual( tile_fluxes(:) )
+    ! !----------------------------------------------------------------
+    ! ! Set annual sums to zero
+    ! !----------------------------------------------------------------
+    ! call init_annual( tile_fluxes(:) )
 
     !----------------------------------------------------------------
     ! LOOP THROUGH MONTHS
@@ -88,7 +90,7 @@ contains
         doy=doy+1
 
         ! if (verbose) print*,'----------------------'
-        ! if (verbose) print*,'YEAR, Doy ', myinterface%steering%year, doy
+        ! if (verbose) print*,'YEAR, Doy ', myinterface%steering_state%year, doy
         ! if (verbose) print*,'----------------------'
 
         !----------------------------------------------------------------
@@ -110,8 +112,8 @@ contains
         call solar( tile_fluxes(:), &
                     myinterface%grid, & 
                     myinterface%climate(doy),  &
-                    doy, &
-                    myinterface%params_siml%in_netrad &
+                    doy &
+                    ! myinterface%params_siml%in_netrad &
                     )
         ! if (verbose) print*,'... done'
 
@@ -134,13 +136,17 @@ contains
                   tile_fluxes(:), &
                   myinterface%pco2, &
                   myinterface%climate(doy), &
-                  myinterface%vegcover(doy), &
                   myinterface%grid, &
                   init_daily, &
-                  myinterface%params_siml%in_ppfd &
+                  myinterface%params_siml%in_ppfd, &
+                  myinterface%tc_home &
                   )
-
         ! if (verbose) print*,'... done'
+
+        !----------------------------------------------------------------
+        ! keep track of 13C isotopic signature in "virtual leaf biomass"
+        !----------------------------------------------------------------
+        call track_vegetation_d13c( tile(:), tile_fluxes(:) )
 
         !----------------------------------------------------------------
         ! get soil moisture, and runoff
@@ -154,9 +160,22 @@ contains
         ! if (verbose) print*,'... done'
 
         !----------------------------------------------------------------
+        ! calculate soil temperature
+        !----------------------------------------------------------------
+        ! if (verbose) print*, 'calling soiltemp() ... '
+        call soiltemp(&
+                      tile(:)%soil, &
+                      myinterface%climate(:)%dtemp, &
+                      doy, &
+                      myinterface%steering_state%init, &
+                      myinterface%steering_state%finalize &
+                      )
+        ! if (verbose) print*, '... done'
+
+        !----------------------------------------------------------------
         ! daily diagnostics (e.g., sum over plant within canopy)
         !----------------------------------------------------------------
-        call diag_daily(tile(:), tile_fluxes(:))
+        call diag_daily( tile(:), tile_fluxes(:) )
 
         !----------------------------------------------------------------
         ! populate function return variable
@@ -181,6 +200,9 @@ contains
                                      / myinterface%params_siml%secs_per_tstep                 ! output in W m-2 
         out_biosphere%wcont(doy)   = tile(1)%soil%phy%wcont
         out_biosphere%snow(doy)    = tile(1)%soil%phy%snow
+        out_biosphere%cond(doy)    = tile_fluxes(1)%canopy%dcn
+        out_biosphere%cleaf(doy)   = tile(1)%plant(1)%pleaf%c12
+        out_biosphere%cleafd13c(doy) = tile(1)%plant(1)%pleaf%d13
 
         init_daily = .false.
 
@@ -188,12 +210,11 @@ contains
 
     end do monthloop
 
-    !----------------------------------------------------------------
-    ! annual diagnostics
-    !----------------------------------------------------------------
-    call diag_annual( tile(:), tile_fluxes(:) )
+    ! !----------------------------------------------------------------
+    ! ! annual diagnostics
+    ! !----------------------------------------------------------------
+    ! call diag_annual( tile(:), tile_fluxes(:) )
     
-
     ! if (verbose) print*,'Done with biosphere for this year. Guete Rutsch!'
 
   end function biosphere_annual

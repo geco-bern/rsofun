@@ -1,4 +1,18 @@
+url: https://geco-bern.github.io/rsofun/
 template:
+  bootstrap: 3
   package: gecotemplate
   params:
    mathjax: true
+articles:
+  - title: All vignettes
+    contents:
+      - pmodel_use
+      - biomee_use
+      - biomee_luluc
+      - data_format
+      - new_cost_function
+      - param_calib_multitarget
+      - sensitivity_analysis
+development:
+  mode: auto

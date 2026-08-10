@@ -8,18 +8,18 @@ module md_sofunutils
 
 contains
 
-  function dampen_variability( var, tau, var_memory ) result( out_memory )
+  pure function dampen_variability( var, tau, var_memory ) result( out_memory )
     !/////////////////////////////////////////////////////////////////////////
     ! Calculates the updated variable accounting for a memory time scale tau.
     ! Following Eq. 5 in Makela et al. (2004) Tree Physiology 24, 369–376
     ! 
-    ! d(var_memory) / dt = (1 / tau) * var - var_memory
+    ! d(var_memory) / dt = (1 / tau) * (var - var_memory)
     ! 
     !-------------------------------------------------------------------------
     ! arguments
-    real, intent(in) :: var           ! fast-varying variable
-    real, intent(in) :: tau           ! memory e-folding time scale (d)
-    real, intent(in) :: var_memory    ! damped (low-pass filtered) variable
+    real, intent(in)    :: var           ! fast-varying variable
+    real, intent(in)    :: tau           ! memory e-folding time scale (d)
+    real, intent(in)    :: var_memory    ! damped (low-pass filtered) variable
 
     ! function return variable
     real :: out_memory
@@ -28,64 +28,81 @@ contains
     real :: dvar
 
     dvar = (1.0/tau) * (var - var_memory)
-    out_memory = var_memory + dvar 
+    out_memory = var_memory + dvar
 
   end function dampen_variability
 
 
-  function running( presval, inow, lenval, lenper, method, prevval ) result( runningval )
+  pure function running( presval, inow, window_length, method, prevval ) result( runningval )
     !/////////////////////////////////////////////////////////////////////////
-    ! Returns running sum or average. 'prevval' is optional, if not pro-
-    ! vided, sum/average is taken only over preceeding days/months of current
-    ! year.
+    ! Returns running sum/average of a window of length 'window_length'
+    ! and whose last element is the 'inow' item of 'presval'.
+    ! If provided, 'prevval' contains the values for the previous year used for padding.
+    ! Otherwise no padding is used.
     !-------------------------------------------------------------------------
     ! arguments
-    ! xxx instead of dimension declaration with 'lenval', use size(presval)
-    integer, intent(in) :: lenval                             ! number of timesteps per year
-    real, dimension(lenval), intent(in) :: presval            ! vector containing 'lenvals' values for each timestep in this year
-    integer, intent(in) :: inow                               ! index corresponding to "now" (day of year or month of year)  
-    integer, intent(in) :: lenper                             ! number of timesteps over which to average/sum
-    character(len=*), intent(in) :: method                    ! either "sum" or "mean" for running sum or running mean
-    real, dimension(lenval), intent(in), optional :: prevval  ! vector containing 'lenvals' values for each timestep in previous year
+    real, dimension(ndayyear), intent(in) :: presval          ! Vector containing values for present year
+    integer, intent(in) :: inow                               ! Index corresponding to "now" (day of year in present year). Negative values are allowed wihen prevval is provided.
+    integer, intent(in) :: window_length                      ! Window length
+    character(len=*), intent(in) :: method                    ! Either "sum" or "mean" for running sum or running mean
+    real, dimension(ndayyear), optional, intent(in):: prevval ! Vector containing values for the previous year
 
     ! local variables
-    real, dimension(lenval) :: valbuf
+    real, dimension(2*ndayyear) :: valbuf
+    integer :: idx_start, idx_end, effective_window_length
 
     ! function return variable
     real :: runningval
 
-    !print*,'day, lenper ',inow, lenper
+    ! Initialize indexes
+    idx_end = ndayyear + inow
+    idx_start = idx_end - window_length + 1
 
+    ! Initialization of the buffer
     if (present(prevval)) then
-      !print*,'A filling up valbuf from ',(lenval-(inow-1)),'to',lenval
-      !print*,'A with values from        1 to     ',inow
-      valbuf((lenval-(inow-1)):lenval) = presval(1:inow)
-      !print*,'B filling up valbuf from  1 to',(lenval-inow)
-      !print*,'B with values from       ',(inow+1),' to ',lenval
-      valbuf(1:(lenval-inow)) = prevval((inow+1):lenval)
+      valbuf(1:ndayyear) = prevval
+      effective_window_length = window_length
     else
-      !print*,'A filling up valbuf from  1 to',inow
-      !print*,'A with values from        1 to ',inow
-      valbuf(1:inow) = presval(1:inow)
-      !print*,'B filling up valbuf from  ',(inow+1),'to',lenval
-      !print*,'B with values zero'
-      valbuf((inow+1):lenval) = 0.0
+      valbuf(1:ndayyear) = 0.0
+      effective_window_length = MIN(window_length, inow)
     end if
+    valbuf(ndayyear + 1 : 2 * ndayyear) = presval
 
-    if (method=="sum") then
-      runningval = sum(valbuf((lenval-lenper+1):lenval))
-    else if (method=="mean") then
-      if (present(prevval)) then
-        runningval = sum(valbuf((lenval-lenper+1):lenval))/lenper
-      else
-        runningval = sum(valbuf((lenval-lenper+1):lenval))/inow
+    runningval = sum(valbuf(idx_start:idx_end))
+
+    if (method == "mean") then
+      if (effective_window_length <= 0) then
+        ! Negative effective window lenght is not allowed. We set it 0 so that the computation of the mean will fail.
+        effective_window_length = 0
       end if
-    else
-      ! stop 'RUNNING: declare valid method.'
+      runningval = runningval / effective_window_length
     end if
 
   end function running
 
+  pure subroutine aggregate(out, in, ratio)
+    !////////////////////////////////////////////////////////////////
+    ! Aggregate array 'in' with ratio 'ratio' using average scheme.
+    !----------------------------------------------------------------
+    ! arguments
+    real, dimension(:), intent(inout) :: out      ! Output array (should have size of 'in' / ratio)
+    real, dimension(:), intent(in) :: in          ! Input array
+    integer, intent(in) :: ratio                   ! Sampling ratio
+
+    ! local variables
+    integer :: idx, idx_in_start, idx_in_end
+
+    if (ratio == 1) then
+      out(:) = in(:)
+    else
+      do idx = 1, size(in)/ratio
+        idx_in_start = (idx - 1) * ratio + 1
+        idx_in_end = idx * ratio
+        out(idx) = sum(in(idx_in_start:idx_in_end))/ratio
+      end do
+    end if
+
+  end subroutine aggregate
 
   function daily2monthly( dval, method ) result( mval )
     !/////////////////////////////////////////////////////////////////////////
@@ -568,12 +585,12 @@ contains
     ! local variables
     real, parameter :: r_earth = 6370000
 
-    out_area = 4.0 * r_earth**2 * 0.5 * dx * pi / 180.0 * cos( abs(lat) * pi / 180.0 ) * sin( 0.5 * dy * pi / 180.0 )    
+    out_area = 4.0 * r_earth**2 * 0.5 * dx * pi / 180.0 * cos( abs(lat) * pi / 180.0 ) * sin( 0.5 * dy * pi / 180.0 )
 
   end function area
 
 
-  function calc_patm( elv ) result( patm )
+  pure function calc_patm( elv ) result( patm )
     !----------------------------------------------------------------   
     ! Calculates atmospheric pressure for a given elevation, assuming
     ! standard atmosphere at sea level (kPo)
@@ -590,8 +607,16 @@ contains
 
   end function calc_patm
 
+  pure function calc_esat(T) result( out_esat ) ! pressure, Pa
+    implicit none
+    real :: out_esat
+    real, intent(in) :: T ! deg C
 
-  function median( vec, len ) result( out )
+    out_esat=610.78*exp(17.27*T/(T+237.3))
+
+  end function calc_esat
+
+  pure function median( vec, len ) result( out )
     !--------------------------------------------------------------------
     ! This function receives an array vec of N entries, copies its value
     ! to a local array Temp(), sorts Temp() and computes the median.
@@ -605,22 +630,22 @@ contains
     real                               :: out
 
     ! local variables
-    real, dimension(1:len)             :: tmp
+    real, dimension(len)             :: tmp
 
     tmp(:) = vec(:)
 
     call  sort(tmp, len)                ! sort the copy
 
     if (mod(len,2) == 0) then           ! compute the median
-       out = (tmp(len/2) + tmp(len/2+1)) / 2.0
+      out = (tmp(len/2) + tmp(len/2+1)) / 2.0
     else
-       out = tmp(len/2+1)
+      out = tmp(len/2+1)
     end if
 
   end function median
 
 
-  subroutine sort( vec, len )
+  pure subroutine sort( vec, len )
     !--------------------------------------------------------------------
     ! This subroutine receives an array vec() and sorts it into ascending
     ! order.
@@ -639,7 +664,7 @@ contains
   end subroutine sort
 
 
-  subroutine swap( a, b )
+  pure subroutine swap( a, b )
     !--------------------------------------------------------------------
     ! This subroutine swaps the values of its two formal arguments.
     ! Copied from https://pages.mtu.edu/~shene/COURSES/cs201/NOTES/chap08/sort.f90
@@ -654,7 +679,7 @@ contains
   end subroutine  swap
 
 
-  function find_minimum( vec, start, end ) result( out )
+  pure function find_minimum( vec, start, end ) result( out )
     !--------------------------------------------------------------------
     ! This function returns the location of the minimum in the section
     ! between start and end.
@@ -676,11 +701,11 @@ contains
       end if
     end do
     out = location                 ! return the position
-   
+
   end function find_minimum
 
 
-  function findroot_quadratic( a, b, c ) result( root )
+  pure function findroot_quadratic( a, b, c ) result( root )
     !-----------------------------------------------------------------------
     ! Returns the solution for a quadratic function:
     ! a + bx + cx**2 = 0
@@ -707,7 +732,7 @@ contains
   end function findroot_quadratic
 
 
-  function dgcos( x ) result( dgcos_out )
+  pure function dgcos( x ) result( dgcos_out )
     !----------------------------------------------------------------   
     ! Calculates the cosine of an angle given in degrees. Equal to 
     ! 'dsin' in Python version.
@@ -724,7 +749,7 @@ contains
   end function dgcos
 
 
-  function dgsin( x ) result( dgsin_out )
+  pure function dgsin( x ) result( dgsin_out )
     !----------------------------------------------------------------   
     ! Calculates the sinus of an angle given in degrees. Equal to 
     ! 'dsin' in Python version.
@@ -741,7 +766,7 @@ contains
   end function dgsin
 
 
-  function degrees( x ) result( degrees_out )
+  pure function degrees( x ) result( degrees_out )
     !----------------------------------------------------------------   
     ! Returns corresponding degrees if x is given in radians
     !----------------------------------------------------------------   
@@ -756,7 +781,7 @@ contains
   end function degrees
 
 
-  function radians( x ) result( radians_out )
+  pure function radians( x ) result( radians_out )
     !----------------------------------------------------------------   
     ! Returns corresponding radians if x is given in degrees
     !----------------------------------------------------------------   
@@ -769,6 +794,6 @@ contains
     radians_out = x*pi/180.0
 
   end function radians
-  
+
 
 end module md_sofunutils

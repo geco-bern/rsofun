@@ -5,202 +5,129 @@ module md_biosphere_biomee
   ! Does not contain any input/output; this is done in SR sofun.
   ! Code adopted from BiomeE https://doi.org/10.5281/zenodo.7125963.
   !----------------------------------------------------------------
-  use datatypes
-  use md_vegetation_biomee
+  use md_vegetation_tile_biomee
+  use md_vegetation_processes_biomee
   use md_soil_biomee
-  use md_params_core
+  use md_forcing_biomee
+  use md_soiltemp, only: air_to_soil_temp
+  use, intrinsic :: iso_c_binding, only: c_double
   
   implicit none
   private
   public biosphere_annual
 
-  type(vegn_tile_type), pointer :: vegn   
-  ! type(soil_tile_type),  pointer :: soil
-  ! type(cohort_type),     pointer :: cx, cc
-
 contains
 
-  subroutine biosphere_annual(out_biosphere)
+  subroutine biosphere_annual( &
+    steering_state, &
+    climate, &
+    vegn &
+  )
     !////////////////////////////////////////////////////////////////
     ! Calculates one year of vegetation dynamics. 
     !----------------------------------------------------------------
-    use md_interface_biomee, only: myinterface, outtype_biosphere  
-    use md_gpp_biomee, only: getpar_modl_gpp
+    use md_interface_in_biomee, only: inputs
+    use md_sofunutils, only: aggregate
+    use, intrinsic :: iso_c_binding, only: c_double
 
-    ! return variable
-    type(outtype_biosphere) :: out_biosphere
+    ! Input vairables
+    type(outtype_steering), intent(in)  :: steering_state
+    type(climate_type), intent(in), dimension(:) :: climate ! Dimension is ndayyear * steps_per_day
+    type(vegn_tile_type), intent(inout) :: vegn
 
-    ! ! local variables
-    integer :: dm, moy, doy
-    logical, save :: init = .true.   ! is true only on the first day of the simulation 
-    logical, parameter :: verbose = .false.       ! change by hand for debugging etc.
+    ! Local variables
+    integer :: doy         ! Day of year
+    integer :: dayloop_idx, fastloop_idx, simu_steps
+    real, dimension(ndayyear) :: daily_temp  ! Daily temperatures (average) in Kelvin
+    real, dimension(size(climate)) :: tair
 
-    !----------------------------------------------------------------
-    ! Biome-E stuff
-    !----------------------------------------------------------------
-    integer, parameter :: rand_seed = 86456
-    integer, parameter :: totalyears = 10
-    integer, parameter :: nCohorts = 1
-    real    :: tsoil, soil_theta
-    integer :: year0
-    integer :: i
-    integer :: idata
-    integer, save :: simu_steps !, datalines
-    integer, save :: iyears
-    integer, save :: idays
-    integer, save :: idoy
+    tair = climate(:)%TairK
 
     !----------------------------------------------------------------
     ! INITIALISATIONS
     !----------------------------------------------------------------
-    if (myinterface%steering%init) then ! is true for the first year
+    ! Compute averaged daily temperatures
+    call aggregate(daily_temp, tair, inputs%steps_per_day)
 
-      ! Parameter initialization: Initialize PFT parameters
-      call initialize_PFT_data()
-
-      ! Initialize vegetation tile and plant cohorts
-      allocate( vegn )
-      call initialize_vegn_tile( vegn, nCohorts)
-      
-      ! Sort and relayer cohorts
-      call relayer_cohorts( vegn )
-
-      ! initialise outputs 
-      call Zero_diagnostics( vegn )
-
-      ! module-specific parameter specification
-      call getpar_modl_gpp()
-
-      year0  = myinterface%climate(1)%year  ! forcingData(1)%year
-
-      iyears = 1
-      idoy   = 0
-      idays  = 0
-
-    endif
-
-    simu_steps = 0
-
-    !----------------------------------------------------------------
-    ! LOOP THROUGH MONTHS
-    !----------------------------------------------------------------
+    !===== Reset diagnostics and counters
+    simu_steps = 0 ! fast loop
     doy = 0
-    monthloop: do moy=1,nmonth
+    call vegn%zero_diagnostics()
+
+    !----------------------------------------------------------------
+    ! LOOP THROUGH DAYS
+    !----------------------------------------------------------------
+    dayloop: do dayloop_idx=1,ndayyear
+
+      doy = doy + 1
+
+      ! Compute daily air and soil temperature
+      vegn%tk_daily = daily_temp(doy)
+      vegn%tc_soil  = air_to_soil_temp( &
+              vegn%thetaS(), &
+              daily_temp - kTkelvin, &
+              doy, &
+              vegn%dtemp_pvy, &
+              vegn%wscal_pvy, &
+              vegn%wscal_alldays &
+      )
 
       !----------------------------------------------------------------
-      ! LOOP THROUGH DAYS
+      ! FAST TIME STEP
       !----------------------------------------------------------------
-      dayloop: do dm=1,ndaymonth(moy)
-        
-        doy = doy + 1
-        idoy = idoy + 1
+      ! get daily mean temperature from hourly/half-hourly data
+      fastloop: do fastloop_idx = 1,inputs%steps_per_day
 
-        ! print*,'----------------------'
-        ! print*,'YEAR, DOY ', myinterface%steering%year, doy
-        ! print*,'----------------------'
+        simu_steps   = simu_steps + 1
 
-        !----------------------------------------------------------------
-        ! FAST TIME STEP
-        !----------------------------------------------------------------
-        ! get daily mean temperature from hourly/half-hourly data
-        vegn%Tc_daily = 0.0
-        tsoil         = 0.0
-        fastloop: do i = 1,myinterface%steps_per_day
+        call vegn_CNW_budget( vegn, climate(simu_steps))
 
-          idata         = simu_steps + 1
-          year0         = myinterface%climate(idata)%year  ! Current year
-          vegn%Tc_daily = vegn%Tc_daily + myinterface%climate(idata)%Tair
-          tsoil         = myinterface%climate(idata)%tsoil
-          simu_steps    = simu_steps + 1
+        call vegn%hourly_diagnostics()
 
-          !----------------------------------------------------------------
-          ! Sub-daily time step at resolution given by forcing (can be 1 = daily)
-          !----------------------------------------------------------------
-          call vegn_CNW_budget( vegn, myinterface%climate(idata), init )
-         
-          call hourly_diagnostics( vegn, myinterface%climate(idata), iyears, idoy, i , out_biosphere%hourly_tile(idata))
-         
-          init = .false.
-         
-        enddo fastloop ! hourly or half-hourly
+      enddo fastloop ! hourly or half-hourly
 
-        ! print*,'-----------day-------------'
-        
-        !-------------------------------------------------
-        ! Daily calls after fast loop
-        !-------------------------------------------------
-        vegn%Tc_daily = vegn%Tc_daily / myinterface%steps_per_day
-        tsoil         = tsoil / myinterface%steps_per_day
-        soil_theta    = vegn%thetaS
+      !-------------------------------------------------
+      ! Daily calls after fast loop
+      !-------------------------------------------------
 
-        ! sum over fast time steps and cohorts
-        call daily_diagnostics( vegn, iyears, idoy, out_biosphere%daily_cohorts(doy,:), out_biosphere%daily_tile(doy)  )
-        
-        ! Determine start and end of season and maximum leaf (root) mass
-        call vegn_phenology( vegn )
-        
-        ! Produce new biomass from 'carbon_gain' (is zero afterwards) and continous biomass turnover
-        call vegn_growth_EW( vegn )
+      ! sum over fast time steps and cohorts
+      call daily_diagnostics( vegn, steering_state%year, doy, steering_state%daily_reporting)
 
-      end do dayloop
+      ! Determine start and end of season and maximum leaf (root) mass
+      call vegn_phenology( vegn )
 
-    end do monthloop
+      ! Produce new biomass from 'carbon_gain' (is zero afterwards) and continous biomass turnover
+      call vegn_growth_EW( vegn )
+
+    end do dayloop
 
     !----------------------------------------------------------------
     ! Annual calls
     !----------------------------------------------------------------
-    idoy = 0
 
-    if ( myinterface%params_siml%update_annualLAImax ) call vegn_annualLAImax_update( vegn )
-    
-    !---------------------------------------------
-    ! Get annual diagnostics and outputs in once. 
-    ! Needs to be called here 
-    ! because mortality and reproduction re-organize
-    ! cohorts again and we want annual output and daily
-    ! output to be consistent with cohort identities.
-    !---------------------------------------------
-    call annual_diagnostics( vegn, iyears, out_biosphere%annual_cohorts(:), out_biosphere%annual_tile )
+    !===== Get annual diagnostics
+    call vegn%annual_diagnostics(steering_state%year, steering_state%cohort_reporting)
 
-    !---------------------------------------------
-    ! Reproduction and mortality
-    !---------------------------------------------        
+    !===== Reproduction and mortality
     ! Kill all individuals in a cohort if NSC falls below critical point
     call vegn_annual_starvation( vegn )
     
-    ! Natural mortality (reducing number of individuals 'nindivs')
+    ! Natural mortality (reducing number of individuals 'density')
     ! (~Eq. 2 in Weng et al., 2015 BG)
-
     call vegn_nat_mortality( vegn )
+    call kill_old_grass( vegn )
     
     ! seed C and germination probability (~Eq. 1 in Weng et al., 2015 BG)
     call vegn_reproduction( vegn )
-    
-    !---------------------------------------------
-    ! Re-organize cohorts
-    !---------------------------------------------
-    call kill_lowdensity_cohorts( vegn )
-    
-    call relayer_cohorts( vegn )
-    
-    call vegn_mergecohorts( vegn )
 
-    !---------------------------------------------
-    ! Set annual variables zero
-    !---------------------------------------------
-    call Zero_diagnostics( vegn )
+    !===== Re-organize cohorts
+    call vegn%relayer()
+    call vegn%reduce()
 
-    ! update the years of model run
-    iyears = iyears + 1
+    !===== Update post-mortality metrics
+    call vegn%annual_diagnostics_post_mortality(steering_state%cohort_reporting)
 
-    if (myinterface%steering%finalize) then
-      !----------------------------------------------------------------
-      ! Finazlize run: deallocating memory
-      !----------------------------------------------------------------
-      deallocate(vegn)
-
-    end if
-    
   end subroutine biosphere_annual
 
 end module md_biosphere_biomee
+
