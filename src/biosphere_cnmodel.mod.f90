@@ -122,6 +122,9 @@ contains
 
         ! print*,'b presv: ', tile(1)%plant(1)%presv
 
+        ! xxx milan: overwrite fAPAR here
+        ! tile(1)%canopy%fapar = myinterface%climate(doy)%fapar_prescr
+
         !----------------------------------------------------------------
         ! Get radiation based on daily temperature, sunshine fraction, and 
         ! elevation.
@@ -475,6 +478,10 @@ contains
         ! daily diagnostics (e.g., sum over plant within canopy)
         !----------------------------------------------------------------
         call diag_daily( tile(:), tile_fluxes(:), out_biosphere(doy) )
+
+        ! xxx milan: overwrite fAPAR here
+        ! print*,'fapar internal, fapar prescribed', tile(1)%canopy%fapar, myinterface%climate(doy)%fapar_prescr 
+        ! tile(1)%canopy%fapar = myinterface%climate(doy)%fapar_prescr
 
         ! print*,'i presv: ', tile(1)%plant(1)%presv
 

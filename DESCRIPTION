@@ -61,7 +61,6 @@ LazyData: true
 LazyDataCompression: xz
 ByteCompile: true
 NeedsCompilation: yes
-RoxygenNote: 7.2.3
 Suggests:
     covr,
     rcmdcheck,
@@ -73,3 +72,4 @@ Suggests:
     cowplot
 VignetteBuilder: knitr
 Encoding: UTF-8
+Config/roxygen2/version: 8.0.0
