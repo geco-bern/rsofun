@@ -1,0 +1,805 @@
+---
+title: "Running the C-only model at CH-Oe1"
+author: "Benjamin Stocker"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Running the C-only model at CH-Oe1}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\usepackage[utf8]{inputenc}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.align = "center",
+  fig.width = 7,
+  fig.height = 4.5
+)
+```
+
+## Aim
+
+This vignette demonstrates a site-level simulation with the carbon-only
+configuration of the C-model. We use daily meteorological forcing from the
+FLUXNET grassland site CH-Oe1. In the C-only configuration, carbon allocation
+is prescribed and plant growth is not limited by nitrogen availability.
+
+## Install rsofun
+
+Install rsofun from `cnmodel` branch and install
+```{r installation, eval=FALSE}
+# # geco-bern packages not on CRAN
+# if (!require(remotes)) {
+#   install.packages(remotes)
+# }
+
+# # uncomment below if not already installed
+# # remotes::install_github("geco-bern/rsofun", ref = "cnmodel")
+# library(rsofun)
+
+# When working from within the rsofun repo as the project locally
+library(devtools)
+devtools::document()
+devtools::install()
+```
+
+Load other required packages.
+```{r libraries}
+library(rsofun)
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(lubridate)
+library(cowplot)
+```
+
+## Load data
+
+The CH-Oe1 forcing and evaluation test data is distributed through FluxDataKit. Load the drivers for all sites and filter to retain only driver data for CH-Oe1 (any other site may be selected instead).
+
+```{r data}
+# Variant 1) load the manually downloaded file:
+df_drivers <- readRDS(
+  "~/data_2/FluxDataKit/v3.4/zenodo_upload/rsofun_driver_data_v3.4.2.rds"
+) |> 
+  filter(sitename == "CH-Oe1")
+
+fdk_site_info <- tibble(read.csv(
+  "~/data_2/FluxDataKit/v3.4/zenodo_upload/fdk_site_info.csv"
+))
+
+fdk_site_fullyearsequence <- tibble(read.csv(
+  "~/data_2/FluxDataKit/v3.4/zenodo_upload/fdk_site_fullyearsequence.csv"
+))
+
+# # Variant 2) or automatically download and load the file:
+# library(zen4R) # install.packages("zen4R")
+# download_path <- tempdir()
+# zen4R::download_zenodo(
+#   path = download_path,
+#   "10.5281/zenodo.12092555",
+#   files = c(
+#     "rsofun_driver_data_v3.2.rds",
+#     "fdk_site_info.csv",
+#     "fdk_site_fullyearsequence.csv"
+#   )
+# )
+
+# driver <- readRDS(file.path(download_path, "rsofun_driver_data_v3.2.rds"))
+# fdk_site_info <- tibble(read.csv(file.path(download_path, "fdk_site_info.csv")))
+# fdk_site_fullyearsequence <- tibble(read.csv(file.path(
+#   download_path,
+#   "fdk_site_fullyearsequence.csv"
+# )))
+```
+
+## Parameters
+
+The parameter values follow `analysis/example_cnmodel.R`. Although nitrogen
+parameters are supplied because the same Fortran interface serves both model
+configurations, they do not constrain carbon allocation in this run.
+
+```{r parameters}
+pars <- list(
+  # P-model
+  kphio = 0.04998,
+  kphio_par_a = 0.0,
+  kphio_par_b = 1.0,
+  soilm_thetastar = 0.6 * 240,
+  soilm_betao = 0.0,
+  beta_unitcostratio = 146.0,
+  rd_to_vcmax = 0.014,
+  tau_acclim = 30.0,
+  kc_jmax = 0.41,
+
+  # Plant carbon and nitrogen
+  f_nretain = 0.5,
+  fpc_tree_max = 0.95,
+  growtheff = 0.6,
+  r_root = 2 * 0.913,
+  r_sapw = 2 * 0.044,
+  exurate = 0.003,
+  k_decay_leaf = 1.9,
+  k_decay_root = 1.9,
+  k_decay_labl = 1.9,
+  k_decay_sapw = 1.9,
+  r_cton_root = 37.0,
+  r_cton_wood = 100.0,
+  r_cton_seed = 15.0,
+  nv_vcmax25 = 0.02 * 13681.77,
+  ncw_min = 0.08 * 1.116222,
+  r_n_cw_v = 0.0,
+  r_ctostructn_leaf = 1.3 * 45.84125,
+  kbeer = 0.5,
+
+  # Phenology
+  gddbase = 5.0,
+  ramp = 0.0,
+  phentype = 2.0,
+
+  # Soil physics
+  perc_k1 = 5.0,
+  thdiff_wp = 0.2,
+  thdiff_whc15 = 0.8,
+  thdiff_fc = 0.4,
+  forg = 0.01,
+  wbwp = 0.029,
+  por = 0.421,
+  fsand = 0.82,
+  fclay = 0.06,
+  fsilt = 0.12,
+
+  # Water and energy balance
+  kA = 107.0,
+  kalb_sw = 0.17,
+  kalb_vis = 0.03,
+  kb = 0.20,
+  kc = 0.25,
+  kCw = 1.05,
+  kd = 0.50,
+  ke = 0.0167,
+  keps = 23.44,
+  kWm = 220.0,
+  kw = 0.26,
+  komega = 283.0,
+  maxmeltrate = 3.0,
+
+  # Soil biogeochemistry
+  klitt_af10 = 1.2,
+  klitt_as10 = 0.35,
+  klitt_bg10 = 0.35,
+  kexu10 = 50.0,
+  ksoil_fs10 = 0.021,
+  ksoil_sl10 = 7.0e-4,
+  ntoc_crit1 = 0.45,
+  ntoc_crit2 = 0.76,
+  cton_microb = 10.0,
+  cton_soil = 9.77,
+  fastfrac = 0.985,
+
+  # Nitrogen uptake and transformations
+  eff_nup = 1.0e-4,
+  minimumcostfix = 1.0,
+  fixoptimum = 25.15,
+  a_param_fix = -3.62,
+  b_param_fix = 0.27,
+  maxnitr = 5.0e-5,
+  non = 0.01,
+  n2on = 5.0e-4,
+  kn = 83.0,
+  kdoc = 17.0,
+  docmax = 1.0,
+  dnitr2n2o = 0.01,
+
+  # Fixed allocation used by the C-only setup
+  frac_leaf = 0.5,
+  frac_wood = 0.0,
+  frac_avl_labl = 0.1,
+  tmppar = 9999.0,
+  nuptake_kc = 600.0,
+  nuptake_kv = 5.0,
+  nuptake_vmax = 0.2
+)
+```
+
+## Complement the driver data
+
+The prepared driver object is a nested data frame containing data from multiple sites, including
+metadata, simulation settings, and daily forcing. We add the management and
+nitrogen-deposition columns expected by `runread_cnmodel_f()`. No harvest is
+applied in this example, while 5 g C m^-2^ of seed carbon is added on 15
+February of every year.
+
+N-deposition is assumed to yield annual totals of 1.5 gN m^−2^ yr^−1^, evenly distributed over days and into NOy and NHx, respectively.
+
+```{r drivers}
+## add new required columns to forcing
+use_cseed <- 5
+cn_seed <- 20
+use_nseed <- use_cseed / cn_seed
+
+df_drivers <- df_drivers |>
+  mutate(
+    forcing = purrr::map(
+      forcing,
+      ~ mutate(
+        .,
+        fharv = 0.0,
+        dno3 = 1.5 / (2 * 365),
+        dnh4 = 1.5 / (2 * 365)
+      )
+    ),
+    forcing = purrr::map(
+      forcing,
+      ~ mutate(
+        .,
+        fharv = ifelse(month(date) == 7 & mday(date) == 15, 0.0, 0.0),
+        cseed = ifelse(month(date) == 2 & mday(date) == 15, use_cseed, 0.0),
+        nseed = ifelse(month(date) == 2 & mday(date) == 15, use_nseed, 0.0)
+      )
+    )
+  )
+
+# Use a five-year recycling period for the spin-up.
+df_drivers$params_siml[[1]]$spinupyears <- 2002
+df_drivers$params_siml[[1]]$recycle <- 5
+
+# This switch selects prescribed allocation and disables interactive C-N
+# constraints. It is the essential difference from the CN run.
+df_drivers$params_siml[[1]]$c_only <- TRUE
+```
+
+## Run the simulation
+
+`runread_cnmodel_f()` runs the compiled model and returns one row per site, with
+daily results in the nested `data` column.
+
+```{r run-model}
+output <- runread_cnmodel_f(
+  drivers = df_drivers,
+  par = pars
+)
+```
+
+```{r postprocessing}
+# Daily values
+ddf <- output |>
+  select(sitename, data) |>
+  unnest(data) |>
+  mutate(
+    nee = -(gpp - rleaf - rwood - rroot - rhet - rgrow)
+  )
+
+# Annual totals
+adf <- ddf |>
+  mutate(year = year(date)) |>
+  group_by(year) |>
+  summarise(
+    lai = max(lai),
+    gpp = sum(gpp),
+    npp = sum(npp),
+    npp_leaf = sum(npp_leaf),
+    npp_root = sum(npp_root),
+    npp_wood = sum(npp_wood),
+    npp_seed = sum(npp_seed),
+    cleaf = mean(cleaf),
+    nleaf = mean(nleaf),
+    clitt = mean(clitt),
+    nlitt = mean(nlitt),
+    croot = mean(croot),
+    cwood = mean(cwood),
+    cseed = mean(cseed),
+    nup = sum(nup),
+    netmin = sum(netmin),
+    ninorg = mean(pno3 + pnh4),
+    nloss = sum(nloss)
+  )
+
+# Mean annual totals
+adf_mean <- adf |>
+  filter(year %in% 2002:2008) |>
+  summarise(across(where(is.numeric), mean)) |>
+  dplyr::select(-year) |>
+  mutate(cue = npp / gpp, cnleaf = cleaf / nleaf, cnlitt = clitt / nlitt) |>
+  pivot_longer(cols = everything())
+
+# Mean seasonal cycle
+msc <- ddf |>
+  mutate(
+    month = month(date),
+    doy = yday(date)
+  ) |>
+  group_by(doy) |>
+  summarise(
+    doy = mean(doy),
+    gpp = mean(gpp),
+    npp = mean(npp),
+    npp_leaf = mean(npp_leaf),
+    npp_root = mean(npp_root),
+    npp_wood = mean(npp_wood),
+    npp_seed = mean(npp_seed),
+    rcex = mean(rcex),
+    rleaf = mean(rleaf),
+    rwood = mean(rwood),
+    rroot = mean(rroot),
+    rgrow = mean(rgrow),
+    dclabl = mean(dclabl),
+    nup = mean(nup),
+    netmin = mean(netmin),
+    ninorg = mean(pno3 + pnh4),
+    nloss = mean(nloss),
+    dnleaf = mean(dnleaf),
+    dnroot = mean(dnroot),
+    dnwood = mean(dnwood),
+    dnseed = mean(dnseed),
+    dnlabl = mean(dnlabl),
+    nresorb = mean(nresorb)
+  ) |>
+  mutate(date = ymd("2023-01-01") + floor(doy) - 1)
+```
+
+## Summarise and visualise the output
+
+### Some daily time series
+
+```{r plot-output}
+plot_data <- ddf |>
+  select(date, gpp, npp, lai, cleaf, croot, nee) |>
+  pivot_longer(-date, names_to = "variable", values_to = "value")
+
+ggplot(plot_data, aes(date, value)) +
+  geom_line(linewidth = 0.3) +
+  facet_wrap(~ variable, scales = "free_y", ncol = 2) +
+  labs(x = NULL, y = NULL) +
+  theme_classic()
+```
+
+### Allocation
+
+```{r allocationplot}
+gg1 <- msc |>
+  ggplot() +
+  geom_ribbon(
+    aes(
+      date,
+      ymin = 0,
+      ymax = npp_leaf,
+      fill = "Leaf production"
+    )
+  ) +
+  geom_ribbon(
+    aes(
+      date,
+      ymin = npp_leaf,
+      ymax = npp_leaf + npp_seed + npp_root, # seed C is zero
+      fill = "Root production"
+    )
+  ) +
+  geom_ribbon(
+    aes(
+      date,
+      ymin = npp_root + npp_leaf + npp_seed,
+      ymax = npp_root + npp_leaf + npp_seed + rcex,
+      fill = "Exudates"
+    )
+  ) +
+  geom_ribbon(
+    aes(
+      date,
+      ymin = npp_root + npp_leaf + npp_seed + rcex,
+      ymax = npp_root + npp_leaf + npp_seed + rcex + dclabl,
+      fill = "Labile turnover"
+    )
+  ) +
+  geom_ribbon(
+    aes(
+      date,
+      ymin = npp_root + npp_leaf + npp_seed + rcex + dclabl,
+      ymax = npp_root +
+        npp_leaf +
+        npp_seed +
+        rcex +
+        dclabl +
+        rleaf +
+        rwood +
+        rroot +
+        rgrow,
+      fill = "Respiration"
+    )
+  ) +
+  geom_line(
+    aes(
+      date,
+      gpp,
+      color = "GPP"
+    )
+  ) +
+  scale_x_date(
+    date_breaks = "1 month",
+    date_labels = "%b",
+    expand = c(0, 0)
+  ) +
+  khroma::scale_color_okabeito(name = "") +
+  scale_fill_manual(
+    name = "",
+    values = c(
+      "Leaf production" = "#009E73",
+      "Root production" = "#E69F00",
+      "Exudates" = "#CC79A7",
+      "Labile turnover" = "#0072B2",
+      "Respiration" = "#56B4E9"
+    )
+  ) +
+  theme_classic() +
+  labs(
+    x = "",
+    y = expression(paste("C flux (gC m"^-2, " d"^-1, ")"))
+  ) +
+  scale_y_continuous(expand = c(0, 0))
+
+msc_agg <- msc |>
+  mutate(
+    npp_leaf = npp_leaf + npp_seed,
+    resp = rleaf + rwood + rroot + rgrow
+  ) |>
+  summarise(
+    gpp = sum(gpp),
+    `Leaf production` = sum(npp_leaf),
+    `Root production` = sum(npp_root),
+    Exudates = sum(rcex),
+    `Labile turnover` = sum(dclabl),
+    Respiration = sum(resp)
+  )
+
+tmp <- msc_agg |>
+  dplyr::select(-gpp) |>
+  pivot_longer(cols = everything()) |>
+  mutate(category = "Sinks") |>
+  bind_rows(
+    tibble(
+      name = "gpp",
+      value = msc_agg$gpp,
+      category = "GPP"
+    )
+  )
+
+gg2 <- tmp |>
+  mutate(
+    name = factor(
+      name,
+      levels = rev(c(
+        "Leaf production",
+        "Root production",
+        "Exudates",
+        "Labile turnover",
+        "Respiration"
+      ))
+    )
+  ) |>
+  ggplot() +
+  geom_bar(
+    aes(x = category, y = value, fill = name),
+    stat = "identity",
+    position = "stack"
+  ) +
+  theme_classic() +
+  scale_fill_manual(
+    name = "",
+    values = c(
+      "Leaf production" = "#009E73",
+      "Root production" = "#E69F00",
+      "Exudates" = "#CC79A7",
+      "Labile turnover" = "#0072B2",
+      "Respiration" = "#56B4E9"
+    )
+  ) +
+  labs(
+    x = "",
+    y = expression(paste("Cumulative C flux (gC m"^-2, "yr"^-1, ")"))
+  ) +
+  theme(legend.position = "none")
+
+plot_grid(
+  gg1,
+  gg2,
+  rel_widths = c(1, 0.5),
+  labels = c("a", "b")
+)
+```
+
+## Evaluation
+
+### NEE
+
+#### Time series
+
+```{r}
+ddf_modobs <- ddf |>
+  transmute(
+    date,
+    nee_mod = nee,
+    gpp_mod = gpp,
+    reco_mod = rleaf + rwood + rroot + rhet
+  ) |>
+  left_join(
+    df_drivers |>
+      select(sitename, forcing) |>
+      unnest(forcing) |>
+      select(
+        date,
+        nee_obs = nee,
+        gpp_obs = gpp,
+        nee_qc,
+        gpp_qc
+      )
+  ) |>
+  mutate(reco_obs = nee_obs + gpp_obs)
+
+ddf_modobs |>
+  pivot_longer(
+    c(nee_mod, nee_obs),
+    names_to = "source",
+    values_to = "nee"
+  ) |>
+  ggplot(aes(date, nee, color = source)) +
+  geom_line() +
+  scale_color_manual(
+    name = "",
+    values = c(
+      nee_obs = "black",
+      nee_mod = "red"
+    ),
+    labels = c(
+      nee_obs = "Observed",
+      nee_mod = "Modelled"
+    )
+  ) +
+  labs(
+    x = "",
+    y = expression(paste("NEE (gC m"^-2, " d"^-1, ")"))
+  ) +
+  theme_bw()
+```
+
+### GPP
+
+#### Time series
+
+```{r}
+ddf_modobs |>
+  pivot_longer(
+    c(gpp_mod, gpp_obs),
+    names_to = "source",
+    values_to = "gpp"
+  ) |>
+  ggplot(aes(date, gpp, color = source)) +
+  geom_line() +
+  scale_color_manual(
+    name = "",
+    values = c(
+      gpp_obs = "black",
+      gpp_mod = "red"
+    ),
+    labels = c(
+      gpp_obs = "Observed",
+      gpp_mod = "Modelled"
+    )
+  ) +
+  labs(
+    x = "",
+    y = expression(paste("GPP (gC m"^-2, " d"^-1, ")"))
+  ) +
+  theme_bw()
+```
+
+#### Mean seasonal cycle
+
+```{r}
+msc_gpp <- ddf_modobs |>
+  filter(!(month(date) == 2 & mday(date) == 29)) |>
+  pivot_longer(
+    c(gpp_mod, gpp_obs),
+    names_to = "source",
+    values_to = "gpp"
+  ) |>
+  mutate(
+    month = month(date),
+    day = mday(date)
+  ) |>
+  group_by(source, month, day) |>
+  summarise(
+    gpp_q25 = quantile(gpp, 0.25, na.rm = TRUE),
+    gpp_q75 = quantile(gpp, 0.75, na.rm = TRUE),
+    gpp = mean(gpp, na.rm = TRUE),
+    .groups = "drop"
+  ) |>
+  filter(if_all(c(gpp, gpp_q25, gpp_q75), is.finite)) |>
+  mutate(date = make_date(2023, month, day))
+
+msc_gpp |>
+  ggplot(aes(date, gpp, color = source)) +
+  geom_ribbon(
+    aes(ymin = gpp_q25, ymax = gpp_q75, fill = source),
+    alpha = 0.2,
+    color = NA
+  ) +
+  geom_line() +
+  scale_color_manual(
+    name = "",
+    values = c(
+      gpp_obs = "black",
+      gpp_mod = "red"
+    ),
+    labels = c(
+      gpp_obs = "Observed",
+      gpp_mod = "Modelled"
+    )
+  ) +
+  scale_fill_manual(
+    values = c(
+      gpp_obs = "black",
+      gpp_mod = "red"
+    ),
+    guide = "none"
+  ) +
+  scale_x_date(date_labels = "%b", date_breaks = "1 month") +
+  labs(
+    x = "",
+    y = expression(paste("Mean GPP (gC m"^-2, " d"^-1, ")"))
+  ) +
+  theme_classic()
+```
+
+### Ecosystem respiration
+
+Modelled ecosystem respiration is the sum of leaf, wood, root, and
+heterotrophic respiration. Observed ecosystem respiration is derived from the
+flux partitioning identity $\mathrm{NEE} = R_\mathrm{eco} - \mathrm{GPP}$, so
+$R_\mathrm{eco} = \mathrm{NEE} + \mathrm{GPP}$.
+
+#### Time series
+
+```{r}
+ddf_modobs |>
+  pivot_longer(
+    c(reco_mod, reco_obs),
+    names_to = "source",
+    values_to = "reco"
+  ) |>
+  ggplot(aes(date, reco, color = source)) +
+  geom_line() +
+  scale_color_manual(
+    name = "",
+    values = c(
+      reco_obs = "black",
+      reco_mod = "red"
+    ),
+    labels = c(
+      reco_obs = "Observed",
+      reco_mod = "Modelled"
+    )
+  ) +
+  labs(
+    x = "",
+    y = expression(paste(R[eco], " (gC m"^-2, " d"^-1, ")"))
+  ) +
+  theme_bw()
+```
+
+#### Mean seasonal cycle
+
+```{r}
+msc_reco <- ddf_modobs |>
+  filter(!(month(date) == 2 & mday(date) == 29)) |>
+  pivot_longer(
+    c(reco_mod, reco_obs),
+    names_to = "source",
+    values_to = "reco"
+  ) |>
+  mutate(
+    month = month(date),
+    day = mday(date)
+  ) |>
+  group_by(source, month, day) |>
+  summarise(
+    reco_q25 = quantile(reco, 0.25, na.rm = TRUE),
+    reco_q75 = quantile(reco, 0.75, na.rm = TRUE),
+    reco = mean(reco, na.rm = TRUE),
+    .groups = "drop"
+  ) |>
+  filter(if_all(c(reco, reco_q25, reco_q75), is.finite)) |>
+  mutate(date = make_date(2023, month, day))
+
+msc_reco |>
+  ggplot(aes(date, reco, color = source)) +
+  geom_ribbon(
+    aes(ymin = reco_q25, ymax = reco_q75, fill = source),
+    alpha = 0.2,
+    color = NA
+  ) +
+  geom_line() +
+  scale_color_manual(
+    name = "",
+    values = c(
+      reco_obs = "black",
+      reco_mod = "red"
+    ),
+    labels = c(
+      reco_obs = "Observed",
+      reco_mod = "Modelled"
+    )
+  ) +
+  scale_fill_manual(
+    values = c(
+      reco_obs = "black",
+      reco_mod = "red"
+    ),
+    guide = "none"
+  ) +
+  scale_x_date(date_labels = "%b", date_breaks = "1 month") +
+  labs(
+    x = "",
+    y = expression(paste("Mean ", R[eco], " (gC m"^-2, " d"^-1, ")"))
+  ) +
+  theme_classic()
+```
+
+#### Mean seasonal cycle
+
+```{r}
+msc_nee <- ddf_modobs |>
+  filter(!(month(date) == 2 & mday(date) == 29)) |>
+  pivot_longer(
+    c(nee_mod, nee_obs),
+    names_to = "source",
+    values_to = "nee"
+  ) |>
+  mutate(
+    month = month(date),
+    day = mday(date)
+  ) |>
+  group_by(source, month, day) |>
+  summarise(
+    nee_q25 = quantile(nee, 0.25, na.rm = TRUE),
+    nee_q75 = quantile(nee, 0.75, na.rm = TRUE),
+    nee = mean(nee, na.rm = TRUE),
+    .groups = "drop"
+  ) |>
+  filter(if_all(c(nee, nee_q25, nee_q75), is.finite)) |>
+  mutate(date = make_date(2023, month, day))
+
+msc_nee |>
+  ggplot(aes(date, nee, color = source)) +
+  geom_hline(yintercept = 0, linetype = "dotted") +
+  geom_ribbon(
+    aes(ymin = nee_q25, ymax = nee_q75, fill = source),
+    alpha = 0.2,
+    color = NA
+  ) +
+  geom_line() +
+  scale_color_manual(
+    name = "",
+    values = c(
+      nee_obs = "black",
+      nee_mod = "red"
+    ),
+    labels = c(
+      nee_obs = "Observed",
+      nee_mod = "Modelled"
+    )
+  ) +
+  scale_fill_manual(
+    values = c(
+      nee_obs = "black",
+      nee_mod = "red"
+    ),
+    guide = "none"
+  ) +
+  scale_x_date(date_labels = "%b", date_breaks = "1 month") +
+  labs(
+    x = "",
+    y = expression(paste("Mean NEE (gC m"^-2, " d"^-1, ")"))
+  ) +
+  theme_classic()
+```
