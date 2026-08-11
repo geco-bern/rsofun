@@ -13,6 +13,9 @@ pars <- list(
   kphio                 = 0.04998,    # setup ORG in Stocker et al. 2020 GMD
   kphio_par_a           = 0.0,        # set to zero to disable temperature-dependence of kphio
   kphio_par_b           = 1.0,
+  kphio_par_c           = 150.0,      # GDD midpoint of dehardening
+  kphio_par_d           = 0.05,       # sigmoid slope (degree-day^-1)
+  kphio_par_e           = 5.0,        # GDD base temperature (deg C)
   soilm_thetastar       = 0.6 * 240,  # to recover old setup with soil moisture stress
   soilm_betao           = 0.0,
   beta_unitcostratio    = 146.0,

@@ -43,6 +43,12 @@
 #'    To disable the temperature dependence, set \code{kphio_par_a = 0}.}
 #'   \item{kphio_par_b}{The optimal temperature parameter \eqn{b} of the temperature
 #'    dependent quantum yield efficiency (see Details), in \eqn{^o}C.}
+#'   \item{kphio_par_c}{Growing-degree-day midpoint of the sigmoid recovery from
+#'    cold hardening, in degree-days. Larger values delay dehardening.}
+#'   \item{kphio_par_d}{Slope of the sigmoid recovery from cold hardening, in
+#'    degree-day\eqn{^{-1}}. Larger values produce a sharper transition.}
+#'   \item{kphio_par_e}{Base temperature for accumulating growing degree days
+#'    during recovery from cold hardening, in \eqn{^o}C.}
 #'   \item{soilm_thetastar}{The threshold parameter \eqn{\theta^{*}} in the 
 #'    soil moisture stress function (see Details), given in mm.
 #'    To turn off the soil moisture stress, set \code{soilm_thetastar = 0}.}
@@ -176,6 +182,18 @@ run_cnmodel_f_bysite <- function(
   
   # base state, always execute the call
   continue <- TRUE
+
+  # Backward compatibility for parameter lists created before the active
+  # dehardening controls were exposed through the R/Fortran interface.
+  dehardening_defaults <- list(
+    kphio_par_c = 150.0,
+    kphio_par_d = 0.05,
+    kphio_par_e = 5.0
+  )
+  missing_dehardening <- setdiff(names(dehardening_defaults), names(params_modl))
+  if (length(missing_dehardening)) {
+    params_modl[missing_dehardening] <- dehardening_defaults[missing_dehardening]
+  }
 
   # Treat NULL inputs and values containing NA/NaN as missing.
   is.nanull <- function(x) is.null(x) || anyNA(x)
@@ -385,9 +403,12 @@ run_cnmodel_f_bysite <- function(
                                        'nv_vcmax25',
                                        'nuptake_kc',
                                        'nuptake_kv',
-                                       'nuptake_vmax'
+                                       'nuptake_vmax',
+                                       'kphio_par_c',
+                                       'kphio_par_d',
+                                       'kphio_par_e'
                                        )
-    ) != 83 ){
+    ) != 86 ){
       warning(" Returning a dummy data frame. Incorrect model parameters.")
       continue <- FALSE
     }
@@ -500,7 +521,11 @@ run_cnmodel_f_bysite <- function(
       as.numeric(params_modl$nv_vcmax25),
       as.numeric(params_modl$nuptake_kc),
       as.numeric(params_modl$nuptake_kv),
-      as.numeric(params_modl$nuptake_vmax)
+      as.numeric(params_modl$nuptake_vmax),
+      # Appended to preserve the original R-to-Fortran parameter ordering.
+      as.numeric(params_modl$kphio_par_c),
+      as.numeric(params_modl$kphio_par_d),
+      as.numeric(params_modl$kphio_par_e)
       )
 
     ## C wrapper call

@@ -107,6 +107,12 @@ pars <- list(
   kphio = 0.04998,
   kphio_par_a = 0.0,
   kphio_par_b = 1.0,
+  
+  # Active recovery from cold hardening
+  kphio_par_c = 150.0, # GDD midpoint of dehardening
+  kphio_par_d = 0.05,  # sigmoid slope (degree-day^-1)
+  kphio_par_e = 5.0,   # base temperature for GDD accumulation (deg C)
+
   soilm_thetastar = 0.6 * 240,
   soilm_betao = 0.0,
   beta_unitcostratio = 146.0,
@@ -271,13 +277,26 @@ ensemble first. The candidates can therefore be simulated independently on
 multiple worker processes. The result is a finite, importance-weighted
 approximation of the posterior rather than an MCMC chain.
 
-Here we select three entries from `pars`. Means are the values used above and
-standard errors describe their prior uncertainty. Bounds truncate the normal
-priors to physically meaningful ranges. The residual standard deviation is a
-separate, positive model-error term and is sampled from a lognormal prior.
+Here we select six entries from `pars`, including all three controls of the
+active recovery from cold hardening. Means are the values used above and
+standard errors describe their prior uncertainty. Bounds truncate the priors to
+physically meaningful ranges. The residual standard deviation is a separate,
+positive model-error term and is sampled from a lognormal prior.
 
 ```{r cmodel-calibration-setup, eval=FALSE}
 pars_to_calibrate <- list(
+  kphio_par_c = list(
+    mean = pars$kphio_par_c, sd = 30, distribution = "normal",
+    lower = 30, upper = 300
+  ),
+  kphio_par_d = list(
+    mean = pars$kphio_par_d, sd = 0.015, distribution = "lognormal",
+    lower = 0.005, upper = 0.15
+  ),
+  kphio_par_e = list(
+    mean = pars$kphio_par_e, sd = 1.5, distribution = "normal",
+    lower = 0, upper = 12
+  ),
   growtheff = list(
     mean = pars$growtheff, sd = 0.06, distribution = "normal",
     lower = 0.35, upper = 0.85

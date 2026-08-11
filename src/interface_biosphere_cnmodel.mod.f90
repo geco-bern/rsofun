@@ -20,6 +20,9 @@ module md_interface_cnmodel
     real :: kphio
     real :: kphio_par_a
     real :: kphio_par_b
+    real :: kphio_par_c
+    real :: kphio_par_d
+    real :: kphio_par_e
     real :: soilm_thetastar
     real :: soilm_betao
     real :: beta_unitcostratio

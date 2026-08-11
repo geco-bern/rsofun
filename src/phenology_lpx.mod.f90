@@ -160,8 +160,8 @@ contains
     real, intent(inout) :: gdd            ! growing degree days (deg)
     real, intent(in)    :: kphio_par_a    ! unitless shape parameter for hardening function
     real, intent(in)    :: kphio_par_b    ! unitless shape parameter for hardening function
-    real, intent(in)    :: kphio_par_c    ! unitless shape parameter for dehardening function
-    real, intent(in)    :: kphio_par_d    ! unitless shape parameter for dehardening function
+    real, intent(in)    :: kphio_par_c    ! GDD midpoint of dehardening function (degree-days)
+    real, intent(in)    :: kphio_par_d    ! slope of dehardening function (degree-day-1)
     real, intent(in)    :: kphio_par_e    ! parameter defining GDD base in dehardening function (deg C)
 
     ! local variable
@@ -217,8 +217,8 @@ contains
     !----------------------------------------------------------------
     ! arguments
     real, intent(in)    :: gdd            ! cumulative degree days (deg C)
-    real, intent(in)    :: kphio_par_c    ! unitless shape parameter for dehardening function
-    real, intent(in)    :: kphio_par_d    ! unitless shape parameter for dehardening function
+    real, intent(in)    :: kphio_par_c    ! GDD midpoint of dehardening function (degree-days)
+    real, intent(in)    :: kphio_par_d    ! slope of dehardening function (degree-day-1)
 
     ! function return variable
     real :: ftemp
@@ -438,12 +438,16 @@ contains
       ! ramp slope for phenology (1 for grasses: immediate phenology turning on)
       params_pft_pheno(pft)%ramp = myinterface%params_calib%ramp
 
-      ! parameter values adopted from results by Yunpeng Luo (photocold project)
+      ! Hardening parameters adopted from results by Yunpeng Luo
+      ! (photocold project).
       params_pft_pheno(pft)%kphio_par_a = 2.0    ! mid-point of hardening state vs. tmin (deg C)
       params_pft_pheno(pft)%kphio_par_b = 0.3    ! slope of hardening state vs. tmin (deg C-1)
-      params_pft_pheno(pft)%kphio_par_c = 150.0  ! mid-point of dehardening state vs. GDD (deg C)
-      params_pft_pheno(pft)%kphio_par_d = 0.05   ! slope of dehardening state vs. GDD (deg C-1)
-      params_pft_pheno(pft)%kphio_par_e = 5.0    ! base temperature for GDD summation (deg C)
+
+      ! Calibratable temperature-sum controls for dehardening. These retain the
+      ! former hard-coded defaults when supplied as 150, 0.05, and 5.
+      params_pft_pheno(pft)%kphio_par_c = myinterface%params_calib%kphio_par_c
+      params_pft_pheno(pft)%kphio_par_d = myinterface%params_calib%kphio_par_d
+      params_pft_pheno(pft)%kphio_par_e = myinterface%params_calib%kphio_par_e
 
       ! phenology type
       phentype = nint(myinterface%params_calib%phentype)
