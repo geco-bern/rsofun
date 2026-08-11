@@ -534,6 +534,59 @@ ddf_modobs <- ddf |>
   mutate(reco_obs = nee_obs + gpp_obs)
 ```
 
+### Leaf area index
+
+We use the Terra MODIS MOD15A2H product, which provides 8-day LAI estimates at
+500 m resolution. `Lai_500m` is stored with a scale factor of 0.1. The
+`FparLai_QC` layer is an 8-bit quality flag. Following the
+[MOD15 Collection 6.1 user guide](https://modis-land.gsfc.nasa.gov/pdf/MOD15_C61_UserGuide_April2020.pdf),
+we retain observations for which:
+
+- bit 0 (`MODLAND_QC`) reports good quality;
+- bit 2 does not flag substantial dead-detector retrievals;
+- bits 3--4 report no significant or mixed clouds; and
+- bits 5--7 (`SCF_QC`) indicate the main radiative-transfer algorithm, either
+  without saturation (0) or with usable saturation (1).
+
+The filtering therefore removes cloud-affected pixels, empirical back-up
+retrievals, failed retrievals, and other poor-quality observations. The
+download and preparation are reproduced by
+data-raw/generate_modis_lai_ch_oe1.R; the resulting quality-controlled time
+series is distributed with rsofun as modis_lai_ch_oe1.
+
+```{r modis-lai-data}
+model_period <- range(ddf$date)
+
+data("modis_lai_ch_oe1", package = "rsofun")
+
+modis_lai <- modis_lai_ch_oe1 |>
+  filter(between(date, model_period[1], model_period[2]))
+```
+
+```{r plot-lai}
+ggplot() +
+  geom_line(
+    data = ddf,
+    aes(date, lai, color = "Modelled"),
+    linewidth = 0.4
+  ) +
+  geom_point(
+    data = modis_lai,
+    aes(date, lai, color = "MODIS"),
+    size = 1.2,
+    alpha = 0.8
+  ) +
+  scale_color_manual(
+    name = "",
+    values = c(Modelled = "red", MODIS = "black")
+  ) +
+  labs(
+    x = NULL,
+    y = expression(paste("LAI (m"^2, " m"^-2, ")"))
+  ) +
+  theme_classic()
+```
+
 ### GPP
 
 #### Time series
@@ -806,4 +859,3 @@ msc_nee |>
   ) +
   theme_classic()
 ```
-

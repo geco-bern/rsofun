@@ -87,6 +87,7 @@ Suggests:
     rmarkdown,
     ggplot2,
     knitr,
+    MODISTools,
     sensitivity,
     rpmodel,
     rlang,
