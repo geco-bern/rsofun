@@ -3,6 +3,7 @@
 export(build_luc_matrix)
 export(calib_sofun)
 export(calib_sofun_legacy)
+export(calib_sofun_lhs)
 export(cost_likelihood_biomee)
 export(cost_likelihood_pmodel)
 export(cost_likelihood_pmodel_legacy)

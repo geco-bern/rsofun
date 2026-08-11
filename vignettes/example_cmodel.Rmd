@@ -257,15 +257,135 @@ df_drivers$params_siml[[1]]$c_only <- TRUE
 daily results in the nested `data` column.
 
 ```{r run-model}
-output <- runread_cnmodel_f(
+output_uncalibrated <- runread_cnmodel_f(
   drivers = df_drivers,
   par = pars
 )
 ```
 
+## Parallel Bayesian calibration with Latin hypercube sampling
+
+Long C-model runs make serial MCMC particularly costly: each proposal depends
+on the previous one. `calib_sofun_lhs()` instead draws the complete candidate
+ensemble first. The candidates can therefore be simulated independently on
+multiple worker processes. The result is a finite, importance-weighted
+approximation of the posterior rather than an MCMC chain.
+
+Here we select three entries from `pars`. Means are the values used above and
+standard errors describe their prior uncertainty. Bounds truncate the normal
+priors to physically meaningful ranges. The residual standard deviation is a
+separate, positive model-error term and is sampled from a lognormal prior.
+
+```{r cmodel-calibration-setup, eval=FALSE}
+pars_to_calibrate <- list(
+  growtheff = list(
+    mean = pars$growtheff, sd = 0.06, distribution = "normal",
+    lower = 0.35, upper = 0.85
+  ),
+  k_decay_leaf = list(
+    mean = pars$k_decay_leaf, sd = 0.25, distribution = "normal",
+    lower = 0.5, upper = 3.5
+  ),
+  frac_leaf = list(
+    mean = pars$frac_leaf, sd = 0.08, distribution = "normal",
+    lower = 0.1, upper = 0.9
+  )
+)
+
+error_to_calibrate <- list(
+  sigma_gpp = list(
+    mean = 1.5, sd = 0.5, distribution = "lognormal",
+    lower = 0.1, upper = 5
+  )
+)
+```
+
+The likelihood below follows the Gaussian model-error approach used by
+`cost_likelihood_pmodel()`. It runs the C-model, aligns modelled and observed
+daily GPP by date, and sums pointwise log-likelihoods. A different observation
+variable or likelihood can be substituted without changing the sampler.
+
+```{r cmodel-likelihood, eval=FALSE}
+cmodel_gpp_loglik <- function(par, model_error, drivers, observations) {
+  simulated <- rsofun::runread_cnmodel_f(drivers = drivers, par = par) |>
+    dplyr::select(sitename, data) |>
+    tidyr::unnest(data) |>
+    dplyr::select(sitename, date, gpp_modelled = gpp)
+
+  comparison <- observations |>
+    dplyr::inner_join(simulated, by = c("sitename", "date")) |>
+    dplyr::filter(is.finite(gpp), is.finite(gpp_modelled))
+
+  if (nrow(comparison) == 0) return(-Inf)
+  sum(stats::dnorm(
+    comparison$gpp,
+    mean = comparison$gpp_modelled,
+    sd = model_error$sigma_gpp,
+    log = TRUE
+  ))
+}
+
+gpp_observations <- df_drivers |>
+  dplyr::select(sitename, forcing) |>
+  tidyr::unnest(forcing) |>
+  dplyr::filter(gpp_qc >= 0.8) |>
+  dplyr::select(sitename, date, gpp)
+
+calibration <- calib_sofun_lhs(
+  pars = pars,
+  par_calib = pars_to_calibrate,
+  model_error = error_to_calibrate,
+  likelihood = cmodel_gpp_loglik,
+  n_samples = 1000,
+  n_cores = max(1, parallel::detectCores() - 1),
+  seed = 42,
+  progress = TRUE,
+  drivers = df_drivers,
+  observations = gpp_observations
+)
+
+pars_calibrated <- calibration$par
+calibration$model_error       # MAP residual error
+calibration$samples |>
+  dplyr::arrange(dplyr::desc(weight)) |>
+  dplyr::slice_head(n = 10)   # highest-posterior combinations
+```
+
+The posterior importance weights sum to one and can be used for weighted
+summaries or resampling. Because the design samples the prior directly, these
+weights are proportional to the likelihood; the prior density is still included
+when selecting the MAP combination. `calibration$par` is the complete parameter list with the selected
+entries replaced by their maximum-a-posteriori (MAP) values; all other entries
+remain fixed. Increasing `n_samples` improves coverage, while `n_cores` controls
+only concurrent evaluation and does not alter the sampled design.
+
+Before evaluating any output variables, run the model once more with the full
+MAP parameter list. `calibration$par` already contains the unchanged parameters
+as well as the calibrated replacements, so it can be passed directly to the
+C-model interface.
+
+```{r rerun-map-model, eval=FALSE}
+output_calibrated <- runread_cnmodel_f(
+  drivers = df_drivers,
+  par = calibration$par
+)
+```
+
+The costly calibration and MAP rerun are not executed while building this
+vignette. The fallback below therefore keeps the document renderable with the
+initial run. After executing the calibration chunks interactively,
+`output_for_evaluation` resolves to `output_calibrated`, and every subsequent
+summary and evaluation uses the MAP simulation.
+
 ```{r postprocessing}
+output_for_evaluation <- if (exists("output_calibrated")) {
+  output_calibrated
+} else {
+  output_uncalibrated
+}
+
 # Daily values
-ddf <- output |>
+ddf <- output_for_evaluation |>
   select(sitename, data) |>
   unnest(data) |>
   mutate(
