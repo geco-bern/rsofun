@@ -193,6 +193,9 @@ contains
         if (verbose) print*, '... done'
 
         ! print*,'c presv: ', tile(1)%plant(1)%presv
+        
+        ! MF: 20260811
+        tile(1)%canopy%fapar = myinterface%climate(doy)%fapar_prescr
 
         !----------------------------------------------------------------
         ! calculate GPP
