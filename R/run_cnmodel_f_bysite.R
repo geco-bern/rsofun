@@ -274,7 +274,8 @@ run_cnmodel_f_bysite <- function(
       dno3,
       dnh4,
       cseed,
-      nseed
+      nseed,
+      lai
       )
 
   # validate input
@@ -295,7 +296,8 @@ run_cnmodel_f_bysite <- function(
       "dno3",
       "dnh4",
       "cseed",
-      "nseed"
+      "nseed",
+      "lai"
     )
     
     # create a loop to loop over a list of variables
