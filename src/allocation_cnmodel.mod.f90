@@ -48,6 +48,15 @@ module md_allocation_cnmodel
   type( params_allocation_type ) :: params_allocation
 
   real :: test
+  
+  !-------------------------------------------------------------------
+  ! MF: 2026-08-13
+  ! Maximum fraction of the current labile C and N pools that may be
+  ! used within one timestep to support additional leaf growth toward
+  ! prescribed LAI. A very small residual fraction is retained to avoid
+  ! complete depletion and numerical instability of the labile pools.
+  !-------------------------------------------------------------------
+  real, parameter :: frac_labile_for_prescr_lai = 0.999
 
 contains
 
@@ -68,6 +77,14 @@ contains
     ! local variables
     real :: dcleaf
     real :: dnleaf
+    real :: cleaf_target      ! MF: 2026-08-12
+    real :: nleaf_target      ! MF: 2026-08-12
+    real :: dcleaf_prescr     ! MF: 2026-08-12
+    real :: dnleaf_prescr     ! MF: 2026-08-12
+    real :: dcleaf_available  ! MF: 2026-08-13
+    real :: lai_trial         ! MF: 2026-08-13
+    real :: nleaf_trial       ! MF: 2026-08-13
+    integer :: nitr_prescr    ! MF: 2026-08-13
     real :: dcroot
     real :: dcwood 
     real :: dnwood
@@ -326,6 +343,139 @@ contains
           dnleaf = 0.0
           dnroot = 0.0
           drgrow = 0.0
+
+      end if
+
+      !-------------------------------------------------------------------
+      ! MF: 2026-08-12
+      ! Additional leaf allocation required to reach prescribed LAI
+      !-------------------------------------------------------------------
+      if ( tile(lu)%plant(pft)%pleaf%c%c12 > 0.0 ) then
+
+        cleaf_target = get_leaf_c_from_lai( &
+          pft, &
+          climate%lai_prescr, &
+          tile(lu)%plant(pft)%actnv_unitfapar &
+          )
+
+        nleaf_target = get_leaf_n_canopy( &
+          pft, &
+          climate%lai_prescr, &
+          tile(lu)%plant(pft)%actnv_unitfapar &
+          )
+
+        if ( cleaf_target > tile(lu)%plant(pft)%pleaf%c%c12 + eps ) then
+
+          dcleaf_prescr = cleaf_target - tile(lu)%plant(pft)%pleaf%c%c12
+          dnleaf_prescr = nleaf_target - tile(lu)%plant(pft)%pleaf%n%n14
+
+          !-------------------------------------------------------------------
+          ! Diagnostic
+          !-------------------------------------------------------------------
+          if ( climate%lai_prescr - tile(lu)%plant(pft)%lai_ind > 0.1 ) then
+
+            print*, 'MF LAI increase diagnostic'
+            print*, '  target LAI       = ', climate%lai_prescr
+            print*, '  current LAI      = ', tile(lu)%plant(pft)%lai_ind
+            print*, '  current Cleaf    = ', tile(lu)%plant(pft)%pleaf%c%c12
+            print*, '  target Cleaf     = ', cleaf_target
+            print*, '  required dCleaf  = ', dcleaf_prescr
+            print*, '  available Clabl  = ', tile(lu)%plant(pft)%plabl%c%c12
+            print*, '  C incl. growth R = ', dcleaf_prescr / params_plant%growtheff
+            print*, '  current Nleaf    = ', tile(lu)%plant(pft)%pleaf%n%n14
+            print*, '  target Nleaf     = ', nleaf_target
+            print*, '  required dNleaf  = ', dnleaf_prescr
+            print*, '  available Nlabl  = ', tile(lu)%plant(pft)%plabl%n%n14
+
+          end if
+          
+          !-------------------------------------------------------------------
+          ! Maximum leaf-C increment affordable from labile C.
+          !-------------------------------------------------------------------
+          dcleaf_available = min( &
+            dcleaf_prescr, &
+            frac_labile_for_prescr_lai * &
+            tile(lu)%plant(pft)%plabl%c%c12 * params_plant%growtheff &
+            )
+
+          !-------------------------------------------------------------------
+          ! If N balance is closed, reduce the candidate leaf-C allocation
+          ! until the associated leaf-N requirement fits available labile N.
+          !-------------------------------------------------------------------
+          if ( dcleaf_available > eps ) then
+
+            nitr_prescr = 0
+
+            do
+
+              lai_trial = get_lai( &
+                pft, &
+                tile(lu)%plant(pft)%pleaf%c%c12 + dcleaf_available, &
+                tile(lu)%plant(pft)%actnv_unitfapar &
+                )
+
+              nleaf_trial = get_leaf_n_canopy( &
+                pft, &
+                lai_trial, &
+                tile(lu)%plant(pft)%actnv_unitfapar &
+                )
+
+              if ( &
+                nleaf_trial - tile(lu)%plant(pft)%pleaf%n%n14 <= &
+                frac_labile_for_prescr_lai * &
+                tile(lu)%plant(pft)%plabl%n%n14 + eps &
+                ) exit
+
+              dcleaf_available = 0.9 * dcleaf_available
+              nitr_prescr = nitr_prescr + 1
+
+              if ( dcleaf_available <= eps ) exit
+
+              if ( nitr_prescr >= 100 ) then
+                dcleaf_available = 0.0
+                exit
+              end if
+
+            end do
+
+          end if
+
+          if ( climate%lai_prescr - tile(lu)%plant(pft)%lai_ind > 0.1 ) then
+            print*, '  affordable dCleaf = ', dcleaf_available
+          end if
+
+          !-------------------------------------------------------------------
+          ! Allocate affordable amount toward prescribed LAI
+          !-------------------------------------------------------------------
+          if ( dcleaf_available > eps ) then
+
+            call allocate_leaf( &
+              pft, &
+              dcleaf_available, &
+              tile(lu)%plant(pft)%pleaf%c%c12, &
+              tile(lu)%plant(pft)%pleaf%n%n14, &
+              tile(lu)%plant(pft)%plabl%c%c12, &
+              tile(lu)%plant(pft)%plabl%n%n14, &
+              tile_fluxes(lu)%plant(pft)%drgrow, &
+              tile(lu)%plant(pft)%actnv_unitfapar, &
+              tile(lu)%plant(pft)%lai_ind, &
+              dnleaf_prescr, &
+              myinterface%steering%closed_nbal, &
+              tile_fluxes(lu)%plant(pft)%dnup_fix &
+              )
+
+            tile(lu)%plant(pft)%fapar_ind = get_fapar( &
+              tile(lu)%plant(pft)%lai_ind &
+              )
+
+            call update_leaftraits( tile(lu)%plant(pft) )
+
+            dcleaf = dcleaf + dcleaf_available
+            dnleaf = dnleaf + dnleaf_prescr
+
+          end if
+
+        end if
 
       end if
 

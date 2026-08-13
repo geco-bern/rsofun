@@ -6,6 +6,7 @@ module md_turnover
   use md_params_core, only: nlu, npft, eps, nmonth, ndayyear
   use md_tile_cnmodel
   use md_plant_cnmodel
+  use md_interface_cnmodel, only: myinterface ! MF: 2026-08-12
 
   implicit none
 
@@ -34,6 +35,8 @@ contains
     integer :: pft
     integer :: lu
     real :: dlabl, dleaf, droot, dseed, dwood
+    real :: cleaf_target ! MF: 2026-08-12
+    real :: dleaf_prescr ! MF: 2026-08-12
 
     real, parameter :: k_decay_wood = 1.0 / 100.0
 
@@ -78,6 +81,30 @@ contains
       if (verbose) nbal1 = tile(lu)%plant(pft)%plabl%n%n14 + tile(lu)%plant(pft)%pleaf%n%n14 + tile(lu)%soil%plitt_af%n%n14
       !--------------------------------------------------------------
       if ( dleaf > 0.0 .and. tile(lu)%plant(pft)%pleaf%c%c12 > 0.0 ) call turnover_leaf( dleaf, tile(lu), tile_fluxes(lu), pft )
+      ! MF: 2026-08-12
+      ! Additional leaf turnover required to reach prescribed LAI
+      if ( tile(lu)%plant(pft)%pleaf%c%c12 > 0.0 ) then
+      
+        cleaf_target = get_leaf_c_from_lai( &
+          pft, &
+          myinterface%climate(doy)%lai_prescr, &
+          tile(lu)%plant(pft)%actnv_unitfapar &
+          )
+      
+        if ( cleaf_target < tile(lu)%plant(pft)%pleaf%c%c12 - eps ) then
+      
+          dleaf_prescr = 1.0 - cleaf_target / tile(lu)%plant(pft)%pleaf%c%c12
+      
+          call turnover_leaf( &
+            dleaf_prescr, &
+            tile(lu), &
+            tile_fluxes(lu), &
+            pft &
+            )
+      
+        end if
+      
+      end if      
       !--------------------------------------------------------------
       if (verbose) print*, '              ==> returned: '
       if (verbose) print*, '              pleaf = ', tile(lu)%plant(pft)%pleaf
