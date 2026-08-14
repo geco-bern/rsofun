@@ -1,5 +1,5 @@
 #' R wrapper for SOFUN CN-model
-#' 
+#'
 #' Call to the Fortran CN-model
 #'
 #' @param sitename Site name.
@@ -32,12 +32,12 @@
 #'       \item{whc}{A numeric value for the total root zone water holding capacity (in mm), used
 #'       for simulating the soil water balance.}
 #' }
-#' @param forcing A data frame of forcing climate data, used as input 
+#' @param forcing A data frame of forcing climate data, used as input
 #'  (see \code{\link{p_model_drivers}}
 #'  for a detailed description of its structure and contents).
 #' @param params_modl A named list of free (calibratable) model parameters.
 #' \describe{
-#'   \item{kphio}{The quantum yield efficiency at optimal temperature \eqn{\varphi_0}, 
+#'   \item{kphio}{The quantum yield efficiency at optimal temperature \eqn{\varphi_0},
 #'    in mol mol\eqn{^{-1}}.
 #'    When temperature dependence is used, it corresponds to the multiplicative
 #'    parameter \eqn{c} (see Details).}
@@ -52,26 +52,26 @@
 #'    degree-day\eqn{^{-1}}. Larger values produce a sharper transition.}
 #'   \item{dehardening_gdd_base}{Base temperature for accumulating growing degree days
 #'    during recovery from cold hardening, in \eqn{^o}C.}
-#'   \item{soilm_thetastar}{The threshold parameter \eqn{\theta^{*}} in the 
+#'   \item{soilm_thetastar}{The threshold parameter \eqn{\theta^{*}} in the
 #'    soil moisture stress function (see Details), given in mm.
 #'    To turn off the soil moisture stress, set \code{soilm_thetastar = 0}.}
 #'   \item{soilm_betao}{The intercept parameter \eqn{\beta_{0}} in the
-#'    soil moisture stress function (see Details). This is the parameter calibrated 
+#'    soil moisture stress function (see Details). This is the parameter calibrated
 #'    in Stocker et al. 2020 GMD.}
 #'   \item{beta_unitcostratio}{The unit cost of carboxylation, corresponding to
 #'    \eqn{\beta = b / a'} in Eq. 3 of Stocker et al. 2020 GMD.}
 #'   \item{rd_to_vcmax}{Ratio of Rdark (dark respiration) to Vcmax25.}
 #'   \item{tau_acclim}{Acclimation time scale of photosynthesis, in days.}
 #'   \item{kc_jmax}{Parameter for Jmax cost ratio (corresponding to c\eqn{^*} in
-#'   Stocker et al. 2020 GMD).} 
+#'   Stocker et al. 2020 GMD).}
 #' }
-#' @param makecheck A logical specifying whether checks are performed 
+#' @param makecheck A logical specifying whether checks are performed
 #'  to verify forcings and model parameters. \code{TRUE} by default.
 #' @param verbose A logical specifying whether to print warnings.
 #' Defaults to \code{TRUE}.
 #'
 #' @import dplyr
-#' 
+#'
 #' @returns Model output is provided as a tidy dataframe, with columns:
 #' \describe{
 #'   \item{\code{date}}{Date of the observation in YYYY-MM-DD format.}
@@ -79,22 +79,22 @@
 #'      (for example, 2007.000 corresponds to 2007-01-01 and 2007.003 to 2007-01-02.}
 #'   \item{\code{fapar}}{Fraction of photosynthetic active radiation (fAPAR), taking
 #'      values between 0 and 1.}
-#'   \item{\code{gpp}}{Gross Primary Productivity (GPP) for each time stamp 
+#'   \item{\code{gpp}}{Gross Primary Productivity (GPP) for each time stamp
 #'       (in gC m\eqn{^{-2}} d\eqn{^{-1}}).}
 #'   \item{\code{aet}}{Actual evapotranspiration (AET), calculated by SPLASH following Priestly-Taylor (in mm d\eqn{^{-1}}).}
 #'   \item{\code{le}}{Latent heat flux (in J m\eqn{^{-2}} d\eqn{^{-1}}).}
 #'   \item{\code{pet}}{Potential evapotranspiration (PET), calculated by SPLASH following Priestly-Taylor (in mm d\eqn{^{-1}}).}
-#'   \item{\code{vcmax}}{Maximum rate of RuBisCO carboxylation 
+#'   \item{\code{vcmax}}{Maximum rate of RuBisCO carboxylation
 #'       (Vcmax) (in mol C m\eqn{^{-2}} d\eqn{^{-1}}).}
 #'   \item{\code{jmax}}{Maximum rate of electron transport for RuBP regeneration
 #'       (in mol CO\eqn{_2} m\eqn{^{-2}} s\eqn{^{-1}}).}
-#'   \item{\code{vcmax25}}{Maximum rate of carboxylation (Vcmax), 
+#'   \item{\code{vcmax25}}{Maximum rate of carboxylation (Vcmax),
 #'       normalised to 25\eqn{^o}C (in mol C m\eqn{^{-2}} d\eqn{^{-1}}).}
-#'   \item{\code{jmax25}}{Maximum rate of electron transport, normalised to 
+#'   \item{\code{jmax25}}{Maximum rate of electron transport, normalised to
 #'       25\eqn{^o}C (in mol C m\eqn{^{-2}} s\eqn{^{-1}}).}
-#'   \item{\code{gs_accl}}{Acclimated stomatal conductance (in 
+#'   \item{\code{gs_accl}}{Acclimated stomatal conductance (in
 #'       mol C m\eqn{^{-2}} d\eqn{^{-1}} Pa\eqn{^{-1}}).}
-#'   \item{\code{wscal}}{Relative soil water content, between 0 (permanent wilting 
+#'   \item{\code{wscal}}{Relative soil water content, between 0 (permanent wilting
 #'       point, PWP) and 1 (field capacity, FC).}
 #'   \item{\code{chi}}{Ratio of leaf-internal to ambient CO\eqn{_{2}}, ci:ca (unitless).}
 #'   \item{\code{iwue}}{Intrinsic water use efficiency (iWUE) (in Pa).}
@@ -103,39 +103,39 @@
 #'   \item{\code{netrad}}{Net radiation, in W m\eqn{^{-2}}. If not an input driver, calculated by SPLASH.}
 #'   \item{\code{wcont}}{Soil water content, in mm.}
 #'   \item{\code{snow}}{Snow water equivalents, in mm.}
-#'   } 
-#'   
-#' @details Depending on the input model parameters, it's possible to run the 
+#'   }
+#'
+#' @details Depending on the input model parameters, it's possible to run the
 #' different P-model setups presented in Stocker et al. 2020 GMD. The P-model
 #' version implemented in this package allows more flexibility than the one
 #' presented in the paper, with the following functions:
-#' 
+#'
 #' The temperature dependence of the quantum yield efficiency is given by: \cr
 #' \eqn{\varphi_0 (T) = c (1 + a (T - b)^2 ) } if \eqn{0 < c (1 + a (T - b)^2 ) < 1}, \cr
 #' \eqn{\varphi_0 (T) = 0 } if \eqn{ c (1 + a (T - b)^2 ) \leq 0}, and  \cr
 #' \eqn{\varphi_0 (T) = 1 } if \eqn{ c (1 + a (T - b)^2 ) \geq 1}. \cr
 #' The ORG setup can be reproduced by setting \code{kphio_par_a = 0}
 #' and calibrating the \code{kphio} parameter only.
-#' The BRC setup (which calibrates \eqn{c_L = \frac{a_L b_L}{4}} in Eq. 18) is more difficult to reproduce, 
+#' The BRC setup (which calibrates \eqn{c_L = \frac{a_L b_L}{4}} in Eq. 18) is more difficult to reproduce,
 #' since the temperature-dependency has been reformulated and a custom cost
 #' function would be necessary for calibration. The new parameters
 #' are related to \eqn{c_L} as follows: \cr
 #' \eqn{a = -0.0004919819} \cr
 #' \eqn{b = 32.35294} \cr
-#' \eqn{c = 0.6910823 c_L} 
-#' 
+#' \eqn{c = 0.6910823 c_L}
+#'
 #' The soil moisture stress is implemented as \cr
-#' \eqn{\beta(\theta) = \frac{\beta_0 - 1}{{\theta^{*}}^2} 
-#'    (\theta - \theta^{*})^2 + 1 } if 
+#' \eqn{\beta(\theta) = \frac{\beta_0 - 1}{{\theta^{*}}^2}
+#'    (\theta - \theta^{*})^2 + 1 } if
 #'    \eqn{ 0 \leq \theta \leq \theta^{*}} and \cr
 #' \eqn{\beta(\theta) = 1} if \eqn{ \theta > \theta^{*}}. \cr
 #' In Stocker et al. 2020 GMD, the threshold plant-available soil water is set as
-#' \eqn{\theta^{*}} 
+#' \eqn{\theta^{*}}
 #' \code{= 0.6 * whc} where \code{whc} is the site's water holding capacity. Also,
 #' the \eqn{\beta} reduction at low soil moisture (\eqn{\beta_0 = \beta(0)}) was parameterized
 #' as a linear function of mean aridity (Eq. 20 in Stocker et al. 2020 GMD) but is
-#' considered a constant model parameter in this package. 
-#' Hence, the FULL calibration setup cannot be 
+#' considered a constant model parameter in this package.
+#' Hence, the FULL calibration setup cannot be
 #' exactly replicated.
 #'
 #' @export
@@ -155,8 +155,8 @@
 #'   tau_acclim         = 30.0,
 #'   kc_jmax            = 0.41
 #' )
-#' 
-#' # Run the Fortran P-model 
+#'
+#' # Run the Fortran P-model
 #' mod_output <- run_cnmodel_f_bysite(
 #'   # unnest drivers example data
 #'   sitename = p_model_drivers$sitename[1],
@@ -176,13 +176,23 @@ run_cnmodel_f_bysite <- function(
   makecheck = TRUE,
   verbose = TRUE
   ){
-  
+
+  # Backward-compatible defaults for optional canopy forcing
+  if (is.null(params_siml$use_prescribed_fapar)) {
+    params_siml$use_prescribed_fapar <- FALSE
+  }
+
+  if (is.null(params_siml$use_prescribed_lai)) {
+    params_siml$use_prescribed_lai <- FALSE
+  }
+
+
   # predefine variables for CRAN check compliance
   ccov <- temp <- rain <- vpd <- ppfd <- netrad <-
-  fsun <- snow <- co2 <- ndep <- fapar <- patm <- 
+  fsun <- snow <- co2 <- ndep <- fapar <- patm <-
   nyeartrend_forcing <- firstyeartrend_forcing <-
   tmin <- tmax <- fsand <- fclay <- forg <- fgravel <- . <- NULL
-  
+
   # base state, always execute the call
   continue <- TRUE
 
@@ -228,20 +238,20 @@ run_cnmodel_f_bysite <- function(
 
   # Treat NULL inputs and values containing NA/NaN as missing.
   is.nanull <- function(x) is.null(x) || anyNA(x)
-  
-  # record first year and number of years in forcing data 
+
+  # record first year and number of years in forcing data
   # frame (may need to overwrite later)
   ndayyear <- 365
-  
+
   firstyeartrend_forcing <- forcing %>%
     dplyr::ungroup() %>%
     dplyr::slice(1) %>%
     dplyr::pull(date) %>%
     format("%Y") %>%
     as.numeric()
-  
+
   nyeartrend_forcing <- nrow(forcing)/ndayyear
-  
+
   # determine number of seconds per time step
   times <- forcing %>%
     dplyr::pull(date) %>%
@@ -249,14 +259,27 @@ run_cnmodel_f_bysite <- function(
   secs_per_tstep <- difftime(times[1], times[2], units = "secs") %>%
     as.integer() %>%
     abs()
-  
+
+  # Keep the fixed 18-column Fortran forcing interface.
+  # If a canopy variable is simulated internally and is absent from the
+  # forcing data, provide a dummy value that will not be used by the model.
+  if (!params_siml$use_prescribed_fapar &&
+      !"fapar" %in% names(forcing)) {
+    forcing$fapar <- 0.0
+  }
+
+  if (!params_siml$use_prescribed_lai &&
+      !"lai" %in% names(forcing)) {
+    forcing$lai <- 0.0
+  }
+
   # re-define units and naming of forcing dataframe
   # keep the order of columns - it's critical for Fortran (reading by column number)
-  forcing <- forcing %>% 
+  forcing <- forcing %>%
     dplyr::mutate(
       fsun = (100-ccov)/100,
       ndep = 0.0
-      ) %>% 
+      ) %>%
     dplyr::select(
       temp,
       rain,
@@ -280,7 +303,7 @@ run_cnmodel_f_bysite <- function(
 
   # validate input
   if (makecheck){
-    
+
     # list variable to check for
     check_vars <- c(
       "temp",
@@ -288,7 +311,6 @@ run_cnmodel_f_bysite <- function(
       "vpd",
       "snow",
       "co2",
-      "fapar",
       "patm",
       "tmin",
       "tmax",
@@ -296,13 +318,21 @@ run_cnmodel_f_bysite <- function(
       "dno3",
       "dnh4",
       "cseed",
-      "nseed",
-      "lai"
+      "nseed"
     )
-    
+
+    if (params_siml$use_prescribed_fapar) {
+      check_vars <- c(check_vars, "fapar")
+    }
+
+    if (params_siml$use_prescribed_lai) {
+      check_vars <- c(check_vars, "lai")
+    }
+
+
     # create a loop to loop over a list of variables
     # to check validity
-    
+
     data_integrity <- lapply(check_vars, function(check_var){
       if (any(is.nanull(forcing[check_var]))){
         warning(sprintf("Error: Missing value in %s for %s",
@@ -312,11 +342,11 @@ run_cnmodel_f_bysite <- function(
         return(TRUE)
       }
     })
-    
+
     if (suppressWarnings(!all(data_integrity))){
       continue <- FALSE
     }
-    
+
     # parameters to check
     check_param <- c(
       "c_only",
@@ -325,6 +355,8 @@ run_cnmodel_f_bysite <- function(
       "spinupyears",
       "recycle",
       "outdt",
+      "use_prescribed_fapar",
+      "use_prescribed_lai",
       "ltre",
       "ltne",
       "ltnd",
@@ -332,7 +364,7 @@ run_cnmodel_f_bysite <- function(
       "lgn3",
       "lgr4"
     )
-    
+
     parameter_integrity <- lapply(check_param, function(check_var){
       if (any(is.nanull(params_siml[check_var]))){
         warning(sprintf("Error: Missing value in %s for %s",
@@ -342,27 +374,27 @@ run_cnmodel_f_bysite <- function(
         return(TRUE)
       }
     })
-    
+
     if (suppressWarnings(!all(parameter_integrity))){
       continue <- FALSE
     }
-      
+
     if (nrow(forcing) %% ndayyear != 0){
       # something weird more fundamentally -> don't run the model
       warning(" Returning a dummy data frame. Forcing data does not
               correspond to full years.")
       continue <- FALSE
     }
-    
+
     # Check model parameters
-    if( sum( names(params_modl) %in% c('kphio', 
-                                       'kphio_par_a', 
+    if( sum( names(params_modl) %in% c('kphio',
+                                       'kphio_par_a',
                                        'kphio_par_b',
-                                       'soilm_thetastar', 
+                                       'soilm_thetastar',
                                        'soilm_betao',
-                                       'beta_unitcostratio', 
-                                       'rd_to_vcmax', 
-                                       'tau_acclim', 
+                                       'beta_unitcostratio',
+                                       'rd_to_vcmax',
+                                       'tau_acclim',
                                        'kc_jmax',
                                        'f_nretain',
                                        'fpc_tree_max',
@@ -447,27 +479,27 @@ run_cnmodel_f_bysite <- function(
       continue <- FALSE
     }
   }
-  
+
   if (continue){
 
     # determine whether to read PPFD from forcing or to calculate internally
-    in_ppfd <- ifelse(any(is.na(forcing$ppfd)), FALSE, TRUE)  
+    in_ppfd <- ifelse(any(is.na(forcing$ppfd)), FALSE, TRUE)
 
     # determine whether to read PPFD from forcing or to calculate internally
-    in_netrad <- ifelse(any(is.na(forcing$netrad)), FALSE, TRUE)  
-    
+    in_netrad <- ifelse(any(is.na(forcing$netrad)), FALSE, TRUE)
+
     # Check if fsun is available
     if(! (in_ppfd & in_netrad)){
       # fsun must be available when one of ppfd or netrad is missing
       if(any(is.na(forcing$fsun))) continue <- FALSE
     }
   }
-  
+
   if(continue){
-    
+
     # convert to matrix
     forcing <- as.matrix(forcing)
-    
+
     # number of rows in matrix (pre-allocation of memory)
     n <- as.integer(nrow(forcing))
 
@@ -566,7 +598,7 @@ run_cnmodel_f_bysite <- function(
     out <- .Call(
 
       'cnmodel_f_C',
-      
+
       ## Simulation parameters
       c_only                    = as.logical(params_siml$c_only),
       write_soil_diagnostics   = as.logical(params_siml$write_soil_diagnostics),
@@ -578,6 +610,8 @@ run_cnmodel_f_bysite <- function(
       secs_per_tstep            = as.integer(secs_per_tstep),
       in_ppfd                   = as.logical(in_ppfd),
       in_netrad                 = as.logical(in_netrad),
+      use_prescribed_fapar      = as.logical(params_siml$use_prescribed_fapar),
+      use_prescribed_lai        = as.logical(params_siml$use_prescribed_lai),
       outdt                     = as.integer(params_siml$outdt),
       ltre                      = as.logical(params_siml$ltre),
       ltne                      = as.logical(params_siml$ltne),
@@ -591,10 +625,10 @@ run_cnmodel_f_bysite <- function(
       altitude                  = as.numeric(site_info$elv),
       whc                       = as.numeric(site_info$whc),
       n                         = n,
-      par                       = par, 
+      par                       = par,
       forcing                   = forcing
       )
-    
+
     # Prepare output to be a nice looking tidy data frame (tibble)
     ddf <- init_dates_dataframe(
       yrstart = firstyeartrend_forcing,
@@ -602,8 +636,8 @@ run_cnmodel_f_bysite <- function(
       noleap = TRUE)
 
     out <- out %>%
-      as.matrix() %>% 
-      as.data.frame() %>% 
+      as.matrix() %>%
+      as.data.frame() %>%
       stats::setNames(
         c(
           "fapar",
@@ -754,7 +788,7 @@ run_cnmodel_f_bysite <- function(
                   x4      = NA
                   )
   }
-    
+
   return(out)
 
 }

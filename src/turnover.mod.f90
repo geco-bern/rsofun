@@ -85,7 +85,7 @@ contains
       endif
 
       !--------------------------------------------------------------
-      ! Calculate leaf turnover in this day 
+      ! Calculate leaf turnover in this day
       !--------------------------------------------------------------
       if (verbose) print*, 'calling turnover_leaf() ... '
       if (verbose) print*, '              with state variables:'
@@ -97,28 +97,33 @@ contains
       if ( dleaf > 0.0 .and. tile(lu)%plant(pft)%pleaf%c%c12 > 0.0 ) call turnover_leaf( dleaf, tile(lu), tile_fluxes(lu), pft )
       ! MF: 2026-08-12
       ! Additional leaf turnover required to reach prescribed LAI
-      if ( tile(lu)%plant(pft)%pleaf%c%c12 > 0.0 ) then
-      
-        cleaf_target = get_leaf_c_from_lai( &
-          pft, &
-          myinterface%climate(doy)%lai_prescr, &
-          tile(lu)%plant(pft)%actnv_unitfapar &
-          )
-      
-        if ( cleaf_target < tile(lu)%plant(pft)%pleaf%c%c12 - eps ) then
-      
-          dleaf_prescr = 1.0 - cleaf_target / tile(lu)%plant(pft)%pleaf%c%c12
-      
-          call turnover_leaf( &
-            dleaf_prescr, &
-            tile(lu), &
-            tile_fluxes(lu), &
-            pft &
+      if ( myinterface%params_siml%use_prescribed_lai ) then
+
+
+        if ( tile(lu)%plant(pft)%pleaf%c%c12 > 0.0 ) then
+
+          cleaf_target = get_leaf_c_from_lai( &
+            pft, &
+            myinterface%climate(doy)%lai_prescr, &
+            tile(lu)%plant(pft)%actnv_unitfapar &
             )
-      
+
+          if ( cleaf_target < tile(lu)%plant(pft)%pleaf%c%c12 - eps ) then
+
+            dleaf_prescr = 1.0 - cleaf_target / tile(lu)%plant(pft)%pleaf%c%c12
+
+            call turnover_leaf( &
+              dleaf_prescr, &
+              tile(lu), &
+              tile_fluxes(lu), &
+              pft &
+              )
+
+          end if
+
         end if
-      
-      end if      
+
+      end if
       !--------------------------------------------------------------
       if (verbose) print*, '              ==> returned: '
       if (verbose) print*, '              pleaf = ', tile(lu)%plant(pft)%pleaf
@@ -134,7 +139,7 @@ contains
       if (baltest .and. abs(nbal1) > eps) stop 'balance 1 not satisfied'
 
       !--------------------------------------------------------------
-      ! Calculate root turnover in this day 
+      ! Calculate root turnover in this day
       !--------------------------------------------------------------
       if (verbose) print*, 'calling turnover_root() ... '
       if (verbose) print*, '              with state variables:'
@@ -159,7 +164,7 @@ contains
       if (baltest .and. abs(nbal1) > eps) stop 'balance 1 not satisfied'
 
       !--------------------------------------------------------------
-      ! Calculate wood turnover in this day 
+      ! Calculate wood turnover in this day
       !--------------------------------------------------------------
       if (verbose) print*, 'calling turnover_wood() ... '
       if (verbose) print*, '              with state variables:'
@@ -184,7 +189,7 @@ contains
       if (baltest .and. abs(nbal1) > eps) stop 'balance 1 not satisfied'
 
       !--------------------------------------------------------------
-      ! Calculate seed turnover in this day 
+      ! Calculate seed turnover in this day
       !--------------------------------------------------------------
       if (verbose) print*, 'calling turnover_seed() ... '
       if (verbose) print*, '              with state variables:'
@@ -233,7 +238,7 @@ contains
       if (verbose) print*, '                  d(nlitt + nroot)             = ', nbal1
       if (baltest .and. abs(cbal1) > eps) stop 'balance 1 not satisfied'
       if (baltest .and. abs(nbal1) > eps) stop 'balance 1 not satisfied'
-    
+
     enddo pftloop
 
   end subroutine turnover
@@ -331,7 +336,7 @@ contains
     if (verbose .and. nitr > 0) print*,'                      final reduction of leaf C ', cleaf / lm_init%c%c12
     if (verbose .and. nitr > 0) print*,'                      final reduction of leaf N ', nleaf / lm_init%n%n14
 
-    ! update 
+    ! update
     tile%plant(pft)%pleaf%c%c12 = cleaf
     tile%plant(pft)%pleaf%n%n14 = nleaf
 
@@ -477,7 +482,7 @@ contains
     ! reduce labile mass
     call orgsub( lb_turn, tile%plant(pft)%plabl )
 
-    ! call orgmvRec( lb_turn, lb_turn, tile%plant(pft)%plitt_af, outaCveg2lit(pft,jpngr), outaNveg2lit(pft,jpngr), scale = real(tile%plant(pft)%nind) 
+    ! call orgmvRec( lb_turn, lb_turn, tile%plant(pft)%plitt_af, outaCveg2lit(pft,jpngr), outaNveg2lit(pft,jpngr), scale = real(tile%plant(pft)%nind)
     call orgmv( lb_turn, lb_turn, tile%soil%plitt_af, scale = real(tile%plant(pft)%nind) )
 
   end subroutine turnover_labl
