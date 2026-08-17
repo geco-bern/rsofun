@@ -11,7 +11,7 @@ module md_allocation_cnmodel
 
   implicit none
 
-  private 
+  private
   public allocation_daily, getpar_modl_allocation
 
   !----------------------------------------------------------------
@@ -49,6 +49,15 @@ module md_allocation_cnmodel
 
   real :: test
 
+  !-------------------------------------------------------------------
+  ! MF: 2026-08-13
+  ! Maximum fraction of the current labile C and N pools that may be
+  ! used within one timestep to support additional leaf growth toward
+  ! prescribed LAI. A very small residual fraction is retained to avoid
+  ! complete depletion and numerical instability of the labile pools.
+  !-------------------------------------------------------------------
+  real, parameter :: frac_labile_for_prescr_lai = 0.999
+
 contains
 
   subroutine allocation_daily( tile, tile_fluxes, climate, init )
@@ -68,8 +77,16 @@ contains
     ! local variables
     real :: dcleaf
     real :: dnleaf
+    real :: cleaf_target      ! MF: 2026-08-12
+    real :: nleaf_target      ! MF: 2026-08-12
+    real :: dcleaf_prescr     ! MF: 2026-08-12
+    real :: dnleaf_prescr     ! MF: 2026-08-12
+    real :: dcleaf_available  ! MF: 2026-08-13
+    real :: lai_trial         ! MF: 2026-08-13
+    real :: nleaf_trial       ! MF: 2026-08-13
+    integer :: nitr_prescr    ! MF: 2026-08-13
     real :: dcroot
-    real :: dcwood 
+    real :: dcwood
     real :: dnwood
     real :: dcseed
     real :: dnseed
@@ -89,7 +106,7 @@ contains
     integer :: idx
     integer :: usemoy        ! MOY in climate vectors to use for allocation
     integer :: usedoy        ! DOY in climate vectors to use for allocation
-  
+
     type(orgpool) :: avl
 
     integer, parameter :: len_resp_vec = 30
@@ -115,7 +132,7 @@ contains
     integer, parameter :: len_rrum_vec = ndayyear
     integer, parameter :: len_rduf_vec = ndayyear
     integer, parameter :: len_cn_vec   = ndayyear
-    
+
     real, dimension(nlu,npft,len_luep_vec), save :: luep_vec
     real, dimension(nlu,npft,len_rduf_vec), save :: rduf_vec
     real, dimension(nlu,npft,len_rrum_vec), save :: rrum_vec
@@ -206,7 +223,7 @@ contains
 
           ! print*,'dcleaf, dcroot ', dcleaf, dcroot
 
-          tile_fluxes(lu)%plant(pft)%debug4 = tile(lu)%plant(pft)%pheno%level_veggrowth 
+          tile_fluxes(lu)%plant(pft)%debug4 = tile(lu)%plant(pft)%pheno%level_veggrowth
 
           !-------------------------------------------------------------------
           ! SEED ALLOCATION
@@ -215,7 +232,7 @@ contains
                       tile(lu)%plant(pft)%plabl, &
                       tile(lu)%plant(pft)%pseed &
                       )
-          
+
           ! ... and remove growth respiration from labile C, update growth respiration
           dclabl = (1.0 / params_plant%growtheff) * dcseed
           tile(lu)%plant(pft)%plabl%c%c12 = tile(lu)%plant(pft)%plabl%c%c12 - dclabl
@@ -261,15 +278,15 @@ contains
               tile_fluxes(lu)%plant(pft)%dnup_fix &
               )
 
-            !-------------------------------------------------------------------  
+            !-------------------------------------------------------------------
             ! Update leaf traits, given updated LAI and fAPAR (leaf N is consistent with plant%narea_canopy)
-            !------------------------------------------------------------------- 
+            !-------------------------------------------------------------------
             tile(lu)%plant(pft)%fapar_ind = get_fapar( tile(lu)%plant(pft)%lai_ind )
             call update_leaftraits( tile(lu)%plant(pft) )
 
-            !-------------------------------------------------------------------  
+            !-------------------------------------------------------------------
             ! If labile N gets negative, account gap as N fixation
-            !-------------------------------------------------------------------  
+            !-------------------------------------------------------------------
             if ( tile(lu)%plant(pft)%plabl%n%n14 < 0.0 ) then
               ! stop 'labile N got negative'
               req = 2.0 * abs(tile(lu)%plant(pft)%plabl%n%n14) ! give it a bit more (factor 2)
@@ -298,9 +315,9 @@ contains
               tile_fluxes(lu)%plant(pft)%dnup_fix &
               )
 
-            !-------------------------------------------------------------------  
+            !-------------------------------------------------------------------
             ! If labile N gets negative, account gap as N fixation
-            !-------------------------------------------------------------------  
+            !-------------------------------------------------------------------
             if ( tile(lu)%plant(pft)%plabl%n%n14 < 0.0 ) then
               ! stop 'labile N got negative'
               req = 2.0 * abs(tile(lu)%plant(pft)%plabl%n%n14) ! give it a bit more (factor 2)
@@ -328,6 +345,119 @@ contains
           drgrow = 0.0
 
       end if
+
+      !-------------------------------------------------------------------
+      ! MF: 2026-08-12
+      ! Additional leaf allocation required to reach prescribed LAI
+      !-------------------------------------------------------------------
+      if ( myinterface%params_siml%use_prescribed_lai ) then
+
+        if ( tile(lu)%plant(pft)%pleaf%c%c12 > 0.0 ) then
+
+          cleaf_target = get_leaf_c_from_lai( &
+            pft, &
+            climate%lai_prescr, &
+            tile(lu)%plant(pft)%actnv_unitfapar &
+            )
+
+          nleaf_target = get_leaf_n_canopy( &
+            pft, &
+            climate%lai_prescr, &
+            tile(lu)%plant(pft)%actnv_unitfapar &
+            )
+
+          if ( cleaf_target > tile(lu)%plant(pft)%pleaf%c%c12 + eps ) then
+
+            dcleaf_prescr = cleaf_target - tile(lu)%plant(pft)%pleaf%c%c12
+            dnleaf_prescr = nleaf_target - tile(lu)%plant(pft)%pleaf%n%n14
+
+            !-------------------------------------------------------------------
+            ! Maximum leaf-C increment affordable from labile C.
+            !-------------------------------------------------------------------
+            dcleaf_available = min( &
+              dcleaf_prescr, &
+              frac_labile_for_prescr_lai * &
+              tile(lu)%plant(pft)%plabl%c%c12 * params_plant%growtheff &
+              )
+
+            !-------------------------------------------------------------------
+            ! If N balance is closed, reduce the candidate leaf-C allocation
+            ! until the associated leaf-N requirement fits available labile N.
+            !-------------------------------------------------------------------
+            if ( dcleaf_available > eps ) then
+
+              nitr_prescr = 0
+
+              do
+
+                lai_trial = get_lai( &
+                  pft, &
+                  tile(lu)%plant(pft)%pleaf%c%c12 + dcleaf_available, &
+                  tile(lu)%plant(pft)%actnv_unitfapar &
+                  )
+
+                nleaf_trial = get_leaf_n_canopy( &
+                  pft, &
+                  lai_trial, &
+                  tile(lu)%plant(pft)%actnv_unitfapar &
+                  )
+
+                if ( &
+                  nleaf_trial - tile(lu)%plant(pft)%pleaf%n%n14 <= &
+                  frac_labile_for_prescr_lai * &
+                  tile(lu)%plant(pft)%plabl%n%n14 + eps &
+                  ) exit
+
+                dcleaf_available = 0.9 * dcleaf_available
+                nitr_prescr = nitr_prescr + 1
+
+                if ( dcleaf_available <= eps ) exit
+
+                if ( nitr_prescr >= 100 ) then
+                  dcleaf_available = 0.0
+                  exit
+                end if
+
+              end do
+
+            end if
+
+            !-------------------------------------------------------------------
+            ! Allocate affordable amount toward prescribed LAI
+            !-------------------------------------------------------------------
+            if ( dcleaf_available > eps ) then
+
+              call allocate_leaf( &
+                pft, &
+                dcleaf_available, &
+                tile(lu)%plant(pft)%pleaf%c%c12, &
+                tile(lu)%plant(pft)%pleaf%n%n14, &
+                tile(lu)%plant(pft)%plabl%c%c12, &
+                tile(lu)%plant(pft)%plabl%n%n14, &
+                tile_fluxes(lu)%plant(pft)%drgrow, &
+                tile(lu)%plant(pft)%actnv_unitfapar, &
+                tile(lu)%plant(pft)%lai_ind, &
+                dnleaf_prescr, &
+                myinterface%steering%closed_nbal, &
+                tile_fluxes(lu)%plant(pft)%dnup_fix &
+                )
+
+              tile(lu)%plant(pft)%fapar_ind = get_fapar( &
+                tile(lu)%plant(pft)%lai_ind &
+                )
+
+              call update_leaftraits( tile(lu)%plant(pft) )
+
+              dcleaf = dcleaf + dcleaf_available
+              dnleaf = dnleaf + dnleaf_prescr
+
+            end if  ! dcleaf_available > eps
+
+          end if    ! cleaf_target > current Cleaf
+
+        end if      ! pleaf > 0
+
+      end if        ! use_prescribed_lai
 
       !-------------------------------------------------------------------
       ! Record acquired and required C and N
@@ -370,7 +500,7 @@ contains
       end if
 
 
-      ! return on leaf investment, defined as sum of C assimilated (after leaf dark respiration, but before exudation, root and other respiration) 
+      ! return on leaf investment, defined as sum of C assimilated (after leaf dark respiration, but before exudation, root and other respiration)
       ! divided by sum over C invested into leaf construction (ignoring growth respiration)
       psi_c = sum( g_net_vec(lu,pft,:) ) / sum( c_a_l_vec(lu,pft,:) )
 
@@ -438,7 +568,7 @@ contains
       ! if (.not. myinterface%steering%spinup_reserves) then
       !   tile(lu)%plant(pft)%presv%c%c12 = c_resv_target
       !   if (pft == npft .and. lu == nlu) firstcall_resv = .false.
-      ! end if      
+      ! end if
 
       ! net C flux from reserves to labile pool
       f_resv_to_labl = calc_f_reserves_labile(&
@@ -464,7 +594,7 @@ contains
           tile(lu)%plant(pft)%presv%c%c12 = tile(lu)%plant(pft)%presv%c%c12 - org_resv_to_labl%c%c12
           tile(lu)%plant(pft)%presv%n%n14 = tile(lu)%plant(pft)%presv%n%n14 - org_resv_to_labl%n%n14
         end if
-        
+
       else if (c_resv_target > 0.0) then
 
         ! transfer C and N to reserves, source pool is plabl
@@ -517,7 +647,7 @@ contains
     ! Sequence of steps:
     ! - increment foliage C pool
     ! - update LAI
-    ! - calculate canopy-level foliage N as a function of LAI 
+    ! - calculate canopy-level foliage N as a function of LAI
     ! - reduce labile pool by C and N increments
     !-------------------------------------------------------------------
     ! arguments
@@ -589,7 +719,7 @@ contains
         nfix = nfix - nlabl
         nlabl = 0.0
       end if
-    end if  
+    end if
 
   end subroutine allocate_leaf
 
@@ -713,8 +843,8 @@ contains
 
   function calc_ft_growth( xx ) result( yy )
     !////////////////////////////////////////////////////////////////
-    ! Temperature limitation function to growth. Increases from around 
-    ! 0 at 0 deg C to 1 at around 10 deg C. The factor scales the 
+    ! Temperature limitation function to growth. Increases from around
+    ! 0 at 0 deg C to 1 at around 10 deg C. The factor scales the
     ! amount of C that becomes available for growth.
     !----------------------------------------------------------------
     ! arguments
@@ -734,7 +864,7 @@ contains
   function calc_l2r(c_labl, c_resv, c_labl_target, c_resv_target, f_max) result( out )
     !///////////////////////////////////////////////////////////
     ! Function for trickling from labile to reserves
-    ! Returns the fraction of the labile pool (is source pool) 
+    ! Returns the fraction of the labile pool (is source pool)
     ! moving from labile to reserves.
     !-----------------------------------------------------------
     real, intent(in) :: c_labl, c_resv, c_labl_target, c_resv_target, f_max
@@ -790,7 +920,7 @@ contains
 
   ! function get_rcton_init( pft, meanmppfd, nv ) result( rcton )
   !   !////////////////////////////////////////////////////////////////
-  !   ! Calculates initial guess based on Taylor approximation of 
+  !   ! Calculates initial guess based on Taylor approximation of
   !   ! Cleaf and Nleaf function around cleaf=0.
   !   ! Cleaf = c_molmass * params_pft_plant(pft)%r_ctostructn_leaf * [ meanmppfd * (1-exp(-kbeer*LAI)) * nv * params_pft_plant(pft)%r_n_cw_v + LAI * params_pft_plant(pft)%ncw_min ]
   !   ! Nleaf = n_molmass * [ meanmppfd * (1-exp(-kbeer*LAI)) * nv * (params_pft_plant(pft)%r_n_cw_v + 1) + LAI * params_pft_plant(pft)%ncw_min ]
@@ -813,10 +943,10 @@ contains
   !   real :: maxnv
   !   real :: tmp1, tmp2, tmp3
 
-  !   ! Metabolic N is predicted and is optimised at a monthly time scale. 
+  !   ! Metabolic N is predicted and is optimised at a monthly time scale.
   !   ! Leaf traits are calculated based on metabolic N => cellwall N => cellwall C / LMA
   !   ! Leaves get thinner at the bottom of the canopy => increasing LAI through the season comes at a declining C and N cost
-  !   ! Monthly variations in metabolic N, determined by variations in meanmppfd and nv should not result in variations in leaf traits. 
+  !   ! Monthly variations in metabolic N, determined by variations in meanmppfd and nv should not result in variations in leaf traits.
   !   ! In order to prevent this, assume annual maximum metabolic N, part of which is deactivated during months with lower insolation (and Rd reduced.)
   !   maxnv = maxval( meanmppfd(:) * nv(:) )
 

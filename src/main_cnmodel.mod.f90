@@ -13,25 +13,27 @@ contains
   !----------------------------------------------------------------
   subroutine cnmodel_f(        &
     c_only,                    &
-    spinup,                    &   
-    spinupyears,               &        
-    recycle,                   &    
-    firstyeartrend,            &           
-    nyeartrend,                &  
-    secs_per_tstep,            &     
-    in_ppfd,                   &    
-    in_netrad,                 &      
-    outdt,                     &  
-    ltre,                      & 
-    ltne,                      & 
-    ltrd,                      & 
-    ltnd,                      & 
-    lgr3,                      & 
-    lgn3,                      & 
-    lgr4,                      & 
-    longitude,                 &      
-    latitude,                  &     
-    altitude,                  &   
+    spinup,                    &
+    spinupyears,               &
+    recycle,                   &
+    firstyeartrend,            &
+    nyeartrend,                &
+    secs_per_tstep,            &
+    in_ppfd,                   &
+    in_netrad,                 &
+    use_prescribed_fapar,      &
+    use_prescribed_lai,        &
+    outdt,                     &
+    ltre,                      &
+    ltne,                      &
+    ltrd,                      &
+    ltnd,                      &
+    lgr3,                      &
+    lgn3,                      &
+    lgr4,                      &
+    longitude,                 &
+    latitude,                  &
+    altitude,                  &
     whc,                       &
     nt,                        &
     par,                       &
@@ -57,6 +59,8 @@ contains
     integer(kind=c_int),  intent(in) :: secs_per_tstep
     logical(kind=c_bool), intent(in) :: in_ppfd
     logical(kind=c_bool), intent(in) :: in_netrad
+    logical(kind=c_bool), intent(in) :: use_prescribed_fapar
+    logical(kind=c_bool), intent(in) :: use_prescribed_lai
     integer(kind=c_int),  intent(in) :: outdt
     logical(kind=c_bool), intent(in) :: ltre
     logical(kind=c_bool), intent(in) :: ltne
@@ -71,7 +75,7 @@ contains
     real(kind=c_double),  intent(in) :: whc
     integer(kind=c_int),  intent(in) :: nt ! number of time steps
     real(kind=c_double),  dimension(86), intent(in) :: par  ! Model parameters
-    real(kind=c_double),  dimension(nt,17), intent(in) :: forcing  ! temp = 1, rain = 2, vpd = 3, ppfd = 4, netrad = 5, fsun = 6, snow = 7, co2 = 8, fapar = 9, patm = 10, tmin = 11, tmax = 12, fharv = 13, dno3 = 14, dnh4 = 15, cseed = 16, nseed = 17
+    real(kind=c_double),  dimension(nt,18), intent(in) :: forcing  ! temp = 1, rain = 2, vpd = 3, ppfd = 4, netrad = 5, fsun = 6, snow = 7, co2 = 8, fapar = 9, patm = 10, tmin = 11, tmax = 12, fharv = 13, dno3 = 14, dnh4 = 15, cseed = 16, nseed = 17, lai = 18
     real(kind=c_double),  dimension(nt,70), intent(out) :: output
 
     ! local variables
@@ -94,18 +98,20 @@ contains
       myinterface%params_siml%runyears = myinterface%params_siml%nyeartrend
       myinterface%params_siml%spinupyears = 0
     endif
-    
-    myinterface%params_siml%in_ppfd            = in_ppfd
-    myinterface%params_siml%in_netrad          = in_netrad
-    myinterface%params_siml%outdt              = outdt
-    myinterface%params_siml%ltre               = ltre
-    myinterface%params_siml%ltne               = ltne
-    myinterface%params_siml%ltrd               = ltrd
-    myinterface%params_siml%ltnd               = ltnd
-    myinterface%params_siml%lgr3               = lgr3
-    myinterface%params_siml%lgn3               = lgn3
-    myinterface%params_siml%lgr4               = lgr4
-    myinterface%params_siml%secs_per_tstep     = secs_per_tstep
+
+    myinterface%params_siml%in_ppfd              = in_ppfd
+    myinterface%params_siml%in_netrad            = in_netrad
+    myinterface%params_siml%use_prescribed_fapar = use_prescribed_fapar
+    myinterface%params_siml%use_prescribed_lai   = use_prescribed_lai
+    myinterface%params_siml%outdt                = outdt
+    myinterface%params_siml%ltre                 = ltre
+    myinterface%params_siml%ltne                 = ltne
+    myinterface%params_siml%ltrd                 = ltrd
+    myinterface%params_siml%ltnd                 = ltnd
+    myinterface%params_siml%lgr3                 = lgr3
+    myinterface%params_siml%lgn3                 = lgn3
+    myinterface%params_siml%lgr4                 = lgr4
+    myinterface%params_siml%secs_per_tstep       = secs_per_tstep
 
     ! Count PFTs to be simulated
     npft_local = 0
@@ -131,7 +137,7 @@ contains
     ! GET SOIL PARAMETERS
     !----------------------------------------------------------------
     myinterface%whc_prescr = real( whc )
-    
+
     !----------------------------------------------------------------
     ! GET CALIBRATABLE MODEL PARAMETERS
     ! (not necessarily all to actually be calibrated)
@@ -228,7 +234,7 @@ contains
     ! GET VEGETATION COVER (fractional projective cover by PFT)
     !----------------------------------------------------------------
     myinterface%fpc_grid(:) = get_fpc_grid( myinterface%params_siml )
-    
+
     yearloop: do yr=1,myinterface%params_siml%runyears
 
       !----------------------------------------------------------------
@@ -265,7 +271,7 @@ contains
       !----------------------------------------------------------------
       ! Call biosphere (wrapper for all modules, contains gridcell loop)
       !----------------------------------------------------------------
-      out_biosphere = biosphere_annual() 
+      out_biosphere = biosphere_annual()
       !----------------------------------------------------------------
 
       !----------------------------------------------------------------
@@ -276,14 +282,14 @@ contains
         idx_start = (myinterface%steering%forcingyear_idx - 1) * ndayyear + 1
         idx_end   = idx_start + ndayyear - 1
 
-        output(idx_start:idx_end,1)  = dble(out_biosphere(:)%fapar)  
-        output(idx_start:idx_end,2)  = dble(out_biosphere(:)%gpp)    
-        output(idx_start:idx_end,3)  = dble(out_biosphere(:)%transp) 
+        output(idx_start:idx_end,1)  = dble(out_biosphere(:)%fapar)
+        output(idx_start:idx_end,2)  = dble(out_biosphere(:)%gpp)
+        output(idx_start:idx_end,3)  = dble(out_biosphere(:)%transp)
         output(idx_start:idx_end,4)  = dble(out_biosphere(:)%latenth)
         output(idx_start:idx_end,5)  = dble(out_biosphere(:)%pet)
-        output(idx_start:idx_end,6)  = dble(out_biosphere(:)%vcmax)  
-        output(idx_start:idx_end,7)  = dble(out_biosphere(:)%jmax)    
-        output(idx_start:idx_end,8)  = dble(out_biosphere(:)%vcmax25) 
+        output(idx_start:idx_end,6)  = dble(out_biosphere(:)%vcmax)
+        output(idx_start:idx_end,7)  = dble(out_biosphere(:)%jmax)
+        output(idx_start:idx_end,8)  = dble(out_biosphere(:)%vcmax25)
         output(idx_start:idx_end,9)  = dble(out_biosphere(:)%jmax25)
         output(idx_start:idx_end,10) = dble(out_biosphere(:)%gs_accl)
         output(idx_start:idx_end,11) = dble(out_biosphere(:)%wscal)
