@@ -2,7 +2,7 @@ module md_nuptake
   !////////////////////////////////////////////////////////////////
   ! N uptake following FUN (Fisher et al., 2010)
   !----------------------------------------------------------------
-  use md_params_core, only: ndayyear, nmonth, nlu, npft, maxgrid
+  use md_params_core, only: ndayyear, nmonth, nlu, npft, maxgrid, eps
   use md_classdefs
   use md_tile_cnmodel
   use md_plant_cnmodel
@@ -149,10 +149,15 @@ contains
       ! N-uptake.
       !--------------------------------------------------------------------------
       ! daily
-      tile_fluxes(lu)%plant(pft)%dnup%n14 = n_uptake_pass + out_calc_dnup%act_no3 + out_calc_dnup%act_nh4 + out_calc_dnup%fix  ! n_uptake_retrans is not considered uptake
+      ! Accumulate rather than overwrite: a C-only run may already have added
+      ! implicit fixation to balance a negative labile N pool before uptake.
+      tile_fluxes(lu)%plant(pft)%dnup%n14 = &
+        tile_fluxes(lu)%plant(pft)%dnup%n14 + n_uptake_pass + &
+        out_calc_dnup%act_no3 + out_calc_dnup%act_nh4 + out_calc_dnup%fix  ! n_uptake_retrans is not considered uptake
       tile_fluxes(lu)%plant(pft)%dnup_pas = n_uptake_pass
       tile_fluxes(lu)%plant(pft)%dnup_act = out_calc_dnup%act_no3 + out_calc_dnup%act_nh4                
-      tile_fluxes(lu)%plant(pft)%dnup_fix = out_calc_dnup%fix  
+      tile_fluxes(lu)%plant(pft)%dnup_fix = &
+        tile_fluxes(lu)%plant(pft)%dnup_fix + out_calc_dnup%fix
       tile_fluxes(lu)%plant(pft)%dnup_res = n_uptake_retrans
 
       if (tile_fluxes(lu)%plant(pft)%dnup%n14 > 0.0) then
@@ -203,9 +208,23 @@ contains
     ! in proportion to their relative shares.
     !-----------------------------------------------------------------
     n0 = nh4 + no3
-    
-    ! if (n0>0.0) then
-    fno3 = no3 / n0
+
+    ! Avoid 0/0 when both mineral N pools are exhausted. With no mineral N,
+    ! active NO3 and NH4 uptake are zero. An N-fixing PFT can still acquire N
+    ! from fixation using the available root exudation.
+    if (n0 <= eps) then
+      out_calc_dnup%act_no3 = 0.0
+      out_calc_dnup%act_nh4 = 0.0
+      if (isnfixer) then
+        eff_bnf = calc_eff_fix( soiltemp )
+        out_calc_dnup%fix = max(0.0, cexu) * max(0.0, eff_bnf)
+      else
+        out_calc_dnup%fix = 0.0
+      end if
+      return
+    end if
+
+    fno3 = min(1.0, max(0.0, no3 / n0))
 
     if (isnfixer) then
       !-----------------------------------------------------------------

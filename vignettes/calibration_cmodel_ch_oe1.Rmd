@@ -375,7 +375,7 @@ daily_gpp_calibration <- calib_sofun_lhs(
     )
   ),
   likelihood = daily_gpp_loglik,
-  n_samples = 250,
+  n_samples = 500,
   n_cores = max(1, parallel::detectCores() - 1),
   seed = 42,
   progress = TRUE,
@@ -393,7 +393,7 @@ annual_gpp_calibration <- calib_sofun_lhs(
     )
   ),
   likelihood = mean_annual_gpp_loglik,
-  n_samples = 250,
+  n_samples = 500,
   n_cores = max(1, parallel::detectCores() - 1),
   seed = 43,
   progress = TRUE,
@@ -443,6 +443,10 @@ ggplot(
 ```
 
 ```{r simple-calibration-diagnostics, eval=TRUE}
+samples_to_80_percent <- function(weight) {
+  which(cumsum(sort(weight, decreasing = TRUE)) >= 0.8)[1]
+}
+
 tibble(
   target = c("Daily GPP", "One mean annual GPP value"),
   effective_sample_size = c(
@@ -453,6 +457,10 @@ tibble(
     max(daily_gpp_calibration$samples$weight),
     max(annual_gpp_calibration$samples$weight)
   ),
+  samples_to_80_percent = c(
+    samples_to_80_percent(daily_gpp_calibration$samples$weight),
+    samples_to_80_percent(annual_gpp_calibration$samples$weight)
+  ),
   map_kphio = c(
     daily_gpp_calibration$par$kphio,
     annual_gpp_calibration$par$kphio
@@ -462,6 +470,46 @@ tibble(
     annual_gpp_calibration$model_error$sigma_gpp_annual
   )
 )
+```
+
+### Distribution of posterior weights
+
+Ranked weights directly reveal importance-weight collapse. A well-supported
+posterior distributes weight across multiple samples; a collapsed posterior has
+one point near one and almost all remaining points near zero. The logarithmic
+axis retains differences among very small weights. Exact zero weights are drawn
+at the smallest positive floating-point value.
+
+```{r simple-posterior-weight-distributions, eval=TRUE}
+posterior_weights <- dplyr::bind_rows(
+  daily_gpp_calibration$samples |>
+    dplyr::mutate(target = "Daily GPP"),
+  annual_gpp_calibration$samples |>
+    dplyr::mutate(target = "One mean annual GPP value")
+) |>
+  dplyr::group_by(target) |>
+  dplyr::arrange(dplyr::desc(weight), .by_group = TRUE) |>
+  dplyr::mutate(
+    weight_rank = dplyr::row_number(),
+    weight_for_plot = pmax(weight, .Machine$double.xmin)
+  ) |>
+  dplyr::ungroup()
+
+ggplot(posterior_weights, aes(weight_rank, weight_for_plot)) +
+  geom_hline(
+    yintercept = 1 / nrow(daily_gpp_calibration$samples),
+    linetype = "dashed",
+    colour = "grey50"
+  ) +
+  geom_line(colour = "#0072B2", linewidth = 0.5) +
+  geom_point(colour = "#0072B2", size = 0.8) +
+  facet_wrap(~ target, ncol = 1) +
+  scale_y_log10() +
+  labs(
+    x = "Sample rank (highest posterior weight first)",
+    y = "Posterior weight (log scale)"
+  ) +
+  theme_classic()
 ```
 
 ### Mean annual cycle of daily GPP

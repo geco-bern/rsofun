@@ -38,7 +38,7 @@ contains
     ! local variables
     integer :: pft
     integer :: lu
-    real :: cavl, creq, frac_avl
+    real :: cavl, creq, frac_avl, n_deficit
     real, parameter :: buffer = 0.9
     type(orgpool) :: org_resv_to_labl ! organic mass moving from reserves to labile pool (g C[N] m-2 tstep-1)
     real :: f_resv_to_labl
@@ -150,7 +150,26 @@ contains
                                                 )
 
       if (tile(lu)%plant(pft)%plabl%c%c12 < (-1) * eps) stop 'after npp labile C is neg.'
-      if (tile(lu)%plant(pft)%plabl%n%n14 < (-1) * eps) stop 'after npp labile N is neg.'
+
+      ! C-only simulations do not require a closed N balance. If an implied N
+      ! demand from the preceding allocation step left the labile N pool below
+      ! zero, supply exactly the missing N and account for it as fixation. Keep
+      ! the strict failure for coupled C-N simulations, where such an imbalance
+      ! indicates a violated model constraint.
+      if (tile(lu)%plant(pft)%plabl%n%n14 < 0.0) then
+        if (myinterface%params_siml%c_only) then
+          n_deficit = -tile(lu)%plant(pft)%plabl%n%n14
+          tile(lu)%plant(pft)%plabl%n%n14 = 0.0
+          tile_fluxes(lu)%plant(pft)%dnup%n14 = &
+            tile_fluxes(lu)%plant(pft)%dnup%n14 + n_deficit
+          tile_fluxes(lu)%plant(pft)%dnup_fix = &
+            tile_fluxes(lu)%plant(pft)%dnup_fix + n_deficit
+        else if (tile(lu)%plant(pft)%plabl%n%n14 < (-1) * eps) then
+          stop 'after npp labile N is neg.'
+        else
+          tile(lu)%plant(pft)%plabl%n%n14 = 0.0
+        end if
+      end if
 
     end do pftloop
 

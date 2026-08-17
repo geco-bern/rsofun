@@ -303,8 +303,6 @@ contains
           
         else
 
-          if ( (-1.0 * netmin_litt) > (tile(lu)%soil%pnh4%n14 + tile(lu)%soil%pno3%n14) ) print*, 'too much immo'
-
           !----------------------------------------------------------------    
           ! Immobilisation: first deplete NH4 pool
           !----------------------------------------------------------------    
@@ -344,7 +342,6 @@ contains
               ! N fixation by free-living bacteria in litter to satisfy remainder
               !----------------------------------------------------------------    
               nfix = req
-              print*,'implied N fixation: ', nfix
               req = 0.0
               ! stop 'could not get enough N upon immobilisation'
 

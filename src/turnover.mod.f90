@@ -6,6 +6,7 @@ module md_turnover
   use md_params_core, only: nlu, npft, eps, nmonth, ndayyear
   use md_tile_cnmodel
   use md_plant_cnmodel
+  use md_interface_cnmodel, only: myinterface
 
   implicit none
 
@@ -33,7 +34,7 @@ contains
     ! local variables
     integer :: pft
     integer :: lu
-    real :: dlabl, dleaf, droot, dseed, dwood
+    real :: dlabl, dleaf, droot, dseed, dwood, n_deficit
 
     real, parameter :: k_decay_wood = 1.0 / 100.0
 
@@ -42,7 +43,21 @@ contains
       lu = params_pft_plant(pft)%lu_category
 
       if (tile(lu)%plant(pft)%plabl%c%c12 < -1.0 * eps) stop 'before turnover labile C is neg.'
-      if (tile(lu)%plant(pft)%plabl%n%n14 < -1.0 * eps) stop 'before turnover labile N is neg.'
+      if (tile(lu)%plant(pft)%plabl%n%n14 < 0.0) then
+        if (myinterface%params_siml%c_only) then
+          ! Treat the open N balance in a C-only run as implicit fixation.
+          n_deficit = -tile(lu)%plant(pft)%plabl%n%n14
+          tile(lu)%plant(pft)%plabl%n%n14 = 0.0
+          tile_fluxes(lu)%plant(pft)%dnup%n14 = &
+            tile_fluxes(lu)%plant(pft)%dnup%n14 + n_deficit
+          tile_fluxes(lu)%plant(pft)%dnup_fix = &
+            tile_fluxes(lu)%plant(pft)%dnup_fix + n_deficit
+        else if (tile(lu)%plant(pft)%plabl%n%n14 < -1.0 * eps) then
+          stop 'before turnover labile N is neg.'
+        else
+          tile(lu)%plant(pft)%plabl%n%n14 = 0.0
+        end if
+      end if
 
       !--------------------------------------------------------------
       ! Get turnover fractions
