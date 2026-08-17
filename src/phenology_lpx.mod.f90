@@ -27,11 +27,11 @@ module md_phenology
   type( paramstype_pheno ) :: params_pheno
 
   type pftparamstype_pheno
-    real    :: kphio_par_a   ! mid-point of hardening state vs. tmin (deg C)
-    real    :: kphio_par_b   ! slope of hardening state vs. tmin (deg C-1)
-    real    :: kphio_par_c   ! mid-point of dehardening state vs. GDD (deg C)
-    real    :: kphio_par_d   ! slope of dehardening state vs. GDD (deg C-1)
-    real    :: kphio_par_e   ! base temperature for GDD summation (deg C)
+    real    :: coldhardening_tmin_midpoint ! midpoint vs. minimum temperature (deg C)
+    real    :: coldhardening_tmin_slope    ! slope vs. minimum temperature (deg C-1)
+    real    :: dehardening_gdd_midpoint    ! midpoint vs. GDD (degree-days)
+    real    :: dehardening_gdd_slope       ! slope vs. GDD (degree-day-1)
+    real    :: dehardening_gdd_base        ! base temperature for GDD summation (deg C)
     real    :: ramp          ! summergreen phenology ramp, GDD requirement to grow full leaf canopy
     logical :: evergreen
     logical :: summergreen
@@ -75,11 +75,11 @@ contains
         dtmin, &
         tile(lu)%plant(pft)%pheno%level_coldacclim, &   ! value updated (inout)
         tile(lu)%gdd, &                                 ! value updated (inout)
-        params_pft_pheno(pft)%kphio_par_a, &
-        params_pft_pheno(pft)%kphio_par_b, &
-        params_pft_pheno(pft)%kphio_par_c, &
-        params_pft_pheno(pft)%kphio_par_d, &
-        params_pft_pheno(pft)%kphio_par_e &
+        params_pft_pheno(pft)%coldhardening_tmin_midpoint, &
+        params_pft_pheno(pft)%coldhardening_tmin_slope, &
+        params_pft_pheno(pft)%dehardening_gdd_midpoint, &
+        params_pft_pheno(pft)%dehardening_gdd_slope, &
+        params_pft_pheno(pft)%dehardening_gdd_base &
       )
 
       tile_fluxes(lu)%plant(pft)%debug1 = tile(lu)%plant(pft)%pheno%level_coldacclim
@@ -147,7 +147,7 @@ contains
 
 
   subroutine calc_ftemp_kphio_coldhard(tc, tmin, level_hard, gdd, &
-    kphio_par_a, kphio_par_b, kphio_par_c, kphio_par_d, kphio_par_e)
+    tmin_midpoint, tmin_slope, gdd_midpoint, gdd_slope, gdd_base)
     !////////////////////////////////////////////////////////////////
     ! Calculates the low temperature stress function assuming no stress
     ! at 10 deg C and above and declining below based on a calibratable
@@ -158,17 +158,17 @@ contains
     real, intent(in)    :: tmin           ! daily minimum air temperature in degrees celsius (deg C)
     real, intent(inout) :: level_hard     ! level (temperature) to which cold hardening is adjusted (deg C)
     real, intent(inout) :: gdd            ! growing degree days (deg)
-    real, intent(in)    :: kphio_par_a    ! unitless shape parameter for hardening function
-    real, intent(in)    :: kphio_par_b    ! unitless shape parameter for hardening function
-    real, intent(in)    :: kphio_par_c    ! GDD midpoint of dehardening function (degree-days)
-    real, intent(in)    :: kphio_par_d    ! slope of dehardening function (degree-day-1)
-    real, intent(in)    :: kphio_par_e    ! parameter defining GDD base in dehardening function (deg C)
+    real, intent(in)    :: tmin_midpoint  ! midpoint of hardening function (deg C)
+    real, intent(in)    :: tmin_slope     ! slope of hardening function (deg C-1)
+    real, intent(in)    :: gdd_midpoint   ! GDD midpoint of dehardening function (degree-days)
+    real, intent(in)    :: gdd_slope      ! slope of dehardening function (degree-day-1)
+    real, intent(in)    :: gdd_base       ! base temperature for GDD accumulation (deg C)
 
     ! local variable
     real :: level_hard_new
 
     ! determine hardening level - responds instantaneously to minimum temperature
-    level_hard_new = f_hardening(tmin, kphio_par_a, kphio_par_b)
+    level_hard_new = f_hardening(tmin, tmin_midpoint, tmin_slope)
 
     if (level_hard_new < level_hard) then
 
@@ -181,22 +181,22 @@ contains
     end if
 
     ! accumulate growing degree days (GDD)
-    gdd = gdd + max(0.0, (tc - kphio_par_e))
+    gdd = gdd + max(0.0, (tc - gdd_base))
 
     ! de-harden based on GDD. f_stress = 1: no stress
-    level_hard = level_hard + (1.0 - level_hard) * f_dehardening(gdd, kphio_par_c, kphio_par_d)
+    level_hard = level_hard + (1.0 - level_hard) * f_dehardening(gdd, gdd_midpoint, gdd_slope)
 
   end subroutine calc_ftemp_kphio_coldhard
 
 
-  function f_hardening(tmin, kphio_par_a, kphio_par_b) result(ftemp)
+  function f_hardening(tmin, tmin_midpoint, tmin_slope) result(ftemp)
     !////////////////////////////////////////////////////////////////
     ! Hardening function of instantaneous temperature
     !----------------------------------------------------------------
     ! arguments
     real, intent(in)    :: tmin           ! daily minimum air temperature in degrees celsius (deg C)
-    real, intent(in)    :: kphio_par_a    ! unitless shape parameter for hardening function
-    real, intent(in)    :: kphio_par_b    ! unitless shape parameter for hardening function
+    real, intent(in)    :: tmin_midpoint  ! midpoint of hardening function (deg C)
+    real, intent(in)    :: tmin_slope     ! slope of hardening function (deg C-1)
 
     ! function return variable
     real :: ftemp
@@ -205,20 +205,20 @@ contains
     real :: xx
 
     xx = (-1.0) * tmin
-    xx = kphio_par_b * (xx + kphio_par_a)
+    xx = tmin_slope * (xx + tmin_midpoint)
     ftemp = 1.0 / (1.0 + exp(xx))
 
   end function f_hardening
 
 
-  function f_dehardening(gdd, kphio_par_c, kphio_par_d) result(ftemp)
+  function f_dehardening(gdd, gdd_midpoint, gdd_slope) result(ftemp)
     !////////////////////////////////////////////////////////////////
     ! De-hardening function of temperature sum (cumulative degree days)
     !----------------------------------------------------------------
     ! arguments
     real, intent(in)    :: gdd            ! cumulative degree days (deg C)
-    real, intent(in)    :: kphio_par_c    ! GDD midpoint of dehardening function (degree-days)
-    real, intent(in)    :: kphio_par_d    ! slope of dehardening function (degree-day-1)
+    real, intent(in)    :: gdd_midpoint   ! GDD midpoint of dehardening function (degree-days)
+    real, intent(in)    :: gdd_slope      ! slope of dehardening function (degree-day-1)
 
     ! function return variable
     real :: ftemp
@@ -227,7 +227,7 @@ contains
     real :: xx
 
     xx = (-1.0) * gdd
-    xx = kphio_par_d * (xx + kphio_par_c)
+    xx = gdd_slope * (xx + gdd_midpoint)
     ftemp = 1.0 / (1.0 + exp(xx))
 
   end function f_dehardening
@@ -440,14 +440,17 @@ contains
 
       ! Hardening parameters adopted from results by Yunpeng Luo
       ! (photocold project).
-      params_pft_pheno(pft)%kphio_par_a = 2.0    ! mid-point of hardening state vs. tmin (deg C)
-      params_pft_pheno(pft)%kphio_par_b = 0.3    ! slope of hardening state vs. tmin (deg C-1)
+      params_pft_pheno(pft)%coldhardening_tmin_midpoint = 2.0
+      params_pft_pheno(pft)%coldhardening_tmin_slope = 0.3
 
       ! Calibratable temperature-sum controls for dehardening. These retain the
       ! former hard-coded defaults when supplied as 150, 0.05, and 5.
-      params_pft_pheno(pft)%kphio_par_c = myinterface%params_calib%kphio_par_c
-      params_pft_pheno(pft)%kphio_par_d = myinterface%params_calib%kphio_par_d
-      params_pft_pheno(pft)%kphio_par_e = myinterface%params_calib%kphio_par_e
+      params_pft_pheno(pft)%dehardening_gdd_midpoint = &
+        myinterface%params_calib%dehardening_gdd_midpoint
+      params_pft_pheno(pft)%dehardening_gdd_slope = &
+        myinterface%params_calib%dehardening_gdd_slope
+      params_pft_pheno(pft)%dehardening_gdd_base = &
+        myinterface%params_calib%dehardening_gdd_base
 
       ! phenology type
       phentype = nint(myinterface%params_calib%phentype)

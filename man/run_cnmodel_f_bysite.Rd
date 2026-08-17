@@ -60,11 +60,11 @@ for a detailed description of its structure and contents).}
    To disable the temperature dependence, set \code{kphio_par_a = 0}.}
   \item{kphio_par_b}{The optimal temperature parameter \eqn{b} of the temperature
    dependent quantum yield efficiency (see Details), in \eqn{^o}C.}
-  \item{kphio_par_c}{Growing-degree-day midpoint of the sigmoid recovery from
+  \item{dehardening_gdd_midpoint}{Growing-degree-day midpoint of the sigmoid recovery from
    cold hardening, in degree-days. Larger values delay dehardening.}
-  \item{kphio_par_d}{Slope of the sigmoid recovery from cold hardening, in
+  \item{dehardening_gdd_slope}{Slope of the sigmoid recovery from cold hardening, in
    degree-day\eqn{^{-1}}. Larger values produce a sharper transition.}
-  \item{kphio_par_e}{Base temperature for accumulating growing degree days
+  \item{dehardening_gdd_base}{Base temperature for accumulating growing degree days
    during recovery from cold hardening, in \eqn{^o}C.}
   \item{soilm_thetastar}{The threshold parameter \eqn{\theta^{*}} in the 
    soil moisture stress function (see Details), given in mm.

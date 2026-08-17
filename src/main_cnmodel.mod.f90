@@ -220,9 +220,9 @@ contains
     myinterface%params_calib%nuptake_kv            = real(par(82))
     myinterface%params_calib%nuptake_vmax          = real(par(83))
     ! Appended to preserve the positions of the original 83 parameters.
-    myinterface%params_calib%kphio_par_c           = real(par(84))
-    myinterface%params_calib%kphio_par_d           = real(par(85))
-    myinterface%params_calib%kphio_par_e           = real(par(86))
+    myinterface%params_calib%dehardening_gdd_midpoint = real(par(84))
+    myinterface%params_calib%dehardening_gdd_slope    = real(par(85))
+    myinterface%params_calib%dehardening_gdd_base     = real(par(86))
 
     !----------------------------------------------------------------
     ! GET VEGETATION COVER (fractional projective cover by PFT)

@@ -43,11 +43,11 @@
 #'    To disable the temperature dependence, set \code{kphio_par_a = 0}.}
 #'   \item{kphio_par_b}{The optimal temperature parameter \eqn{b} of the temperature
 #'    dependent quantum yield efficiency (see Details), in \eqn{^o}C.}
-#'   \item{kphio_par_c}{Growing-degree-day midpoint of the sigmoid recovery from
+#'   \item{dehardening_gdd_midpoint}{Growing-degree-day midpoint of the sigmoid recovery from
 #'    cold hardening, in degree-days. Larger values delay dehardening.}
-#'   \item{kphio_par_d}{Slope of the sigmoid recovery from cold hardening, in
+#'   \item{dehardening_gdd_slope}{Slope of the sigmoid recovery from cold hardening, in
 #'    degree-day\eqn{^{-1}}. Larger values produce a sharper transition.}
-#'   \item{kphio_par_e}{Base temperature for accumulating growing degree days
+#'   \item{dehardening_gdd_base}{Base temperature for accumulating growing degree days
 #'    during recovery from cold hardening, in \eqn{^o}C.}
 #'   \item{soilm_thetastar}{The threshold parameter \eqn{\theta^{*}} in the 
 #'    soil moisture stress function (see Details), given in mm.
@@ -186,10 +186,31 @@ run_cnmodel_f_bysite <- function(
   # Backward compatibility for parameter lists created before the active
   # dehardening controls were exposed through the R/Fortran interface.
   dehardening_defaults <- list(
-    kphio_par_c = 150.0,
-    kphio_par_d = 0.05,
-    kphio_par_e = 5.0
+    dehardening_gdd_midpoint = 150.0,
+    dehardening_gdd_slope = 0.05,
+    dehardening_gdd_base = 5.0
   )
+  old_dehardening_names <- c(
+    kphio_par_c = "dehardening_gdd_midpoint",
+    kphio_par_d = "dehardening_gdd_slope",
+    kphio_par_e = "dehardening_gdd_base"
+  )
+  supplied_old_names <- intersect(names(old_dehardening_names), names(params_modl))
+  if (length(supplied_old_names)) {
+    for (old_name in supplied_old_names) {
+      new_name <- old_dehardening_names[[old_name]]
+      if (!new_name %in% names(params_modl)) {
+        params_modl[[new_name]] <- params_modl[[old_name]]
+      }
+    }
+    params_modl[supplied_old_names] <- NULL
+    warning(
+      "`kphio_par_c`, `kphio_par_d`, and `kphio_par_e` are deprecated; use ",
+      "`dehardening_gdd_midpoint`, `dehardening_gdd_slope`, and ",
+      "`dehardening_gdd_base`.",
+      call. = FALSE
+    )
+  }
   missing_dehardening <- setdiff(names(dehardening_defaults), names(params_modl))
   if (length(missing_dehardening)) {
     params_modl[missing_dehardening] <- dehardening_defaults[missing_dehardening]
@@ -404,9 +425,9 @@ run_cnmodel_f_bysite <- function(
                                        'nuptake_kc',
                                        'nuptake_kv',
                                        'nuptake_vmax',
-                                       'kphio_par_c',
-                                       'kphio_par_d',
-                                       'kphio_par_e'
+                                       'dehardening_gdd_midpoint',
+                                       'dehardening_gdd_slope',
+                                       'dehardening_gdd_base'
                                        )
     ) != 86 ){
       warning(" Returning a dummy data frame. Incorrect model parameters.")
@@ -523,9 +544,9 @@ run_cnmodel_f_bysite <- function(
       as.numeric(params_modl$nuptake_kv),
       as.numeric(params_modl$nuptake_vmax),
       # Appended to preserve the original R-to-Fortran parameter ordering.
-      as.numeric(params_modl$kphio_par_c),
-      as.numeric(params_modl$kphio_par_d),
-      as.numeric(params_modl$kphio_par_e)
+      as.numeric(params_modl$dehardening_gdd_midpoint),
+      as.numeric(params_modl$dehardening_gdd_slope),
+      as.numeric(params_modl$dehardening_gdd_base)
       )
 
     ## C wrapper call

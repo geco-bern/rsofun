@@ -63,6 +63,59 @@ test_that("progress output is optional and reports completion", {
   )
 })
 
+test_that("a failed candidate receives zero posterior weight", {
+  out <- calib_sofun_lhs(
+    pars = list(a = 0),
+    par_calib = list(a = list(
+      mean = 0, sd = 1 / sqrt(3), distribution = "uniform",
+      lower = -1, upper = 1
+    )),
+    likelihood = function(par, model_error) {
+      if (par$a < 0) stop("simulation failed")
+      -par$a^2
+    },
+    n_samples = 10,
+    n_cores = 2,
+    seed = 3
+  )
+
+  failed <- out$samples$a < 0
+  expect_true(any(failed))
+  expect_true(any(!failed))
+  expect_true(all(out$samples$log_likelihood[failed] == -Inf))
+  expect_true(all(out$samples$weight[failed] == 0))
+  expect_false(any(out$samples$evaluation_ok[failed]))
+  expect_true(all(out$samples$evaluation_ok[!failed]))
+  expect_equal(sum(out$samples$weight), 1)
+})
+
+test_that("calibration recovers when a worker process terminates", {
+  skip_on_cran()
+  out <- calib_sofun_lhs(
+    pars = list(a = 0),
+    par_calib = list(a = list(
+      mean = 0, sd = 1 / sqrt(3), distribution = "uniform",
+      lower = -1, upper = 1
+    )),
+    likelihood = function(par, model_error) {
+      # Emulate a Fortran STOP, which exits the worker before it can return an
+      # R error condition to tryCatch() inside evaluate_one().
+      if (par$a < 0) quit(save = "no")
+      -par$a^2
+    },
+    n_samples = 2,
+    n_cores = 2,
+    seed = 7
+  )
+
+  failed <- out$samples$a < 0
+  expect_equal(sum(failed), 1)
+  expect_false(out$samples$evaluation_ok[failed])
+  expect_equal(out$samples$log_likelihood[failed], -Inf)
+  expect_equal(out$samples$weight[failed], 0)
+  expect_true(out$samples$evaluation_ok[!failed])
+})
+
 test_that("invalid LHS calibration inputs are rejected", {
   likelihood <- function(par, model_error) 0
   expect_error(calib_sofun_lhs(

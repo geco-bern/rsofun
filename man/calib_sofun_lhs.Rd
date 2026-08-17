@@ -47,7 +47,10 @@ progress is disabled by default.}
 \value{
 A list with `par` (the MAP model parameters), `model_error` (the MAP
   error terms), and `samples`. `samples` contains the LHS values, log prior,
-  log likelihood, log posterior density, and normalized posterior `weight`.
+  log likelihood, log posterior density, normalized posterior `weight`, and
+  logical `evaluation_ok` status.
+  A candidate whose likelihood evaluation raises an error is retained with
+  `log_likelihood = -Inf` and therefore receives zero posterior weight.
   Because the LHS design is drawn from the prior, its importance weights are
   proportional to the likelihood (the prior/proposal terms cancel). The
   returned `par` contains the complete parameter set supplied in `pars`.

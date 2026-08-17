@@ -26,7 +26,10 @@
 #'
 #' @return A list with `par` (the MAP model parameters), `model_error` (the MAP
 #'   error terms), and `samples`. `samples` contains the LHS values, log prior,
-#'   log likelihood, log posterior density, and normalized posterior `weight`.
+#'   log likelihood, log posterior density, normalized posterior `weight`, and
+#'   logical `evaluation_ok` status.
+#'   A candidate whose likelihood evaluation raises an error is retained with
+#'   `log_likelihood = -Inf` and therefore receives zero posterior weight.
 #'   Because the LHS design is drawn from the prior, its importance weights are
 #'   proportional to the likelihood (the prior/proposal terms cancel). The
 #'   returned `par` contains the complete parameter set supplied in `pars`.
@@ -158,15 +161,18 @@ calib_sofun_lhs <- function(
     # Error terms are supplied separately to the likelihood and never inserted
     # into the model parameter list.
     errors <- as.list(draws[i, names(model_error), drop = FALSE])
-    value <- do.call(likelihood, c(list(
-      par = candidate,
-      model_error = errors
-    ), dots))
+    # A numerically or biologically invalid parameter combination must not
+    # abort the remaining (potentially very expensive) ensemble. Convert an
+    # error from either the model or likelihood to an impossible candidate.
+    value <- tryCatch(
+      do.call(likelihood, c(list(
+        par = candidate,
+        model_error = errors
+      ), dots)),
+      error = function(condition) -Inf
+    )
     if (!is.numeric(value) || length(value) != 1L || is.na(value) ||
-        identical(value, Inf)) {
-      stop("`likelihood` must return one numeric log-likelihood (or -Inf).",
-        call. = FALSE)
-    }
+        identical(value, Inf)) value <- -Inf
     # -Inf is valid: it marks a candidate that is impossible under the data.
     as.numeric(value)
   }
@@ -195,7 +201,7 @@ calib_sofun_lhs <- function(
     # calls from one another. stopCluster() is registered immediately so errors
     # in a likelihood cannot leave orphan worker processes behind.
     cluster <- parallel::makeCluster(n_workers)
-    on.exit(parallel::stopCluster(cluster), add = TRUE)
+    on.exit(try(parallel::stopCluster(cluster), silent = TRUE), add = TRUE)
     # Export the large closure once rather than serializing drivers and
     # observations again for every progress chunk.
     parallel::clusterExport(cluster, "evaluate_one", envir = environment())
@@ -207,8 +213,33 @@ calib_sofun_lhs <- function(
     } else {
       # Load balancing assigns a new candidate to a worker as soon as it becomes
       # free, which helps when simulation runtimes differ among parameter sets.
-      unlist(parallel::parLapplyLB(cluster, chunk, function(i) evaluate_one(i)),
-        use.names = FALSE)
+      tryCatch(
+        unlist(
+          parallel::parLapplyLB(cluster, chunk, function(i) evaluate_one(i)),
+          use.names = FALSE
+        ),
+        error = function(condition) {
+          # A Fortran STOP may kill a PSOCK process rather than raise an R
+          # condition inside evaluate_one(). Recover the batch by running each
+          # candidate in its own temporary process. A process that dies maps to
+          # -Inf, while successful candidates retain their likelihoods.
+          try(parallel::stopCluster(cluster), silent = TRUE)
+          recovered <- vapply(chunk, function(i) {
+            isolated <- parallel::makeCluster(1L)
+            on.exit(try(parallel::stopCluster(isolated), silent = TRUE),
+              add = TRUE)
+            tryCatch({
+              parallel::clusterExport(isolated, "evaluate_one",
+                envir = environment())
+              parallel::parLapply(isolated, i, function(j) evaluate_one(j))[[1L]]
+            }, error = function(condition) -Inf)
+          }, numeric(1))
+          cluster <<- parallel::makeCluster(n_workers)
+          parallel::clusterExport(cluster, "evaluate_one",
+            envir = environment())
+          recovered
+        }
+      )
     }
     log_likelihood[chunk] <- values
     if (progress) {
@@ -241,7 +272,8 @@ calib_sofun_lhs <- function(
     log_prior = log_prior,
     log_likelihood = log_likelihood,
     log_posterior = log_posterior,
-    weight = weight
+    weight = weight,
+    evaluation_ok = is.finite(log_likelihood)
   )
 
   # ---- 8. Reconstruct convenient MAP inputs ---------------------------------
@@ -254,8 +286,12 @@ calib_sofun_lhs <- function(
 
   if (progress) {
     message(sprintf(
-      "Calibration complete in %.1f seconds; MAP sample is %d and effective sample size is %.1f.",
-      as.numeric(walltime, units = "secs"), map_index, 1 / sum(weight^2)
+      paste0(
+        "Calibration complete in %.1f seconds; MAP sample is %d, ",
+        "effective sample size is %.1f, and %d/%d evaluations failed."
+      ),
+      as.numeric(walltime, units = "secs"), map_index, 1 / sum(weight^2),
+      sum(!samples$evaluation_ok), n_samples
     ))
   }
 
@@ -271,6 +307,10 @@ calib_sofun_lhs <- function(
     walltime = walltime
   )
 }
+
+# Used by long-running vignettes/scripts to detect an older installed rsofun
+# namespace that predates recovery from worker processes killed by Fortran STOP.
+.calib_lhs_worker_stop_recovery <- TRUE
 
 # ---- Distribution helpers ---------------------------------------------------
 

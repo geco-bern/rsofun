@@ -1,0 +1,774 @@
+---
+title: "Calibrating the C-model at CH-Oe1"
+author: "Benjamin Stocker"
+output: rmarkdown::html_vignette
+code-fold: true
+vignette: >
+  %\VignetteIndexEntry{Calibrating the C-model at CH-Oe1}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\usepackage[utf8]{inputenc}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.align = "center",
+  fig.width = 7,
+  fig.height = 4.5
+)
+```
+
+## Aim and calibration sequence
+
+This vignette contains the complete calibration workflow for the carbon-only
+C-model at the temperate grassland site CH-Oe1. The calibration is deliberately
+staged so that the ecosystem flux data do not compensate for poorly constrained
+photosynthesis, leaf structure, turnover, or allocation parameters.
+
+1. Initialise the P-model parameters at the posterior MAP estimates from setup
+   S6 of Arán Paredes et al. (2025), Table 2.
+2. Estimate the structural leaf parameter against a representative temperate-
+   grass leaf mass per area (LMA).
+3. Estimate leaf and root turnover using biologically constrained priors for a
+   temperate grass.
+4. Fix allocation to wood to zero.
+5. Diagnose posterior-weight collapse by varying only `kphio` against GPP while
+   holding every other model parameter constant, comparing daily and
+   mean-annual likelihoods.
+6. Restore the multiple-parameter calibration against monthly GPP, monthly
+   ecosystem respiration (Reco), and LAI.
+
+Monthly aggregation reduces the effect of strongly autocorrelated daily
+residuals. It does not assert that monthly residuals are necessarily independent;
+that assumption should still be checked after calibration.
+
+The completed LMA calibration is shown with `eval=FALSE` and its cached result
+is used below. The flux calibration remains executable and starts with a
+reduced LHS design.
+
+Functions evaluated on parallel workers use explicit namespace qualifiers such
+as `dplyr::filter()` and `tidyr::unnest()`. Worker processes do not inherit the
+packages attached in the interactive R session, so unqualified package
+functions should be avoided inside a likelihood.
+
+```{r libraries}
+library(rsofun)
+library(dplyr)
+library(tidyr)
+library(lubridate)
+library(ggplot2)
+
+# Rendering with library(rsofun) uses the installed package, not uninstalled
+# edits under R/. Fail before starting expensive simulations if that installed
+# namespace does not yet contain Fortran-STOP worker recovery.
+if (!exists(
+  ".calib_lhs_worker_stop_recovery",
+  envir = asNamespace("rsofun"),
+  inherits = FALSE
+)) {
+  stop(
+    "The installed rsofun is stale. Reinstall this working tree, or run ",
+    "devtools::load_all() before rendering the vignette."
+  )
+}
+```
+
+## Drivers and observations
+
+This example uses the FluxDataKit v3.4.2 driver object. Adjust `fdk_path` to the
+local download location. The forcing contains daily GPP and NEE observations;
+observed Reco is calculated from the ecosystem carbon balance as
+`Reco = NEE + GPP` under the FLUXNET sign convention used here.
+
+```{r data, eval=TRUE}
+fdk_path <- "~/data_2/FluxDataKit/v3.4/zenodo_upload"
+
+df_drivers <- readRDS(file.path(
+  fdk_path,
+  "rsofun_driver_data_v3.4.2.rds"
+)) |>
+  filter(sitename == "CH-Oe1")
+
+use_cseed <- 5
+use_nseed <- use_cseed / 20
+
+df_drivers <- df_drivers |>
+  mutate(
+    forcing = purrr::map(forcing, ~ mutate(
+      .,
+      fharv = 0,
+      dno3 = 1.5 / (2 * 365),
+      dnh4 = 1.5 / (2 * 365),
+      cseed = ifelse(month(date) == 2 & mday(date) == 15, use_cseed, 0),
+      nseed = ifelse(month(date) == 2 & mday(date) == 15, use_nseed, 0)
+    ))
+  )
+
+df_drivers$params_siml[[1]]$spinupyears <- 2002
+df_drivers$params_siml[[1]]$recycle <- 5
+df_drivers$params_siml[[1]]$c_only <- TRUE
+
+daily_observations <- df_drivers |>
+  select(sitename, forcing) |>
+  unnest(forcing) |>
+  transmute(
+    sitename,
+    date,
+    gpp = if_else(gpp_qc >= 0.8, gpp, NA_real_),
+    reco = if_else(gpp_qc >= 0.8 & nee_qc >= 0.8, gpp + nee, NA_real_)
+  )
+
+# Quality-controlled MODIS MOD15A2H LAI; see example_cmodel.Rmd for QC details.
+data("modis_lai_ch_oe1", package = "rsofun")
+model_period <- range(daily_observations$date)
+lai_observations <- modis_lai_ch_oe1 |>
+  filter(between(date, model_period[1], model_period[2])) |>
+  select(date, lai)
+```
+
+## Baseline parameters
+
+The P-model values below reproduce the MAP estimates in the last column of
+Table 2 (setup S6) of Arán Paredes et al. (2025): `kphio = 0.08`,
+`kphio_par_a = -0.001`, `kphio_par_b = 27.5`, `soilm_thetastar = 26.7`,
+`beta_unitcostratio = 187.5`, `tau_acclim = 1.0`, and `kc_jmax = 0.58`.
+Parameters that are not estimated in setup S6 retain their existing model
+defaults. Note that the S6 value of `beta_unitcostratio` lies at the lower bound
+of its truncated normal prior; it should not be replaced by the posterior mean
+or by the rounded value discussed elsewhere in the article.
+
+The three quantum-yield parameters have a distinct and coupled meaning:
+
+```text
+phi(T) = kphio * max(0, min(1, 1 + kphio_par_a * (T - kphio_par_b)^2))
+```
+
+Thus `kphio` is the maximum quantum yield, `kphio_par_a` controls the curvature,
+and `kphio_par_b` locates the temperature optimum. The shape and location
+parameters remain fixed at their S6 estimates. For the deliberately simplified
+diagnostic calibration below, only the maximum, `kphio`, is allowed to depart
+from its S6 estimate. All C-model parameters remain fixed.
+
+The turnover constants are annual values. We use baseline values of `1.9
+yr-1` for leaves and `0.7 yr-1` for roots, corresponding to expected tissue
+lifetimes of about 0.53 and 1.43 years, respectively. These values also define
+the prior centres below, but both rates are estimated during calibration. Wood
+allocation is fixed to zero throughout.
+
+The model reports LMA in grams of carbon per square metre of leaf. Define the
+target in the same units. The value below is an explicit working assumption of
+`25 g C m-2`, approximately `50 g dry mass m-2` for a carbon fraction of 0.5.
+Replace it with a site- or trait-database-derived value and uncertainty when
+available.
+
+LMA depends directly on `r_ctostructn_leaf` and also on the partitioning of leaf
+nitrogen into structural and metabolic components. To avoid an underidentified
+trait-only calibration, keep `r_ctostructn_leaf`, `ncw_min`, `r_n_cw_v`, and `nv_vcmax25`
+fixed. Since `r_n_cw_v = 0` here, LMA depends only on `r_ctostructn_leaf` and is set to a value of 30.9.
+
+```{r parameters}
+pars <- list(
+  # P-model: informed by Arán Paredes et al. (2025), setup S6
+  kphio = 0.08,
+  kphio_par_a = -0.001,
+  kphio_par_b = 27.5,
+  # C-model phenology; unrelated to the P-model quantum-yield parameters above
+  dehardening_gdd_midpoint = 150.0,
+  dehardening_gdd_slope = 0.05,
+  dehardening_gdd_base = 5.0,
+  soilm_thetastar = 26.7,
+  soilm_betao = 0.0,
+  beta_unitcostratio = 187.5,
+  rd_to_vcmax = 0.014,
+  tau_acclim = 1.0,
+  kc_jmax = 0.58,
+
+  # Plant C and N
+  f_nretain = 0.5,
+  fpc_tree_max = 0.95,
+  growtheff = 0.6,
+  r_root = 2 * 0.913,
+  r_sapw = 2 * 0.044,
+  exurate = 0.003,
+  k_decay_leaf = 1.9,
+  k_decay_root = 0.7,
+  k_decay_labl = 1.9,
+  k_decay_sapw = 1.9,
+  r_cton_root = 37.0,
+  r_cton_wood = 100.0,
+  r_cton_seed = 15.0,
+  nv_vcmax25 = 0.02 * 13681.77,
+  ncw_min = 0.08 * 1.116222,
+  r_n_cw_v = 0.0,
+  r_ctostructn_leaf = 30.9, # from LMA calibration below
+  kbeer = 0.5,
+
+  # Phenology
+  gddbase = 5.0,
+  ramp = 0.0,
+  phentype = 2.0,
+
+  # Soil physics
+  perc_k1 = 5.0,
+  thdiff_wp = 0.2,
+  thdiff_whc15 = 0.8,
+  thdiff_fc = 0.4,
+  forg = 0.01,
+  wbwp = 0.029,
+  por = 0.421,
+  fsand = 0.82,
+  fclay = 0.06,
+  fsilt = 0.12,
+
+  # Water and energy balance
+  kA = 107.0,
+  kalb_sw = 0.17,
+  kalb_vis = 0.03,
+  kb = 0.20,
+  kc = 0.25,
+  kCw = 1.05,
+  kd = 0.50,
+  ke = 0.0167,
+  keps = 23.44,
+  kWm = 220.0,
+  kw = 0.26,
+  komega = 283.0,
+  maxmeltrate = 3.0,
+
+  # Soil biogeochemistry
+  klitt_af10 = 1.2,
+  klitt_as10 = 0.35,
+  klitt_bg10 = 0.35,
+  kexu10 = 50.0,
+  ksoil_fs10 = 0.021,
+  ksoil_sl10 = 7.0e-4,
+  ntoc_crit1 = 0.45,
+  ntoc_crit2 = 0.76,
+  cton_microb = 10.0,
+  cton_soil = 9.77,
+  fastfrac = 0.985,
+
+  # N uptake and transformations
+  eff_nup = 1.0e-4,
+  minimumcostfix = 1.0,
+  fixoptimum = 25.15,
+  a_param_fix = -3.62,
+  b_param_fix = 0.27,
+  maxnitr = 5.0e-5,
+  non = 0.01,
+  n2on = 5.0e-4,
+  kn = 83.0,
+  kdoc = 17.0,
+  docmax = 1.0,
+  dnitr2n2o = 0.01,
+
+  # Prescribed allocation in the C-only setup
+  frac_leaf = 0.5,
+  frac_wood = 0.0,
+  frac_avl_labl = 0.1,
+  tmppar = 9999.0,
+  nuptake_kc = 600.0,
+  nuptake_kv = 5.0,
+  nuptake_vmax = 0.2
+)
+
+stopifnot(pars$frac_wood == 0)
+
+# LMA is already fixed in `pars`; retain this alias for the broader calibration
+# setup below.
+pars_lma <- pars
+```
+
+## Calibration setup 1: `kphio` and GPP model error
+
+This diagnostic setup varies only `kphio` and one GPP residual standard
+deviation. The `kphio` prior is normal with mean `0.08` and standard deviation
+`0.04`, truncated to `0.03--0.12`. All other model parameters remain fixed.
+Two likelihoods use the same simulations and priors but retain very different
+amounts of temporal information:
+
+- the daily likelihood treats every quality-controlled daily GPP residual as
+  an observation;
+- the mean-annual likelihood reduces the record to one value: the mean of the
+  paired annual GPP totals.
+
+The comparison reveals how repeated, autocorrelated observations can make the
+likelihood much sharper than a single aggregated target.
+The daily error is expressed in daily GPP units; the annual error is expressed
+in annual-total GPP units, so their numerical MAP values are not directly
+comparable.
+
+```{r gpp-likelihoods}
+daily_gpp_loglik <- function(par, model_error, drivers, observations) {
+  simulated <- rsofun::runread_cnmodel_f(drivers = drivers, par = par) |>
+    dplyr::select(sitename, data) |>
+    tidyr::unnest(data) |>
+    dplyr::transmute(sitename, date, gpp_modelled = gpp)
+
+  matched <- observations |>
+    dplyr::select(sitename, date, gpp) |>
+    dplyr::inner_join(simulated, by = c("sitename", "date")) |>
+    dplyr::filter(is.finite(gpp), is.finite(gpp_modelled))
+
+  if (nrow(matched) == 0) return(-Inf)
+
+  sum(stats::dnorm(
+    matched$gpp,
+    mean = matched$gpp_modelled,
+    sd = model_error$sigma_gpp_daily,
+    log = TRUE
+  ))
+}
+
+mean_annual_gpp_loglik <- function(par, model_error, drivers, observations) {
+  simulated <- rsofun::runread_cnmodel_f(drivers = drivers, par = par) |>
+    dplyr::select(sitename, data) |>
+    tidyr::unnest(data) |>
+    dplyr::transmute(sitename, date, gpp_modelled = gpp)
+
+  annual_gpp <- observations |>
+    dplyr::select(sitename, date, gpp) |>
+    dplyr::inner_join(simulated, by = c("sitename", "date")) |>
+    dplyr::filter(is.finite(gpp), is.finite(gpp_modelled)) |>
+    dplyr::mutate(year = lubridate::year(date)) |>
+    dplyr::group_by(sitename, year) |>
+    dplyr::summarise(
+      observed = sum(gpp),
+      modelled = sum(gpp_modelled),
+      .groups = "drop"
+    )
+
+  if (nrow(annual_gpp) == 0) return(-Inf)
+
+  mean_annual <- annual_gpp |>
+    dplyr::summarise(
+      observed = mean(observed),
+      modelled = mean(modelled)
+    )
+
+  stats::dnorm(
+    mean_annual$observed,
+    mean = mean_annual$modelled,
+    sd = model_error$sigma_gpp_annual,
+    log = TRUE
+  )
+}
+```
+
+```{r simple-gpp-calibrations, eval=TRUE}
+kphio_prior <- list(
+  kphio = list(
+    mean = 0.08, sd = 0.04,
+    distribution = "normal", lower = 0.03, upper = 0.12
+  )
+)
+stopifnot(identical(names(kphio_prior), "kphio"))
+
+daily_gpp_calibration <- calib_sofun_lhs(
+  pars = pars,
+  par_calib = kphio_prior,
+  model_error = list(
+    sigma_gpp_daily = list(
+      mean = 0.8, sd = 0.3,
+      distribution = "lognormal", lower = 0.05, upper = 4
+    )
+  ),
+  likelihood = daily_gpp_loglik,
+  n_samples = 250,
+  n_cores = max(1, parallel::detectCores() - 1),
+  seed = 42,
+  progress = TRUE,
+  drivers = df_drivers,
+  observations = daily_observations
+)
+
+annual_gpp_calibration <- calib_sofun_lhs(
+  pars = pars,
+  par_calib = kphio_prior,
+  model_error = list(
+    sigma_gpp_annual = list(
+      mean = 100, sd = 50,
+      distribution = "lognormal", lower = 10, upper = 500
+    )
+  ),
+  likelihood = mean_annual_gpp_loglik,
+  n_samples = 250,
+  n_cores = max(1, parallel::detectCores() - 1),
+  seed = 43,
+  progress = TRUE,
+  drivers = df_drivers,
+  observations = daily_observations
+)
+```
+
+### Prior and posterior distributions of `kphio`
+
+The unweighted LHS draws approximate the prior; the normalized importance
+weights applied to those same draws approximate the posterior.
+
+```{r simple-kphio-prior-posterior, eval=TRUE}
+distribution_data <- function(calibration, target_label) {
+  dplyr::bind_rows(
+    calibration$samples |>
+      dplyr::transmute(
+        kphio, target = target_label, distribution = "Prior",
+        density_weight = 1 / dplyr::n()
+      ),
+    calibration$samples |>
+      dplyr::transmute(
+        kphio, target = target_label, distribution = "Posterior",
+        density_weight = weight
+      )
+  )
+}
+
+kphio_distributions <- dplyr::bind_rows(
+  distribution_data(daily_gpp_calibration, "Daily GPP"),
+  distribution_data(annual_gpp_calibration, "One mean annual GPP value")
+)
+
+ggplot(
+  kphio_distributions,
+  aes(kphio, weight = density_weight, colour = distribution, fill = distribution)
+) +
+  geom_density(alpha = 0.2) +
+  geom_vline(xintercept = pars$kphio, linetype = "dashed") +
+  facet_wrap(~ target, ncol = 1) +
+  scale_colour_manual(values = c(Prior = "grey40", Posterior = "red")) +
+  scale_fill_manual(values = c(Prior = "grey70", Posterior = "red")) +
+  labs(x = "Maximum quantum yield (kphio)", y = "Density", colour = NULL,
+       fill = NULL) +
+  theme_classic()
+```
+
+```{r simple-calibration-diagnostics, eval=TRUE}
+tibble(
+  target = c("Daily GPP", "One mean annual GPP value"),
+  effective_sample_size = c(
+    daily_gpp_calibration$effective_sample_size,
+    annual_gpp_calibration$effective_sample_size
+  ),
+  maximum_weight = c(
+    max(daily_gpp_calibration$samples$weight),
+    max(annual_gpp_calibration$samples$weight)
+  ),
+  map_kphio = c(
+    daily_gpp_calibration$par$kphio,
+    annual_gpp_calibration$par$kphio
+  ),
+  map_gpp_error = c(
+    daily_gpp_calibration$model_error$sigma_gpp_daily,
+    annual_gpp_calibration$model_error$sigma_gpp_annual
+  )
+)
+```
+
+### Mean annual cycle of daily GPP
+
+Re-run the C-model with the MAP `kphio` from each calibration. To make the
+seasonal cycles directly comparable, calculate modelled means only for dates
+that have a quality-controlled GPP observation.
+
+```{r simple-gpp-annual-cycle, eval=TRUE}
+map_gpp_cycle <- function(calibration, source_label) {
+  rsofun::runread_cnmodel_f(
+    drivers = df_drivers,
+    par = calibration$par
+  ) |>
+    dplyr::select(sitename, data) |>
+    tidyr::unnest(data) |>
+    dplyr::transmute(sitename, date, gpp_modelled = gpp) |>
+    dplyr::inner_join(
+      dplyr::filter(daily_observations, is.finite(gpp)),
+      by = c("sitename", "date")
+    ) |>
+    dplyr::filter(is.finite(gpp_modelled)) |>
+    dplyr::mutate(day_of_year = lubridate::yday(date)) |>
+    dplyr::group_by(day_of_year) |>
+    dplyr::summarise(gpp = mean(gpp_modelled), .groups = "drop") |>
+    dplyr::mutate(source = source_label)
+}
+
+observed_gpp_cycle <- daily_observations |>
+  dplyr::filter(is.finite(gpp)) |>
+  dplyr::mutate(day_of_year = lubridate::yday(date)) |>
+  dplyr::group_by(day_of_year) |>
+  dplyr::summarise(gpp = mean(gpp), .groups = "drop") |>
+  dplyr::mutate(source = "Observed")
+
+gpp_annual_cycles <- dplyr::bind_rows(
+  observed_gpp_cycle,
+  map_gpp_cycle(daily_gpp_calibration, "MAP from daily GPP"),
+  map_gpp_cycle(annual_gpp_calibration, "MAP from mean annual GPP")
+)
+
+ggplot(gpp_annual_cycles, aes(day_of_year, gpp, colour = source)) +
+  geom_line() +
+  scale_x_continuous(
+    breaks = c(15, 46, 74, 105, 135, 166, 196, 227, 258, 288, 319, 349),
+    labels = month.abb
+  ) +
+  scale_colour_manual(values = c(
+    "Observed" = "black",
+    "MAP from daily GPP" = "tomato",
+    "MAP from mean annual GPP" = "royalblue"
+  )) +
+  labs(
+    x = NULL,
+    y = expression("Mean daily GPP (g C " * m^-2 * d^-1 * ")"),
+    colour = NULL
+  ) +
+  theme_classic() +
+  theme(
+    legend.position = "bottom"
+  )
+```
+
+<!--
+## Calibration setup 2: multiple parameters and observations
+
+This restores the broader calibration against monthly GPP, monthly Reco, and
+MODIS LAI. The modelled respiratory components are summed as
+`Reco = rleaf + rroot + rwood + rhet + rgrow`. Months require at least 20 valid
+daily observations. LAI is evaluated on the MODIS acquisition dates.
+
+```{r monthly-likelihood, eval=FALSE}
+monthly_flux_loglik <- function(
+    par, model_error, drivers, observations, lai_observations,
+    minimum_days = 20
+) {
+  simulated <- rsofun::runread_cnmodel_f(drivers = drivers, par = par) |>
+    dplyr::select(sitename, data) |>
+    tidyr::unnest(data) |>
+    dplyr::transmute(
+      sitename, date, gpp_modelled = gpp,
+      reco_modelled = rleaf + rroot + rwood + rhet + rgrow,
+      lai_modelled = lai
+    )
+
+  matched <- observations |>
+    dplyr::inner_join(simulated, by = c("sitename", "date")) |>
+    dplyr::mutate(month = lubridate::floor_date(date, "month"))
+
+  aggregate_monthly <- function(data, observed, modelled) {
+    data |>
+      dplyr::filter(is.finite({{ observed }}), is.finite({{ modelled }})) |>
+      dplyr::group_by(sitename, month) |>
+      dplyr::summarise(
+        n_days = dplyr::n(), observed = mean({{ observed }}),
+        modelled = mean({{ modelled }}), .groups = "drop"
+      ) |>
+      dplyr::filter(n_days >= minimum_days)
+  }
+
+  monthly_gpp <- aggregate_monthly(matched, gpp, gpp_modelled)
+  monthly_reco <- aggregate_monthly(matched, reco, reco_modelled)
+  matched_lai <- lai_observations |>
+    dplyr::inner_join(dplyr::select(simulated, date, lai_modelled), by = "date") |>
+    dplyr::filter(is.finite(lai), is.finite(lai_modelled))
+
+  if (!nrow(monthly_gpp) || !nrow(monthly_reco) || !nrow(matched_lai)) return(-Inf)
+
+  sum(stats::dnorm(monthly_gpp$observed, monthly_gpp$modelled,
+                   model_error$sigma_gpp_monthly, log = TRUE)) +
+    sum(stats::dnorm(monthly_reco$observed, monthly_reco$modelled,
+                     model_error$sigma_reco_monthly, log = TRUE)) +
+    sum(stats::dnorm(matched_lai$lai, matched_lai$lai_modelled,
+                     model_error$sigma_lai, log = TRUE))
+}
+```
+
+Some samples can violate C--N pool constraints. A failed run is retained with
+`log_likelihood = -Inf`, `weight = 0`, and `evaluation_ok = FALSE`.
+
+```{r monthly-calibration, eval=FALSE}
+flux_parameters <- list(
+  dehardening_gdd_midpoint = list(
+    mean = pars_lma$dehardening_gdd_midpoint, sd = 30,
+    distribution = "normal", lower = 30, upper = 300
+  ),
+  dehardening_gdd_slope = list(
+    mean = pars_lma$dehardening_gdd_slope, sd = 0.015,
+    distribution = "lognormal", lower = 0.005, upper = 0.15
+  ),
+  dehardening_gdd_base = list(
+    mean = pars_lma$dehardening_gdd_base, sd = 1.5,
+    distribution = "normal", lower = 0, upper = 12
+  ),
+  growtheff = list(
+    mean = pars_lma$growtheff, sd = 0.06,
+    distribution = "normal", lower = 0.35, upper = 0.85
+  ),
+  frac_leaf = list(
+    mean = pars_lma$frac_leaf, sd = 0.08,
+    distribution = "normal", lower = 0.1, upper = 0.9
+  ),
+  k_decay_leaf = list(
+    mean = 1.9, sd = 0.6,
+    distribution = "lognormal", lower = 0.7, upper = 4.0
+  ),
+  k_decay_root = list(
+    mean = 0.7, sd = 0.25,
+    distribution = "lognormal", lower = 0.1, upper = 1.5
+  ),
+  r_root = list(
+    mean = pars_lma$r_root, sd = 0.45,
+    distribution = "lognormal", lower = 0.5, upper = 3.5
+  )
+)
+
+flux_errors <- list(
+  sigma_gpp_monthly = list(
+    mean = 0.8, sd = 0.3,
+    distribution = "lognormal", lower = 0.05, upper = 4
+  ),
+  sigma_reco_monthly = list(
+    mean = 0.8, sd = 0.3,
+    distribution = "lognormal", lower = 0.05, upper = 4
+  ),
+  sigma_lai = list(
+    mean = 0.5, sd = 0.2,
+    distribution = "lognormal", lower = 0.1, upper = 2
+  )
+)
+
+flux_calibration <- calib_sofun_lhs(
+  pars = pars_lma,
+  par_calib = flux_parameters,
+  model_error = flux_errors,
+  likelihood = monthly_flux_loglik,
+  n_samples = 25,
+  n_cores = max(1, parallel::detectCores() - 1),
+  seed = 44,
+  progress = TRUE,
+  drivers = df_drivers,
+  observations = daily_observations,
+  lai_observations = lai_observations
+)
+```
+
+### Multiple-target posterior diagnostics
+
+```{r posterior-diagnostics, eval=FALSE}
+posterior_diagnostics <- flux_calibration$samples |>
+  arrange(desc(weight)) |>
+  mutate(cumulative_weight = cumsum(weight))
+
+n_to_80_percent <- which(posterior_diagnostics$cumulative_weight >= 0.8)[1]
+
+list(
+  effective_sample_size = flux_calibration$effective_sample_size,
+  failed_evaluations = sum(!flux_calibration$samples$evaluation_ok),
+  n_to_80_percent = n_to_80_percent,
+  top_samples = slice_head(posterior_diagnostics, n = 10)
+)
+```
+
+## Re-run and evaluate the MAP simulation
+
+The returned MAP list contains all fixed and calibrated parameters, including
+the zero wood-allocation constraint. Re-run the model once with this list before
+evaluating either target.
+
+```{r map-run, eval=FALSE}
+pars_map <- flux_calibration$par
+stopifnot(pars_map$frac_wood == 0)
+
+output_map <- runread_cnmodel_f(
+  drivers = df_drivers,
+  par = pars_map
+)
+
+map_daily <- output_map |>
+  select(sitename, data) |>
+  unnest(data) |>
+  transmute(
+    sitename,
+    date,
+    gpp_modelled = gpp,
+    reco_modelled = rleaf + rroot + rwood + rhet + rgrow,
+    lai_modelled = lai,
+    lma,
+    cleaf,
+    croot,
+    cwood
+  )
+
+map_monthly <- daily_observations |>
+  inner_join(map_daily, by = c("sitename", "date")) |>
+  mutate(month = floor_date(date, "month")) |>
+  group_by(sitename, month) |>
+  summarise(
+    gpp_observed = mean(gpp, na.rm = TRUE),
+    gpp_modelled = mean(gpp_modelled[is.finite(gpp)], na.rm = TRUE),
+    reco_observed = mean(reco, na.rm = TRUE),
+    reco_modelled = mean(reco_modelled[is.finite(reco)], na.rm = TRUE),
+    .groups = "drop"
+  )
+```
+
+```{r map-plots, eval=FALSE}
+map_monthly |>
+  select(sitename, month, starts_with("gpp"), starts_with("reco")) |>
+  pivot_longer(
+    -c(sitename, month),
+    names_to = c("variable", "source"),
+    names_sep = "_",
+    values_to = "value"
+  ) |>
+  ggplot(aes(month, value, colour = source)) +
+  geom_line() +
+  facet_wrap(~ variable, scales = "free_y", ncol = 1) +
+  scale_colour_manual(values = c(observed = "black", modelled = "red")) +
+  labs(x = NULL, y = expression("Monthly mean flux (g C " * m^-2 * d^-1 * ")")) +
+  theme_classic()
+```
+
+Evaluate LAI on the MODIS acquisition dates rather than interpolating the
+observations to every model day:
+
+```{r map-lai-plot, eval=FALSE}
+map_lai <- lai_observations |>
+  inner_join(select(map_daily, date, lai_modelled), by = "date")
+
+ggplot(map_lai, aes(date)) +
+  geom_line(aes(y = lai_modelled, colour = "Modelled"), linewidth = 0.4) +
+  geom_point(aes(y = lai, colour = "MODIS"), size = 1.2, alpha = 0.8) +
+  scale_colour_manual(values = c(Modelled = "red", MODIS = "black")) +
+  labs(x = NULL, y = expression("LAI (m"^2 * " m"^-2 * ")"), colour = NULL) +
+  theme_classic()
+```
+
+Finally, confirm that the staged constraints remain satisfied in the MAP run:
+
+```{r map-constraints, eval=FALSE}
+map_checks <- tibble(
+  quantity = c(
+    "Peak-season median LMA (g C m-2 leaf)",
+    "Mean wood allocation",
+    "Mean standing wood C"
+  ),
+  value = c(
+    median(map_daily$lma[map_daily$lma > 0], na.rm = TRUE),
+    pars_map$frac_wood,
+    mean(map_daily$cwood, na.rm = TRUE)
+  )
+)
+
+map_checks
+```
+
+-->
+
+## Reference
+
+Arán Paredes, J., Bernhard, F., Hufkens, K., Marcadella, M., and Stocker,
+B. D. (2025). rsofun v5.1: a model-data integration framework for simulating
+ecosystem processes. *Geoscientific Model Development*, 18, 9855–9878.
+doi:10.5194/gmd-18-9855-2025.
+
+Leifeld, J., Meyer, S., Budge, K., Sebastia, M.-T., Zimmermann, M., and Fuhrer,
+J. (2015). Turnover of grassland roots in mountain ecosystems revealed by
+radiocarbon analysis: role of temperature and management. *PLOS ONE*, 10,
+e0119184. doi:10.1371/journal.pone.0119184.

@@ -104,41 +104,41 @@ configurations, they do not constrain carbon allocation in this run.
 ```{r parameters}
 pars <- list(
   # P-model
-  kphio = 0.04998,
-  kphio_par_a = 0.0,
-  kphio_par_b = 1.0,
-  
-  # Active recovery from cold hardening
-  kphio_par_c = 150.0, # GDD midpoint of dehardening
-  kphio_par_d = 0.05,  # sigmoid slope (degree-day^-1)
-  kphio_par_e = 5.0,   # base temperature for GDD accumulation (deg C)
+  kphio = 0.09,
+  kphio_par_a = 0,
+  kphio_par_b = 21.0,
 
-  soilm_thetastar = 0.6 * 240,
+  # Active recovery from cold hardening
+  dehardening_gdd_midpoint = 90, # GDD midpoint of dehardening
+  dehardening_gdd_slope = 0.1, # sigmoid slope (degree-day^-1)
+  dehardening_gdd_base = 4.5, # base temperature for GDD accumulation (deg C)
+
+  soilm_thetastar = 26.7,
   soilm_betao = 0.0,
-  beta_unitcostratio = 146.0,
-  rd_to_vcmax = 0.014,
-  tau_acclim = 30.0,
-  kc_jmax = 0.41,
+  beta_unitcostratio = 187.5,
+  rd_to_vcmax = 0.025,
+  tau_acclim = 10.0,
+  kc_jmax = 0.58,
 
   # Plant carbon and nitrogen
   f_nretain = 0.5,
   fpc_tree_max = 0.95,
-  growtheff = 0.6,
-  r_root = 2 * 0.913,
-  r_sapw = 2 * 0.044,
+  growtheff = 0.55,
+  r_root = 2.5,
+  r_sapw = 0,
   exurate = 0.003,
-  k_decay_leaf = 1.9,
-  k_decay_root = 1.9,
-  k_decay_labl = 1.9,
-  k_decay_sapw = 1.9,
+  k_decay_leaf = 5,
+  k_decay_root = 5,
+  k_decay_labl = 0,
+  k_decay_sapw = 0.1,
   r_cton_root = 37.0,
   r_cton_wood = 100.0,
   r_cton_seed = 15.0,
   nv_vcmax25 = 0.02 * 13681.77,
   ncw_min = 0.08 * 1.116222,
   r_n_cw_v = 0.0,
-  r_ctostructn_leaf = 1.3 * 45.84125,
-  kbeer = 0.5,
+  r_ctostructn_leaf = 30.86173,
+  kbeer = 0.4,
 
   # Phenology
   gddbase = 5.0,
@@ -200,9 +200,9 @@ pars <- list(
   dnitr2n2o = 0.01,
 
   # Fixed allocation used by the C-only setup
-  frac_leaf = 0.5,
+  frac_leaf = 0.45,
   frac_wood = 0.0,
-  frac_avl_labl = 0.1,
+  frac_avl_labl = 0.3,
   tmppar = 9999.0,
   nuptake_kc = 600.0,
   nuptake_kv = 5.0,
@@ -269,142 +269,10 @@ output_uncalibrated <- runread_cnmodel_f(
 )
 ```
 
-## Parallel Bayesian calibration with Latin hypercube sampling
-
-Long C-model runs make serial MCMC particularly costly: each proposal depends
-on the previous one. `calib_sofun_lhs()` instead draws the complete candidate
-ensemble first. The candidates can therefore be simulated independently on
-multiple worker processes. The result is a finite, importance-weighted
-approximation of the posterior rather than an MCMC chain.
-
-Here we select six entries from `pars`, including all three controls of the
-active recovery from cold hardening. Means are the values used above and
-standard errors describe their prior uncertainty. Bounds truncate the priors to
-physically meaningful ranges. The residual standard deviation is a separate,
-positive model-error term and is sampled from a lognormal prior.
-
-```{r cmodel-calibration-setup, eval=FALSE}
-pars_to_calibrate <- list(
-  kphio_par_c = list(
-    mean = pars$kphio_par_c, sd = 30, distribution = "normal",
-    lower = 30, upper = 300
-  ),
-  kphio_par_d = list(
-    mean = pars$kphio_par_d, sd = 0.015, distribution = "lognormal",
-    lower = 0.005, upper = 0.15
-  ),
-  kphio_par_e = list(
-    mean = pars$kphio_par_e, sd = 1.5, distribution = "normal",
-    lower = 0, upper = 12
-  ),
-  growtheff = list(
-    mean = pars$growtheff, sd = 0.06, distribution = "normal",
-    lower = 0.35, upper = 0.85
-  ),
-  k_decay_leaf = list(
-    mean = pars$k_decay_leaf, sd = 0.25, distribution = "normal",
-    lower = 0.5, upper = 3.5
-  ),
-  frac_leaf = list(
-    mean = pars$frac_leaf, sd = 0.08, distribution = "normal",
-    lower = 0.1, upper = 0.9
-  )
-)
-
-error_to_calibrate <- list(
-  sigma_gpp = list(
-    mean = 1.5, sd = 0.5, distribution = "lognormal",
-    lower = 0.1, upper = 5
-  )
-)
-```
-
-The likelihood below follows the Gaussian model-error approach used by
-`cost_likelihood_pmodel()`. It runs the C-model, aligns modelled and observed
-daily GPP by date, and sums pointwise log-likelihoods. A different observation
-variable or likelihood can be substituted without changing the sampler.
-
-```{r cmodel-likelihood, eval=FALSE}
-cmodel_gpp_loglik <- function(par, model_error, drivers, observations) {
-  simulated <- rsofun::runread_cnmodel_f(drivers = drivers, par = par) |>
-    dplyr::select(sitename, data) |>
-    tidyr::unnest(data) |>
-    dplyr::select(sitename, date, gpp_modelled = gpp)
-
-  comparison <- observations |>
-    dplyr::inner_join(simulated, by = c("sitename", "date")) |>
-    dplyr::filter(is.finite(gpp), is.finite(gpp_modelled))
-
-  if (nrow(comparison) == 0) return(-Inf)
-  sum(stats::dnorm(
-    comparison$gpp,
-    mean = comparison$gpp_modelled,
-    sd = model_error$sigma_gpp,
-    log = TRUE
-  ))
-}
-
-gpp_observations <- df_drivers |>
-  dplyr::select(sitename, forcing) |>
-  tidyr::unnest(forcing) |>
-  dplyr::filter(gpp_qc >= 0.8) |>
-  dplyr::select(sitename, date, gpp)
-
-calibration <- calib_sofun_lhs(
-  pars = pars,
-  par_calib = pars_to_calibrate,
-  model_error = error_to_calibrate,
-  likelihood = cmodel_gpp_loglik,
-  n_samples = 1000,
-  n_cores = max(1, parallel::detectCores() - 1),
-  seed = 42,
-  progress = TRUE,
-  drivers = df_drivers,
-  observations = gpp_observations
-)
-
-pars_calibrated <- calibration$par
-calibration$model_error       # MAP residual error
-calibration$samples |>
-  dplyr::arrange(dplyr::desc(weight)) |>
-  dplyr::slice_head(n = 10)   # highest-posterior combinations
-```
-
-The posterior importance weights sum to one and can be used for weighted
-summaries or resampling. Because the design samples the prior directly, these
-weights are proportional to the likelihood; the prior density is still included
-when selecting the MAP combination. `calibration$par` is the complete parameter list with the selected
-entries replaced by their maximum-a-posteriori (MAP) values; all other entries
-remain fixed. Increasing `n_samples` improves coverage, while `n_cores` controls
-only concurrent evaluation and does not alter the sampled design.
-
-Before evaluating any output variables, run the model once more with the full
-MAP parameter list. `calibration$par` already contains the unchanged parameters
-as well as the calibrated replacements, so it can be passed directly to the
-C-model interface.
-
-```{r rerun-map-model, eval=FALSE}
-output_calibrated <- runread_cnmodel_f(
-  drivers = df_drivers,
-  par = calibration$par
-)
-```
-
-The costly calibration and MAP rerun are not executed while building this
-vignette. The fallback below therefore keeps the document renderable with the
-initial run. After executing the calibration chunks interactively,
-`output_for_evaluation` resolves to `output_calibrated`, and every subsequent
-summary and evaluation uses the MAP simulation.
-
+ds
 ```{r postprocessing}
-output_for_evaluation <- if (exists("output_calibrated")) {
-  output_calibrated
-} else {
-  output_uncalibrated
-}
-
 # Daily values
-ddf <- output_for_evaluation |>
+ddf <- output_uncalibrated |>
   select(sitename, data) |>
   unnest(data) |>
   mutate(

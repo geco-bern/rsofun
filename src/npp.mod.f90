@@ -83,7 +83,6 @@ contains
 
         ! transfer required C from reserves to labile
         f_resv_to_labl = creq - cavl
-        print*,'refilling labile, frac_avl ', frac_avl
         tile(lu)%plant(pft)%plabl%c%c12 = tile(lu)%plant(pft)%plabl%c%c12 + f_resv_to_labl
         if (.not. myinterface%steering%spinup_reserves) then
           tile(lu)%plant(pft)%presv%c%c12 = tile(lu)%plant(pft)%presv%c%c12 - f_resv_to_labl
