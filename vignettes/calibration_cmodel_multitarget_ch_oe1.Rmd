@@ -35,7 +35,7 @@ under an inverse-gamma prior. Consequently, the Latin hypercube contains only
 biological model parameters, not weakly identified error parameters.
 
 The sample size used below is suitable for demonstrating the workflow, not for
-a definitive eight-dimensional calibration. Increase `n_samples` and inspect
+a definitive nine-dimensional calibration. Increase `n_samples` further and inspect
 posterior stability before interpreting parameter estimates.
 
 ```{r libraries}
@@ -458,7 +458,10 @@ inverse_gamma_marginal_loglik <- function(residual, alpha, beta) {
 The model is run once per parameter sample. GPP, Reco, and LAI features are
 then evaluated separately, and their log marginal likelihoods are added. A
 sample must produce every requested target-feature group; otherwise it receives
-zero posterior weight.
+zero posterior weight. Nevertheless, inclusion does not guarantee a close LAI
+fit: the joint MAP may trade LAI against GPP and Reco, and the integrated LAI
+variance can accommodate persistent mismatch. The diagnostics below therefore
+show each target's actual likelihood contribution and posterior error scale.
 
 ```{r joint-feature-likelihood}
 multitarget_feature_loglik <- function(
@@ -493,6 +496,11 @@ multitarget_feature_loglik <- function(
       prior_name = paste(target, feature, sep = "__")
     )
 
+  # Every configured feature, including all six LAI features, is compulsory.
+  # This explicit check prevents a missing target from silently dropping out of
+  # the joint likelihood.
+  if (!setequal(unique(pairs$prior_name), names(variance_priors))) return(-Inf)
+
   score <- vapply(names(variance_priors), function(prior_name) {
     prior <- variance_priors[[prior_name]]
     residual <- pairs$residual[pairs$prior_name == prior_name]
@@ -508,7 +516,9 @@ multitarget_feature_loglik <- function(
 The quantum-yield shape and location parameters remain fixed at the S6 values,
 and wood allocation remains zero. The calibrated subset controls temperature
 recovery after hardening, growth efficiency, leaf allocation, leaf and root
-turnover, and root respiration.
+turnover, root respiration, and the ratio of dark respiration to Vcmax. The
+turnover priors retain temperate-grass centres but now allow substantially
+faster leaf and root replacement when required by the LAI observations.
 
 ```{r calibration-parameters}
 calibration_parameters <- list(
@@ -533,16 +543,20 @@ calibration_parameters <- list(
     distribution = "normal", lower = 0.1, upper = 0.9
   ),
   k_decay_leaf = list(
-    mean = 1.9, sd = 0.6,
-    distribution = "lognormal", lower = 0.7, upper = 4
+    mean = 1.9, sd = 1.2,
+    distribution = "lognormal", lower = 0.3, upper = 8
   ),
   k_decay_root = list(
-    mean = 0.7, sd = 0.25,
-    distribution = "lognormal", lower = 0.1, upper = 1.5
+    mean = 0.7, sd = 0.5,
+    distribution = "lognormal", lower = 0.05, upper = 4
   ),
   r_root = list(
     mean = pars$r_root, sd = 0.45,
     distribution = "lognormal", lower = 0.5, upper = 3.5
+  ),
+  rd_to_vcmax = list(
+    mean = pars$rd_to_vcmax, sd = 0.004,
+    distribution = "lognormal", lower = 0.005, upper = 0.03
   )
 )
 
@@ -562,7 +576,7 @@ if (!is.finite(feature_preflight)) {
   stop("The multi-target feature likelihood failed its serial preflight check.")
 }
 
-n_samples <- 250
+n_samples <- 5000
 multitarget_calibration <- calib_sofun_lhs(
   pars = pars,
   par_calib = calibration_parameters,
@@ -587,8 +601,8 @@ multitarget_calibration <- calib_sofun_lhs(
 
 The effective sample size and ranked weights reveal whether the finite LHS
 posterior is supported by several parameter combinations or collapses onto one.
-Because eight parameters are varied, 250 samples are only a computationally
-light demonstration.
+Because nine parameters are varied, even 1,000 samples should be treated as a
+starting design whose posterior stability must be checked.
 
 ```{r posterior-diagnostics}
 posterior_diagnostics <- multitarget_calibration$samples |>
@@ -658,9 +672,11 @@ map_daily <- map_output |>
 ## Target-feature diagnostics at the MAP
 
 The table exposes every annual observed-modelled comparison rather than only
-the summed likelihood. The following table gives the corresponding conditional
-posterior error distributions. These errors were integrated out during
-calibration and are recovered here only for interpretation.
+the summed likelihood. It also reports the marginal log-likelihood contributed
+by every target-feature group. The three-target summary confirms that LAI is
+part of the optimized joint score; it is not merely evaluated after calibration.
+The conditional posterior errors were integrated out during calibration and
+are recovered here only for interpretation.
 
 ```{r map-feature-diagnostics}
 map_feature_pairs <- build_feature_pairs(
@@ -694,6 +710,13 @@ feature_error_posteriors <- map_feature_pairs |>
       n_years / 2,
     beta_posterior = feature_variance_priors[[prior_name]]$beta +
       sum_squared_residual / 2,
+    log_marginal_likelihood =
+      lgamma(alpha_posterior) -
+      lgamma(feature_variance_priors[[prior_name]]$alpha) +
+      feature_variance_priors[[prior_name]]$alpha *
+      log(feature_variance_priors[[prior_name]]$beta) -
+      alpha_posterior * log(beta_posterior) -
+      n_years * log(2 * pi) / 2,
     posterior_rms = sqrt(beta_posterior / (alpha_posterior - 1)),
     posterior_median = sqrt(1 / stats::qgamma(
       0.5, shape = alpha_posterior, rate = beta_posterior
@@ -708,9 +731,19 @@ feature_error_posteriors <- map_feature_pairs |>
   dplyr::ungroup() |>
   dplyr::select(
     target, feature, n_years, prior_rms, posterior_rms,
-    posterior_median, posterior_lower, posterior_upper
+    posterior_median, posterior_lower, posterior_upper,
+    log_marginal_likelihood
   )
 feature_error_posteriors
+
+target_likelihood_contributions <- feature_error_posteriors |>
+  dplyr::group_by(target) |>
+  dplyr::summarise(
+    n_features = dplyr::n(),
+    log_marginal_likelihood = sum(log_marginal_likelihood),
+    .groups = "drop"
+  )
+target_likelihood_contributions
 ```
 
 ## Observed and MAP seasonal cycles
@@ -794,6 +827,23 @@ dplyr::bind_rows(flux_cycles, lai_cycles) |>
 ```
 
 ## MAP constraints and parameter estimates
+
+If LAI remains biased after broadening the current calibration, consider the
+following additions one at a time rather than expanding the LHS indiscriminately:
+
+- restore realistic cutting or grazing through the `fharv` forcing. It is set
+  to zero in this demonstration, although management can dominate grassland
+  LAI dynamics;
+- calibrate `r_ctostructn_leaf` with an informative independent LMA prior. This
+  parameter directly connects leaf carbon to leaf area and is therefore the
+  most direct structural control on LAI;
+- calibrate `frac_avl_labl` or `k_decay_labl` if post-cutting or spring regrowth
+  is systematically too slow or too fast;
+- consider `gddbase` or `ramp` if the remaining error is specifically in
+  growing-season timing;
+- only relax nitrogen-allocation parameters such as `nv_vcmax25` or `ncw_min`
+  when independent leaf-nitrogen or LMA observations are available, because
+  they can otherwise compensate for several processes simultaneously.
 
 ```{r map-summary}
 map_parameters <- tibble::tibble(
