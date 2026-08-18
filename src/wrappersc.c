@@ -155,6 +155,7 @@ extern SEXP pmodel_onestep_f_C(
 /////////////////////////////////////////////////////////////
 void F77_NAME(cnmodel_f)(
     int    *c_only,
+    int    *write_soil_diagnostics,
     int    *spinup, // LOGICAL can be defined as _Bool but it gives a warning  
     int    *spinupyears,
     int    *recycle,
@@ -184,6 +185,7 @@ void F77_NAME(cnmodel_f)(
 // C wrapper function for P-model
 extern SEXP cnmodel_f_C(
     SEXP c_only,
+    SEXP write_soil_diagnostics,
     SEXP spinup,
     SEXP spinupyears,
     SEXP recycle,
@@ -219,6 +221,7 @@ extern SEXP cnmodel_f_C(
     // Fortran subroutine call
     F77_CALL(cnmodel_f)(
         LOGICAL(c_only),
+        LOGICAL(write_soil_diagnostics),
         LOGICAL(spinup),
         INTEGER(spinupyears),
         INTEGER(recycle),
@@ -377,7 +380,7 @@ extern SEXP biomee_f_C(
 /////////////////////////////////////////////////////////////
 static const R_CallMethodDef CallEntries[] = {
   {"pmodel_f_C",         (DL_FUNC) &pmodel_f_C,          24},  // Specify number of arguments to C wrapper as the last number here
-  {"cnmodel_f_C",        (DL_FUNC) &cnmodel_f_C,         24},  // Specify number of arguments to C wrapper as the last number here
+  {"cnmodel_f_C",        (DL_FUNC) &cnmodel_f_C,         25},  // Specify number of arguments to C wrapper as the last number here
   {"pmodel_onestep_f_C", (DL_FUNC) &pmodel_onestep_f_C,   3},  // Specify number of arguments to C wrapper as the last number here
   {"biomee_f_C",         (DL_FUNC) &biomee_f_C,          46},  // Number of the SEXP variables (not the output)
   { NULL,                 NULL,                          0 }

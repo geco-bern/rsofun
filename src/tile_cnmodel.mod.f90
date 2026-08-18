@@ -253,6 +253,8 @@ contains
     !  Initialisation of all _pools on all gridcells at the beginning
     !  of the simulation.
     !----------------------------------------------------------------
+    use md_interface_cnmodel, only: myinterface
+
     ! argument
     type( tile_type ), dimension(nlu), intent(inout) :: tile
 
@@ -281,16 +283,18 @@ contains
 
     tile(:)%gdd = 0.0
 
-    !-----------------------------------------------------------------------------
-    ! open files for experimental output
-    !-----------------------------------------------------------------------------
-    prefix = "./out_rsofun"
+    ! Open the legacy annual soil-pool diagnostics only when explicitly
+    ! requested. Normal simulations return these pools through the R interface
+    ! and do not create files in the working directory.
+    if (myinterface%params_siml%write_soil_diagnostics) then
+      prefix = "./out_rsofun"
 
-    filnam = trim(prefix)//'.a.csoil.txt'
-    open(unit = 101, file = filnam, err = 999, status = 'unknown')
+      filnam = trim(prefix)//'.a.csoil.txt'
+      open(unit = 101, file = filnam, err = 999, status = 'unknown')
 
-    filnam = trim(prefix)//'.a.nsoil.txt'
-    open(unit = 102, file = filnam, err = 999, status = 'unknown')
+      filnam = trim(prefix)//'.a.nsoil.txt'
+      open(unit = 102, file = filnam, err = 999, status = 'unknown')
+    end if
 
     return
     999 stop 'init_tile(): error opening output files'
@@ -300,7 +304,7 @@ contains
 
   subroutine finalize_tile()
     !////////////////////////////////////////////////////////////////
-    ! Closing files
+    ! Close optional annual soil-pool diagnostic files.
     !----------------------------------------------------------------
     close(unit = 101)
     close(unit = 102)
@@ -943,8 +947,7 @@ contains
 
   subroutine diag_annual( tile, tile_fluxes )
     !////////////////////////////////////////////////////////////////
-    ! Annual diagnostics
-    ! Write to (experimental) files
+    ! Write optional annual soil-pool diagnostics.
     !----------------------------------------------------------------
     use md_interface_cnmodel, only: myinterface
 
@@ -955,9 +958,6 @@ contains
     ! local
     integer :: lu, pft
 
-    !////////////////////////////////////////////////////////////////
-    ! Annual output to file
-    !----------------------------------------------------------------
     lu = 1
     pft = 1
 

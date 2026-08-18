@@ -22,6 +22,9 @@ run_cnmodel_f_bysite(
       \item{c_only}{A logical specifying whether to simulate interactive C and N cycles. If set to \code{FALSE}, 
                     constant leaf:root allocation fractions are used and required N for allocation is added from 
                     an unspecified source, whereby the N mass balance is violated.} 
+      \item{write_soil_diagnostics}{A logical specifying whether annual soil C
+                    and N diagnostics are written to \code{out_rsofun.a.csoil.txt}
+                    and \code{out_rsofun.a.nsoil.txt}. Defaults to \code{FALSE}.}
       \item{spinup}{A logical value indicating whether this simulation does spin-up.}
       \item{spinupyears}{Number of spin-up years.}
       \item{recycle}{Length of standard recycling period, in days.}

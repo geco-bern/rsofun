@@ -8,6 +8,9 @@
 #'       \item{c_only}{A logical specifying whether to simulate interactive C and N cycles. If set to \code{FALSE}, 
 #'                     constant leaf:root allocation fractions are used and required N for allocation is added from 
 #'                     an unspecified source, whereby the N mass balance is violated.} 
+#'       \item{write_soil_diagnostics}{A logical specifying whether annual soil C
+#'                     and N diagnostics are written to \code{out_rsofun.a.csoil.txt}
+#'                     and \code{out_rsofun.a.nsoil.txt}. Defaults to \code{FALSE}.}
 #'       \item{spinup}{A logical value indicating whether this simulation does spin-up.}
 #'       \item{spinupyears}{Number of spin-up years.}
 #'       \item{recycle}{Length of standard recycling period, in days.}
@@ -183,6 +186,13 @@ run_cnmodel_f_bysite <- function(
   # base state, always execute the call
   continue <- TRUE
 
+  # Keep file-based diagnostics opt-in, including for older driver objects
+  # created before this simulation parameter was introduced.
+  if (!"write_soil_diagnostics" %in% names(params_siml) ||
+      is.null(params_siml$write_soil_diagnostics)) {
+    params_siml$write_soil_diagnostics <- FALSE
+  }
+
   # Backward compatibility for parameter lists created before the active
   # dehardening controls were exposed through the R/Fortran interface.
   dehardening_defaults <- list(
@@ -308,6 +318,7 @@ run_cnmodel_f_bysite <- function(
     # parameters to check
     check_param <- c(
       "c_only",
+      "write_soil_diagnostics",
       "spinup",
       "spinupyears",
       "recycle",
@@ -556,6 +567,7 @@ run_cnmodel_f_bysite <- function(
       
       ## Simulation parameters
       c_only                    = as.logical(params_siml$c_only),
+      write_soil_diagnostics   = as.logical(params_siml$write_soil_diagnostics),
       spinup                    = as.logical(params_siml$spinup),
       spinupyears               = as.integer(params_siml$spinupyears),
       recycle                   = as.integer(params_siml$recycle),

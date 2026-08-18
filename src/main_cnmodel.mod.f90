@@ -13,6 +13,7 @@ contains
   !----------------------------------------------------------------
   subroutine cnmodel_f(        &
     c_only,                    &
+    write_soil_diagnostics,    &
     spinup,                    &   
     spinupyears,               &        
     recycle,                   &    
@@ -49,6 +50,7 @@ contains
 
     ! arguments
     logical(kind=c_bool), intent(in) :: c_only
+    logical(kind=c_bool), intent(in) :: write_soil_diagnostics
     logical(kind=c_bool), intent(in) :: spinup
     integer(kind=c_int),  intent(in) :: spinupyears
     integer(kind=c_int),  intent(in) :: recycle
@@ -82,6 +84,7 @@ contains
     ! GET SIMULATION PARAMETERS
     !----------------------------------------------------------------
     myinterface%params_siml%c_only         = c_only
+    myinterface%params_siml%write_soil_diagnostics = write_soil_diagnostics
     myinterface%params_siml%do_spinup      = spinup
     myinterface%params_siml%spinupyears    = spinupyears
     myinterface%params_siml%recycle        = recycle

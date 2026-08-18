@@ -24,6 +24,7 @@ module md_params_siml_cnmodel
     logical :: c_only               ! whether to do interactive C-N cycling
     logical :: do_spinup            ! whether this simulation does spinup 
     logical :: is_calib             ! whether this simulation is a calibration simulation (overriding parameters and no output)
+    logical :: write_soil_diagnostics ! whether to write annual soil C and N text files
 
     character(len=256) :: runname
     character(len=256) :: sitename
@@ -229,5 +230,4 @@ contains
   end function get_cycleyear
 
 end module md_params_siml_cnmodel
-
 

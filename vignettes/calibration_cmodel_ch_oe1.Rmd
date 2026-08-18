@@ -285,19 +285,24 @@ pars_lma <- pars
 This diagnostic setup varies only `kphio` and one GPP residual standard
 deviation. The `kphio` prior is normal with mean `0.08` and standard deviation
 `0.04`, truncated to `0.03--0.12`. All other model parameters remain fixed.
-Two likelihoods use the same simulations and priors but retain very different
+Four likelihoods use the same model-parameter prior but retain very different
 amounts of temporal information:
 
 - the daily likelihood treats every quality-controlled daily GPP residual as
   an observation;
+- the monthly likelihood uses monthly mean GPP when at least 20 paired daily
+  observations are available;
 - the mean-annual likelihood reduces the record to one value: the mean of the
-  paired annual GPP totals.
+  paired annual GPP totals;
+- the feature likelihood evaluates six complementary summaries: mean annual
+  GPP, peak-week GPP, timing of peak GPP, growing-season onset and termination,
+  seasonal amplitude, and the totals of individual years.
 
 The comparison reveals how repeated, autocorrelated observations can make the
 likelihood much sharper than a single aggregated target.
-The daily error is expressed in daily GPP units; the annual error is expressed
-in annual-total GPP units, so their numerical MAP values are not directly
-comparable.
+The daily and monthly-mean errors are expressed in daily GPP units, whereas the
+mean-annual error is expressed in annual-total GPP units. The annual error's
+numerical MAP value is therefore not directly comparable with the other two.
 
 ```{r gpp-likelihoods}
 daily_gpp_loglik <- function(par, model_error, drivers, observations) {
@@ -317,6 +322,38 @@ daily_gpp_loglik <- function(par, model_error, drivers, observations) {
     matched$gpp,
     mean = matched$gpp_modelled,
     sd = model_error$sigma_gpp_daily,
+    log = TRUE
+  ))
+}
+
+monthly_gpp_loglik <- function(
+    par, model_error, drivers, observations, minimum_days = 20
+) {
+  simulated <- rsofun::runread_cnmodel_f(drivers = drivers, par = par) |>
+    dplyr::select(sitename, data) |>
+    tidyr::unnest(data) |>
+    dplyr::transmute(sitename, date, gpp_modelled = gpp)
+
+  monthly_gpp <- observations |>
+    dplyr::select(sitename, date, gpp) |>
+    dplyr::inner_join(simulated, by = c("sitename", "date")) |>
+    dplyr::filter(is.finite(gpp), is.finite(gpp_modelled)) |>
+    dplyr::mutate(month = lubridate::floor_date(date, "month")) |>
+    dplyr::group_by(sitename, month) |>
+    dplyr::summarise(
+      n_days = dplyr::n(),
+      observed = mean(gpp),
+      modelled = mean(gpp_modelled),
+      .groups = "drop"
+    ) |>
+    dplyr::filter(n_days >= minimum_days)
+
+  if (nrow(monthly_gpp) == 0) return(-Inf)
+
+  sum(stats::dnorm(
+    monthly_gpp$observed,
+    mean = monthly_gpp$modelled,
+    sd = model_error$sigma_gpp_monthly,
     log = TRUE
   ))
 }
@@ -354,6 +391,107 @@ mean_annual_gpp_loglik <- function(par, model_error, drivers, observations) {
     log = TRUE
   )
 }
+
+# Extract seasonal features from one daily GPP series. The 15-day centred
+# moving average is used only to locate threshold crossings. The threshold is
+# 15% of the robust seasonal amplitude above the 5th percentile.
+gpp_features <- function(data, value) {
+  value <- rlang::ensym(value)
+  series <- data |>
+    dplyr::transmute(date, gpp = !!value) |>
+    dplyr::filter(is.finite(gpp))
+
+  annual <- series |>
+    dplyr::mutate(year = lubridate::year(date)) |>
+    dplyr::group_by(year) |>
+    dplyr::summarise(total = sum(gpp), .groups = "drop")
+
+  daily_cycle <- series |>
+    dplyr::mutate(day = lubridate::yday(date)) |>
+    dplyr::group_by(day) |>
+    dplyr::summarise(gpp = mean(gpp), .groups = "drop") |>
+    dplyr::arrange(day) |>
+    dplyr::mutate(
+      smooth = as.numeric(stats::filter(gpp, rep(1 / 15, 15), sides = 2))
+    )
+  usable_cycle <- dplyr::filter(daily_cycle, is.finite(smooth))
+
+  weekly_cycle <- series |>
+    dplyr::mutate(week = lubridate::isoweek(date)) |>
+    dplyr::group_by(week) |>
+    dplyr::summarise(gpp = mean(gpp), .groups = "drop")
+  peak_week <- weekly_cycle[which.max(weekly_cycle$gpp), ]
+
+  lower <- stats::quantile(usable_cycle$smooth, 0.05, names = FALSE)
+  upper <- stats::quantile(usable_cycle$smooth, 0.95, names = FALSE)
+  amplitude <- upper - lower
+  threshold <- lower + 0.15 * amplitude
+  peak_day <- usable_cycle$day[which.max(usable_cycle$smooth)]
+  active <- dplyr::filter(usable_cycle, smooth >= threshold)
+  onset <- active$day[active$day <= peak_day] |> min()
+  termination <- active$day[active$day >= peak_day] |> max()
+
+  list(
+    mean_annual = mean(annual$total),
+    peak_gpp = peak_week$gpp,
+    peak_week = peak_week$week,
+    onset = onset,
+    termination = termination,
+    amplitude = amplitude,
+    annual = stats::setNames(annual$total, annual$year)
+  )
+}
+
+feature_gpp_loglik <- function(
+    par, model_error, drivers, observations, feature_function
+) {
+  simulated <- rsofun::runread_cnmodel_f(drivers = drivers, par = par) |>
+    dplyr::select(sitename, data) |>
+    tidyr::unnest(data) |>
+    dplyr::transmute(sitename, date, gpp_modelled = gpp)
+  matched <- observations |>
+    dplyr::select(sitename, date, gpp) |>
+    dplyr::inner_join(simulated, by = c("sitename", "date")) |>
+    dplyr::filter(is.finite(gpp), is.finite(gpp_modelled))
+  if (nrow(matched) == 0) return(-Inf)
+
+  # `feature_function` is passed explicitly through calib_sofun_lhs(). This is
+  # important for PSOCK parallelism: unlike an object in the likelihood's
+  # global environment, an explicit argument is serialized to every worker.
+  observed <- feature_function(matched, gpp)
+  modelled <- feature_function(matched, gpp_modelled)
+  common_years <- intersect(names(observed$annual), names(modelled$annual))
+  if (!length(common_years)) return(-Inf)
+
+  # Base tolerances put features with different units onto comparable scales.
+  # Taking the mean within multi-valued groups gives each of the six requested
+  # aspects equal influence. `sigma_feature` tunes their common multiplier.
+  multiplier <- model_error$sigma_feature
+  score <- c(
+    mean_annual = stats::dnorm(observed$mean_annual, modelled$mean_annual,
+      sd = 0.10 * observed$mean_annual * multiplier, log = TRUE),
+    peak_gpp = stats::dnorm(observed$peak_gpp, modelled$peak_gpp,
+      sd = max(0.25, 0.10 * observed$peak_gpp) * multiplier, log = TRUE),
+    peak_week = stats::dnorm(
+      pmin(abs(observed$peak_week - modelled$peak_week),
+           52 - abs(observed$peak_week - modelled$peak_week)),
+      mean = 0, sd = 2 * multiplier, log = TRUE
+    ),
+    growing_season = mean(stats::dnorm(
+      c(observed$onset, observed$termination),
+      c(modelled$onset, modelled$termination),
+      sd = 14 * multiplier, log = TRUE
+    )),
+    amplitude = stats::dnorm(observed$amplitude, modelled$amplitude,
+      sd = max(0.25, 0.10 * observed$amplitude) * multiplier, log = TRUE),
+    annual_totals = mean(stats::dnorm(
+      observed$annual[common_years], modelled$annual[common_years],
+      sd = 0.10 * observed$mean_annual * multiplier, log = TRUE
+    ))
+  )
+  if (any(!is.finite(score))) return(-Inf)
+  sum(score)
+}
 ```
 
 ```{r simple-gpp-calibrations, eval=TRUE}
@@ -383,6 +521,24 @@ daily_gpp_calibration <- calib_sofun_lhs(
   observations = daily_observations
 )
 
+monthly_gpp_calibration <- calib_sofun_lhs(
+  pars = pars,
+  par_calib = kphio_prior,
+  model_error = list(
+    sigma_gpp_monthly = list(
+      mean = 0.8, sd = 0.3,
+      distribution = "lognormal", lower = 0.05, upper = 4
+    )
+  ),
+  likelihood = monthly_gpp_loglik,
+  n_samples = 500,
+  n_cores = max(1, parallel::detectCores() - 1),
+  seed = 44,
+  progress = TRUE,
+  drivers = df_drivers,
+  observations = daily_observations
+)
+
 annual_gpp_calibration <- calib_sofun_lhs(
   pars = pars,
   par_calib = kphio_prior,
@@ -400,45 +556,130 @@ annual_gpp_calibration <- calib_sofun_lhs(
   drivers = df_drivers,
   observations = daily_observations
 )
+
+# Check the feature pipeline once in the main R process. This gives a local,
+# informative failure before launching hundreds of worker evaluations.
+feature_preflight <- feature_gpp_loglik(
+  par = pars,
+  model_error = list(sigma_feature = 1),
+  drivers = df_drivers,
+  observations = daily_observations,
+  feature_function = gpp_features
+)
+if (!is.finite(feature_preflight)) {
+  stop("The seasonal-feature likelihood failed its serial preflight check.")
+}
+
+feature_gpp_calibration <- calib_sofun_lhs(
+  pars = pars,
+  par_calib = kphio_prior,
+  model_error = list(
+    sigma_feature = list(
+      mean = 1, sd = 0.35,
+      distribution = "lognormal", lower = 0.25, upper = 3
+    )
+  ),
+  likelihood = feature_gpp_loglik,
+  n_samples = 500,
+  n_cores = max(1, parallel::detectCores() - 1),
+  seed = 45,
+  progress = TRUE,
+  drivers = df_drivers,
+  observations = daily_observations,
+  feature_function = gpp_features
+)
 ```
 
-### Prior and posterior distributions of `kphio`
+The feature likelihood uses tolerances of 10% for annual GPP and amplitude,
+two weeks for peak timing, and 14 days for onset and termination. The calibrated
+`sigma_feature` multiplies all of these tolerances. The table below keeps the
+six likelihood aspects visible rather than reducing them to the combined score.
 
-The unweighted LHS draws approximate the prior; the normalized importance
-weights applied to those same draws approximate the posterior.
+```{r feature-calibration-components, eval=TRUE}
+feature_map_simulation <- rsofun::runread_cnmodel_f(
+  drivers = df_drivers,
+  par = feature_gpp_calibration$par
+) |>
+  dplyr::select(sitename, data) |>
+  tidyr::unnest(data) |>
+  dplyr::transmute(sitename, date, gpp_modelled = gpp)
+
+feature_map_matched <- daily_observations |>
+  dplyr::select(sitename, date, gpp) |>
+  dplyr::inner_join(feature_map_simulation, by = c("sitename", "date")) |>
+  dplyr::filter(is.finite(gpp), is.finite(gpp_modelled))
+observed_features <- gpp_features(feature_map_matched, gpp)
+map_features <- gpp_features(feature_map_matched, gpp_modelled)
+feature_years <- intersect(
+  names(observed_features$annual), names(map_features$annual)
+)
+
+feature_comparison <- dplyr::bind_rows(
+  tibble::tibble(
+    aspect = c(
+      "Mean annual GPP", "GPP of peak week", "Week of peak GPP",
+      "Growing-season onset", "Growing-season termination",
+      "Seasonal amplitude"
+    ),
+    observed = c(
+      observed_features$mean_annual, observed_features$peak_gpp,
+      observed_features$peak_week, observed_features$onset,
+      observed_features$termination, observed_features$amplitude
+    ),
+    map_model = c(
+      map_features$mean_annual, map_features$peak_gpp,
+      map_features$peak_week, map_features$onset,
+      map_features$termination, map_features$amplitude
+    )
+  ),
+  tibble::tibble(
+    aspect = paste("Annual GPP total", feature_years),
+    observed = unname(observed_features$annual[feature_years]),
+    map_model = unname(map_features$annual[feature_years])
+  )
+)
+feature_comparison
+```
+
+### Prior and posterior empirical distributions of `kphio`
+
+The empirical cumulative distribution function (ECDF) avoids kernel smoothing.
+The prior ECDF gives every LHS draw equal mass; the posterior ECDF uses the
+normalized posterior weights. A collapsed posterior therefore appears as one
+large vertical step at the dominant sample's `kphio` value.
 
 ```{r simple-kphio-prior-posterior, eval=TRUE}
 distribution_data <- function(calibration, target_label) {
   dplyr::bind_rows(
     calibration$samples |>
-      dplyr::transmute(
-        kphio, target = target_label, distribution = "Prior",
-        density_weight = 1 / dplyr::n()
-      ),
+      dplyr::arrange(kphio) |>
+      dplyr::transmute(kphio, cumulative_probability = dplyr::row_number() /
+                         dplyr::n(), target = target_label,
+                       distribution = "Prior"),
     calibration$samples |>
-      dplyr::transmute(
-        kphio, target = target_label, distribution = "Posterior",
-        density_weight = weight
-      )
+      dplyr::arrange(kphio) |>
+      dplyr::transmute(kphio, cumulative_probability = cumsum(weight),
+                       target = target_label, distribution = "Posterior")
   )
 }
 
 kphio_distributions <- dplyr::bind_rows(
   distribution_data(daily_gpp_calibration, "Daily GPP"),
-  distribution_data(annual_gpp_calibration, "One mean annual GPP value")
+  distribution_data(monthly_gpp_calibration, "Monthly GPP"),
+  distribution_data(annual_gpp_calibration, "One mean annual GPP value"),
+  distribution_data(feature_gpp_calibration, "Seasonal GPP features")
 )
 
 ggplot(
   kphio_distributions,
-  aes(kphio, weight = density_weight, colour = distribution, fill = distribution)
+  aes(kphio, cumulative_probability, colour = distribution)
 ) +
-  geom_density(alpha = 0.2) +
+  geom_step(linewidth = 0.7) +
   geom_vline(xintercept = pars$kphio, linetype = "dashed") +
   facet_wrap(~ target, ncol = 1) +
   scale_colour_manual(values = c(Prior = "grey40", Posterior = "red")) +
-  scale_fill_manual(values = c(Prior = "grey70", Posterior = "red")) +
-  labs(x = "Maximum quantum yield (kphio)", y = "Density", colour = NULL,
-       fill = NULL) +
+  labs(x = "Maximum quantum yield (kphio)",
+       y = "Cumulative probability", colour = NULL) +
   theme_classic()
 ```
 
@@ -448,26 +689,39 @@ samples_to_80_percent <- function(weight) {
 }
 
 tibble(
-  target = c("Daily GPP", "One mean annual GPP value"),
+  target = c(
+    "Daily GPP", "Monthly GPP", "One mean annual GPP value",
+    "Seasonal GPP features"
+  ),
   effective_sample_size = c(
     daily_gpp_calibration$effective_sample_size,
-    annual_gpp_calibration$effective_sample_size
+    monthly_gpp_calibration$effective_sample_size,
+    annual_gpp_calibration$effective_sample_size,
+    feature_gpp_calibration$effective_sample_size
   ),
   maximum_weight = c(
     max(daily_gpp_calibration$samples$weight),
-    max(annual_gpp_calibration$samples$weight)
+    max(monthly_gpp_calibration$samples$weight),
+    max(annual_gpp_calibration$samples$weight),
+    max(feature_gpp_calibration$samples$weight)
   ),
   samples_to_80_percent = c(
     samples_to_80_percent(daily_gpp_calibration$samples$weight),
-    samples_to_80_percent(annual_gpp_calibration$samples$weight)
+    samples_to_80_percent(monthly_gpp_calibration$samples$weight),
+    samples_to_80_percent(annual_gpp_calibration$samples$weight),
+    samples_to_80_percent(feature_gpp_calibration$samples$weight)
   ),
   map_kphio = c(
     daily_gpp_calibration$par$kphio,
-    annual_gpp_calibration$par$kphio
+    monthly_gpp_calibration$par$kphio,
+    annual_gpp_calibration$par$kphio,
+    feature_gpp_calibration$par$kphio
   ),
   map_gpp_error = c(
     daily_gpp_calibration$model_error$sigma_gpp_daily,
-    annual_gpp_calibration$model_error$sigma_gpp_annual
+    monthly_gpp_calibration$model_error$sigma_gpp_monthly,
+    annual_gpp_calibration$model_error$sigma_gpp_annual,
+    feature_gpp_calibration$model_error$sigma_feature
   )
 )
 ```
@@ -477,21 +731,25 @@ tibble(
 Ranked weights directly reveal importance-weight collapse. A well-supported
 posterior distributes weight across multiple samples; a collapsed posterior has
 one point near one and almost all remaining points near zero. The logarithmic
-axis retains differences among very small weights. Exact zero weights are drawn
-at the smallest positive floating-point value.
+axis retains differences among very small weights. Exact zeros and weights below
+`1e-16` are drawn at that plotting floor.
 
 ```{r simple-posterior-weight-distributions, eval=TRUE}
 posterior_weights <- dplyr::bind_rows(
   daily_gpp_calibration$samples |>
     dplyr::mutate(target = "Daily GPP"),
+  monthly_gpp_calibration$samples |>
+    dplyr::mutate(target = "Monthly GPP"),
   annual_gpp_calibration$samples |>
-    dplyr::mutate(target = "One mean annual GPP value")
+    dplyr::mutate(target = "One mean annual GPP value"),
+  feature_gpp_calibration$samples |>
+    dplyr::mutate(target = "Seasonal GPP features")
 ) |>
   dplyr::group_by(target) |>
   dplyr::arrange(dplyr::desc(weight), .by_group = TRUE) |>
   dplyr::mutate(
     weight_rank = dplyr::row_number(),
-    weight_for_plot = pmax(weight, .Machine$double.xmin)
+    weight_for_plot = pmax(weight, 1e-16)
   ) |>
   dplyr::ungroup()
 
@@ -548,7 +806,9 @@ observed_gpp_cycle <- daily_observations |>
 gpp_annual_cycles <- dplyr::bind_rows(
   observed_gpp_cycle,
   map_gpp_cycle(daily_gpp_calibration, "MAP from daily GPP"),
-  map_gpp_cycle(annual_gpp_calibration, "MAP from mean annual GPP")
+  map_gpp_cycle(monthly_gpp_calibration, "MAP from monthly GPP"),
+  map_gpp_cycle(annual_gpp_calibration, "MAP from mean annual GPP"),
+  map_gpp_cycle(feature_gpp_calibration, "MAP from GPP features")
 )
 
 ggplot(gpp_annual_cycles, aes(day_of_year, gpp, colour = source)) +
@@ -560,7 +820,9 @@ ggplot(gpp_annual_cycles, aes(day_of_year, gpp, colour = source)) +
   scale_colour_manual(values = c(
     "Observed" = "black",
     "MAP from daily GPP" = "tomato",
-    "MAP from mean annual GPP" = "royalblue"
+    "MAP from monthly GPP" = "darkgreen",
+    "MAP from mean annual GPP" = "royalblue",
+    "MAP from GPP features" = "darkorange3"
   )) +
   labs(
     x = NULL,

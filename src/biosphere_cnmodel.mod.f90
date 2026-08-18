@@ -491,19 +491,13 @@ contains
 
     end do monthloop
 
-    !----------------------------------------------------------------
-    ! annual diagnostics
-    !----------------------------------------------------------------
-    call diag_annual( tile(:), tile_fluxes(:) )
+    ! Write and close legacy annual soil diagnostics only when requested.
+    if (myinterface%params_siml%write_soil_diagnostics) then
+      call diag_annual( tile(:), tile_fluxes(:) )
+      if (myinterface%steering%finalize) call finalize_tile()
+    end if
 
     ! print*,'j presv: ', tile(1)%plant(1)%presv
-
-    !----------------------------------------------------------------
-    ! close (experimental) files
-    !----------------------------------------------------------------
-    if (myinterface%steering%finalize) then
-      call finalize_tile()
-    end if
 
     ! print*,'k presv: ', tile(1)%plant(1)%presv
     
