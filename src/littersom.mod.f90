@@ -10,6 +10,8 @@ module md_littersom
 
   implicit none
   
+  logical, parameter :: verbose = .false.  ! set to true to activate verbose mode
+  
   private 
   public getpar_modl_littersom, littersom
 
@@ -343,7 +345,6 @@ contains
               !----------------------------------------------------------------    
               nfix = req
               req = 0.0
-              ! stop 'could not get enough N upon immobilisation'
 
             end if
 

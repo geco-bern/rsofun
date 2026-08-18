@@ -10,6 +10,8 @@ module md_allocation_cnmodel
   use md_interface_cnmodel, only: myinterface
 
   implicit none
+  
+  logical, parameter :: verbose = .false.  ! set to true to activate verbose mode
 
   private
   public allocation_daily, getpar_modl_allocation
@@ -152,13 +154,6 @@ contains
     real    :: max_dcleaf_n_constraint
     real    :: max_dcroot_n_constraint
 
-    ! xxx debug
-    real :: tmp
-    real :: frac_leaf_test
-
-    ! xxx verbose
-    logical, parameter :: verbose = .true.
-
     if ( init .or. .not. myinterface%steering%dofree_alloc ) then
       frac_leaf = params_allocation%frac_leaf
     end if
@@ -214,14 +209,15 @@ contains
           !------------------------------------------------------------------
           ! Set remaining allocation fractions to leaves and roots (after wood)
           !------------------------------------------------------------------
-          ! print*,'clabl, avl, frac_leaf: ', tile(lu)%plant(pft)%plabl%c%c12, avl%c%c12, frac_leaf
+          if (verbose) print*, 'clabl, avl, frac_leaf: ', &
+            tile(lu)%plant(pft)%plabl%c%c12, avl%c%c12, frac_leaf
 
           ! leaf allocation fraction was determined in the previous time step (dcleaf is a "save variable")
           dcleaf = frac_leaf         * params_plant%growtheff * avl%c%c12
           dcroot = (1.0 - frac_leaf) * params_plant%growtheff * avl%c%c12
           dnroot = dcroot * params_pft_plant(pft)%r_ntoc_root
 
-          ! print*,'dcleaf, dcroot ', dcleaf, dcroot
+          if (verbose) print*, 'dcleaf, dcroot ', dcleaf, dcroot
 
           tile_fluxes(lu)%plant(pft)%debug4 = tile(lu)%plant(pft)%pheno%level_veggrowth
 
@@ -704,14 +700,16 @@ contains
 
     if (closed_nbal) then
       if ( nlabl < -1.0 * eps ) then
-        print*,'dcleaf       ', mydcleaf
-        print*,'cleaf before ', cleaf0
-        print*,'cleaf after  ', cleaf
-        print*,'nleaf before ', nleaf0
-        print*,'nleaf after  ', nleaf
-        print*,'C:N before   ', cleaf0 / nleaf0
-        print*,'C:N after    ', cleaf / nleaf
-        print*,'nlabl = ', nlabl
+        if (verbose) then
+          print*,'dcleaf       ', mydcleaf
+          print*,'cleaf before ', cleaf0
+          print*,'cleaf after  ', cleaf
+          print*,'nleaf before ', nleaf0
+          print*,'nleaf after  ', nleaf
+          print*,'C:N before   ', cleaf0 / nleaf0
+          print*,'C:N after    ', cleaf / nleaf
+          print*,'nlabl = ', nlabl
+        end if
         stop 'ALLOCATE_LEAF: trying to remove too much from labile pool: leaf N'
       else if ( nlabl < 0.0 ) then
         ! more N used for leaf growth than available in labile N pool

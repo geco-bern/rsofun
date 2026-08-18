@@ -10,6 +10,8 @@ module md_npp
   use md_interface_cnmodel, only: myinterface
 
   implicit none
+  
+  logical, parameter :: verbose = .false.  ! set to true to activate verbose mode
 
   private
   public npp, calc_cexu, calc_resp_maint
