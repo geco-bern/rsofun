@@ -2,7 +2,7 @@
 "$schema" = "https://cdn.posit.co/publisher/schemas/posit-publishing-record-schema-v3.json"
 server_type = "connect_cloud"
 server_url = "https://connect.posit.cloud"
-client_version = "2.9.16"
+client_version = "2.9.19"
 created_at = "2026-08-10T21:02:00.735Z"
 type = "html"
 configuration_name = "Running the C-only model at CH-5G4C"
@@ -10,12 +10,11 @@ id = "019fed7b-9dc8-5fe8-f4e0-d08cfb97726d"
 dashboard_url = "https://connect.posit.cloud/stineb/content/019fed7b-9dc8-5fe8-f4e0-d08cfb97726d"
 direct_url = "https://019fed7b-9dc8-5fe8-f4e0-d08cfb97726d.share.connect.posit.cloud"
 logs_url = "https://connect.posit.cloud/stineb/content/019fed7b-9dc8-5fe8-f4e0-d08cfb97726d/history"
-deployed_at = "2026-08-10T21:07:44.905Z"
-bundle_id = "019fed80-8db5-e978-658b-f3e634db8f3a"
+deployed_at = "2026-08-18T12:26:26.886Z"
+bundle_id = "01a014d6-4a10-9376-10ba-e97677684ab7"
 files = [
     ".posit/publish/Running the C-only model at CH-5G4C.toml",
     ".posit/publish/deployments/deployment-RUU0.toml",
-    "example_cmodel.html",
 ]
 
 [connect_cloud]
@@ -34,4 +33,9 @@ files = [
 ]
 validate = true
 product_type = "connect_cloud"
+
+[deployment_error]
+code = "deployFailed"
+message = "Unable to find primary file: Unable to locate example_cmodel.html. Please update your code and republish."
+operation = "publish"
 

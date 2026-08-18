@@ -1,0 +1,832 @@
+---
+title: "Calibrating multiple C-model parameters with GPP, Reco, and LAI features"
+author: "Benjamin Stocker"
+output: rmarkdown::html_vignette
+code-fold: true
+vignette: >
+  %\VignetteIndexEntry{Calibrating multiple C-model parameters with GPP, Reco, and LAI features}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\usepackage[utf8]{inputenc}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.align = "center",
+  fig.width = 7,
+  fig.height = 4.5
+)
+```
+
+## Aim
+
+This vignette extends the feature-oriented likelihood developed in
+`vignette("calibration_cmodel_ch_oe1")` to a joint calibration of several
+C-model parameters at the temperate grassland site CH-Oe1. GPP, ecosystem
+respiration (Reco), and leaf area index (LAI) are separate calibration targets.
+
+Every target is reduced to annually replicated time-series features. GPP and
+Reco contribute annual totals, while LAI contributes an annual mean. All three
+also contribute peak magnitude, peak timing, growing-season onset and
+termination, and quantile-based seasonal amplitude. A separate residual
+variance is assigned to every target-feature combination and integrated out
+under an inverse-gamma prior. Consequently, the Latin hypercube contains only
+biological model parameters, not weakly identified error parameters.
+
+The sample size used below is suitable for demonstrating the workflow, not for
+a definitive eight-dimensional calibration. Increase `n_samples` and inspect
+posterior stability before interpreting parameter estimates.
+
+```{r libraries}
+library(rsofun)
+library(dplyr)
+library(tidyr)
+library(lubridate)
+library(ggplot2)
+
+if (!exists(
+  ".calib_lhs_worker_stop_recovery",
+  envir = asNamespace("rsofun"),
+  inherits = FALSE
+)) {
+  stop(
+    "The installed rsofun is stale. Reinstall this working tree, or run ",
+    "devtools::load_all() before rendering the vignette."
+  )
+}
+```
+
+## Drivers and three observation targets
+
+The FluxDataKit forcing supplies GPP and NEE. Under its sign convention,
+observed Reco is `GPP + NEE`. MODIS LAI is taken from the quality-controlled
+data prepared in `vignette("example_cmodel")`.
+
+```{r data, eval=TRUE}
+fdk_path <- "~/data_2/FluxDataKit/v3.4/zenodo_upload"
+
+df_drivers <- readRDS(file.path(
+  fdk_path,
+  "rsofun_driver_data_v3.4.2.rds"
+)) |>
+  dplyr::filter(sitename == "CH-Oe1")
+
+use_cseed <- 5
+use_nseed <- use_cseed / 20
+df_drivers <- df_drivers |>
+  dplyr::mutate(
+    forcing = purrr::map(forcing, ~ dplyr::mutate(
+      .,
+      fharv = 0,
+      dno3 = 1.5 / (2 * 365),
+      dnh4 = 1.5 / (2 * 365),
+      cseed = ifelse(lubridate::month(date) == 2 &
+                       lubridate::mday(date) == 15, use_cseed, 0),
+      nseed = ifelse(lubridate::month(date) == 2 &
+                       lubridate::mday(date) == 15, use_nseed, 0)
+    ))
+  )
+df_drivers$params_siml[[1]]$spinupyears <- 2002
+df_drivers$params_siml[[1]]$recycle <- 5
+df_drivers$params_siml[[1]]$c_only <- TRUE
+
+flux_observations <- df_drivers |>
+  dplyr::select(sitename, forcing) |>
+  tidyr::unnest(forcing) |>
+  dplyr::transmute(
+    sitename,
+    date,
+    gpp = dplyr::if_else(gpp_qc >= 0.8, gpp, NA_real_),
+    reco = dplyr::if_else(
+      gpp_qc >= 0.8 & nee_qc >= 0.8, gpp + nee, NA_real_
+    )
+  )
+
+data("modis_lai_ch_oe1", package = "rsofun")
+model_period <- range(flux_observations$date)
+lai_observations <- modis_lai_ch_oe1 |>
+  dplyr::filter(dplyr::between(date, model_period[1], model_period[2])) |>
+  dplyr::transmute(sitename = "CH-Oe1", date, lai)
+```
+
+## Baseline parameters
+
+The P-model values below reproduce the MAP estimates in the last column of
+Table 2 (setup S6) of Arán Paredes et al. (2025): `kphio = 0.08`,
+`kphio_par_a = -0.001`, `kphio_par_b = 27.5`, `soilm_thetastar = 26.7`,
+`beta_unitcostratio = 187.5`, `tau_acclim = 1.0`, and `kc_jmax = 0.58`.
+Parameters that are not estimated in setup S6 retain their existing model
+defaults. Note that the S6 value of `beta_unitcostratio` lies at the lower bound
+of its truncated normal prior; it should not be replaced by the posterior mean
+or by the rounded value discussed elsewhere in the article.
+
+The three quantum-yield parameters have a distinct and coupled meaning:
+
+```text
+phi(T) = kphio * max(0, min(1, 1 + kphio_par_a * (T - kphio_par_b)^2))
+```
+
+Thus `kphio` is the maximum quantum yield, `kphio_par_a` controls the curvature,
+and `kphio_par_b` locates the temperature optimum. The shape and location
+parameters remain fixed at their S6 estimates, as does `kphio`. The calibrated
+subset below instead targets C-model phenology, allocation, turnover, growth,
+and respiration parameters.
+
+The turnover constants are annual values. Baseline values of `1.9 yr-1` for
+leaves and `0.7 yr-1` for roots correspond to expected tissue lifetimes of
+about 0.53 and 1.43 years. They define the prior centres for the turnover
+calibration. Allocation to wood remains fixed at zero.
+
+Leaf structure and nitrogen partitioning are also fixed. In particular,
+`r_ctostructn_leaf = 30.9` is the previously selected value for a temperate
+grass; it is held fixed during the multi-target calibration.
+
+```{r parameters}
+pars <- list(
+  # P-model: informed by Arán Paredes et al. (2025), setup S6
+  kphio = 0.08,
+  kphio_par_a = -0.001,
+  kphio_par_b = 27.5,
+  # C-model phenology; unrelated to the P-model quantum-yield parameters above
+  dehardening_gdd_midpoint = 150.0,
+  dehardening_gdd_slope = 0.05,
+  dehardening_gdd_base = 5.0,
+  soilm_thetastar = 26.7,
+  soilm_betao = 0.0,
+  beta_unitcostratio = 187.5,
+  rd_to_vcmax = 0.014,
+  tau_acclim = 1.0,
+  kc_jmax = 0.58,
+
+  # Plant C and N
+  f_nretain = 0.5,
+  fpc_tree_max = 0.95,
+  growtheff = 0.6,
+  r_root = 2 * 0.913,
+  r_sapw = 2 * 0.044,
+  exurate = 0.003,
+  k_decay_leaf = 1.9,
+  k_decay_root = 0.7,
+  k_decay_labl = 1.9,
+  k_decay_sapw = 1.9,
+  r_cton_root = 37.0,
+  r_cton_wood = 100.0,
+  r_cton_seed = 15.0,
+  nv_vcmax25 = 0.02 * 13681.77,
+  ncw_min = 0.08 * 1.116222,
+  r_n_cw_v = 0.0,
+  r_ctostructn_leaf = 30.9,
+  kbeer = 0.5,
+
+  # Phenology
+  gddbase = 5.0,
+  ramp = 0.0,
+  phentype = 2.0,
+
+  # Soil physics
+  perc_k1 = 5.0,
+  thdiff_wp = 0.2,
+  thdiff_whc15 = 0.8,
+  thdiff_fc = 0.4,
+  forg = 0.01,
+  wbwp = 0.029,
+  por = 0.421,
+  fsand = 0.82,
+  fclay = 0.06,
+  fsilt = 0.12,
+
+  # Water and energy balance
+  kA = 107.0,
+  kalb_sw = 0.17,
+  kalb_vis = 0.03,
+  kb = 0.20,
+  kc = 0.25,
+  kCw = 1.05,
+  kd = 0.50,
+  ke = 0.0167,
+  keps = 23.44,
+  kWm = 220.0,
+  kw = 0.26,
+  komega = 283.0,
+  maxmeltrate = 3.0,
+
+  # Soil biogeochemistry
+  klitt_af10 = 1.2,
+  klitt_as10 = 0.35,
+  klitt_bg10 = 0.35,
+  kexu10 = 50.0,
+  ksoil_fs10 = 0.021,
+  ksoil_sl10 = 7.0e-4,
+  ntoc_crit1 = 0.45,
+  ntoc_crit2 = 0.76,
+  cton_microb = 10.0,
+  cton_soil = 9.77,
+  fastfrac = 0.985,
+
+  # N uptake and transformations
+  eff_nup = 1.0e-4,
+  minimumcostfix = 1.0,
+  fixoptimum = 25.15,
+  a_param_fix = -3.62,
+  b_param_fix = 0.27,
+  maxnitr = 5.0e-5,
+  non = 0.01,
+  n2on = 5.0e-4,
+  kn = 83.0,
+  kdoc = 17.0,
+  docmax = 1.0,
+  dnitr2n2o = 0.01,
+
+  # Prescribed allocation in the C-only setup
+  frac_leaf = 0.5,
+  frac_wood = 0.0,
+  frac_avl_labl = 0.1,
+  tmppar = 9999.0,
+  nuptake_kc = 600.0,
+  nuptake_kv = 5.0,
+  nuptake_vmax = 0.2
+)
+
+stopifnot(pars$frac_wood == 0)
+```
+
+## Annual time-series features
+
+The helper below first interpolates internal gaps onto a daily grid and then
+applies a centred 15-day moving average. Onset and termination are the first
+and last crossings around the seasonal peak of a threshold located 15% of the
+way from the 5th to the 95th smoothed quantile. Peak timing is represented by
+week of year.
+
+Fluxes use an annual total calculated over the common observation period. LAI
+is a state variable rather than a flux, so its annual-level feature is the
+annual mean. Features are only retained for years with sufficient paired data.
+
+```{r feature-extraction}
+annual_series_features <- function(
+    data, value_name, annual_stat = c("total", "mean"),
+    minimum_observations
+) {
+  annual_stat <- match.arg(annual_stat)
+  series <- data |>
+    dplyr::transmute(
+      year = lubridate::year(date),
+      day = lubridate::yday(date),
+      value = .data[[value_name]]
+    ) |>
+    dplyr::filter(is.finite(value))
+  series <- split(series, series$year)
+
+  extract_year <- function(x) {
+    if (nrow(x) < minimum_observations) return(NULL)
+    daily <- tibble::tibble(
+      day = seq_len(365),
+      value = stats::approx(
+        x$day, x$value, xout = seq_len(365), ties = mean
+      )$y
+    ) |>
+      dplyr::mutate(
+        smooth = as.numeric(stats::filter(
+          value, rep(1 / 15, 15), sides = 2
+        )),
+        week = (day - 1L) %/% 7L + 1L
+      )
+    usable <- dplyr::filter(daily, is.finite(smooth))
+    if (nrow(usable) < minimum_observations) return(NULL)
+
+    weekly <- daily |>
+      dplyr::filter(is.finite(value)) |>
+      dplyr::group_by(week) |>
+      dplyr::summarise(value = mean(value), .groups = "drop")
+    peak <- weekly[which.max(weekly$value), ]
+    lower <- stats::quantile(usable$smooth, 0.05, names = FALSE)
+    upper <- stats::quantile(usable$smooth, 0.95, names = FALSE)
+    threshold <- lower + 0.15 * (upper - lower)
+    peak_day <- usable$day[which.max(usable$smooth)]
+    active <- dplyr::filter(usable, smooth >= threshold)
+    before_peak <- active$day[active$day <= peak_day]
+    after_peak <- active$day[active$day >= peak_day]
+    if (!length(before_peak) || !length(after_peak)) return(NULL)
+
+    annual_value <- if (annual_stat == "total") {
+      sum(daily$value, na.rm = TRUE)
+    } else {
+      mean(daily$value, na.rm = TRUE)
+    }
+    annual_name <- if (annual_stat == "total") {
+      "annual_total"
+    } else {
+      "annual_mean"
+    }
+
+    tibble::tibble(
+      year = x$year[[1]],
+      annual_level = annual_value,
+      peak_value = peak$value,
+      peak_week = peak$week,
+      onset = min(before_peak),
+      termination = max(after_peak),
+      amplitude = upper - lower
+    ) |>
+      tidyr::pivot_longer(
+        -year, names_to = "feature", values_to = "value"
+      ) |>
+      dplyr::mutate(
+        feature = dplyr::if_else(
+          feature == "annual_level", annual_name, feature
+        )
+      )
+  }
+
+  dplyr::bind_rows(lapply(series, extract_year))
+}
+
+pair_features <- function(
+    data, observed_name, modelled_name, target, annual_stat,
+    minimum_observations, feature_function
+) {
+  # Both feature sets must use identical dates. Otherwise data gaps in the
+  # observations would be mistaken for model-data differences.
+  paired <- data |>
+    dplyr::filter(
+      is.finite(.data[[observed_name]]),
+      is.finite(.data[[modelled_name]])
+    )
+  observed <- feature_function(
+    paired, observed_name, annual_stat, minimum_observations
+  ) |>
+    dplyr::rename(observed = value)
+  modelled <- feature_function(
+    paired, modelled_name, annual_stat, minimum_observations
+  ) |>
+    dplyr::rename(modelled = value)
+
+  dplyr::inner_join(observed, modelled, by = c("year", "feature")) |>
+    dplyr::mutate(target = target)
+}
+
+build_feature_pairs <- function(
+    simulated, flux_observations, lai_observations,
+    feature_function, pair_function
+) {
+  matched_flux <- flux_observations |>
+    dplyr::inner_join(simulated, by = c("sitename", "date")) |>
+    dplyr::filter(
+      is.finite(gpp_modelled), is.finite(reco_modelled)
+    )
+  matched_lai <- lai_observations |>
+    dplyr::inner_join(
+      dplyr::select(simulated, sitename, date, lai_modelled),
+      by = c("sitename", "date")
+    ) |>
+    dplyr::filter(is.finite(lai), is.finite(lai_modelled))
+
+  dplyr::bind_rows(
+    pair_function(
+      matched_flux, "gpp", "gpp_modelled", "GPP", "total", 200,
+      feature_function
+    ),
+    pair_function(
+      matched_flux, "reco", "reco_modelled", "Reco", "total", 200,
+      feature_function
+    ),
+    pair_function(
+      matched_lai, "lai", "lai_modelled", "LAI", "mean", 12,
+      feature_function
+    )
+  )
+}
+```
+
+## Feature-specific variance priors
+
+As explained in the companion vignette, if normal residual variance
+$v=\sigma^2$ has an inverse-gamma prior, it can be integrated out exactly. The
+prior is specified through `prior_rms = sqrt(E[v])`, in the native units of
+each feature. `alpha = 3` is retained after the sensitivity analysis in the
+single-parameter vignette.
+
+The values below are explicit assumptions. Flux totals are in
+g C m$^{-2}$ yr$^{-1}$, peak fluxes and amplitudes in
+g C m$^{-2}$ d$^{-1}$, timing variables in weeks or days, and LAI magnitude
+features in m$^2$ m$^{-2}$.
+
+```{r variance-priors}
+make_variance_prior <- function(prior_rms, alpha = 3) {
+  list(
+    alpha = alpha,
+    beta = (alpha - 1) * prior_rms^2,
+    prior_rms = prior_rms
+  )
+}
+
+feature_variance_priors <- list(
+  GPP__annual_total = make_variance_prior(150),
+  GPP__peak_value = make_variance_prior(0.75),
+  GPP__peak_week = make_variance_prior(2),
+  GPP__onset = make_variance_prior(14),
+  GPP__termination = make_variance_prior(14),
+  GPP__amplitude = make_variance_prior(0.75),
+
+  Reco__annual_total = make_variance_prior(150),
+  Reco__peak_value = make_variance_prior(0.75),
+  Reco__peak_week = make_variance_prior(2),
+  Reco__onset = make_variance_prior(14),
+  Reco__termination = make_variance_prior(14),
+  Reco__amplitude = make_variance_prior(0.75),
+
+  LAI__annual_mean = make_variance_prior(0.5),
+  LAI__peak_value = make_variance_prior(0.75),
+  LAI__peak_week = make_variance_prior(3),
+  LAI__onset = make_variance_prior(21),
+  LAI__termination = make_variance_prior(21),
+  LAI__amplitude = make_variance_prior(0.5)
+)
+
+inverse_gamma_marginal_loglik <- function(residual, alpha, beta) {
+  n <- length(residual)
+  if (!n || any(!is.finite(residual))) return(-Inf)
+  lgamma(alpha + n / 2) - lgamma(alpha) + alpha * log(beta) -
+    (alpha + n / 2) * log(beta + sum(residual^2) / 2) -
+    n * log(2 * pi) / 2
+}
+```
+
+## Joint feature likelihood
+
+The model is run once per parameter sample. GPP, Reco, and LAI features are
+then evaluated separately, and their log marginal likelihoods are added. A
+sample must produce every requested target-feature group; otherwise it receives
+zero posterior weight.
+
+```{r joint-feature-likelihood}
+multitarget_feature_loglik <- function(
+    par, model_error, drivers, flux_observations, lai_observations,
+    feature_function, pair_function, pair_builder, variance_priors,
+    marginal_function
+) {
+  simulated <- rsofun::runread_cnmodel_f(drivers = drivers, par = par) |>
+    dplyr::select(sitename, data) |>
+    tidyr::unnest(data) |>
+    dplyr::transmute(
+      sitename,
+      date,
+      gpp_modelled = gpp,
+      reco_modelled = rleaf + rroot + rwood + rhet + rgrow,
+      lai_modelled = lai
+    )
+  pairs <- pair_builder(
+    simulated = simulated,
+    flux_observations = flux_observations,
+    lai_observations = lai_observations,
+    feature_function = feature_function,
+    pair_function = pair_function
+  ) |>
+    dplyr::mutate(
+      residual = observed - modelled,
+      residual = dplyr::if_else(
+        feature == "peak_week",
+        pmin(abs(residual), 52 - abs(residual)),
+        residual
+      ),
+      prior_name = paste(target, feature, sep = "__")
+    )
+
+  score <- vapply(names(variance_priors), function(prior_name) {
+    prior <- variance_priors[[prior_name]]
+    residual <- pairs$residual[pairs$prior_name == prior_name]
+    marginal_function(residual, prior$alpha, prior$beta)
+  }, numeric(1))
+  if (any(!is.finite(score))) return(-Inf)
+  sum(score)
+}
+```
+
+## Parameters and parallel LHS calibration
+
+The quantum-yield shape and location parameters remain fixed at the S6 values,
+and wood allocation remains zero. The calibrated subset controls temperature
+recovery after hardening, growth efficiency, leaf allocation, leaf and root
+turnover, and root respiration.
+
+```{r calibration-parameters}
+calibration_parameters <- list(
+  dehardening_gdd_midpoint = list(
+    mean = pars$dehardening_gdd_midpoint, sd = 30,
+    distribution = "normal", lower = 30, upper = 300
+  ),
+  dehardening_gdd_slope = list(
+    mean = pars$dehardening_gdd_slope, sd = 0.015,
+    distribution = "lognormal", lower = 0.005, upper = 0.15
+  ),
+  dehardening_gdd_base = list(
+    mean = pars$dehardening_gdd_base, sd = 1.5,
+    distribution = "normal", lower = 0, upper = 12
+  ),
+  growtheff = list(
+    mean = pars$growtheff, sd = 0.06,
+    distribution = "normal", lower = 0.35, upper = 0.85
+  ),
+  frac_leaf = list(
+    mean = pars$frac_leaf, sd = 0.08,
+    distribution = "normal", lower = 0.1, upper = 0.9
+  ),
+  k_decay_leaf = list(
+    mean = 1.9, sd = 0.6,
+    distribution = "lognormal", lower = 0.7, upper = 4
+  ),
+  k_decay_root = list(
+    mean = 0.7, sd = 0.25,
+    distribution = "lognormal", lower = 0.1, upper = 1.5
+  ),
+  r_root = list(
+    mean = pars$r_root, sd = 0.45,
+    distribution = "lognormal", lower = 0.5, upper = 3.5
+  )
+)
+
+feature_preflight <- multitarget_feature_loglik(
+  par = pars,
+  model_error = list(),
+  drivers = df_drivers,
+  flux_observations = flux_observations,
+  lai_observations = lai_observations,
+  feature_function = annual_series_features,
+  pair_function = pair_features,
+  pair_builder = build_feature_pairs,
+  variance_priors = feature_variance_priors,
+  marginal_function = inverse_gamma_marginal_loglik
+)
+if (!is.finite(feature_preflight)) {
+  stop("The multi-target feature likelihood failed its serial preflight check.")
+}
+
+n_samples <- 250
+multitarget_calibration <- calib_sofun_lhs(
+  pars = pars,
+  par_calib = calibration_parameters,
+  model_error = list(),
+  likelihood = multitarget_feature_loglik,
+  n_samples = n_samples,
+  n_cores = max(1, parallel::detectCores() - 1),
+  seed = 46,
+  progress = TRUE,
+  drivers = df_drivers,
+  flux_observations = flux_observations,
+  lai_observations = lai_observations,
+  feature_function = annual_series_features,
+  pair_function = pair_features,
+  pair_builder = build_feature_pairs,
+  variance_priors = feature_variance_priors,
+  marginal_function = inverse_gamma_marginal_loglik
+)
+```
+
+## Posterior-weight diagnostics
+
+The effective sample size and ranked weights reveal whether the finite LHS
+posterior is supported by several parameter combinations or collapses onto one.
+Because eight parameters are varied, 250 samples are only a computationally
+light demonstration.
+
+```{r posterior-diagnostics}
+posterior_diagnostics <- multitarget_calibration$samples |>
+  dplyr::arrange(dplyr::desc(weight)) |>
+  dplyr::mutate(cumulative_weight = cumsum(weight))
+
+tibble::tibble(
+  effective_sample_size = multitarget_calibration$effective_sample_size,
+  failed_evaluations = sum(!multitarget_calibration$samples$evaluation_ok),
+  maximum_weight = max(multitarget_calibration$samples$weight),
+  samples_to_80_percent = which(
+    posterior_diagnostics$cumulative_weight >= 0.8
+  )[1]
+)
+
+ggplot(
+  dplyr::mutate(
+    posterior_diagnostics,
+    rank = dplyr::row_number(),
+    weight_for_plot = pmax(weight, 1e-16)
+  ),
+  aes(rank, weight_for_plot)
+) +
+  geom_hline(
+    yintercept = 1 / nrow(posterior_diagnostics),
+    linetype = "dashed", colour = "grey50"
+  ) +
+  geom_line(colour = "#0072B2") +
+  geom_point(colour = "#0072B2", size = 0.8) +
+  scale_y_log10() +
+  labs(
+    x = "Sample rank (highest posterior weight first)",
+    y = "Posterior weight (log scale)"
+  ) +
+  theme_classic()
+```
+
+## Re-run the MAP model
+
+The returned MAP parameter list includes fixed and calibrated values and can be
+passed directly back to the C-model.
+
+```{r map-run}
+pars_map <- multitarget_calibration$par
+stopifnot(pars_map$frac_wood == 0)
+
+map_output <- rsofun::runread_cnmodel_f(
+  drivers = df_drivers,
+  par = pars_map
+)
+map_daily <- map_output |>
+  dplyr::select(sitename, data) |>
+  tidyr::unnest(data) |>
+  dplyr::transmute(
+    sitename,
+    date,
+    gpp_modelled = gpp,
+    reco_modelled = rleaf + rroot + rwood + rhet + rgrow,
+    lai_modelled = lai,
+    lma,
+    cleaf,
+    croot,
+    cwood
+  )
+```
+
+## Target-feature diagnostics at the MAP
+
+The table exposes every annual observed-modelled comparison rather than only
+the summed likelihood. The following table gives the corresponding conditional
+posterior error distributions. These errors were integrated out during
+calibration and are recovered here only for interpretation.
+
+```{r map-feature-diagnostics}
+map_feature_pairs <- build_feature_pairs(
+  simulated = map_daily,
+  flux_observations = flux_observations,
+  lai_observations = lai_observations,
+  feature_function = annual_series_features,
+  pair_function = pair_features
+)
+map_feature_pairs
+
+feature_error_posteriors <- map_feature_pairs |>
+  dplyr::mutate(
+    residual = observed - modelled,
+    residual = dplyr::if_else(
+      feature == "peak_week",
+      pmin(abs(residual), 52 - abs(residual)), residual
+    ),
+    prior_name = paste(target, feature, sep = "__")
+  ) |>
+  dplyr::group_by(target, feature, prior_name) |>
+  dplyr::summarise(
+    n_years = dplyr::n(),
+    sum_squared_residual = sum(residual^2),
+    .groups = "drop"
+  ) |>
+  dplyr::rowwise() |>
+  dplyr::mutate(
+    prior_rms = feature_variance_priors[[prior_name]]$prior_rms,
+    alpha_posterior = feature_variance_priors[[prior_name]]$alpha +
+      n_years / 2,
+    beta_posterior = feature_variance_priors[[prior_name]]$beta +
+      sum_squared_residual / 2,
+    posterior_rms = sqrt(beta_posterior / (alpha_posterior - 1)),
+    posterior_median = sqrt(1 / stats::qgamma(
+      0.5, shape = alpha_posterior, rate = beta_posterior
+    )),
+    posterior_lower = sqrt(1 / stats::qgamma(
+      0.975, shape = alpha_posterior, rate = beta_posterior
+    )),
+    posterior_upper = sqrt(1 / stats::qgamma(
+      0.025, shape = alpha_posterior, rate = beta_posterior
+    ))
+  ) |>
+  dplyr::ungroup() |>
+  dplyr::select(
+    target, feature, n_years, prior_rms, posterior_rms,
+    posterior_median, posterior_lower, posterior_upper
+  )
+feature_error_posteriors
+```
+
+## Observed and MAP seasonal cycles
+
+For fluxes, modelled values are averaged only over days with a corresponding
+quality-controlled observation. LAI observations retain the MODIS acquisition
+dates. The shaded envelope spans the minimum to maximum observed value for each
+day of year across years; the black and orange lines show the observed and MAP-model
+means. Faceting with free vertical scales keeps all three targets legible.
+
+```{r map-seasonal-cycles, fig.width=7.5, fig.height=8}
+seasonal_cycle <- function(data, observed_name, modelled_name, target_name) {
+  data |>
+    dplyr::filter(
+      is.finite(.data[[observed_name]]),
+      is.finite(.data[[modelled_name]]),
+      !(lubridate::month(date) == 2 & lubridate::mday(date) == 29)
+    ) |>
+    dplyr::mutate(
+      day = lubridate::yday(date) - dplyr::if_else(
+        lubridate::leap_year(date) & lubridate::month(date) > 2,
+        1L, 0L
+      )
+    ) |>
+    dplyr::group_by(day) |>
+    dplyr::summarise(
+      observed_min = min(.data[[observed_name]]),
+      observed_mean = mean(.data[[observed_name]]),
+      observed_max = max(.data[[observed_name]]),
+      modelled_mean = mean(.data[[modelled_name]]),
+      .groups = "drop"
+    ) |>
+    dplyr::mutate(target = target_name)
+}
+
+matched_flux_cycles <- flux_observations |>
+  dplyr::inner_join(map_daily, by = c("sitename", "date"))
+
+flux_cycles <- dplyr::bind_rows(
+  seasonal_cycle(matched_flux_cycles, "gpp", "gpp_modelled", "GPP"),
+  seasonal_cycle(matched_flux_cycles, "reco", "reco_modelled", "Reco")
+)
+
+lai_cycles <- lai_observations |>
+  dplyr::inner_join(
+    dplyr::select(map_daily, sitename, date, lai_modelled),
+    by = c("sitename", "date")
+  ) |>
+  seasonal_cycle("lai", "lai_modelled", "LAI")
+
+dplyr::bind_rows(flux_cycles, lai_cycles) |>
+  ggplot(aes(day)) +
+  geom_ribbon(
+    aes(
+      ymin = observed_min,
+      ymax = observed_max,
+      fill = "Observed min–max"
+    ),
+    alpha = 0.25,
+    colour = NA
+  ) +
+  geom_line(aes(y = observed_mean, colour = "Observed mean"), linewidth = 0.7) +
+  geom_line(aes(y = modelled_mean, colour = "MAP model mean"), linewidth = 0.8) +
+  facet_wrap(~ target, scales = "free_y", ncol = 1) +
+  scale_x_continuous(
+    breaks = c(15, 46, 74, 105, 135, 166, 196, 227, 258, 288, 319, 349),
+    labels = month.abb
+  ) +
+  scale_colour_manual(values = c(
+    "Observed mean" = "black",
+    "MAP model mean" = "#D55E00"
+  )) +
+  scale_fill_manual(values = c("Observed min–max" = "grey55")) +
+  labs(x = NULL, y = NULL, colour = NULL, fill = NULL) +
+  theme_classic() +
+  theme(
+    legend.position = "bottom",
+    strip.background = element_blank(),
+    strip.text = element_text(face = "bold")
+  )
+```
+
+## MAP constraints and parameter estimates
+
+```{r map-summary}
+map_parameters <- tibble::tibble(
+  parameter = names(calibration_parameters),
+  prior_centre = vapply(
+    calibration_parameters, function(x) x$mean, numeric(1)
+  ),
+  map = unlist(pars_map[names(calibration_parameters)])
+)
+map_parameters
+
+tibble::tibble(
+  quantity = c(
+    "Peak-season median LMA (g C m-2 leaf)",
+    "Wood allocation",
+    "Mean standing wood C"
+  ),
+  value = c(
+    median(map_daily$lma[map_daily$lma > 0], na.rm = TRUE),
+    pars_map$frac_wood,
+    mean(map_daily$cwood, na.rm = TRUE)
+  )
+)
+```
+
+## References
+
+Arán Paredes, J., Bernhard, F., Hufkens, K., Marcadella, M., and Stocker,
+B. D. (2025). rsofun v5.1: a model-data integration framework for simulating
+ecosystem processes. *Geoscientific Model Development*, 18, 9855–9878.
+doi:10.5194/gmd-18-9855-2025.
+
+Leifeld, J., Meyer, S., Budge, K., Sebastia, M.-T., Zimmermann, M., and Fuhrer,
+J. (2015). Turnover of grassland roots in mountain ecosystems revealed by
+radiocarbon analysis: role of temperature and management. *PLOS ONE*, 10,
+e0119184. doi:10.1371/journal.pone.0119184.
