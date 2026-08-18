@@ -642,6 +642,32 @@ error parameters. The error variances have not been ignored: they have been
 integrated over. Their conditional posterior distributions can still be
 recovered after calibration, as demonstrated below.
 
+#### Relation to published calibration approaches
+
+This implementation can be described as **parallel prior-ensemble importance
+calibration in the feature domain**. Latin hypercube sampling provides a
+space-filling sample from the parameter prior (McKay et al., 1979). Because the
+proposal distribution is the prior, evaluating the feature likelihood for each
+independent model run and normalizing those likelihoods gives a finite
+importance-sampling approximation to the posterior. The inverse-gamma
+variances are integrated out analytically, so they express uncertainty about
+the mismatch of each feature without adding error parameters to the sampled
+space. This particular combination is a synthesis of established methods
+rather than a standard named calibration algorithm.
+
+Close precedents occur in hydrology, where dynamic rainfall--runoff models have
+been calibrated against hydrological signatures using Approximate Bayesian
+Computation (Vrugt and Sadegh, 2013; Kavetski et al., 2018). Those methods also
+retain informative properties of a time series instead of treating every
+autocorrelated time step as independent evidence, but use simulated acceptance
+or distance criteria when a signature likelihood is unavailable. In ecosystem
+science, Wood (2010) calibrated nonlinear dynamic models with a *synthetic
+likelihood* constructed from time-series summary statistics. The approach here
+differs by specifying an explicit likelihood for annually replicated GPP
+features and analytically marginalizing their feature-specific variances. It
+is therefore feature- or signature-domain Bayesian calibration, but is neither
+Approximate Bayesian Computation nor synthetic likelihood in the strict sense.
+
 ```{r feature-gpp-calibration, eval=TRUE}
 
 # Each inverse-gamma prior is defined through E[sigma^2]^(1/2), an interpretable
@@ -1218,6 +1244,16 @@ ggplot(gpp_annual_cycles, aes(day_of_year, gpp, colour = source)) +
 
 ## References
 
+Kavetski, D., Fenicia, F., Reichert, P., and Albert, C. (2018).
+Signature-domain calibration of hydrological models using approximate Bayesian
+computation: theory and comparison to existing applications. *Water Resources
+Research*, 54, 4059--4083. doi:10.1002/2017WR020528.
+
+McKay, M. D., Beckman, R. J., and Conover, W. J. (1979). A comparison of three
+methods for selecting values of input variables in the analysis of output from
+a computer code. *Technometrics*, 21, 239--245.
+doi:10.1080/00401706.1979.10489755.
+
 Arán Paredes, J., Bernhard, F., Hufkens, K., Marcadella, M., and Stocker,
 B. D. (2025). rsofun v5.1: a model-data integration framework for simulating
 ecosystem processes. *Geoscientific Model Development*, 18, 9855–9878.
@@ -1227,3 +1263,10 @@ Leifeld, J., Meyer, S., Budge, K., Sebastia, M.-T., Zimmermann, M., and Fuhrer,
 J. (2015). Turnover of grassland roots in mountain ecosystems revealed by
 radiocarbon analysis: role of temperature and management. *PLOS ONE*, 10,
 e0119184. doi:10.1371/journal.pone.0119184.
+
+Vrugt, J. A. and Sadegh, M. (2013). Toward diagnostic model calibration and
+evaluation: approximate Bayesian computation. *Water Resources Research*, 49,
+4335--4345. doi:10.1002/wrcr.20354.
+
+Wood, S. N. (2010). Statistical inference for noisy nonlinear ecological
+dynamic systems. *Nature*, 466, 1102--1104. doi:10.1038/nature09319.
