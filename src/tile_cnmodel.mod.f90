@@ -297,7 +297,7 @@ contains
     end if
 
     return
-    ! 999 stop 'init_tile(): error opening output files'
+  999 stop 'init_tile(): error opening output files'
 
   end subroutine init_tile
 
