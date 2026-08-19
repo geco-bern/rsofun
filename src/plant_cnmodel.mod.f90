@@ -13,7 +13,8 @@ module md_plant_cnmodel
   public plant_type, plant_fluxes_type, getpar_modl_plant, &
     init_plant, params_plant, params_pft_plant, ftemp, &
     fmoist, add_seed, update_leaftraits, get_leaftraits_init, &
-    get_lai, get_fapar, init_plant_fluxes, get_leaf_n_canopy, &
+    get_lai, get_fapar, get_leaf_c_from_lai, init_plant_fluxes, &
+    get_leaf_n_canopy, &
 
     ! debug
     r_cton_leaf, r_ntoc_leaf
@@ -236,6 +237,50 @@ contains
     fapar = ( 1.0 - exp( -1.0 * params_plant%kbeer * lai) )
 
   end function get_fapar
+  
+  
+  ! MF: 2026-08-12
+  function get_leaf_c_from_lai( pft, lai, actnv_unitfapar ) result( cleaf )
+    !////////////////////////////////////////////////////////////////
+    ! Calculates canopy leaf C corresponding to a prescribed LAI,
+    ! using the same leaf-trait relationships as the CN model.
+    !----------------------------------------------------------------
+    use md_params_core, only: c_molmass
+    
+    ! arguments
+    integer, intent(in) :: pft
+    real, intent(in)    :: lai
+    real, intent(in)    :: actnv_unitfapar
+    
+    ! function return variable
+    real :: cleaf
+    
+    ! local variables
+    real :: fapar
+    real :: nleaf_metabolic
+    real :: nleaf_structural
+    
+    if (lai > 0.0) then
+    
+      fapar = get_fapar( lai )
+    
+      nleaf_metabolic = get_leaf_n_metabolic_canopy( &
+        fapar, actnv_unitfapar )
+    
+      nleaf_structural = get_leaf_n_structural_canopy( &
+        pft, lai, nleaf_metabolic )
+    
+      cleaf = c_molmass * &
+        params_pft_plant(pft)%r_ctostructn_leaf * &
+        nleaf_structural
+    
+    else
+    
+      cleaf = 0.0
+    
+    end if
+    
+  end function get_leaf_c_from_lai
 
 
   function get_lai( pft, cleaf, actnv_unitfapar ) result( lai )

@@ -26,6 +26,7 @@ module md_forcing_cnmodel
     real(kind=sp) :: dnetrad! W m-2
     real(kind=sp) :: dpatm  ! Pa
     real(kind=sp) :: fapar_prescr ! unitless, fAPAR from forcing
+    real(kind=sp) :: lai_prescr ! m2 leaf m-2 ground, LAI from forcing
   end type climate_type
 
   type vegcover_type
@@ -51,7 +52,7 @@ contains
     !----------------------------------------------------------------
     ! arguments
     integer,  intent(in) :: nt ! number of time steps
-    real(kind=dp),  dimension(nt,17), intent(in)  :: forcing  ! array containing all temporally varying forcing data
+    real(kind=dp),  dimension(nt,18), intent(in)  :: forcing  ! array containing all temporally varying forcing data
     integer, intent(in) :: climateyear_idx
     logical, intent(in) :: in_ppfd
     logical, intent(in) :: in_netrad
@@ -100,6 +101,9 @@ contains
 
     ! xxx milan: take fAPAR from forcing
     out_climate(:)%fapar_prescr = real(forcing(idx_start:idx_end, 9))
+    
+    ! MF: prescribed LAI from forcing
+    out_climate(:)%lai_prescr = real(forcing(idx_start:idx_end, 18))
 
   end function getclimate
   
@@ -110,7 +114,7 @@ contains
     !----------------------------------------------------------------
     ! arguments
     integer,  intent(in) :: nt ! number of time steps
-    real(kind=dp),  dimension(nt,17), intent(in)  :: forcing  ! array containing all temporally varying forcing data
+    real(kind=dp),  dimension(nt,18), intent(in)  :: forcing  ! array containing all temporally varying forcing data
     integer, intent(in) :: forcingyear
     integer, intent(in) :: firstyeartrend
 
@@ -137,7 +141,7 @@ contains
     !----------------------------------------------------------------
     ! arguments
     integer,  intent(in) :: nt ! number of time steps
-    real(kind=dp), dimension(nt,17), intent(in)  :: forcing  ! array containing all temporally varying forcing data
+    real(kind=dp), dimension(nt,18), intent(in)  :: forcing  ! array containing all temporally varying forcing data
     integer, intent(in) :: forcingyear_idx
 
     ! function return variable
@@ -218,7 +222,7 @@ contains
     !----------------------------------------------------------------
     ! arguments
     integer,  intent(in) :: nt ! number of time steps
-    real(kind=dp),  dimension(nt,17), intent(in)  :: forcing  ! array containing all temporally varying forcing data
+    real(kind=dp),  dimension(nt,18), intent(in)  :: forcing  ! array containing all temporally varying forcing data
     integer, intent(in) :: forcingyear
     integer, intent(in) :: firstyeartrend
 

@@ -297,7 +297,7 @@ contains
     end if
 
     return
-    999 stop 'init_tile(): error opening output files'
+  999 stop 'init_tile(): error opening output files'
 
   end subroutine init_tile
 
@@ -306,8 +306,8 @@ contains
     !////////////////////////////////////////////////////////////////
     ! Close optional annual soil-pool diagnostic files.
     !----------------------------------------------------------------
-    close(unit = 101)
-    close(unit = 102)
+    ! close(unit = 101)
+    ! close(unit = 102)
 
   end subroutine finalize_tile
 
@@ -962,10 +962,10 @@ contains
     pft = 1
 
     ! soil C
-    write(101, 999) myinterface%steering%outyear, (tile(lu)%soil%psoil_sl%c%c12 + tile(lu)%soil%psoil_fs%c%c12)
+    ! write(101, 999) myinterface%steering%outyear, (tile(lu)%soil%psoil_sl%c%c12 + tile(lu)%soil%psoil_fs%c%c12)
 
     ! soil N
-    write(102, 999) myinterface%steering%outyear, (tile(lu)%soil%psoil_sl%n%n14 + tile(lu)%soil%psoil_fs%n%n14)
+    ! write(102, 999) myinterface%steering%outyear, (tile(lu)%soil%psoil_sl%n%n14 + tile(lu)%soil%psoil_fs%n%n14)
 
     return
     999 format (I4.4, F20.8)

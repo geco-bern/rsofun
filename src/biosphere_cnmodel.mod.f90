@@ -193,6 +193,11 @@ contains
         if (verbose) print*, '... done'
 
         ! print*,'c presv: ', tile(1)%plant(1)%presv
+        
+        ! MF: configurable prescribed fAPAR
+        if ( myinterface%params_siml%use_prescribed_fapar ) then
+          tile(1)%canopy%fapar = myinterface%climate(doy)%fapar_prescr
+        end if
 
         !----------------------------------------------------------------
         ! calculate GPP

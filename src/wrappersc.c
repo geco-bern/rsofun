@@ -164,6 +164,8 @@ void F77_NAME(cnmodel_f)(
     int    *secs_per_tstep,
     int    *in_ppfd,
     int    *in_netrad,
+    int    *use_prescribed_fapar,
+    int    *use_prescribed_lai,
     int    *outdt,
     int    *ltre,
     int    *ltne,
@@ -194,6 +196,8 @@ extern SEXP cnmodel_f_C(
     SEXP secs_per_tstep,
     SEXP in_ppfd,
     SEXP in_netrad,
+    SEXP use_prescribed_fapar,
+    SEXP use_prescribed_lai,
     SEXP outdt,
     SEXP ltre,
     SEXP ltne,
@@ -230,6 +234,8 @@ extern SEXP cnmodel_f_C(
         INTEGER(secs_per_tstep),
         LOGICAL(in_ppfd),
         LOGICAL(in_netrad),
+        LOGICAL(use_prescribed_fapar),
+        LOGICAL(use_prescribed_lai),
         INTEGER(outdt),
         LOGICAL(ltre),
         LOGICAL(ltne),
@@ -380,7 +386,7 @@ extern SEXP biomee_f_C(
 /////////////////////////////////////////////////////////////
 static const R_CallMethodDef CallEntries[] = {
   {"pmodel_f_C",         (DL_FUNC) &pmodel_f_C,          24},  // Specify number of arguments to C wrapper as the last number here
-  {"cnmodel_f_C",        (DL_FUNC) &cnmodel_f_C,         25},  // Specify number of arguments to C wrapper as the last number here
+  {"cnmodel_f_C",        (DL_FUNC) &cnmodel_f_C,         27},  // Specify number of arguments to C wrapper as the last number here
   {"pmodel_onestep_f_C", (DL_FUNC) &pmodel_onestep_f_C,   3},  // Specify number of arguments to C wrapper as the last number here
   {"biomee_f_C",         (DL_FUNC) &biomee_f_C,          46},  // Number of the SEXP variables (not the output)
   { NULL,                 NULL,                          0 }

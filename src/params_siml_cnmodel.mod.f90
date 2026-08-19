@@ -31,7 +31,9 @@ module md_params_siml_cnmodel
 
     ! optionally prescribed variables (if false, then simulated internally)
     logical :: in_netrad    ! net radiation
-    logical :: in_ppfd      ! photosynthetic photon flux density 
+    logical :: in_ppfd      ! photosynthetic photon flux density
+    logical :: use_prescribed_fapar   ! use externally prescribed fAPAR
+    logical :: use_prescribed_lai     ! use externally prescribed LAI
 
     ! activated PFTs
     logical :: ltre        ! evergreen tree
