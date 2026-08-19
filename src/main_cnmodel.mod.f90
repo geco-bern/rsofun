@@ -20,8 +20,10 @@ contains
     firstyeartrend,            &           
     nyeartrend,                &  
     secs_per_tstep,            &     
-    in_ppfd,                   &    
-    in_netrad,                 &      
+    in_ppfd,                   &
+    in_netrad,                 &
+    use_prescribed_fapar,      &
+    use_prescribed_lai,        &
     outdt,                     &  
     ltre,                      & 
     ltne,                      & 
