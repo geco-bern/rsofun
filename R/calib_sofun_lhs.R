@@ -202,8 +202,13 @@ calib_sofun_lhs <- function(
     # in a likelihood cannot leave orphan worker processes behind.
     cluster <- parallel::makeCluster(n_workers)
     on.exit(try(parallel::stopCluster(cluster), silent = TRUE), add = TRUE)
-    # Export the large closure once rather than serializing drivers and
-    # observations again for every progress chunk.
+    # Export required objects separately to avoid costly closure transfer.
+    parallel::clusterExport(
+      cluster,
+      c("pars", "par_calib", "model_error", "draws", "dots", "likelihood"),
+      envir = environment()
+    )
+    # Export the worker function after its dependencies are available.
     parallel::clusterExport(cluster, "evaluate_one", envir = environment())
   }
   log_likelihood <- numeric(n_samples)
