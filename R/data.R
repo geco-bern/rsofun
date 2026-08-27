@@ -62,6 +62,8 @@
 #'   differ for daily simulations or for onestep acclimation.
 #'   For daily simulations these include:
 #'     \describe{
+#'       \item{write_soil_diagnostics}{Whether to write annual soil C and N
+#'       diagnostics to text files. Defaults to \code{FALSE} if missing.}
 #'       \item{spinup}{A logical value indicating whether this simulation does spin-up.}
 #'       \item{spinupyears}{Number of spin-up years.}
 #'       \item{recycle}{Number of first N years of forcing data.frame that are recycled for spin-up.}
@@ -405,3 +407,32 @@
 #' Example output dataset from a BiomeE-model run using divers \code{\link{biomee_p_model_luluc_drivers}}
 #' See \code{\link{runread_biomee_f}} and \code{\link{run_biomee_f_bysite}} for a detailed description of the outputs.
 "biomee_p_model_luluc_output"
+
+#' Quality-controlled MODIS LAI at CH-Oe1
+#'
+#' Terra MODIS leaf area index observations for the FLUXNET grassland site
+#' CH-Oe1 (47.28583 degrees N, 7.731944 degrees E), obtained from the MOD15A2H
+#' Collection 6.1 product at 500 m spatial and 8-day temporal resolution. LAI
+#' values use the product scale factor of 0.1. Observations affected by clouds,
+#' detector problems, empirical back-up retrievals, or failed retrievals have
+#' been removed using the \code{FparLai_QC} bit field.
+#'
+#' @format A data frame with one row per retained MODIS composite and seven
+#' variables:
+#' \describe{
+#'   \item{date}{Composite date.}
+#'   \item{lai}{Scaled leaf area index, in m2 leaf per m2 ground.}
+#'   \item{fpar_lai_qc}{Original 8-bit \code{FparLai_QC} value.}
+#'   \item{modland_qc}{Decoded MODLAND quality bit; retained values are 0.}
+#'   \item{dead_detector}{Decoded detector-quality bit; retained values are 0.}
+#'   \item{cloud_state}{Decoded cloud-state bits; retained values are 0 (clear).}
+#'   \item{scf_qc}{Decoded algorithm-path bits; retained values are 0 or 1.}
+#' }
+#'
+#' @source MODIS/Terra Leaf Area Index/FPAR 8-Day L4 Global 500 m SIN Grid,
+#' MOD15A2H Collection 6.1, downloaded with \pkg{MODISTools}.
+#' \url{https://doi.org/10.5067/MODIS/MOD15A2H.061}
+#'
+#' @references MOD15 Collection 6.1 LAI/FPAR Product User's Guide,
+#' \url{https://modis-land.gsfc.nasa.gov/pdf/MOD15_C61_UserGuide_April2020.pdf}
+"modis_lai_ch_oe1"

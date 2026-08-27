@@ -1,0 +1,22 @@
+---
+title: "Root zone water supply"
+output: html_document
+date: "2022-12-07"
+---
+
+```{r}
+library(ggplot2)
+
+calc_supply <- function(x){
+  # yy <- 1 - exp(-0.05 * x)
+  yy <- 1 - 1/x
+  return(yy)
+}
+
+ggplot() +
+  geom_function(fun = calc_supply) +
+  xlim(0001, 300) +
+  # geom_vline(xintercept = 1, linetype = "dotted") +
+  geom_vline(xintercept = 0, linetype = "dotted")
+
+```

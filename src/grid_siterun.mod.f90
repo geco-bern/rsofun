@@ -17,7 +17,6 @@ module md_grid
     real :: nu               ! true anomaly (orbital parameter), recalculated each year for each gridcell in solar()
     real :: lambda           ! true longitude (orbital parameter), recalculated each year for each gridcell in solar()
     real :: decl_angle       ! declination angle (degrees)
-    real :: dayl             ! day length (s), is updated daily in waterbal SR
   end type gridtype
 
 end module md_grid

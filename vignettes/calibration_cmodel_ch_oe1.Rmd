@@ -1,0 +1,1272 @@
+---
+title: "Calibrating kphio with GPP features"
+author: "Benjamin Stocker"
+output: rmarkdown::html_vignette
+code-fold: true
+vignette: >
+  %\VignetteIndexEntry{Calibrating kphio with GPP features}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\usepackage[utf8]{inputenc}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.align = "center",
+  fig.width = 7,
+  fig.height = 4.5
+)
+```
+
+## Aim
+
+This vignette isolates one question: how does the temporal representation of
+GPP observations affect a Bayesian calibration of the maximum quantum yield
+`kphio`? All other C-model parameters are held fixed for the temperate
+grassland site CH-Oe1. This deliberately simple setup makes posterior-weight
+collapse visible without confounding it with parameter interactions.
+
+Four likelihood constructions are compared: daily GPP, monthly mean GPP, one
+mean annual GPP value, and annually replicated seasonal GPP features. The first
+three diagnose how repeated autocorrelated residuals affect the finite LHS
+posterior. The feature likelihood provides the proposed solution: retain
+seasonal timing, magnitude, and interannual information while integrating
+feature-specific error variances under transparent inverse-gamma priors.
+
+The companion vignette
+`vignette("calibration_cmodel_multitarget_ch_oe1")` extends this approach to a
+joint calibration of multiple C-model parameters against GPP, ecosystem
+respiration (Reco), and LAI.
+
+Functions evaluated on parallel workers use explicit namespace qualifiers such
+as `dplyr::filter()` and `tidyr::unnest()`. Worker processes do not inherit the
+packages attached in the interactive R session, so unqualified package
+functions should be avoided inside a likelihood.
+
+```{r libraries}
+library(rsofun)
+library(dplyr)
+library(tidyr)
+library(lubridate)
+library(ggplot2)
+
+# Rendering with library(rsofun) uses the installed package, not uninstalled
+# edits under R/. Fail before starting expensive simulations if that installed
+# namespace does not yet contain Fortran-STOP worker recovery.
+if (!exists(
+  ".calib_lhs_worker_stop_recovery",
+  envir = asNamespace("rsofun"),
+  inherits = FALSE
+)) {
+  stop(
+    "The installed rsofun is stale. Reinstall this working tree, or run ",
+    "devtools::load_all() before rendering the vignette."
+  )
+}
+```
+
+## Drivers and observations
+
+This example uses the FluxDataKit v3.4.2 driver object. Adjust `fdk_path` to the
+local download location. Only quality-controlled daily GPP is used as a target
+in this vignette.
+
+```{r data, eval=TRUE}
+fdk_path <- "~/data_2/FluxDataKit/v3.4/zenodo_upload"
+
+df_drivers <- readRDS(file.path(
+  fdk_path,
+  "rsofun_driver_data_v3.4.2.rds"
+)) |>
+  filter(sitename == "CH-Oe1")
+
+use_cseed <- 5
+use_nseed <- use_cseed / 20
+
+df_drivers <- df_drivers |>
+  mutate(
+    forcing = purrr::map(forcing, ~ mutate(
+      .,
+      fharv = 0,
+      dno3 = 1.5 / (2 * 365),
+      dnh4 = 1.5 / (2 * 365),
+      cseed = ifelse(month(date) == 2 & mday(date) == 15, use_cseed, 0),
+      nseed = ifelse(month(date) == 2 & mday(date) == 15, use_nseed, 0)
+    ))
+  )
+
+df_drivers$params_siml[[1]]$spinupyears <- 2002
+df_drivers$params_siml[[1]]$recycle <- 5
+df_drivers$params_siml[[1]]$c_only <- TRUE
+
+daily_observations <- df_drivers |>
+  select(sitename, forcing) |>
+  unnest(forcing) |>
+  transmute(
+    sitename,
+    date,
+    gpp = if_else(gpp_qc >= 0.8, gpp, NA_real_)
+  )
+```
+
+## Baseline parameters
+
+The P-model values below reproduce the MAP estimates in the last column of
+Table 2 (setup S6) of Arán Paredes et al. (2025): `kphio = 0.08`,
+`kphio_par_a = -0.001`, `kphio_par_b = 27.5`, `soilm_thetastar = 26.7`,
+`beta_unitcostratio = 187.5`, `tau_acclim = 1.0`, and `kc_jmax = 0.58`.
+Parameters that are not estimated in setup S6 retain their existing model
+defaults. Note that the S6 value of `beta_unitcostratio` lies at the lower bound
+of its truncated normal prior; it should not be replaced by the posterior mean
+or by the rounded value discussed elsewhere in the article.
+
+The three quantum-yield parameters have a distinct and coupled meaning:
+
+```text
+phi(T) = kphio * max(0, min(1, 1 + kphio_par_a * (T - kphio_par_b)^2))
+```
+
+Thus `kphio` is the maximum quantum yield, `kphio_par_a` controls the curvature,
+and `kphio_par_b` locates the temperature optimum. The shape and location
+parameters remain fixed at their S6 estimates. For the deliberately simplified
+diagnostic calibration below, only the maximum, `kphio`, is allowed to depart
+from its S6 estimate. All C-model parameters remain fixed.
+
+The turnover constants are annual values. Baseline values of `1.9 yr-1` for
+leaves and `0.7 yr-1` for roots correspond to expected tissue lifetimes of
+about 0.53 and 1.43 years. They remain fixed here, as does zero allocation to
+wood.
+
+Leaf structure and nitrogen partitioning are also fixed. In particular,
+`r_ctostructn_leaf = 30.9` is the previously selected value for a temperate
+grass; it is not inferred from GPP in this diagnostic vignette.
+
+```{r parameters}
+pars <- list(
+  # P-model: informed by Arán Paredes et al. (2025), setup S6
+  kphio = 0.08,
+  kphio_par_a = -0.001,
+  kphio_par_b = 27.5,
+  # C-model phenology; unrelated to the P-model quantum-yield parameters above
+  dehardening_gdd_midpoint = 150.0,
+  dehardening_gdd_slope = 0.05,
+  dehardening_gdd_base = 5.0,
+  soilm_thetastar = 26.7,
+  soilm_betao = 0.0,
+  beta_unitcostratio = 187.5,
+  rd_to_vcmax = 0.014,
+  tau_acclim = 1.0,
+  kc_jmax = 0.58,
+
+  # Plant C and N
+  f_nretain = 0.5,
+  fpc_tree_max = 0.95,
+  growtheff = 0.6,
+  r_root = 2 * 0.913,
+  r_sapw = 2 * 0.044,
+  exurate = 0.003,
+  k_decay_leaf = 1.9,
+  k_decay_root = 0.7,
+  k_decay_labl = 1.9,
+  k_decay_sapw = 1.9,
+  r_cton_root = 37.0,
+  r_cton_wood = 100.0,
+  r_cton_seed = 15.0,
+  nv_vcmax25 = 0.02 * 13681.77,
+  ncw_min = 0.08 * 1.116222,
+  r_n_cw_v = 0.0,
+  r_ctostructn_leaf = 30.9,
+  kbeer = 0.5,
+
+  # Phenology
+  gddbase = 5.0,
+  ramp = 0.0,
+  phentype = 2.0,
+
+  # Soil physics
+  perc_k1 = 5.0,
+  thdiff_wp = 0.2,
+  thdiff_whc15 = 0.8,
+  thdiff_fc = 0.4,
+  forg = 0.01,
+  wbwp = 0.029,
+  por = 0.421,
+  fsand = 0.82,
+  fclay = 0.06,
+  fsilt = 0.12,
+
+  # Water and energy balance
+  kA = 107.0,
+  kalb_sw = 0.17,
+  kalb_vis = 0.03,
+  kb = 0.20,
+  kc = 0.25,
+  kCw = 1.05,
+  kd = 0.50,
+  ke = 0.0167,
+  keps = 23.44,
+  kWm = 220.0,
+  kw = 0.26,
+  komega = 283.0,
+  maxmeltrate = 3.0,
+
+  # Soil biogeochemistry
+  klitt_af10 = 1.2,
+  klitt_as10 = 0.35,
+  klitt_bg10 = 0.35,
+  kexu10 = 50.0,
+  ksoil_fs10 = 0.021,
+  ksoil_sl10 = 7.0e-4,
+  ntoc_crit1 = 0.45,
+  ntoc_crit2 = 0.76,
+  cton_microb = 10.0,
+  cton_soil = 9.77,
+  fastfrac = 0.985,
+
+  # N uptake and transformations
+  eff_nup = 1.0e-4,
+  minimumcostfix = 1.0,
+  fixoptimum = 25.15,
+  a_param_fix = -3.62,
+  b_param_fix = 0.27,
+  maxnitr = 5.0e-5,
+  non = 0.01,
+  n2on = 5.0e-4,
+  kn = 83.0,
+  kdoc = 17.0,
+  docmax = 1.0,
+  dnitr2n2o = 0.01,
+
+  # Prescribed allocation in the C-only setup
+  frac_leaf = 0.5,
+  frac_wood = 0.0,
+  frac_avl_labl = 0.1,
+  tmppar = 9999.0,
+  nuptake_kc = 600.0,
+  nuptake_kv = 5.0,
+  nuptake_vmax = 0.2
+)
+
+stopifnot(pars$frac_wood == 0)
+
+```
+
+## Comparing four GPP likelihoods
+
+This diagnostic setup varies only `kphio` and one GPP residual standard
+deviation. The `kphio` prior is normal with mean `0.08` and standard deviation
+`0.04`, truncated to `0.03--0.12`. All other model parameters remain fixed.
+Four likelihoods use the same model-parameter prior but retain very different
+amounts of temporal information:
+
+- the daily likelihood treats every quality-controlled daily GPP residual as
+  an observation;
+- the monthly likelihood uses monthly mean GPP when at least 20 paired daily
+  observations are available;
+- the mean-annual likelihood reduces the record to one value: the mean of the
+  paired annual GPP totals;
+- the feature likelihood uses annual GPP totals, peak-week GPP, timing of peak
+  GPP, growing-season onset and termination, and seasonal amplitude, each
+  calculated separately for individual years. It omits their redundant
+  mean-annual aggregate.
+
+The comparison reveals how repeated, autocorrelated observations can make the
+likelihood much sharper than a single aggregated target.
+The daily and monthly-mean errors are expressed in daily GPP units, whereas the
+mean-annual error is expressed in annual-total GPP units. The annual error's
+numerical MAP value is therefore not directly comparable with the other two.
+
+```{r gpp-likelihoods}
+daily_gpp_loglik <- function(par, model_error, drivers, observations) {
+  simulated <- rsofun::runread_cnmodel_f(drivers = drivers, par = par) |>
+    dplyr::select(sitename, data) |>
+    tidyr::unnest(data) |>
+    dplyr::transmute(sitename, date, gpp_modelled = gpp)
+
+  matched <- observations |>
+    dplyr::select(sitename, date, gpp) |>
+    dplyr::inner_join(simulated, by = c("sitename", "date")) |>
+    dplyr::filter(is.finite(gpp), is.finite(gpp_modelled))
+
+  if (nrow(matched) == 0) return(-Inf)
+
+  sum(stats::dnorm(
+    matched$gpp,
+    mean = matched$gpp_modelled,
+    sd = model_error$sigma_gpp_daily,
+    log = TRUE
+  ))
+}
+
+monthly_gpp_loglik <- function(
+    par, model_error, drivers, observations, minimum_days = 20
+) {
+  simulated <- rsofun::runread_cnmodel_f(drivers = drivers, par = par) |>
+    dplyr::select(sitename, data) |>
+    tidyr::unnest(data) |>
+    dplyr::transmute(sitename, date, gpp_modelled = gpp)
+
+  monthly_gpp <- observations |>
+    dplyr::select(sitename, date, gpp) |>
+    dplyr::inner_join(simulated, by = c("sitename", "date")) |>
+    dplyr::filter(is.finite(gpp), is.finite(gpp_modelled)) |>
+    dplyr::mutate(month = lubridate::floor_date(date, "month")) |>
+    dplyr::group_by(sitename, month) |>
+    dplyr::summarise(
+      n_days = dplyr::n(),
+      observed = mean(gpp),
+      modelled = mean(gpp_modelled),
+      .groups = "drop"
+    ) |>
+    dplyr::filter(n_days >= minimum_days)
+
+  if (nrow(monthly_gpp) == 0) return(-Inf)
+
+  sum(stats::dnorm(
+    monthly_gpp$observed,
+    mean = monthly_gpp$modelled,
+    sd = model_error$sigma_gpp_monthly,
+    log = TRUE
+  ))
+}
+
+mean_annual_gpp_loglik <- function(par, model_error, drivers, observations) {
+  simulated <- rsofun::runread_cnmodel_f(drivers = drivers, par = par) |>
+    dplyr::select(sitename, data) |>
+    tidyr::unnest(data) |>
+    dplyr::transmute(sitename, date, gpp_modelled = gpp)
+
+  annual_gpp <- observations |>
+    dplyr::select(sitename, date, gpp) |>
+    dplyr::inner_join(simulated, by = c("sitename", "date")) |>
+    dplyr::filter(is.finite(gpp), is.finite(gpp_modelled)) |>
+    dplyr::mutate(year = lubridate::year(date)) |>
+    dplyr::group_by(sitename, year) |>
+    dplyr::summarise(
+      observed = sum(gpp),
+      modelled = sum(gpp_modelled),
+      .groups = "drop"
+    )
+
+  if (nrow(annual_gpp) == 0) return(-Inf)
+
+  mean_annual <- annual_gpp |>
+    dplyr::summarise(
+      observed = mean(observed),
+      modelled = mean(modelled)
+    )
+
+  stats::dnorm(
+    mean_annual$observed,
+    mean = mean_annual$modelled,
+    sd = model_error$sigma_gpp_annual,
+    log = TRUE
+  )
+}
+
+# Extract one set of features for every year. Annual replication is essential:
+# it supplies information about each feature's residual variance. The 15-day
+# centred moving average is used only to locate the 15%-of-amplitude crossings.
+gpp_features_by_year <- function(data, value, minimum_days = 200) {
+  value <- rlang::ensym(value)
+  series <- data |>
+    dplyr::transmute(
+      date, year = lubridate::year(date), day = lubridate::yday(date),
+      gpp = !!value
+    ) |>
+    dplyr::filter(is.finite(gpp))
+  series <- split(series, series$year)
+
+  extract_year <- function(x) {
+    if (nrow(x) < minimum_days) return(NULL)
+    # Interpolate missing observation days before applying the moving average.
+    daily <- tibble::tibble(
+      day = seq_len(365),
+      gpp = stats::approx(x$day, x$gpp, xout = seq_len(365),
+                          ties = mean)$y
+    ) |>
+      dplyr::mutate(
+        smooth = as.numeric(stats::filter(gpp, rep(1 / 15, 15), sides = 2)),
+        week = (day - 1L) %/% 7L + 1L
+      )
+    usable <- dplyr::filter(daily, is.finite(smooth))
+    if (nrow(usable) < minimum_days) return(NULL)
+
+    weekly <- daily |>
+      dplyr::filter(is.finite(gpp)) |>
+      dplyr::group_by(week) |>
+      dplyr::summarise(gpp = mean(gpp), .groups = "drop")
+    peak <- weekly[which.max(weekly$gpp), ]
+    lower <- stats::quantile(usable$smooth, 0.05, names = FALSE)
+    upper <- stats::quantile(usable$smooth, 0.95, names = FALSE)
+    threshold <- lower + 0.15 * (upper - lower)
+    peak_day <- usable$day[which.max(usable$smooth)]
+    active <- dplyr::filter(usable, smooth >= threshold)
+    before_peak <- active$day[active$day <= peak_day]
+    after_peak <- active$day[active$day >= peak_day]
+    if (!length(before_peak) || !length(after_peak)) return(NULL)
+
+    tibble::tibble(
+      year = x$year[[1]],
+      annual_gpp = sum(x$gpp),
+      peak_gpp = peak$gpp,
+      peak_week = peak$week,
+      onset = min(before_peak),
+      termination = max(after_peak),
+      amplitude = upper - lower
+    )
+  }
+
+  dplyr::bind_rows(lapply(series, extract_year)) |>
+    tidyr::pivot_longer(-year, names_to = "feature", values_to = "value")
+}
+
+# If residuals are normal with variance v and v ~ inverse-gamma(alpha, beta),
+# this is log p(residuals) after integrating v from zero to infinity.
+inverse_gamma_marginal_loglik <- function(residual, alpha, beta) {
+  n <- length(residual)
+  if (!n || any(!is.finite(residual))) return(-Inf)
+  lgamma(alpha + n / 2) - lgamma(alpha) + alpha * log(beta) -
+    (alpha + n / 2) * log(beta + sum(residual^2) / 2) -
+    n * log(2 * pi) / 2
+}
+
+feature_gpp_loglik <- function(
+    par, model_error, drivers, observations, feature_function,
+    variance_priors, marginal_function
+) {
+  simulated <- rsofun::runread_cnmodel_f(drivers = drivers, par = par) |>
+    dplyr::select(sitename, data) |>
+    tidyr::unnest(data) |>
+    dplyr::transmute(sitename, date, gpp_modelled = gpp)
+  matched <- observations |>
+    dplyr::select(sitename, date, gpp) |>
+    dplyr::inner_join(simulated, by = c("sitename", "date")) |>
+    dplyr::filter(is.finite(gpp), is.finite(gpp_modelled))
+  if (nrow(matched) == 0) return(-Inf)
+
+  # `feature_function` is passed explicitly through calib_sofun_lhs(). This is
+  # important for PSOCK parallelism: unlike an object in the likelihood's
+  # global environment, an explicit argument is serialized to every worker.
+  observed <- feature_function(matched, gpp) |>
+    dplyr::rename(observed = value)
+  modelled <- feature_function(matched, gpp_modelled) |>
+    dplyr::rename(modelled = value)
+  features <- dplyr::inner_join(observed, modelled,
+    by = c("year", "feature")) |>
+    dplyr::mutate(residual = observed - modelled)
+  if (!nrow(features)) return(-Inf)
+
+  # Week 1 and week 52 are neighbours, so use circular rather than linear
+  # distance for this feature.
+  is_peak_week <- features$feature == "peak_week"
+  features$residual[is_peak_week] <- pmin(
+    abs(features$residual[is_peak_week]),
+    52 - abs(features$residual[is_peak_week])
+  )
+
+  score <- vapply(names(variance_priors), function(feature_name) {
+    prior <- variance_priors[[feature_name]]
+    residual <- features$residual[features$feature == feature_name]
+    marginal_function(
+      residual, alpha = prior$alpha, beta = prior$beta
+    )
+  }, numeric(1))
+  if (any(!is.finite(score))) return(-Inf)
+  sum(score)
+}
+```
+
+```{r simple-gpp-calibrations, eval=TRUE}
+kphio_prior <- list(
+  kphio = list(
+    mean = 0.08, sd = 0.04,
+    distribution = "normal", lower = 0.03, upper = 0.12
+  )
+)
+stopifnot(identical(names(kphio_prior), "kphio"))
+
+daily_gpp_calibration <- calib_sofun_lhs(
+  pars = pars,
+  par_calib = kphio_prior,
+  model_error = list(
+    sigma_gpp_daily = list(
+      mean = 0.8, sd = 0.3,
+      distribution = "lognormal", lower = 0.05, upper = 4
+    )
+  ),
+  likelihood = daily_gpp_loglik,
+  n_samples = 500,
+  n_cores = max(1, parallel::detectCores() - 1),
+  seed = 42,
+  progress = TRUE,
+  drivers = df_drivers,
+  observations = daily_observations
+)
+
+monthly_gpp_calibration <- calib_sofun_lhs(
+  pars = pars,
+  par_calib = kphio_prior,
+  model_error = list(
+    sigma_gpp_monthly = list(
+      mean = 0.8, sd = 0.3,
+      distribution = "lognormal", lower = 0.05, upper = 4
+    )
+  ),
+  likelihood = monthly_gpp_loglik,
+  n_samples = 500,
+  n_cores = max(1, parallel::detectCores() - 1),
+  seed = 44,
+  progress = TRUE,
+  drivers = df_drivers,
+  observations = daily_observations
+)
+
+annual_gpp_calibration <- calib_sofun_lhs(
+  pars = pars,
+  par_calib = kphio_prior,
+  model_error = list(
+    sigma_gpp_annual = list(
+      mean = 100, sd = 50,
+      distribution = "lognormal", lower = 10, upper = 500
+    )
+  ),
+  likelihood = mean_annual_gpp_loglik,
+  n_samples = 500,
+  n_cores = max(1, parallel::detectCores() - 1),
+  seed = 43,
+  progress = TRUE,
+  drivers = df_drivers,
+  observations = daily_observations
+)
+```
+
+### Feature-oriented calibration with integrated error variances
+
+Mean annual GPP is deliberately omitted from this likelihood because it is
+calculated from the same annual totals that are already included. Using both
+would count essentially the same information twice. The retained features are
+calculated separately for each year, producing a set of annual residuals for
+each feature.
+
+#### Interpreting the variance priors
+
+The mismatch between model and observations is unlikely to have the same size
+for all features. An error of two weeks may be plausible for peak timing, for
+example, whereas an error of two units has a completely different meaning for
+daily GPP. Each feature therefore gets its own unknown residual variance
+$v=\sigma^2$, expressed in the square of that feature's native units.
+
+Instead of fixing $\sigma$, assign its variance the prior
+
+$$
+v \sim \mathrm{InvGamma}(\alpha,\beta).
+$$
+
+The code specifies this prior through `prior_rms`, defined as
+$\sqrt{E[v]}$. This is easier to interpret than the inverse-gamma scale
+parameter. For example, `prior_rms = 2` for `peak_week` says that, before
+seeing the CH-Oe1 residuals, a residual scale of roughly two weeks is plausible.
+It does **not** fix the error at two weeks: the inverse-gamma distribution still
+allows both smaller and larger values.
+
+For an inverse-gamma distribution, $E[v]=\beta/(\alpha-1)$. Consequently,
+the conversion
+
+```r
+beta = (alpha - 1) * prior_rms^2
+```
+
+makes the value entered as `prior_rms` equal to $\sqrt{E[v]}$. Here
+`alpha = 3` gives every variance a proper but fairly broad prior. Increasing
+`alpha` while preserving the same `prior_rms` would express greater confidence
+in the chosen error scale; decreasing it towards 2 would make the prior wider.
+
+#### Why the variances need not be sampled
+
+For a proposed `kphio`, the model produces annual residuals
+$r_1,\ldots,r_n$ for each feature. Conditional on a variance, these are
+assumed normal. The normal likelihood and inverse-gamma variance prior are
+conjugate, so the variance can be averaged over exactly:
+
+$$
+p(r \mid \mathrm{kphio}) =
+\int_0^\infty p(r \mid \mathrm{kphio},v)\,p(v)\,\mathrm{d}v.
+$$
+
+This integral is the marginal likelihood. Intuitively, it asks: *Across all
+plausible error variances, weighted by their prior plausibility, how well does
+this `kphio` explain the annual feature values?* A poor fit cannot escape its
+penalty merely by selecting an arbitrarily large error because large variances
+are also penalized by the normalized likelihood and by the prior.
+
+The resulting log marginal likelihood for one feature is
+
+$$
+\log p(r) = \log\Gamma(\alpha+n/2)-\log\Gamma(\alpha)
++\alpha\log\beta-(\alpha+n/2)\log\left(\beta+\tfrac12\sum r_i^2\right)
+-\tfrac{n}{2}\log(2\pi).
+$$
+
+The two important updates in this expression are intuitive:
+
+- $\alpha+n/2$ increases the information about the variance as more annual
+  residuals become available;
+- $\beta+\tfrac12\sum r_i^2$ increases the inferred error scale when the
+  model has larger squared residuals.
+
+The symbols used above mean:
+
+- $\mathrm{kphio}$ is the model parameter being calibrated: the maximum
+  quantum-yield efficiency;
+- $r=(r_1,\ldots,r_n)$ is the vector of annual residuals for one feature, with
+  $r_i$ equal to observed minus modelled feature value in year $i$;
+- $n$ is the number of years with a valid observed and modelled feature value;
+- $\sigma$ is the residual standard deviation and $v=\sigma^2$ is its variance;
+- $\mathrm{InvGamma}(\alpha,\beta)$ is the inverse-gamma distribution used for
+  $v$, with shape $\alpha$ and scale $\beta$;
+- $E[v]$ is the prior expected value of the variance;
+- $p(r\mid\mathrm{kphio},v)$ is the normal likelihood conditional on one
+  variance, while $p(v)$ is the inverse-gamma prior density;
+- $\int_0^\infty \cdot\,\mathrm{d}v$ means that the conditional likelihood is
+  averaged over every positive value of $v$;
+- $\log$ is the natural logarithm, $\Gamma$ is the gamma function,
+  $\sum r_i^2$ is the sum of squared annual residuals, and $\pi$ is the circle
+  constant.
+
+The six feature contributions are added to obtain the likelihood for a
+`kphio` sample. No variance is added to the Latin hypercube, so the feature
+calibration samples only `kphio` rather than `kphio` plus six weakly identified
+error parameters. The error variances have not been ignored: they have been
+integrated over. Their conditional posterior distributions can still be
+recovered after calibration, as demonstrated below.
+
+#### Relation to published calibration approaches
+
+This implementation can be described as **parallel prior-ensemble importance
+calibration in the feature domain**. Latin hypercube sampling provides a
+space-filling sample from the parameter prior (McKay et al., 1979). Because the
+proposal distribution is the prior, evaluating the feature likelihood for each
+independent model run and normalizing those likelihoods gives a finite
+importance-sampling approximation to the posterior. The inverse-gamma
+variances are integrated out analytically, so they express uncertainty about
+the mismatch of each feature without adding error parameters to the sampled
+space. This particular combination is a synthesis of established methods
+rather than a standard named calibration algorithm.
+
+Close precedents occur in hydrology, where dynamic rainfall--runoff models have
+been calibrated against hydrological signatures using Approximate Bayesian
+Computation (Vrugt and Sadegh, 2013; Kavetski et al., 2018). Those methods also
+retain informative properties of a time series instead of treating every
+autocorrelated time step as independent evidence, but use simulated acceptance
+or distance criteria when a signature likelihood is unavailable. In ecosystem
+science, Wood (2010) calibrated nonlinear dynamic models with a *synthetic
+likelihood* constructed from time-series summary statistics. The approach here
+differs by specifying an explicit likelihood for annually replicated GPP
+features and analytically marginalizing their feature-specific variances. It
+is therefore feature- or signature-domain Bayesian calibration, but is neither
+Approximate Bayesian Computation nor synthetic likelihood in the strict sense.
+
+```{r feature-gpp-calibration, eval=TRUE}
+
+# Each inverse-gamma prior is defined through E[sigma^2]^(1/2), an interpretable
+# prior RMS error in the feature's native units. alpha = 3 leaves substantial
+# uncertainty while giving the variance a finite prior mean.
+make_variance_prior <- function(prior_rms, alpha = 3) {
+  list(
+    alpha = alpha,
+    beta = (alpha - 1) * prior_rms^2,
+    prior_rms = prior_rms
+  )
+}
+feature_variance_priors <- list(
+  annual_gpp = make_variance_prior(150), # g C m-2 yr-1
+  peak_gpp = make_variance_prior(0.75),  # g C m-2 d-1
+  peak_week = make_variance_prior(2),    # weeks
+  onset = make_variance_prior(14),       # days of year
+  termination = make_variance_prior(14), # days of year
+  amplitude = make_variance_prior(0.75)  # g C m-2 d-1
+)
+
+# Check the feature pipeline once in the main R process. This gives a local,
+# informative failure before launching hundreds of worker evaluations.
+feature_preflight <- feature_gpp_loglik(
+  par = pars,
+  model_error = list(),
+  drivers = df_drivers,
+  observations = daily_observations,
+  feature_function = gpp_features_by_year,
+  variance_priors = feature_variance_priors,
+  marginal_function = inverse_gamma_marginal_loglik
+)
+if (!is.finite(feature_preflight)) {
+  stop("The seasonal-feature likelihood failed its serial preflight check.")
+}
+
+feature_gpp_calibration <- calib_sofun_lhs(
+  pars = pars,
+  par_calib = kphio_prior,
+  model_error = list(),
+  likelihood = feature_gpp_loglik,
+  n_samples = 500,
+  n_cores = max(1, parallel::detectCores() - 1),
+  seed = 45,
+  progress = TRUE,
+  drivers = df_drivers,
+  observations = daily_observations,
+  feature_function = gpp_features_by_year,
+  variance_priors = feature_variance_priors,
+  marginal_function = inverse_gamma_marginal_loglik
+)
+```
+
+```{r feature-calibration-components, eval=TRUE}
+feature_map_simulation <- rsofun::runread_cnmodel_f(
+  drivers = df_drivers,
+  par = feature_gpp_calibration$par
+) |>
+  dplyr::select(sitename, data) |>
+  tidyr::unnest(data) |>
+  dplyr::transmute(sitename, date, gpp_modelled = gpp)
+
+feature_map_matched <- daily_observations |>
+  dplyr::select(sitename, date, gpp) |>
+  dplyr::inner_join(feature_map_simulation, by = c("sitename", "date")) |>
+  dplyr::filter(is.finite(gpp), is.finite(gpp_modelled))
+observed_features <- gpp_features_by_year(feature_map_matched, gpp) |>
+  dplyr::rename(observed = value)
+map_features <- gpp_features_by_year(feature_map_matched, gpp_modelled) |>
+  dplyr::rename(map_model = value)
+feature_comparison <- dplyr::inner_join(
+  observed_features, map_features, by = c("year", "feature")
+)
+feature_comparison
+```
+
+The conjugate update also provides the conditional posterior of every error
+standard deviation at the MAP `kphio`. These are diagnostics, not additional
+LHS dimensions.
+
+```{r feature-error-posteriors, eval=TRUE}
+feature_error_posteriors <- feature_comparison |>
+  dplyr::mutate(
+    residual = observed - map_model,
+    residual = dplyr::if_else(
+      feature == "peak_week",
+      pmin(abs(residual), 52 - abs(residual)), residual
+    )
+  ) |>
+  dplyr::group_by(feature) |>
+  dplyr::summarise(
+    n_years = dplyr::n(),
+    sum_squared_residual = sum(residual^2),
+    .groups = "drop"
+  ) |>
+  dplyr::rowwise() |>
+  dplyr::mutate(
+    prior_rms = feature_variance_priors[[feature]]$prior_rms,
+    alpha_posterior = feature_variance_priors[[feature]]$alpha + n_years / 2,
+    beta_posterior = feature_variance_priors[[feature]]$beta +
+      sum_squared_residual / 2,
+    posterior_rms = sqrt(beta_posterior / (alpha_posterior - 1)),
+    posterior_median = sqrt(1 / stats::qgamma(
+      0.5, shape = alpha_posterior, rate = beta_posterior
+    )),
+    posterior_lower = sqrt(1 / stats::qgamma(
+      0.975, shape = alpha_posterior, rate = beta_posterior
+    )),
+    posterior_upper = sqrt(1 / stats::qgamma(
+      0.025, shape = alpha_posterior, rate = beta_posterior
+    ))
+  ) |>
+  dplyr::ungroup() |>
+  dplyr::select(
+    feature, n_years, prior_rms, posterior_rms, posterior_median,
+    posterior_lower, posterior_upper
+  )
+feature_error_posteriors
+```
+
+### Sensitivity to the inverse-gamma shape parameter
+
+The choice `alpha = 3` should be checked rather than treated as universal. The
+comparison below uses `alpha = 2.1, 3, 5, 10`, while preserving every feature's
+`prior_rms`. Therefore, all alternatives have the same prior mean variance and
+differ only in how tightly the variance is concentrated around that scale.
+
+Running four complete calibrations would repeat the expensive C-model
+simulation four times. Instead, evaluate every successful `kphio` sample from
+the main calibration once, retain the number and sum of squared annual residuals
+for each feature, and reuse those sufficient statistics for all four analytical
+marginal likelihoods.
+
+```{r feature-alpha-sensitivity-simulations, eval=TRUE}
+feature_residual_summary <- function(
+    kphio, pars, drivers, observations, feature_function
+) {
+  candidate <- pars
+  candidate$kphio <- kphio
+  simulated <- rsofun::runread_cnmodel_f(drivers = drivers, par = candidate) |>
+    dplyr::select(sitename, data) |>
+    tidyr::unnest(data) |>
+    dplyr::transmute(sitename, date, gpp_modelled = gpp)
+  matched <- observations |>
+    dplyr::select(sitename, date, gpp) |>
+    dplyr::inner_join(simulated, by = c("sitename", "date")) |>
+    dplyr::filter(is.finite(gpp), is.finite(gpp_modelled))
+
+  observed <- feature_function(matched, gpp) |>
+    dplyr::rename(observed = value)
+  modelled <- feature_function(matched, gpp_modelled) |>
+    dplyr::rename(modelled = value)
+  dplyr::inner_join(observed, modelled, by = c("year", "feature")) |>
+    dplyr::mutate(
+      residual = observed - modelled,
+      residual = dplyr::if_else(
+        feature == "peak_week",
+        pmin(abs(residual), 52 - abs(residual)), residual
+      )
+    ) |>
+    dplyr::group_by(feature) |>
+    dplyr::summarise(
+      n = dplyr::n(),
+      sum_squared_residual = sum(residual^2),
+      .groups = "drop"
+    )
+}
+
+sensitivity_design <- feature_gpp_calibration$samples |>
+  dplyr::filter(evaluation_ok) |>
+  dplyr::select(sample_id, kphio, log_prior)
+
+evaluate_sensitivity_sample <- function(i) {
+  tryCatch(
+    feature_residual_summary(
+      kphio = sensitivity_design$kphio[[i]],
+      pars = pars,
+      drivers = df_drivers,
+      observations = daily_observations,
+      feature_function = gpp_features_by_year
+    ) |>
+      dplyr::mutate(sample_id = sensitivity_design$sample_id[[i]]),
+    error = function(condition) NULL
+  )
+}
+
+n_sensitivity_workers <- min(
+  max(1, parallel::detectCores() - 1), nrow(sensitivity_design)
+)
+message(sprintf(
+  "Evaluating %d shared sensitivity simulations on %d worker(s).",
+  nrow(sensitivity_design), n_sensitivity_workers
+))
+if (n_sensitivity_workers == 1) {
+  sensitivity_residuals <- lapply(
+    seq_len(nrow(sensitivity_design)), evaluate_sensitivity_sample
+  )
+} else {
+  sensitivity_cluster <- parallel::makeCluster(n_sensitivity_workers)
+  sensitivity_residuals <- tryCatch({
+    parallel::clusterExport(
+      sensitivity_cluster,
+      c(
+        "evaluate_sensitivity_sample", "feature_residual_summary",
+        "sensitivity_design", "pars", "df_drivers", "daily_observations",
+        "gpp_features_by_year"
+      ),
+      envir = environment()
+    )
+    parallel::parLapplyLB(
+      sensitivity_cluster,
+      seq_len(nrow(sensitivity_design)),
+      function(i) evaluate_sensitivity_sample(i)
+    )
+  }, finally = {
+    parallel::stopCluster(sensitivity_cluster)
+  })
+}
+sensitivity_residuals <- dplyr::bind_rows(sensitivity_residuals)
+message(sprintf(
+  "Recovered feature residuals for %d/%d sensitivity samples.",
+  dplyr::n_distinct(sensitivity_residuals$sample_id), nrow(sensitivity_design)
+))
+```
+
+The likelihood calculation below is inexpensive: it contains no model call.
+For each `alpha`, `beta` is recalculated to preserve `prior_rms`, and posterior
+weights are normalized independently.
+
+```{r feature-alpha-sensitivity-posteriors, eval=TRUE}
+alpha_values <- c(2.1, 3, 5, 10)
+
+alpha_posteriors <- tidyr::crossing(
+  sensitivity_residuals,
+  alpha = alpha_values
+) |>
+  dplyr::rowwise() |>
+  dplyr::mutate(
+    prior_rms = feature_variance_priors[[feature]]$prior_rms,
+    beta = (alpha - 1) * prior_rms^2,
+    log_likelihood_feature =
+      lgamma(alpha + n / 2) - lgamma(alpha) + alpha * log(beta) -
+      (alpha + n / 2) * log(beta + sum_squared_residual / 2) -
+      n * log(2 * pi) / 2
+  ) |>
+  dplyr::ungroup() |>
+  dplyr::group_by(sample_id, alpha) |>
+  dplyr::filter(dplyr::n() == length(feature_variance_priors)) |>
+  dplyr::summarise(
+    log_likelihood = sum(log_likelihood_feature),
+    .groups = "drop"
+  ) |>
+  dplyr::left_join(sensitivity_design, by = "sample_id") |>
+  dplyr::mutate(log_posterior = log_prior + log_likelihood) |>
+  dplyr::group_by(alpha) |>
+  dplyr::mutate(
+    weight = exp(log_likelihood - max(log_likelihood)),
+    weight = weight / sum(weight)
+  ) |>
+  dplyr::ungroup()
+
+alpha_diagnostics <- alpha_posteriors |>
+  dplyr::group_by(alpha) |>
+  dplyr::summarise(
+    map_kphio = kphio[which.max(log_posterior)],
+    effective_sample_size = 1 / sum(weight^2),
+    maximum_weight = max(weight),
+    samples_to_80_percent = which(
+      cumsum(sort(weight, decreasing = TRUE)) >= 0.8
+    )[1],
+    .groups = "drop"
+  ) |>
+  dplyr::mutate(
+    map_difference_from_alpha_3 = map_kphio - map_kphio[alpha == 3],
+    prior_cv_variance = 1 / sqrt(alpha - 2),
+    prior_sigma_lower_over_rms = sqrt(
+      (alpha - 1) / stats::qgamma(0.975, shape = alpha)
+    ),
+    prior_sigma_upper_over_rms = sqrt(
+      (alpha - 1) / stats::qgamma(0.025, shape = alpha)
+    )
+  )
+map_alpha_3 <- alpha_diagnostics$map_kphio[alpha_diagnostics$alpha == 3]
+maximum_map_change <- max(abs(alpha_diagnostics$map_difference_from_alpha_3))
+maximum_relative_map_change <- maximum_map_change / map_alpha_3
+alpha_sensitivity_conclusion <- if (maximum_relative_map_change <= 0.05) {
+  paste(
+    "The maximum relative MAP change is no greater than 5%, supporting the",
+    "conclusion that the MAP is insensitive over this range. Together with",
+    "its variance coefficient of variation of one, this supports alpha = 3",
+    "as a broad but finite-variance compromise."
+  )
+} else {
+  paste(
+    "The maximum relative MAP change exceeds 5%; the calibration should",
+    "therefore be described as sensitive to alpha, and alpha = 3 cannot be",
+    "justified from MAP stability alone."
+  )
+}
+alpha_diagnostics
+```
+
+The last three columns quantify prior width independently of the calibration.
+`prior_cv_variance` is the coefficient of variation of $v$; the two ratio
+columns give the 95% prior interval for $\sigma$ relative to `prior_rms`. At
+`alpha = 3`, the variance has a coefficient of variation of
+`r signif(alpha_diagnostics$prior_cv_variance[alpha_diagnostics$alpha == 3], 3)`
+and 95% of the prior standard-deviation distribution lies between
+`r signif(alpha_diagnostics$prior_sigma_lower_over_rms[alpha_diagnostics$alpha == 3], 3)`
+and
+`r signif(alpha_diagnostics$prior_sigma_upper_over_rms[alpha_diagnostics$alpha == 3], 3)`
+times `prior_rms`. This is the sense in which `alpha = 3` is informative enough
+to exclude implausibly extreme errors, but still broad.
+
+The ECDF compares the full `kphio` posteriors without kernel smoothing. Similar
+curves and closely aligned MAP lines indicate that the inference is insensitive
+to the reasonable range of `alpha` values considered here.
+
+```{r feature-alpha-sensitivity-ecdf, eval=TRUE}
+alpha_ecdf <- alpha_posteriors |>
+  dplyr::arrange(alpha, kphio) |>
+  dplyr::group_by(alpha) |>
+  dplyr::mutate(cumulative_probability = cumsum(weight)) |>
+  dplyr::ungroup() |>
+  dplyr::mutate(alpha = factor(alpha, levels = alpha_values))
+
+ggplot(alpha_ecdf, aes(kphio, cumulative_probability, colour = alpha)) +
+  geom_step(linewidth = 0.8) +
+  geom_vline(
+    data = dplyr::mutate(
+      alpha_diagnostics, alpha = factor(alpha, levels = alpha_values)
+    ),
+    aes(xintercept = map_kphio, colour = alpha),
+    linetype = "dotted",
+    show.legend = FALSE
+  ) +
+  labs(
+    x = "Maximum quantum yield (kphio)",
+    y = "Posterior cumulative probability",
+    colour = expression(alpha)
+  ) +
+  theme_classic()
+```
+
+Finally, ranked weights show whether a more concentrated variance prior causes
+importance-weight collapse. The dashed line is the equal-weight reference.
+
+```{r feature-alpha-sensitivity-weights, eval=TRUE}
+alpha_weight_ranks <- alpha_posteriors |>
+  dplyr::group_by(alpha) |>
+  dplyr::arrange(dplyr::desc(weight), .by_group = TRUE) |>
+  dplyr::mutate(
+    weight_rank = dplyr::row_number(),
+    weight_for_plot = pmax(weight, 1e-16)
+  ) |>
+  dplyr::ungroup()
+
+ggplot(alpha_weight_ranks, aes(weight_rank, weight_for_plot)) +
+  geom_hline(
+    yintercept = 1 / nrow(sensitivity_design),
+    linetype = "dashed", colour = "grey50"
+  ) +
+  geom_line(colour = "#0072B2", linewidth = 0.6) +
+  facet_wrap(~ alpha, labeller = ggplot2::label_bquote(alpha == .(alpha))) +
+  scale_y_log10() +
+  labs(
+    x = "Sample rank (highest posterior weight first)",
+    y = "Posterior weight (log scale)"
+  ) +
+  theme_classic()
+```
+
+Across these alternatives, the MAP range is
+`r signif(diff(range(alpha_diagnostics$map_kphio)), 3)` and the largest absolute
+deviation from the `alpha = 3` MAP is
+`r signif(maximum_map_change, 3)`
+(`r signif(100 * maximum_relative_map_change, 3)`% relative to the
+`alpha = 3` MAP). `r alpha_sensitivity_conclusion`
+
+### Prior and posterior empirical distributions of `kphio`
+
+The empirical cumulative distribution function (ECDF) avoids kernel smoothing.
+The prior ECDF gives every LHS draw equal mass; the posterior ECDF uses the
+normalized posterior weights. A collapsed posterior therefore appears as one
+large vertical step at the dominant sample's `kphio` value.
+
+```{r simple-kphio-prior-posterior, eval=TRUE}
+distribution_data <- function(calibration, target_label) {
+  dplyr::bind_rows(
+    calibration$samples |>
+      dplyr::arrange(kphio) |>
+      dplyr::transmute(kphio, cumulative_probability = dplyr::row_number() /
+                         dplyr::n(), target = target_label,
+                       distribution = "Prior"),
+    calibration$samples |>
+      dplyr::arrange(kphio) |>
+      dplyr::transmute(kphio, cumulative_probability = cumsum(weight),
+                       target = target_label, distribution = "Posterior")
+  )
+}
+
+kphio_distributions <- dplyr::bind_rows(
+  distribution_data(daily_gpp_calibration, "Daily GPP"),
+  distribution_data(monthly_gpp_calibration, "Monthly GPP"),
+  distribution_data(annual_gpp_calibration, "One mean annual GPP value"),
+  distribution_data(feature_gpp_calibration, "Seasonal GPP features")
+)
+
+ggplot(
+  kphio_distributions,
+  aes(kphio, cumulative_probability, colour = distribution)
+) +
+  geom_step(linewidth = 0.7) +
+  geom_vline(xintercept = pars$kphio, linetype = "dashed") +
+  facet_wrap(~ target, ncol = 1) +
+  scale_colour_manual(values = c(Prior = "grey40", Posterior = "red")) +
+  labs(x = "Maximum quantum yield (kphio)",
+       y = "Cumulative probability", colour = NULL) +
+  theme_classic()
+```
+
+```{r simple-calibration-diagnostics, eval=TRUE}
+samples_to_80_percent <- function(weight) {
+  which(cumsum(sort(weight, decreasing = TRUE)) >= 0.8)[1]
+}
+
+tibble(
+  target = c(
+    "Daily GPP", "Monthly GPP", "One mean annual GPP value",
+    "Seasonal GPP features"
+  ),
+  effective_sample_size = c(
+    daily_gpp_calibration$effective_sample_size,
+    monthly_gpp_calibration$effective_sample_size,
+    annual_gpp_calibration$effective_sample_size,
+    feature_gpp_calibration$effective_sample_size
+  ),
+  maximum_weight = c(
+    max(daily_gpp_calibration$samples$weight),
+    max(monthly_gpp_calibration$samples$weight),
+    max(annual_gpp_calibration$samples$weight),
+    max(feature_gpp_calibration$samples$weight)
+  ),
+  samples_to_80_percent = c(
+    samples_to_80_percent(daily_gpp_calibration$samples$weight),
+    samples_to_80_percent(monthly_gpp_calibration$samples$weight),
+    samples_to_80_percent(annual_gpp_calibration$samples$weight),
+    samples_to_80_percent(feature_gpp_calibration$samples$weight)
+  ),
+  map_kphio = c(
+    daily_gpp_calibration$par$kphio,
+    monthly_gpp_calibration$par$kphio,
+    annual_gpp_calibration$par$kphio,
+    feature_gpp_calibration$par$kphio
+  ),
+  map_sampled_error = c(
+    daily_gpp_calibration$model_error$sigma_gpp_daily,
+    monthly_gpp_calibration$model_error$sigma_gpp_monthly,
+    annual_gpp_calibration$model_error$sigma_gpp_annual,
+    NA_real_ # feature-specific variances are integrated out, not sampled
+  )
+)
+```
+
+### Distribution of posterior weights
+
+Ranked weights directly reveal importance-weight collapse. A well-supported
+posterior distributes weight across multiple samples; a collapsed posterior has
+one point near one and almost all remaining points near zero. The logarithmic
+axis retains differences among very small weights. Exact zeros and weights below
+`1e-16` are drawn at that plotting floor.
+
+```{r simple-posterior-weight-distributions, eval=TRUE}
+posterior_weights <- dplyr::bind_rows(
+  daily_gpp_calibration$samples |>
+    dplyr::mutate(target = "Daily GPP"),
+  monthly_gpp_calibration$samples |>
+    dplyr::mutate(target = "Monthly GPP"),
+  annual_gpp_calibration$samples |>
+    dplyr::mutate(target = "One mean annual GPP value"),
+  feature_gpp_calibration$samples |>
+    dplyr::mutate(target = "Seasonal GPP features")
+) |>
+  dplyr::group_by(target) |>
+  dplyr::arrange(dplyr::desc(weight), .by_group = TRUE) |>
+  dplyr::mutate(
+    weight_rank = dplyr::row_number(),
+    weight_for_plot = pmax(weight, 1e-16)
+  ) |>
+  dplyr::ungroup()
+
+ggplot(posterior_weights, aes(weight_rank, weight_for_plot)) +
+  geom_hline(
+    yintercept = 1 / nrow(daily_gpp_calibration$samples),
+    linetype = "dashed",
+    colour = "grey50"
+  ) +
+  geom_line(colour = "#0072B2", linewidth = 0.5) +
+  geom_point(colour = "#0072B2", size = 0.8) +
+  facet_wrap(~ target, ncol = 1) +
+  scale_y_log10() +
+  labs(
+    x = "Sample rank (highest posterior weight first)",
+    y = "Posterior weight (log scale)"
+  ) +
+  theme_classic()
+```
+
+### Mean annual cycle of daily GPP
+
+Re-run the C-model with the MAP `kphio` from each calibration. To make the
+seasonal cycles directly comparable, calculate modelled means only for dates
+that have a quality-controlled GPP observation.
+
+```{r simple-gpp-annual-cycle, eval=TRUE}
+map_gpp_cycle <- function(calibration, source_label) {
+  rsofun::runread_cnmodel_f(
+    drivers = df_drivers,
+    par = calibration$par
+  ) |>
+    dplyr::select(sitename, data) |>
+    tidyr::unnest(data) |>
+    dplyr::transmute(sitename, date, gpp_modelled = gpp) |>
+    dplyr::inner_join(
+      dplyr::filter(daily_observations, is.finite(gpp)),
+      by = c("sitename", "date")
+    ) |>
+    dplyr::filter(is.finite(gpp_modelled)) |>
+    dplyr::mutate(day_of_year = lubridate::yday(date)) |>
+    dplyr::group_by(day_of_year) |>
+    dplyr::summarise(gpp = mean(gpp_modelled), .groups = "drop") |>
+    dplyr::mutate(source = source_label)
+}
+
+observed_gpp_cycle <- daily_observations |>
+  dplyr::filter(is.finite(gpp)) |>
+  dplyr::mutate(day_of_year = lubridate::yday(date)) |>
+  dplyr::group_by(day_of_year) |>
+  dplyr::summarise(gpp = mean(gpp), .groups = "drop") |>
+  dplyr::mutate(source = "Observed")
+
+gpp_annual_cycles <- dplyr::bind_rows(
+  observed_gpp_cycle,
+  map_gpp_cycle(daily_gpp_calibration, "MAP from daily GPP"),
+  map_gpp_cycle(monthly_gpp_calibration, "MAP from monthly GPP"),
+  map_gpp_cycle(annual_gpp_calibration, "MAP from mean annual GPP"),
+  map_gpp_cycle(feature_gpp_calibration, "MAP from GPP features")
+)
+
+ggplot(gpp_annual_cycles, aes(day_of_year, gpp, colour = source)) +
+  geom_line() +
+  scale_x_continuous(
+    breaks = c(15, 46, 74, 105, 135, 166, 196, 227, 258, 288, 319, 349),
+    labels = month.abb
+  ) +
+  scale_colour_manual(values = c(
+    "Observed" = "black",
+    "MAP from daily GPP" = "tomato",
+    "MAP from monthly GPP" = "darkgreen",
+    "MAP from mean annual GPP" = "royalblue",
+    "MAP from GPP features" = "darkorange3"
+  )) +
+  labs(
+    x = NULL,
+    y = expression("Mean daily GPP (g C " * m^-2 * d^-1 * ")"),
+    colour = NULL
+  ) +
+  theme_classic() +
+  theme(
+    legend.position = "bottom"
+  )
+```
+
+
+## References
+
+Kavetski, D., Fenicia, F., Reichert, P., and Albert, C. (2018).
+Signature-domain calibration of hydrological models using approximate Bayesian
+computation: theory and comparison to existing applications. *Water Resources
+Research*, 54, 4059--4083. doi:10.1002/2017WR020528.
+
+McKay, M. D., Beckman, R. J., and Conover, W. J. (1979). A comparison of three
+methods for selecting values of input variables in the analysis of output from
+a computer code. *Technometrics*, 21, 239--245.
+doi:10.1080/00401706.1979.10489755.
+
+Arán Paredes, J., Bernhard, F., Hufkens, K., Marcadella, M., and Stocker,
+B. D. (2025). rsofun v5.1: a model-data integration framework for simulating
+ecosystem processes. *Geoscientific Model Development*, 18, 9855–9878.
+doi:10.5194/gmd-18-9855-2025.
+
+Leifeld, J., Meyer, S., Budge, K., Sebastia, M.-T., Zimmermann, M., and Fuhrer,
+J. (2015). Turnover of grassland roots in mountain ecosystems revealed by
+radiocarbon analysis: role of temperature and management. *PLOS ONE*, 10,
+e0119184. doi:10.1371/journal.pone.0119184.
+
+Vrugt, J. A. and Sadegh, M. (2013). Toward diagnostic model calibration and
+evaluation: approximate Bayesian computation. *Water Resources Research*, 49,
+4335--4345. doi:10.1002/wrcr.20354.
+
+Wood, S. N. (2010). Statistical inference for noisy nonlinear ecological
+dynamic systems. *Nature*, 466, 1102--1104. doi:10.1038/nature09319.

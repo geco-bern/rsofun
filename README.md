@@ -4,7 +4,7 @@
 
 # rsofun
 
-An R Simulating Optimal FUNctioning (RSOFUN) framework for site-scale simulations of ecosystem processes. The package contains the following modules:
+An R Simulating Optimal FUNctioning (rsofun) framework for site-scale simulations of ecosystem processes. The package contains the following modules:
 
 - P-model for leaf-level acclimation of photosynthesis from [Stocker et al. (2019)](https://gmd.copernicus.org/preprints/gmd-2019-200/).
 - SPLASH for bioclimatic variables, including the surface radiation budget and the soil water balance from [Davis et al. (2017)](https://doi.org/10.5194/gmd-10-689-2017).
@@ -15,6 +15,8 @@ An R Simulating Optimal FUNctioning (RSOFUN) framework for site-scale simulation
 ### Stable release
 
 To install the current stable release use a CRAN repository:
+
+**WARNING: rsofun is not currently available on CRAN.** We're working on it. Until it's available again, the command below will not work.
 
 ``` r
 install.packages("rsofun")
@@ -30,6 +32,8 @@ if(!require(remotes)){install.packages("remotes")}
 remotes::install_github("geco-bern/rsofun")
 library("rsofun")
 ```
+ 
+**NOTE:** Installing from GitHub requires compilation of Fortran and C source code contained in {rsofun}. To enable compiling source code, install [Rtools](https://cran.r-project.org/bin/windows/Rtools/) on Windows, or [Xcode](https://developer.apple.com/xcode/) and the [GNU Fortran compiler on Mac](https://github.com/fxcoudert/gfortran-for-macOS) (see also 'Mandatory tools' [here](https://mac.r-project.org/tools/)). On Linux, the gfortran compiler is usually installed already.
 
 **NOTE:** Installing from GitHub requires compilation of Fortran and C source code contained in {rsofun}. To enable compiling source code, install [Rtools](https://cran.r-project.org/bin/windows/Rtools/) on Windows, or [Xcode](https://developer.apple.com/xcode/) and the [GNU Fortran compiler on Mac](https://github.com/fxcoudert/gfortran-for-macOS) (see also 'Mandatory tools' [here](https://mac.r-project.org/tools/)). On Linux, the gfortran compiler is usually installed already.
 

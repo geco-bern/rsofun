@@ -1,7 +1,7 @@
 module md_gpp_pmodel
   !////////////////////////////////////////////////////////////////
   ! Module containing a wrapper for using the P-model photosynthesis
-  ! scheme.
+  ! scheme in the P-model setup.
   !----------------------------------------------------------------
   use md_params_core
   use md_tile_pmodel, only: tile_type, tile_fluxes_type
@@ -136,7 +136,7 @@ contains
       ! acclimated to slowly varying conditions
       !----------------------------------------------------------------
       if (tile(lu)%plant(pft)%fpc_grid > 0.0 .and. &      ! PFT is present
-          grid%dayl > 0.0 .and.                    &      ! no arctic night
+          tile_fluxes(lu)%canopy%dayl > 0.0 .and.  &      ! no arctic night
           temp_memory > -5.0 ) then                       ! minimum temp threshold to avoid fpe
 
         !================================================================

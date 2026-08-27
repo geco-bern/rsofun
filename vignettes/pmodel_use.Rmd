@@ -143,6 +143,7 @@ ggplot(data = df_gpp_plot) +
     values = c("black", "tomato"))
 ```
 
+
 ## Calibrating model parameters
 
 To optimize new parameters based upon driver data and a validation dataset we must first specify an optimization strategy and settings, as well as a cost function and parameter ranges.
