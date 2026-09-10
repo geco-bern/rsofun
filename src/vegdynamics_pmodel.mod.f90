@@ -16,7 +16,6 @@ contains
     !//////////////////////////////////////////////////////////////////
     ! Updates canopy and tile variables
     !------------------------------------------------------------------
-    
     ! arguments
     type( tile_type ), dimension(nlu), intent(inout) :: tile
 
@@ -47,6 +46,5 @@ contains
     end do
   
   end subroutine vegdynamics
-
 
 end module md_vegdynamics_pmodel

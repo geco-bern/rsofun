@@ -1,0 +1,254 @@
+---
+title: "Canopy C and N"
+author: "Beni Stocker"
+date: "2024-02-24"
+output: html_document
+editor_options: 
+  markdown: 
+    wrap: 72
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(LambertW)
+```
+
+## Model description
+
+CN-model contains the P-model for photosyntheis, which is formulated as
+a big-leaf model, whereby CO$_2$ assimilation is to be understood as the
+ecosystem gross primary production (GPP). Accordingly, also
+$V_\mathrm{cmax}$ and $R_d$ are to be understood as quantities
+representative for canopy-totals and in units of per ground area. From
+the formulation of the P-model (Stocker et al., 2020), it follows that
+$V_\mathrm{cmax}$ scales in proportion to the light absorbed by the
+canopy ($I_\mathrm{abs}$). Using the Beer-Lambert law for light
+absorption, a saturating relationship between (canopy total)
+$V_\mathrm{cmax}$ and the leaf area index (LAI) follows.
+
+$$
+V_\mathrm{cmax} = \underbrace{\varphi_0 \frac{\chi + \kappa}{\chi + 2\gamma} I_0}_{c_0} \left(1 - e^{-kL} \right)
+$$
+
+The metabolic leaf N ($N_v$) is taken to be proportional to
+$V_\mathrm{cmax}$ at standard temperature (25°C, $V_\mathrm{cmax25}$).
+
+$$
+\begin{aligned}
+N_v &= b_v V_{cmax25} \\
+    &= \underbrace{b_v f_t^{-1} c_0}_{c_0^\ast} \left(1 - e^{-kL} \right)
+\end{aligned}
+$$
+At the leaf-level, the amount of metabolic N per unit leaf area is 
+
+$$
+N_v^l = N_v/L
+$$
+
+The structural leaf N ($N_s$) is modelled as a linear function of
+$N_v^l$. 
+
+$$
+N_s^l = a_s + b_s N_v^l
+$$
+
+The parameter $a_s$ determines the minimum investment into structures as
+$N_v^l$ tends toward zero when $L$ tends towards infinity
+(theoretically).
+
+The total leaf N is the sum of metabolic and structural N at the leaf
+level ($N^l = N_v^l + N_s^l$). At the canopy-level, this is
+
+$$
+\begin{aligned}
+N_\mathrm{fol} &= L (N_v^l + N_s^l) \\
+               &= a_s L + (1 + b_s)N_v \\
+               &= a_s L + (1 + b_s) c_0^\ast \left(1 - e^{-kL} \right)
+\end{aligned}
+$$
+
+Leaf C per unit leaf area (which is largely equivalent to leaf mass per
+area, LMA) is calculated by multiplying $N_s^l$ with a constant factor
+that relates canopy structural N to structural C. 
+$$
+C^l = b_c\;N_s^l
+$$
+
+The canopy-total C in foliage is 
+$$
+\begin{aligned}
+C_\mathrm{fol} &= C^l L \\
+               &= L b_c N_s^l \\
+               &= L b_c (a_s + b_s N_v^l) \\
+               &= L b_c a_s + b_c b_s N_v \\ 
+               &= b_c \left( a_s L + b_s c_0^\ast \left(1 - e^{-kL} \right) \right)
+\end{aligned}
+$$
+
+This is a transcendental function of the form 
+$$
+\alpha(1-e^{-kL}) + \beta L - \gamma = 0
+$$ with:
+
+-   $\alpha = b_s c_0^\ast$
+-   $\beta = a_s$
+-   $\gamma = C_\mathrm{fol}/b_c$
+
+To express $L$ as a function of $C_\mathrm{fol}$, the Lambert-W function
+$W_n$ has to be used:
+
+$$
+L = \frac{\gamma - \alpha}{\beta} + \frac{1}{k} W_n \left( \frac{\alpha k}{\beta} \exp \left( (\alpha - \gamma)k/\beta \right)  \right)
+$$
+
+## Demonstration
+
+Let's apply this model for visualising:
+
+-   $N_v$, $N_\mathrm{fol}$, $C_\mathrm{fol}$, $(C:N)_\mathrm{fol}$, and
+    LMA versus LAI.
+-   LAI versus $C_\mathrm{fol}$
+
+Define and obtain values representing a temperate forest with a LAI of
+5.
+
+### Model parameters
+
+```{r}
+par <- list(
+  
+  # relationship between Vcmax25 and metabolic leaf N (including N in other enzymes 
+  # assumed to scale with Vcmax25)
+  nv_vcmax25 = 0.02 * 13681.77,  # b_v
+  
+  # constant ratio of C to structural N
+  r_ctostructn_leaf = 40, #1.3 * 45.84125,   # b_c
+  
+  # y-axis intersection in the relationship of non-metabolic versus metabolic N per leaf area
+  ncw_min = 0.056, #0.08 * 1.116222,  # a_s
+  
+  # slope in the relationship of non-metabolic versus metabolic N per leaf area
+  r_n_cw_v = 1.23223, #0,  # b_s
+  
+  # light extinction coefficient 
+  kbeer = 0.5,  # k
+  
+  molmass_c = 12.0107
+)
+```
+
+### State variables
+
+The value for $c_0$ is simulated dynamically in response to the
+environment. It is
+
+```{r}
+# in rsofun: actnv_unitfapar = (nv_vcmax25 * vcmax25_unitiabs * dppfd / dayl), gpp_cnmodel.mod.f90, l. 238
+# here, corresponds to b_v * c_0 * f_T^-1 (nv_vcmax25 * c0)
+par$actnv_unitfapar <- 0.1079643 # 1.36396807E-06  # typical value, run analysis/example_cnmodel_ch_oe1.R
+```
+
+Define variable substitutes
+
+-   $\alpha = b_c a_s$
+-   $\beta = b_s c_0^\ast$
+
+```{r}
+par$alpha <- par$r_ctostructn_leaf * par$ncw_min
+par$beta <- par$r_n_cw_v * par$actnv_unitfapar # actnv_unitfapar = nv_vcmax25 * c0
+```
+
+## Functions
+
+```{r}
+calc_n_v <- function(lai, par){
+  par$actnv_unitfapar * (1 - exp(-par$kbeer * lai))
+}
+
+calc_n_vp <- function(lai, par){
+  (1 + par$r_n_cw_v) * par$actnv_unitfapar * (1 - exp(-par$kbeer * lai))
+}
+
+calc_n_fol <- function(lai, par){
+  par$ncw_min * lai + (1 + par$r_n_cw_v) * par$actnv_unitfapar * (1 - exp(-par$kbeer * lai))
+}
+
+calc_c_fol <- function(lai, par){
+  lai * par$r_ctostructn_leaf * par$ncw_min + par$r_ctostructn_leaf * par$r_n_cw_v * par$actnv_unitfapar * (1 - exp(-par$kbeer * lai))
+}
+
+get_lai <- function(cleaf, par){
+
+  alpha <- par$actnv_unitfapar * par$r_n_cw_v
+  beta  <- par$ncw_min
+  gamma <- cleaf / ( par$molmass_c * par$r_ctostructn_leaf ) 
+
+  arg_to_lambertw <- alpha * par$kbeer / beta * exp( (alpha - gamma) * par$kbeer / beta )
+
+  lai <- 1.0 / (beta * par$kbeer ) * ( -alpha * par$kbeer + gamma * par$kbeer + beta * W( arg_to_lambertw ) )
+
+}
+
+get_lai_approx_to_zero <- function( cleaf, par ){
+  par$r_ctostructn_leaf / ( par$ncw_min * par$molmass_c * par$r_ctostructn_leaf )
+}
+
+get_lai_approx_to_inf <- function( cleaf, par ){
+  1.0 / par$ncw_min * ( cleaf / (par$r_ctostructn_leaf * par$molmass_c) - par$actnv_unitfapar * par$r_n_cw_v)
+}
+```
+
+## Visualisations
+
+### Versus LAI
+
+```{r}
+df <- tibble(lai = seq(0, 10, by = 0.2)) |> 
+  mutate(n_v = calc_n_v(lai, par),
+         n_vp = calc_n_vp(lai, par),
+         n_fol = calc_n_fol(lai, par),
+         c_fol = calc_c_fol(lai, par)
+         ) |> 
+  mutate(lma = c_fol / lai,
+         cn_fol = c_fol/n_fol
+         )
+
+df |> 
+  pivot_longer(cols = c(cn_fol, lma, c_fol, n_fol, n_v, n_vp),
+               names_to = "var",
+               values_to = "val") |> 
+  ggplot(aes(lai, val)) +
+  geom_line() +
+  facet_wrap(~var, scales = "free_y", ncol = 2)
+```
+
+### Versus leaf C
+
+```{r}
+df <- tibble(cleaf = seq(0, 300, by = 10)) |> 
+  mutate(lai = get_lai(cleaf, par),
+         lai_inf = get_lai_approx_to_inf(cleaf, par),
+         lai_zero = get_lai_approx_to_zero(cleaf, par))
+
+df |> 
+  ggplot() +
+  geom_line(aes(cleaf, lai)) +
+  geom_line(aes(cleaf, lai_inf), linetype = "dotted") +
+  theme_classic() +
+  ylim(0, NA) +
+  labs(x = expression(paste("leaf C (gC m"^-2,")")), 
+       y = expression(paste("LAI (m"^2," m"^-2,")"))
+  )
+
+# ggsave(here::here("fig/lai_vs_leafc.pdf"), width = 4, height = 3)
+
+# df |> 
+#   ggplot() +
+#   geom_line(aes(lai, cleaf)) +
+#   geom_line(aes(lai_inf, cleaf), linetype = "dotted") +
+#   theme_classic() +
+#   xlim(0, NA)
+```

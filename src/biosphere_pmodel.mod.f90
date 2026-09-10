@@ -5,7 +5,8 @@ module md_biosphere_pmodel
   ! Does not contain any input/output; this is done in SR sofun.
   !----------------------------------------------------------------
   use md_params_core
-  use md_waterbal, only: waterbal, solar, getpar_modl_waterbal
+  use md_classdefs
+  use md_waterbal_pmodel, only: waterbal, solar, getpar_modl_waterbal
   use md_gpp_pmodel, only: getpar_modl_gpp, gpp
   use md_vegdynamics_pmodel, only: vegdynamics
   use md_tile_pmodel, only: tile_type, tile_fluxes_type, init_tile, initdaily_tile_fluxes, &

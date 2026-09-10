@@ -1,0 +1,178 @@
+---
+title: "Labile pool dynamics"
+output: html_document
+date: "2022-11-16"
+---
+
+```{r setup, include=FALSE}
+library(dplyr)
+library(tidyr)
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Model formulation
+
+This is from the QUINCY model (Thum et al., 2019 GMD).
+```{r cars}
+calc_phi_maint <- function(c_labl, c_labl_target){
+  lambda_maint <- 4.0
+  k_maint <- 1.6
+  exp(-(lambda_maint * c_labl / c_labl_target)^k_maint)
+}
+
+calc_phi_store_wrong <- function(c_resv, c_resv_target){
+  lambda_store <- 2.0
+  k_store <- 3.0
+  1 - exp(-(lambda_store * c_resv / c_resv_target)^k_store)
+}
+
+calc_phi_store_corr <- function(phi_maint, phi_store){
+  k_inter <- 0.75
+  ifelse(
+    phi_maint > k_inter,
+    phi_store * (1 - phi_maint) / (1 - k_inter),
+    phi_store
+  )
+}
+
+calc_phi_store <- function(c_resv, c_resv_target){
+  lambda_store <- 2.0
+  k_store <- 3.0
+  exp(-(lambda_store * c_resv / c_resv_target)^k_store) ## I think it should be like this
+}
+
+calc_f_reserves_labile <- function(c_labl, c_resv, c_labl_target, c_resv_target){
+  tau_labl <- 7
+  (1/tau_labl) * 
+    (calc_phi_maint(c_labl, c_labl_target) * c_resv - 
+       calc_phi_store_corr(calc_phi_maint(c_labl, c_labl_target),  calc_phi_store(c_resv, c_resv_target)) * c_labl)
+}
+
+calc_f_reserves_labile_wrong <- function(c_labl, c_resv, c_labl_target, c_resv_target){
+  tau_labl <- 7
+  (1/tau_labl) * 
+    (calc_phi_maint(c_labl, c_labl_target) * c_resv - 
+       calc_phi_store_corr(calc_phi_maint(c_labl, c_labl_target),  calc_phi_store_wrong(c_resv, c_resv_target)) * c_labl)
+}
+```
+
+Test
+```{r}
+# test 1
+-4.92087412 - calc_f_reserves_labile(c_labl = 39.9364128, c_resv = 67.6525421, c_labl_target = 67.6525421, c_resv_target = 281.609833)
+
+# test 2
+1.91786699E-02 - calc_phi_maint(c_labl = 39.9364128, c_labl_target = 67.6525421)
+0.895012856    - calc_phi_store(c_resv = 67.6525421, c_resv_target = 281.609833)
+0.895012856    - calc_phi_store_corr(
+                    calc_phi_maint(c_labl = 39.9364128, c_labl_target = 67.6525421), 
+                    calc_phi_store(c_resv = 67.6525421, c_resv_target = 281.609833)
+                    )
+```
+
+## Pull functions
+
+```{r}
+ggplot() +
+  geom_function(fun = function(x) calc_phi_maint(c_labl = x, c_labl_target = 100)) +
+  xlim(0, 100) +
+  labs(title = "Pull from reserves to labile (Eq. S40b)", subtitle = "Target labile C: 100", x = "labile C")
+```
+
+
+```{r}
+ggplot() +
+  geom_function(fun = function(x) calc_phi_store_wrong(c_resv = x, c_resv_target = 100)) +
+  xlim(0, 100) +
+  labs(title = "Pull from labile to reserve pool (Eq. S40c)", subtitle = "Target reserves C: 100", x = "reserves C")
+```
+
+**Issue**
+
+- Shouldn't this be the opposite (1 minus what's shown above)?
+
+## Net flux
+
+```{r}
+ggplot() +
+  geom_function(fun = function(x) calc_f_reserves_labile(c_labl = x, c_resv = 50, c_labl_target = 100, c_resv_target = 100)) +
+  xlim(0, 100) +
+  geom_hline(yintercept = 0, linetype = "dotted") +
+  labs(title = "Flux from reserves to labile (Eq. S40a)", subtitle = "Reserves C: 50, target labile = 100, target reserves = 100", x = "labile C")
+```
+
+This makes sense: as the labile pool approaches its target size (100), there is an increasingly strong net flux from the labile to the reserves pool (the reserves pool always being at half its target size). 
+
+```{r}
+ggplot() +
+  geom_function(fun = function(x) calc_f_reserves_labile_wrong(c_labl = x, c_resv = 100, c_labl_target = 100, c_resv_target = 100)) +
+  xlim(0, 100) +
+  geom_hline(yintercept = 0, linetype = "dotted") +
+  labs(title = "Flux from reserves to labile (Eq. S40a)", subtitle = "Reserves C: 100, target labile = 100, target reserves = 100", x = "labile C")
+```
+
+**Question:**
+
+Is this correct?: with the reserves pool being at its target size (100), there is still a net flux into the reserves pool (negative values in plot above) if the labile pool becomes greater than ~30% of its target size. Hence, the reserves pool can increase beyond its target size. 
+
+```{r}
+ggplot() +
+  geom_function(fun = function(x) calc_f_reserves_labile_wrong(c_labl = 50, c_resv = x, c_labl_target = 100, c_resv_target = 100)) +
+  xlim(0, 100) +
+  geom_hline(yintercept = 0, linetype = "dotted") +
+  labs(title = "Flux from reserves to labile (Eq. S40a)", subtitle = "Labile C: 50, target labile = 100, target reserves = 100", x = "Reserves C")
+```
+
+This makes sense: With the labile pool being at 50% of its target there is always a net flux into the labile pool - scaling in proportion with the size of the reserves pool.
+
+```{r}
+df <- expand.grid(c_labl = seq(100), c_resv = seq(100)) |> 
+  as_tibble() |> 
+  mutate(f_net = purrr::map2_dbl(c_labl, c_resv, 
+                                 ~calc_f_reserves_labile_wrong(c_labl = .x, c_resv = .y, c_labl_target = 100, c_resv_target = 100)))
+
+library(scico)
+ggplot(df, aes(c_labl, c_resv, fill= f_net)) + 
+  geom_tile() +
+  scale_fill_scico(palette = 'roma') +
+  theme_classic() +
+  labs(title = "Flux from reserves to labile (Eq. S40a)", x = "Labile C (% of target)", y = "Reserves C (% of target)")
+```
+
+**Question:**
+
+Relatively large brown area indicates domain where a net flux into the reserves pool exists.
+Weird: the flux into the reserves pool becomes stronger (more negative values above) the closer the reserves pool is to its target. Shouldn't this be the other way round?
+
+I think the function `calc_phi_store()` should be changed to (dropping the `1 - ...`):
+```{r}
+calc_phi_store <- function(c_resv, c_resv_target){
+  lambda_store <- 2.0
+  k_store <- 3.0
+  exp(-(lambda_store * c_resv / c_resv_target)^k_store) ## I think it should be like this
+}
+```
+
+Corrected pull function into reserves:
+```{r}
+ggplot() +
+  geom_function(fun = function(x) calc_phi_store(c_resv = x, c_resv_target = 100)) +
+  xlim(0, 100) +
+  labs(title = "Pull from labile to reserve pool (Eq. S40c)", subtitle = "Target reserves C: 100", x = "reserves C")
+```
+
+This makes more sense: 
+
+```{r}
+df <- expand.grid(c_labl = seq(100), c_resv = seq(100)) |> 
+  as_tibble() |> 
+  mutate(f_net = purrr::map2_dbl(c_labl, c_resv, 
+                                 ~calc_f_reserves_labile(c_labl = .x, c_resv = .y, c_labl_target = 100, c_resv_target = 100)))
+
+library(scico)
+ggplot(df, aes(c_labl, c_resv, fill= f_net)) + 
+  geom_tile() +
+  scale_fill_scico(palette = 'roma') +
+  theme_classic() +
+  labs(title = "Flux from reserves to labile (Eq. S40a)", x = "Labile C (% of target)", y = "Reserves C (% of target)")
+```

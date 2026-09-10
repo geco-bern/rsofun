@@ -1,6 +1,6 @@
 module md_params_siml_pmodel
   !////////////////////////////////////////////////////////////////
-  ! Module for handling simulation parameters for P-model.
+  ! Module for handling simulation parameters for P-model setup.
   !----------------------------------------------------------------
   use md_params_core, only: steering_parameters
 
@@ -40,5 +40,3 @@ module md_params_siml_pmodel
   end type paramstype_siml_pmodel
 
 end module md_params_siml_pmodel
-
-

@@ -78,7 +78,6 @@ LazyData: true
 LazyDataCompression: xz
 ByteCompile: true
 NeedsCompilation: yes
-RoxygenNote: 7.3.3
 Suggests:
     covr,
     constructive,
@@ -88,6 +87,7 @@ Suggests:
     rmarkdown,
     ggplot2,
     knitr,
+    MODISTools,
     sensitivity,
     rpmodel,
     rlang,
@@ -96,3 +96,4 @@ Suggests:
 VignetteBuilder: knitr
 Encoding: UTF-8
 Config/testthat/edition: 3
+Config/roxygen2/version: 8.0.0
