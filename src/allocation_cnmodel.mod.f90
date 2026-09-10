@@ -51,15 +51,6 @@ module md_allocation_cnmodel
 
   real :: test
 
-  !-------------------------------------------------------------------
-  ! MF: 2026-08-13
-  ! Maximum fraction of the current labile C and N pools that may be
-  ! used within one timestep to support additional leaf growth toward
-  ! prescribed LAI. A very small residual fraction is retained to avoid
-  ! complete depletion and numerical instability of the labile pools.
-  !-------------------------------------------------------------------
-  real, parameter :: frac_labile_for_prescr_lai = 0.999
-
 contains
 
   subroutine allocation_daily( tile, tile_fluxes, climate, init )
@@ -173,13 +164,143 @@ contains
           end if
 
           !------------------------------------------------------------------
-          ! Calculate maximum C allocatable based on current labile pool size
+          ! Calculate maximum C available for biomass production based on current labile pool size
           !------------------------------------------------------------------
-          avl = orgfrac(  params_allocation%frac_avl_labl &
-                          * tile(lu)%plant(pft)%pheno%level_coldacclim &
-                          * tile(lu)%plant(pft)%pheno%level_veggrowth, &
-                          tile(lu)%plant(pft)%plabl )
+          if ( myinterface%params_siml%use_prescribed_lai ) then
 
+            ! Now additional phenology-dependent growth suppression
+            avl = orgfrac(  
+              params_allocation%frac_avl_labl, &
+              tile(lu)%plant(pft)%plabl )
+
+          else
+
+            avl = orgfrac(  
+              params_allocation%frac_avl_labl &
+              * tile(lu)%plant(pft)%pheno%level_coldacclim &
+              * tile(lu)%plant(pft)%pheno%level_veggrowth, &
+              tile(lu)%plant(pft)%plabl )
+
+          end if
+
+          !-------------------------------------------------------------------
+          ! Additional leaf allocation required to reach prescribed LAI
+          !-------------------------------------------------------------------
+          if ( myinterface%params_siml%use_prescribed_lai ) then
+            if ( avl%c%c12 > 0.0 ) then
+
+              ! Determine leaf C pool size, given prescribed LAI of this time step
+              ! xxx to be checked whether this is consistent with description in Stocker & Prentice, 2024
+              cleaf_target = get_leaf_c_from_lai( &
+                pft, &
+                climate%lai_prescr, &
+                tile(lu)%plant(pft)%actnv_unitfapar &
+                )
+
+              ! Determine leaf N pool size, given prescribed LAI of this time step
+              nleaf_target = get_leaf_n_canopy( &
+                pft, &
+                climate%lai_prescr, &
+                tile(lu)%plant(pft)%actnv_unitfapar &
+                )
+
+              ! Check if the target leaf C mass is greater than current
+              if ( cleaf_target > tile(lu)%plant(pft)%pleaf%c%c12 + eps ) then
+
+                ! gap to target
+                dcleaf_prescr = cleaf_target - tile(lu)%plant(pft)%pleaf%c%c12
+                dnleaf_prescr = nleaf_target - tile(lu)%plant(pft)%pleaf%n%n14
+
+                !-------------------------------------------------------------------
+                ! Maximum leaf-C increment affordable from labile C.
+                !-------------------------------------------------------------------
+                dcleaf_available = min( &
+                  dcleaf_prescr, &
+                  params_plant%growtheff * avl%c%c12 &
+                  )
+
+                !-------------------------------------------------------------------
+                ! If N balance is closed, reduce the candidate leaf-C allocation
+                ! until the associated leaf-N requirement fits available labile N.
+                !-------------------------------------------------------------------
+                if ( dcleaf_available > eps ) then
+
+                  nitr_prescr = 0
+
+                  do
+
+                    lai_trial = get_lai( &
+                      pft, &
+                      tile(lu)%plant(pft)%pleaf%c%c12 + dcleaf_available, &
+                      tile(lu)%plant(pft)%actnv_unitfapar &
+                      )
+
+                    ! xxx beni: avoid conserving N balance in C-only runs. 
+                    ! calculate N demand given new LAI, get it from labile, 
+                    ! remainder account as implied source (counted towards N fixation)
+                    nleaf_trial = get_leaf_n_canopy( &
+                      pft, &
+                      lai_trial, &
+                      tile(lu)%plant(pft)%actnv_unitfapar &
+                      )
+
+                    if ( &
+                      nleaf_trial - tile(lu)%plant(pft)%pleaf%n%n14 <= &
+                      frac_labile_for_prescr_lai * &
+                      tile(lu)%plant(pft)%plabl%n%n14 + eps &
+                      ) exit
+
+                    dcleaf_available = 0.9 * dcleaf_available
+                    nitr_prescr = nitr_prescr + 1
+
+                    if ( dcleaf_available <= eps ) exit
+
+                    if ( nitr_prescr >= 100 ) then
+                      dcleaf_available = 0.0
+                      exit
+                    end if
+
+                  end do
+
+                end if
+
+                !-------------------------------------------------------------------
+                ! Allocate affordable amount toward prescribed LAI
+                !-------------------------------------------------------------------
+                if ( dcleaf_available > eps ) then
+
+                  call allocate_leaf( &
+                    pft, &
+                    dcleaf_available, &
+                    tile(lu)%plant(pft)%pleaf%c%c12, &
+                    tile(lu)%plant(pft)%pleaf%n%n14, &
+                    tile(lu)%plant(pft)%plabl%c%c12, &
+                    tile(lu)%plant(pft)%plabl%n%n14, &
+                    tile_fluxes(lu)%plant(pft)%drgrow, &
+                    tile(lu)%plant(pft)%actnv_unitfapar, &
+                    tile(lu)%plant(pft)%lai_ind, &
+                    dnleaf_prescr, &
+                    myinterface%steering%closed_nbal, &
+                    tile_fluxes(lu)%plant(pft)%dnup_fix &
+                    )
+
+                  tile(lu)%plant(pft)%fapar_ind = get_fapar( &
+                    tile(lu)%plant(pft)%lai_ind &
+                    )
+
+                  call update_leaftraits( tile(lu)%plant(pft) )
+
+                  dcleaf = dcleaf + dcleaf_available
+                  dnleaf = dnleaf + dnleaf_prescr
+
+                end if  ! dcleaf_available > eps
+
+              end if    ! cleaf_target > current Cleaf
+
+            end if      ! avl > 0
+
+          end if        ! use_prescribed_lai
+                        
           ! ! xxx debug
           ! tile_fluxes(lu)%plant(pft)%debug1 = params_allocation%frac_avl_labl
           ! tile_fluxes(lu)%plant(pft)%debug2 = tile(lu)%plant(pft)%pheno%level_coldacclim
@@ -341,119 +462,6 @@ contains
           drgrow = 0.0
 
       end if
-
-      !-------------------------------------------------------------------
-      ! MF: 2026-08-12
-      ! Additional leaf allocation required to reach prescribed LAI
-      !-------------------------------------------------------------------
-      if ( myinterface%params_siml%use_prescribed_lai ) then
-
-        if ( tile(lu)%plant(pft)%pleaf%c%c12 > 0.0 ) then
-
-          cleaf_target = get_leaf_c_from_lai( &
-            pft, &
-            climate%lai_prescr, &
-            tile(lu)%plant(pft)%actnv_unitfapar &
-            )
-
-          nleaf_target = get_leaf_n_canopy( &
-            pft, &
-            climate%lai_prescr, &
-            tile(lu)%plant(pft)%actnv_unitfapar &
-            )
-
-          if ( cleaf_target > tile(lu)%plant(pft)%pleaf%c%c12 + eps ) then
-
-            dcleaf_prescr = cleaf_target - tile(lu)%plant(pft)%pleaf%c%c12
-            dnleaf_prescr = nleaf_target - tile(lu)%plant(pft)%pleaf%n%n14
-
-            !-------------------------------------------------------------------
-            ! Maximum leaf-C increment affordable from labile C.
-            !-------------------------------------------------------------------
-            dcleaf_available = min( &
-              dcleaf_prescr, &
-              frac_labile_for_prescr_lai * &
-              tile(lu)%plant(pft)%plabl%c%c12 * params_plant%growtheff &
-              )
-
-            !-------------------------------------------------------------------
-            ! If N balance is closed, reduce the candidate leaf-C allocation
-            ! until the associated leaf-N requirement fits available labile N.
-            !-------------------------------------------------------------------
-            if ( dcleaf_available > eps ) then
-
-              nitr_prescr = 0
-
-              do
-
-                lai_trial = get_lai( &
-                  pft, &
-                  tile(lu)%plant(pft)%pleaf%c%c12 + dcleaf_available, &
-                  tile(lu)%plant(pft)%actnv_unitfapar &
-                  )
-
-                nleaf_trial = get_leaf_n_canopy( &
-                  pft, &
-                  lai_trial, &
-                  tile(lu)%plant(pft)%actnv_unitfapar &
-                  )
-
-                if ( &
-                  nleaf_trial - tile(lu)%plant(pft)%pleaf%n%n14 <= &
-                  frac_labile_for_prescr_lai * &
-                  tile(lu)%plant(pft)%plabl%n%n14 + eps &
-                  ) exit
-
-                dcleaf_available = 0.9 * dcleaf_available
-                nitr_prescr = nitr_prescr + 1
-
-                if ( dcleaf_available <= eps ) exit
-
-                if ( nitr_prescr >= 100 ) then
-                  dcleaf_available = 0.0
-                  exit
-                end if
-
-              end do
-
-            end if
-
-            !-------------------------------------------------------------------
-            ! Allocate affordable amount toward prescribed LAI
-            !-------------------------------------------------------------------
-            if ( dcleaf_available > eps ) then
-
-              call allocate_leaf( &
-                pft, &
-                dcleaf_available, &
-                tile(lu)%plant(pft)%pleaf%c%c12, &
-                tile(lu)%plant(pft)%pleaf%n%n14, &
-                tile(lu)%plant(pft)%plabl%c%c12, &
-                tile(lu)%plant(pft)%plabl%n%n14, &
-                tile_fluxes(lu)%plant(pft)%drgrow, &
-                tile(lu)%plant(pft)%actnv_unitfapar, &
-                tile(lu)%plant(pft)%lai_ind, &
-                dnleaf_prescr, &
-                myinterface%steering%closed_nbal, &
-                tile_fluxes(lu)%plant(pft)%dnup_fix &
-                )
-
-              tile(lu)%plant(pft)%fapar_ind = get_fapar( &
-                tile(lu)%plant(pft)%lai_ind &
-                )
-
-              call update_leaftraits( tile(lu)%plant(pft) )
-
-              dcleaf = dcleaf + dcleaf_available
-              dnleaf = dnleaf + dnleaf_prescr
-
-            end if  ! dcleaf_available > eps
-
-          end if    ! cleaf_target > current Cleaf
-
-        end if      ! pleaf > 0
-
-      end if        ! use_prescribed_lai
 
       !-------------------------------------------------------------------
       ! Record acquired and required C and N
@@ -909,9 +917,15 @@ contains
     use md_interface_cnmodel, only: myinterface
 
     ! maximum nitrification rate
-    params_allocation%frac_leaf     = myinterface%params_calib%frac_leaf
-    params_allocation%frac_wood     = myinterface%params_calib%frac_wood
-    params_allocation%frac_avl_labl = myinterface%params_calib%frac_avl_labl
+    params_allocation%frac_leaf = myinterface%params_calib%frac_leaf
+    params_allocation%frac_wood = myinterface%params_calib%frac_wood
+
+    ! in LAI-driven runs, allow near-complete depletion of labile pool for growth
+    if ( myinterface%params_siml%use_prescribed_lai ) then
+      params_allocation%frac_avl_labl = 0.99
+    else
+      params_allocation%frac_avl_labl = myinterface%params_calib%frac_avl_labl
+    end if
 
   end subroutine getpar_modl_allocation
 

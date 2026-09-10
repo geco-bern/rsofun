@@ -576,7 +576,7 @@ if (!is.finite(feature_preflight)) {
   stop("The multi-target feature likelihood failed its serial preflight check.")
 }
 
-n_samples <- 5000
+n_samples <- 1000
 multitarget_calibration <- calib_sofun_lhs(
   pars = pars,
   par_calib = calibration_parameters,

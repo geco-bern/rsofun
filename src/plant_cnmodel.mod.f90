@@ -239,7 +239,6 @@ contains
   end function get_fapar
   
   
-  ! MF: 2026-08-12
   function get_leaf_c_from_lai( pft, lai, actnv_unitfapar ) result( cleaf )
     !////////////////////////////////////////////////////////////////
     ! Calculates canopy leaf C corresponding to a prescribed LAI,

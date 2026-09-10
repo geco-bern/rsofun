@@ -497,7 +497,7 @@ daily_gpp_calibration <- calib_sofun_lhs(
     )
   ),
   likelihood = daily_gpp_loglik,
-  n_samples = 500,
+  n_samples = 50,
   n_cores = max(1, parallel::detectCores() - 1),
   seed = 42,
   progress = TRUE,
@@ -515,7 +515,7 @@ monthly_gpp_calibration <- calib_sofun_lhs(
     )
   ),
   likelihood = monthly_gpp_loglik,
-  n_samples = 500,
+  n_samples = 50,
   n_cores = max(1, parallel::detectCores() - 1),
   seed = 44,
   progress = TRUE,
@@ -533,7 +533,7 @@ annual_gpp_calibration <- calib_sofun_lhs(
     )
   ),
   likelihood = mean_annual_gpp_loglik,
-  n_samples = 500,
+  n_samples = 50,
   n_cores = max(1, parallel::detectCores() - 1),
   seed = 43,
   progress = TRUE,
@@ -709,7 +709,7 @@ feature_gpp_calibration <- calib_sofun_lhs(
   par_calib = kphio_prior,
   model_error = list(),
   likelihood = feature_gpp_loglik,
-  n_samples = 500,
+  n_samples = 50,
   n_cores = max(1, parallel::detectCores() - 1),
   seed = 45,
   progress = TRUE,
