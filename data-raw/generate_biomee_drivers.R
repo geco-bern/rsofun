@@ -93,7 +93,7 @@ params_species <- tibble(
   alphaHT           = rep(36, 5),
   thetaHT           = c(0.3, 0.36, 0.30, 0.54, 0.30),
   alphaCA           = rep(150, 5),
-  thetaCA           = rep(1.5, 5),
+  thetaCA           = c(1.3, 1.36, 1.30, 1.54, 1.30), # to obey thetaBM = thetaCA + 1
   thetaBM           = c(2.3, 2.36, 2.30, 2.54, 2.30), # to obey thetaBM = thetaHT + 2
   # Reproduction parameters
   seedlingsize      = rep(0.05, 5),                   # initial size of seedlings (s0_plant)
