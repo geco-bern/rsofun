@@ -2,8 +2,35 @@
 * BiomeEP:
   * Bugfix: annual, cohort-level output had mixed up column names for variables:
   `NSN`,`seedC`,`leafC`,`rootC`,`sapwoodC`,`heartwoodC`
+  * Bugfix: `init_cohort$init_cohort_nsc` is now correctly taken into account. To 
+  remain backward-compatible, it was made optional. To recover previous behavior 
+  do not provide this column.
+  * Bugfix: `init_cohort$lu_index` is now correctly taken into account.
+  * Added missing state variables to in `output_annual_cohorts`:
+  `seedN`,`leafN`,`rootN`,`sapwoodN`,`heartwoodN` (note d13C currently still not output)
   * Cohorts are now less aggressively merged. Merging criteria was simplified from
   relative to absolute DBH difference. Now merging if difference <= 0.01 m.
+  * Removed dummy parameters in `params_species` for `run_biomee_f_bysite()`: 
+  `phenotype`,`Vmax`,`alphaBM`,`leafLS`,`lAImax`,`CNleaf0`,`gamma_L`,`Vannual`,
+  `betaON`,`betaOFF`, `leaf_size`.
+  If still provided, they must be NA, otherwise an error occurs.
+  * Removed parameter in `params_tile`  for `run_biomee_f_bysite()`: `par_mort_under` 
+  and `par_mort`. Their effects can be fully specified by 
+  `params_species%mortrate_d_u` and `params_species%mortrate_d_c` (for trees and for grasses)
+  * Added optional parameter `init_cohort$init_cohort_age` to specify a corresponding 
+  initial age distribution in years (default = 0). Default ensures backwards compatibility.
+  Age affects reproduction through `params_species$matural_age`
+  * Added optional parameter to `init_cohort`, to enable specification of initial plant
+  nitrogen pools. Namely: `init_cohort_bl_n14`, `init_cohort_br_n14`,
+  `init_cohort_bsw_n14`,`init_cohort_bHW_n14`,`init_cohort_seedC_n14`,
+  `init_cohort_nsc_n14`. If not provided, default values ensure backwards compatibility.
+  * Added optional parameter to `init_soil`, to enable specification of initial soil
+  nitrogen pools. Namely: `init_fast_soil_N`, `init_slow_soil_N`, `init_pmicr_C`, 
+  `init_pmicr_d13C`, `init_pmicr_N`, `init_wcl1`, `init_wcl2`, `init_wcl3`, `init_N0_ecosystem`. 
+  If not provided, default values ensure backwards compatibility.
+  * Added check that all `species$LMA` >= `params_tile$LMAmin`
+* P-model:
+  * no changes
 
 # rsofun 5.1.0
 

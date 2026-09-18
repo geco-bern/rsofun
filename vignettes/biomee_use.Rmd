@@ -184,14 +184,14 @@ pars <- pars_all["par"]
 
 ```{r include = FALSE}
 # fake output since calibration isn't run
-# saveRDS(pars_all, "files/biomee_use.Rmd__biomee_p_model_output___pars.RDS")
-# pars <- readRDS("files/biomee_use.Rmd__biomee_p_model_output___pars.RDS")["par"]
+# saveRDS(pars_all, here::here("vignettes","files","biomee_use.Rmd__biomee_p_model_output___pars.RDS"))
+# pars <- readRDS(here::here("vignettes","files","biomee_use.Rmd__biomee_p_model_output___pars.RDS"))["par"]
 pars <- list(
-  par = c(phiRL     = 1.27705864862701, 
-          LAI_light = 5.62385280630643, 
-          tf_base   = 0.504099730241379, 
-          par_mort  = 0.0220552311561793
-))
+  par = c(phiRL     = 1.86467244630407,
+          LAI_light = 6.67994629750767,
+          tf_base   = 0.610053130958959,
+          par_mort  = 0.0247470739328088
+)) # TODO: update these for better fit since using thetaHT = thetaBM - 2, and thetaCA = thetaBM - 1
 ```
 
 Using the calibrated parameter values, we can run again the BiomeE simulations.

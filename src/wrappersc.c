@@ -223,7 +223,7 @@ extern SEXP biomee_f_C(
     SEXP output_annual_tile            = PROTECT( alloc3DArray(REALSXP, nt_annual, 61, n_lu) );
 
     // Dimensions
-    int pDims[4] = {50, nt_annual_trans, 35, n_lu};
+    int pDims[4] = {50, nt_annual_trans, 40, n_lu};
     SEXP dims = PROTECT( allocVector(INTSXP, 4) );
     // INTEGER(dims) is a int* which we initialise with pDims
     memcpy(INTEGER(dims), pDims, 4 * sizeof(int));
