@@ -94,7 +94,7 @@ params_species <- tibble(
   thetaHT           = rep(0.5, 5),
   alphaCA           = rep(150, 5),
   thetaCA           = rep(1.5, 5),
-  thetaBM           = c(2.3, 2.36, 2.30, 2.54, 2.30),
+  thetaBM           = c(2.5, 2.5, 2.5, 2.5, 2.5), # since we are gonna switch this in next commit
   # Reproduction parameters
   seedlingsize      = rep(0.05, 5),                   # initial size of seedlings (s0_plant)
   maturalage        = c(0, 5, 5, 5, 5),               # (AgeRepro)
