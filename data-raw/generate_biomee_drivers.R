@@ -153,7 +153,7 @@ init_cohort <- tibble(
   init_cohort_bsw     = rep(0.05, 1), # initial biomass of sapwood, kg C/individual
   init_cohort_bHW     = rep(0.0, 1),  # initial biomass of heartwood, kg C/tree
   init_cohort_seedC   = rep(0.0, 1),  # initial biomass of seeds, kg C/individual
-  init_cohort_nsc     = rep(0.05, 1), # initial non-structural biomass
+  init_cohort_nsc     = rep(0.05, 1), # initial non-structural biomass, kg C/individual
   lu_index            = rep(0, 1)     # index land use (LU) containing this cohort. 0 (default) means any vegetated tile will contain a copy.
 )
 

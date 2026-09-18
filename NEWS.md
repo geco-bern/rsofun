@@ -1,4 +1,11 @@
 # rsofun (development version)
+* BiomeEP:
+  * Bugfix: annual, cohort-level output had mixed up column names for variables:
+  `NSN`,`seedC`,`leafC`,`rootC`,`sapwoodC`,`heartwoodC`
+  * Cohorts are now less aggressively merged. Merging criteria for two cohorts now 
+    uses updated DBH differences:
+    - for trees below 5 cm criteria remain as before: i.e. either <= 0.001 m or <= 20%, and
+    - for trees above 5 cm criteria was changed to absolute DBH difference of <= 0.01 m.
 
 ## New features
 * P-model:

@@ -445,7 +445,7 @@ contains
     self%thetaHT            = real( params_species(25)) ! prescribed
     self%alphaCA            = real( params_species(26)) ! prescribed
     self%thetaCA            = real( params_species(27)) ! prescribed
-    self%alphaBM            = real( params_species(28)) ! prescribed
+    self%alphaBM            = real( params_species(28)) ! prescribed ! TODO: not actually not prescribed, it is overwritten by alphaBM
     self%thetaBM            = real( params_species(29)) ! prescribed
     self%seedlingsize       = real( params_species(30))
     self%maturalage         = real( params_species(31))
@@ -487,7 +487,7 @@ contains
     ! specific root area
     self%SRA           = 2.0/(self%root_r*self%rho_FR)
 
-    ! calculate alphaBM parameter of allometry. note that rho_wood was re-introduced for this calculation
+    ! calculate alphaBM parameter of allometry. note that rho_wood was re-introduced for this calculation ! TODO: note that this overwrites the parameter alphaBM
     self%alphaBM = self%rho_wood * self%taperfactor * PI/4. * self%alphaHT ! 5200
 
     ! Vmax as a function of LNbase
