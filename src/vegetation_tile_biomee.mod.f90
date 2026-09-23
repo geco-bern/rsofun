@@ -20,6 +20,7 @@ module md_vegetation_tile_biomee
 
   !=============== Parameters ======================================================
   integer, public, parameter :: NCohortMax = 50 ! maximum number of cohorts that are output (there could be more but they would not be reported)
+                                                ! is also maximum number of cohorts that can reproduce in a year 
 
   !===== Model
   integer, public, parameter :: NLAYERS_MAX = 9     ! maximum number of canopy layers to be considered
@@ -151,8 +152,8 @@ module md_vegetation_tile_biomee
     !===== Reporting diagnostics
     real, dimension(nvars_annual_tile) :: out_annual_tile
     real, dimension(ndayyear, nvars_daily_tile) :: out_daily_tile
-    real, dimension(NCohortMax, nvars_annual_cohorts) :: out_annual_cohorts
-
+    real, dimension(NCohortMax, nvars_annual_cohorts) :: out_annual_cohorts 
+    
   contains
 
     !========= Derived variables
@@ -765,6 +766,8 @@ contains
     i = 0
     ! We initialize years to 0, indicating a lack of data
     self%out_annual_cohorts(:, ANNUAL_COHORTS_YEAR) = 0
+    self%out_annual_cohorts(:, ANNUAL_COHORTS_ID) = 0
+    self%out_annual_cohorts(:, ANNUAL_COHORTS_CID) = 0
 
     ! Cohorts ouput
     it => self%cohorts()

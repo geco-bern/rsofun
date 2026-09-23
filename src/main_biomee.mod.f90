@@ -182,7 +182,7 @@ contains
           output_annual_tile(steering_state%year, :, :))
 
       if (steering_state%cohort_reporting) then
-        idx = steering_state%cohort_report_idx
+        idx = steering_state%cohort_report_idx  ! index corresponding current year
         call aggregat%populate_outcohorts(output_annual_cohorts(:, idx, :, :))
       end if
       if (steering_state%daily_reporting) then

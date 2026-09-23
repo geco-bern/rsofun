@@ -371,6 +371,7 @@ build_lu_out <- function(biomeeout, lu, trimmed_object){
 
   # annual cohorts
   output_annual_cohorts <- annual_cohort_output(biomeeout[[3]][,,,lu,drop=FALSE])
+  # biomeeout[[3]] === output_annual_cohorts has dimension(NCohortMax, nt_annual_trans, nvars_annual_cohorts, n_lu)
 
   # restart state
   restart_init_cohort <- restart_cohort_output(biomeeout[[5]][,,lu,drop=FALSE])
@@ -456,7 +457,6 @@ build_params_siml <- function(params_siml, forcing_years, makecheck){
   }
   # Default value for firstyeartrend
   # If not provided, we anchor to 0, meaning that spinup years are negative and transient years are positive.
-  # firstyeartrend is currently not used.
   if ('firstyeartrend' %nin% names(params_siml)) {
     params_siml$firstyeartrend <- 0
   }
@@ -1244,7 +1244,7 @@ restart_soil_output <- function(raw_data){
 }
 
 annual_cohort_output <- function(raw_data){
-  annual_values <- c(
+  vars_annual_cohorts <- c(
     "cohort",      # ANNUAL_COHORTS_ID             =  1
     "year",        # ANNUAL_COHORTS_YEAR           =  2
     "cID",         # ANNUAL_COHORTS_CID            =  3
@@ -1287,14 +1287,23 @@ annual_cohort_output <- function(raw_data){
     "heartwoodN"   # ANNUAL_COHORTS_HW_N           = 40
   )
 
+  # biomeeout[[3]] === output_annual_cohorts      has dimension(NCohortMax, nt_annual_trans, nvars_annual_cohorts, n_lu)
+  # raw_data === biomeeout[[3]][,,,lu,drop=FALSE] has dimension(NCohortMax, nt_annual_trans, nvars_annual_cohorts)
+  
+  # Flatten 3D array 'raw_data' to a 2D data.frame
+  # - columns correspond to dimension[3] (nvars_annual_cohorts)
+  # - rows correspond to dimension[1] * dimension[2] (NCohortMax * nt_annual_trans)
+  # - n_lu (in 4D array) is 
   dimensions <- dim(raw_data)
-  dim(raw_data) <- c(prod(dimensions[1:2]), dimensions[3])
+  dim(raw_data) <- c(prod(dimensions[1:2]), dimensions[3]) # reshape
   df <- as.data.frame(raw_data)
-  colnames(df) <- annual_values
+  colnames(df) <- vars_annual_cohorts
 
   ## drop rows (cohorts) with no values
   df$year[df$year <= 0] <- NA
   df <- df[!is.na(df$year),]
+
+  # TODO: add warning if values in cohort column reach 50, since this means there was some cohort overflow (i.e. more cohorts than the maximum allowed by the model)
 
   # remove confusing cohort column: 
   # #' \item{cohort}{An index of the cohorts (unused, since this changes from year to year.)}

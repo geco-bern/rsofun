@@ -339,12 +339,12 @@ contains
     end do
   end subroutine populate_restart_state
 
-  subroutine populate_outcohorts(self, output_annual_cohorts)
+  subroutine populate_outcohorts(self, output_curr_year_cohorts)
     use, intrinsic :: iso_fortran_env, dp=>real64
 
     ! Arguments
     class(aggregated_tile), intent(in)             :: self
-    real(kind=dp), dimension(:, :, :), intent(out) :: output_annual_cohorts
+    real(kind=dp), dimension(:, :, :), intent(out) :: output_curr_year_cohorts
 
     ! Local variable
     integer :: lu_idx
@@ -353,7 +353,9 @@ contains
       associate(lu => self%tiles(lu_idx))
         ! If empty tile, skip
         if (lu%non_empty()) then
-          output_annual_cohorts(:, :, lu_idx) = dble(lu%vegn%out_annual_cohorts(:, :))
+          ! since output_curr_year_cohorts is the current year's view of == output_annual_cohorts(:, idx, :, :), 
+          ! we can directly assign the values from lu%vegn%out_annual_cohorts to the correct land use type (lu_idx)
+          output_curr_year_cohorts(:, :, lu_idx) = dble(lu%vegn%out_annual_cohorts(:, :))
         end if
 
       end associate
