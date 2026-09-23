@@ -3,7 +3,7 @@
 \docType{data}
 \name{biomee_validation}
 \alias{biomee_validation}
-\title{rsofun BiomeE targets validation data}
+\title{rsofun BiomeE validation data}
 \format{
 A tibble of validation data:
 \describe{
@@ -21,6 +21,6 @@ biomee_validation
 }
 \description{
 Small example dataset of target observations (leaf trait data) at the CH-LAE site
-to optimize model parameters with the function \code{\link{calib_sofun}}
+to optimize model parameters with the function \code{\link{calib_sofun_legacy}}
 }
 \keyword{datasets}

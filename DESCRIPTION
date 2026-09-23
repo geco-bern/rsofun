@@ -1,6 +1,6 @@
 Package: rsofun
 Title: The P-Model and BiomeE Modelling Framework
-Version: 5.1.0.9000
+Version: 5.1.0.9001
 Authors@R: c(
             person(
               family = "Stocker",
@@ -69,7 +69,11 @@ Imports:
     lubridate,
     multidplyr,
     stats,
-    utils
+    utils,
+    doParallel,
+    msm,
+    foreach,
+    methods
 LazyData: true
 LazyDataCompression: xz
 ByteCompile: true
@@ -86,7 +90,9 @@ Suggests:
     knitr,
     sensitivity,
     rpmodel,
-    rlang
+    rlang,
+    khroma,
+    yardstick
 VignetteBuilder: knitr
 Encoding: UTF-8
 Config/testthat/edition: 3
