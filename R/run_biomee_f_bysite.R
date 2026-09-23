@@ -640,7 +640,7 @@ build_init_cohort <- function(init_cohort, params_species){
   }
   
   # This function is needed for defaults of initial NSC or NSN values (if not provided):
-  init_bl_max_br_max <- function(init_cohort, arg_cohort_params){ # TODO: replace rsofun::
+  init_bl_max_br_max <- function(init_cohort, arg_cohort_params){
     # This is now copied to R layer to recover previous default
     btot <- with(init_cohort, init_cohort_bHW + init_cohort_bsw)
     
@@ -651,7 +651,7 @@ build_init_cohort <- function(init_cohort, params_species){
     alphaCA <- arg_cohort_params$alphaCA
     thetaCA <- arg_cohort_params$thetaCA
     LMA     <- arg_cohort_params$LMA
-    LAImax  <- max(0.5, arg_cohort_params$LAI_light) # TODO: should be pmax
+    LAImax  <- pmax(0.5, arg_cohort_params$LAI_light)
     phiRL   <- arg_cohort_params$phiRL
     SRA     <- with(arg_cohort_params,
                     2.0/(root_r * rho_FR))
