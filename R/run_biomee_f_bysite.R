@@ -617,27 +617,43 @@ build_params_species <- function(params_species, params_tile_arg = NULL){
 }
 
 build_init_cohort <- function(init_cohort, params_species){
+  if ('init_cohort_species' %nin% names(init_cohort)) {
+    stop("'init_cohort' must contain 'init_cohort_species'.")
+  }
+  if (nrow(params_species) < 1L) {
+    stop("'params_species' must contain at least one species.")
+  }
+
+  # get idx of params_species for each cohort
+  if (any(init_cohort$init_cohort_species < 1L) || any(init_cohort$init_cohort_species > nrow(params_species))) {
+    stop(sprintf(
+      "'init_cohort_species' must contain integer row indices referring to rows of 'params_species' (valid range: 1 to %d).",
+      nrow(params_species)))
+  }
+
+  # repeat params for each cohorts: cohort_params has one row per cohort, with species parameters
+  init_cohort$init_cohort_species <- as.integer(init_cohort$init_cohort_species)
+  cohort_params <- params_species[init_cohort$init_cohort_species, , drop = FALSE]
+
   if ('init_cohort_age' %nin% names(init_cohort)) {
     init_cohort$init_cohort_age <- 0.0  # former default: initialize at 0 years old
   }
   
   # This function is needed for defaults of initial NSC or NSN values (if not provided):
-  init_bl_max_br_max <- function(init_cohort, params_species){ # TODO: replace rsofun::
+  init_bl_max_br_max <- function(init_cohort, arg_cohort_params){ # TODO: replace rsofun::
     # This is now copied to R layer to recover previous default
     btot <- with(init_cohort, init_cohort_bHW + init_cohort_bsw)
-    species_idx <- with(init_cohort, init_cohort_species)
     
     # get species params for calculation
-    alphaBM <- with(params_species[species_idx,],
+    alphaBM <- with(arg_cohort_params,
                     rho_wood * taperfactor * pi/4. * alphaHT)
-    thetaBM <- with(params_species[species_idx,], thetaBM)
-    alphaCA <- with(params_species[species_idx,], alphaCA)
-    thetaCA <- with(params_species[species_idx,], thetaCA)
-    LMA     <- with(params_species[species_idx,], LMA)
-    LAImax  <- with(params_species[species_idx,],
-                    max(0.5, LAI_light))
-    phiRL   <- with(params_species[species_idx,], phiRL)
-    SRA     <- with(params_species[species_idx,],
+    thetaBM <- arg_cohort_params$thetaBM
+    alphaCA <- arg_cohort_params$alphaCA
+    thetaCA <- arg_cohort_params$thetaCA
+    LMA     <- arg_cohort_params$LMA
+    LAImax  <- max(0.5, arg_cohort_params$LAI_light) # TODO: should be pmax
+    phiRL   <- arg_cohort_params$phiRL
+    SRA     <- with(arg_cohort_params,
                     2.0/(root_r * rho_FR))
     
     # calculate bl_max and br_max to derive previous default NSC or NSN:
@@ -652,19 +668,18 @@ build_init_cohort <- function(init_cohort, params_species){
   }
   
   # set default initial C values of vegetation pools
-  res <- init_bl_max_br_max(init_cohort, params_species)
+  res <- init_bl_max_br_max(init_cohort, cohort_params)
   if ('init_cohort_nsc' %nin% names(init_cohort)) {
     
     init_cohort$init_cohort_nsc <- 2.0 * (res$bl_max + res$br_max) # former default: initialize to value based on bl_max and br_max
   }
 
   # set default initial N values of vegetation pools
-  species_idx <- init_cohort$init_cohort_species
-  curr_CNroot0 <- params_species[species_idx,]$CNroot0
-  curr_CNsw0   <- params_species[species_idx,]$CNsw0
-  curr_CNwood0 <- params_species[species_idx,]$CNwood0
-  curr_CNseed0 <- params_species[species_idx,]$CNseed0
-  curr_CNleaf0 <- with(params_species[species_idx,],
+  curr_CNroot0 <- cohort_params$CNroot0
+  curr_CNsw0   <- cohort_params$CNsw0
+  curr_CNwood0 <- cohort_params$CNwood0
+  curr_CNseed0 <- cohort_params$CNseed0
+  curr_CNleaf0 <- with(cohort_params,
                        # This is now copied to R layer to recover previous default
                        {LNA = LNbase + LMA/CNleafsupport
                        CNleaf0 = LMA/LNA
