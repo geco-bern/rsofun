@@ -53,7 +53,7 @@ This data structure can be freely used for documenting the dataset, but must inc
       \item{K_nitrogen}{Mineral Nitrogen turnover rate (yr\eqn{^{-1}}).}
       \item{MLmixRatio}{Ratio of C and N returned to litters from microbes.}
       \item{etaN}{N loss rate through runoff (organic and mineral) (yr\eqn{^{-1}}).}
-      \item{LMAmin}{Minimum LMA, leaf mass per unit area, only of parts of the leaf that become fine litter (metabolic parts), kg C m\eqn{^{-2}}. Has to be smaller than LMA.}
+      \item{LMAmin}{Minimum LMA, leaf mass per unit area, LMAmin/LMA describes fraction of leaf that become fine litter (metabolic parts), kg C m\eqn{^{-2}}. Has to be smaller than LMA. Difference to LMA is structural parts (becoming coarse litter).}
       \item{fsc_fine}{Fraction of fast turnover carbon in fine biomass.}
       \item{fsc_wood}{Fraction of fast turnover carbon in wood biomass.}
       \item{l_fract}{Fraction of the carbon retained after leaf drop.}
@@ -76,7 +76,7 @@ This data structure can be freely used for documenting the dataset, but must inc
       \item{wet_leaf_dreg}{Wet leaf photosynthesis down-regulation.}
       \item{m_cond}{Factor of stomatal conductance.}
       \item{alpha_phot}{Photosynthesis efficiency.}
-      \item{gamma_LN}{Leaf respiration coefficient per unit N.}
+      \item{gamma_LN}{Leaf respiration coefficient per unit N, in molC kgN\eqn{^{-1}} yr\eqn{^{-1}}.}
       \item{gamma_SW}{Sapwood respiration rate, in kg C m\eqn{^{-2}} yr\eqn{^{-1}}.}
       \item{gamma_FR}{Fine root respiration rate, kg C kg C\eqn{^{-1}} yr\eqn{^{-1}}.}
       \item{tk_crit}{Critical temperature triggering offset of leaf phenology (unused with evergreen), in Kelvin.}
@@ -87,8 +87,8 @@ This data structure can be freely used for documenting the dataset, but must inc
       \item{alphaHT}{Coefficient for allometry (height = alphaHT * DBH_m ** thetaHT), in m m\eqn{^{-thetaHT}}.}
       \item{thetaHT}{Coefficient for allometry (height = alphaHT * DBH_m ** thetaHT), unitless.}
       \item{thetaBM}{Coefficient for allometry (biomass = alphaBM * DBH ** thetaBM), unitless. Since alphaBM is derived from alphaHT, it makes sense to also ensure thetaBM = thetaHT + 2.}
-      \item{alphaCA}{Coefficient for allometry (projected crown area = pi * (alphaCA * DBH_m) ** thetaCA), in m\eqn{^{2/thetaCA-1}}.}
-      \item{thetaCA}{Coefficient for allometry (projected crown area = pi * (alphaCA * DBH_m) ** thetaCA), unitless. Dybzinski (eq. G1) showed that thetaCA = thetaBM - 1.}
+      \item{alphaCA}{Coefficient for allometry (projected crown area = alphaCA * DBH_m ** thetaCA), in m\eqn{^{2}} \eqn{^{-/thetaCA}}.}
+      \item{thetaCA}{Coefficient for allometry (projected crown area = alphaCA * DBH_m ** thetaCA), unitless. Dybzinski (eq. G1) showed that thetaCA = thetaBM - 1. Moreover, Weng et al. (2015, eq A2) uses thetaBM = thetaHT + 2.}
       \item{rho_wood}{Wood density (kg C m\eqn{^{-3}}). (Only used to derive alphaBM.)}
       \item{taperfactor}{Multiplicative factor to correct the cylindric volume/mass calculated with DBH, unitless. E.g. for a cone taperfactor is 1/3 (V = 1/3 Pi * r^2 * HT).  (Only used to derive alphaBM.)}
       \item{phiCSA}{Ratio of sapwood area to leaf area.}
