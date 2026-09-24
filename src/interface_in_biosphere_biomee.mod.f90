@@ -597,13 +597,12 @@ contains
     ! specific root area
     self%SRA           = 2.0/(self%root_r*self%rho_FR)
 
-    ! calculate alphaBM parameter of allometry. note that rho_wood was re-introduced for this calculation ! TODO: note that this overwrites the parameter alphaBM
+    ! calculate alphaBM parameter of allometry. note that rho_wood was re-introduced for this calculation ! NOTE: this overwrites the dummy parameter alphaBM
     self%alphaBM = self%rho_wood * self%taperfactor * PI/4. * self%alphaHT ! 5200
     !              (kgC/tree / m)* (-)              *       * m / m^thetaHT          => alphaBM is in kgC/tree / m^(thetaHT+2)
     ! NOTE: definition of taperfactor is the multiplicative factor to correct the cylindric volume/mass calculated with DBH.
     ! NOTE: e.g. for a cone the volume formula is: V = 1/3 Pi * r^2 * HT, i.e. for a cone the taperfactor is 1/3.
     ! TODO: wouldn't this also require that we assume thetaBM == thetaHT + 2 (eqA2, Weng et al. 2015)? Which is not enforced with current parameters.
-    !       
 
     ! Vmax as a function of LNbase (max rubisco rate, mol m-2 s-1)
     self%Vmax = 0.02 * self%LNbase ! 0.03125 * sp%LNbase ! Vmax/LNbase= 25E-6/0.8E-3 = 0.03125 !
