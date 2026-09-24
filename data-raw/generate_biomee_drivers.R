@@ -71,7 +71,7 @@ params_tile <- tibble(
 
 params_species <- tibble(
   lifeform          = c(0, 1, 1, 1, 1),    # 0: grass; 1 Woody
-  phenotype         = c(0, 1, 1, 1, 1),    # 0: Deciduous; 1 Evergreen
+  phenotype         = c(0, 0, 1, 1, 1),    # 0: Deciduous; 1 Evergreen
   pt                = c(1, 0, 0, 0, 0),    # 0: C3; 1: C4
   # Root parameters
   alpha_FR          = rep(1.2, 5),
@@ -128,16 +128,9 @@ params_species <- tibble(
   phiRL             = c(0.7, 3.5, 3.5, 3.5, 3.5),     # Root/Leaf area ratio
   LAI_light         = rep(3.5, 5)                      # Light-limited crown LAI
 )
-params_species <- params_species[2:5, ] # NOTE: current drivers and outputs had not been updated
-                                        #       with the first species (the grass species), leading
-                                        #       to test fail if run with all 5 species. Therefore,
-                                        #       the grass species is removed again here. 
-                                        # TODO: Later one can decide to include the grass species in the 
-                                        #       example driver, but this requires updating outputs and
-                                        #       tests as well.
 
 init_cohort <- tibble(
-  init_cohort_species = rep(2, 1),    # indicates sps # 2 - Fagus sylvatica
+  init_cohort_species = rep(3, 1),    # indicates sps # 3
   init_cohort_nindivs = rep(0.05, 1), # initial individual density, individual/m2 ! 1 indiv/m2 = 10.000 indiv/ha
   init_cohort_age     = rep(0.0, 1),  # initial age, year
   init_cohort_bl      = rep(0.0, 1),  # initial biomass of leaves, kg C/individual
