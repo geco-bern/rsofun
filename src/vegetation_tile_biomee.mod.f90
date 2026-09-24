@@ -766,8 +766,6 @@ contains
     i = 0
     ! We initialize years to 0, indicating a lack of data
     self%out_annual_cohorts(:, ANNUAL_COHORTS_YEAR) = 0
-    self%out_annual_cohorts(:, ANNUAL_COHORTS_ID) = 0
-    self%out_annual_cohorts(:, ANNUAL_COHORTS_CID) = 0
 
     ! Cohorts ouput
     it => self%cohorts()

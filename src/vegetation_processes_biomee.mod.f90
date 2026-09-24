@@ -403,7 +403,7 @@ contains
       cc => it%cohort
 
       ! update GDD for each cohort
-      cc%gdd = cc%gdd + max(0.0, vegn%tk_daily - 278.15) ! GDD5
+      cc%gdd = cc%gdd + max(0.0, vegn%tk_daily - 278.15) ! GDD5 (i.e 5 degrees) # NOTE: this actually uses a hardcoded 5C threshold
 
       associate (sp => cc%sp() )
 
@@ -590,7 +590,7 @@ contains
       end do
 
       ! set calibratable mortality parameter
-      CAI_max = 1.0 ! used to be calibrateable (Slight misuse of par_mort. Set to 1.0 (former default) instead of replacing with sp%mortrate_d_c.)
+      CAI_max = 1.0 ! used to be calibrateable (Was formerly a slight misuse of par_mort. Set to 1.0 (former default) instead of replacing with sp%mortrate_d_c.)
 
       ! This thinning method depends on the order of the cohorts (oldest cohorts tends to die first)
       ! We sort the cohorts by increasing height
@@ -767,7 +767,7 @@ contains
     ! We build new cohorts for seedlings
     do k = 1, nPFTs
 
-      new => vegn%create_cohort() ! NOTE: this could lead to more cohorts than `NCohortMax`
+      new => vegn%create_cohort() ! NOTE: this increases number of cohorts and could lead to more cohorts than `NCohortMax`
       cc => new%cohort
 
       ! update child cohort parameters
