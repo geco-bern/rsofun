@@ -38,7 +38,7 @@ module md_cohort
     real :: age           = 0.0          ! age of cohort, years
     real :: topyear       = 0.0          ! number of years the cohort is in top layer
 
-    !===== Biological state variables (prognostic)
+    !===== Biological prognostic variables (i.e. state variables)
     real    :: gdd        = 0.0          ! growing degree-day (phenology)
     integer :: status     = LEAF_OFF     ! growth status of plant
     real :: leaf_age      = 0.0          ! leaf age (years)
@@ -56,7 +56,7 @@ module md_cohort
     real    :: br_max     = 0.0          ! Max. fine root biomass
 
     !=================== Temporary variables
-    ! Contrary to the state vairbales, temporary variables are reset every step, day, or year (as appropriate).
+    ! Contrary to the state variables, temporary variables are reset every step, day, or year (as appropriate).
 
     !===== Fast step fluxes, kg timestep-1 tree-1
     type(common_fluxes) :: fast_fluxes
@@ -406,9 +406,6 @@ contains
 
     ! calculations of bl_max and br_max are used as target values for leaf and
     ! root growth. They affect how much carbon is pulled from NSC towards growth
-    ! BUG: Given that bl_max and br_max depend on crownarea() they should increase with wood biomass (pwood+psapw) 
-    ! along the lifetime of a cohort. However, they are set only at the beginning of the simulation. TODO: solve this
-    ! NO, we call init_bl_max_br_max each year when doing vegn_phenology()
     self%bl_max = sp%LMA   * sp%LAImax        * crownarea / self%layer  
     self%br_max = sp%phiRL * sp%LAImax/sp%SRA * crownarea / self%layer
 
