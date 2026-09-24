@@ -41,6 +41,7 @@ test_that("Snapshot tests run_biomee_f_bysite()", {
 
   # read in demo data
   df_drivers_BiomeE_Pmodel <- rsofun::biomee_p_model_drivers
+  df_drivers_BiomeE_Pmodeldecid <- rsofun::biomee_p_model_drivers; df_drivers_BiomeE_Pmodeldecid$init_cohort[[1]]$init_cohort_species <- 2 # to select deciuous species (2) instead of evergreen (3)
   df_drivers_BiomeE_PLULUC <- rsofun::biomee_p_model_luluc_drivers
   df_drivers_BiomeE_gsLeun <- rsofun::biomee_gs_leuning_drivers
 
@@ -48,12 +49,21 @@ test_that("Snapshot tests run_biomee_f_bysite()", {
 
   # remove spinup that we can check initial conditions and transient phases
   df_drivers_BiomeE_Pmodel$params_siml[[1]]$spinupyears <- 0
+  df_drivers_BiomeE_Pmodeldecid$params_siml[[1]]$spinupyears <- 0
   df_drivers_BiomeE_PLULUC$params_siml[[1]]$spinupyears <- 0
   df_drivers_BiomeE_gsLeun$params_siml[[1]]$spinupyears <- 0
   df_drivers_BiomeE_Pmodel$params_siml[[1]]$nyeartrend <- 251
+  df_drivers_BiomeE_Pmodeldecid$params_siml[[1]]$nyeartrend <- 251
   df_drivers_BiomeE_PLULUC$params_siml[[1]]$nyeartrend <- 251
   df_drivers_BiomeE_gsLeun$params_siml[[1]]$nyeartrend <- 251
   df_drivers_BiomeE_Pmodel$forcing[[1]] <- df_drivers_BiomeE_Pmodel$forcing[[1]] |>
+    # repeat forcing and update dates
+    list() |> rep(251) |> dplyr::bind_rows(.id = "repeatedyear") |>
+    # While we could change the date of each row with below code,
+    # it is actually not needed since it is not read by run_biomee_f_bysite()
+    # mutate(date = date + lubridate::years(as.numeric(repeatedyear) - 1)) |>
+    select(-repeatedyear)
+  df_drivers_BiomeE_Pmodeldecid$forcing[[1]] <- df_drivers_BiomeE_Pmodeldecid$forcing[[1]] |>
     # repeat forcing and update dates
     list() |> rep(251) |> dplyr::bind_rows(.id = "repeatedyear") |>
     # While we could change the date of each row with below code,
@@ -87,6 +97,17 @@ test_that("Snapshot tests run_biomee_f_bysite()", {
     params_species = df_drivers_BiomeE_Pmodel$params_species[[1]],
     init_cohort    = df_drivers_BiomeE_Pmodel$init_cohort[[1]],
     init_soil      = df_drivers_BiomeE_Pmodel$init_soil[[1]],
+    makecheck      = TRUE
+  )
+  mod_BiomeE_Pmodeldecid <- run_biomee_f_bysite(
+    sitename       = df_drivers_BiomeE_Pmodeldecid$sitename[1],
+    params_siml    = df_drivers_BiomeE_Pmodeldecid$params_siml[[1]],
+    site_info      = df_drivers_BiomeE_Pmodeldecid$site_info[[1]],
+    forcing        = df_drivers_BiomeE_Pmodeldecid$forcing[[1]],
+    params_tile    = df_drivers_BiomeE_Pmodeldecid$params_tile[[1]],
+    params_species = df_drivers_BiomeE_Pmodeldecid$params_species[[1]],
+    init_cohort    = df_drivers_BiomeE_Pmodeldecid$init_cohort[[1]],
+    init_soil      = df_drivers_BiomeE_Pmodeldecid$init_soil[[1]],
     makecheck      = TRUE
   )
   mod_BiomeE_PLULUC <- run_biomee_f_bysite(
@@ -176,6 +197,11 @@ test_that("Snapshot tests run_biomee_f_bysite()", {
   expect_true(all(!is.na(tibble(mod_BiomeE_Pmodel$data$output_annual_tile))))
   expect_true(all(!is.na(tibble(mod_BiomeE_Pmodel$data$output_annual_cohorts))))
 
+  expect_true(all(!is.na(tibble(mod_BiomeE_Pmodeldecid$data$output_daily_tile))))
+  # expect_true(all(!is.na(tibble(mod_BiomeE_Pmodeldecid$data$output_annual_tile)))) # TODO: this appears not to be true for column c_turnover_time
+  expect_true(all(!is.na(tibble(subset(mod_BiomeE_Pmodeldecid$data$output_annual_tile, select=-c(c_turnover_time))))))  # if any value outside of column c_turnover_time
+  expect_true(all(!is.na(tibble(mod_BiomeE_Pmodeldecid$data$output_annual_cohorts))))
+  
   expect_true(all(!is.na(tibble(mod_BiomeE_PLULUC$primary$output_daily_tile))))
   expect_true(all(!is.na(tibble(mod_BiomeE_PLULUC$secondary$output_daily_tile))))
   expect_true(all(!is.na(tibble(mod_BiomeE_PLULUC$primary$output_annual_tile))))
@@ -235,6 +261,12 @@ test_that("Snapshot tests run_biomee_f_bysite()", {
   mod_BiomeE_Pmodel_oac_yr2   <- tibble(mod_BiomeE_Pmodel$data$output_annual_cohorts) |> filter(year ==  2)
   mod_BiomeE_Pmodel_oac_yr251 <- tibble(mod_BiomeE_Pmodel$data$output_annual_cohorts) |> filter(year == 251)
 
+  mod_BiomeE_Pmodeldecid_odt_yr1   <- tibble(mod_BiomeE_Pmodeldecid$data$output_daily_tile) |> filter(year ==  1, doy %in% c(1, 2, 180, 364, 365))
+  mod_BiomeE_Pmodeldecid_odt_yr251 <- tibble(mod_BiomeE_Pmodeldecid$data$output_daily_tile) |> filter(year == 251, doy %in% c(1, 2, 180, 364, 365))
+  mod_BiomeE_Pmodeldecid_oat       <- tibble(mod_BiomeE_Pmodeldecid$data$output_annual_tile) |> filter(year %in% c(1, 2, 8, 9, 16, 251))
+  mod_BiomeE_Pmodeldecid_oac_yr1   <- tibble(mod_BiomeE_Pmodeldecid$data$output_annual_cohorts) |> filter(year ==  1)
+  mod_BiomeE_Pmodeldecid_oac_yr2   <- tibble(mod_BiomeE_Pmodeldecid$data$output_annual_cohorts) |> filter(year ==  2)
+  mod_BiomeE_Pmodeldecid_oac_yr251 <- tibble(mod_BiomeE_Pmodeldecid$data$output_annual_cohorts) |> filter(year == 251)
 
   mod_BiomeE_gsLeun_odt_yr1   <- tibble(mod_BiomeE_gsLeun$data$output_daily_tile) |> filter(year ==  1, doy %in% c(1, 2, 180, 364, 365))
   mod_BiomeE_gsLeun_odt_yr251 <- tibble(mod_BiomeE_gsLeun$data$output_daily_tile) |> filter(year == 251, doy %in% c(1, 2, 180, 364, 365))
@@ -268,6 +300,13 @@ test_that("Snapshot tests run_biomee_f_bysite()", {
   expect_snapshot_value_fmt(mod_BiomeE_Pmodel_oac_yr2,   tolerance = 0.01, cran = TRUE)
   expect_snapshot_value_fmt(mod_BiomeE_Pmodel_oac_yr251, tolerance = 0.085, cran = TRUE) # Higher than 0.01 for Nupt on Windows
 
+  expect_snapshot_value_fmt(mod_BiomeE_Pmodeldecid_odt_yr1,   tolerance = 0.01, cran = TRUE)
+  expect_snapshot_value_fmt(mod_BiomeE_Pmodeldecid_odt_yr251, tolerance = 0.01, cran = TRUE)
+  expect_snapshot_value_fmt(mod_BiomeE_Pmodeldecid_oat,       tolerance = 0.04, cran = TRUE)  # Higher than 0.01 for N_uptk on Windows
+  expect_snapshot_value_fmt(mod_BiomeE_Pmodeldecid_oac_yr1,   tolerance = 0.01, cran = TRUE)
+  expect_snapshot_value_fmt(mod_BiomeE_Pmodeldecid_oac_yr2,   tolerance = 0.01, cran = TRUE)
+  expect_snapshot_value_fmt(mod_BiomeE_Pmodeldecid_oac_yr251, tolerance = 0.085, cran = TRUE) # Higher than 0.01 for Nupt on Windows
+  
   expect_snapshot_value_fmt(mod_BiomeE_gsLeun_odt_yr1,   tolerance = 0.01, cran = TRUE)
   expect_snapshot_value_fmt(mod_BiomeE_gsLeun_odt_yr251, tolerance = 0.01, cran = TRUE)
   expect_snapshot_value_fmt(mod_BiomeE_gsLeun_oat,       tolerance = 0.01, cran = TRUE)
@@ -288,4 +327,5 @@ test_that("Snapshot tests run_biomee_f_bysite()", {
   expect_snapshot_value_fmt(mod_BiomeE_PLULUC_secondary_oac_yr1,   tolerance = 0.01, cran = TRUE)
   expect_snapshot_value_fmt(mod_BiomeE_PLULUC_secondary_oac_yr2,   tolerance = 0.01, cran = TRUE)
   expect_snapshot_value_fmt(mod_BiomeE_PLULUC_secondary_oac_yr251, tolerance = 0.085, cran = TRUE)
+  
 })
