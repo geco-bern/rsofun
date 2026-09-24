@@ -1,72 +1,78 @@
 # rsofun (development version)
-* BiomeEP:
-  * Bugfix: `phenotype` is now correctly taking into account, decoupling it from `LMA` (#329)
-  * Bugfix: annual, cohort-level output had mixed up column names for variables:
-  `NSN`,`seedC`,`leafC`,`rootC`,`sapwoodC`,`heartwoodC`
-  * Bugfix: `init_cohort$init_cohort_nsc` is now correctly taken into account. To 
-  remain backward-compatible, it was made optional. To recover previous behavior 
-  do not provide this column.
-  * Bugfix: `init_cohort$lu_index` is now correctly taken into account.
-  * Added missing state variables to in `output_annual_cohorts`:
-  `seedN`,`leafN`,`rootN`,`sapwoodN`,`heartwoodN` (note d13C currently still not output)
-  * Cohorts are now less aggressively merged. Merging criteria for two cohorts now 
-    uses updated DBH differences:
-    - for trees below 5 cm criteria remain as before: i.e. either <= 0.001 m or <= 20%, and
-    - for trees above 5 cm criteria was changed to absolute DBH difference of <= 0.01 m.
-  * Removed dummy parameters in `params_species` for `run_biomee_f_bysite()`: 
+
+## BiomeEP: New features
+* Cohorts are now less aggressively merged. Cohort merging is needed for 
+  lowering memory footprint of a simulation. Criteria for merging eligibility 
+  of two cohorts now use modified limits for DBH differences:
+  - for trees below 5 cm: criteria _remain as before_: i.e. either <= 0.001 m or <= 20%, and
+  - for trees above 5 cm: criteria were changed to absolute DBH difference of <= 0.01 m.
+* Added `output_daily_tile$Tksoil`, i.e. daily output of soil temperature
+* Added parameters allowing restarting a previous simulation where it has ended:
+  * Added missing state variables to `output_annual_cohorts`:
+    `seedN`,`leafN`,`rootN`,`sapwoodN`,`heartwoodN` (note d13C currently still not output)
+  * Added optional parameter `init_cohort$init_cohort_age` to specify a corresponding 
+    initial age distribution in years (default = 0). Default ensures backwards compatibility.
+    Age affects reproduction through `params_species$matural_age`
+  * Added optional parameter to `init_cohort`, to enable specification of initial plant
+    nitrogen pools. Namely: `init_cohort_bl_n14`, `init_cohort_br_n14`,
+    `init_cohort_bsw_n14`,`init_cohort_bHW_n14`,`init_cohort_seedC_n14`,
+    `init_cohort_nsc_n14`. If not provided, default values ensure backwards compatibility.
+  * Added optional parameter to `init_soil`, to enable specification of initial soil
+    nitrogen pools. Namely: `init_fast_soil_N`, `init_slow_soil_N`, `init_pmicr_C`, 
+    `init_pmicr_d13C`, `init_pmicr_N`, `init_wcl1`, `init_wcl2`, `init_wcl3`, `init_N0_ecosystem`. 
+    If not provided, default values ensure backwards compatibility.
+
+## BiomeEP: (Potentially) Breaking changes
+* Removed dummy parameters in `params_species` for `run_biomee_f_bysite()`: 
   `Vmax`,`alphaBM`,`leafLS`,`lAImax`,`CNleaf0`,`gamma_L`,`Vannual`,
   `betaON`,`betaOFF`, `leaf_size` and in `params_tile`: `GR_factor`.
   If still provided, they must be NA, otherwise an error occurs.
-  * Removed parameter in `params_tile`  for `run_biomee_f_bysite()`: `par_mort_under` 
+* Removed parameter in `params_tile`  for `run_biomee_f_bysite()`: `par_mort_under` 
   and `par_mort`. Their effects can be fully specified by 
-  `params_species%mortrate_d_u` and `params_species%mortrate_d_c` (for trees and for grasses)
-  * Added optional parameter `init_cohort$init_cohort_age` to specify a corresponding 
-  initial age distribution in years (default = 0). Default ensures backwards compatibility.
-  Age affects reproduction through `params_species$matural_age`
-  * Added optional parameter to `init_cohort`, to enable specification of initial plant
-  nitrogen pools. Namely: `init_cohort_bl_n14`, `init_cohort_br_n14`,
-  `init_cohort_bsw_n14`,`init_cohort_bHW_n14`,`init_cohort_seedC_n14`,
-  `init_cohort_nsc_n14`. If not provided, default values ensure backwards compatibility.
-  * Added optional parameter to `init_soil`, to enable specification of initial soil
-  nitrogen pools. Namely: `init_fast_soil_N`, `init_slow_soil_N`, `init_pmicr_C`, 
-  `init_pmicr_d13C`, `init_pmicr_N`, `init_wcl1`, `init_wcl2`, `init_wcl3`, `init_N0_ecosystem`. 
-  If not provided, default values ensure backwards compatibility.
+  `params_species%mortrate_d_u` and `params_species%mortrate_d_c` (for trees and for grasses)    
+
+## BiomeEP: Non-Breaking changes
+* Bugfixes: 
+  * Bugfix: `phenotype` is now correctly taking into account, decoupling it from `LMA` (#329)
+  * Bugfix: annual, cohort-level output had mixed up column names for variables:
+    `NSN`,`seedC`,`leafC`,`rootC`,`sapwoodC`,`heartwoodC`
+  * Bugfix: `init_cohort$init_cohort_nsc` is now correctly taken into account. To 
+    remain backward-compatible, it was made optional. To recover previous behavior 
+    do not provide this column.
+  * Bugfix: `init_cohort$lu_index` is now correctly taken into account.
+* Internals:
   * Added check that all `species$LMA` >= `params_tile$LMAmin`
   * Added check that all `init_cohort$species` have a corresponding entry in `params_species`
-  * Added `output_daily_tile$Tksoil`, i.e. daily output of soil temperature
-* P-model:
-  * no changes
 
-## New features
-* P-model:
-  * Rewritten `calib_sofun()` that can handle more diverse prior 
+## P-model: New features
+* Rewritten `calib_sofun()` that can handle more diverse prior 
   distributions of the parameters to estimate (see internal function 
   `createMixedPrior()`) and that can parallelize multiple the MCMC chains.
   The old version is still available as `calib_sofun_legacy()`.
-  * Rewritten `cost_likelihood_pmodel()` now handling multiple 
+* Rewritten `cost_likelihood_pmodel()` now handling multiple 
   target variables that require to run either `run_pmodel_f_bysite()` or 
   `run_pmodel_onestep_f_bysite()`. Thus also requires a new data format for the
   `drivers` and `obs` arguments. See below under (non-)breaking changes for the new
   format. The old likelihood function is still available as `cost_likelihood_pmodel_legacy()`.
-  * Rewritten `cost_rmse_pmodel()` similarly as `cost_likelihood_pmodel()` (see above).
-  * `runread_pmodel()` can now run onestep and daily model thanks to the new 
+* Rewritten `cost_rmse_pmodel()` similarly as `cost_likelihood_pmodel()` (see above).
+* `runread_pmodel()` can now run onestep and daily model thanks to the new 
   `drivers` format. If the old format is used it is implicitly assuming daily 
   runs were requested. Output of `runread_pmodel()` can be split based on columns 
   present in the `data` column: 
   `df |> rowwise() |> filter("vcmax_mod_molm2s" %in% names(data)) |> ungroup()` or
   `df |> rowwise() |> filter("date" %in% names(data)) |> ungroup()`
-  * `pmodel_drivers` and `pmodel_validation` contain now additional sites and a 
+* `pmodel_drivers` and `pmodel_validation` contain now additional sites and a 
   mix of `daily` as well as `onestep` model runs. Note that the data of 
   site `FR-Pue` were updated in FDK, so that the forcing data has slightly 
   changed and also `whc` of `FR-Pue` was modified from 432 to 260 mm.
-  * The old `p_model_drivers_vcmax25` and `p_model_validation_vcmax25` were 
+* The old `p_model_drivers_vcmax25` and `p_model_validation_vcmax25` were 
   removed. The old `p_model_drivers` and `p_model_validation` were renamed to 
   `p_model_oldformat_drivers` and `p_model_oldformat_validation`.  See 
   below how to transform between new and old formats.
-  * Output of `run_pmodel_f_bysite()` (and consequently that of `runread_pmodel()`) 
+* Output of `run_pmodel_f_bysite()` (and consequently that of `runread_pmodel()`) 
   has been transformed into `tibble` for consistency
 
-## (Potentially) Breaking changes
+## P-model: (Potentially) Breaking changes
 * `calib_sofun()` has been renamed to `calib_sofun_legacy()`, and a new 
   `calib_sofun()` has been written (see new features above). For P-model calibration 
   it is fully backwards compatible. For BiomeE calibration this still needs to be tested.
@@ -74,7 +80,7 @@
   `cost_likelihood_pmodel()` and `cost_rmse_pmodel()` have been rewritten for the updated
   data.frame format, now simulating daily- or onestep-model.
   
-## Non-Breaking changes
+## P-model: Non-Breaking changes
 * New driver data.frame format for P-model: now containing the information which
   model to run (`daily` or `onestep`) as additional column `onestep` = `TRUE`/`FALSE`
   in the `params_siml` column. Moreover, in the 
