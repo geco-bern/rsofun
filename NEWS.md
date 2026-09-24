@@ -21,7 +21,19 @@
     nitrogen pools. Namely: `init_fast_soil_N`, `init_slow_soil_N`, `init_pmicr_C`, 
     `init_pmicr_d13C`, `init_pmicr_N`, `init_wcl1`, `init_wcl2`, `init_wcl3`, `init_N0_ecosystem`. 
     If not provided, default values ensure backwards compatibility.
-
+* Added following optional parameters. Previously they were hardcoded. If not provided, default 
+  values ensure backwards compatibility. The parameters are (default):
+  `kphio`       (default = 0.05)  quantum yield efficiency at optimal temperature, mol mol-1.
+  `beta`        (default = 146.0) unit cost ratio of carboxylation to transpiration, unitless.
+  `rd_to_vcmax` (default = 0.014) Ratio of Rdark to Vcmax25, unitless.
+  `kc_jmax`     (default = 0.41)  Jmax cost ratio, unitless . 
+  `kphio_par_a` (default = 0.0)   shape parameter of temperature-dependency of quantum yield efficiency, degC-2.
+  `kphio_par_b` (default = 25.0)  optimal temperature of quantum yield efficiency, degC.
+  `extinct`     (default = 0.75)  (TODO: is it same as kappa below) light extinction coefficient in the canopy (Beer's law), unitless .
+  `kappa`       (default = 0.5)   light extinction coefficient in the canopy (Beer's law), unitless .
+  `A_mort`      (default = 9.0)   A coefficient in understory mortality rate correction, year-1 (deathrate = mortrate_d_u * (1+A*exp(B*DBH))/(1+exp(B*DBH))).
+  `B_mort`      (default = -60.0) B coefficient in understory mortality rate correction, m-1 (deathrate = mortrate_d_u * (1+A*exp(B*DBH))/(1+exp(B*DBH))).
+  `f_LFR_max`   (default = 0.85)  Max fraction of total C growth that is allocated to leaves and fine root (remaining C growth used for seeds and DBH growth), unitless.
 ## BiomeEP: (Potentially) Breaking changes
 * Removed dummy parameters in `params_species` for `run_biomee_f_bysite()`: 
   `Vmax`,`alphaBM`,`leafLS`,`lAImax`,`CNleaf0`,`gamma_L`,`Vannual`,
