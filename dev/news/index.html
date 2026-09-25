@@ -58,8 +58,41 @@
     <div class="section level2">
 <h2 class="page-header" data-toc-text="development version" id="rsofun-development-version">rsofun (development version)<a class="anchor" aria-label="anchor" href="#rsofun-development-version"></a></h2>
 <div class="section level3">
-<h3 id="new-features-development-version">New features<a class="anchor" aria-label="anchor" href="#new-features-development-version"></a></h3>
-<ul><li>P-model:
+<h3 id="biomeep-new-features-development-version">BiomeEP: New features<a class="anchor" aria-label="anchor" href="#biomeep-new-features-development-version"></a></h3>
+<ul><li>Cohorts are now less aggressively merged. Cohort merging is needed for lowering memory footprint of a simulation. Criteria for merging eligibility of two cohorts now use modified limits for DBH differences:
+<ul><li>for trees below 5 cm: criteria <em>remain as before</em>: i.e. either &lt;= 0.001 m or &lt;= 20%, and</li>
+<li>for trees above 5 cm: criteria were changed to absolute DBH difference of &lt;= 0.01 m.</li>
+</ul></li>
+<li>Added <code>output_daily_tile$Tksoil</code>, i.e. daily output of soil temperature</li>
+<li>Added parameters allowing restarting a previous simulation where it has ended:
+<ul><li>Added missing state variables to <code>output_annual_cohorts</code>: <code>seedN</code>,<code>leafN</code>,<code>rootN</code>,<code>sapwoodN</code>,<code>heartwoodN</code> (note d13C currently still not output)</li>
+<li>Added optional parameter <code>init_cohort$init_cohort_age</code> to specify a corresponding initial age distribution in years (default = 0). Default ensures backwards compatibility. Age affects reproduction through <code>params_species$matural_age</code>
+</li>
+<li>Added optional parameter to <code>init_cohort</code>, to enable specification of initial plant nitrogen pools. Namely: <code>init_cohort_bl_n14</code>, <code>init_cohort_br_n14</code>, <code>init_cohort_bsw_n14</code>,<code>init_cohort_bHW_n14</code>,<code>init_cohort_seedC_n14</code>, <code>init_cohort_nsc_n14</code>. If not provided, default values ensure backwards compatibility.</li>
+<li>Added optional parameter to <code>init_soil</code>, to enable specification of initial soil nitrogen pools. Namely: <code>init_fast_soil_N</code>, <code>init_slow_soil_N</code>, <code>init_pmicr_C</code>, <code>init_pmicr_d13C</code>, <code>init_pmicr_N</code>, <code>init_wcl1</code>, <code>init_wcl2</code>, <code>init_wcl3</code>, <code>init_N0_ecosystem</code>. If not provided, default values ensure backwards compatibility.</li>
+</ul></li>
+<li>Added following optional parameters. Previously they were hardcoded. If not provided, default values ensure backwards compatibility. The parameters are (default): <code>kphio</code> (default = 0.05) quantum yield efficiency at optimal temperature, mol mol-1. <code>beta</code> (default = 146.0) unit cost ratio of carboxylation to transpiration, unitless. <code>rd_to_vcmax</code> (default = 0.014) Ratio of Rdark to Vcmax25, unitless. <code>kc_jmax</code> (default = 0.41) Jmax cost ratio, unitless . <code>kphio_par_a</code> (default = 0.0) shape parameter of temperature-dependency of quantum yield efficiency, degC-2. <code>kphio_par_b</code> (default = 25.0) optimal temperature of quantum yield efficiency, degC. <code>extinct</code> (default = 0.75) (TODO: is it same as kappa below) light extinction coefficient in the canopy (Beer’s law), unitless . <code>kappa</code> (default = 0.5) light extinction coefficient in the canopy (Beer’s law), unitless . <code>A_mort</code> (default = 9.0) A coefficient in understory mortality rate correction, year-1 (deathrate = mortrate_d_u * (1+A<em>exp(B</em>DBH))/(1+exp(B<em>DBH))). <code>B_mort</code> (default = -60.0) B coefficient in understory mortality rate correction, m-1 (deathrate = mortrate_d_u </em> (1+A<em>exp(B</em>DBH))/(1+exp(B*DBH))). <code>f_LFR_max</code> (default = 0.85) Max fraction of total C growth that is allocated to leaves and fine root (remaining C growth used for seeds and DBH growth), unitless. ## BiomeEP: (Potentially) Breaking changes</li>
+<li>Removed dummy parameters in <code>params_species</code> for <code><a href="../reference/run_biomee_f_bysite.html">run_biomee_f_bysite()</a></code>: <code>Vmax</code>,<code>alphaBM</code>,<code>leafLS</code>,<code>lAImax</code>,<code>CNleaf0</code>,<code>gamma_L</code>,<code>Vannual</code>, <code>betaON</code>,<code>betaOFF</code>, <code>leaf_size</code> and in <code>params_tile</code>: <code>GR_factor</code>. If still provided, they must be NA, otherwise an error occurs.</li>
+<li>Removed parameter in <code>params_tile</code> for <code><a href="../reference/run_biomee_f_bysite.html">run_biomee_f_bysite()</a></code>: <code>par_mort_under</code> and <code>par_mort</code>. Their effects can be fully specified by <code>params_species%mortrate_d_u</code> and <code>params_species%mortrate_d_c</code> (for trees and for grasses)</li>
+</ul></div>
+<div class="section level3">
+<h3 id="biomeep-non-breaking-changes-development-version">BiomeEP: Non-Breaking changes<a class="anchor" aria-label="anchor" href="#biomeep-non-breaking-changes-development-version"></a></h3>
+<ul><li>Bugfixes:
+<ul><li>Bugfix: <code>phenotype</code> is now correctly taking into account, decoupling it from <code>LMA</code> (<a href="https://github.com/geco-bern/rsofun/issues/329" class="external-link">#329</a>)</li>
+<li>Bugfix: annual, cohort-level output had mixed up column names for variables: <code>NSN</code>,<code>seedC</code>,<code>leafC</code>,<code>rootC</code>,<code>sapwoodC</code>,<code>heartwoodC</code>
+</li>
+<li>Bugfix: <code>init_cohort$init_cohort_nsc</code> is now correctly taken into account. To remain backward-compatible, it was made optional. To recover previous behavior do not provide this column.</li>
+<li>Bugfix: <code>init_cohort$lu_index</code> is now correctly taken into account.</li>
+</ul></li>
+<li>Internals:
+<ul><li>Added check that all <code>species$LMA</code> &gt;= <code>params_tile$LMAmin</code>
+</li>
+<li>Added check that all <code>init_cohort$species</code> have a corresponding entry in <code>params_species</code>
+</li>
+</ul></li>
+</ul></div>
+<div class="section level3">
+<h3 id="p-model-new-features-development-version">P-model: New features<a class="anchor" aria-label="anchor" href="#p-model-new-features-development-version"></a></h3>
 <ul><li>Rewritten <code><a href="../reference/calib_sofun.html">calib_sofun()</a></code> that can handle more diverse prior distributions of the parameters to estimate (see internal function <code><a href="../reference/createMixedPrior.html">createMixedPrior()</a></code>) and that can parallelize multiple the MCMC chains. The old version is still available as <code><a href="../reference/calib_sofun_legacy.html">calib_sofun_legacy()</a></code>.</li>
 <li>Rewritten <code><a href="../reference/cost_likelihood_pmodel.html">cost_likelihood_pmodel()</a></code> now handling multiple target variables that require to run either <code><a href="../reference/run_pmodel_f_bysite.html">run_pmodel_f_bysite()</a></code> or <code><a href="../reference/run_pmodel_onestep_f_bysite.html">run_pmodel_onestep_f_bysite()</a></code>. Thus also requires a new data format for the <code>drivers</code> and <code>obs</code> arguments. See below under (non-)breaking changes for the new format. The old likelihood function is still available as <code><a href="../reference/cost_likelihood_pmodel_legacy.html">cost_likelihood_pmodel_legacy()</a></code>.</li>
 <li>Rewritten <code><a href="../reference/cost_rmse_pmodel.html">cost_rmse_pmodel()</a></code> similarly as <code><a href="../reference/cost_likelihood_pmodel.html">cost_likelihood_pmodel()</a></code> (see above).</li>
@@ -70,17 +103,16 @@
 <code>pmodel_drivers</code> and <code>pmodel_validation</code> contain now additional sites and a mix of <code>daily</code> as well as <code>onestep</code> model runs. Note that the data of site <code>FR-Pue</code> were updated in FDK, so that the forcing data has slightly changed and also <code>whc</code> of <code>FR-Pue</code> was modified from 432 to 260 mm.</li>
 <li>The old <code>p_model_drivers_vcmax25</code> and <code>p_model_validation_vcmax25</code> were removed. The old <code>p_model_drivers</code> and <code>p_model_validation</code> were renamed to <code>p_model_oldformat_drivers</code> and <code>p_model_oldformat_validation</code>. See below how to transform between new and old formats.</li>
 <li>Output of <code><a href="../reference/run_pmodel_f_bysite.html">run_pmodel_f_bysite()</a></code> (and consequently that of <code>runread_pmodel()</code>) has been transformed into <code>tibble</code> for consistency</li>
-</ul></li>
 </ul></div>
 <div class="section level3">
-<h3 id="potentially-breaking-changes-development-version">(Potentially) Breaking changes<a class="anchor" aria-label="anchor" href="#potentially-breaking-changes-development-version"></a></h3>
+<h3 id="p-model-potentially-breaking-changes-development-version">P-model: (Potentially) Breaking changes<a class="anchor" aria-label="anchor" href="#p-model-potentially-breaking-changes-development-version"></a></h3>
 <ul><li>
 <code><a href="../reference/calib_sofun.html">calib_sofun()</a></code> has been renamed to <code><a href="../reference/calib_sofun_legacy.html">calib_sofun_legacy()</a></code>, and a new <code><a href="../reference/calib_sofun.html">calib_sofun()</a></code> has been written (see new features above). For P-model calibration it is fully backwards compatible. For BiomeE calibration this still needs to be tested.</li>
 <li>
 <code><a href="../reference/cost_likelihood_pmodel.html">cost_likelihood_pmodel()</a></code> has been renamed to <code><a href="../reference/cost_likelihood_pmodel_legacy.html">cost_likelihood_pmodel_legacy()</a></code>. Both <code><a href="../reference/cost_likelihood_pmodel.html">cost_likelihood_pmodel()</a></code> and <code><a href="../reference/cost_rmse_pmodel.html">cost_rmse_pmodel()</a></code> have been rewritten for the updated data.frame format, now simulating daily- or onestep-model.</li>
 </ul></div>
 <div class="section level3">
-<h3 id="non-breaking-changes-development-version">Non-Breaking changes<a class="anchor" aria-label="anchor" href="#non-breaking-changes-development-version"></a></h3>
+<h3 id="p-model-non-breaking-changes-development-version">P-model: Non-Breaking changes<a class="anchor" aria-label="anchor" href="#p-model-non-breaking-changes-development-version"></a></h3>
 <ul><li><p>New driver data.frame format for P-model: now containing the information which model to run (<code>daily</code> or <code>onestep</code>) as additional column <code>onestep</code> = <code>TRUE</code>/<code>FALSE</code> in the <code>params_siml</code> column. Moreover, in the <code>forcing</code> column the nested data.frame has now additional columns for <code>wind</code> (resulting in columns <code>ccov</code>,<code>co2</code>,<code>date</code>,<code>fapar</code>,<code>netrad</code>,<code>patm</code>,<code>ppfd</code>, <code>rain</code>,<code>snow</code>,<code>temp</code>,<code>tmax</code>,<code>tmin</code>,<code>vpd</code>,<code>wind</code>) for <code>daily</code> model runs. For <code>onestep</code> model runs the required columns are (<code>co2</code>,<code>patm</code>,<code>ppfd</code>,<code>temp</code>,<code>vpd</code>). Each row in <code>pmodel_drivers</code> corresponds to a model run (either daily or onestep depending on <code>params_siml$onestep</code> logical) and (for calibration) should have a corresponding row in <code>pmodel_validation</code>. The example data set for <code>FR-Pue</code> now contains non-zero <code>ccov</code>, previously this was set to <code>0</code>.</p></li>
 <li>
 <p>New validation (i.e. observation) data.frame format for P-model: A new column <code>source</code> is required and determines in combination with the <code>targets</code> argument of <code><a href="../reference/calib_sofun.html">calib_sofun()</a></code> which variables are fitted . variable(s) is/are the target of the corresponding line.</p>

@@ -135,7 +135,8 @@ If multiple land units (LU) are simulated, the columns are named according to th
 If multiple land units (LU) are simulated, an additional column 'aggregated' contains output aggregating all tiles as
 well as product pools.
 Model output for each land unit (LU) is provided as a list.
-Each list has elements: <code>output_daily_tile</code>, <code>output_annual_tile</code>, and <code>output_annual_cohorts</code>.
+Each list has elements: <code>output_daily_tile</code>, <code>output_annual_tile</code>, <code>output_annual_cohorts</code>,
+<code>restart_init_cohort</code>, and <code>restart_init_soil</code>.
 Model output for the aggregated land units (LU) is provided as a list containing <code>output_daily_cell</code>.</p><dl><dt><code>output_daily_tile</code></dt>
 <dd><p>A data.frame with daily outputs at tile level.</p><dl><dt>year</dt>
 <dd><p>Year of the simulation.</p></dd>
@@ -145,6 +146,9 @@ Model output for the aggregated land units (LU) is provided as a list containing
 
       <dt>Tk</dt>
 <dd><p>Air temperature (Kelvin).</p></dd>
+
+      <dt>Tksoil</dt>
+<dd><p>Dampened soil temperature (Kelvin).</p></dd>
 
       <dt>Prcp</dt>
 <dd><p>Precipitation (mm m\(^{-2}\) day\(^{-1}\)).</p></dd>
@@ -162,13 +166,13 @@ Model output for the aggregated land units (LU) is provided as a list containing
 <dd><p>Water runoff (mm m\(^{-2}\) day\(^{-1}\)).</p></dd>
 
       <dt>ws1</dt>
-<dd><p>Volumetric soil water content for layer 1.</p></dd>
+<dd><p>Soil water content for layer 1 (mm = kg H2O m\(^{-2}\)).</p></dd>
 
       <dt>ws2</dt>
-<dd><p>Volumetric soil water content for layer 2.</p></dd>
+<dd><p>Soil water content for layer 2 (mm = kg H2O m\(^{-2}\)).</p></dd>
 
       <dt>ws3</dt>
-<dd><p>Volumetric soil water content for layer 3.</p></dd>
+<dd><p>Soil water content for layer 3 (mm = kg H2O m\(^{-2}\)).</p></dd>
 
       <dt>LAI</dt>
 <dd><p>Leaf area index (m\(^2\)/m\(^2\)).</p></dd>
@@ -499,6 +503,21 @@ Model output for the aggregated land units (LU) is provided as a list containing
     <dt>heartwoodC</dt>
 <dd><p>Biomass of heartwood of a tree in this cohort (kg C tree\(^{-1}\)).</p></dd>
 
+    <dt>seedN</dt>
+<dd><p>Nitrogen content in seeds of a tree in this cohort (kg N tree\(^{-1}\)).</p></dd>
+
+    <dt>leafN</dt>
+<dd><p>Nitrogen content in leaves of a tree in this cohort (kg N tree\(^{-1}\)).</p></dd>
+
+    <dt>rootN</dt>
+<dd><p>Nitrogen content in fine roots of a tree in this cohort (kg N tree\(^{-1}\)).</p></dd>
+
+    <dt>sapwoodN</dt>
+<dd><p>Nitrogen content in sapwood of a tree in this cohort (kg N tree\(^{-1}\)).</p></dd>
+
+    <dt>heartwoodN</dt>
+<dd><p>Nitrogen content in heartwood of a tree in this cohort (kg N tree\(^{-1}\)).</p></dd>
+
     <dt>NSN</dt>
 <dd><p>Non-structural nitrogen of a tree in this cohort (kg N tree\(^{-1}\)).</p></dd>
 
@@ -543,6 +562,15 @@ Model output for the aggregated land units (LU) is provided as a list containing
 
 
 </dl></dd>
+
+  <dt><code>restart_init_cohort</code></dt>
+<dd><p>A data.frame that can be passed back as <code>init_cohort</code> for a restart run.
+    It contains the initialized pools together with restart-only cohort state such as phenology status, canopy layer,
+    GDD, leaf age, and the stored <code>bl_max</code>/<code>br_max</code> targets.</p></dd>
+
+  <dt><code>restart_init_soil</code></dt>
+<dd><p>A one-row data.frame that can be passed back as <code>init_soil</code> for a restart run.
+    It contains the soil pools together with the tile-level phenology restart state currently used during initialization.</p></dd>
 
 
 </dl><p>If there are multiple land units (LU) there will also be a column named `aggregated` containing a data.frame in the column

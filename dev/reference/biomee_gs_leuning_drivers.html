@@ -181,16 +181,13 @@ This data structure can be freely used for documenting the dataset, but must inc
 <dd><p>N loss rate through runoff (organic and mineral) (yr\(^{-1}\)).</p></dd>
 
       <dt>LMAmin</dt>
-<dd><p>Minimum LMA, leaf mass per unit area, kg C m\(^{-2}\).</p></dd>
+<dd><p>Minimum LMA, leaf mass per unit area, LMAmin/LMA describes fraction of leaf that become fine litter (metabolic parts), kg C m\(^{-2}\). Has to be smaller than LMA. Difference to LMA is structural parts (becoming coarse litter).</p></dd>
 
       <dt>fsc_fine</dt>
 <dd><p>Fraction of fast turnover carbon in fine biomass.</p></dd>
 
       <dt>fsc_wood</dt>
 <dd><p>Fraction of fast turnover carbon in wood biomass.</p></dd>
-
-      <dt>GR_factor</dt>
-<dd><p>Growth respiration factor.</p></dd>
 
       <dt>l_fract</dt>
 <dd><p>Fraction of the carbon retained after leaf drop.</p></dd>
@@ -207,22 +204,10 @@ This data structure can be freely used for documenting the dataset, but must inc
       <dt>tf_base</dt>
 <dd><p>Calibratable scalar for respiration, used to increase LUE levels.</p></dd>
 
-      <dt>par_mort</dt>
-<dd><p>Canopy mortality parameter.</p></dd>
-
-      <dt>par_mort_under</dt>
-<dd><p>Parameter for understory mortality.</p></dd>
-
-
-</dl></dd>
-
   <dt>params_species</dt>
 <dd><p>A data.frame containing species-specific model parameters, with one species per row, including the following data:</p><dl><dt>The following columns pertaining to the <b>plant type</b>:</dt>
 <dd><dl><dt>lifeform</dt>
 <dd><p>Integer set to 0 for grasses and 1 for trees.</p></dd>
-
-      <dt>phenotype</dt>
-<dd><p>Integer set to 0 for deciduous and 1 for evergreen.</p></dd>
 
       <dt>pt</dt>
 <dd><p>Integer indicating the type of plant according to photosynthesis: 0 for C3; 1 for C4</p></dd>
@@ -245,19 +230,10 @@ This data structure can be freely used for documenting the dataset, but must inc
       <dt>Kw_root</dt>
 <dd><p>Fine root water conductivity (mol m\(^{-2}\) s\(^{-1}\) MPa\(^{-1}\)).</p></dd>
 
-      <dt>leaf_size</dt>
-<dd><p>Characteristic leaf size.</p></dd>
-
 
 </dl></dd>
 <dt>The following columns pertaining to the <b>photosynthesis parameters</b>:</dt>
-<dd><dl><dt>Vmax</dt>
-<dd><p>Max RuBisCo rate, in mol m\(^{-2}\) s\(^{-1}\).</p></dd>
-
-      <dt>Vannual</dt>
-<dd><p>Annual productivity per unit area at full sun (kg C m\(^{-2}\) year\(^{-2}\)).</p></dd>
-
-      <dt>wet_leaf_dreg</dt>
+<dd><dl><dt>wet_leaf_dreg</dt>
 <dd><p>Wet leaf photosynthesis down-regulation.</p></dd>
 
       <dt>m_cond</dt>
@@ -266,11 +242,8 @@ This data structure can be freely used for documenting the dataset, but must inc
       <dt>alpha_phot</dt>
 <dd><p>Photosynthesis efficiency.</p></dd>
 
-      <dt>gamma_L</dt>
-<dd><p>Leaf respiration coefficient, in yr\(^{-1}\).</p></dd>
-
       <dt>gamma_LN</dt>
-<dd><p>Leaf respiration coefficient per unit N.</p></dd>
+<dd><p>Leaf respiration coefficient per unit N, in molC kgN\(^{-1}\) yr\(^{-1}\).</p></dd>
 
       <dt>gamma_SW</dt>
 <dd><p>Sapwood respiration rate, in kg C m\(^{-2}\) yr\(^{-1}\).</p></dd>
@@ -279,19 +252,31 @@ This data structure can be freely used for documenting the dataset, but must inc
 <dd><p>Fine root respiration rate, kg C kg C\(^{-1}\) yr\(^{-1}\).</p></dd>
 
       <dt>tk_crit</dt>
-<dd><p>Critical temperature triggerng offset of phenology, in Kelvin.</p></dd>
+<dd><p>Critical temperature triggering offset of leaf phenology (unused with evergreen), in Kelvin.</p></dd>
 
       <dt>tk_crit_on</dt>
-<dd><p>Critical temperature triggerng onset of phenology, in Kelvin.</p></dd>
+<dd><p>Critical temperature triggering onset of leaf phenology (unused with evergreen), in Kelvin.</p></dd>
 
       <dt>gdd_crit</dt>
-<dd><p>Critical value of GDD5 for turning ON growth season.</p></dd>
+<dd><p>Critical value of GDD5 for turning ON leaf phenology (unused with evergreen).</p></dd>
 
-      <dt>betaON</dt>
-<dd><p>Critical soil moisture for phenology onset.</p></dd>
+      <dt>kphio</dt>
+<dd><p>Quantum yield efficiency \(\varphi_0\) at optimal temperature, in mol mol\(^{-1}\). (optional, defaults to 0.05)</p></dd>
 
-      <dt>betaOFF</dt>
-<dd><p>Critical soil moisture for phenology offset.</p></dd>
+      <dt>beta</dt>
+<dd><p>Unit cost ratio of carboxylation to transpiration, unitless. (optional, defaults to 146.0)</p></dd>
+
+      <dt>rd_to_vcmax</dt>
+<dd><p>Ratio of Rdark to Vcmax25, unitless. (optional, defaults to 0.014)</p></dd>
+
+      <dt>kc_jmax</dt>
+<dd><p>Jmax cost ratio, unitless. (optional, defaults to 0.41)</p></dd>
+
+      <dt>kphio_par_a</dt>
+<dd><p>Shape parameter of temperature-dependency of quantum yield efficiency, in degC\(^{-2}\). (optional, defaults to 0.0)</p></dd>
+
+      <dt>kphio_par_b</dt>
+<dd><p>Optimal temperature of quantum yield efficiency, in degC. (optional, defaults to 25.0)</p></dd>
 
 
 </dl></dd>
@@ -300,19 +285,34 @@ This data structure can be freely used for documenting the dataset, but must inc
 <dd><p>Coefficient for allometry (height = alphaHT * DBH_m ** thetaHT), in m m\(^{-thetaHT}\).</p></dd>
 
       <dt>thetaHT</dt>
-<dd><p>Coefficient for allometry (height = alphaHT * DBH_m ** thetaHT), in m m\(^{-thetaHT}\).</p></dd>
-
-      <dt>alphaCA</dt>
-<dd><p>Coefficient for allometry (projected crown area = pi * (alphaCA * DBH_m) ** thetaCA), in m\(^{2/thetaCA-1}\).</p></dd>
-
-      <dt>thetaCA</dt>
-<dd><p>Coefficient for allometry (projected crown area = pi * (alphaCA * DBH_m) ** thetaCA), unitless. Dybzinski (eq. G1) showed that thetaCA = theatBM - 1.</p></dd>
-
-      <dt>alphaBM</dt>
-<dd><p>Coefficient for allometry (biomass = alphaBM * DBH ** thetaBM), in kg C m\(^{-thetaBM}\).</p></dd>
+<dd><p>Coefficient for allometry (height = alphaHT * DBH_m ** thetaHT), unitless.</p></dd>
 
       <dt>thetaBM</dt>
-<dd><p>Coefficient for allometry (biomass = alphaBM * DBH ** thetaBM), unitless. Dybzinski (eq. G1) showed that thetaCA = theatBM - 1.</p></dd>
+<dd><p>Coefficient for allometry (biomass = alphaBM * DBH ** thetaBM), unitless. Since alphaBM is derived from alphaHT, it makes sense to also ensure thetaBM = thetaHT + 2.</p></dd>
+
+      <dt>alphaCA</dt>
+<dd><p>Coefficient for allometry (projected crown area = alphaCA * DBH_m ** thetaCA), in m\(^{2}\) \(^{-/thetaCA}\).</p></dd>
+
+      <dt>thetaCA</dt>
+<dd><p>Coefficient for allometry (projected crown area = alphaCA * DBH_m ** thetaCA), unitless. Dybzinski (eq. G1) showed that thetaCA = thetaBM - 1. Moreover, Weng et al. (2015, eq A2) uses thetaBM = thetaHT + 2.</p></dd>
+
+      <dt>rho_wood</dt>
+<dd><p>Wood density (kg C m\(^{-3}\)). (Only used to derive alphaBM.)</p></dd>
+
+      <dt>taperfactor</dt>
+<dd><p>Multiplicative factor to correct the cylindric volume/mass calculated with DBH, unitless. E.g. for a cone taperfactor is 1/3 (V = 1/3 Pi * r^2 * HT).  (Only used to derive alphaBM.)</p></dd>
+
+      <dt>phiCSA</dt>
+<dd><p>Ratio of sapwood area to leaf area.</p></dd>
+
+      <dt>phiRL</dt>
+<dd><p>Ratio of fine root to leaf area.</p></dd>
+
+      <dt>extinct</dt>
+<dd><p>TODO: same as kappa below) light extinction coefficient in the canopy (Beer's law), unitless. (optional, defaults to 0.75)</p></dd>
+
+      <dt>kappa</dt>
+<dd><p>light extinction coefficient in the canopy (Beer's law), unitless. (optional, defaults to 0.5)</p></dd>
 
 
 </dl></dd>
@@ -330,10 +330,24 @@ This data structure can be freely used for documenting the dataset, but must inc
 </dl></dd>
 <dt>The following columns pertaining to the <b>mortality parameters</b>:</dt>
 <dd><dl><dt>mortrate_d_c</dt>
-<dd><p>Canopy tree mortality rate (yr\(^{-1}\)).</p></dd>
+<dd><p>Canopy tree mortality rate (yr\(^{-1}\)).
+         (Differently used depending on method_mortality and do_U_shaped_mortality:
+         CAI_max (m\(^{2}\) m\(^{-2}\)) if "const_selfthin",
+         multiplicative factor (-) if "cstarvation" (),
+         multiplicative factor (yr\(^{-1}\)m\(^{-1.5}\)) (deathrate = par_mort * dbh ** 1.5) if "dbh" and "do_U_shaped_mortality"
+             )</p></dd>
+
+
+</dl></dd>
 
       <dt>mortrate_d_u</dt>
 <dd><p>Understory tree mortality rate (yr\(^{-1}\)).</p></dd>
+
+      <dt>A_mort</dt>
+<dd><p>A coefficient in understory mortality rate correction, (deathrate = mortrate_d_u * (1+A*exp(B*DBH))/(1+exp(B*DBH))), in year\(^{-1}\). (optional, defaults to 9.0)</p></dd>
+
+      <dt>B_mort</dt>
+<dd><p>B coefficient in understory mortality rate correction, (deathrate = mortrate_d_u * (1+A*exp(B*DBH))/(1+exp(B*DBH))), in m\(^{-1}\). (optional, defaults to -60.0)</p></dd>
 
 
 </dl></dd>
@@ -341,50 +355,37 @@ This data structure can be freely used for documenting the dataset, but must inc
 <dd><dl><dt>LMA</dt>
 <dd><p>Leaf mass per unit area (kg C m\(^{-2}\)).</p></dd>
 
-      <dt>leafLS</dt>
-<dd><p>TODO</p></dd>
-
       <dt>LNbase</dt>
-<dd><p>Basal leaf N per unit area, in kg N m\(^{-2}\).</p></dd>
+<dd><p>Basal leaf N per unit leaf area, in kg N m\(^{-2}\). NOTE: it is used to represent the N content in metabolic parts of the leaf. (TODO: correct?)</p></dd>
 
       <dt>CNleafsupport</dt>
-<dd><p>TODO</p></dd>
-
-      <dt>rho_wood</dt>
-<dd><p>Wood density (kg C m\(^{-3}\)).</p></dd>
-
-      <dt>taperfactor</dt>
-<dd><p>TODO</p></dd>
-
-      <dt>lAImax</dt>
-<dd><p>Maximum crown LAI (leaf area index).</p></dd>
+<dd><p>C/N ratio of the structural parts of the leaf (non-metabolic parts).</p></dd>
 
       <dt>tauNSC</dt>
-<dd><p>TODO</p></dd>
+<dd><p>Residence time of C in NSC (to define storage capacity), in years.</p></dd>
 
-      <dt>fNSmax</dt>
+      <dt>f_LFR_max</dt>
+<dd><p>Max fraction of total C growth that is allocated to leaves and fine root (remaining C growth used for seeds and DBH growth), unitless. (optional, defaults to 0.85)</p></dd>
+#'       <dt>fNSmax</dt>
 <dd><p>Multiplier for NSNmax as sum of potential bl and br.</p></dd>
 
-      <dt>phiCSA</dt>
-<dd><p>Ratio of sapwood area to leaf area.</p></dd>
+      <dt>internal_gap_frac</dt>
+<dd><p>Fraction of internal gaps in the canopy</p></dd>
 
 
 </dl></dd>
 <dt>The following columns pertaining to the <b>C/N ratios for plant pools</b>:</dt>
-<dd><dl><dt>CNleaf0</dt>
-<dd><p>TODO</p></dd>
-
-      <dt>CNsw0</dt>
-<dd><p>TODO</p></dd>
+<dd><dl><dt>CNsw0</dt>
+<dd><p>C/N ratio of sapwood, in kg C kg N\(^{-1}\).</p></dd>
 
       <dt>CNwood0</dt>
-<dd><p>TODO</p></dd>
+<dd><p>C/N ratio of heartwood, in kg C kg N\(^{-1}\).</p></dd>
 
       <dt>CNroot0</dt>
-<dd><p>TODO</p></dd>
+<dd><p>C/N ratio of roots, in kg C kg N\(^{-1}\).</p></dd>
 
       <dt>CNseed0</dt>
-<dd><p>TODO</p></dd>
+<dd><p>C/N ratio of seeds, in kg C kg N\(^{-1}\).</p></dd>
 
       <dt>Nfixrate0</dt>
 <dd><p>Reference N fixation rate (kg N kg C\(^{-1}\) root).</p></dd>
@@ -392,23 +393,15 @@ This data structure can be freely used for documenting the dataset, but must inc
       <dt>NfixCost0</dt>
 <dd><p>Carbon cost of N fixation (kg C kg N\(^{-1}\)).</p></dd>
 
-      <dt>internal_gap_frac</dt>
-<dd><p>TODO</p></dd>
-
 
 </dl></dd>
 <dt>The following columns pertaining to the <b>calibratable parameters</b>:</dt>
-<dd><dl><dt>kphio</dt>
-<dd><p>Quantum yield efficiency \(\varphi_0\), in mol mol\(^{-1}\).</p></dd>
-
-      <dt>phiRL</dt>
-<dd><p>Ratio of fine root to leaf area.</p></dd>
-
-      <dt>LAI_light</dt>
+<dd><dl><dt>LAI_light</dt>
 <dd><p>Maximum LAI limited by light.</p></dd>
 
 
 </dl></dd>
+
 
 </dl></dd>
 
@@ -416,6 +409,10 @@ This data structure can be freely used for documenting the dataset, but must inc
 <dd><p>A data.frame of initial cohort specifications, including
   the following data:</p><dl><dt>init_cohort_species</dt>
 <dd><p>Index of a species described in param_species.</p></dd>
+
+      <dt>init_cohort_age</dt>
+<dd><p>Initial tree/cohort age, in yr. (optional)
+       Default: 0.</p></dd>
 
       <dt>init_cohort_nindivs</dt>
 <dd><p>Initial individual density, in individuals per m\(^{2}\).</p></dd>
@@ -436,11 +433,53 @@ This data structure can be freely used for documenting the dataset, but must inc
 <dd><p>Initial biomass of seed, in kg C per individual.</p></dd>
 
       <dt>init_cohort_nsc</dt>
-<dd><p>Initial non-structural biomass, in kg C per individual.</p></dd>
+<dd><p>Initial non-structural biomass, in kg C per individual. (optional, defaults to value derived from br_max and bl_max)</p></dd>
+
+      <dt>init_cohort_bl_n14</dt>
+<dd><p>Initial nitrogen in leaf, in kg N per individual.        (optional, defaults to C biomass * CN-ratio)</p></dd>
+
+      <dt>init_cohort_br_n14</dt>
+<dd><p>Initial nitrogen in fine root, in kg N per individual.   (optional, defaults to C biomass * CN-ratio)</p></dd>
+
+      <dt>init_cohort_bsw_n14</dt>
+<dd><p>Initial nitrogen in sapwood, in kg N per individual.    (optional, defaults to C biomass * CN-ratio)</p></dd>
+
+      <dt>init_cohort_bHW_n14</dt>
+<dd><p>Initial nitrogen in heartwood, in kg N per individual.  (optional, defaults to C biomass * CN-ratio)</p></dd>
+
+      <dt>init_cohort_seedC_n14</dt>
+<dd><p>Initial nitrogen in seed, in kg N per individual.     (optional, defaults to C biomass * CN-ratio)</p></dd>
+
+      <dt>init_cohort_nsc_n14</dt>
+<dd><p>Initial non-structural biomass, in kg N per individual. (optional, defaults to value derived from br_max and bl_max)</p></dd>
 
       <dt>lu_index</dt>
-<dd><p>Land use type this cohorts belongs to (given as index in init_lu aray).
+<dd><p>Land use type this cohorts belongs to (given as index in init_lu aray). (optional)
        Default: 0 (attach to all LU types except thoses which do not accept vegetation – cf  init_lu.vegetated).</p></dd>
+
+      <dt>restart_status</dt>
+<dd><p>Restart phenology status for the cohort (`0` = leaf-off, `1` = leaf-on). Optional; when omitted, a cold-start default is used.</p></dd>
+
+      <dt>restart_layer</dt>
+<dd><p>Restart canopy layer for the cohort. Optional; when omitted, cohorts are relayered as in a cold start.</p></dd>
+
+      <dt>restart_firstlayer</dt>
+<dd><p>Restart flag indicating whether the cohort has previously occupied the top layer. Optional.</p></dd>
+
+      <dt>restart_gdd</dt>
+<dd><p>Restart growing degree days stored on the cohort. Optional.</p></dd>
+
+      <dt>restart_leaf_age</dt>
+<dd><p>Restart leaf age, in years. Optional.</p></dd>
+
+      <dt>restart_topyear</dt>
+<dd><p>Restart count of years spent in the top canopy layer. Optional.</p></dd>
+
+      <dt>restart_bl_max</dt>
+<dd><p>Restart target leaf biomass (`bl_max`), in kg C per individual. Optional.</p></dd>
+
+      <dt>restart_br_max</dt>
+<dd><p>Restart target fine-root biomass (`br_max`), in kg C per individual. Optional.</p></dd>
 
 
 </dl></dd>
@@ -458,6 +497,39 @@ This data structure can be freely used for documenting the dataset, but must inc
 
       <dt>N_input</dt>
 <dd><p>Annual nitrogen input to soil N pool, in kg N m\(^{-2}\) yr\(^{-1}\).</p></dd>
+
+      <dt>init_fast_soil_N</dt>
+<dd><p>Initial fast soil nitrogen, in kg N m\(^{-2}\).                     (optional, defaults to C biomass * CN-ratio)</p></dd>
+
+      <dt>init_slow_soil_N</dt>
+<dd><p>Initial slow soil nitrogen, in kg N m\(^{-2}\).                     (optional, defaults to C biomass * CN-ratio)</p></dd>
+
+      <dt>init_pmicr_C</dt>
+<dd><p>Initial carbon in soil microbial biomass, in kg C m\(^{-2}\).           (optional, defaults to 0.0)</p></dd>
+
+      <dt>init_pmicr_d13C</dt>
+<dd><p>Initial d13C signature in soil microbial biomass, in permil.           (optional, defaults to -9999)</p></dd>
+
+      <dt>init_pmicr_N</dt>
+<dd><p>Initial nitrogen in soil microbial biomass, in kg N m\(^{-2}\).         (optional, defaults to 0.0)</p></dd>
+
+      <dt>init_wcl1</dt>
+<dd><p>Initial volumetric water content of soil layer 1, in m\(^{3}\)m\(^{-3}\). (optional, defaults to field capacity)</p></dd>
+
+      <dt>init_wcl2</dt>
+<dd><p>Initial volumetric water content of soil layer 2, in m\(^{3}\)m\(^{-3}\). (optional, defaults to field capacity)</p></dd>
+
+      <dt>init_wcl3</dt>
+<dd><p>Initial volumetric water content of soil layer 3, in m\(^{3}\)m\(^{-3}\). (optional, defaults to field capacity)</p></dd>
+
+      <dt>init_N0_ecosystem</dt>
+<dd><p>Initial total amount of nitrogen in ecosystem (only used for nitrogen workaround), in kg N m\(^{-2}\). (optional, defaults to sum of soil and plant pools.) Might not be needed.</p></dd>
+
+      <dt>restart_tk_pheno</dt>
+<dd><p>Restart smoothed phenology temperature, in Kelvin. Optional.</p></dd>
+
+      ### <dt>restart_vegn_gdd</dt>
+<dd><p>Restart tile-level growing degree days. Optional.</p></dd>
 
 
 </dl></dd>
