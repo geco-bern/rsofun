@@ -7,11 +7,11 @@ module md_soiltemp
   implicit none
 
   private
-  public soiltemp, air_to_soil_temp
+  public soiltemp_pmodel, air_to_soil_temp_biomee
 
 contains
 
-  subroutine soiltemp( soil, dtemp, doy, init, finalize)
+  subroutine soiltemp_pmodel( soil, dtemp, doy, init, finalize)
     !/////////////////////////////////////////////////////////////////////////
     ! Calculates soil temperature (deg C) based on air temperature (deg C).
     !-------------------------------------------------------------------------
@@ -29,7 +29,7 @@ contains
     ! local variables
     real, dimension(:),   allocatable, save   :: dtemp_pvy    ! daily temperature of previous year (deg C)
     real, dimension(:,:), allocatable, save   :: wscal_pvy    ! daily Cramer-Prentice-Alpha of previous year (unitless)
-    real, dimension(:,:), allocatable, save   :: wscal_alldays
+    real, dimension(:,:), allocatable, save   :: wscal_alldays! daily Cramer-Prentice-Alpha of current  year (unitless)
 
     integer :: lu, window_length
 
@@ -120,12 +120,12 @@ contains
       if (allocated(wscal_alldays)) deallocate( wscal_alldays )
     end if
 
-  end subroutine soiltemp
+  end subroutine soiltemp_pmodel
 
-  real function air_to_soil_temp( thetaS, dtemp, doy, dtemp_pvy, wscal_pvy, wscal_alldays)
+  real function air_to_soil_temp_biomee( thetaS, dtemp, doy, dtemp_pvy, wscal_pvy, wscal_alldays)
     !/////////////////////////////////////////////////////////////////////////
     ! Calculates soil temperature (deg C) based on air temperature (deg C).
-    ! Same as soiltemp but simlified to not use global variables
+    ! Same as soiltemp_pmodel but simlified to not use global variables
     !-------------------------------------------------------------------------
     use md_params_core, only: ndayyear, pi
     use md_sofunutils, only: running
@@ -183,7 +183,7 @@ contains
 
     ! In case of zero soil water, soil temp = air temp
     if (abs(meanw1 - 0.0) < eps) then
-      air_to_soil_temp = dtemp(doy)
+      air_to_soil_temp_biomee = dtemp(doy)
     else
 
       ! Interpolate thermal diffusivity function against soil water content
@@ -212,7 +212,7 @@ contains
       lagtemp = ( tempthismonth - templastmonth ) * ( 1.0 - lag ) + templastmonth
 
       ! Adjust amplitude of lagged air temp to give estimated soil temp
-      air_to_soil_temp = avetemp + amp * ( lagtemp - avetemp )
+      air_to_soil_temp_biomee = avetemp + amp * ( lagtemp - avetemp )
 
     end if
 
@@ -225,6 +225,6 @@ contains
       wscal_pvy(:) = wscal_alldays(:)
     end if
 
-  end function air_to_soil_temp
+  end function air_to_soil_temp_biomee
 
 end module md_soiltemp
