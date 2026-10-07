@@ -44,6 +44,11 @@
   Set either threshold to `-1` to disable its process. Existing drivers retain the previous default
   thresholds.
 ## BiomeEP: (Potentially) Breaking changes
+* `run_biomee_f_bysite()` now reports unknown parameter column names in
+  `params_siml`, `params_tile`, `params_species`, `init_cohort`, and `init_soil`
+  instead of silently ignoring them. Missing required columns in `site_info`
+  and `forcing`, and duplicate names in all seven inputs, are reported early.
+  Extra site and forcing metadata remain supported.
 * Removed dummy parameters in `params_species` for `run_biomee_f_bysite()`: 
   `Vmax`,`alphaBM`,`leafLS`,`lAImax`,`CNleaf0`,`gamma_L`,`Vannual`,
   `betaON`,`betaOFF`, `leaf_size` and in `params_tile`: `GR_factor`.

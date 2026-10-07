@@ -396,7 +396,92 @@ build_lu_out <- function(biomeeout, lu, trimmed_object) {
 
 `%nin%` <- Negate(`%in%`)
 
+# Check names before adding defaults, so misspelled inputs cannot be ignored.
+check_biomee_input_names <- function(driver_element, input, required = character(), allowed = NULL) {
+  input_names <- names(driver_element)
+  if (is.null(input_names) || anyNA(input_names) || any(input_names == "")) {
+    stop(sprintf("'%s' must have nonempty column names.", input), call. = FALSE)
+  }
+  duplicates <- unique(input_names[duplicated(input_names)])
+  if (length(duplicates)) {
+    stop(sprintf("Duplicate column name(s) in '%s': %s.", input,
+                 paste(sprintf("'%s'", duplicates), collapse = ", ")), call. = FALSE)
+  }
+  if (!is.null(allowed)) {
+    unknown <- setdiff(input_names, allowed)
+    if (length(unknown)) {
+      format_unknown <- function(name) {
+        distances <- utils::adist(name, allowed)
+        closest <- which.min(distances)
+        suggestion <- if (length(closest) && distances[closest] <= 3L) {
+          sprintf(" (did you mean '%s'?)", allowed[closest])
+        } else {""}
+        paste0("'", name, "'", suggestion)
+      }
+      stop(sprintf("Unknown column name(s) in '%s': %s.", input,
+                   paste(vapply(unknown, format_unknown, character(1)),
+                         collapse = ", ")), call. = FALSE)
+    }
+  }
+  missing <- setdiff(required, input_names)
+  if (length(missing)) {
+    stop(sprintf("Missing required column name(s) in '%s': %s.", input,
+                 paste(sprintf("'%s'", missing), collapse = ", ")), call. = FALSE)
+  }
+  invisible(NULL)
+}
+
+# These names mirror the fields selected by prepare_*(), plus accepted metadata
+# and deprecated columns that are still handled by the build/prepare layer.
+biomee_allowed_input_names <- list(
+  params_siml = c(
+    "spinup", "spinupyears", "recycle", "firstyeartrend", "nyeartrend",
+    "steps_per_day", "do_U_shaped_mortality", "do_closedN_run", 
+    "code_method_photosynth", "code_method_mortality",
+    "do_daily_diagnostics", 
+    "starvation_nsc_fraction", "min_cohort_density_tree_ha", 
+    "method_photosynth", "method_mortality"
+  ),
+  params_tile = c(
+    "soiltype", "FLDCAP", "WILTPT", "K1", "K2",
+    "K_nitrogen", "MLmixRatio", "etaN", "LMAmin", "fsc_fine",
+    "fsc_wood", "GR_factor", "l_fract", "retransN", "f_initialBSW",
+    "f_N_add", "tf_base", "tau_acclim", "CN0metabolicL", "CN0structuralL"
+  ),
+  params_species = c(
+    "lifeform", "phenotype", "pt", "alpha_FR", "rho_FR",
+    "root_r", "root_zeta", "Kw_root", "leaf_size", "Vmax",
+    "Vannual", "wet_leaf_dreg", "m_cond", "alpha_phot", "gamma_L",
+    "gamma_LN", "gamma_SW", "gamma_FR", "tk_crit", "tk_crit_on",
+    "gdd_crit", "betaON", "betaOFF", "alphaHT", "thetaHT",
+    "alphaCA", "thetaCA", "alphaBM", "thetaBM", "seedlingsize",
+    "maturalage", "v_seed", "mortrate_d_c", "mortrate_d_u", "LMA",
+    "leafLS", "LNbase", "CNleafsupport", "rho_wood", "taperfactor",
+    "lAImax", "tauNSC", "fNSNmax", "phiCSA", "CNleaf0",
+    "CNsw0", "CNwood0", "CNroot0", "CNseed0", "Nfixrate0",
+    "NfixCost0", "internal_gap_frac", "kphio", "phiRL", "LAI_light",
+    "beta", "rd_to_vcmax", "kc_jmax", "kphio_par_a", "kphio_par_b",
+    "extinct", "kappa", "A_mort", "B_mort", "f_LFR_max",
+    "species"
+  ),
+  init_cohort = c(
+    "init_cohort_species", "init_cohort_nindivs", "init_cohort_age", 
+    "init_cohort_bl", "init_cohort_br", "init_cohort_bsw", "init_cohort_bHW", 
+    "init_cohort_seedC", "init_cohort_nsc", 
+    "init_cohort_bl_n14", "init_cohort_br_n14", "init_cohort_bsw_n14", "init_cohort_bHW_n14", 
+    "init_cohort_seedC_n14", "init_cohort_nsc_n14",
+    "lu_index", "restart_status", "restart_layer", "restart_firstlayer", "restart_gdd",
+    "restart_leaf_age", "restart_topyear", "restart_bl_max", "restart_br_max", "init_n_cohorts"
+  ),
+  init_soil = c(
+    "init_fast_soil_C", "init_slow_soil_C", "init_Nmineral", "N_input", "init_fast_soil_N",
+    "init_slow_soil_N", "init_pmicr_C", "init_pmicr_d13C", "init_pmicr_N", "init_wcl1",
+    "init_wcl2", "init_wcl3", "init_N0_ecosystem", "restart_tk_pheno"
+  )
+)
+
 build_site_info <- function(site_info, forcing){
+  check_biomee_input_names(site_info, "site_info", required = c("lon", "lat", "elv"))
   
   # Add tc_home to site_info 
   if ("tc_home" %in% names(site_info)) {
@@ -443,6 +528,7 @@ build_site_info <- function(site_info, forcing){
 }
 
 build_params_siml <- function(params_siml, forcing_years, makecheck){
+  check_biomee_input_names(params_siml, "params_siml", allowed = biomee_allowed_input_names$params_siml)
   if ("spinup" %nin% names(params_siml))
     params_siml$spinup <- params_siml$spinupyears > 0
   else if (params_siml$spinup != (params_siml$spinupyears > 0)) {
@@ -533,6 +619,7 @@ build_params_siml <- function(params_siml, forcing_years, makecheck){
 }
 
 build_params_tile <- function(params_tile){
+  check_biomee_input_names(params_tile, "params_tile", allowed = biomee_allowed_input_names$params_tile)
   # a) Ensure certain unused legacy parameters (if provided) are NA.
   # If any other value is received an error is emitted.
   # If not provided set them to NA.
@@ -566,6 +653,7 @@ build_params_tile <- function(params_tile){
   return(params_tile)
 }
 build_params_species <- function(params_species, params_tile_arg = NULL){
+  check_biomee_input_names(params_species, "params_species", allowed = biomee_allowed_input_names$params_species)
   # a) Ensure params_species$LMA >= params_tileLMAmin
   if (!is.null(params_tile_arg)){ # only check if provided
     if (!all(params_species$LMA >= params_tile_arg$LMAmin)){stop("LMA of all species must be >= LMAmin")}
@@ -630,6 +718,7 @@ build_params_species <- function(params_species, params_tile_arg = NULL){
 }
 
 build_init_cohort <- function(init_cohort, params_species){
+  check_biomee_input_names(init_cohort, "init_cohort", allowed = biomee_allowed_input_names$init_cohort)
   if ("init_cohort_species" %nin% names(init_cohort)) {
     stop("'init_cohort' must contain 'init_cohort_species'.")
   }
@@ -745,6 +834,7 @@ build_init_cohort <- function(init_cohort, params_species){
 }
 
 build_init_soil <- function(init_soil, init_cohort, params_tile){
+  check_biomee_input_names(init_soil, "init_soil", allowed = biomee_allowed_input_names$init_soil)
   if ("init_fast_soil_N" %nin% names(init_soil)) {
     init_soil$init_fast_soil_N = init_soil$init_fast_soil_C / params_tile$CN0metabolicL # former default
   }
@@ -789,7 +879,9 @@ build_init_soil <- function(init_soil, init_cohort, params_tile){
 }
 
 build_forcing <- function(forcing){
-  #browser() # currently build_forcing has no-effect
+  check_biomee_input_names(forcing, "forcing",
+                           required = c("date", "ppfd", "temp", "vpd",
+                                        "rain", "wind", "patm", "co2"))
   return(forcing)
 }
 
