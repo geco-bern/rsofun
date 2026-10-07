@@ -459,6 +459,20 @@ build_params_siml <- function(params_siml, forcing_years, makecheck){
   if ("firstyeartrend" %nin% names(params_siml)) {
     params_siml$firstyeartrend <- 0
   }
+  # Default value for starvation_nsc_fraction and min_cohort_density_tree_ha
+  if ("starvation_nsc_fraction" %nin% names(params_siml)) {
+    params_siml$starvation_nsc_fraction <- 0.01
+  }
+  if ("min_cohort_density_tree_ha" %nin% names(params_siml)) {
+    params_siml$min_cohort_density_tree_ha <- 0.25
+  }
+  # and check values of starvation_nsc_fraction, min_cohort_density_tree_ha
+  for (name in c("starvation_nsc_fraction", "min_cohort_density_tree_ha")) {
+    value <- params_siml[[name]]
+    if (!is.numeric(value) || length(value) != 1L || !is.finite(value) || (value < 0 && value != -1)) {
+      stop(sprintf("'params_siml$%s' must be nonnegative or -1 to disable it.", name))
+    }
+  }
 
   # Types of photosynthesis model
   if (params_siml$method_photosynth == "gs_leuning") {
@@ -791,7 +805,9 @@ prepare_params_siml <- function(params_siml){
     "do_closedN_run",
     "code_method_photosynth",
     "code_method_mortality",
-    "do_daily_diagnostics"
+    "do_daily_diagnostics",
+    "starvation_nsc_fraction",
+    "min_cohort_density_tree_ha"
   )
 
   return(params_siml)

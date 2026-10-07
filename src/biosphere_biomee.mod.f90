@@ -107,7 +107,9 @@ contains
 
     !===== Reproduction and mortality
     ! Kill all individuals in a cohort if NSC falls below critical point
-    call vegn_annual_starvation( vegn )
+    if (inputs%params_siml%starvation_nsc_fraction >= 0.0) then
+      call vegn_annual_starvation( vegn, inputs%params_siml%starvation_nsc_fraction )
+    endif
     
     ! Natural mortality (reducing number of individuals 'density')
     ! (~Eq. 2 in Weng et al., 2015 BG)

@@ -26,9 +26,6 @@ module md_vegetation_tile_biomee
   integer, public, parameter :: NLAYERS_MAX = 9     ! maximum number of canopy layers to be considered
 
 
-  !===== Minimum cohort density
-  real, public, parameter :: mindensity = 0.25E-4 ! Minimum cohort density
-
   type :: dampended_forcing_type
     logical :: initialized = .true.
     real :: co2  = 0.0
@@ -534,12 +531,13 @@ contains
   end subroutine reduce
 
 
-  subroutine kill_lowdensity_cohorts( self )
+  subroutine kill_lowdensity_cohorts( self, mindensity )
     !////////////////////////////////////////////////////////////////
     ! Remove cohorts that have (almost) fully died and update tile
     ! Code from BiomeE-Allocation
     !---------------------------------------------------------------
     class(vegn_tile_type), intent(inout) :: self
+    real, intent(in) :: mindensity ! trees/m2
     ! local variables
     logical :: at_least_one_survivor
 

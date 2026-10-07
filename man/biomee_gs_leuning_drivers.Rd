@@ -24,6 +24,8 @@ A tibble of driver data.
         model. One of the following: "dbh" is size-dependent mortality, "const_selfthin"
         is constant self thinning (in development), "cstarvation" is carbon starvation, and
         "growthrate" is growth rate dependent mortality.}
+      \item{starvation_nsc_fraction}{Minimum nonstructural carbon as a fraction of maximum leaf biomass before a cohort is removed (optional). Defaults to 0.01 if not provided. Set to -1 to disable this starvation removal.}
+      \item{min_cohort_density_tree_ha}{Minimum cohort density in trees per hectare. Cohorts at or below this density are removed when at least one other cohort exceeds it (optional). Defaults to 0.25. Set to -1 to disable this cleanup.}
       \item{do_daily_diagnostics}{Whether to output daily diagnostics ('output_daily_tile'). Default: True.}
     }}
   \item{site_info}{Site meta info in a data.frame.

@@ -21,7 +21,7 @@ module md_interface_in_biomee
                                           ! year (NOTE: can lead to non-compatible LMA and phenotype parameters)
 
   !===== Number of parameters
-  integer, public, parameter :: nvars_params_siml    = 11
+  integer, public, parameter :: nvars_params_siml    = 13
   integer, public, parameter :: nvars_site_info      = 4
   integer, public, parameter :: nvars_params_tile    = 20
   integer, public, parameter :: nvars_init_soil      = 14
@@ -50,6 +50,8 @@ module md_interface_in_biomee
     logical :: do_closedN_run
     character(len=30) :: method_photosynth
     character(len=30) :: method_mortality
+    real :: starvation_nsc_fraction = 0.01 ! ratio;  -1 disables annual C starvation
+    real :: min_cohort_density = 0.25E-4  ! trees/m2; -1 disables cleanup
 
   contains
 
@@ -334,6 +336,12 @@ contains
     end select
 
     self%steering_input%do_daily_reporting = int(params_siml(11)) /= 0
+    self%starvation_nsc_fraction = real(params_siml(12))
+    if (params_siml(13) < 0.0) then
+      self%min_cohort_density = -1.0 ! any value below 0 disables cleanup
+    else
+      self%min_cohort_density = real(params_siml(13)) / 10000.0 ! trees/ha to trees/m2
+    endif
 
   end subroutine populate_params_siml
 

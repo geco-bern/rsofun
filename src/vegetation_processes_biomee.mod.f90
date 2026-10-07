@@ -567,9 +567,6 @@ contains
     type(cohort_stack_item), pointer :: it
 
     real :: deathrate ! mortality rate, 1/year
-
-    ! real, parameter :: min_density = 1e-5 ! 2e-15 ! 1/m. If density is less than this number,
-    ! then the entire cohort is killed; 2e-15 is approximately 1 individual per Earth
     real :: cCAI ! Cumulative CAI
     real :: CAI_max
     real :: dbh ! cache variable
@@ -680,18 +677,21 @@ contains
     endif
 
     ! Remove the cohorts with very few individuals
-    call vegn%kill_lowdensity_cohorts()
+    if (inputs%params_siml%min_cohort_density >= 0.0) then
+      call vegn%kill_lowdensity_cohorts(inputs%params_siml%min_cohort_density)
+    endif
 
   end subroutine vegn_nat_mortality
 
 
-  subroutine vegn_annual_starvation( vegn ) ! Annual
+  subroutine vegn_annual_starvation( vegn, starvation_nsc_fraction ) ! Annual
     !////////////////////////////////////////////////////////////////
     ! Mortality due to C starvation (NSC below threshold)
     ! Starvation due to low NSC and annual NPP
     ! Code from BiomeE-Allocation
     !---------------------------------------------------------------
     type(vegn_tile_type), intent(inout) :: vegn
+    real, intent(in) :: starvation_nsc_fraction
 
     ! local variables --------
     type(cohort_type), pointer :: cc
@@ -701,7 +701,7 @@ contains
     do while (associated(it))
       cc => it%cohort
      
-      if (cc%plabl%c12 < 0.01*cc%bl_max) then
+      if (cc%plabl%c12 < starvation_nsc_fraction*cc%bl_max) then
         it => vegn%thin_cohort(it)
       else
         it => it%next()

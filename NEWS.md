@@ -21,8 +21,8 @@
     nitrogen pools. Namely: `init_fast_soil_N`, `init_slow_soil_N`, `init_pmicr_C`, 
     `init_pmicr_d13C`, `init_pmicr_N`, `init_wcl1`, `init_wcl2`, `init_wcl3`, `init_N0_ecosystem`. 
     If not provided, default values ensure backwards compatibility.
-* Added following optional parameters. Previously they were hardcoded. If not provided, default 
-  values ensure backwards compatibility. The parameters are (default):
+* Added following optional parameters to `params_species`. Previously they were hardcoded. 
+  If not provided, default values ensure backwards compatibility. The parameters are (default):
   `kphio`       (default = 0.05)  quantum yield efficiency at optimal temperature, mol mol-1.
   `beta`        (default = 146.0) unit cost ratio of carboxylation to transpiration, unitless.
   `rd_to_vcmax` (default = 0.014) Ratio of Rdark to Vcmax25, unitless.
@@ -34,6 +34,15 @@
   `A_mort`      (default = 9.0)   A coefficient in understory mortality rate correction, year-1 (deathrate = mortrate_d_u * (1+A*exp(B*DBH))/(1+exp(B*DBH))).
   `B_mort`      (default = -60.0) B coefficient in understory mortality rate correction, m-1 (deathrate = mortrate_d_u * (1+A*exp(B*DBH))/(1+exp(B*DBH))).
   `f_LFR_max`   (default = 0.85)  Max fraction of total C growth that is allocated to leaves and fine root (remaining C growth used for seeds and DBH growth), unitless.
+* Added following optional parameters to `params_siml`. Previously they were hardcoded. 
+  If not provided, default values ensure backwards compatibility. The parameters are (default):
+  `starvation_nsc_fraction`    (default = 0.01)          threshold for (background) carbon 
+  starvation whenever NSC as a fraction of bl_max is below that. Note that this process is 
+  separate from the additional process defined by `method_mortality = "cstarvation"`.
+  `min_cohort_density_tree_ha` (default = 0.25 trees/ha) lower threshold for low-density cohort cleanup
+  
+  Set either threshold to `-1` to disable its process. Existing drivers retain the previous default
+  thresholds.
 ## BiomeEP: (Potentially) Breaking changes
 * Removed dummy parameters in `params_species` for `run_biomee_f_bysite()`: 
   `Vmax`,`alphaBM`,`leafLS`,`lAImax`,`CNleaf0`,`gamma_L`,`Vannual`,
