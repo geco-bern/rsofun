@@ -5,7 +5,8 @@
   lowering memory footprint of a simulation. Criteria for merging eligibility 
   of two cohorts now use modified limits for DBH differences:
   - for trees below 5 cm: criteria _remain as before_: i.e. either <= 0.001 m or <= 20%, and
-  - for trees above 5 cm: criteria were changed to absolute DBH difference of <= 0.01 m.
+  - for trees above 5 cm: criteria were changed to absolute DBH difference of < 0.01 m. 
+    (NOTE: actually for numerical reasons used thresholds are <= 0.009 m and <= 18%)
 * Added `output_daily_tile$Tksoil`, i.e. daily output of soil temperature
 * Added parameters allowing restarting a previous simulation where it has ended:
   * Added missing state variables to `output_annual_cohorts`:

@@ -371,8 +371,8 @@ contains
                       (self%layer > 1 .and. other%layer > 1))
 
       sameSizeTree = (spdata(self%species)%lifeform == 1).and.(spdata(other%species)%lifeform ==1) .and.( & ! both must be trees
-              (self_dbh >  0.05 .and. dbh_diff <= 0.01) .or. &                                            ! above 5cm if DBH diff <= 1cm
-              (self_dbh <= 0.05 .and. (dbh_diff/(self_dbh + other_dbh) < 0.1 ).or. (dbh_diff < 0.001)))   ! below 5cm if DBH diff <= 20% or <1mm
+              (self_dbh >  0.05 .and. dbh_diff <= 0.009) .or. &                                           ! above 5cm if DBH diff <= 1cm (actually 0.9cm)
+              (self_dbh <= 0.05 .and. (dbh_diff/(self_dbh + other_dbh) < 0.09 ).or. (dbh_diff < 0.001)))   ! below 5cm if DBH diff <= 20% or <1mm (actually <=18%)
 
       sameSizeGrass= (spdata(self%species)%lifeform == 0) .and. &
               (spdata(other%species)%lifeform == 0) .and. &
