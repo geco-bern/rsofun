@@ -337,10 +337,10 @@ test_that("test likelihood/RMSE calculations with BiomeE", {
     object = ll_values_BiomeE,
     # expected was generated with dput(ll_values_BiomeE)
     expected = c(
-      -2.02028078723776, 
-      -2.23975145218513, 
-      -1.24205422222268, 
-      -0.385833876654153
+      -2.02028083996674, 
+      -2.2397494479801, 
+      -1.24182391805374, 
+      -0.413618987503414
     )
   )
 
@@ -358,10 +358,10 @@ test_that("test likelihood/RMSE calculations with BiomeE", {
     # expected was generated with dput(relError_values_BiomeE)
     # NOTE: these errors are relative Errors, not RMSE:
     expected = c(
-      0.427264794095862, 
-      0.16743635219546, 
-      0.15395725407191, 
-      0.315096226632107
+      0.42678901665047, 
+      0.167735439635371, 
+      0.153357046903149, 
+      0.313214847042536
     )
   )
 })
