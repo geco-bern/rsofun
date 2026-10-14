@@ -49,7 +49,8 @@
   `params_siml`, `params_tile`, `params_species`, `init_cohort`, and `init_soil`
   instead of silently ignoring them. Missing required columns in `site_info`
   and `forcing`, and duplicate names in all seven inputs, are reported early.
-  Extra site and forcing metadata remain supported.
+  Extra site and forcing metadata remain supported. `forcing` is now checked 
+  and errors on invalid numeric inputs (e.g. negative pressure).
 * Removed dummy parameters in `params_species` for `run_biomee_f_bysite()`: 
   `Vmax`,`alphaBM`,`leafLS`,`lAImax`,`CNleaf0`,`gamma_L`,`Vannual`,
   `betaON`,`betaOFF`, `leaf_size` and in `params_tile`: `GR_factor`.

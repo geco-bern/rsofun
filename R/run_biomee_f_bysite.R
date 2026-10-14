@@ -882,6 +882,67 @@ build_forcing <- function(forcing){
   check_biomee_input_names(forcing, "forcing",
                            required = c("date", "ppfd", "temp", "vpd",
                                         "rain", "wind", "patm", "co2"))
+  if (!(inherits(forcing$date, "Date") || inherits(forcing$date, "POSIXt")) ||
+      any(!is.finite(as.numeric(forcing$date)))) {
+    stop("'forcing$date' must contain finite Date or POSIXt values without missing dates.",
+         call. = FALSE)
+  }
+  # Repeated dates are valid for subdaily forcing; backwards dates are not.
+  if (is.unsorted(forcing$date)) {
+    stop("'forcing$date' must be in chronological order.", call. = FALSE)
+  }
+
+  # Broad terrestrial bounds also catch unit mistakes (kPa instead of Pa,
+  # Kelvin instead of deg C) and -9999 sentinels. Never fill or clip here:
+  # repairs belong in the data preparation pipeline, not in the model runner.
+  limits <- list(
+    ppfd = c(0, Inf), 
+    temp = c(-100, 100), 
+    vpd = c(0, Inf),
+    rain = c(0, Inf), 
+    wind = c(0, Inf), 
+    patm = c(10000, 120000),
+    co2 = c(1, Inf)
+  )
+  units <- c(
+    ppfd = "mol m-2 s-1", 
+    temp = "deg C", 
+    vpd = "Pa",
+    rain = "mm s-1", 
+    wind = "m s-1", 
+    patm = "Pa", 
+    co2 = "ppm")
+  problems <- character()
+  for (variable in names(limits)) {
+    values <- forcing[[variable]]
+    bounds <- limits[[variable]]
+    if (!is.numeric(values) || !is.null(dim(values))) {
+      problems <- c(
+        problems, 
+        sprintf("'%s' must be a numeric vector (%s).", variable, units[[variable]]))
+      next
+    }
+    invalid <- !is.finite(values) | values < bounds[1] | values > bounds[2]
+    rows <- which(invalid)
+    if (length(rows)) {
+      examples <- head(rows, 5L)
+      locations <- sprintf("row %d (%s): %s", 
+                           examples,
+                           as.character(forcing$date[examples]),
+                           format(values[examples], 
+                           trim = TRUE))
+      rule <- sprintf("finite and in [%s, %s]", bounds[1], bounds[2])
+      problems <- c(
+        problems, 
+        sprintf(
+          "'%s' must be %s %s; %d invalid value(s): %s%s.",
+          variable, rule, units[[variable]], length(rows), paste(locations, collapse = "; "), 
+          if (length(rows) > 5L) "; ..." else ""))
+    }
+  }
+  if (length(problems)) {
+    stop(paste(c("Invalid BiomeE forcing:", problems), collapse = "\n"), call. = FALSE)
+  }
   return(forcing)
 }
 
