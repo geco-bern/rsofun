@@ -38,10 +38,10 @@ module md_cohort
     real :: age           = 0.0          ! age of cohort, years
     real :: topyear       = 0.0          ! number of years the cohort is in top layer
 
-    !===== Biological prognostic variables
+    !===== Biological prognostic variables (i.e. state variables)
     real    :: gdd        = 0.0          ! growing degree-day (phenology)
     integer :: status     = LEAF_OFF     ! growth status of plant
-    real :: leaf_age   = 0.0          ! leaf age (years)
+    real :: leaf_age      = 0.0          ! leaf age (years)
 
     !===== Organic pools, kg tree-1
     type(orgpool) :: pleaf               ! leaf biomass
@@ -56,7 +56,7 @@ module md_cohort
     real    :: br_max     = 0.0          ! Max. fine root biomass
 
     !=================== Temporary variables
-    ! Contrary to the state vairbales, temporary variables are reset every step, day, or year (as appropriate).
+    ! Contrary to the state variables, temporary variables are reset every step, day, or year (as appropriate).
 
     !===== Fast step fluxes, kg timestep-1 tree-1
     type(common_fluxes) :: fast_fluxes
@@ -111,9 +111,8 @@ module md_cohort
 
       !========== Other member procedures
 
-      procedure reset_cohort
-      procedure initialize_cohort_from_biomass
-      procedure init_bl_br
+      procedure reset_cohort_fluxes
+      procedure init_bl_max_br_max
       procedure can_be_merged_with
 
   end type cohort_type
@@ -311,15 +310,15 @@ contains
 
   end subroutine merge_in
 
-  pure subroutine reset_cohort(self)
+  pure subroutine reset_cohort_fluxes(self)
     !////////////////////////////////////////////////////////////////
     ! Reset cohort temporary data (used yearly)
     !---------------------------------------------------------------
     class(cohort_type), intent(inout) :: self
 
     ! Save last year's values
-    self%DBH_ys        = self%dbh()
-    self%BA_ys         = basal_area(self)
+    self%DBH_ys        = self%dbh()       ! _ys: year start
+    self%BA_ys         = basal_area(self) ! _ys: year start
 
     self%WupL(:)       = 0.0
 
@@ -343,7 +342,7 @@ contains
 
     self%m_turnover    = 0.0
     self%deathrate     = 0.0
-  end subroutine reset_cohort
+  end subroutine reset_cohort_fluxes
 
   function can_be_merged_with(self, other) result(res)
     !////////////////////////////////////////////////////////////////
@@ -371,10 +370,9 @@ contains
                       (spdata(other%species)%lifeform == 0) .and. &
                       (self%layer > 1 .and. other%layer > 1))
 
-      sameSizeTree = (spdata(self%species)%lifeform > 0).and.  &
-              (spdata(other%species)%lifeform > 0).and.  &
-              ((dbh_diff/(self_dbh + other_dbh) < 0.1 ) .or.  &
-                      (dbh_diff < 0.001))  ! it'll be always true for grasses
+      sameSizeTree = (spdata(self%species)%lifeform == 1).and.(spdata(other%species)%lifeform ==1) .and.( & ! both must be trees
+              (self_dbh >  0.05 .and. dbh_diff <= 0.01) .or. &                                            ! above 5cm if DBH diff <= 1cm
+              (self_dbh <= 0.05 .and. (dbh_diff/(self_dbh + other_dbh) < 0.1 ).or. (dbh_diff < 0.001)))   ! below 5cm if DBH diff <= 20% or <1mm
 
       sameSizeGrass= (spdata(self%species)%lifeform == 0) .and. &
               (spdata(other%species)%lifeform == 0) .and. &
@@ -392,34 +390,9 @@ contains
   ! Other helper functions
   !----------------------------------------------------------------
 
-  pure subroutine initialize_cohort_from_biomass(self)
+  pure subroutine init_bl_max_br_max( self )
     !////////////////////////////////////////////////////////////////
-    ! Calculate initial biomass
-    !---------------------------------------------------------------
-    class(cohort_type), intent(inout) :: self
-
-    ! Local variable
-    type(params_species_biomee) :: sp
-
-    sp = self%sp()
-
-    call self%init_bl_br()
-
-    self%plabl%c12 = 2.0 * (self%bl_max + self%br_max)
-
-    ! N pools
-    self%plabl%n14 = 5.0 * (self%bl_max / sp%CNleaf0 + self%br_max / sp%CNroot0)
-    self%pleaf%n14 = self%pleaf%c12 / sp%CNleaf0
-    self%proot%n14 = self%proot%c12 / sp%CNroot0
-    self%psapw%n14 = self%psapw%c12 / sp%CNsw0
-    self%pwood%n14 = self%pwood%c12 / sp%CNwood0
-    self%pseed%n14 = self%pseed%c12 / sp%CNseed0
-
-  end subroutine initialize_cohort_from_biomass
-
-  pure subroutine init_bl_br( self )
-    !////////////////////////////////////////////////////////////////
-    ! Initialize bl_max and br_max
+    ! Derive bl_max and br_max from crownarea
     !---------------------------------------------------------------
     class(cohort_type), intent(inout) :: self
 
@@ -431,13 +404,11 @@ contains
 
     crownarea = self%crownarea()
 
-    ! calculations of bl_max and br_max are here only for the sake of the
-    ! diagnostics, because otherwise those fields are inherited from the
-    ! parent cohort and produce spike in the output, even though these spurious
-    ! values are not used by the model
-    self%bl_max = sp%LMA   * sp%LAImax        * crownarea / self%layer
+    ! calculations of bl_max and br_max are used as target values for leaf and
+    ! root growth. They affect how much carbon is pulled from NSC towards growth
+    self%bl_max = sp%LMA   * sp%LAImax        * crownarea / self%layer  
     self%br_max = sp%phiRL * sp%LAImax/sp%SRA * crownarea / self%layer
 
-  end subroutine init_bl_br
+  end subroutine init_bl_max_br_max
 
 end module md_cohort

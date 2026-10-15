@@ -219,7 +219,7 @@ contains
       lue = kphio * mprime * c_molmass  ! in g CO2 m-2 s-1 / (mol light m-2 s-1)
 
       ! Vcmax after accounting for Jmax limitation
-      vcmax = kphio  * ppfd * out_optchi%mjoc * mprime / out_optchi%mj
+      vcmax = kphio * ppfd * out_optchi%mjoc * mprime / out_optchi%mj ! mol m-2 s-1
 
       ! Vcmax per unit aborbed light
       vcmax_unitiabs = kphio * out_optchi%mjoc * mprime / out_optchi%mj

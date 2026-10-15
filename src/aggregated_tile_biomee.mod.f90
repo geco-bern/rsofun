@@ -10,6 +10,7 @@ module md_aggregated_tile_biomee
   use md_interface_out_biomee
   use md_cohort
   use md_cohort_linked_list, only: cohort_stack_item
+  use, intrinsic :: iso_c_binding, only: c_double
 
   implicit none
 
@@ -30,6 +31,7 @@ module md_aggregated_tile_biomee
       procedure populate_outarrays
       procedure populate_outcohorts
       procedure populate_outdaily
+      procedure populate_restart_state
 
   end type aggregated_tile
 
@@ -57,7 +59,7 @@ contains
     do lu_idx = 1, nb_lu
       associate(lu => self%tiles(lu_idx))
         lu%fraction = lu_fractions(lu_idx)
-        if (lu%non_empty()) call lu%vegn%initialize_vegn_tile(lu_idx)
+        if (lu%non_empty()) call lu%vegn%initialize_vegn_tile(lu_idx) ! NOTE: cohorts of new simulation are initialized following inputs%init_cohort
       end associate
     end do
   end subroutine initialize
@@ -164,7 +166,9 @@ contains
 
         if (old_lu_fractions(j) <= 0 .and. lu_fractions(j) > 0) then
           ! If a tile had null fraction and has now non-null, we initialize it.
-          call lu%vegn%initialize_vegn_tile(j)
+          call lu%vegn%initialize_vegn_tile(j) 
+          ! NOTE: cohorts of new tiles are initialized following inputs%init_cohort, NOTE: for new tiles, age should be set at 0, instead of inputs%init_cohort
+          
         else
           it => lu%vegn%cohorts()
           do while (associated(it))
@@ -174,7 +178,7 @@ contains
             cc%density = (cc%density   * (old_lu_fractions(j) - lost(j))) / lu_fractions(j)
             it => it%next()
           end do
-          call lu%vegn%aggregate_cohorts() ! We aggregate to get the right density
+          call lu%vegn%aggregate_pools_across_cohorts() ! We aggregate to get the right density
         end if
 
         ! Subtract the lost quantities, add transfered ones, and normalize with the new fraction
@@ -319,12 +323,28 @@ contains
 
   end subroutine populate_outarrays
 
-  subroutine populate_outcohorts(self, output_annual_cohorts)
+  subroutine populate_restart_state(self, output_restart_cohorts, output_restart_soil)
+    class(aggregated_tile), intent(in) :: self
+    real(kind=c_double), dimension(:, :, :), intent(out) :: output_restart_cohorts
+    real(kind=c_double), dimension(:, :), intent(out) :: output_restart_soil
+
+    integer :: lu_idx
+
+    do lu_idx = 1, self%n_lu()
+      associate(lu => self%tiles(lu_idx))
+        if (lu%non_empty()) then
+          call lu%vegn%export_restart_state(output_restart_cohorts(:, :, lu_idx), output_restart_soil(:, lu_idx))
+        end if
+      end associate
+    end do
+  end subroutine populate_restart_state
+
+  subroutine populate_outcohorts(self, output_curr_year_cohorts)
     use, intrinsic :: iso_fortran_env, dp=>real64
 
     ! Arguments
     class(aggregated_tile), intent(in)             :: self
-    real(kind=dp), dimension(:, :, :), intent(out) :: output_annual_cohorts
+    real(kind=dp), dimension(:, :, :), intent(out) :: output_curr_year_cohorts
 
     ! Local variable
     integer :: lu_idx
@@ -333,7 +353,9 @@ contains
       associate(lu => self%tiles(lu_idx))
         ! If empty tile, skip
         if (lu%non_empty()) then
-          output_annual_cohorts(:, :, lu_idx) = dble(lu%vegn%out_annual_cohorts(:, :))
+          ! since output_curr_year_cohorts is the current year's view of == output_annual_cohorts(:, idx, :, :), 
+          ! we can directly assign the values from lu%vegn%out_annual_cohorts to the correct land use type (lu_idx)
+          output_curr_year_cohorts(:, :, lu_idx) = dble(lu%vegn%out_annual_cohorts(:, :))
         end if
 
       end associate

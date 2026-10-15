@@ -11,6 +11,7 @@ module md_vegetation_tile_biomee
   use md_cohort
   use md_cohort_linked_list
   use, intrinsic :: iso_c_binding, only: c_double
+  use, intrinsic :: ieee_arithmetic, only: ieee_is_nan
 
   ! define data types and constants
   implicit none
@@ -18,25 +19,12 @@ module md_vegetation_tile_biomee
   public :: params_species_biomee, cohort_type, vegn_tile_type, dampended_forcing_type
 
   !=============== Parameters ======================================================
-  integer, public, parameter :: NCohortMax = 50 ! maximum number of cohorts
-  integer, public, parameter :: out_max_cohorts      = NCohortMax
+  integer, public, parameter :: NCohortMax = 50 ! maximum number of cohorts that are output (there could be more but they would not be reported)
+                                                ! is also maximum number of cohorts that can reproduce in a year 
 
   !===== Model
   integer, public, parameter :: NLAYERS_MAX = 9     ! maximum number of canopy layers to be considered
 
-  !===== Photosynthesis
-  real, public, parameter  :: extinct = 0.75        ! light extinction coefficient in the canopy for photosynthesis
-
-  !===== Soil SOM reference C/N ratios
-  real, parameter :: CN0metabolicL                       = 15.0
-  real, parameter :: CN0structuralL                      = 40.0
-
-  !===== fraction = mortrate_d_u * (1+A*exp(B*DBH))/(1+exp(B*DBH))
-  real, parameter  :: A_mort     = 9.0    ! A coefficient in understory mortality rate correction, 1/year
-  real, parameter  :: B_mort     = -60.0  ! B coefficient in understory mortality rate correction, 1/m
-
-  !===== Ensheng's growth parameters
-  real, parameter  :: f_LFR_max  = 0.85    ! max allocation to leaves and fine roots
 
   !===== Minimum cohort density
   real, public, parameter :: mindensity = 0.25E-4 ! Minimum cohort density
@@ -65,7 +53,7 @@ module md_vegetation_tile_biomee
     integer, private :: lu_index   ! Which land use (LU) this tile represents. Given as the index in 'init_lu' array.
 
     !========================= Cohort aggreation ===========================!
-    ! Attention: variables aggregated from cohorts are only usable after having run aggregate_cohorts()
+    ! Attention: variables aggregated from cohorts are only usable after having run aggregate_pools_across_cohorts()
     real             :: density                            ! density (tree/m2)
     real, private    :: LAI                                ! leaf area index (surface of leaves per m2 of ground/tile)
     real, private    :: CAI                                ! crown area index (surface of the projected crown mer m2 of ground/tile)
@@ -110,14 +98,13 @@ module md_vegetation_tile_biomee
     !===== Inorganic pools, kg m-2
     type(orgpool) :: inorg                        ! Mineral N/C pool
 
-    !===== Soil water pool, kg H2O m-2
-    real    :: wcl(MAX_LEVELS)              ! volumetric soil water content for each layer
+    !===== Soil water pool, m3 /m3
+    real    :: wcl(MAX_LEVELS)              ! volumetric soil water content for each layer (in m3 H2O / m3 soil volume)
 
     !=====  Averaged quantities for PPA phenology
     ! Note, these fields do not follow the usual annual cycle (january-january)
     ! so they are not reset in zero_diagnostics
     real    :: tk_daily           = 0.0           ! 24h average temperature (Kelvin)
-    real    :: gdd                = 0.0           ! growing degree-days
     real    :: tk_pheno           = 0.0           ! smoothed canopy air temperature for phenology (Kelvin)
     real    :: tc_soil            = 0.0           ! Daily soil temperature in (deg C)
 
@@ -133,7 +120,6 @@ module md_vegetation_tile_biomee
     real    :: N_P2S_yr           ! N turnover (plant to soil) (kg N m-2 yr-1)
 
     !=====  Memory
-    real    :: previousN          ! weighted annual available N
     real    :: initialN0          ! initial available N (kg N m-2)
 
     !=====  Fast fluxes, kg m-2 timestep-1
@@ -142,6 +128,7 @@ module md_vegetation_tile_biomee
     real    :: evap                               ! Evaporation
     real    :: runoff                             ! Water runoff of the tile
     real    :: precp                              ! Precipitation
+    real    :: f_light_forest_floor               ! Fraction of light reaching forest floor, used to compute evaporation
 
     !=====  Daily fluxes, kg day-1 m-2
     real, private    :: dailyRh
@@ -165,8 +152,8 @@ module md_vegetation_tile_biomee
     !===== Reporting diagnostics
     real, dimension(nvars_annual_tile) :: out_annual_tile
     real, dimension(ndayyear, nvars_daily_tile) :: out_daily_tile
-    real, dimension(out_max_cohorts, nvars_annual_cohorts) :: out_annual_cohorts
-
+    real, dimension(NCohortMax, nvars_annual_cohorts) :: out_annual_cohorts 
+    
   contains
 
     !========= Derived variables
@@ -212,15 +199,15 @@ module md_vegetation_tile_biomee
 
     procedure plant2soil
     procedure initialize_vegn_tile
-    procedure :: aggregate_cohorts
+    procedure :: aggregate_pools_across_cohorts
     procedure :: lu_props
+    procedure :: export_restart_state
 
     !========= Private helper methods
 
     procedure, private :: recover_N_balance
     procedure, private :: merge_cohorts
     procedure, private :: split_cohort
-    procedure, private :: aggregate_pools
     procedure, private :: zero_daily_diagnostics
     procedure, private :: kill_cohort
 
@@ -238,7 +225,7 @@ contains
     !---------------------------------------------------------------
     class(vegn_tile_type), intent(in) :: self
 
-    soilwater  = SUM(self%wcl(:)*thksl(:)*1000.0)
+    soilwater  = SUM(self%wcl(:)*thksl(:)*1000.0) ! in m*1000 = m3/m2 *1000 = kg/m2
 
   end function soilwater
 
@@ -536,7 +523,7 @@ contains
       do while (associated(it2))
         if (it1%cohort%can_be_merged_with(it2%cohort)) then
           it2 => self%merge_cohorts(it1, it2)
-          call it1%cohort%init_bl_br()
+          call it1%cohort%init_bl_max_br_max()
         else
           it2 => it2%next()
         end if
@@ -615,14 +602,14 @@ contains
     self%n_deadtrees  = 0.0
     self%c_deadtrees  = 0.0
     self%m_turnover   = 0.0
-    self%totseed      = orgpool()
-    self%totNewC      = orgpool()
+    self%totseed      = orgpool() ! initializes with zero
+    self%totNewC      = orgpool() ! initializes with zero
 
 
     ! We reset the cohorts internal state
     it => self%cohorts()
     do while (associated(it))
-      call it%cohort%reset_cohort()
+      call it%cohort%reset_cohort_fluxes()
       it => it%next()
     end do
 
@@ -635,7 +622,7 @@ contains
     ! Reset dauly diagnostic variables
     class(vegn_tile_type), intent(inout) :: self
 
-    self%daily_fluxes = common_fluxes()
+    self%daily_fluxes = common_fluxes() ! initializes with zero
     self%dailyRh   = 0.0
     self%dailyPrcp = 0.0
     self%dailyEvap = 0.0
@@ -705,11 +692,12 @@ contains
     enddo
 
     if (daily_reporting) then
-      call self%aggregate_cohorts()
+      call self%aggregate_pools_across_cohorts()
 
       self%out_daily_tile(idoy, DAILY_TILE_YEAR       ) = iyears
       self%out_daily_tile(idoy, DAILY_TILE_DOY        ) = idoy
       self%out_daily_tile(idoy, DAILY_TILE_TK         ) = self%tk_daily
+      self%out_daily_tile(idoy, DAILY_TILE_TKSOIL      ) = self%tc_soil + kTkelvin
       self%out_daily_tile(idoy, DAILY_TILE_PRCP       ) = self%dailyPrcp
       self%out_daily_tile(idoy, DAILY_TILE_SOIL_W     ) = self%soilwater()
       self%out_daily_tile(idoy, DAILY_TILE_TRSP       ) = self%daily_fluxes%trsp
@@ -768,7 +756,7 @@ contains
     logical, intent(in) :: cohort_reporting
 
     ! local variables
-    real :: treeG, fseed, fleaf, froot, fwood, dDBH, BA, dBA
+    real :: treeG, fseed, fleaf, froot, fwood, dDBH, dBA
     real :: plantC, plantN, soilC, soilN
     type(cohort_type), pointer :: cc
     type(cohort_stack_item), pointer :: it
@@ -794,8 +782,7 @@ contains
         froot     = cc%NPProot / treeG
         fwood     = cc%NPPwood / treeG
         dDBH      = cc%dbh() - cc%DBH_ys !in m
-        BA        = cc%basal_area()
-        dBA       = BA - cc%BA_ys
+        dBA       = cc%basal_area() - cc%BA_ys ! _ys: year start
 
         if (i <= NCohortMax) then
 
@@ -810,11 +797,11 @@ contains
           self%out_annual_cohorts(i, ANNUAL_COHORTS_DDBH       ) = dDBH * 100           ! *100 to convert m in cm
           self%out_annual_cohorts(i, ANNUAL_COHORTS_HEIGHT     ) = cc%height()
           self%out_annual_cohorts(i, ANNUAL_COHORTS_AGE        ) = cc%age
-          self%out_annual_cohorts(i, ANNUAL_COHORTS_BA         ) = BA
+          self%out_annual_cohorts(i, ANNUAL_COHORTS_BA         ) = cc%basal_area()
           self%out_annual_cohorts(i, ANNUAL_COHORTS_DBA        ) = dBA
           self%out_annual_cohorts(i, ANNUAL_COHORTS_ACROWN     ) = cc%crownarea()
           self%out_annual_cohorts(i, ANNUAL_COHORTS_ALEAF      ) = cc%leafarea()
-          self%out_annual_cohorts(i, ANNUAL_COHORTS_NCS        ) = cc%plabl%c12
+          self%out_annual_cohorts(i, ANNUAL_COHORTS_NSC        ) = cc%plabl%c12
           self%out_annual_cohorts(i, ANNUAL_COHORTS_NSN        ) = cc%plabl%n14
           self%out_annual_cohorts(i, ANNUAL_COHORTS_SEED_C     ) = cc%pseed%c12
           self%out_annual_cohorts(i, ANNUAL_COHORTS_LEAF_C     ) = cc%pleaf%c12
@@ -834,6 +821,18 @@ contains
           self%out_annual_cohorts(i, ANNUAL_COHORTS_DEATHRATE  ) = 0
           self%out_annual_cohorts(i, ANNUAL_COHORTS_N_LOSS     ) = 0
           self%out_annual_cohorts(i, ANNUAL_COHORTS_C_LOSS     ) = 0
+          self%out_annual_cohorts(i, ANNUAL_COHORTS_SEED_N     ) = cc%pseed%n14
+          self%out_annual_cohorts(i, ANNUAL_COHORTS_LEAF_N     ) = cc%pleaf%n14
+          self%out_annual_cohorts(i, ANNUAL_COHORTS_ROOT_N     ) = cc%proot%n14
+          self%out_annual_cohorts(i, ANNUAL_COHORTS_SW_N       ) = cc%psapw%n14
+          self%out_annual_cohorts(i, ANNUAL_COHORTS_HW_N       ) = cc%pwood%n14
+          
+          ! print *, 'NSC,NSN', self%out_annual_cohorts(i, ANNUAL_COHORTS_NSC), self%out_annual_cohorts(i, ANNUAL_COHORTS_NSN), cc%plabl%c12, cc%plabl%n14
+          ! print *, 'Seed', self%out_annual_cohorts(i, ANNUAL_COHORTS_SEED_C     ), cc%pseed%c12, cc%pseed%n14
+          ! print *, 'Leaf', self%out_annual_cohorts(i, ANNUAL_COHORTS_LEAF_C     ), cc%pleaf%c12, cc%pleaf%n14
+          ! print *, 'Root', self%out_annual_cohorts(i, ANNUAL_COHORTS_ROOT_C     ), cc%proot%c12, cc%proot%n14
+          ! print *, 'sapw', self%out_annual_cohorts(i, ANNUAL_COHORTS_SW_C       ), cc%psapw%c12, cc%psapw%n14
+          ! print *, 'heaw', self%out_annual_cohorts(i, ANNUAL_COHORTS_HW_C       ), cc%pwood%c12, cc%pwood%n14
 
         end if
 
@@ -845,7 +844,7 @@ contains
 
     enddo
 
-    call self%aggregate_cohorts()
+    call self%aggregate_pools_across_cohorts()
 
     pool = self%pplant()
     plantC = pool%c12
@@ -914,6 +913,11 @@ contains
     self%out_annual_tile(ANNUAL_TILE_DEADTREES_C     ) = 0
     self%out_annual_tile(ANNUAL_TILE_M_TURNOVER      ) = 0
     self%out_annual_tile(ANNUAL_TILE_C_TURNOVER_TIME ) = self%pwood%c12 / self%NPPW
+
+    !print *, 'MCRB_C', self%out_annual_tile(ANNUAL_TILE_MCRB_C  ), self%pmicr%c12,    self%pmicr%n14
+    !print *, 'FASTSOM', self%out_annual_tile(ANNUAL_TILE_FASTSOM ), self%psoil_fs%c12, self%psoil_fs%n14
+    !print *, 'SLOWSOM', self%out_annual_tile(ANNUAL_TILE_SLOWSOM ), self%psoil_sl%c12, self%psoil_sl%n14
+    !print *, 'INORG_N', self%out_annual_tile(ANNUAL_TILE_INORG_N ), self%inorg%n14
 
     ! Rebalance N (to compensate for the adjunction in vegn_N_uptake)
     if (inputs%params_siml%do_closedN_run) call self%recover_N_balance()
@@ -1038,11 +1042,14 @@ contains
 
     ! Local variables
     integer :: i, init_n_cohorts
+    logical :: has_restart_state
     type(cohort_type), pointer :: cc
     type(cohort_stack_item), pointer :: new
+    type(params_species_biomee) :: sp
 
     ! Initialize lu_index
     self%lu_index = lu_index
+    has_restart_state = .false.
 
     ! If it is an LU acception vegetation (typically anything else than urban), we add the cohorts matching the lu_index
     if (inputs%init_lu(lu_index)%vegetated) then
@@ -1054,60 +1061,186 @@ contains
 
         ! If this cohorts init does not belong to the land use type of this vegetation tile, we move on to the next item.
         ! If the cohort's registered lu_index is negative, it belongs to all LU types (except urban)
-        if (inputs%init_cohort(i)%lu_index > 0 .and. self%lu_index /= i) cycle
+        if (inputs%init_cohort(i)%lu_index > 0 .and. self%lu_index /= inputs%init_cohort(i)%lu_index) cycle
 
         new => self%create_cohort()
         cc => new%cohort
         cc%species   = inputs%init_cohort(i)%init_cohort_species
         cc%density   = inputs%init_cohort(i)%init_cohort_density ! trees/m2
+        cc%age       = inputs%init_cohort(i)%init_cohort_age ! years
+
+        sp = cc%sp() ! careful this uses cc%species, ensure cc%sp() is called only after setting cc%species
+
+        ! C pools
         cc%plabl%c12 = inputs%init_cohort(i)%init_cohort_nsc
         cc%psapw%c12 = inputs%init_cohort(i)%init_cohort_bsw
         cc%pwood%c12 = inputs%init_cohort(i)%init_cohort_bHW
         cc%pleaf%c12 = inputs%init_cohort(i)%init_cohort_bl
         cc%proot%c12 = inputs%init_cohort(i)%init_cohort_br
         cc%pseed%c12 = inputs%init_cohort(i)%init_cohort_seedC
-        call cc%initialize_cohort_from_biomass()
+
+        ! N pools
+        cc%plabl%n14 = inputs%init_cohort(i)%init_cohort_nsc_n14
+        cc%psapw%n14 = inputs%init_cohort(i)%init_cohort_bsw_n14
+        cc%pwood%n14 = inputs%init_cohort(i)%init_cohort_bHW_n14
+        cc%pleaf%n14 = inputs%init_cohort(i)%init_cohort_bl_n14
+        cc%proot%n14 = inputs%init_cohort(i)%init_cohort_br_n14
+        cc%pseed%n14 = inputs%init_cohort(i)%init_cohort_seedC_n14
+
+        ! Other memory variables (needed for restarting a simulation)
+        if (inputs%init_cohort(i)%restart_status >= 0) then
+          cc%status = inputs%init_cohort(i)%restart_status
+          has_restart_state = .true.
+        end if
+
+        if (inputs%init_cohort(i)%restart_layer > 0) then
+          cc%layer = inputs%init_cohort(i)%restart_layer
+          has_restart_state = .true.
+        end if
+
+        if (inputs%init_cohort(i)%restart_firstlayer >= 0) then
+          cc%firstlayer = inputs%init_cohort(i)%restart_firstlayer
+          has_restart_state = .true.
+        end if
+
+        if (.not. ieee_is_nan(inputs%init_cohort(i)%restart_gdd)) then
+          cc%gdd = inputs%init_cohort(i)%restart_gdd
+          has_restart_state = .true.
+        end if
+
+        if (.not. ieee_is_nan(inputs%init_cohort(i)%restart_leaf_age)) then
+          cc%leaf_age = inputs%init_cohort(i)%restart_leaf_age
+          has_restart_state = .true.
+        end if
+
+        if (.not. ieee_is_nan(inputs%init_cohort(i)%restart_topyear)) then
+          cc%topyear = inputs%init_cohort(i)%restart_topyear
+          has_restart_state = .true.
+        end if
+
+        if (.not. ieee_is_nan(inputs%init_cohort(i)%restart_bl_max) .and. &
+            .not. ieee_is_nan(inputs%init_cohort(i)%restart_br_max)) then
+          cc%bl_max = inputs%init_cohort(i)%restart_bl_max
+          cc%br_max = inputs%init_cohort(i)%restart_br_max
+          has_restart_state = .true.
+        else
+          ! Cold starts still derive these targets from the initialized structure.
+          call cc%init_bl_max_br_max()
+        end if
 
       enddo
 
       ! Split initial layer in smaller layers (if it is full)
-      call self%relayer()
+      if (.not. has_restart_state) call self%relayer() ! restart states do not need relayer(), they already carry layer assignments
 
     end if
 
     ! Initial Soil pools and environmental conditions
     self%psoil_fs%c12 = inputs%init_soil%init_fast_soil_C  ! fast soil carbon pool, (kg C/m2)
     self%psoil_sl%c12 = inputs%init_soil%init_slow_soil_C  ! slow soil carbon pool, (kg C/m2)
-    self%psoil_fs%n14 = self%psoil_fs%c12 / CN0metabolicL  ! fast soil nitrogen pool, (kg N/m2)
-    self%psoil_sl%n14 = self%psoil_sl%c12 / CN0structuralL ! slow soil nitrogen pool, (kg N/m2)
+    self%psoil_fs%n14 = inputs%init_soil%init_fast_soil_N ! fast soil nitrogen pool, (kg N/m2)
+    self%psoil_sl%n14 = inputs%init_soil%init_slow_soil_N ! slow soil nitrogen pool, (kg N/m2)
     self%inorg%n14    = inputs%init_soil%init_Nmineral     ! Mineral nitrogen pool, (kg N/m2)
-    self%previousN    = self%inorg%n14
 
     ! debug: adding microbial biomass initialisation
-    self%pmicr = orgpool() ! to do: add to: inputs%init_soil%xxxxx
+    self%pmicr = orgpool(inputs%init_soil%init_pmicr_C,   &
+                         inputs%init_soil%init_pmicr_d13C, &
+                         inputs%init_soil%init_pmicr_N)
 
-    ! Initialize soil volumetric water conent with field capacity (maximum soil moisture to start with)
-    self%wcl = inputs%params_tile%FLDCAP
+    ! Initialize soil volumetric water content
+    self%wcl = (/inputs%init_soil%init_wcl1, inputs%init_soil%init_wcl2, inputs%init_soil%init_wcl3/)
 
-    call self%aggregate_cohorts()
+    ! Initialize initialN0, that is used for nitrogen workaround: keep the N in the system constant at this value
+    self%initialN0 = inputs%init_soil%init_N0_ecosystem
 
-    self%initialN0 =  self%totN
+    if (.not. ieee_is_nan(inputs%init_soil%restart_tk_pheno)) self%tk_pheno = inputs%init_soil%restart_tk_pheno 
+    !if (.not. ieee_is_nan(inputs%init_soil%restart_vegn_gdd)) self%gdd      = inputs%init_soil%restart_vegn_gdd
+    
+    !call self%aggregate_pools_across_cohorts()
+    !self%initialN0 =  self%totN
 
   end subroutine initialize_vegn_tile
+
+  subroutine export_restart_state(self, output_init_cohort, output_init_soil)
+    !////////////////////////////////////////////////////////////////////////
+    ! Export the current tile state in a format compatible with init_cohort
+    ! and init_soil, including restart-only cohort and tile fields.
+    !------------------------------------------------------------------------
+    class(vegn_tile_type), intent(in) :: self
+    real(kind=c_double), dimension(:, :), intent(out) :: output_init_cohort
+    real(kind=c_double), dimension(:), intent(out) :: output_init_soil
+
+    type(cohort_type), pointer :: cc
+    type(cohort_stack_item), pointer :: it
+    integer :: i
+
+    i = 0
+    it => self%cohorts()
+    do while (associated(it) .and. i < size(output_init_cohort, 1))
+      cc => it%cohort
+      i = i + 1
+
+      output_init_cohort(i, 1)  = cc%species
+      output_init_cohort(i, 2)  = cc%density
+      output_init_cohort(i, 3)  = cc%age
+      output_init_cohort(i, 4)  = cc%pleaf%c12
+      output_init_cohort(i, 5)  = cc%proot%c12
+      output_init_cohort(i, 6)  = cc%psapw%c12
+      output_init_cohort(i, 7)  = cc%pwood%c12
+      output_init_cohort(i, 8)  = cc%pseed%c12
+      output_init_cohort(i, 9)  = cc%plabl%c12
+      output_init_cohort(i, 10) = cc%pleaf%n14
+      output_init_cohort(i, 11) = cc%proot%n14
+      output_init_cohort(i, 12) = cc%psapw%n14
+      output_init_cohort(i, 13) = cc%pwood%n14
+      output_init_cohort(i, 14) = cc%pseed%n14
+      output_init_cohort(i, 15) = cc%plabl%n14
+      output_init_cohort(i, 16) = self%lu_index
+      output_init_cohort(i, 17) = cc%status
+      output_init_cohort(i, 18) = cc%layer
+      output_init_cohort(i, 19) = cc%firstlayer
+      output_init_cohort(i, 20) = cc%gdd
+      output_init_cohort(i, 21) = cc%leaf_age
+      output_init_cohort(i, 22) = cc%topyear
+      output_init_cohort(i, 23) = cc%bl_max
+      output_init_cohort(i, 24) = cc%br_max
+
+      it => it%next()
+    end do
+
+    output_init_soil(1)  = self%psoil_fs%c12
+    output_init_soil(2)  = self%psoil_sl%c12
+    output_init_soil(3)  = self%inorg%n14
+    output_init_soil(4)  = inputs%init_soil%N_input
+    output_init_soil(5)  = self%psoil_fs%n14
+    output_init_soil(6)  = self%psoil_sl%n14
+    output_init_soil(7)  = self%pmicr%c12
+    output_init_soil(8)  = self%pmicr%d13
+    output_init_soil(9)  = self%pmicr%n14
+    output_init_soil(10) = self%wcl(1)
+    output_init_soil(11) = self%wcl(2)
+    output_init_soil(12) = self%wcl(3)
+    output_init_soil(13) = self%initialN0
+    output_init_soil(14) = self%tk_pheno
+    !output_init_soil(15) = self%gdd ! previously we had a vegn%gdd, but use only cc%gdd
+
+  end subroutine export_restart_state
 
   !----------------------------------------------------------------
   ! Private helper methods
   !----------------------------------------------------------------
 
-  subroutine aggregate_pools( self )
+  subroutine aggregate_pools_across_cohorts( self )
     !////////////////////////////////////////////////////////////////////////
-    ! Compute tile-level pools from aggregation of pools from all living cohorts.
+    ! Update tile-level variables from aggration across living cohorts.
     !------------------------------------------------------------------------
     class(vegn_tile_type), intent(inout) :: self
 
     ! local variables
     type(cohort_type), pointer :: cc
     type(cohort_stack_item), pointer :: it !iterator
+    real :: dbh ! cache variable
+    type(orgpool) :: total_pool
 
     ! State variables
     self%plabl = orgpool()
@@ -1133,20 +1266,11 @@ contains
 
     enddo
 
-  end subroutine aggregate_pools
+    total_pool = self%pplant() + self%psoil() ! pplant requires updated pools: plabl,pseed,pleaf,proot,psapw,pwood and pmicr,psoil_fs,psoil_sl,inorg
+    self%totC = total_pool%c12
+    self%totN = total_pool%n14
 
-  subroutine aggregate_cohorts( self )
-    !////////////////////////////////////////////////////////////////////////
-    ! Update tile-level variables from aggration of living cohorts.
-    !------------------------------------------------------------------------
-    class(vegn_tile_type), intent(inout) :: self
-
-    ! local variables
-    type(cohort_type), pointer :: cc
-    type(cohort_stack_item), pointer :: it !iterator
-    real :: dbh ! cache variable
-    type(orgpool) :: total_pool
-
+    ! Derived quantities on tile level
     self%LAI          = 0.0
     self%CAI          = 0.0
     self%density      = 0.0
@@ -1160,12 +1284,6 @@ contains
     self%NPPL         = 0.0
     self%NPPW         = 0.0
     self%m_turnover   = 0.0
-
-    call self%aggregate_pools()
-
-    total_pool = self%pplant() + self%psoil()
-    self%totC = total_pool%c12
-    self%totN = total_pool%n14
 
     it => self%cohorts()
     do while (associated(it))
@@ -1201,7 +1319,7 @@ contains
     if (self%density12 > 0.0) self%DBH12 = self%DBH12 / self%density12
     if (self%density12 > 0.0) self%QMD12   = sqrt(self%QMD12 / self%density12)
 
-  end subroutine aggregate_cohorts
+  end subroutine aggregate_pools_across_cohorts
 
   function lu_props(self) result(res)
     !////////////////////////////////////////////////////////////////////////

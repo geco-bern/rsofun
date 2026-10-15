@@ -33,7 +33,9 @@ contains
     output_daily_tile,            &
     output_annual_tile,           &
     output_annual_cohorts,        &
-    output_annual_aggregated      &
+    output_annual_aggregated,     &
+    output_restart_cohorts,       &
+    output_restart_soil           &
   ) bind(C, name = "biomee_f_")
      
     !////////////////////////////////////////////////////////////////
@@ -64,7 +66,7 @@ contains
     integer(kind=c_int), intent(in) :: n_params_species
     real(kind=c_double), dimension(n_params_species, nvars_params_species), intent(in) :: params_species
     integer(kind=c_int), intent(in) :: n_init_cohort
-    real(kind=c_double), dimension(n_init_cohort,nvars_init_cohorts),  intent(in)  :: init_cohort
+    real(kind=c_double), dimension(n_init_cohort, nvars_init_cohorts),  intent(in)  :: init_cohort
     real(kind=c_double), dimension(nvars_init_soil),   intent(in)  :: init_soil
     real(kind=c_double), dimension(nvars_params_tile), intent(in) :: params_tile
     real(kind=c_double), dimension(nvars_params_siml), intent(in) :: params_siml
@@ -80,9 +82,11 @@ contains
     ! Output arrays (naked) to be passed back to C/R
     real(kind=c_double), dimension(nt_daily,nvars_daily_tile, n_lu), intent(out) :: output_daily_tile
     real(kind=c_double), dimension(nt_annual,nvars_annual_tile, n_lu), intent(out) :: output_annual_tile
-    real(kind=c_double), dimension(out_max_cohorts, nt_annual_trans, nvars_annual_cohorts, n_lu), &
+    real(kind=c_double), dimension(NCohortMax, nt_annual_trans, nvars_annual_cohorts, n_lu), &
             intent(out) :: output_annual_cohorts
     real(kind=c_double), dimension(nt_annual,nvars_aggregated_out), intent(out) :: output_annual_aggregated
+    real(kind=c_double), dimension(NCohortMax, nvars_init_cohorts, n_lu), intent(out) :: output_restart_cohorts
+    real(kind=c_double), dimension(nvars_init_soil, n_lu), intent(out) :: output_restart_soil
 
     ! Local state
     type(aggregated_tile) :: aggregat
@@ -102,6 +106,8 @@ contains
     output_annual_tile = nan
     output_annual_cohorts = nan
     output_annual_aggregated = nan
+    output_restart_cohorts = nan
+    output_restart_soil = nan
 
     ! Allocate climate array
     allocate(climate(inputs%ntstepsyear))
@@ -123,6 +129,11 @@ contains
       ! Define simulations "steering" variables (indices for forcing, but also output flags)
       !----------------------------------------------------------------
       steering_state = get_steering( yr, inputs%params_siml%steering_input )
+
+      !----------------------------------------------------------------
+      ! Print here all persistent state variables to check initialization and restart
+      !----------------------------------------------------------------
+      !call debug_print_state(steering_state, aggregat)
 
       !----------------------------------------------------------------
       ! Get external (environmental) forcing (for biomee, co2 is in inputs%climate)
@@ -171,7 +182,7 @@ contains
           output_annual_tile(steering_state%year, :, :))
 
       if (steering_state%cohort_reporting) then
-        idx = steering_state%cohort_report_idx
+        idx = steering_state%cohort_report_idx  ! index corresponding current year
         call aggregat%populate_outcohorts(output_annual_cohorts(:, idx, :, :))
       end if
       if (steering_state%daily_reporting) then
@@ -181,6 +192,9 @@ contains
       end if
 
     end do yearloop
+
+    call aggregat%populate_restart_state(output_restart_cohorts, output_restart_soil)
+    !call debug_print_restart_state(output_restart_cohorts, output_restart_soil)
 
     !----------------------------------------------------------------
     ! Clean-up allocated memory
