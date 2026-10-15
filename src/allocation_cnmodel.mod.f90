@@ -51,6 +51,16 @@ module md_allocation_cnmodel
 
   real :: test
 
+  !-------------------------------------------------------------------
+  ! Maximum labile fraction available for prescribed LAI growth; retain a small reserve.
+  ! MF: 2026-08-13
+  ! Maximum fraction of the current labile C and N pools that may be
+  ! used within one timestep to support additional leaf growth toward
+  ! prescribed LAI. A very small residual fraction is retained to avoid
+  ! complete depletion and numerical instability of the labile pools.
+  !-------------------------------------------------------------------
+  real, parameter :: frac_labile_for_prescr_lai = 0.999
+
 contains
 
   subroutine allocation_daily( tile, tile_fluxes, climate, init )
@@ -169,13 +179,13 @@ contains
           if ( myinterface%params_siml%use_prescribed_lai ) then
 
             ! Now additional phenology-dependent growth suppression
-            avl = orgfrac(  
+            avl = orgfrac( &
               params_allocation%frac_avl_labl, &
               tile(lu)%plant(pft)%plabl )
 
           else
 
-            avl = orgfrac(  
+            avl = orgfrac( &
               params_allocation%frac_avl_labl &
               * tile(lu)%plant(pft)%pheno%level_coldacclim &
               * tile(lu)%plant(pft)%pheno%level_veggrowth, &
