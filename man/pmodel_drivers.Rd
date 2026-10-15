@@ -47,6 +47,8 @@ A tibble of driver data:
   differ for daily simulations or for onestep acclimation.
   For daily simulations these include:
     \describe{
+      \item{write_soil_diagnostics}{Whether to write annual soil C and N
+      diagnostics to text files. Defaults to \code{FALSE} if missing.}
       \item{spinup}{A logical value indicating whether this simulation does spin-up.}
       \item{spinupyears}{Number of spin-up years.}
       \item{recycle}{Number of first N years of forcing data.frame that are recycled for spin-up.}

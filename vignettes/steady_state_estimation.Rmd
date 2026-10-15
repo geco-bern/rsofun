@@ -1,0 +1,199 @@
+---
+title: "Steady-state estimation"
+author: "Beni Stocker"
+date: "2026-04-09"
+output: html_document
+---
+
+This is to assess the accuracy of the steady-state estimation from transient model outputs, in support of Zhang-Zheng et al. (*in rev.*).
+
+We consider two alternative models of the C cycle in a terrestrial ecosystem. The first represents all pool dynamics as a first-order decay process (constant turnover) and assumes constant parameters governing the downstream partition of C flows, determining the ratio of NPP/GPP and allocation fractions. Therefore, by design, it exhibits linear dynamics.
+
+The second model, BiomeEP is a vegetation demography model that explicity simulates forest dynamics. Previous research has demonstrated that upon a change in biomass production (or NPP), steady-state biomass pools change in parallel, but to a lesser degree (in relative terms) (Marqués et al., 2023). The model thus exhibits non-linear dynamics, arising from the relationship between NPP and steady-state vegetation C pools.
+
+This vignette evaluates estimated versus actual steady-state vegetation C pools ($C(t)$) based on the two alternative models. Steady-state vegetation C pools are estimated using an approximative function.
+
+## Analytic approach
+
+The steady-state vegetation C pool ($C^\ast$) can be estimated, assuming first-order decay (constant turnover $\tau$), as:
+$$
+C^\ast = \text{NPP}(t) / \tau
+$$
+Also following the first-order decay model, the temporal change in $C(t)$ is given by:
+$$
+dC/dt = \text{NPP}(t) - C(t)/\tau
+$$
+Combining these two equations, the turnover rate ($\tau$) can be estimated from NPP, the current (transiently changing) size ($C(t)$) and the temporal change of the vegetationa C pool ($dC/dt$):
+$$
+\tau = \frac{C(t)}{\text{NPP}(t) – dC/dt}
+$$
+This, in turn can be plugged into the first equation here. Thus, we get an expression for estimating of the steady-state vegetation C pool size from the transient dynamics as:
+$$
+C^\ast = \frac{C(t) \times \text{NPP}(t)}{\text{NPP}(t) – dC/dt}
+$$
+Eq. 12 is applied in the following for estimating the steady-state vegetation C pool size $C^\ast$ from the transient simulation outputs.
+
+## Simulations
+
+Load R libraries.
+```{r}
+library(dplyr)
+library(rsofun)
+library(ggplot2)
+```
+
+### Linear model
+
+#### Define model
+
+```{r}
+#| code-fold: true
+#| label: fig-ccascade-simulations
+#| fig-cap: "Time series of the pool sizes in the C cascade model, forced with an increase of GPP from 100 to 120 PgC yr^-1^. The first 2000 simulation years are not shown as they are used for model spin-up. The years used for quantifying relative changes below are indicated by the vertical dotted lines."
+#| out-width: 80%
+ccascade <- function( 
+  gpp, 
+  state = initpools(),
+  par = getpar(),
+  fluxes = initfluxes()
+  ){
+
+  # determine integration length (number of time steps) from length of 'c_influx'
+  len <- length(gpp)
+
+  # output the state and fluxes in one data frame
+  df <- dplyr::tibble()
+
+  # integrate over each time step (this is an implementation of the differential equation)
+  for (yr in seq(len)){
+
+    # update states and fluxes
+    out <- ccascade_onestep(gpp[yr], state, par, fluxes)
+    state <- out$state
+    fluxes <- out$fluxes
+
+    # record for output
+    df <- dplyr::bind_rows(
+      df,
+      dplyr::bind_cols( 
+        dplyr::tibble(year = yr),
+        dplyr::as_tibble(state), 
+        dplyr::as_tibble(fluxes))
+      )
+  }
+  return(df)
+}
+
+ccascade_onestep <- function(gpp, state, par, fluxes){
+
+  # total biomass production
+  bp <- gpp * par$bpe
+  fluxes$ra <- gpp * (1 - par$bpe)
+
+  # biomass turnover by pool, use exponential here to avoid numerical instability with k -> 1
+  dleaf <- (1 - exp(-par$kleaf)) * state$cleaf
+  dwood <- (1 - exp(-par$kwood)) * state$cwood
+  droot <- (1 - exp(-par$kroot)) * state$croot
+
+  # update biomass pools
+  state$cleaf <- state$cleaf + bp * par$fleaf - dleaf
+  state$cwood <- state$cwood + bp * par$fwood - dwood
+  state$croot <- state$croot + bp * par$froot - droot
+
+  # litter turnover
+  dflitt <- (1 - exp(-par$kflitt)) * state$flitt
+  dslitt <- (1 - exp(-par$kslitt)) * state$slitt
+
+  # update litter: add biomass turnover and update litter pools
+  state$flitt <- state$flitt + dleaf + droot - dflitt
+  state$slitt <- state$slitt + dwood         - dslitt
+
+  # heterotrophic respiration during litter decomposition
+  rh_litt <- (1 - par$eff) * (dflitt + dslitt)
+
+  # soil turnover
+  dfsoil <- (1 - exp(-par$kfsoil)) * state$fsoil
+  dssoil <- (1 - exp(-par$kssoil)) * state$ssoil
+
+  # update soil: remainder of litter turnover goes to soil, subtract decomposing portion
+  state$fsoil <- state$fsoil + par$eff * par$ffast       * (dflitt + dslitt) - dfsoil
+  state$ssoil <- state$ssoil + par$eff * (1 - par$ffast) * (dflitt + dslitt) - dssoil
+
+  # heterotrophic respiration from soil decomposition
+  rh_soil <- dfsoil + dssoil
+  fluxes$rh <- rh_litt + rh_soil
+
+  return(list(state = state, fluxes = fluxes))
+}
+
+getpar <- function(){
+  list(
+    bpe = 0.4,
+    fleaf = 0.3,
+    froot = 3,
+    fwood = 0.4,
+    kleaf = 0.5,
+    kwood = 0.02,
+    kroot = 0.5,
+    kflitt = 0.5,
+    kslitt = 0.1,
+    kfsoil = 0.1,
+    kssoil = 0.003,
+    eff = 0.6,
+    ffast = 0.95
+    )
+}
+
+initpools <- function(){
+  list(
+    cleaf = 0,
+    cwood = 0,
+    croot = 0,
+    flitt = 0,
+    slitt = 0,
+    fsoil = 0,
+    ssoil = 0
+    )
+}
+
+initfluxes <- function(){
+  list(
+    ra = 0,
+    rh = 0
+    )
+}
+```
+
+#### Create forcing
+
+```{r}
+#| code-fold: true
+#| label: fig-ccascade-simulations
+#| fig-cap: "Time series of the pool sizes in the C cascade model, forced with an increase of GPP from 100 to 120 PgC yr^-1^. The first 2000 simulation years are not shown as they are used for model spin-up. The years used for quantifying relative changes below are indicated by the vertical dotted lines."
+#| out-width: 80%
+
+# specify GPP for each simulation year as a vector
+gpp <- c(rep(100, 3000), rep(120, 3000))
+```
+
+#### Run model
+
+```{r}
+# run the model, it returns a data frame
+df <- ccascade(gpp)
+
+df <- df |> 
+  mutate(cveg = cleaf + cwood + croot)
+
+df |> 
+  ggplot() +
+  geom_line(aes(year, cveg, color = "Vegetation C")) +
+  geom_vline(xintercept = 2500, linetype = "dotted") +
+  geom_vline(xintercept = 5500, linetype = "dotted") +
+  xlim(2000, 6000) +
+  khroma::scale_color_okabeito(name = "") +
+  theme_classic() +
+  labs(x = "Simulation year", y = "Pool size (PgC)")
+```
+
+### BiomeEP

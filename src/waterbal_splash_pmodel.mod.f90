@@ -1,4 +1,4 @@
-module md_waterbal
+module md_waterbal_pmodel
   !////////////////////////////////////////////////////////////////
   ! Ecosystem water balance using SPLASH.
   ! Code adopted from https://doi.org/10.5281/zenodo.376293
@@ -161,8 +161,6 @@ contains
     !---------------------------------------------------------
     ! Berger (1978)
     call get_berger_tls( doy, grid )
-    ! grid%nu     = out_berger%nu
-    ! grid%lambda = out_berger%lambda
 
     !---------------------------------------------------------
     ! 3. Calculate distance factor (dr), unitless
@@ -187,7 +185,7 @@ contains
     !---------------------------------------------------------
     ! 6.a Calculate day length from sunset hour angle, seconds
     !---------------------------------------------------------
-    grid%dayl = 24.0 * 60 * 60 * hs / 180.0  ! hs is in degrees (pi = 180 deg)
+    tile_fluxes(:)%canopy%dayl = 24.0 * 60 * 60 * hs / 180.0  ! hs is in degrees (pi = 180 deg)
 
     !---------------------------------------------------------
     ! 7. Calculate daily extraterrestrial solar radiation (dra), J m-2 d-1
@@ -567,8 +565,6 @@ contains
 
   end subroutine getpar_modl_waterbal
 
-  ! xxx put these functions into a 'contain' within calling SR?
-
 
   subroutine get_berger_tls( day, grid )
     !----------------------------------------------------------------   
@@ -776,4 +772,4 @@ contains
 
   end function psychro
 
-end module md_waterbal
+end module md_waterbal_pmodel

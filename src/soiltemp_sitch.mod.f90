@@ -9,6 +9,11 @@ module md_soiltemp
   private
   public soiltemp_pmodel, air_to_soil_temp_biomee
 
+  interface soiltemp
+    module procedure soiltemp_pmodel
+    module procedure soiltemp_cnmodel
+  end interface soiltemp
+
 contains
 
   subroutine soiltemp_pmodel( soil, dtemp, doy, init, finalize)
@@ -78,7 +83,7 @@ contains
       endif
 
       ! Interpolate thermal diffusivity function against soil water content
-      if (meanw1<0.15) then
+      if (meanw1 < 0.15) then
         diffus = ( soil(lu)%params%thdiff_whc15 - soil(lu)%params%thdiff_wp ) / 0.15 &
                   * meanw1 + soil(lu)%params%thdiff_wp
       else
@@ -121,6 +126,35 @@ contains
     end if
 
   end subroutine soiltemp_pmodel
+
+  subroutine soiltemp_cnmodel(tile, dtemp, moy, doy, init)
+    ! Compatibility entry point for the cnmodel tile representation.
+    use md_tile_cnmodel, only: cn_tile_type => tile_type
+    use md_tile_pmodel, only: pmodel_soil_type => soil_type
+
+    type(cn_tile_type), dimension(nlu), intent(inout) :: tile
+    real, dimension(ndayyear), intent(in) :: dtemp
+    integer, intent(in) :: moy, doy
+    logical, intent(in) :: init
+
+    type(pmodel_soil_type), dimension(nlu) :: soil
+    integer :: lu
+
+    do lu = 1, nlu
+      soil(lu)%phy%wscal = tile(lu)%soil%phy%wscal
+      soil(lu)%phy%temp = tile(lu)%soil%phy%temp
+      soil(lu)%params%thdiff_whc15 = tile(lu)%soil%params%thdiff_whc15
+      soil(lu)%params%thdiff_wp = tile(lu)%soil%params%thdiff_wp
+      soil(lu)%params%thdiff_fc = tile(lu)%soil%params%thdiff_fc
+    end do
+
+    call soiltemp_pmodel(soil, dtemp, doy, init, .false.)
+
+    do lu = 1, nlu
+      tile(lu)%soil%phy%temp = soil(lu)%phy%temp
+    end do
+
+  end subroutine soiltemp_cnmodel
 
   real function air_to_soil_temp_biomee( thetaS, dtemp, doy, dtemp_pvy, wscal_pvy, wscal_alldays)
     !/////////////////////////////////////////////////////////////////////////
