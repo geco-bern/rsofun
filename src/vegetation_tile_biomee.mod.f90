@@ -729,6 +729,7 @@ contains
       self%out_daily_tile(idoy, DAILY_TILE_SL_N       ) = self%psoil_sl%n14
       self%out_daily_tile(idoy, DAILY_TILE_INORG_N    ) = self%inorg%n14
       self%out_daily_tile(idoy, DAILY_TILE_N_UPTK     ) = self%daily_fluxes%Nup
+      self%out_daily_tile(idoy, DAILY_TILE_FAPAR      ) = 1.0 - self%f_light_forest_floor
     endif
 
     ! running annual sums

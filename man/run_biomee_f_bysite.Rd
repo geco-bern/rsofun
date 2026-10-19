@@ -95,6 +95,7 @@ Model output for the aggregated land units (LU) is provided as a list containing
       \item{slowSoilN}{Slow soil nitrogen pool (kg N m\eqn{^{-2}}).}
       \item{mineralN}{Mineral nitrogen pool (kg N m\eqn{^{-2}}).}
       \item{N_uptk}{Nitrogen uptake (kg N m\eqn{^{-2}} day\eqn{^{-1}}).}
+      \item{fAPAR}{Fraction of incoming photosynthetically active radiation absorbed by the tile canopy (unitless).}
     }}
   \item{\code{output_annual_tile}}{A data.frame with annual outputs at tile level.
   \describe{

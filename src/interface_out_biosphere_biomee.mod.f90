@@ -13,7 +13,7 @@ module md_interface_out_biomee
 
   !=============== Daily
 
-  integer, public, parameter :: nvars_daily_tile     = 37
+  integer, public, parameter :: nvars_daily_tile     = 38
 
   integer, public, parameter :: DAILY_TILE_YEAR               =  1
   integer, public, parameter :: DAILY_TILE_DOY                =  2
@@ -52,6 +52,7 @@ module md_interface_out_biomee
   integer, public, parameter :: DAILY_TILE_SL_N               = 35
   integer, public, parameter :: DAILY_TILE_INORG_N            = 36
   integer, public, parameter :: DAILY_TILE_N_UPTK             = 37
+  integer, public, parameter :: DAILY_TILE_FAPAR              = 38
 
 
   !=============== Cohorts
