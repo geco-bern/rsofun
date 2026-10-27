@@ -7,7 +7,7 @@ module md_soiltemp
   implicit none
 
   private
-  public soiltemp_pmodel, air_to_soil_temp_biomee
+  public soiltemp, soiltemp_pmodel, air_to_soil_temp_biomee
 
   interface soiltemp
     module procedure soiltemp_pmodel

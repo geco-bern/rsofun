@@ -48,13 +48,13 @@ run_cnmodel_f_bysite(
       for simulating the soil water balance.}
 }}
 
-\item{forcing}{A data frame of forcing climate data, used as input 
+\item{forcing}{A data frame of forcing climate data, used as input
 (see \code{\link{p_model_drivers}}
 for a detailed description of its structure and contents).}
 
 \item{params_modl}{A named list of free (calibratable) model parameters.
 \describe{
-  \item{kphio}{The quantum yield efficiency at optimal temperature \eqn{\varphi_0}, 
+  \item{kphio}{The quantum yield efficiency at optimal temperature \eqn{\varphi_0},
    in mol mol\eqn{^{-1}}.
    When temperature dependence is used, it corresponds to the multiplicative
    parameter \eqn{c} (see Details).}
@@ -69,21 +69,21 @@ for a detailed description of its structure and contents).}
    degree-day\eqn{^{-1}}. Larger values produce a sharper transition.}
   \item{dehardening_gdd_base}{Base temperature for accumulating growing degree days
    during recovery from cold hardening, in \eqn{^o}C.}
-  \item{soilm_thetastar}{The threshold parameter \eqn{\theta^{*}} in the 
+  \item{soilm_thetastar}{The threshold parameter \eqn{\theta^{*}} in the
    soil moisture stress function (see Details), given in mm.
    To turn off the soil moisture stress, set \code{soilm_thetastar = 0}.}
   \item{soilm_betao}{The intercept parameter \eqn{\beta_{0}} in the
-   soil moisture stress function (see Details). This is the parameter calibrated 
+   soil moisture stress function (see Details). This is the parameter calibrated
    in Stocker et al. 2020 GMD.}
   \item{beta_unitcostratio}{The unit cost of carboxylation, corresponding to
    \eqn{\beta = b / a'} in Eq. 3 of Stocker et al. 2020 GMD.}
   \item{rd_to_vcmax}{Ratio of Rdark (dark respiration) to Vcmax25.}
   \item{tau_acclim}{Acclimation time scale of photosynthesis, in days.}
   \item{kc_jmax}{Parameter for Jmax cost ratio (corresponding to c\eqn{^*} in
-  Stocker et al. 2020 GMD).} 
+  Stocker et al. 2020 GMD).}
 }}
 
-\item{makecheck}{A logical specifying whether checks are performed 
+\item{makecheck}{A logical specifying whether checks are performed
 to verify forcings and model parameters. \code{TRUE} by default.}
 
 \item{verbose}{A logical specifying whether to print warnings.
@@ -97,22 +97,22 @@ Model output is provided as a tidy dataframe, with columns:
      (for example, 2007.000 corresponds to 2007-01-01 and 2007.003 to 2007-01-02.}
   \item{\code{fapar}}{Fraction of photosynthetic active radiation (fAPAR), taking
      values between 0 and 1.}
-  \item{\code{gpp}}{Gross Primary Productivity (GPP) for each time stamp 
+  \item{\code{gpp}}{Gross Primary Productivity (GPP) for each time stamp
       (in gC m\eqn{^{-2}} d\eqn{^{-1}}).}
   \item{\code{aet}}{Actual evapotranspiration (AET), calculated by SPLASH following Priestly-Taylor (in mm d\eqn{^{-1}}).}
   \item{\code{le}}{Latent heat flux (in J m\eqn{^{-2}} d\eqn{^{-1}}).}
   \item{\code{pet}}{Potential evapotranspiration (PET), calculated by SPLASH following Priestly-Taylor (in mm d\eqn{^{-1}}).}
-  \item{\code{vcmax}}{Maximum rate of RuBisCO carboxylation 
+  \item{\code{vcmax}}{Maximum rate of RuBisCO carboxylation
       (Vcmax) (in mol C m\eqn{^{-2}} d\eqn{^{-1}}).}
   \item{\code{jmax}}{Maximum rate of electron transport for RuBP regeneration
       (in mol CO\eqn{_2} m\eqn{^{-2}} s\eqn{^{-1}}).}
-  \item{\code{vcmax25}}{Maximum rate of carboxylation (Vcmax), 
+  \item{\code{vcmax25}}{Maximum rate of carboxylation (Vcmax),
       normalised to 25\eqn{^o}C (in mol C m\eqn{^{-2}} d\eqn{^{-1}}).}
-  \item{\code{jmax25}}{Maximum rate of electron transport, normalised to 
+  \item{\code{jmax25}}{Maximum rate of electron transport, normalised to
       25\eqn{^o}C (in mol C m\eqn{^{-2}} s\eqn{^{-1}}).}
-  \item{\code{gs_accl}}{Acclimated stomatal conductance (in 
+  \item{\code{gs_accl}}{Acclimated stomatal conductance (in
       mol C m\eqn{^{-2}} d\eqn{^{-1}} Pa\eqn{^{-1}}).}
-  \item{\code{wscal}}{Relative soil water content, between 0 (permanent wilting 
+  \item{\code{wscal}}{Relative soil water content, between 0 (permanent wilting
       point, PWP) and 1 (field capacity, FC).}
   \item{\code{chi}}{Ratio of leaf-internal to ambient CO\eqn{_{2}}, ci:ca (unitless).}
   \item{\code{iwue}}{Intrinsic water use efficiency (iWUE) (in Pa).}
@@ -127,7 +127,7 @@ Model output is provided as a tidy dataframe, with columns:
 Call to the Fortran CN-model
 }
 \details{
-Depending on the input model parameters, it's possible to run the 
+Depending on the input model parameters, it's possible to run the
 different P-model setups presented in Stocker et al. 2020 GMD. The P-model
 version implemented in this package allows more flexibility than the one
 presented in the paper, with the following functions:
@@ -138,26 +138,26 @@ The temperature dependence of the quantum yield efficiency is given by: \cr
 \eqn{\varphi_0 (T) = 1 } if \eqn{ c (1 + a (T - b)^2 ) \geq 1}. \cr
 The ORG setup can be reproduced by setting \code{kphio_par_a = 0}
 and calibrating the \code{kphio} parameter only.
-The BRC setup (which calibrates \eqn{c_L = \frac{a_L b_L}{4}} in Eq. 18) is more difficult to reproduce, 
+The BRC setup (which calibrates \eqn{c_L = \frac{a_L b_L}{4}} in Eq. 18) is more difficult to reproduce,
 since the temperature-dependency has been reformulated and a custom cost
 function would be necessary for calibration. The new parameters
 are related to \eqn{c_L} as follows: \cr
 \eqn{a = -0.0004919819} \cr
 \eqn{b = 32.35294} \cr
-\eqn{c = 0.6910823 c_L} 
+\eqn{c = 0.6910823 c_L}
 
 The soil moisture stress is implemented as \cr
-\eqn{\beta(\theta) = \frac{\beta_0 - 1}{{\theta^{*}}^2} 
-   (\theta - \theta^{*})^2 + 1 } if 
+\eqn{\beta(\theta) = \frac{\beta_0 - 1}{{\theta^{*}}^2}
+   (\theta - \theta^{*})^2 + 1 } if
    \eqn{ 0 \leq \theta \leq \theta^{*}} and \cr
 \eqn{\beta(\theta) = 1} if \eqn{ \theta > \theta^{*}}. \cr
 In Stocker et al. 2020 GMD, the threshold plant-available soil water is set as
-\eqn{\theta^{*}} 
+\eqn{\theta^{*}}
 \code{= 0.6 * whc} where \code{whc} is the site's water holding capacity. Also,
 the \eqn{\beta} reduction at low soil moisture (\eqn{\beta_0 = \beta(0)}) was parameterized
 as a linear function of mean aridity (Eq. 20 in Stocker et al. 2020 GMD) but is
-considered a constant model parameter in this package. 
-Hence, the FULL calibration setup cannot be 
+considered a constant model parameter in this package.
+Hence, the FULL calibration setup cannot be
 exactly replicated.
 }
 \examples{
@@ -175,7 +175,7 @@ params_modl <- list(
   kc_jmax            = 0.41
 )
 
-# Run the Fortran P-model 
+# Run the Fortran P-model
 mod_output <- run_cnmodel_f_bysite(
   # unnest drivers example data
   sitename = p_model_drivers$sitename[1],

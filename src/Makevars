@@ -42,6 +42,7 @@ md_orgpool.mod: orgpool.mod.o
 md_params_core.mod: params_core.mod.o
 md_grid.mod: grid_siterun.mod.o
 md_classdefs.mod: classdefs.mod.o
+md_debug_print.mod: debug_print.o
 md_lambertw.mod: lambertw.mod.o
 md_npp.mod: npp.mod.o
 md_phenology.mod: phenology_lpx.mod.o
@@ -77,7 +78,8 @@ gpp_pmodel.mod.o: md_params_core.mod md_tile_pmodel.mod md_interface_pmodel.mod 
 gpp_cnmodel.mod.o: md_params_core.mod md_tile_cnmodel.mod md_interface_cnmodel.mod md_forcing_cnmodel.mod md_plant_cnmodel.mod md_sofunutils.mod md_grid.mod md_photosynth.mod
 gpp_biomee.mod.o: md_vegetation_tile_biomee.mod md_interface_in_biomee.mod md_soil_biomee.mod md_sofunutils.mod md_forcing_biomee.mod md_photosynth.mod md_params_core.mod
 photosynth_pmodel.mod.o: md_params_core.mod md_sofunutils.mod
-soiltemp_sitch.mod.o: md_params_core.mod md_sofunutils.mod md_tile_pmodel.mod
+soiltemp_sitch.mod.o: md_params_core.mod md_sofunutils.mod md_tile_pmodel.mod md_tile_cnmodel.mod
+debug_print.o: md_aggregated_tile_biomee.mod md_params_core.mod md_orgpool.mod md_lu_tile_biomee.mod md_cohort_linked_list.mod
 plant_pmodel.mod.o: md_params_core.mod md_interface_pmodel.mod md_orgpool.mod
 plant_cnmodel.mod.o: md_classdefs.mod md_params_core.mod md_interface_cnmodel.mod md_lambertw.mod
 vegdynamics_pmodel.mod.o: md_params_core.mod md_tile_pmodel.mod
