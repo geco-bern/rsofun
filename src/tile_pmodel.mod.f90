@@ -129,8 +129,9 @@ module md_tile_pmodel
     real :: iwue              ! intrinsic water use efficiency (A/gs = ca*(1-chi))
 
     ! radiation
-    real :: ppfd_splash      ! daily photosynthetic photon flux density (mol m-2 d-1, Note that this differs from ppfd input 'dppfd', which is mol m-2 s-1.)
-    real :: dra              ! daily top-of-atmosphere solar radiation (J m-2 d-1)
+    real :: ppfd_splash
+    real :: dra              ! daily top-of-atmosphere solar radiation (J/m^2/d)
+    real :: dayl              ! day length (s)
 
   end type canopy_fluxes_type ! if type is changed, change initialization, too: initdaily_tile_fluxes()
 

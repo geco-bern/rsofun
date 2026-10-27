@@ -1,0 +1,12 @@
+"$schema" = "https://cdn.posit.co/publisher/schemas/posit-publishing-schema-v3.json"
+type = "html"
+entrypoint = "example_cmodel.html"
+title = "Running the C-only model at CH-Oe1"
+source = "example_cmodel.Rmd"
+files = [
+    "/example_cmodel.html",
+    "/.posit/publish/Running the C-only model at CH-5G4C.toml",
+    "/.posit/publish/deployments/deployment-RUU0.toml",
+]
+validate = true
+product_type = "connect_cloud"

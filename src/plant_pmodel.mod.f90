@@ -165,7 +165,7 @@ contains
   subroutine getpar_modl_plant()
     !////////////////////////////////////////////////////////////////
     !  Subroutine reads model parameters from input file.
-    !  It was necessary to separate this SR from module md_plant
+    !  It was necessary to separate this SR from module md_plant_pmodel
     !  because this SR uses module md_waterbal, which also uses
     !  _plant.
     !----------------------------------------------------------------    

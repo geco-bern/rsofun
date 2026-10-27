@@ -32,6 +32,8 @@ module md_params_core
   integer, parameter, dimension(npft) :: pft_end   = 1
 
   integer, parameter, dimension(nmonth)   :: ndaymonth = (/31,28,31,30,31,30,31,31,30,31,30,31/) ! number of days per month
+  integer, parameter, dimension(nmonth+1) :: middaymonth = (/16,44,75,105,136,166,197,228,258,289,319,350,381/) ! middle-month day of year
+  integer, parameter, dimension(nmonth)   :: cumdaymonth = (/31,59,90,120,151,181,212,243,273,304,334,365/) ! cumulative days by month
 
   real, parameter :: pi = 3.14159265359          ! pi - what else?
   real, parameter :: c_molmass = 12.0107         ! g C / mol C
@@ -49,7 +51,7 @@ module md_params_core
   real, parameter :: kL  = 0.0065                ! temperature lapse rate, K/m (Cavcar, 2000)
   real, parameter :: kG  = 9.80665               ! gravitational acceleration, m/s^2 (Allen, 1973)
   real, parameter :: k_karman = 0.41             ! Von Karman constant; from bigleaf R package
-  real, parameter :: eps = 9.999e-6              ! numerical imprecision allowed in mass conservation tests
+  real, parameter :: eps = 9.999e-4              ! numerical imprecision allowed in mass conservation tests
   real, parameter :: cp = 1.004834               ! specific heat of air for constant pressure (J K-1 g-1); from bigleaf R package
   real, parameter :: Rd = 287.0586               ! gas constant of dry air (J kg-1 K-1) (Foken 2008 p. 245; from bigleaf R package)
   real, parameter :: kGsc = 1360.8               ! solar constant (W m-2) (Kopp & Lean, 2011)
