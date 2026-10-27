@@ -20,6 +20,8 @@ src/*.mod
 # vignette builds
 vignettes/*.html
 
+.debug/
+
 # documentation dir
 docs/
 

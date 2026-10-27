@@ -73,13 +73,16 @@ local download location. Only quality-controlled daily GPP is used as a target
 in this vignette.
 
 ```{r data, eval=TRUE}
+# INSTRUCTIONS: download manually file rsofun_driver_data_v3.4.2.rds from https://zenodo.org/records/14808331
+#               and provide the fdk_path here. Outcomment invalid fdk_path to knit the vignette.
+fdk_path <- "~/Downloads/FDK"
 fdk_path <- "~/data_2/FluxDataKit/v3.4/zenodo_upload"
 
 df_drivers <- readRDS(file.path(
   fdk_path,
   "rsofun_driver_data_v3.4.2.rds"
 )) |>
-  filter(sitename == "CH-Oe1")
+  dplyr::filter(sitename == "CH-Oe1")
 
 use_cseed <- 5
 use_nseed <- use_cseed / 20
