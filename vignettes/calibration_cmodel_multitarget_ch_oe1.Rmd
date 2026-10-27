@@ -64,15 +64,11 @@ observed Reco is `GPP + NEE`. MODIS LAI is taken from the quality-controlled
 data prepared in `vignette("example_cmodel")`.
 
 ```{r data, eval=TRUE}
-# INSTRUCTIONS: download manually file rsofun_driver_data_v3.4.2.rds from https://zenodo.org/records/14808331
-#               and provide the fdk_path here. Outcomment invalid fdk_path to knit the vignette.
-fdk_path <- "~/Downloads/FDK"
-fdk_path <- "~/data_2/FluxDataKit/v3.4/zenodo_upload"
-
-df_drivers <- readRDS(file.path(
-  fdk_path,
-  "rsofun_driver_data_v3.4.2.rds"
-)) |>
+fname <- file.path(tempdir(), "rsofun_driver_data_v3.4.2.rds")
+if (!file.exists(fname)){
+  utils::download.file("https://zenodo.org/records/14808331/files/rsofun_driver_data_v3.4.2.rds?download=1", fname, mode = "wb")
+}
+df_drivers <- readRDS(fname) |>
   dplyr::filter(sitename == "CH-Oe1")
 
 use_cseed <- 5

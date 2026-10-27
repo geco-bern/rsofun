@@ -61,38 +61,37 @@ The CH-Oe1 forcing and evaluation test data is distributed through FluxDataKit. 
 
 ```{r data}
 # Variant 1) load the manually downloaded file:
-df_drivers <- readRDS(
-  "~/data_2/FluxDataKit/v3.4/zenodo_upload/rsofun_driver_data_v3.4.2.rds"
-) |> 
-  filter(sitename == "CH-Oe1")
-
-fdk_site_info <- tibble(read.csv(
-  "~/data_2/FluxDataKit/v3.4/zenodo_upload/fdk_site_info.csv"
-))
-
-fdk_site_fullyearsequence <- tibble(read.csv(
-  "~/data_2/FluxDataKit/v3.4/zenodo_upload/fdk_site_fullyearsequence.csv"
-))
+# df_drivers <- readRDS(
+#   "~/data_2/FluxDataKit/v3.4/zenodo_upload/rsofun_driver_data_v3.4.2.rds"
+# ) |> 
+#   filter(sitename == "CH-Oe1")
+# 
+# fdk_site_info <- tibble(read.csv(
+#   "~/data_2/FluxDataKit/v3.4/zenodo_upload/fdk_site_info.csv"
+# ))
+# 
+# fdk_site_fullyearsequence <- tibble(read.csv(
+#   "~/data_2/FluxDataKit/v3.4/zenodo_upload/fdk_site_fullyearsequence.csv"
+# ))
 
 # # Variant 2) or automatically download and load the file:
-# library(zen4R) # install.packages("zen4R")
-# download_path <- tempdir()
-# zen4R::download_zenodo(
-#   path = download_path,
-#   "10.5281/zenodo.12092555",
-#   files = c(
-#     "rsofun_driver_data_v3.2.rds",
-#     "fdk_site_info.csv",
-#     "fdk_site_fullyearsequence.csv"
-#   )
-# )
+fname_fdk_driver      <- file.path(tempdir(), "rsofun_driver_data_v3.4.2.rds")
+fname_fdk_site_info   <- file.path(tempdir(), "fdk_site_info.csv")
+fname_fdk_fullyearseq <- file.path(tempdir(), "fdk_site_fullyearsequence.csv")
 
-# driver <- readRDS(file.path(download_path, "rsofun_driver_data_v3.2.rds"))
-# fdk_site_info <- tibble(read.csv(file.path(download_path, "fdk_site_info.csv")))
-# fdk_site_fullyearsequence <- tibble(read.csv(file.path(
-#   download_path,
-#   "fdk_site_fullyearsequence.csv"
-# )))
+if (!file.exists(fname_fdk_driver)){
+  utils::download.file("https://zenodo.org/records/14808331/files/rsofun_driver_data_v3.4.2.rds?download=1", fname_fdk_driver, mode = "wb")
+}
+if (!file.exists(fname_fdk_site_info)){
+  utils::download.file("https://zenodo.org/records/14808331/files/fdk_site_info.csv?download=1", fname_fdk_site_info, mode = "wb")
+}
+if (!file.exists(fname_fdk_fullyearseq)){
+  utils::download.file("https://zenodo.org/records/14808331/files/fdk_site_fullyearsequence.csv?download=1", fname_fdk_fullyearseq, mode = "wb")
+}
+
+df_drivers <- readRDS(fname_fdk_driver) |> dplyr::filter(sitename == "CH-Oe1")
+fdk_site_info <- tibble(read.csv(fname_fdk_site_info))
+fdk_site_fullyearsequence <- tibble(read.csv(fname_fdk_fullyearseq))
 ```
 
 ## Parameters
