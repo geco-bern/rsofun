@@ -558,7 +558,10 @@ calibration_parameters <- list(
     distribution = "lognormal", lower = 0.005, upper = 0.03
   )
 )
+```
 
+```{r calibration-run, eval = FALSE}
+# This calibration can take a while (which is why it is deactivated by normal rendering: eval=FALSE)
 feature_preflight <- multitarget_feature_loglik(
   par = pars,
   model_error = list(),
@@ -594,6 +597,18 @@ multitarget_calibration <- calib_sofun_lhs(
   variance_priors = feature_variance_priors,
   marginal_function = inverse_gamma_marginal_loglik
 )
+```
+
+```{r eval = FALSE, include = FALSE}
+# store output so that actual calibration isn't run at each vignette rendering
+saveRDS(multitarget_calibration,
+  "vignettes/files/calibration_cmodel_multitarget_ch_oe1.Rmd__multitarget_calibration.RDS",
+  compress = "xz")
+```
+```{r include = FALSE}
+# for normal vignette rendering re-use previously stored output
+multitarget_calibration <- readRDS(
+  "files/calibration_cmodel_multitarget_ch_oe1.Rmd__multitarget_calibration.RDS") # NOTE: for rendering remove prefix "vignettes/"
 ```
 
 ## Posterior-weight diagnostics
