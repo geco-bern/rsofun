@@ -2,7 +2,12 @@
 title: "Steady-state estimation"
 author: "Beni Stocker"
 date: "2026-04-09"
-output: html_document
+output: rmarkdown::html_document
+code-fold: true
+vignette: >
+  %\VignetteIndexEntry{Calibrating multiple C-model parameters with GPP, Reco, and LAI features}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\usepackage[utf8]{inputenc}
 ---
 
 This is to assess the accuracy of the steady-state estimation from transient model outputs, in support of Zhang-Zheng et al. (*in rev.*).
@@ -168,7 +173,7 @@ initfluxes <- function(){
 
 ```{r}
 #| code-fold: true
-#| label: fig-ccascade-simulations
+#| label: fig-ccascade-simulations-2
 #| fig-cap: "Time series of the pool sizes in the C cascade model, forced with an increase of GPP from 100 to 120 PgC yr^-1^. The first 2000 simulation years are not shown as they are used for model spin-up. The years used for quantifying relative changes below are indicated by the vertical dotted lines."
 #| out-width: 80%
 
