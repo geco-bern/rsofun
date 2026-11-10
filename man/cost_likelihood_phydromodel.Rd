@@ -101,7 +101,12 @@ cost_likelihood_phydromodel(        # reuse likelihood cost function
   ),                          # must be a named list
   obs     = p_model_validation,   # example data from package
   drivers = p_model_drivers_formatPhydro \%>\%
-    ungroup() \%>\% dplyr::mutate(params_siml = purrr::map(params_siml, ~mutate(.x, use_phydro = TRUE, use_pml = TRUE, use_gs = TRUE))),
+    ungroup() \%>\%
+    dplyr::mutate(
+      params_siml = purrr::map(params_siml, 
+                               ~mutate(.x, use_phydro = TRUE,
+                                       use_pml = TRUE,
+                                       use_gs = TRUE))),
   targets = "gpp",
   par_fixed = list()
 )

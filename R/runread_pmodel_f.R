@@ -167,7 +167,7 @@ runread_pmodel_f <- function( # TODO: Above docstring appears duplicated in run_
     # gather all results
     collect() |> ungroup() |> arrange(rowwise) |> select(-rowwise) |>
     # only keep site_info and data
-    dplyr::select(sitename, site_info, data)
+    dplyr::select("sitename", "site_info", "data")
   
   # Previously, single core, was simply rowwise. This is however covered by the unique code above.
   # df_out <- drivers |>

@@ -8,7 +8,7 @@
 A tibble of driver data:
 \describe{
   \item{sitename}{A character string containing the site name.}
-  \item{forcing}{A tibble of a time series of forcing climate data, including 
+  \item{forcing}{A tibble of a time series of forcing climate data, including
   the following variables:
     \describe{
       \item{date}{Date of the observation in YYYY-MM-DD format.}

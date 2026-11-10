@@ -79,7 +79,12 @@
 #'   ),                          # must be a named list
 #'   obs     = p_model_validation,   # example data from package
 #'   drivers = p_model_drivers_formatPhydro %>%
-#'     ungroup() %>% dplyr::mutate(params_siml = purrr::map(params_siml, ~mutate(.x, use_phydro = TRUE, use_pml = TRUE, use_gs = TRUE))),
+#'     ungroup() %>%
+#'     dplyr::mutate(
+#'       params_siml = purrr::map(params_siml, 
+#'                                ~mutate(.x, use_phydro = TRUE,
+#'                                        use_pml = TRUE,
+#'                                        use_gs = TRUE))),
 #'   targets = "gpp",
 #'   par_fixed = list()
 #' )
@@ -93,9 +98,6 @@ cost_likelihood_phydromodel <- function(
     ncores = 2
 ){
   # NOTE(fabian): These different cost functions share a LOT of code in common. Consider consolidation for maintainability?
-
-  # predefine variables for CRAN check compliance
-  sitename <- data <- gpp_mod <- NULL
   
   if (!("use_phydro" %in% colnames(drivers$params_siml[[1]]))){
     warning("Parameter use_phydro not set. Assuming FALSE")
@@ -106,9 +108,9 @@ cost_likelihood_phydromodel <- function(
 
   ## define required parameter set based on model parameters
   if (!using_phydro){
-    required_param_names <- rsofun:::required_param_names$p_model
+    required_param_names <- required_param_names$p_model
   } else {
-    required_param_names <- rsofun:::required_param_names$phydro_model
+    required_param_names <- required_param_names$phydro_model
   }
   
   ## split calibrated parameters into model and error parameters
@@ -143,31 +145,29 @@ cost_likelihood_phydromodel <- function(
   
   ## Calculate dpsi intercept from outputs
   df <- df |> 
-    mutate(dpsi_int = purrr::map(.x=data, .f=function(d){
+    mutate(dpsi_int = purrr::map(.x=.data$data, .f=function(d){
       # Remove extremeties (potentially spurious values)
       d_filt = d |> 
-        mutate(psi_soil = psi_leaf + dpsi) |> 
-        filter(psi_soil > min(psi_soil)+0.01) |>
-        filter(psi_soil < max(psi_soil)-0.01)
+        mutate(psi_soil = .data$psi_leaf + .data$dpsi) |> 
+        filter(.data$psi_soil > min(.data$psi_soil)+0.01) |>
+        filter(.data$psi_soil < max(.data$psi_soil)-0.01)
       
       # calculate psi_soil threshold for "wet" regime
-      psi_soil_max <- d_filt |>
-        with(quantile(psi_soil, probs = 0.95))
+      psi_soil_max <- stats::quantile(d_filt[["psi_soil"]], probs = 0.95)
       
       # calculate dpsi intercept as mean of dpsi in wet regime
       int_q = d_filt |>
-        filter(psi_soil >= psi_soil_max) |>
-        pull(dpsi) |>
+        filter(.data$psi_soil >= psi_soil_max) |>
+        pull("dpsi") |>
         mean()
       
       # calculate actual dpsi intercept by fitting lm (might not work)
       dat_lm = d_filt |> 
-        dplyr::select(psi_leaf, psi_soil) |> 
+        dplyr::select("psi_leaf", "psi_soil") |> 
         tidyr::drop_na()
       
       if (nrow(dat_lm) > 5){
-        mod = dat_lm |>
-          with(lm(psi_leaf~psi_soil))
+        mod <- stats::lm(psi_leaf ~ psi_soil, data = dat_lm)
         mods = summary(mod)
         int_reg = -mod$coefficients[1]
         p_slope = mods$coefficients[2,4]
@@ -187,7 +187,7 @@ cost_likelihood_phydromodel <- function(
   df <- df |>
     dplyr::rowwise() |>
     dplyr::reframe(
-      cbind(sitename, data[, c('date', unique(c('gpp', targets)))], dpsi_int) |>
+      cbind(.data$sitename, .data$data[, c('date', unique(c('gpp', targets)))], .data$dpsi_int) |>
         stats::setNames(c('sitename', 'date', paste0(unique(c('gpp', targets)), '_mod'), 'dpsi_int_mod'))
     ) # gpp is used to get average trait prediction
   
@@ -199,8 +199,8 @@ cost_likelihood_phydromodel <- function(
     
     # Unnest flux observations for our targets
     obs_flux <- obs[is_flux, ] |>
-      dplyr::select(sitename, data) |>
-      tidyr::unnest(data) |>
+      dplyr::select("sitename", "data") |>
+      tidyr::unnest(.data$data) |>
       dplyr::select(any_of(c('sitename', 'date', targets))) |>
       mutate(dpsi_int = 1)
     
@@ -210,7 +210,7 @@ cost_likelihood_phydromodel <- function(
     }else{
       # Join P-model output and flux observations
       df_flux <- df |>
-        dplyr::filter(sitename %in% flux_sites) |>
+        dplyr::filter(.data$sitename %in% flux_sites) |>
         dplyr::left_join(
           obs_flux, 
           by = c('sitename', 'date'))    # observations with missing date are ignored
@@ -224,8 +224,8 @@ cost_likelihood_phydromodel <- function(
     
     # Unnest trait observations for our targets
     obs_trait <- obs[!is_flux, ] |>
-      dplyr::select(sitename, data) |>
-      tidyr::unnest(data) |>
+      dplyr::select("sitename", "data") |>
+      tidyr::unnest(.data$data) |>
       dplyr::select(any_of(c('sitename', targets)))
     
     if(ncol(obs_trait) < 2){
@@ -234,11 +234,11 @@ cost_likelihood_phydromodel <- function(
     }else{
       # Join output and trait observations
       df_trait <- df |>
-        dplyr::filter(sitename %in% trait_sites) |>
-        dplyr::group_by(sitename) |>
+        dplyr::filter(.data$sitename %in% trait_sites) |>
+        dplyr::group_by(.data$sitename) |>
         # get growing season average traits
         dplyr::summarise(across(ends_with("_mod") & !starts_with('gpp'),
-                                ~ sum(.x * gpp_mod/sum(gpp_mod)),
+                                ~ sum(.x * .data$gpp_mod/sum(.data$gpp_mod)),
                                 .names = "{.col}")) |>
         dplyr::left_join(
           obs_trait,

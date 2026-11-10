@@ -151,7 +151,8 @@
 #'   params_siml = p_model_drivers_formatPhydro$params_siml[[1]],
 #'   site_info = p_model_drivers_formatPhydro$site_info[[1]],
 #'   forcing = p_model_drivers_formatPhydro$forcing[[1]],
-#'   forcing_acclim = p_model_drivers_formatPhydro$forcing_daytime[[1]] |> dplyr::mutate(vwind=2.0), # TODO: update p_model_drivers_formatPhydro
+#'   forcing_acclim = p_model_drivers_formatPhydro$forcing_daytime[[1]] |>
+#'     dplyr::mutate(vwind=2.0), # TODO: update p_model_drivers_formatPhydro
 #'   params_modl = params_modl
 #'  )
 run_pmodel_f_bysite <- function( # TODO: Above docstring appears duplicated in runread_pmodel_f.R. This redunduncy should be reduced.
@@ -337,9 +338,9 @@ run_pmodel_f_bysite <- function( # TODO: Above docstring appears duplicated in r
     # Check model parameters
     # The different models need these parameters:
     if (!params_siml$use_phydro){
-      required_param_names <- rsofun:::required_param_names$p_model
+      required_param_names <- required_param_names$p_model
     } else {
-      required_param_names <- rsofun:::required_param_names$phydro_model
+      required_param_names <- required_param_names$phydro_model
     }
 
     ## check parameters
@@ -357,7 +358,7 @@ run_pmodel_f_bysite <- function( # TODO: Above docstring appears duplicated in r
     if (!is.list(params_modl)){  # stopifnot(is.list(params_modl))
       warning(sprintf(paste0(" Returning a dummy data frame. Model parameters not provided as named list but as:",
                              "\n         %s"),
-                      str(par)))
+                      paste(class(params_modl), collapse = "/")))
       continue <- FALSE
     }
   }

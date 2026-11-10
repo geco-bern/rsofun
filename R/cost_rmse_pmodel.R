@@ -79,9 +79,6 @@ cost_rmse_pmodel <- function(
 ){
   # NOTE(fabian): These different cost functions share a LOT of code in common. Consider consolidation for maintainability?
 
-  # predefine variables for CRAN check compliance
-  sitename <- data <- gpp_mod <- NULL
-  
   if (!("use_phydro" %in% colnames(drivers$params_siml[[1]]))){
     warning("Parameter use_phydro not set. Assuming FALSE")
     using_phydro = FALSE
@@ -91,9 +88,9 @@ cost_rmse_pmodel <- function(
   
   ## define required parameter set based on model parameters
   if (!using_phydro){
-    required_param_names <- rsofun:::required_param_names$p_model
+    required_param_names <- required_param_names$p_model
   } else {
-    required_param_names <- rsofun:::required_param_names$phydro_model
+    required_param_names <- required_param_names$phydro_model
   }
 
   ## if WHC is treated as calibratable, remove it from par and overwrite site 
@@ -138,7 +135,7 @@ cost_rmse_pmodel <- function(
   df <- df |>
     dplyr::rowwise() |>
     dplyr::reframe(
-      cbind(sitename, data[, c('date', unique(c('gpp', targets)))]) |>
+      cbind(.data$sitename, .data$data[, c('date', unique(c('gpp', targets)))]) |>
         stats::setNames(c('sitename', 'date', paste0(unique(c('gpp', targets)), '_mod')))
     ) # gpp is used to get average trait prediction
   
@@ -150,8 +147,8 @@ cost_rmse_pmodel <- function(
     
     # Unnest flux observations for our targets
     obs_flux <- obs[is_flux, ] |>
-      dplyr::select(sitename, data) |>
-      tidyr::unnest(data) |>
+      dplyr::select("sitename", "data") |>
+      tidyr::unnest(.data$data) |>
       dplyr::select(any_of(c('sitename', 'date', targets)))
     
     if(ncol(obs_flux) < 3){
@@ -160,7 +157,7 @@ cost_rmse_pmodel <- function(
     }else{
       # Join P-model output and flux observations
       df_flux <- df |>
-      dplyr::filter(sitename %in% flux_sites) |>
+      dplyr::filter(.data$sitename %in% flux_sites) |>
       dplyr::left_join(
         obs_flux, 
         by = c('sitename', 'date'))    # observations with missing date are ignored
@@ -174,8 +171,8 @@ cost_rmse_pmodel <- function(
     
     # Unnest trait observations for our targets
     obs_trait <- obs[!is_flux, ] |>
-      dplyr::select(sitename, data) |>
-      tidyr::unnest(data) |>
+      dplyr::select("sitename", "data") |>
+      tidyr::unnest(.data$data) |>
       dplyr::select(any_of(c('sitename', targets)))
     
     if(ncol(obs_trait) < 2){
@@ -184,11 +181,11 @@ cost_rmse_pmodel <- function(
     }else{
       # Join output and trait observations
       df_trait <- df |>
-        dplyr::filter(sitename %in% trait_sites) |>
-        dplyr::group_by(sitename) |>
+        dplyr::filter(.data$sitename %in% trait_sites) |>
+        dplyr::group_by(.data$sitename) |>
           # get growing season average traits
         dplyr::summarise(across(ends_with("_mod") & !starts_with('gpp'),
-                                ~ sum(.x * gpp_mod/sum(gpp_mod)),
+                                ~ sum(.x * .data$gpp_mod/sum(.data$gpp_mod)),
                                 .names = "{.col}")) |>
         dplyr::left_join(
           obs_trait,

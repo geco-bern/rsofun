@@ -174,7 +174,7 @@ calib_sofun <- function(
       likelihood = function(random_par) {
         do.call("cost",
                 list(
-                  par = setNames(random_par, rownames(pars)),
+                  par = stats::setNames(random_par, rownames(pars)),
                   obs = obs,
                   drivers = drivers
                 ))},
