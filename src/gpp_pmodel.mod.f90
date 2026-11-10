@@ -266,7 +266,7 @@ contains
       end if
 
       ! simple:
-      ! if (nlu > 1) stop 'gpp: think about nlu > 1'
+      ! if (nlu > 1) call my_STOP('gpp: think about nlu > 1')
       lu = 1
 
       !================================================================
@@ -665,7 +665,7 @@ contains
 
   !     case default
 
-  !       stop "calc_climate_acclimation: Provide valid method."
+  !       call my_STOP("calc_climate_acclimation: Provide valid method.")
 
   !   end select
 

@@ -1856,7 +1856,7 @@ contains
     ! https://github.com/geco-bern/rsofun/issues/24
     !if (k==0) then 
     !  print *, "cohort too small..."
-    !  stop
+    !  call my_STOP("cohort too small...")
     !endif
     
     ! exclude cohorts that have low individuals

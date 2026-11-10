@@ -177,7 +177,7 @@ contains
 
     ! print*, 'out_steering%climateyear'
     ! print*, out_steering%climateyear
-    ! if (year>30) stop
+    ! if (year>30) call my_STOP('')
 
   end function getsteering
 

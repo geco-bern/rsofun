@@ -110,13 +110,13 @@ contains
 
     ! if (check_sanity) then
     !   if ( amount%c%c12>from%c%c12+epsilon) then
-    !     stop 'in ORGSUB: attempting to remove C amount > from-pool'
+    !     call my_STOP('in ORGSUB: attempting to remove C amount > from-pool')
     !   else if ( amount%n%n14>from%n%n14+epsilon) then
-    !     stop 'in ORGSUB: attempting to remove N amount > from-pool'
+    !     call my_STOP('in ORGSUB: attempting to remove N amount > from-pool')
     !   else if (from%c%c12<0.0) then
-    !     stop 'in ORGSUB: C in from-pool negative'
+    !     call my_STOP('in ORGSUB: C in from-pool negative')
     !   else if (from%n%n14<0.0) then
-    !     stop 'in ORGSUB: N in from-pool negative'
+    !     call my_STOP('in ORGSUB: N in from-pool negative')
     !   end if
     ! end if
 
@@ -306,8 +306,7 @@ contains
     !  if ( amount%c12 > from%c12+epsilon) then
     !    write(0,*) 'amount', amount%c12
     !    write(0,*) 'from  ', from%c12
-    !    write(0,*) 'in CSUB: attempting to remove amount > from-pool'
-    !    stop
+    !    call my_STOP('in CSUB: attempting to remove amount > from-pool')
     !  end if
     !end if
     
@@ -422,7 +421,7 @@ contains
 
     ! if (check_sanity) then
     !   if ( amount%n14>from%n14+epsilon) then
-    !     stop 'in NSUB: attempting to remove amount > from-pool'
+    !     call my_STOP('in NSUB: attempting to remove amount > from-pool')
     !   end if
     ! end if
     
@@ -737,10 +736,10 @@ contains
 
     ! if (check_sanity) then
     !   if (pool%n%n14==0.) then
-    !     stop 'in CTON: N is zero'
+    !     call my_STOP('in CTON: N is zero')
     !   end if
     !   if (pool%n%n14<0.0 .or. pool%c%c12<0.0) then
-    !     stop 'in CTON: C and/or N is negative'
+    !     call my_STOP('in CTON: C and/or N is negative')
     !   end if
     ! end if
     
@@ -773,10 +772,10 @@ contains
 
     ! if (check_sanity) then
     !   if (pool%c%c12==0.) then
-    !     stop 'in NTOC: C is zero'
+    !     call my_STOP('in NTOC: C is zero')
     !   end if
     !   if (pool%n%n14<0.0 .or. pool%c%c12<0.0) then
-    !     stop 'in NTOC: C and/or N is negative'
+    !     call my_STOP('in NTOC: C and/or N is negative')
     !   end if
     ! end if
     

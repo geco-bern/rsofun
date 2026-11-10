@@ -193,7 +193,7 @@ contains
         
         case default
 
-          ! stop 'PMODEL: select valid method'
+          ! call my_STOP('PMODEL: select valid method')
 
       end select
 
@@ -246,7 +246,7 @@ contains
       ! print*,'out_optchi%mjoc : ', out_optchi%mjoc 
       ! print*,'mprime          : ', mprime
       ! print*,'out_optchi%mj   : ', out_optchi%mj
-      ! stop 
+      ! call my_STOP('') 
 
     else if (method_jmaxlim=="smith19") then
 
@@ -687,7 +687,7 @@ contains
   !     root1 = (-b + d)/(2.0*a)     ! first root
   !     root2 = (-b - d)/(2.0*a)     ! second root
   !   else                            ! complex roots
-  !     stop 'findroot_quadratic(): There is no real root.'
+  !     call my_STOP('findroot_quadratic(): There is no real root.')
   !   end if
 
   ! end function findroot_quadratic

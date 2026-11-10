@@ -29,6 +29,9 @@
 #' @param forcing A data frame of forcing climate data, used as input 
 #'  (see \code{\link{p_model_drivers}}
 #'  for a detailed description of its structure and contents).
+#' @param forcing_acclim A data frame of climate inputs for acclimation, with
+#'   the same columns and dates as \code{forcing}.
+#' @param ... Additional arguments, currently unused.
 #' @param params_modl A named list of free (calibratable) model parameters.
 #' \describe{
 #'   \item{kphio}{The quantum yield efficiency at optimal temperature \eqn{\varphi_0}, 

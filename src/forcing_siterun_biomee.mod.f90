@@ -154,7 +154,7 @@ contains
     idx_start = (forcingyear_idx - 1) * ntstepsyear + 1
     idx_end   = idx_start + ntstepsyear - 1
 
-    ! if (int(forcing(idx_start, 1)) /= forcingyear) stop 'getco2(): forcingyear does not correspond to index read from forcing'
+    ! if (int(forcing(idx_start, 1)) /= forcingyear) call my_STOP('getco2(): forcingyear does not correspond to index read from forcing')
     
     !year = real(forcing(idx_start:idx_end, 1))           ! Year
     pco2 = real(forcing(idx_start:idx_end,12)) * 1.0e-6  ! mol/mol

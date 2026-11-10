@@ -52,6 +52,7 @@ Imports:
     purrr,
     tidyr,
     magrittr,
+    rlang,
     GenSA,
     BayesianTools,
     multidplyr,
@@ -61,7 +62,7 @@ LazyData: true
 LazyDataCompression: xz
 ByteCompile: true
 NeedsCompilation: yes
-RoxygenNote: 7.3.2
+RoxygenNote: 7.3.3
 Suggests:
     covr,
     cwd,
@@ -70,6 +71,8 @@ Suggests:
     rmarkdown,
     ggplot2,
     knitr,
+    lubridate,
+    MASS,
     sensitivity,
     hexbin, 
     khroma,

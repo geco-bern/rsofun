@@ -182,7 +182,7 @@ contains
           cc%resl    = -resp         * c_molmass * 1e-3 * cc%leafarea * myinterface%step_seconds ! kgC tree-1 step-1
           cc%gpp     = (psyn - resp) * c_molmass * 1e-3 * cc%leafarea * myinterface%step_seconds ! kgC step-1 tree-1
 
-          !if (isnan(cc%gpp)) stop '"gpp" is a NaN'
+          !if (isnan(cc%gpp)) call my_STOP('"gpp" is a NaN')
 
           else
 

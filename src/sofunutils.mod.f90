@@ -85,7 +85,7 @@ contains
         runningval = sum(valbuf((lenval-lenper+1):lenval))/inow
       end if
     else
-      ! stop 'RUNNING: declare valid method.'
+      ! call my_STOP('RUNNING: declare valid method.')
       runningval = sum(valbuf((lenval-lenper+1):lenval))
     end if
 
@@ -117,7 +117,7 @@ contains
   !     else if (method=="mean") then
   !       mval(moy) = sum( dval( istart(moy) : iend(moy) )) / ndaymonth(moy)
   !     else
-  !       stop 'DAILY2MONTHLY: select valid method (sum, mean)' 
+  !       call my_STOP('DAILY2MONTHLY: select valid method (sum, mean)')
   !     end if
   !   end do
 
@@ -384,7 +384,7 @@ contains
   !     ! soil heat diffusion and freezing/thawing processes. 
   !     !--------------------------------------------------------------------!
   !     if (monthistotal) &
-  !       stop 'MONTHLY2DAILY: no monthly totals allowed for polynom method'
+  !       call my_STOP('MONTHLY2DAILY: no monthly totals allowed for polynom method')
       
   !     ! Starting conditons of december in previous year
   !     startt = -30.5               ! midpoint between Nov-Dec of previous year
@@ -449,7 +449,7 @@ contains
   !     end do
 
   !   else
-  !     stop 'MONTHLY2DAILY: select viable case.'
+  !     call my_STOP('MONTHLY2DAILY: select viable case.')
   !   end if
 
   ! end function monthly2daily
@@ -480,7 +480,7 @@ contains
   !   return
   !   !600 format (F10.7)
   !   888 write(0,*) 'READ1YEAR_DAILY: error opening file '//trim(filename)//'. Abort. '
-  !   stop
+  !   call my_STOP('READ1YEAR_DAILY: error opening file '//trim(filename)//'. Abort. ')
 
   ! end function read1year_daily
 
@@ -663,7 +663,7 @@ contains
       root(1) = (-b + d)/(2.0*c)    ! first root
       root(2) = (-b - d)/(2.0*c)    ! second root
     else                            ! complex roots
-      ! stop 'findroot_quadratic(): There is no real root.'
+      ! call my_STOP('findroot_quadratic(): There is no real root.')
     end if
 
   end function findroot_quadratic
@@ -1423,6 +1423,20 @@ contains
     
     return
   end
-    
+
+
+  subroutine my_STOP(message)
+    ! Fatal-error boundary for the R package. This handler must not return.
+    implicit none
+    character(len=*), intent(in) :: message
+
+    ! Within R: use rexit instead of stop in order not to crash calling R session.
+    ! https://cran.r-project.org/doc/manuals/r-devel/R-exts.html#Error-signaling-from-Fortran-1
+    call rexit(message) 
+
+    ! For a standalone build, replace the rexit call above with:
+    ! write(*, '(A)') 'Error: ' // trim(message)
+    ! error stop 1
+  end subroutine my_STOP
 
 end module md_sofunutils

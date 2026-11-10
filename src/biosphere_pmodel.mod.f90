@@ -165,7 +165,7 @@ contains
                         myinterface%params_siml%use_pml &
                         )
         ! bal2 = wcont + snow + precip - AET
-        ! if (abs(bal2 - bal1) > eps) stop 'water balance violated'
+        ! if (abs(bal2 - bal1) > eps) call my_STOP('water balance violated')
         ! if (verbose) print*,'... done'
 
         !----------------------------------------------------------------
@@ -183,7 +183,7 @@ contains
         !----------------------------------------------------------------
         ! populate function return variable
         !----------------------------------------------------------------
-        ! if (nlu>1) stop 'think about nlu > 1'
+        ! if (nlu>1) call my_STOP('think about nlu > 1')
         out_biosphere%fapar(doy)   = tile(1)%canopy%fapar
         out_biosphere%gpp(doy)     = tile_fluxes(1)%canopy%dgpp
         out_biosphere%transp(doy)  = tile_fluxes(1)%canopy%daet

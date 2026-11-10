@@ -1,6 +1,6 @@
 module md_photosynth_phydro
   use md_photosynth, only: calc_viscosity_h2o, calc_density_h2o, calc_kmm, calc_gammastar
-  use md_sofunutils, only: calc_patm, zero, gammad
+  use md_sofunutils, only: calc_patm, zero, gammad, my_STOP
   
 
   !--------------------------------------------------------------
@@ -308,19 +308,20 @@ contains
 
     type(par_env_type), intent(in) :: this
 
-    write(*, *) "Env:"
-    write(*, *) "   tc = ", this%tc, " [degC]"
-    write(*, *) "   patm = ", this%patm, " [Pa]"
-    write(*, *) "   vpd = ", this%vpd, " [Pa]"
-    write(*, *) "   Rn = ", this%Rn, " [W m-2]"
-    write(*, *) "   v_wind = ", this%v_wind, " [m s-1]"
-    write(*, *) "   viscosity_water = ", this%viscosity_water, " [Pa s]"
-    write(*, *) "   density_water = ", this%density_water, " [kg m-3]"
-    write(*, *) "   rho = ", this%rho, " [kg m-3]"
-    write(*, *) "   cp = ", this%cp, " [J kg-1 K-1]"
-    write(*, *) "   gamma = ", this%gamma, " [Pa K-1]"
-    write(*, *) "   epsilon = ", this%epsilon, " [Pa K-1]"
-    write(*, *) "   lv = ", this%lv, " [J kg-1]"
+    ! Use R console helpers rather than Fortran I/O in the shared library.
+    call labelpr("Env:", -1)
+    call dblepr1("tc [degC]", -1, this%tc)
+    call dblepr1("patm [Pa]", -1, this%patm)
+    call dblepr1("vpd [Pa]", -1, this%vpd)
+    call dblepr1("Rn [W m-2]", -1, this%Rn)
+    call dblepr1("v_wind [m s-1]", -1, this%v_wind)
+    call dblepr1("viscosity_water [Pa s]", -1, this%viscosity_water)
+    call dblepr1("density_water [kg m-3]", -1, this%density_water)
+    call dblepr1("rho [kg m-3]", -1, this%rho)
+    call dblepr1("cp [J kg-1 K-1]", -1, this%cp)
+    call dblepr1("gamma [Pa K-1]", -1, this%gamma)
+    call dblepr1("epsilon [Pa K-1]", -1, this%epsilon)
+    call dblepr1("lv [J kg-1]", -1, this%lv)
 
   end subroutine print_par_env
 
@@ -556,7 +557,7 @@ contains
     if      (par_plant%gs_method == GS_IGF)  then; I = integral_P_analytical(dpsi, psi_soil, par_plant%psi50, par_plant%b);
     else if (par_plant%gs_method == GS_APX)  then; I = integral_P_approx(    dpsi, psi_soil, par_plant%psi50, par_plant%b);
     else if (par_plant%gs_method == GS_APX2) then; I = integral_P_approx2(   dpsi, psi_soil, par_plant%psi50, par_plant%b);
-    else; error stop "Unsupported gs_method specified"
+    else; call my_STOP("Unsupported gs_method specified")
     end if
   end
 
@@ -641,8 +642,7 @@ contains
       ga = calc_g_aero(par_plant%h_canopy, dble(par_env%v_wind), par_plant%h_wind_measurement)
       gs = calc_gs_pm(Q, ga, par_env)
     else
-      write(*,*) 'Unknown et_method:', par_env%et_method
-      stop
+      call my_STOP('Unknown et_method in P-hydro')
     end if
   end function calc_gs_from_Q
 
@@ -697,8 +697,7 @@ contains
     ! else if (par_env%gs_method == GS_QNG) then
     !     Qprime = calc_Qprime_analytical(dpsi, psi_soil, par_plant, par_env)
     else
-      write(*,*) "Unsupported gs_method specified"
-      stop
+      call my_STOP('Unsupported gs_method specified in P-hydro')
     end if
 
   end function calc_Qprime
@@ -744,8 +743,7 @@ contains
     else if (par_env%et_method == T_PM) then
       dE_dgs = calc_dE_dgs_pm_from_gs(gs, par_plant, par_env)
     else
-      write(*,*) "Unknown et_method:", par_env%et_method
-      stop
+      call my_STOP('Unknown et_method in P-hydro')
     end if
 
   end function calc_dE_dgs_from_gs
@@ -761,8 +759,7 @@ contains
     else if (par_env%et_method == T_PM) then
       dE_dgs = calc_dE_dgs_pm_from_dpsi(dpsi, psi_soil, par_plant, par_env)
     else
-      write(*,*) "Unknown et_method:", par_env%et_method
-      stop
+      call my_STOP('Unknown et_method in P-hydro')
     end if
 
   end function calc_dE_dgs_from_dpsi
@@ -825,20 +822,20 @@ contains
   subroutine print_par_photosynth(this)
     type(par_photosynth_type), intent(in) :: this
 
-    print *, "ParPhotosynth: "
-    print *, "   fT_vcmax", this%fT_vcmax
-    print *, "   fT_jmax", this%fT_jmax
-    print *, "   fT_rd", this%fT_rd
-    print *, "   kmm", this%kmm
-    print *, "   gammastar", this%gammastar
-    print *, "   phi0", this%phi0
-    print *, "   Iabs", this%Iabs
-    print *, "   ca", this%ca
-    print *, "   patm", this%patm
-    print *, "   delta", this%delta
-    print *, "   ftemp_vj_method", this%ftemp_vj_method
-    print *, "   ftemp_rd_method", this%ftemp_rd_method
-    print *, "   ftemp_br_method", this%ftemp_br_method
+    call labelpr("ParPhotosynth:", -1)
+    call dblepr1("fT_vcmax", -1, this%fT_vcmax)
+    call dblepr1("fT_jmax", -1, this%fT_jmax)
+    call dblepr1("fT_rd", -1, this%fT_rd)
+    call dblepr1("kmm", -1, this%kmm)
+    call dblepr1("gammastar", -1, this%gammastar)
+    call dblepr1("phi0", -1, this%phi0)
+    call dblepr1("Iabs", -1, this%Iabs)
+    call dblepr1("ca", -1, this%ca)
+    call dblepr1("patm", -1, this%patm)
+    call dblepr1("delta", -1, this%delta)
+    call intpr1("ftemp_vj_method", -1, int(this%ftemp_vj_method))
+    call intpr1("ftemp_rd_method", -1, int(this%ftemp_rd_method))
+    call intpr1("ftemp_br_method", -1, int(this%ftemp_br_method))
   end subroutine print_par_photosynth
 
   function calc_ftemp_arrhenius(tk, dha, tkref) result(ftemp)
@@ -912,8 +909,7 @@ contains
 
       fv = term_1 * term_2 / term_3
     else
-      write(*,*) "Invalid method_ftemp:", method_ftemp
-      stop
+      call my_STOP('Invalid method_ftemp in P-hydro')
     end if
   end function calc_ftemp_inst_vcmax
 
@@ -974,8 +970,7 @@ contains
       fv = term_1 * term_2 / term_3
 
     else
-      write(*,*) "Invalid method_ftemp:", method_ftemp
-      stop
+      call my_STOP('Invalid method_ftemp in P-hydro')
     end if
 
   end function calc_ftemp_inst_jmax
@@ -1000,8 +995,7 @@ contains
       ! Q10 temperature scaling according to Tjoelker et al. (2001)
       f = (3.22 - 0.046 * tc_leaf)**(tc_leaf - 25.0) / 10.0
     else
-      write(*,*) "Invalid method_rd_scale:", method_rd_scale
-      stop
+      call my_STOP('Invalid method_rd_scale in P-hydro')
     end if
 
   end function calc_ftemp_inst_rd
@@ -1017,8 +1011,7 @@ contains
     elseif (method_rd25 == FB_kumarathunge19) then
       rd_to_vcmax = 0.0360 - 0.0010 * tc_growth ! Acclimated rd_to_vcmax taken from Kumarathunge et al. (2019), Table 1, Mature Natural Environment
     else
-      write(*,*) "Invalid method_rd25:", method_rd25
-      stop
+      call my_STOP('Invalid method_rd25 in P-hydro')
     end if
 
   end function calc_brd25
@@ -1536,8 +1529,8 @@ contains
     
     dpsi_opt = zero(0.0d0, 0.99d0 * bound, lambda_profit_fun_inst, 1.0d-6)
 
-    if (dpsi_opt .ne. dpsi_opt) print *, "Dspi_opt is NaN", dpsi_opt
-    if (dpsi_opt-1 .eq. dpsi_opt) print *, "Dspi_opt is Inf", dpsi_opt
+    if (dpsi_opt .ne. dpsi_opt) call dblepr1("Dpsi_opt is NaN", -1, dpsi_opt)
+    if (dpsi_opt-1 .eq. dpsi_opt) call dblepr1("Dpsi_opt is Inf", -1, dpsi_opt)
 
     ! FIXME Jaideep: This is a super hacky way to avoid NaNs in the calculation of e,
     !    which seem to happen when dpsi_opt is extremely small, ~1e-6
@@ -1547,7 +1540,7 @@ contains
       e = calc_sapflux(dpsi_opt, psi_soil, par_plant, par_env)
     end if
     if (e .ne. e) then
-      print *, "E is NaN", tc, psi_soil, dpsi_opt, e
+      call dblepr("E is NaN (tc, psi_soil, dpsi_opt, e)", -1, [tc, psi_soil, dpsi_opt, e], 4)
       e = 0
     end if
 

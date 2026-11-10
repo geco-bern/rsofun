@@ -81,6 +81,44 @@
 #' surfaces for global land areas. International Journal of Climatology 37 (12): 4302-4315.
 "p_model_drivers"
 
+#' Example drivers and observations for P-model and P-hydro
+#'
+#' Nested example datasets used by the P-model and P-hydro vignettes and tests.
+#'
+#' @name phydro_example_data
+#' @aliases p_hydro_drivers p_hydro_validation p_model_drivers_formatPhydro p_model_validation_formatPhydro
+#' @docType data
+#' @usage
+#' p_hydro_drivers
+#' p_hydro_validation
+#' p_model_drivers_formatPhydro
+#' p_model_validation_formatPhydro
+#' @format Nested tibbles with one row per site. Driver tables contain
+#'   \code{sitename}, \code{params_siml}, \code{site_info}, and \code{forcing}.
+#'   Validation tables contain \code{sitename} and a nested \code{data} table.
+#' @details
+#' \code{p_hydro_drivers} additionally includes \code{forcing_acclim},
+#' \code{forcing_daytime_mean}, and \code{forcing_halfhourly}.
+#' \code{p_model_drivers_formatPhydro} includes \code{forcing_24h},
+#' \code{forcing_daytime}, and \code{forcing_3hrmax}.
+#' The additional tables retain different temporal aggregations of the weather.
+#' Forcing field conventions are described in \code{\link{p_model_drivers}};
+#' the older alternative forcing tables need a \code{vwind} column before use.
+#'
+#' \code{p_hydro_validation$data} contains \code{date}, \code{time}, \code{gpp},
+#' and \code{latenth}; further tables are \code{data_hh}, \code{data_3hr_mean},
+#' and \code{data_daytime_mean}.
+#' \code{p_model_validation_formatPhydro$data} contains dates, alternative GPP
+#' estimates, latent heat fluxes, and their quality flags.
+#'
+#' Select \code{use_phydro}, \code{use_gs}, and \code{use_pml} explicitly in
+#' \code{params_siml} before a run; these switches are not present in every
+#' example dataset. The analytical P-hydro conductance calculation requires
+#' positive vapour pressure deficit.
+#' @seealso \code{\link{runread_pmodel_f}}, \code{\link{run_pmodel_f_bysite}}
+#' @keywords datasets
+NULL
+
 #' SOFUN p-model GPP validation data
 #'
 #' Small tests dataset to validate 

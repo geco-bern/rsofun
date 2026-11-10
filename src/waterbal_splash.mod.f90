@@ -434,7 +434,7 @@ contains
       tile_fluxes%canopy%daet_e = tile_fluxes%canopy%daet / energy_to_mm
     
       if (using_pml) then
-        print*,'Warning: simulation parameter use_pml == .true. but not used in combination with SPLASH-AET (using_gs == .false.).'
+        call labelpr('Warning: use_pml is ignored with use_gs=FALSE (SPLASH AET).', -1)
       end if
 
     else

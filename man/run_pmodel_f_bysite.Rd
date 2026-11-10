@@ -48,6 +48,9 @@ run_pmodel_f_bysite(
 (see \code{\link{p_model_drivers}}
 for a detailed description of its structure and contents).}
 
+\item{forcing_acclim}{A data frame of climate inputs for acclimation, with
+the same columns and dates as \code{forcing}.}
+
 \item{params_modl}{A named list of free (calibratable) model parameters.
 \describe{
   \item{kphio}{The quantum yield efficiency at optimal temperature \eqn{\varphi_0}, 
@@ -75,6 +78,8 @@ to verify forcings and model parameters. \code{TRUE} by default.}
 
 \item{verbose}{A logical specifying whether to print warnings.
 Defaults to \code{TRUE}.}
+
+\item{...}{Additional arguments, currently unused.}
 }
 \value{
 Model output is provided as a tidy dataframe, with columns:
