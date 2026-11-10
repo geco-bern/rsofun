@@ -108,7 +108,7 @@ cost_likelihood_pmodel <- function(
   # par_fixed
   
   ## check parameters
-  if (!identical(sort(c(names(par_calibrated_model), names(par_fixed))), required_param_names)){
+  if (!identical(sort(c(names(par_calibrated_model), names(par_fixed))), sort(required_param_names))){
     stop(sprintf(paste0("Error: Input calibratable and fixed parameters do not ",
                         "match required model parameters:",
                         "\n         par:       c(%s)",

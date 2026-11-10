@@ -343,7 +343,9 @@ run_pmodel_f_bysite <- function( # TODO: Above docstring appears duplicated in r
     }
 
     ## check parameters
-    if (!identical(sort(names(params_modl)), required_param_names)){
+    # NOTE: also need to sort(required_param_names): mixed-case names such as Ssoil collate differently by locale (system-language). 
+    #       Otherwise, pmodel might or might not be not run depending on the locale.
+    if (!identical(sort(names(params_modl)), sort(required_param_names))){
       warning(sprintf(paste0(" Returning a dummy data frame. Incorrect model parameters.",
                              "Received params do not match required model parameters:",
                              "\n         params_model (received): c(%s)",
