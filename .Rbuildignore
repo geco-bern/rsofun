@@ -27,3 +27,5 @@
 ^.*-logo\..*$
 ^codemeta\.json$
 ^CRAN-SUBMISSION$
+^doc$
+^Meta$

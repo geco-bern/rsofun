@@ -26,3 +26,5 @@ docs/
 # CRAN submission archives
 CRAN-SUBMISSION
 docs
+/doc/
+/Meta/
