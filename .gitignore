@@ -5,6 +5,11 @@
 .Ruserdata
 .DS_Store
 .idea
+.debug
+
+# act local config & secrets
+.actrc
+.secrets
 
 # source files
 src/*.o
@@ -17,3 +22,7 @@ vignettes/*.html
 
 # documentation dir
 docs/
+
+# CRAN submission archives
+CRAN-SUBMISSION
+docs

@@ -21,7 +21,6 @@ library(rsofun)
 library(dplyr)
 library(ggplot2)
 # library(ggthemes)
-library(RColorBrewer)
 
 # fake variable as optimization isn't run
 pars <- list()
@@ -585,7 +584,24 @@ For P-hydro, we must use the 3-hr daily max forcing as the acclimation forcing. 
 
 ```{r}
 phydro_model_drivers <- rsofun::p_model_drivers_formatPhydro  |> 
-  rename(forcing_acclim = forcing_3hrmax)
+  rename(forcing_acclim = forcing_3hrmax) |>
+  # NOTE: `forcing_3hrmax`, `forcing_daytime`, and `forcing_24h`-data.frames all contain columns:date,temp,vpd,ppfd,netrad,patm,snow,rain,tmin,tmax,fapar,co2,ccov   
+  # ISSUE: a) all are lacking vwind , 
+  #        b) VPD is sometimes 0 kPa 
+  #           hist(rsofun::p_model_drivers_formatPhydro$forcing[[1]] |> filter(vpd<1) |> magrittr::extract2('vpd'))
+  # SOLUTION: a)For lacking wind, copy the daily wind measurements from the forcing by date. 
+  #           b)The analytical conductance calculation requires positive VPD; this example uses a 1 Pa lower bound. 
+  # TODO: 1) modify this where these data.frames were generated, and 
+  #       2) copy data-frame generation in `data-raw/` (see master branch)
+  mutate(
+    forcing        = purrr::map(forcing,        ~mutate(.x, vpd = pmax(vpd, 1))),
+    forcing_acclim = purrr::map(forcing_acclim, ~mutate(.x, vpd = pmax(vpd, 1)))) |>
+  mutate(forcing_acclim = purrr::map2(
+    forcing_acclim, 
+    forcing,
+    ~left_join(.x, select(.y, date, vwind), by = "date"))
+  )
+
   
 phydro_model_drivers$forcing_acclim[[1]] |>
     # dplyr::filter(year(date) >= ystart & year(date) <= yend) |>
@@ -628,8 +644,8 @@ params_modl <- list(
 )
 
 # run the model for these parameters
-output <- rsofun::p_model_drivers_formatPhydro |>
-  mutate(params_siml = purrr::map(params_siml, ~mutate(., use_gs = TRUE, use_phydro = TRUE))) |>
+output <- phydro_model_drivers |>
+  mutate(params_siml = purrr::map(params_siml, ~mutate(., use_gs = TRUE, use_phydro = TRUE, use_pml = FALSE))) |>
   rsofun::runread_pmodel_f(par = params_modl)
 ```
 

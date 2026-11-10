@@ -165,12 +165,12 @@ morrisOut <- sensitivity::morris(
 
 ```{r eval = FALSE, echo = FALSE}
 # Save Morris sensitivity output because it takes very long to compute
-saveRDS(morrisOut, "files/sensitivity_analysis.Rmd__morrisOut.rds")
+saveRDS(morrisOut, "files/sensitivity_analysis.Rmd__morrisOut.RDS")
 ```
 
 ```{r eval = TRUE, echo = FALSE}
 # Load Morris sensitivity output
-morrisOut <- readRDS("files/sensitivity_analysis.Rmd__morrisOut.rds")
+morrisOut <- readRDS("files/sensitivity_analysis.Rmd__morrisOut.RDS")
 
 ```
 
@@ -330,12 +330,12 @@ par_calib <- calib_sofun(
 
 ```{r eval = FALSE, echo = FALSE}
 # Save calibration output because it takes very long to compute
-saveRDS(par_calib, "files/sensitivity_analysis.Rmd__par_calib.rds")
+saveRDS(par_calib, "files/sensitivity_analysis.Rmd__par_calib.RDS")
 ```
 
 ```{r eval = TRUE, echo = FALSE}
 # Load calibration output
-par_calib <- readRDS("files/sensitivity_analysis.Rmd__par_calib.rds")
+par_calib <- readRDS("files/sensitivity_analysis.Rmd__par_calib.RDS")
 ```
 
 `BayesianTools` makes it easy to produce the trace plot of the MCMC chains and the posterior density plot for the parameters. Trace plots show the time series of the sampled chains, which should reach a stationary state. One can also choose a burnin visually, to discard the early iterations and keep only the samples from the stationary distribution to which they converge. We set \code{burnin = 3000} above from previous runs, and those iterations are not shown by the following trace plot. The samples after the burnin period should be used for inference.
@@ -476,11 +476,11 @@ pmodel_runs <- samples_par |>
 ```
 
 ```{r eval = FALSE, echo = FALSE}
-saveRDS(pmodel_runs, "files/sensitivity_analysis.Rmd__pmodel_runs.rds")
+saveRDS(pmodel_runs, "files/sensitivity_analysis.Rmd__pmodel_runs.RDS")
 ```
 
 ```{r echo = FALSE, eval = TRUE}
-pmodel_runs <- readRDS("files/sensitivity_analysis.Rmd__pmodel_runs.rds")
+pmodel_runs <- readRDS("files/sensitivity_analysis.Rmd__pmodel_runs.RDS")
 ```
 
 Below we plot the first year of observed GPP (in black) against the predicted 
