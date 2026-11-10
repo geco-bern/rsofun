@@ -200,7 +200,7 @@ cost_likelihood_phydromodel <- function(
     # Unnest flux observations for our targets
     obs_flux <- obs[is_flux, ] |>
       dplyr::select("sitename", "data") |>
-      tidyr::unnest(.data$data) |>
+      tidyr::unnest("data") |>
       dplyr::select(any_of(c('sitename', 'date', targets))) |>
       mutate(dpsi_int = 1)
     
@@ -225,7 +225,7 @@ cost_likelihood_phydromodel <- function(
     # Unnest trait observations for our targets
     obs_trait <- obs[!is_flux, ] |>
       dplyr::select("sitename", "data") |>
-      tidyr::unnest(.data$data) |>
+      tidyr::unnest("data") |>
       dplyr::select(any_of(c('sitename', targets)))
     
     if(ncol(obs_trait) < 2){

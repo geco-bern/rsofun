@@ -148,7 +148,7 @@ cost_rmse_pmodel <- function(
     # Unnest flux observations for our targets
     obs_flux <- obs[is_flux, ] |>
       dplyr::select("sitename", "data") |>
-      tidyr::unnest(.data$data) |>
+      tidyr::unnest("data") |>
       dplyr::select(any_of(c('sitename', 'date', targets)))
     
     if(ncol(obs_flux) < 3){
@@ -172,7 +172,7 @@ cost_rmse_pmodel <- function(
     # Unnest trait observations for our targets
     obs_trait <- obs[!is_flux, ] |>
       dplyr::select("sitename", "data") |>
-      tidyr::unnest(.data$data) |>
+      tidyr::unnest("data") |>
       dplyr::select(any_of(c('sitename', targets)))
     
     if(ncol(obs_trait) < 2){
