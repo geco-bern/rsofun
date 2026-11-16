@@ -477,7 +477,8 @@ feature_gpp_loglik <- function(
 }
 ```
 
-```{r simple-gpp-calibrations, eval=TRUE}
+```{r simple-gpp-calibrations, eval=FALSE}
+# This calibration can take a while (which is why it is deactivated by normal rendering: eval=FALSE)
 kphio_prior <- list(
   kphio = list(
     mean = 0.08, sd = 0.04,
@@ -539,6 +540,29 @@ annual_gpp_calibration <- calib_sofun_lhs(
   drivers = df_drivers,
   observations = daily_observations
 )
+```
+
+```{r eval = FALSE, include = FALSE}
+# store output so that actual calibration isn't run at each vignette rendering
+saveRDS(daily_gpp_calibration,
+  "vignettes/files/calibration_cmodel_ch_oe1.Rmd__daily_gpp_calibration.RDS",
+  compress = "xz")
+saveRDS(monthly_gpp_calibration,
+  "vignettes/files/calibration_cmodel_ch_oe1.Rmd__monthly_gpp_calibration.RDS",
+  compress = "xz")
+saveRDS(annual_gpp_calibration,
+  "vignettes/files/calibration_cmodel_ch_oe1.Rmd__annual_gpp_calibration.RDS",
+  compress = "xz")
+```
+
+```{r include = FALSE}
+# for normal vignette rendering re-use previously stored output
+daily_gpp_calibration <- readRDS(
+  "files/calibration_cmodel_ch_oe1.Rmd__daily_gpp_calibration.RDS") # NOTE: for rendering remove prefix "vignettes/"
+monthly_gpp_calibration <- readRDS(
+  "files/calibration_cmodel_ch_oe1.Rmd__monthly_gpp_calibration.RDS") # NOTE: for rendering remove prefix "vignettes/"
+annual_gpp_calibration <- readRDS(
+  "files/calibration_cmodel_ch_oe1.Rmd__annual_gpp_calibration.RDS") # NOTE: for rendering remove prefix "vignettes/"
 ```
 
 ### Feature-oriented calibration with integrated error variances
@@ -667,7 +691,7 @@ features and analytically marginalizing their feature-specific variances. It
 is therefore feature- or signature-domain Bayesian calibration, but is neither
 Approximate Bayesian Computation nor synthetic likelihood in the strict sense.
 
-```{r feature-gpp-calibration, eval=TRUE}
+```{r feature-gpp-calibration-preparation, eval=TRUE}
 
 # Each inverse-gamma prior is defined through E[sigma^2]^(1/2), an interpretable
 # prior RMS error in the feature's native units. alpha = 3 leaves substantial
@@ -702,7 +726,9 @@ feature_preflight <- feature_gpp_loglik(
 if (!is.finite(feature_preflight)) {
   stop("The seasonal-feature likelihood failed its serial preflight check.")
 }
-
+```
+```{r feature-gpp-calibration-run, eval=FALSE}
+# This calibration can take a while (which is why it is deactivated by normal rendering: eval=FALSE)
 feature_gpp_calibration <- calib_sofun_lhs(
   pars = pars,
   par_calib = kphio_prior,
@@ -719,6 +745,18 @@ feature_gpp_calibration <- calib_sofun_lhs(
   marginal_function = inverse_gamma_marginal_loglik
 )
 ```
+```{r eval = FALSE, include = FALSE}
+# store output so that actual calibration isn't run at each vignette rendering
+saveRDS(feature_gpp_calibration,
+  "vignettes/files/calibration_cmodel_ch_oe1.Rmd__feature_gpp_calibration.RDS",
+  compress = "xz")
+```
+```{r include = FALSE}
+# for normal vignette rendering re-use previously stored output
+feature_gpp_calibration <- readRDS(
+  "files/calibration_cmodel_ch_oe1.Rmd__feature_gpp_calibration.RDS") # NOTE: for rendering remove prefix "vignettes/"
+```
+
 
 ```{r feature-calibration-components, eval=TRUE}
 feature_map_simulation <- rsofun::runread_cnmodel_f(
@@ -800,7 +838,7 @@ the main calibration once, retain the number and sum of squared annual residuals
 for each feature, and reuse those sufficient statistics for all four analytical
 marginal likelihoods.
 
-```{r feature-alpha-sensitivity-simulations, eval=TRUE}
+```{r feature-alpha-sensitivity-simulations, eval=FALSE}
 feature_residual_summary <- function(
     kphio, pars, drivers, observations, feature_function
 ) {
@@ -891,6 +929,24 @@ message(sprintf(
   dplyr::n_distinct(sensitivity_residuals$sample_id), nrow(sensitivity_design)
 ))
 ```
+```{r eval = FALSE, include = FALSE}
+# store output so that actual calibration isn't run at each vignette rendering
+saveRDS(sensitivity_residuals,
+  "vignettes/files/calibration_cmodel_ch_oe1.Rmd__sensitivity_residuals.RDS",
+  compress = "xz")
+saveRDS(sensitivity_design,
+  "vignettes/files/calibration_cmodel_ch_oe1.Rmd__sensitivity_design.RDS",
+  compress = "xz")
+```
+```{r include = FALSE}
+# for normal vignette rendering re-use previously stored output
+sensitivity_residuals <- readRDS(
+  "files/calibration_cmodel_ch_oe1.Rmd__sensitivity_residuals.RDS") # NOTE: for rendering remove prefix "vignettes/"
+sensitivity_design <- readRDS(
+  "files/calibration_cmodel_ch_oe1.Rmd__sensitivity_design.RDS") # NOTE: for rendering remove prefix "vignettes/"
+```
+
+
 
 The likelihood calculation below is inexpensive: it contains no model call.
 For each `alpha`, `beta` is recalculated to preserve `prior_rms`, and posterior

@@ -2,7 +2,12 @@
 title: "Canopy C and N"
 author: "Beni Stocker"
 date: "2024-02-24"
-output: html_document
+output: rmarkdown::html_document
+code-fold: true
+vignette: >
+  %\VignetteIndexEntry{Calibrating multiple C-model parameters with GPP, Reco, and LAI features}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\usepackage[utf8]{inputenc}
 ---
 
 ## Model description

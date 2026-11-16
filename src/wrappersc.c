@@ -396,7 +396,7 @@ static const R_CallMethodDef CallEntries[] = {
   {"pmodel_f_C",         (DL_FUNC) &pmodel_f_C,          24},  // Specify number of arguments to C wrapper as the last number here
   {"cnmodel_f_C",        (DL_FUNC) &cnmodel_f_C,         27},  // Specify number of arguments to C wrapper as the last number here
   {"pmodel_onestep_f_C", (DL_FUNC) &pmodel_onestep_f_C,   3},  // Specify number of arguments to C wrapper as the last number here
-  {"biomee_f_C",         (DL_FUNC) &biomee_f_C,          46},  // Number of the SEXP variables (not the output)
+  {"biomee_f_C",         (DL_FUNC) &biomee_f_C,          12},  // Specify number of arguments to C wrapper as the last number here
   { NULL,                 NULL,                          0 }
 };
 
