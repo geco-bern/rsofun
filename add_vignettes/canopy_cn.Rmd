@@ -188,7 +188,7 @@ get_lai <- function(cleaf, par){
 
   arg_to_lambertw <- alpha * par$kbeer / beta * exp( (alpha - gamma) * par$kbeer / beta )
 
-  lai <- 1.0 / (beta * par$kbeer ) * ( -alpha * par$kbeer + gamma * par$kbeer + beta * W( arg_to_lambertw ) )
+  lai <- 1.0 / (beta * par$kbeer ) * ( -alpha * par$kbeer + gamma * par$kbeer + beta * LambertW::W( arg_to_lambertw ) )
 
 }
 
